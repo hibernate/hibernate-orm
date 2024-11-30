@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id.enhanced;
 
@@ -11,8 +9,8 @@ import java.util.Properties;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.DatabaseVersion;
@@ -20,6 +18,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.sequence.ANSISequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.enhanced.DatabaseStructure;
@@ -33,11 +32,17 @@ import org.hibernate.id.enhanced.SequenceStructure;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.StandardOptimizerDescriptor;
 import org.hibernate.id.enhanced.TableStructure;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
+import org.hibernate.mapping.RootClass;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.Type;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.Matchers.instanceOf;
@@ -55,13 +60,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @BaseUnitTest
 public class SequenceStyleConfigUnitTest {
+	private static final Type LONG_TYPE = new TypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.LONG );
 
 	/**
 	 * Test all params defaulted with a dialect supporting pooled sequences
 	 */
 	@Test
 	public void testDefaultedSequenceBackedConfiguration() {
-		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, PooledSequenceDialect.class.getName() )
 				.build()) {
 			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
@@ -72,10 +78,8 @@ public class SequenceStyleConfigUnitTest {
 			Properties props = buildGeneratorPropertiesBase( buildingContext );
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
 			generator.configure(
-					new TypeConfiguration().getBasicTypeRegistry()
-							.resolve( StandardBasicTypes.LONG ),
-					props,
-					serviceRegistry
+					new TestGeneratorCreationContext( LONG_TYPE, buildingContext, serviceRegistry ),
+					props
 			);
 
 			Database database = new Database( buildingContext.getBuildingOptions() );
@@ -96,10 +100,6 @@ public class SequenceStyleConfigUnitTest {
 	private Properties buildGeneratorPropertiesBase(MetadataBuildingContext buildingContext) {
 		Properties props = new Properties();
 		props.put(
-				PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER,
-				buildingContext.getObjectNameNormalizer()
-		);
-		props.put(
 				PersistentIdentifierGenerator.IMPLICIT_NAME_BASE,
 				"ID"
 		);
@@ -111,7 +111,7 @@ public class SequenceStyleConfigUnitTest {
 	 */
 	@Test
 	public void testDefaultedTableBackedConfiguration() {
-		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, TableDialect.class.getName() )
 				.build()) {
 			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
@@ -122,10 +122,8 @@ public class SequenceStyleConfigUnitTest {
 			Properties props = buildGeneratorPropertiesBase( buildingContext );
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
 			generator.configure(
-					new TypeConfiguration().getBasicTypeRegistry()
-							.resolve( StandardBasicTypes.LONG ),
-					props,
-					serviceRegistry
+					new TestGeneratorCreationContext( LONG_TYPE, buildingContext, serviceRegistry ),
+					props
 			);
 
 			Database database = new Database( buildingContext.getBuildingOptions() );
@@ -151,7 +149,7 @@ public class SequenceStyleConfigUnitTest {
 	@Test
 	public void testDefaultOptimizerBasedOnIncrementBackedBySequence() {
 		// for dialects which do not support pooled sequences, we default to pooled+table
-		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, SequenceDialect.class.getName() )
 				.build()) {
 			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
@@ -164,10 +162,8 @@ public class SequenceStyleConfigUnitTest {
 
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
 			generator.configure(
-					new TypeConfiguration().getBasicTypeRegistry()
-							.resolve( StandardBasicTypes.LONG ),
-					props,
-					serviceRegistry
+					new TestGeneratorCreationContext( LONG_TYPE, buildingContext, serviceRegistry ),
+					props
 			);
 
 			Database database = new Database( buildingContext.getBuildingOptions() );
@@ -181,7 +177,7 @@ public class SequenceStyleConfigUnitTest {
 		}
 
 		// for dialects which do support pooled sequences, we default to pooled+sequence
-		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, PooledSequenceDialect.class.getName() )
 				.build()) {
 			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
@@ -194,10 +190,8 @@ public class SequenceStyleConfigUnitTest {
 
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
 			generator.configure(
-					new TypeConfiguration().getBasicTypeRegistry()
-							.resolve( StandardBasicTypes.LONG ),
-					props,
-					serviceRegistry
+					new TestGeneratorCreationContext( LONG_TYPE, buildingContext, serviceRegistry ),
+					props
 			);
 			Database database = new Database( buildingContext.getBuildingOptions() );
 			generator.registerExportables( database );
@@ -217,7 +211,7 @@ public class SequenceStyleConfigUnitTest {
 	 */
 	@Test
 	public void testDefaultOptimizerBasedOnIncrementBackedByTable() {
-		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, TableDialect.class.getName() )
 				.build()) {
 			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
@@ -230,10 +224,8 @@ public class SequenceStyleConfigUnitTest {
 
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
 			generator.configure(
-					new TypeConfiguration().getBasicTypeRegistry()
-							.resolve( StandardBasicTypes.LONG ),
-					props,
-					serviceRegistry
+					new TestGeneratorCreationContext( LONG_TYPE, buildingContext, serviceRegistry ),
+					props
 			);
 			Database database = new Database( buildingContext.getBuildingOptions() );
 			generator.registerExportables( database );
@@ -251,7 +243,7 @@ public class SequenceStyleConfigUnitTest {
 	 */
 	@Test
 	public void testForceTableUse() {
-		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, SequenceDialect.class.getName() )
 				.build()) {
 			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
@@ -264,10 +256,8 @@ public class SequenceStyleConfigUnitTest {
 
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
 			generator.configure(
-					new TypeConfiguration().getBasicTypeRegistry()
-							.resolve( StandardBasicTypes.LONG ),
-					props,
-					serviceRegistry
+					new TestGeneratorCreationContext( LONG_TYPE, buildingContext, serviceRegistry ),
+					props
 			);
 			Database database = new Database( buildingContext.getBuildingOptions() );
 			generator.registerExportables( database );
@@ -290,7 +280,7 @@ public class SequenceStyleConfigUnitTest {
 	@Test
 	public void testExplicitOptimizerWithExplicitIncrementSize() {
 		// optimizer=none w/ increment > 1 => should honor optimizer
-		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, SequenceDialect.class.getName() )
 				.build()) {
 			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
@@ -298,16 +288,16 @@ public class SequenceStyleConfigUnitTest {
 					() -> buildingContext.getBootstrapContext().getTypeConfiguration(),
 					serviceRegistry
 			);
+			final GeneratorCreationContext creationContext = new TestGeneratorCreationContext(
+					LONG_TYPE,
+					buildingContext,
+					serviceRegistry
+			);
 			Properties props = buildGeneratorPropertiesBase( buildingContext );
 			props.setProperty( SequenceStyleGenerator.OPT_PARAM, StandardOptimizerDescriptor.NONE.getExternalName() );
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "20" );
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
-			generator.configure(
-					new TypeConfiguration().getBasicTypeRegistry()
-							.resolve( StandardBasicTypes.LONG ),
-					props,
-					serviceRegistry
-			);
+			generator.configure( creationContext, props );
 			Database database = new Database( buildingContext.getBuildingOptions() );
 			generator.registerExportables( database );
 			generator.initialize( SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() ) );
@@ -322,12 +312,7 @@ public class SequenceStyleConfigUnitTest {
 			props.setProperty( SequenceStyleGenerator.OPT_PARAM, StandardOptimizerDescriptor.HILO.getExternalName() );
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "20" );
 			generator = new SequenceStyleGenerator();
-			generator.configure(
-					new TypeConfiguration().getBasicTypeRegistry()
-							.resolve( StandardBasicTypes.LONG ),
-					props,
-					serviceRegistry
-			);
+			generator.configure( creationContext, props );
 			generator.registerExportables( database );
 			generator.initialize( SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() ) );
 			assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
@@ -340,12 +325,7 @@ public class SequenceStyleConfigUnitTest {
 			props.setProperty( SequenceStyleGenerator.OPT_PARAM, StandardOptimizerDescriptor.POOLED.getExternalName() );
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "20" );
 			generator = new SequenceStyleGenerator();
-			generator.configure(
-					new TypeConfiguration().getBasicTypeRegistry()
-							.resolve( StandardBasicTypes.LONG ),
-					props,
-					serviceRegistry
-			);
+			generator.configure( creationContext, props );
 			generator.registerExportables( database );
 			generator.initialize( SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() ) );
 			// because the dialect reports to not support pooled seqyences, the expectation is that we will
@@ -359,7 +339,7 @@ public class SequenceStyleConfigUnitTest {
 
 	@Test
 	public void testPreferredPooledOptimizerSetting() {
-		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, PooledSequenceDialect.class.getName() )
 				.build()) {
 			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
@@ -367,15 +347,15 @@ public class SequenceStyleConfigUnitTest {
 					() -> buildingContext.getBootstrapContext().getTypeConfiguration(),
 					serviceRegistry
 			);
+			final GeneratorCreationContext creationContext = new TestGeneratorCreationContext(
+					LONG_TYPE,
+					buildingContext,
+					serviceRegistry
+			);
 			Properties props = buildGeneratorPropertiesBase( buildingContext );
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "20" );
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
-			generator.configure(
-					new TypeConfiguration().getBasicTypeRegistry()
-							.resolve( StandardBasicTypes.LONG ),
-					props,
-					serviceRegistry
-			);
+			generator.configure( creationContext, props );
 			Database database = new Database( buildingContext.getBuildingOptions() );
 			generator.registerExportables( database );
 			generator.initialize( SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() ) );
@@ -384,12 +364,7 @@ public class SequenceStyleConfigUnitTest {
 
 			props.setProperty( Environment.PREFERRED_POOLED_OPTIMIZER, StandardOptimizerDescriptor.POOLED_LO.getExternalName() );
 			generator = new SequenceStyleGenerator();
-			generator.configure(
-					new TypeConfiguration().getBasicTypeRegistry()
-							.resolve( StandardBasicTypes.LONG ),
-					props,
-					serviceRegistry
-			);
+			generator.configure( creationContext, props );
 			generator.registerExportables( database );
 			generator.initialize( SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() ) );
 			assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
@@ -397,12 +372,7 @@ public class SequenceStyleConfigUnitTest {
 
 			props.setProperty( Environment.PREFERRED_POOLED_OPTIMIZER, StandardOptimizerDescriptor.POOLED_LOTL.getExternalName() );
 			generator = new SequenceStyleGenerator();
-			generator.configure(
-					new TypeConfiguration().getBasicTypeRegistry()
-							.resolve( StandardBasicTypes.LONG ),
-					props,
-					serviceRegistry
-			);
+			generator.configure( creationContext, props );
 			generator.registerExportables( database );
 			generator.initialize( SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() ) );
 			assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
@@ -441,4 +411,55 @@ public class SequenceStyleConfigUnitTest {
 		}
 	}
 
+	private static class TestGeneratorCreationContext implements GeneratorCreationContext {
+		private final Type type;
+		private final MetadataImplementor metadata;
+		private final ServiceRegistry serviceRegistry;
+
+		public TestGeneratorCreationContext(Type type, MetadataBuildingContext buildingContext, ServiceRegistry serviceRegistry) {
+			this.type = type;
+			this.metadata = buildingContext.getMetadataCollector();
+			this.serviceRegistry = serviceRegistry;
+		}
+
+		@Override
+		public Database getDatabase() {
+			return metadata.getDatabase();
+		}
+
+		@Override
+		public ServiceRegistry getServiceRegistry() {
+			return serviceRegistry;
+		}
+
+		@Override
+		public String getDefaultCatalog() {
+			return "";
+		}
+
+		@Override
+		public String getDefaultSchema() {
+			return "";
+		}
+
+		@Override
+		public PersistentClass getPersistentClass() {
+			return null;
+		}
+
+		@Override
+		public RootClass getRootClass() {
+			return null;
+		}
+
+		@Override
+		public Property getProperty() {
+			return null;
+		}
+
+		@Override
+		public Type getType() {
+			return type;
+		}
+	}
 }

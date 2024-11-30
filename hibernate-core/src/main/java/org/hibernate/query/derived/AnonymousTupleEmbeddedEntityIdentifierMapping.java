@@ -1,27 +1,24 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.derived;
 
-import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
+import org.hibernate.event.spi.MergeContext;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
-import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.sqm.SqmExpressible;
+
+import jakarta.persistence.metamodel.Attribute;
 
 /**
  * @author Christian Beikov
@@ -33,17 +30,32 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 	private final CompositeIdentifierMapping delegate;
 
 	public AnonymousTupleEmbeddedEntityIdentifierMapping(
-			Map<String, ModelPart> modelParts,
+			SqmExpressible<?> sqmExpressible,
+			SqlTypedMapping[] sqlTypedMappings,
+			int selectionIndex,
+			String selectionExpression,
+			Set<String> compatibleTableExpressions,
+			Set<Attribute<?, ?>> attributes,
 			DomainType<?> domainType,
-			String componentName,
 			CompositeIdentifierMapping delegate) {
 		super(
-				modelParts,
+				sqmExpressible,
+				sqlTypedMappings,
+				selectionIndex,
+				selectionExpression,
+				compatibleTableExpressions,
+				attributes,
 				domainType,
-				componentName,
-				(EmbeddableValuedModelPart) delegate
+				delegate.getAttributeName(),
+				delegate,
+				-1
 		);
 		this.delegate = delegate;
+	}
+
+	@Override
+	public Nature getNature() {
+		return delegate.getNature();
 	}
 
 	@Override
@@ -52,13 +64,13 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 	}
 
 	@Override
-	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
-		return delegate.getIdentifier( entity, session );
+	public Object getIdentifier(Object entity) {
+		return delegate.getIdentifier( entity );
 	}
 
 	@Override
-	public Object getIdentifier(Object entity) {
-		return delegate.getIdentifier( entity );
+	public Object getIdentifier(Object entity, MergeContext mergeContext) {
+		return delegate.getIdentifier( entity, mergeContext );
 	}
 
 	@Override
@@ -77,6 +89,16 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 	}
 
 	@Override
+	public EmbeddableMappingType getPartMappingType() {
+		return this;
+	}
+
+	@Override
+	public int compare(Object value1, Object value2) {
+		return super.compare( value1, value2 );
+	}
+
+	@Override
 	public String getAttributeName() {
 		return getPartName();
 	}
@@ -92,12 +114,8 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 	}
 
 	@Override
-	public MappingType getMappedType() {
+	public EmbeddableMappingType getMappedType() {
 		return this;
 	}
 
-	@Override
-	public EmbeddableMappingType getPartMappingType() {
-		return (EmbeddableMappingType) super.getPartMappingType();
-	}
 }

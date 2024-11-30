@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.ast.spi;
 
@@ -15,7 +13,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
  *
  * @author Steve Ebersole
  */
-public interface SingleEntityLoader<T> extends Loader {
+public interface SingleEntityLoader<T> extends EntityLoader {
 	@Override
 	EntityMappingType getLoadable();
 
@@ -23,8 +21,4 @@ public interface SingleEntityLoader<T> extends Loader {
 	 * Load an entity by a primary or unique key value.
 	 */
 	T load(Object key, LockOptions lockOptions, Boolean readOnly, SharedSessionContractImplementor session);
-
-	default T load(Object key, LockOptions lockOptions, SharedSessionContractImplementor session) {
-		return load( key, lockOptions, session );
-	}
 }

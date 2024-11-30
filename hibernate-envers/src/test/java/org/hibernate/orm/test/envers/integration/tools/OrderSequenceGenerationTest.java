@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.tools;
 
@@ -13,13 +11,13 @@ import java.util.Map;
 import jakarta.persistence.EntityManager;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -32,7 +30,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-11131")
+@JiraKey(value = "HHH-11131")
 @RequiresDialectFeature( DialectChecks.SupportsSequences.class )
 public class OrderSequenceGenerationTest extends BaseEnversJPAFunctionalTestCase {
 
@@ -54,10 +52,10 @@ public class OrderSequenceGenerationTest extends BaseEnversJPAFunctionalTestCase
 	@Override
 	protected void addConfigOptions(Map options) {
 		super.addConfigOptions( options );
-		options.put( AvailableSettings.HBM2DDL_SCRIPTS_CREATE_TARGET, createSchema.toPath() );
-		options.put( AvailableSettings.HBM2DDL_SCRIPTS_DROP_TARGET, dropSchema.toPath() );
-		options.put( AvailableSettings.HBM2DDL_SCRIPTS_ACTION, "drop-and-create" );
-		options.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, "create-drop" );
+		options.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET, createSchema.toPath() );
+		options.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_DROP_TARGET, dropSchema.toPath() );
+		options.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION, "drop-and-create" );
+		options.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "create-drop" );
 		options.put( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 	}
 
@@ -66,8 +64,8 @@ public class OrderSequenceGenerationTest extends BaseEnversJPAFunctionalTestCase
 		final String[] createStrings = getDialect().getSequenceSupport().getCreateSequenceStrings( "REVISION_GENERATOR", 1, 1 );
 		final String content = new String( Files.readAllBytes( createSchema.toPath() ) ).toLowerCase();
 		for ( int i = 0; i < createStrings.length; ++i ) {
-			if ( getDialect() instanceof Oracle8iDialect ) {
-				assertTrue( content.contains( ( createStrings[ i ] + " ORDER" ).toLowerCase() ) );
+			if ( getDialect() instanceof OracleDialect ) {
+				assertTrue( content.contains( ( createStrings[ i ] + " NOCACHE ORDER" ).toLowerCase() ) );
 			}
 			else {
 				assertTrue( content.contains( createStrings[ i ].toLowerCase() ) );

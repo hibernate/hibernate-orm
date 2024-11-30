@@ -1,14 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping;
 
 import org.hibernate.engine.spi.VersionValue;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
-import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.VersionJavaType;
 
 /**
@@ -24,7 +21,9 @@ public interface EntityVersionMapping extends BasicValuedModelPart {
 
 	/**
 	 * The strategy for distinguishing between detached and transient
-	 * state based on the version mapping
+	 * state based on the version mapping.
+	 *
+	 * @see EntityIdentifierMapping#getUnsavedStrategy()
 	 */
 	VersionValue getUnsavedStrategy();
 
@@ -34,5 +33,10 @@ public interface EntityVersionMapping extends BasicValuedModelPart {
 	@Override
 	default VersionJavaType<?> getExpressibleJavaType() {
 		return (VersionJavaType<?>) getMappedType().getMappedJavaType();
+	}
+
+	@Override
+	default AttributeMapping asAttributeMapping() {
+		return getVersionAttribute();
 	}
 }

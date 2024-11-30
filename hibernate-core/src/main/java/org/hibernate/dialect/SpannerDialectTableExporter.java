@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
@@ -10,7 +8,6 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -21,6 +18,8 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.schema.spi.Exporter;
+
+import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
 
 /**
  * The exporter for Cloud Spanner CREATE and DROP table statements.
@@ -54,7 +53,7 @@ class SpannerDialectTableExporter implements Exporter<Table> {
 			// a typical table that corresponds to an entity type
 			keyColumns = table.getPrimaryKey().getColumns();
 		}
-		else if ( table.getForeignKeys().size() > 0 ) {
+		else if ( !table.getForeignKeys().isEmpty() ) {
 			// a table with no PK's but has FK's; often corresponds to element collection properties
 			keyColumns = table.getColumns();
 		}
@@ -63,10 +62,10 @@ class SpannerDialectTableExporter implements Exporter<Table> {
 			keyColumns = Collections.emptyList();
 		}
 
-		return getTableString( table, keyColumns, context );
+		return getTableString( table, metadata, keyColumns, context );
 	}
 
-	private String[] getTableString(Table table, Iterable<Column> keyColumns, SqlStringGenerationContext context) {
+	private String[] getTableString(Table table, Metadata metadata, Iterable<Column> keyColumns, SqlStringGenerationContext context) {
 		String primaryKeyColNames = StreamSupport.stream( keyColumns.spliterator(), false )
 				.map( Column::getName )
 				.collect( Collectors.joining( "," ) );
@@ -75,10 +74,11 @@ class SpannerDialectTableExporter implements Exporter<Table> {
 
 
 		for ( Column column : table.getColumns() ) {
-			String columnDeclaration =
+			final String sqlType = column.getSqlType( metadata );
+			final String columnDeclaration =
 					column.getName()
-							+ " " + column.getSqlType()
-							+ ( column.isNullable() ? this.spannerDialect.getNullColumnString( column.getSqlType() ) : " not null" );
+							+ " " + sqlType
+							+ ( column.isNullable() ? this.spannerDialect.getNullColumnString( sqlType ) : " not null" );
 			colsAndTypes.add( columnDeclaration );
 		}
 
@@ -92,7 +92,7 @@ class SpannerDialectTableExporter implements Exporter<Table> {
 				)
 		);
 
-		return statements.toArray( new String[0] );
+		return statements.toArray(EMPTY_STRING_ARRAY);
 	}
 
 	@Override
@@ -105,8 +105,8 @@ class SpannerDialectTableExporter implements Exporter<Table> {
 
 		ArrayList<String> dropStrings = new ArrayList<>();
 
-		for (Iterator<Index> index = table.getIndexIterator(); index.hasNext();) {
-			dropStrings.add( "drop index " + index.next().getName() );
+		for ( Index index : table.getIndexes().values() ) {
+			dropStrings.add( "drop index " + index.getName() );
 		}
 
 		dropStrings.add( this.spannerDialect.getDropTableString( context.format( table.getQualifiedTableName() ) ) );

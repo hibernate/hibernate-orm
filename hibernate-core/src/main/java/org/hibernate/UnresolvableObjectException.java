@@ -1,12 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
-import org.hibernate.pretty.MessageHelper;
+import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
  * Thrown when Hibernate could not resolve an object by id, especially when
@@ -19,7 +17,8 @@ public class UnresolvableObjectException extends HibernateException {
 	private final String entityName;
 
 	/**
-	 * Constructs an UnresolvableObjectException using the specified information.
+	 * Constructs an {@code UnresolvableObjectException} using the specified information.
+	 *
 	 *  @param identifier The identifier of the entity which could not be resolved
 	 * @param entityName The name of the entity which could not be resolved
 	 */
@@ -34,7 +33,7 @@ public class UnresolvableObjectException extends HibernateException {
 	}
 
 	/**
-	 * Factory method for building and throwing an UnresolvableObjectException if the entity is null.
+	 * Factory method for building and throwing an {@code UnresolvableObjectException} if the entity is null.
 	 *
 	 * @param entity The entity to check for nullness
 	 * @param identifier The identifier of the entity
@@ -59,7 +58,7 @@ public class UnresolvableObjectException extends HibernateException {
 
 	@Override
 	public String getMessage() {
-		return super.getMessage() + ": " + MessageHelper.infoString( entityName, identifier );
+		return super.getMessage() + ": " + infoString( entityName, identifier );
 	}
 
 }

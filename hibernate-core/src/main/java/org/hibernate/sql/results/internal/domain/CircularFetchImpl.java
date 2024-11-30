@@ -1,166 +1,85 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.internal.domain;
 
 import java.util.function.BiConsumer;
 
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.mapping.IndexedConsumer;
-import org.hibernate.metamodel.mapping.Association;
-import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.EntityValuedModelPart;
-import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
-import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
-import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.BiDirectionalFetch;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.FetchParentAccess;
-import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerData;
+import org.hibernate.sql.results.graph.basic.BasicFetch;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
-import org.hibernate.sql.results.graph.entity.internal.BatchEntitySelectFetchInitializer;
+import org.hibernate.sql.results.graph.entity.internal.AbstractNonJoinedEntityFetch;
 import org.hibernate.sql.results.graph.entity.internal.EntityDelayedFetchInitializer;
-import org.hibernate.sql.results.graph.entity.internal.EntitySelectFetchByUniqueKeyInitializer;
-import org.hibernate.sql.results.graph.entity.internal.EntitySelectFetchInitializer;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
+import org.hibernate.sql.results.graph.entity.internal.EntitySelectFetchInitializerBuilder;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Andrea Boriero
  */
-public class CircularFetchImpl implements BiDirectionalFetch, Association {
-	private final DomainResult<?> keyResult;
-	private final EntityValuedModelPart referencedModelPart;
-	private final EntityMappingType entityMappingType;
+public class CircularFetchImpl extends AbstractNonJoinedEntityFetch implements BiDirectionalFetch {
 	private final FetchTiming timing;
-	private final NavigablePath navigablePath;
-	private final ToOneAttributeMapping fetchable;
-	private final boolean selectByUniqueKey;
-
-	private final FetchParent fetchParent;
 	private final NavigablePath referencedNavigablePath;
 
 	public CircularFetchImpl(
-			EntityValuedModelPart referencedModelPart,
-			EntityMappingType entityMappingType,
+			ToOneAttributeMapping referencedModelPart,
 			FetchTiming timing,
 			NavigablePath navigablePath,
 			FetchParent fetchParent,
-			ToOneAttributeMapping fetchable,
 			boolean selectByUniqueKey,
 			NavigablePath referencedNavigablePath,
-			DomainResult<?> keyResult) {
-		this.referencedModelPart = referencedModelPart;
-		this.entityMappingType = entityMappingType;
+			DomainResult<?> keyResult,
+			DomainResultCreationState creationState) {
+		super(
+				navigablePath,
+				referencedModelPart,
+				fetchParent,
+				keyResult,
+				timing == FetchTiming.DELAYED && referencedModelPart.getEntityMappingType()
+						.getEntityPersister()
+						.isConcreteProxy(),
+				selectByUniqueKey,
+				creationState
+		);
 		this.timing = timing;
-		this.fetchParent = fetchParent;
-		this.navigablePath = navigablePath;
-		this.selectByUniqueKey = selectByUniqueKey;
 		this.referencedNavigablePath = referencedNavigablePath;
-		this.fetchable = fetchable;
-		this.keyResult = keyResult;
-
 	}
 
-	@Override
-	public NavigablePath getNavigablePath() {
-		return navigablePath;
+	/**
+	 * Used from Hibernate Reactive
+	 */
+	@SuppressWarnings("unused")
+	protected CircularFetchImpl(CircularFetchImpl original) {
+		super(
+				original.getNavigablePath(),
+				original.getFetchedMapping(),
+				original.getFetchParent(),
+				original.getKeyResult(),
+				original.getDiscriminatorFetch(),
+				original.isSelectByUniqueKey()
+		);
+		this.timing = original.timing;
+		this.referencedNavigablePath = original.referencedNavigablePath;
 	}
 
 	@Override
 	public NavigablePath getReferencedPath() {
 		return referencedNavigablePath;
-	}
-
-	@Override
-	public FetchParent getFetchParent() {
-		return fetchParent;
-	}
-
-	@Override
-	public Fetchable getFetchedMapping() {
-		return fetchable;
-	}
-
-	@Override
-	public JavaType<?> getResultJavaType() {
-		return fetchable.getJavaType();
-	}
-
-	@Override
-	public DomainResultAssembler<?> createAssembler(
-			FetchParentAccess parentAccess,
-			AssemblerCreationState creationState) {
-		final DomainResultAssembler<?> keyAssembler = keyResult.createResultAssembler( parentAccess, creationState );
-
-		final EntityInitializer initializer = (EntityInitializer) creationState.resolveInitializer(
-				getNavigablePath(),
-				referencedModelPart,
-				() -> {
-					if ( timing == FetchTiming.IMMEDIATE ) {
-						if ( selectByUniqueKey ) {
-							return new EntitySelectFetchByUniqueKeyInitializer(
-									parentAccess,
-									fetchable,
-									getNavigablePath(),
-									entityMappingType.getEntityPersister(),
-									keyAssembler
-							);
-						}
-						final EntityPersister entityPersister = entityMappingType.getEntityPersister();
-						if ( entityPersister.isBatchLoadable() ) {
-							return new BatchEntitySelectFetchInitializer(
-									parentAccess,
-									(ToOneAttributeMapping) referencedModelPart,
-									getReferencedPath(),
-									entityPersister,
-									keyAssembler
-							);
-						}
-						else {
-							return new EntitySelectFetchInitializer(
-									parentAccess,
-									(ToOneAttributeMapping) referencedModelPart,
-									getReferencedPath(),
-									entityPersister,
-									keyAssembler
-							);
-						}
-					}
-					else {
-						return new EntityDelayedFetchInitializer(
-								parentAccess,
-								getReferencedPath(),
-								fetchable,
-								selectByUniqueKey,
-								keyAssembler
-						);
-					}
-				}
-		);
-
-		return new BiDirectionalFetchAssembler(
-				initializer,
-				fetchable.getJavaType()
-		);
 	}
 
 	@Override
@@ -174,131 +93,119 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 	}
 
 	@Override
-	public String getFetchableName() {
-		return fetchable.getFetchableName();
+	public DomainResultAssembler<?> createAssembler(
+			InitializerParent<?> parent,
+			AssemblerCreationState creationState) {
+		return new CircularFetchAssembler(
+				getResultJavaType(),
+				creationState.resolveInitializer( this, parent, this ).asEntityInitializer()
+		);
 	}
 
 	@Override
-	public FetchOptions getMappedFetchOptions() {
-		throw new UnsupportedOperationException();
+	public EntityInitializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {
+		if ( timing == FetchTiming.IMMEDIATE ) {
+			return buildEntitySelectFetchInitializer(
+					parent,
+					getFetchedMapping(),
+					getFetchedMapping().getEntityMappingType().getEntityPersister(),
+					getKeyResult(),
+					getNavigablePath(),
+					isSelectByUniqueKey(),
+					creationState
+			);
+		}
+		else {
+			return buildEntityDelayedFetchInitializer(
+					parent,
+					getNavigablePath(),
+					getFetchedMapping(),
+					isSelectByUniqueKey(),
+					getKeyResult(),
+					getDiscriminatorFetch(),
+					creationState
+			);
+		}
 	}
 
-	@Override
-	public String getPartName() {
-		return fetchable.getFetchableName();
-	}
-
-	@Override
-	public NavigableRole getNavigableRole() {
-		return fetchable.getNavigableRole();
-	}
-
-	@Override
-	public <T> DomainResult<T> createDomainResult(
+	protected EntityInitializer<?> buildEntitySelectFetchInitializer(
+			InitializerParent<?> parent,
+			ToOneAttributeMapping fetchable,
+			EntityPersister entityPersister,
+			DomainResult<?> keyResult,
 			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
-		return fetchable.createDomainResult( navigablePath, tableGroup,resultVariable, creationState );
+			boolean selectByUniqueKey,
+			AssemblerCreationState creationState) {
+		return EntitySelectFetchInitializerBuilder.createInitializer(
+				parent,
+				fetchable,
+				entityPersister,
+				keyResult,
+				navigablePath,
+				selectByUniqueKey,
+				false,
+				creationState
+		);
 	}
 
-	@Override
-	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState) {
-		fetchable.applySqlSelections( navigablePath, tableGroup, creationState );
+	protected EntityInitializer<?> buildEntityDelayedFetchInitializer(
+			InitializerParent<?> parent,
+			NavigablePath referencedPath,
+			ToOneAttributeMapping fetchable,
+			boolean selectByUniqueKey,
+			DomainResult<?> keyResult,
+			BasicFetch<?> discriminatorFetch,
+			AssemblerCreationState creationState) {
+		return new EntityDelayedFetchInitializer(
+				parent,
+				referencedPath,
+				fetchable,
+				selectByUniqueKey,
+				keyResult,
+				discriminatorFetch,
+				creationState
+		);
 	}
 
-	@Override
-	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState,
-			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
-		fetchable.applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
-	}
+	private static class CircularFetchAssembler implements DomainResultAssembler<Object> {
+		private final EntityInitializer<InitializerData> initializer;
+		private final JavaType<Object> assembledJavaType;
 
-	@Override
-	public EntityMappingType findContainingEntityMapping() {
-		return fetchable.findContainingEntityMapping();
-	}
-
-	@Override
-	public MappingType getPartMappingType() {
-		return fetchable.getPartMappingType();
-	}
-
-	@Override
-	public JavaType<?> getJavaType() {
-		return fetchable.getJavaType();
-	}
-
-	@Override
-	public ForeignKeyDescriptor getForeignKeyDescriptor() {
-		return ( (Association) fetchParent ).getForeignKeyDescriptor();
-	}
-
-	@Override
-	public ForeignKeyDescriptor.Nature getSideNature() {
-		return ( (Association) fetchParent ).getSideNature();
-	}
-
-	@Override
-	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		fetchable.breakDownJdbcValues( domainValue, valueConsumer, session );
-	}
-
-	@Override
-	public Fetch generateFetch(
-			FetchParent fetchParent,
-			NavigablePath fetchablePath,
-			FetchTiming fetchTiming,
-			boolean selected,
-			String resultVariable,
-			DomainResultCreationState creationState) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public int forEachDisassembledJdbcValue(
-			Object value,
-			Clause clause,
-			int offset,
-			JdbcValuesConsumer valuesConsumer,
-			SharedSessionContractImplementor session) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
-		throw new UnsupportedOperationException();
-	}
-
-	private static class BiDirectionalFetchAssembler implements DomainResultAssembler {
-		private EntityInitializer initializer;
-		private JavaType assembledJavaType;
-
-		public BiDirectionalFetchAssembler(
-				EntityInitializer initializer,
-				JavaType assembledJavaType) {
-			this.initializer = initializer;
-			this.assembledJavaType = assembledJavaType;
+		public CircularFetchAssembler(JavaType<?> assembledJavaType, EntityInitializer<?> initializer) {
+			//noinspection unchecked
+			this.assembledJavaType = (JavaType<Object>) assembledJavaType;
+			this.initializer = (EntityInitializer<InitializerData>) initializer;
 		}
 
 		@Override
-		public Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
-			initializer.resolveInstance( rowProcessingState );
-			return initializer.getInitializedInstance();
+		public Object assemble(RowProcessingState rowProcessingState) {
+			final InitializerData data = initializer.getData( rowProcessingState );
+			final Initializer.State state = data.getState();
+			if ( state == Initializer.State.KEY_RESOLVED ) {
+				initializer.resolveInstance( data );
+			}
+			return initializer.getResolvedInstance( data );
 		}
 
 		@Override
-		public JavaType getAssembledJavaType() {
+		public void resolveState(RowProcessingState rowProcessingState) {
+			initializer.resolveState( rowProcessingState );
+		}
+
+		@Override
+		public @Nullable Initializer<?> getInitializer() {
+			return initializer;
+		}
+
+		@Override
+		public <X> void forEachResultAssembler(BiConsumer<Initializer<?>, X> consumer, X arg) {
+			if ( initializer.isResultInitializer() ) {
+				consumer.accept( initializer, arg );
+			}
+		}
+
+		@Override
+		public JavaType<Object> getAssembledJavaType() {
 			return assembledJavaType;
 		}
 	}

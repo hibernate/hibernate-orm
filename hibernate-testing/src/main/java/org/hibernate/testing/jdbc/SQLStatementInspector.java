@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.jdbc;
 
@@ -18,6 +16,8 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+
+import org.assertj.core.api.Assertions;
 
 /**
  * @author Andrea Boriero
@@ -91,8 +91,12 @@ public class SQLStatementInspector implements StatementInspector {
 	}
 
 	public void assertNumberOfOccurrenceInQuery(int queryNumber, String toCheck, int expectedNumberOfOccurrences) {
+		assertNumberOfOccurrenceInQueryNoSpace( queryNumber, " " + toCheck + " ", expectedNumberOfOccurrences );
+	}
+
+	public void assertNumberOfOccurrenceInQueryNoSpace(int queryNumber, String toCheck, int expectedNumberOfOccurrences) {
 		String query = sqlQueries.get( queryNumber );
-		int actual = query.split( " " + toCheck + " ", -1 ).length - 1;
+		int actual = query.split( toCheck, -1 ).length - 1;
 		assertThat( "number of " + toCheck, actual, is( expectedNumberOfOccurrences ) );
 	}
 
@@ -109,6 +113,18 @@ public class SQLStatementInspector implements StatementInspector {
 	public void assertIsUpdate(int queryNumber) {
 		String query = sqlQueries.get( queryNumber );
 		assertTrue( query.toLowerCase( Locale.ROOT ).startsWith( "update" ) );
+	}
+
+	public void assertNoUpdate() {
+		Assertions.assertThat( sqlQueries )
+				.isNotEmpty()
+				.allSatisfy( sql -> Assertions.assertThat( sql.toLowerCase( Locale.ROOT ) ).doesNotStartWith( "update" ) );
+	}
+
+	public void assertUpdate() {
+		Assertions.assertThat( sqlQueries )
+				.isNotEmpty()
+				.anySatisfy( sql -> Assertions.assertThat( sql.toLowerCase( Locale.ROOT ) ).startsWith( "update" ) );
 	}
 
 	public static SQLStatementInspector extractFromSession(SessionImplementor session) {

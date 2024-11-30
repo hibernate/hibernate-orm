@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
@@ -25,6 +23,11 @@ public class CurrencyJavaType extends AbstractClassJavaType<Currency> {
 	}
 
 	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
+	@Override
 	public String toString(Currency value) {
 		return value.getCurrencyCode();
 	}
@@ -39,6 +42,9 @@ public class CurrencyJavaType extends AbstractClassJavaType<Currency> {
 		if ( value == null ) {
 			return null;
 		}
+		if ( Currency.class.isAssignableFrom( type ) ) {
+			return (X) value;
+		}
 		if ( String.class.isAssignableFrom( type ) ) {
 			return (X) value.getCurrencyCode();
 		}
@@ -50,8 +56,11 @@ public class CurrencyJavaType extends AbstractClassJavaType<Currency> {
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof String) {
-			return Currency.getInstance( (String) value );
+		if ( value instanceof Currency currency ) {
+			return currency;
+		}
+		if (value instanceof String string) {
+			return Currency.getInstance( string );
 		}
 		throw unknownWrap( value.getClass() );
 	}

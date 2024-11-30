@@ -1,15 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.type;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
 import java.sql.Blob;
@@ -29,27 +27,32 @@ import jakarta.persistence.Lob;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.dialect.SybaseDialect;
 
-@TestForIssue(jiraKey = "HHH-12555")
-@RequiresDialectFeature(DialectChecks.SupportsExpectedLobUsagePattern.class)
-@RunWith(BytecodeEnhancerRunner.class)
-public class LobUnfetchedPropertyTest extends BaseCoreFunctionalTestCase {
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.Test;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[]{ FileBlob.class, FileClob.class, FileNClob.class };
-	}
+@JiraKey("HHH-12555")
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExpectedLobUsagePattern.class)
+@DomainModel(
+		annotatedClasses = {
+			LobUnfetchedPropertyTest.FileBlob.class, LobUnfetchedPropertyTest.FileClob.class, LobUnfetchedPropertyTest.FileNClob.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class LobUnfetchedPropertyTest {
 
 	@Test
-	public void testBlob() throws SQLException {
-		final int id = doInHibernate( this::sessionFactory, s -> {
+	public void testBlob(SessionFactoryScope scope) throws SQLException {
+		final int id = scope.fromTransaction( s -> {
 			FileBlob file = new FileBlob();
 			file.setBlob( s.getLobHelper().createBlob( "TEST CASE".getBytes() ) );
 			// merge transient entity
@@ -57,7 +60,7 @@ public class LobUnfetchedPropertyTest extends BaseCoreFunctionalTestCase {
 			return file.getId();
 		} );
 
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			FileBlob file = s.get( FileBlob.class, id );
 			assertFalse( Hibernate.isPropertyInitialized( file, "blob" ) );
 			Blob blob = file.getBlob();
@@ -73,8 +76,8 @@ public class LobUnfetchedPropertyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testClob() {
-		final int id = doInHibernate( this::sessionFactory, s -> {
+	public void testClob(SessionFactoryScope scope) throws SQLException {
+		final int id = scope.fromTransaction( s -> {
 			FileClob file = new FileClob();
 			file.setClob( s.getLobHelper().createClob( "TEST CASE" ) );
 			// merge transient entity
@@ -82,14 +85,14 @@ public class LobUnfetchedPropertyTest extends BaseCoreFunctionalTestCase {
 			return file.getId();
 		} );
 
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			FileClob file = s.get( FileClob.class, id );
 			assertFalse( Hibernate.isPropertyInitialized( file, "clob" ) );
 			Clob clob = file.getClob();
 			try {
 				final char[] chars = new char[(int) file.getClob().length()];
 				clob.getCharacterStream().read( chars );
-				assertTrue( Arrays.equals( "TEST CASE".toCharArray(), chars ) );
+				assertArrayEquals( "TEST CASE".toCharArray(), chars );
 			}
 			catch (SQLException ex ) {
 				fail( "could not determine Lob length" );
@@ -101,9 +104,12 @@ public class LobUnfetchedPropertyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialectFeature(DialectChecks.SupportsNClob.class)
-	public void testNClob() {
-		final int id = doInHibernate( this::sessionFactory, s -> {
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNClob.class)
+	@SkipForDialect(
+			dialectClass = SybaseDialect.class, matchSubTypes = true,
+			reason = "jConnect does not support Connection#createNClob which is ultimately used by LobHelper#createNClob" )
+	public void testNClob(SessionFactoryScope scope) {
+		final int id = scope.fromTransaction( s -> {
 			FileNClob file = new FileNClob();
 			file.setClob( s.getLobHelper().createNClob( "TEST CASE" ) );
 			// merge transient entity
@@ -111,27 +117,27 @@ public class LobUnfetchedPropertyTest extends BaseCoreFunctionalTestCase {
 			return file.getId();
 		});
 
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			FileNClob file = s.get( FileNClob.class, id );
 			assertFalse( Hibernate.isPropertyInitialized( file, "clob" ) );
 			NClob nClob = file.getClob();
 			assertTrue( Hibernate.isPropertyInitialized( file, "clob" ) );
 			try {
-			   final char[] chars = new char[(int) file.getClob().length()];
-			   nClob.getCharacterStream().read( chars );
-			   assertTrue( Arrays.equals( "TEST CASE".toCharArray(), chars ) );
+			final char[] chars = new char[(int) file.getClob().length()];
+			nClob.getCharacterStream().read( chars );
+				assertArrayEquals( "TEST CASE".toCharArray(), chars );
 			}
 			catch (SQLException ex ) {
-			   fail( "could not determine Lob length" );
+			fail( "could not determine Lob length" );
 			}
 			catch (IOException ex) {
-			   fail( "could not read Lob" );
+			fail( "could not read Lob" );
 			}
 		});
 	}
 
 	@Entity(name = "FileBlob")
-	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, include = "non-lazy")
+	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, includeLazy = false)
 	public static class FileBlob {
 
 		private int id;
@@ -161,7 +167,7 @@ public class LobUnfetchedPropertyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity(name = "FileClob")
-	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, include = "non-lazy")
+	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, includeLazy = false)
 	public static class FileClob {
 
 		private int id;
@@ -191,7 +197,7 @@ public class LobUnfetchedPropertyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity(name = "FileNClob")
-	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, include = "non-lazy")
+	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, includeLazy = false)
 	public static class FileNClob {
 
 		private int id;
@@ -216,6 +222,36 @@ public class LobUnfetchedPropertyTest extends BaseCoreFunctionalTestCase {
 		}
 
 		public void setClob(NClob clob) {
+			this.clob = clob;
+		}
+	}
+
+	@Entity(name = "FileNClob2")
+	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, includeLazy = false)
+	public static class FileNClob2 {
+
+		private int id;
+
+		private String clob;
+
+		@Id
+		@GeneratedValue
+		public int getId() {
+			return id;
+		}
+
+		public void setId(int id) {
+			this.id = id;
+		}
+
+		@Column(name = "filedata", length = 1024 * 1024)
+		@Lob
+		@Basic(fetch = FetchType.LAZY)
+		public String getClob() {
+			return clob;
+		}
+
+		public void setClob(String clob) {
 			this.clob = clob;
 		}
 	}

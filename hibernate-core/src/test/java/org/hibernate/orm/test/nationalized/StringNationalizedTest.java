@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.nationalized;
 
@@ -17,7 +15,7 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.RequiresDialects;
@@ -32,11 +30,11 @@ import static org.hamcrest.core.Is.is;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "10495")
+@JiraKey(value = "10495")
 @RequiresDialects(
 		value = {
-				@RequiresDialect(value = OracleDialect.class, majorVersion = 10),
-				@RequiresDialect(value = PostgreSQLDialect.class, majorVersion = 8, minorVersion = 1)
+				@RequiresDialect(value = OracleDialect.class),
+				@RequiresDialect(value = PostgreSQLDialect.class)
 		})
 @DomainModel(
 		annotatedClasses = StringNationalizedTest.NationalizedEntity.class
@@ -48,7 +46,7 @@ public class StringNationalizedTest {
 	public void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "delete from NationalizedEntity" ).executeUpdate();
+					session.createQuery( "delete from NationalizedEntity", null ).executeUpdate();
 				}
 		);
 	}
@@ -59,13 +57,13 @@ public class StringNationalizedTest {
 				session -> {
 					NationalizedEntity ne = new NationalizedEntity();
 					ne.name = "Hello";
-					session.save( ne );
+					session.persist( ne );
 				}
 		);
 
 		scope.inSession(
 				session -> {
-					final Query query = session.createQuery( "from NationalizedEntity where name = :name" );
+					final Query query = session.createQuery( "from NationalizedEntity where name = :name", null );
 					query.setParameter( "name", "Hello" );
 					final List list = query.list();
 					assertThat( list.size(), is( 1 ) );

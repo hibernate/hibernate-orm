@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.hbm2ddl;
 
+import java.lang.invoke.MethodHandles;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
@@ -25,7 +24,7 @@ import org.jboss.logging.Logger;
  */
 @Deprecated
 class DatabaseExporter implements Exporter {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, DatabaseExporter.class.getName() );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, DatabaseExporter.class.getName() );
 
 	private final ConnectionHelper connectionHelper;
 	private final SqlExceptionHelper sqlExceptionHelper;

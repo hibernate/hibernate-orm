@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.transaction.spi;
 
@@ -22,7 +20,7 @@ import org.hibernate.tool.schema.internal.exec.JdbcContext;
  */
 public interface TransactionCoordinatorBuilder extends Service {
 	/**
-	 * Access to options to are specific to each TransactionCoordinator instance
+	 * Access to options to are specific to each {@link TransactionCoordinator} instance.
 	 */
 	interface Options {
 		/**
@@ -42,6 +40,8 @@ public interface TransactionCoordinatorBuilder extends Service {
 	PhysicalConnectionHandlingMode getDefaultConnectionHandlingMode();
 
 	default DdlTransactionIsolator buildDdlTransactionIsolator(JdbcContext jdbcContext) {
-		return isJta() ? new DdlTransactionIsolatorJtaImpl( jdbcContext ) : new DdlTransactionIsolatorNonJtaImpl( jdbcContext );
+		return isJta()
+				? new DdlTransactionIsolatorJtaImpl( jdbcContext )
+				: new DdlTransactionIsolatorNonJtaImpl( jdbcContext );
 	}
 }

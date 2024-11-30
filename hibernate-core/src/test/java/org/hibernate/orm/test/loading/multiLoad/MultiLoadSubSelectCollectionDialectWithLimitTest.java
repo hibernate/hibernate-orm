@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.loading.multiLoad;
 
 import java.util.ArrayList;
@@ -10,10 +14,12 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -34,6 +40,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 import static jakarta.persistence.GenerationType.AUTO;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -45,8 +52,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ServiceRegistry(
 		settingProviders = @SettingProvider( provider = MultiLoadSubSelectCollectionDialectWithLimitTest.TestSettingProvider.class, settingName = AvailableSettings.DIALECT)
 )
-@SessionFactory(generateStatistics = true)
-@RequiresDialect( H2Dialect.class )
+@SessionFactory(generateStatistics = true, useCollectingStatementInspector = true)
+@RequiresDialect( value = H2Dialect.class )
 public class MultiLoadSubSelectCollectionDialectWithLimitTest {
 
 
@@ -102,39 +109,59 @@ public class MultiLoadSubSelectCollectionDialectWithLimitTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12740")
+	@JiraKey(value = "HHH-12740")
 	public void testSubselect(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final Dialect dialect = scope.getSessionFactory().getFastSessionServices().jdbcServices.getDialect();
+		statementInspector.clear();
+
 		scope.inTransaction(
 				session -> {
 					List<Parent> list = session.byMultipleIds( Parent.class ).multiLoad( ids( 56 ) );
 					assertEquals( 56, list.size() );
 
 					// None of the collections should be loaded yet
+					if ( dialect.useArrayForMultiValuedParameters() ) {
+						assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+					}
+					else {
+						assertThat( statementInspector.getSqlQueries() ).hasSize( 2 );
+					}
 					for ( Parent p : list ) {
 						assertFalse( Hibernate.isInitialized( p.children ) );
 					}
 
-					// When the first collection is loaded, the full batch of 50 collections
-					// should be loaded.
+					statementInspector.clear();
+
+					// When the first collection is loaded multiple will be initialized
 					Hibernate.initialize( list.get( 0 ).children );
 
-					for ( int i = 0; i < 50; i++ ) {
-						assertTrue( Hibernate.isInitialized( list.get( i ).children ) );
-						assertEquals( i + 1, list.get( i ).children.size() );
+					// exactly how depends on whether the Dialect supports use of SQL ARRAY
+					if ( dialect.useArrayForMultiValuedParameters() ) {
+						assertThat( Hibernate.isInitialized( list.get( 0 ).children ) ).isTrue();
+						assertThat( Hibernate.isInitialized( list.get( 50 ).children ) ).isTrue();
+						assertThat( Hibernate.isInitialized( list.get( 52 ).children ) ).isTrue();
+						assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
 					}
+					else {
+						for ( int i = 0; i < 50; i++ ) {
+							assertTrue( Hibernate.isInitialized( list.get( i ).children ) );
+							assertEquals( i + 1, list.get( i ).children.size() );
+						}
 
-					// The collections for the 51st through 56th entities should still be uninitialized
-					for ( int i = 50; i < 56; i++ ) {
-						assertFalse( Hibernate.isInitialized( list.get( i ).children ) );
-					}
+						// The collections for the 51st through 56th entities should still be uninitialized
+						for ( int i = 50; i < 56; i++ ) {
+							assertFalse( Hibernate.isInitialized( list.get( i ).children ) );
+						}
 
-					// When the 51st collection gets initialized, the remaining collections should
-					// also be initialized.
-					Hibernate.initialize( list.get( 50 ).children );
+						// When the 51st collection gets initialized, the remaining collections should
+						// also be initialized.
+						Hibernate.initialize( list.get( 50 ).children );
 
-					for ( int i = 50; i < 56; i++ ) {
-						assertTrue( Hibernate.isInitialized( list.get( i ).children ) );
-						assertEquals( i + 1, list.get( i ).children.size() );
+						for ( int i = 50; i < 56; i++ ) {
+							assertTrue( Hibernate.isInitialized( list.get( i ).children ) );
+							assertEquals( i + 1, list.get( i ).children.size() );
+						}
 					}
 				}
 		);

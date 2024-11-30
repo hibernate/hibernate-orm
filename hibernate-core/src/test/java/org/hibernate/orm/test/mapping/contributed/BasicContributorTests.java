@@ -1,29 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.contributed;
 
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
-import org.hibernate.boot.jaxb.Origin;
-import org.hibernate.boot.jaxb.SourceType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
-import org.hibernate.boot.jaxb.internal.MappingBinder;
-import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.spi.AdditionalJaxbMappingProducer;
-import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.spi.AdditionalMappingContributor;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
@@ -32,7 +16,6 @@ import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.SchemaDropperImpl;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
-import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.ScriptSourceInput;
 import org.hibernate.tool.schema.spi.SourceDescriptor;
@@ -47,8 +30,6 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.junit.jupiter.api.Test;
 
-import org.jboss.jandex.IndexView;
-
 import org.hamcrest.Matchers;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -58,9 +39,9 @@ import static org.hamcrest.Matchers.not;
  * @author Steve Ebersole
  */
 @BootstrapServiceRegistry(
-		javaServices = @JavaService( role = AdditionalJaxbMappingProducer.class, impl = BasicContributorTests.Contributor.class )
+		javaServices = @JavaService( role = AdditionalMappingContributor.class, impl = ContributorImpl.class )
 )
-@DomainModel( annotatedClasses = BasicContributorTests.MainEntity.class )
+@DomainModel( annotatedClasses = MainEntity.class )
 public class BasicContributorTests {
 
 	@Test
@@ -88,11 +69,6 @@ public class BasicContributorTests {
 			@Override
 			public ExceptionHandler getExceptionHandler() {
 				return Throwable::printStackTrace;
-			}
-
-			@Override
-			public SchemaFilter getSchemaFilter() {
-				return SchemaFilter.ALL;
 			}
 		};
 
@@ -171,14 +147,21 @@ public class BasicContributorTests {
 		assertThat(
 				targetDescriptor.getCommands(),
 				CollectionElementMatcher.hasAllOf(
-						CaseInsensitiveStartsWithMatcher.startsWith( "drop table main_table" ),
-						CaseInsensitiveStartsWithMatcher.startsWith( "drop table DynamicEntity" )
+						CaseInsensitiveStartsWithMatcher.startsWith( "drop table if exists main_table" ),
+						CaseInsensitiveStartsWithMatcher.startsWith( "drop table if exists DynamicEntity" )
 				)
 		);
 
 		// filter by `orm`
 		targetDescriptor.clear();
-		schemaDropper.doDrop( metadata, options, contributed -> "orm".equals( contributed.getContributor() ), dialect, sourceDescriptor, targetDescriptor );
+		schemaDropper.doDrop(
+				metadata,
+				options,
+				contributed -> "orm".equals( contributed.getContributor() ),
+				dialect,
+				sourceDescriptor,
+				targetDescriptor
+		);
 		assertThat(
 				targetDescriptor.getCommands(),
 				CollectionElementMatcher.hasAllOf( not( CaseInsensitiveStartsWithMatcher.startsWith( "drop table DynamicEntity" ) ) )
@@ -194,67 +177,4 @@ public class BasicContributorTests {
 
 	}
 
-	@Entity( name = "MainEntity" )
-	 @Table( name = "main_table" )
-	static class MainEntity {
-		@Id
-		private Integer id;
-		String name;
-
-		private MainEntity() {
-		}
-
-		public MainEntity(Integer id, String name) {
-			this.id = id;
-			this.name = name;
-		}
-
-		public Integer getId() {
-			return id;
-		}
-
-		public void setId(Integer id) {
-			this.id = id;
-		}
-
-		public String getName() {
-			return name;
-		}
-
-		public void setName(String name) {
-			this.name = name;
-		}
-	}
-
-	public static class Contributor implements AdditionalJaxbMappingProducer {
-		public Contributor() {
-		}
-
-		@Override
-		public Collection<MappingDocument> produceAdditionalMappings(
-				MetadataImplementor metadata,
-				IndexView jandexIndex,
-				MappingBinder mappingBinder,
-				MetadataBuildingContext buildingContext) {
-			return Collections.singletonList( createMappingDocument( mappingBinder, buildingContext ) );
-		}
-
-		private MappingDocument createMappingDocument(MappingBinder mappingBinder, MetadataBuildingContext buildingContext) {
-			final Origin origin = new Origin( SourceType.OTHER, "test" );
-
-			final ClassLoaderService classLoaderService = buildingContext.getBootstrapContext()
-					.getServiceRegistry()
-					.getService( ClassLoaderService.class );
-			final InputStream inputStream = classLoaderService.locateResourceStream( "org/hibernate/orm/test/mapping/contributed/BasicContributorTests.hbm.xml" );
-			final Binding<JaxbHbmHibernateMapping> jaxbBinding = mappingBinder.bind( inputStream, origin );
-			final JaxbHbmHibernateMapping jaxbRoot = jaxbBinding.getRoot();
-
-			return new MappingDocument(
-					"test",
-					jaxbRoot,
-					origin,
-					buildingContext
-			);
-		}
-	}
 }

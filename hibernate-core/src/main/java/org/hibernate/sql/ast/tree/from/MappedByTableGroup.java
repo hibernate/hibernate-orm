@@ -1,18 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.from;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.ModelPartContainer;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.spi.NavigablePath;
 
 /**
@@ -21,29 +19,34 @@ import org.hibernate.spi.NavigablePath;
 public class MappedByTableGroup extends DelegatingTableGroup implements VirtualTableGroup {
 
 	private final NavigablePath navigablePath;
-	private final ModelPartContainer modelPart;
+	private final TableGroupProducer producer;
 	private final TableGroup underlyingTableGroup;
 	private final boolean fetched;
 	private final TableGroup parentTableGroup;
-	private final BiPredicate<NavigablePath, String> navigablePathChecker;
+	private final LazyTableGroup.ParentTableGroupUseChecker parentTableGroupUseChecker;
 
 	public MappedByTableGroup(
 			NavigablePath navigablePath,
-			ModelPartContainer modelPart,
+			TableGroupProducer producer,
 			TableGroup underlyingTableGroup,
 			boolean fetched,
 			TableGroup parentTableGroup,
-			BiPredicate<NavigablePath, String> navigablePathChecker) {
+			LazyTableGroup.ParentTableGroupUseChecker parentTableGroupUseChecker) {
 		this.navigablePath = navigablePath;
-		this.modelPart = modelPart;
+		this.producer = producer;
 		this.underlyingTableGroup = underlyingTableGroup;
 		this.fetched = fetched;
 		this.parentTableGroup = parentTableGroup;
-		this.navigablePathChecker = navigablePathChecker;
+		this.parentTableGroupUseChecker = parentTableGroupUseChecker;
 	}
 
 	@Override
 	protected TableGroup getTableGroup() {
+		return underlyingTableGroup;
+	}
+
+	@Override
+	public TableGroup getUnderlyingTableGroup() {
 		return underlyingTableGroup;
 	}
 
@@ -70,7 +73,7 @@ public class MappedByTableGroup extends DelegatingTableGroup implements VirtualT
 
 	@Override
 	public ModelPartContainer getModelPart() {
-		return modelPart;
+		return producer;
 	}
 
 	// Don't provide access to table group joins as this is table group is just a "named reference"
@@ -114,12 +117,39 @@ public class MappedByTableGroup extends DelegatingTableGroup implements VirtualT
 	@Override
 	public TableReference resolveTableReference(
 			NavigablePath navigablePath,
-			String tableExpression,
-			boolean allowFkOptimization) {
+			String tableExpression) {
 		final TableReference tableReference = getTableReference(
 				navigablePath,
 				tableExpression,
-				allowFkOptimization,
+				true
+		);
+
+		if ( tableReference == null ) {
+			throw new UnknownTableReferenceException(
+					tableExpression,
+					String.format(
+							Locale.ROOT,
+							"Unable to determine TableReference (`%s`) for `%s`",
+							tableExpression,
+							navigablePath
+					)
+			);
+		}
+
+		return tableReference;
+	}
+
+	@Override
+	public TableReference resolveTableReference(
+			NavigablePath navigablePath,
+			ValuedModelPart modelPart,
+			String tableExpression) {
+		assert modelPart != null;
+
+		final TableReference tableReference = getTableReference(
+				navigablePath,
+				modelPart,
+				tableExpression,
 				true
 		);
 
@@ -142,25 +172,31 @@ public class MappedByTableGroup extends DelegatingTableGroup implements VirtualT
 	public TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization,
 			boolean resolve) {
-		if ( allowFkOptimization && ( navigablePath == null || navigablePathChecker.test( navigablePath, tableExpression ) ) ) {
+		return getTableGroup().getTableReference(
+				navigablePath,
+				tableExpression,
+				resolve
+		);
+	}
+
+	@Override
+	public TableReference getTableReference(
+			NavigablePath navigablePath,
+			ValuedModelPart modelPart,
+			String tableExpression,
+			boolean resolve) {
+		if ( parentTableGroupUseChecker.canUseParentTableGroup( producer, navigablePath, modelPart ) ) {
 			final TableReference reference = parentTableGroup.getTableReference(
 					navigablePath,
+					(ValuedModelPart) producer,
 					tableExpression,
-					allowFkOptimization,
 					resolve
 			);
 			if ( reference != null ) {
 				return reference;
 			}
 		}
-
-		return underlyingTableGroup.getTableReference(
-				navigablePath,
-				tableExpression,
-				allowFkOptimization,
-				resolve
-		);
+		return getTableGroup().getTableReference( navigablePath, modelPart, tableExpression, resolve );
 	}
 }

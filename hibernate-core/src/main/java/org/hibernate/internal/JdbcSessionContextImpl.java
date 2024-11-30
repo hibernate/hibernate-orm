@@ -1,19 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.resource.jdbc.spi.JdbcObserver;
+import org.hibernate.jpa.spi.JpaCompliance;
+import org.hibernate.resource.jdbc.spi.JdbcEventHandler;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
  * @author Steve Ebersole
@@ -22,22 +22,26 @@ public class JdbcSessionContextImpl implements JdbcSessionContext {
 	private final SessionFactoryImplementor sessionFactory;
 	private final StatementInspector statementInspector;
 	private final PhysicalConnectionHandlingMode connectionHandlingMode;
+	private final JdbcServices jdbcServices;
+	private final BatchBuilder batchBuilder;
 
-	private final transient ServiceRegistry serviceRegistry;
-	private final transient JdbcObserver jdbcObserver;
+	private final transient JdbcEventHandler jdbcEventHandler;
 
 	public JdbcSessionContextImpl(
-			SharedSessionContractImplementor session,
+			SessionFactoryImplementor sessionFactory,
 			StatementInspector statementInspector,
 			PhysicalConnectionHandlingMode connectionHandlingMode,
-			FastSessionServices fastSessionServices) {
-		this.sessionFactory = session.getFactory();
+			JdbcServices jdbcServices,
+			BatchBuilder batchBuilder,
+			JdbcEventHandler jdbcEventHandler) {
+		this.sessionFactory = sessionFactory;
 		this.statementInspector = statementInspector;
 		this.connectionHandlingMode = connectionHandlingMode;
-		this.serviceRegistry = sessionFactory.getServiceRegistry();
-		this.jdbcObserver = new JdbcObserverImpl( session, fastSessionServices );
+		this.jdbcServices = jdbcServices;
+		this.batchBuilder = batchBuilder;
+		this.jdbcEventHandler = jdbcEventHandler;
 
-		if ( this.statementInspector == null ) {
+		if ( statementInspector == null ) {
 			throw new IllegalArgumentException( "StatementInspector cannot be null" );
 		}
 	}
@@ -53,8 +57,23 @@ public class JdbcSessionContextImpl implements JdbcSessionContext {
 	}
 
 	@Override
-	public int getFetchSize() {
+	public Integer getFetchSizeOrNull() {
 		return settings().getJdbcFetchSize();
+	}
+
+	@Override
+	public JpaCompliance getJpaCompliance() {
+		return settings().getJpaCompliance();
+	}
+
+	@Override
+	public boolean isPreferUserTransaction() {
+		return settings().isPreferUserTransaction();
+	}
+
+	@Override
+	public boolean isJtaTrackByThread() {
+		return settings().isJtaTrackByThread();
 	}
 
 	@Override
@@ -73,21 +92,31 @@ public class JdbcSessionContextImpl implements JdbcSessionContext {
 	}
 
 	@Override
-	public JdbcObserver getObserver() {
-		return this.jdbcObserver;
-	}
-
-	@Override
-	public SessionFactoryImplementor getSessionFactory() {
-		return this.sessionFactory;
-	}
-
-	@Override
-	public ServiceRegistry getServiceRegistry() {
-		return this.serviceRegistry;
+	public JdbcEventHandler getEventHandler() {
+		return jdbcEventHandler;
 	}
 
 	private SessionFactoryOptions settings() {
-		return this.sessionFactory.getSessionFactoryOptions();
+		return sessionFactory.getSessionFactoryOptions();
+	}
+
+	@Override
+	public JdbcServices getJdbcServices() {
+		return jdbcServices;
+	}
+
+	@Override
+	public BatchBuilder getBatchBuilder() {
+		return batchBuilder;
+	}
+
+	@Override
+	public boolean isActive() {
+		return !sessionFactory.isClosed();
+	}
+
+	@Override
+	public StatisticsImplementor getStatistics() {
+		return sessionFactory.getStatistics();
 	}
 }

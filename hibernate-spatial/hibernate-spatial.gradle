@@ -7,7 +7,7 @@
 
 description = 'Integrate support for Spatial/GIS data into Hibernate O/RM'
 
-apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+apply from: rootProject.file( 'gradle/relocated-published-java-module.gradle' )
 apply plugin: 'org.hibernate.matrix-test'
 
 
@@ -35,21 +35,22 @@ dependencies {
 }
 
 sourceSets.test.resources {
-	setSrcDirs( ['src/test/java', 'src/test/resources'] )
+	setSrcDirs( ['src/test/resources'] )
 }
 
 tasks.test {
 
-	enabled = ['pgsql',
-			   'h2',
+	enabled = ['h2',
+			   'pgsql',
 			   'pgsql_ci',
 			   'cockroachdb',
 			   'mariadb',
+			   'mariadb_ci',
+			   'mysql',
 			   'mysql_ci',
-			   'mysql_docker',
-			   'oracle_docker',
+			   'oracle',
 			   'oracle_ci',
-			   'oracle_rds',
+			   'oracle_xe_ci',
 			   'mssql',
 			   'mssql_ci'
 	].contains( project.db )

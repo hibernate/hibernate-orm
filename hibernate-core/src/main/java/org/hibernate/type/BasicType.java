@@ -1,26 +1,21 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
 
-import java.util.Collections;
-import java.util.List;
-
 import org.hibernate.Incubating;
-import org.hibernate.cache.internal.CacheKeyValueDescriptor;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 
@@ -29,7 +24,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
  *
  * @author Steve Ebersole
  */
-public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, BasicValuedMapping, JdbcMapping, CacheKeyValueDescriptor {
+public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, BasicValuedMapping, JdbcMapping {
 	/**
 	 * Get the names under which this type should be registered in the type registry.
 	 *
@@ -69,8 +64,16 @@ public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, Bas
 	}
 
 	@Override
-	default List<JdbcMapping> getJdbcMappings() {
-		return Collections.singletonList( this );
+	default JdbcMapping getJdbcMapping(int index) {
+		if ( index != 0 ) {
+			throw new IndexOutOfBoundsException( index );
+		}
+		return this;
+	}
+
+	@Override
+	default JdbcMapping getSingleJdbcMapping() {
+		return this;
 	}
 
 	@Override
@@ -111,14 +114,47 @@ public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, Bas
 	}
 
 	@Override
-	default int forEachDisassembledJdbcValue(
+	default <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		valuesConsumer.consume( offset, value, getJdbcMapping() );
+		valuesConsumer.consume( offset, x, y, value, getJdbcMapping() );
 		return getJdbcTypeCount();
 	}
 
+	/**
+	 * The check constraint that should be added to the column
+	 * definition in generated DDL.
+	 *
+	 * @param columnName the name of the column
+	 * @param dialect the SQL {@link Dialect}
+	 * @return a check constraint condition or null
+	 * @since 6.2
+	 */
+	@Incubating
+	default String getCheckCondition(String columnName, Dialect dialect) {
+		String checkCondition = getJdbcType().getCheckCondition(
+				columnName,
+				getMappedJavaType(),
+				getValueConverter(),
+				dialect
+		);
+		if ( checkCondition == null ) {
+			checkCondition = getMappedJavaType().getCheckCondition(
+					columnName,
+					getJdbcType(),
+					getValueConverter(),
+					dialect
+			);
+		}
+		return checkCondition;
+	}
+
+	@Override
+	default int compare(Object x, Object y, SessionFactoryImplementor sessionFactory) {
+		return compare( x, y );
+	}
 }

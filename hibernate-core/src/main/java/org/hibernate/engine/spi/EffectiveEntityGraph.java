@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
@@ -16,10 +14,11 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 
 import org.jboss.logging.Logger;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
- * Think of this as the composite modeling of a graph
- * and the semantic.
- *
+ * Think of this as the composite modeling of a graph and the semantic.
+ * <p>
  * Its graph and semantic can be obtained by {@link #getGraph()} and
  * {@link #getSemantic()}
  *
@@ -33,8 +32,8 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 
 	private final boolean allowOverwrite;
 
-	private GraphSemantic semantic;
-	private RootGraphImplementor<?> graph;
+	private @Nullable GraphSemantic semantic;
+	private @Nullable RootGraphImplementor<?> graph;
 
 	/**
 	 * @implSpec I explicitly made this constructor package protected
@@ -59,12 +58,12 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 	}
 
 	@Override
-	public GraphSemantic getSemantic() {
+	public @Nullable GraphSemantic getSemantic() {
 		return semantic;
 	}
 
 	@Override
-	public RootGraphImplementor<?> getGraph() {
+	public @Nullable RootGraphImplementor<?> getGraph() {
 		return graph;
 	}
 
@@ -75,7 +74,7 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 	 * @throws IllegalArgumentException Thrown if the semantic is null
 	 * @throws IllegalStateException If previous state is still available (hasn't been cleared).
 	 */
-	public void applyGraph(RootGraphImplementor<?> graph, GraphSemantic semantic) {
+	public void applyGraph(RootGraphImplementor<?> graph, @Nullable GraphSemantic semantic) {
 		if ( semantic == null ) {
 			throw new IllegalArgumentException( "Graph semantic cannot be null" );
 		}
@@ -100,24 +99,24 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 	 * Apply a graph and semantic based on configuration properties or hints
 	 * based on {@link GraphSemantic#getJpaHintName()} for {@link GraphSemantic#LOAD} or
 	 * {@link GraphSemantic#FETCH}.
-	 *
+	 * <p>
 	 * The semantic is required.  The graph
 	 * may be null, but that should generally be considered mis-use.
 	 *
 	 * @throws IllegalArgumentException If both kinds of graphs were present in the properties/hints
 	 * @throws IllegalStateException If previous state is still available (hasn't been cleared).
 	 */
-	public void applyConfiguredGraph(Map<String,?> properties) {
+	public void applyConfiguredGraph(@Nullable Map<String,?> properties) {
 		if ( properties == null || properties.isEmpty() ) {
 			return;
 		}
 
 		RootGraphImplementor<?> fetchHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.FETCH.getJpaHintName() );
 		RootGraphImplementor<?> loadHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.LOAD.getJpaHintName() );
-		if (fetchHint == null) {
+		if ( fetchHint == null ) {
 			fetchHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.FETCH.getJakartaHintName() );
 		}
-		if (loadHint == null) {
+		if ( loadHint == null ) {
 			loadHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.LOAD.getJakartaHintName() );
 		}
 
@@ -138,6 +137,7 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 			applyGraph( fetchHint, GraphSemantic.FETCH );
 		}
 		else {
+			assert loadHint != null : "@AssumeAssertion(nullness)";
 			applyGraph( loadHint, GraphSemantic.LOAD );
 		}
 	}

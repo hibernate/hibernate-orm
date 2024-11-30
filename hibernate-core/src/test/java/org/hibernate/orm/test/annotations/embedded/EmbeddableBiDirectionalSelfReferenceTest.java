@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.embedded;
 
@@ -36,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 				EntityTest.class
 		}
 )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 public class EmbeddableBiDirectionalSelfReferenceTest {
 
 	@BeforeEach
@@ -51,7 +49,7 @@ public class EmbeddableBiDirectionalSelfReferenceTest {
 					embeddable.setStringField( "Fab" );
 					entity.setEmbeddedAttribute( embeddable );
 
-					session.save( entity );
+					session.persist( entity );
 				}
 		);
 	}
@@ -62,7 +60,7 @@ public class EmbeddableBiDirectionalSelfReferenceTest {
 				session -> {
 					List<EntityTest> results = session.createQuery( "from EntityTest" ).list();
 					results.forEach(
-							result -> session.delete( result )
+							result -> session.remove( result )
 					);
 				}
 		);
@@ -70,7 +68,7 @@ public class EmbeddableBiDirectionalSelfReferenceTest {
 
 	@Test
 	public void testGet(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
@@ -105,13 +103,13 @@ public class EmbeddableBiDirectionalSelfReferenceTest {
 					embeddable2.setStringField( "Acme2" );
 					entity2.setEmbeddedAttribute( embeddable2 );
 
-					session.save( entity );
-					session.save( entity2 );
-					session.save( entity3 );
+					session.persist( entity );
+					session.persist( entity2 );
+					session.persist( entity3 );
 				}
 		);
 
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {

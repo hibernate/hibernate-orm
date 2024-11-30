@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
@@ -11,14 +9,13 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.type.Type;
 
 /**
- * A value which is "typed" by reference to some other
- * value (for example, a foreign key is typed by the
- * referenced primary key).
+ * A mapping model object representing a {@linkplain Value value} which is "typed" by reference
+ * to some other value (for example, a foreign key is typed by the referenced primary key).
  *
  * @author Gavin King
  */
 public class DependantValue extends SimpleValue implements Resolvable, SortableValue {
-	private KeyValue wrappedValue;
+	private final KeyValue wrappedValue;
 	private boolean nullable;
 	private boolean updateable;
 	private boolean sorted;
@@ -60,9 +57,9 @@ public class DependantValue extends SimpleValue implements Resolvable, SortableV
 	@Override
 	public boolean isNullable() {
 		return nullable;
-	
+
 	}
-	
+
 	public void setNullable(boolean nullable) {
 		this.nullable = nullable;
 	}
@@ -71,7 +68,7 @@ public class DependantValue extends SimpleValue implements Resolvable, SortableV
 	public boolean isUpdateable() {
 		return updateable;
 	}
-	
+
 	public void setUpdateable(boolean updateable) {
 		this.updateable = updateable;
 	}

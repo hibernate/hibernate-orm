@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.from;
 
@@ -12,6 +10,7 @@ import java.util.function.Function;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.select.QueryPart;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
 
 /**
  * A table reference for a query part.
@@ -20,20 +19,24 @@ import org.hibernate.sql.ast.tree.select.QueryPart;
  */
 public class QueryPartTableReference extends DerivedTableReference {
 
-	private final QueryPart queryPart;
+	private final SelectStatement selectStatement;
 
 	public QueryPartTableReference(
-			QueryPart queryPart,
+			SelectStatement selectStatement,
 			String identificationVariable,
 			List<String> columnNames,
 			boolean lateral,
 			SessionFactoryImplementor sessionFactory) {
 		super( identificationVariable, columnNames, lateral, sessionFactory );
-		this.queryPart = queryPart;
+		this.selectStatement = selectStatement;
 	}
 
 	public QueryPart getQueryPart() {
-		return queryPart;
+		return selectStatement.getQueryPart();
+	}
+
+	public SelectStatement getStatement() {
+		return selectStatement;
 	}
 
 	@Override
@@ -45,7 +48,7 @@ public class QueryPartTableReference extends DerivedTableReference {
 	public Boolean visitAffectedTableNames(Function<String, Boolean> nameCollector) {
 		final Function<TableReference, Boolean> tableReferenceBooleanFunction =
 				tableReference -> tableReference.visitAffectedTableNames( nameCollector );
-		return queryPart.queryQuerySpecs(
+		return selectStatement.getQueryPart().queryQuerySpecs(
 			querySpec -> querySpec.getFromClause().queryTableReferences( tableReferenceBooleanFunction )
 		);
 	}

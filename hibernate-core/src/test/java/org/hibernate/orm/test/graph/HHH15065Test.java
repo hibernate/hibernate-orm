@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.graph;
 
@@ -11,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.List;
 
 import org.hibernate.graph.RootGraph;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -22,14 +20,14 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
-@TestForIssue(jiraKey = "HHH-15065")
+@JiraKey(value = "HHH-15065")
 @DomainModel(
 	annotatedClasses = {
 		HHH15065Test.Book.class,
 		HHH15065Test.Person.class,
 	}
 )
-@SessionFactory
+@SessionFactory(useCollectingStatementInspector = true)
 class HHH15065Test {
 
 	@Test
@@ -43,15 +41,15 @@ class HHH15065Test {
 				.getResultList();
 		} );
 
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		List<String> sqlQueries = statementInspector.getSqlQueries();
 		assertEquals( 1, sqlQueries.size() );
-		assertEquals( "select b1_0.id,a1_0.id,c1_0.id,c2_0.id,e1_0.id" +
-					 " from Book b1_0" +
-					 " left join Person a1_0 on a1_0.id=b1_0.author_id" +
-					 " left join Person c1_0 on c1_0.id=b1_0.coAuthor_id" +
-					 " left join Person c2_0 on c2_0.id=b1_0.coEditor_id" +
-					 " left join Person e1_0 on e1_0.id=b1_0.editor_id", sqlQueries.get(0) );
+		assertEquals( "select b1_0.id,a1_0.id,a1_0.name,ca1_0.id,ca1_0.name,ce1_0.id,ce1_0.name,e1_0.id,e1_0.name" +
+					" from Book b1_0" +
+					" left join Person a1_0 on a1_0.id=b1_0.author_id" +
+					" left join Person ca1_0 on ca1_0.id=b1_0.coAuthor_id" +
+					" left join Person ce1_0 on ce1_0.id=b1_0.coEditor_id" +
+					" left join Person e1_0 on e1_0.id=b1_0.editor_id", sqlQueries.get(0) );
 	}
 
 	@Entity(name = "Book")
@@ -73,9 +71,10 @@ class HHH15065Test {
 	}
 
 	@Entity(name = "Person")
-	public class Person {
+	public static class Person {
 		@Id
 		Long id;
+		String name;
 	}
 
 }

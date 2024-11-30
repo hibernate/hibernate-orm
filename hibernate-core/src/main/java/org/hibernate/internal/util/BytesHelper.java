@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal.util;
 
@@ -13,9 +11,9 @@ public final class BytesHelper {
 	}
 
 	/**
-	 * Custom algorithm used to generate an int from a series of bytes.
-	 * <p/>
-	 * NOTE : this is different than interpreting the incoming bytes as an int value!
+	 * Custom algorithm used to generate an {@code int} from a series of bytes.
+	 *
+	 * @implNote This is different to interpreting the incoming bytes as an {@code int}!
 	 *
 	 * @param bytes The bytes to use in generating the int.
 	 *
@@ -77,7 +75,7 @@ public final class BytesHelper {
 	 *
 	 * @param longValue The long to interpret to binary
 	 * @param dest the destination array.
-     * @param destPos starting position in the destination array.
+	 * @param destPos starting position in the destination array.
 	 */
 	public static void fromLong(long longValue, byte[] dest, int destPos) {
 

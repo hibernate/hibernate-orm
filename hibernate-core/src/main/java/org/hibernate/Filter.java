@@ -1,23 +1,31 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
 import java.util.Collection;
 
+import org.hibernate.annotations.FilterDef;
 import org.hibernate.engine.spi.FilterDefinition;
 
 /**
- * Allows control over an enabled filter at runtime. In particular, allows
- * {@linkplain #setParameter(String, Object) arguments} to be assigned to
- * parameters declared by the filter.
+ * Allows control over an enabled {@linkplain FilterDef filter} at runtime.
+ * In particular, allows {@linkplain #setParameter(String, Object) arguments}
+ * to be assigned to parameters declared by the filter.
  * <p>
- * A filter may be defined using {@link org.hibernate.annotations.FilterDef}
- * and {@link org.hibernate.annotations.Filter}, and must be explicitly
- * enabled at runtime by calling {@link Session#enableFilter(String)}.
+ * A filter may be defined using the annotations {@link FilterDef @FilterDef}
+ * and {@link org.hibernate.annotations.Filter @Filter}, but must be explicitly
+ * enabled at runtime by calling {@link Session#enableFilter(String)}, unless
+ * the filter is declared as {@linkplain FilterDef#autoEnabled auto-enabled}.
+ * If, in a given session, a filter not declared {@code autoEnabled = true} is
+ * not explicitly enabled by calling {@code enableFilter()}, the filter will
+ * have no effect in that session.
+ * <p>
+ * Every {@linkplain FilterDef#parameters parameter} of the filter must be
+ * supplied an argument by calling {@code setParameter()} immediately after
+ * {@code enableFilter()} is called, and before any other operation of the
+ * session is invoked.
  *
  * @see org.hibernate.annotations.FilterDef
  * @see Session#enableFilter(String)
@@ -35,13 +43,17 @@ public interface Filter {
 	String getName();
 
 	/**
-	 * Get the associated {@link FilterDefinition definition} of
-	 * this named filter.
+	 * Get the associated {@link FilterDefinition definition} of this
+	 * named filter.
 	 *
 	 * @return The filter definition
+	 *
+	 * @deprecated There is no plan to remove this operation, but its use
+	 *             should be avoided since {@link FilterDefinition} is an
+	 *             SPI type, and so this operation is a layer-breaker.
 	 */
+	@Deprecated(since = "6.2")
 	FilterDefinition getFilterDefinition();
-
 
 	/**
 	 * Set the named parameter's value for this filter.
@@ -79,4 +91,32 @@ public interface Filter {
 	 * @throws HibernateException If the state is not currently valid.
 	 */
 	void validate() throws HibernateException;
+
+	/**
+	 * Get the associated {@link FilterDefinition autoEnabled} of this
+	 * named filter.
+	 *
+	 * @return The flag value
+	 */
+	boolean isAutoEnabled();
+
+	/**
+	 * Get the associated {@link FilterDefinition applyToLoadByKey} of this
+	 * named filter.
+	 *
+	 * @return The flag value
+	 */
+	boolean isAppliedToLoadByKey();
+
+	/**
+	 * Obtain the argument currently bound to the filter parameter
+	 * with the given name.
+	 *
+	 * @param name the name of the filter parameter
+	 * @return the value currently set
+	 *
+	 * @since 7
+	 */
+	@Incubating
+	Object getParameterValue(String name);
 }

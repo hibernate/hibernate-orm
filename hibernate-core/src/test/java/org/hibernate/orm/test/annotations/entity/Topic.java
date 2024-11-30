@@ -1,22 +1,21 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.orm.test.annotations.entity;
+
 import java.util.HashSet;
 import java.util.Set;
+
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
-
-import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.ParamDef;
 
 /**
  * @author Sharath Reddy
@@ -28,11 +27,12 @@ public class Topic {
 
 	@Id @GeneratedValue
 	private int id;
+	private String name;
 	@OneToMany(mappedBy="topic", cascade=CascadeType.ALL)
 	@Filter(name="byState", condition=":state = state")
 	private Set<Narrative> narratives = new HashSet<Narrative>();
-	
-	
+
+
 	public int getId() {
 		return id;
 	}
@@ -48,6 +48,6 @@ public class Topic {
 	public void addNarrative(Narrative val) {
 		narratives.add(val);
 		val.setTopic(this);
-	} 
+	}
 
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.test.integration.tm;
 
@@ -30,45 +28,45 @@ import org.hibernate.testing.jta.TestingJtaPlatformImpl;
  */
 public class SessionInterceptorTransactionTest extends BaseEnversJPAFunctionalTestCase {
 
-    private TransactionManager tm;
+	private TransactionManager tm;
 
-    @Override
-    protected Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[] { StrTestEntity.class };
-    }
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[] { StrTestEntity.class };
+	}
 
-    @Override
-    protected void addConfigOptions(Map options) {
-        super.addConfigOptions( options );
+	@Override
+	protected void addConfigOptions(Map options) {
+		super.addConfigOptions( options );
 
-        TestInterceptor.reset();
+		TestInterceptor.reset();
 
-        options.put( AvailableSettings.SESSION_SCOPED_INTERCEPTOR, TestInterceptor.class.getName() );
-        options.put( AvailableSettings.ALLOW_JTA_TRANSACTION_ACCESS, "true" );
+		options.put( AvailableSettings.SESSION_SCOPED_INTERCEPTOR, TestInterceptor.class.getName() );
+		options.put( AvailableSettings.ALLOW_JTA_TRANSACTION_ACCESS, "true" );
 
-        TestingJtaBootstrap.prepare( options );
-        tm = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
-    }
+		TestingJtaBootstrap.prepare( options );
+		tm = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
+	}
 
-    @Test
-    @Priority(10)
-    public void initData() throws Exception {
-        // Revision 1
-        EntityManager em = getEntityManager();
-        // Explicitly use manual flush to trigger separate temporary session write via Envers
-        em.unwrap( SessionImpl.class ).setHibernateFlushMode( FlushMode.MANUAL );
-        tm.begin();
-        StrTestEntity entity = new StrTestEntity( "Test" );
-        em.persist( entity );
-        em.flush();
-        tm.commit();
-    }
+	@Test
+	@Priority(10)
+	public void initData() throws Exception {
+		// Revision 1
+		EntityManager em = getEntityManager();
+		// Explicitly use manual flush to trigger separate temporary session write via Envers
+		em.unwrap( SessionImpl.class ).setHibernateFlushMode( FlushMode.MANUAL );
+		tm.begin();
+		StrTestEntity entity = new StrTestEntity( "Test" );
+		em.persist( entity );
+		em.flush();
+		tm.commit();
+	}
 
-    @Test
-    public void testInterceptorInvocations() throws Exception {
-        // The interceptor should only be created once and should only be invoked once.
-        final Map<TestInterceptor, Integer> invocationMap = TestInterceptor.getBeforeCompletionCallbacks();
-        assertEquals( 1, invocationMap.size() );
-        assertEquals( invocationMap.values().stream().filter( v -> v == 1 ).count(), 1 );
-    }
+	@Test
+	public void testInterceptorInvocations() throws Exception {
+		// The interceptor should only be created once and should only be invoked once.
+		final Map<TestInterceptor, Integer> invocationMap = TestInterceptor.getBeforeCompletionCallbacks();
+		assertEquals( 1, invocationMap.size() );
+		assertEquals( invocationMap.values().stream().filter( v -> v == 1 ).count(), 1 );
+	}
 }

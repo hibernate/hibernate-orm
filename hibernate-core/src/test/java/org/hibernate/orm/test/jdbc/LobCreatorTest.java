@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jdbc;
 
@@ -19,80 +17,142 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.NClob;
 import java.sql.SQLException;
-import java.util.Properties;
-
-import org.junit.Test;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.jdbc.BlobImplementer;
 import org.hibernate.engine.jdbc.ClobImplementer;
-import org.hibernate.engine.jdbc.ContextualLobCreator;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.NClobImplementer;
-import org.hibernate.engine.jdbc.NonContextualLobCreator;
-import org.hibernate.engine.jdbc.WrappedBlob;
-import org.hibernate.engine.jdbc.WrappedClob;
-import org.hibernate.engine.jdbc.internal.LobCreatorBuilder;
+import org.hibernate.engine.jdbc.env.internal.NonContextualLobCreator;
+import org.hibernate.engine.jdbc.proxy.WrappedBlob;
+import org.hibernate.engine.jdbc.proxy.WrappedClob;
+import org.hibernate.engine.jdbc.env.internal.BlobAndClobCreator;
+import org.hibernate.engine.jdbc.env.internal.LobCreationHelper;
+import org.hibernate.engine.jdbc.env.internal.LobCreatorBuilderImpl;
+import org.hibernate.engine.jdbc.env.internal.LobTypes;
+import org.hibernate.engine.jdbc.env.internal.StandardLobCreator;
 
-import static org.junit.Assert.assertSame;
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole
  */
-public class LobCreatorTest extends org.hibernate.testing.junit4.BaseUnitTestCase {
+public class LobCreatorTest {
 
 	@Test
 	public void testConnectedLobCreator() throws SQLException {
-		final Connection connection = createConnectionProxy( 4, new JdbcLobBuilderImpl( true ) );
-		LobCreationContext lobCreationContext = new LobCreationContextImpl( connection );
+		final Connection connection = createConnectionProxy( 4, new JdbcLobBuilderImpl( LobTypes.BLOB, LobTypes.CLOB, LobTypes.NCLOB ) );
+		final H2Dialect dialect = new H2Dialect();
 
-		LobCreator lobCreator =
-				new LobCreatorBuilder( new Properties(), connection )
-						.buildLobCreator( lobCreationContext );
-		assertTrue( lobCreator instanceof ContextualLobCreator );
+		final EnumSet<LobTypes> supportedContextualLobTypes = LobCreationHelper.getSupportedContextualLobTypes(
+				dialect,
+				Collections.emptyMap(),
+				connection
+		);
+
+		final LobCreatorBuilderImpl creatorBuilder = new LobCreatorBuilderImpl( dialect.useConnectionToCreateLob(), supportedContextualLobTypes );
+		final LobCreationContext lobCreationContext = new LobCreationContextImpl( connection );
+
+		final LobCreator lobCreator = creatorBuilder.buildLobCreator( lobCreationContext );
+		assertThat( lobCreator ).isInstanceOf( StandardLobCreator.class );
+
 		testLobCreation( lobCreator );
 
 		connection.close();
 	}
-    @Test
+
+	@Test
 	public void testJdbc3LobCreator() throws SQLException {
-		final Connection connection = createConnectionProxy( 3, new JdbcLobBuilderImpl( false) );
-		LobCreationContext lobCreationContext = new LobCreationContextImpl( connection );
+		final Connection connection = createConnectionProxy( 3, new JdbcLobBuilderImpl() );
+		final H2Dialect dialect = new H2Dialect();
 
-		LobCreator lobCreator =
-				new LobCreatorBuilder( new Properties(), connection )
-						.buildLobCreator( lobCreationContext );
-		assertSame( NonContextualLobCreator.INSTANCE, lobCreator );
+		final EnumSet<LobTypes> supportedContextualLobTypes = LobCreationHelper.getSupportedContextualLobTypes(
+				dialect,
+				Collections.emptyMap(),
+				connection
+		);
+
+		final LobCreatorBuilderImpl creatorBuilder = new LobCreatorBuilderImpl( dialect.useConnectionToCreateLob(), supportedContextualLobTypes );
+		final LobCreationContext lobCreationContext = new LobCreationContextImpl( connection );
+
+		final LobCreator lobCreator = creatorBuilder.buildLobCreator( lobCreationContext );
+		assertThat( lobCreator ).isSameAs( NonContextualLobCreator.INSTANCE );
 
 		testLobCreation( lobCreator );
+
 		connection.close();
 	}
-    @Test
+	@Test
 	public void testJdbc4UnsupportedLobCreator() throws SQLException {
-		final Connection connection = createConnectionProxy( 4, new JdbcLobBuilderImpl( false ) );
-		LobCreationContext lobCreationContext = new LobCreationContextImpl( connection );
+		final Connection connection = createConnectionProxy( 4, new JdbcLobBuilderImpl() );
+		final H2Dialect dialect = new H2Dialect();
 
-		LobCreator lobCreator =
-				new LobCreatorBuilder( new Properties(), connection )
-						.buildLobCreator( lobCreationContext );
-		assertSame( NonContextualLobCreator.INSTANCE, lobCreator );
+		final EnumSet<LobTypes> supportedContextualLobTypes = LobCreationHelper.getSupportedContextualLobTypes(
+				dialect,
+				Collections.emptyMap(),
+				connection
+		);
+
+		final LobCreatorBuilderImpl creatorBuilder = new LobCreatorBuilderImpl( dialect.useConnectionToCreateLob(), supportedContextualLobTypes );
+		final LobCreationContext lobCreationContext = new LobCreationContextImpl( connection );
+
+		final LobCreator lobCreator = creatorBuilder.buildLobCreator( lobCreationContext );
+		assertThat( lobCreator ).isSameAs( NonContextualLobCreator.INSTANCE );
+
+		testLobCreation( lobCreator );
+
+		connection.close();
+	}
+	@Test
+	public void testConfiguredNonContextualLobCreator() throws SQLException {
+		final Connection connection = createConnectionProxy( 4, new JdbcLobBuilderImpl( LobTypes.BLOB, LobTypes.CLOB, LobTypes.NCLOB ) );
+		final H2Dialect dialect = new H2Dialect();
+		final Map<String,Object> props = new HashMap<>();
+		props.put( Environment.NON_CONTEXTUAL_LOB_CREATION, "true" );
+
+		final EnumSet<LobTypes> supportedContextualLobTypes = LobCreationHelper.getSupportedContextualLobTypes(
+				dialect,
+				props,
+				connection
+		);
+		final LobCreatorBuilderImpl creatorBuilder = new LobCreatorBuilderImpl( dialect.useConnectionToCreateLob(), supportedContextualLobTypes );
+		final LobCreationContext lobCreationContext = new LobCreationContextImpl( connection );
+
+		final LobCreator lobCreator = creatorBuilder.buildLobCreator( lobCreationContext );
+		assertThat( lobCreator ).isSameAs( NonContextualLobCreator.INSTANCE );
 
 		testLobCreation( lobCreator );
 		connection.close();
 	}
-    @Test
-	public void testConfiguredNonContextualLobCreator() throws SQLException {
-		final Connection connection = createConnectionProxy( 4, new JdbcLobBuilderImpl( true ) );
-		LobCreationContext lobCreationContext = new LobCreationContextImpl( connection );
 
-		Properties props = new Properties();
-		props.setProperty( Environment.NON_CONTEXTUAL_LOB_CREATION, "true" );
-		LobCreator lobCreator =
-				new LobCreatorBuilder( props, connection )
-						.buildLobCreator( lobCreationContext );
-		assertSame( NonContextualLobCreator.INSTANCE, lobCreator );
+	@Test
+	public void testBlobAndClob() throws SQLException {
+		// no NCLOB
+		final Connection connection = createConnectionProxy( 4, new JdbcLobBuilderImpl( LobTypes.BLOB, LobTypes.CLOB ) );
+		final SybaseDialect dialect = new SybaseDialect();
+		final EnumSet<LobTypes> supportedContextualLobTypes = LobCreationHelper.getSupportedContextualLobTypes(
+				dialect,
+				Collections.emptyMap(),
+				connection
+		);
+		final LobCreatorBuilderImpl creatorBuilder = new LobCreatorBuilderImpl( dialect.useConnectionToCreateLob(), supportedContextualLobTypes );
+		final LobCreationContext lobCreationContext = new LobCreationContextImpl( connection );
+
+		final LobCreator lobCreator = creatorBuilder.buildLobCreator( lobCreationContext );
+		assertThat( lobCreator ).isInstanceOf( BlobAndClobCreator.class );
 
 		testLobCreation( lobCreator );
 		connection.close();
@@ -124,7 +184,7 @@ public class LobCreatorTest extends org.hibernate.testing.junit4.BaseUnitTestCas
 			assertTrue( nclob instanceof NClobImplementer );
 		}
 		else {
-			assertTrue( nclob instanceof JdbcNClob );
+			assertTrue( nclob instanceof NClob );
 		}
 //		assertTrue( nclob instanceof NClob );
 		nclob = lobCreator.wrap( nclob );
@@ -159,27 +219,34 @@ public class LobCreatorTest extends org.hibernate.testing.junit4.BaseUnitTestCas
 	}
 
 	private static class JdbcLobBuilderImpl implements JdbcLobBuilder {
-		private final boolean isSupported;
+		private final Set<LobTypes> supportedTypes;
 
-		private JdbcLobBuilderImpl(boolean isSupported) {
-			this.isSupported = isSupported;
+		private JdbcLobBuilderImpl(LobTypes... supportedTypes) {
+			this.supportedTypes = convert( supportedTypes );
 		}
+
+		private static Set<LobTypes> convert(LobTypes... supportedTypes) {
+			final Set<LobTypes> result = new HashSet<>();
+			result.addAll( Arrays.asList( supportedTypes ) );
+			return result;
+		}
+
 		public Blob createBlob() throws SQLException {
-			if ( ! isSupported ) {
+			if ( ! supportedTypes.contains( LobTypes.BLOB ) ) {
 				throw new SQLException( "not supported!" );
 			}
 			return new JdbcBlob();
 		}
 
 		public Clob createClob() throws SQLException  {
-			if ( ! isSupported ) {
+			if ( ! supportedTypes.contains( LobTypes.CLOB ) ) {
 				throw new SQLException( "not supported!" );
 			}
 			return new JdbcClob();
 		}
 
 		public NClob createNClob() throws SQLException  {
-			if ( ! isSupported ) {
+			if ( ! supportedTypes.contains( LobTypes.NCLOB ) ) {
 				throw new SQLException( "not supported!" );
 			}
 			return new JdbcNClob();

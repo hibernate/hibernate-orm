@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.access;
 
@@ -15,8 +13,7 @@ import org.hibernate.mapping.Property;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
-import org.hibernate.testing.orm.junit.FailureExpected;
-import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.junit.jupiter.api.Test;
 
@@ -27,6 +24,8 @@ import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
@@ -37,6 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @DomainModel( annotatedClasses = { NestedEmbeddableDefaultAccessTests.MyEntity.class } )
 @SessionFactory( exportSchema = false )
+@JiraKey( "HHH-14703" )
 public class NestedEmbeddableDefaultAccessTests {
 	@Test
 	public void verifyEmbeddedMapping(DomainModelScope scope) {
@@ -47,11 +47,7 @@ public class NestedEmbeddableDefaultAccessTests {
 	}
 
 	@Test
-	@Jira( "https://hibernate.atlassian.net/browse/HHH-14063" )
-	@FailureExpected(
-			reason = "When an embeddable is a key or element of a collection, access-type is " +
-					"not properly propagated to nested embeddables"
-	)
+	@JiraKey( "HHH-14063" )
 	public void verifyElementCollectionMapping(DomainModelScope scope) {
 		scope.withHierarchy( MyEntity.class, (descriptor) -> {
 			final Property outerEmbeddedList = descriptor.getProperty( "outerEmbeddableList" );
@@ -66,19 +62,24 @@ public class NestedEmbeddableDefaultAccessTests {
 		final Component nestedEmbeddable = (Component) nestedEmbedded.getValue();
 		final Property nestedData = nestedEmbeddable.getProperty( "nestedData" );
 		final BasicValue nestedDataMapping = (BasicValue) nestedData.getValue();
+		final Property nestedEnum = nestedEmbeddable.getProperty( "nestedEnum" );
+		final BasicValue nestedEnumMapping = (BasicValue) nestedEnum.getValue();
 
 		assertThat( outerDataMapping.getColumn().getText() ).isEqualTo( "outer_data" );
 		assertThat( outerDataMapping.getJpaAttributeConverterDescriptor() ).isNotNull();
 
 		assertThat( nestedDataMapping.getColumn().getText() ).isEqualTo( "nested_data" );
+
+		// Check for HHH-14703
+		assertThat( nestedEnumMapping.getEnumeratedType() ).isEqualTo( EnumType.STRING );
 	}
 
 	@Entity( name = "MyEntity" )
 	@Table( name = "MyEntity" )
 	public static class MyEntity {
-	    @Id
-	    private Integer id;
-	    @Basic
+		@Id
+		private Integer id;
+		@Basic
 		private String name;
 		@Embedded
 		private OuterEmbeddable outerEmbeddable;
@@ -130,5 +131,13 @@ public class NestedEmbeddableDefaultAccessTests {
 		@Convert( converter = SillyConverter.class )
 		@Column( name = "nested_data" )
 		private String nestedData;
+		@Enumerated(EnumType.STRING)
+		@Column( name = "nested_enum" )
+		private MyEnum nestedEnum;
+	}
+
+	public enum MyEnum {
+		A,
+		B
 	}
 }

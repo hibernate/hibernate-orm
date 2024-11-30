@@ -1,14 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.orphan.onetomany;
 
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -57,7 +55,7 @@ public class DeleteOneToManyOrphansTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9330")
+	@JiraKey(value = "HHH-9330")
 	public void testOrphanedWhileManaged(SessionFactoryScope scope) {
 
 		Product p = scope.fromTransaction(
@@ -75,7 +73,7 @@ public class DeleteOneToManyOrphansTest {
 
 		scope.inTransaction(
 				session -> {
-					Product product = ( session.get( Product.class, p.getId() ) );
+					Product product = session.get( Product.class, p.getId() );
 					assertEquals( 0, product.getFeatures().size() );
 					List results = session.createQuery( "from Feature" ).list();
 					assertEquals( 0, results.size() );
@@ -86,7 +84,7 @@ public class DeleteOneToManyOrphansTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9330")
+	@JiraKey(value = "HHH-9330")
 	public void testOrphanedWhileManagedMergeOwner(SessionFactoryScope scope) {
 
 		Product p = scope.fromTransaction(
@@ -117,7 +115,7 @@ public class DeleteOneToManyOrphansTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9330")
+	@JiraKey(value = "HHH-9330")
 	public void testReplacedWhileManaged(SessionFactoryScope scope) {
 
 		Feature f = scope.fromTransaction(

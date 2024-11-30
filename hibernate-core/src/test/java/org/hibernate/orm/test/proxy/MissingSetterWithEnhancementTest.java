@@ -1,11 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.proxy;
 
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -13,48 +13,47 @@ import jakarta.persistence.Id;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  *
  * @author Christian Beikov
  */
-@TestForIssue(jiraKey = "HHH-14460")
-@RunWith( BytecodeEnhancerRunner.class )
+@JiraKey("HHH-14460")
+@BytecodeEnhanced
 public class MissingSetterWithEnhancementTest {
-    private ServiceRegistry serviceRegistry;
+	private ServiceRegistry serviceRegistry;
 
-    @Before
-    public void setUp() {
+	@BeforeEach
+	public void setUp() {
 		final BootstrapServiceRegistryBuilder builder = new BootstrapServiceRegistryBuilder();
 		builder.applyClassLoader( getClass().getClassLoader() );
-		serviceRegistry = new StandardServiceRegistryBuilder( builder.build() )
+		serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder( builder.build() )
 				.applySettings( Environment.getProperties() )
 				.build();
-    }
+	}
 
-    @After
-    public void tearDown() {
-        if ( serviceRegistry != null ) {
-            ServiceRegistryBuilder.destroy( serviceRegistry );
-        }
-    }
+	@AfterEach
+	public void tearDown() {
+		if ( serviceRegistry != null ) {
+			ServiceRegistryBuilder.destroy( serviceRegistry );
+		}
+	}
 
-    @Test
+	@Test
 	public void testEnhancedClassMissesSetterForProperty() {
 		Configuration cfg = new Configuration();
 		cfg.addAnnotatedClass( EntityWithMissingSetter.class );
@@ -63,19 +62,22 @@ public class MissingSetterWithEnhancementTest {
 		}
 		catch (MappingException e) {
 			assertEquals(
-					"Could not locate setter method for property [" + EntityWithMissingSetter.class.getName() + "#name]",
+					"Could not locate setter method for property 'name' of class '"
+							+ EntityWithMissingSetter.class.getName() + "'",
 					e.getMessage()
 			);
 		}
 	}
 
 	@Entity
+	@Access(AccessType.PROPERTY)
 	public static class EntityWithMissingSetter {
-    	private Long id;
-    	@Column
+		private Long id;
+		@Column
+		@Access(AccessType.FIELD)
 		private int someInt;
 
-    	@Id
+		@Id
 		public Long getId() {
 			return id;
 		}

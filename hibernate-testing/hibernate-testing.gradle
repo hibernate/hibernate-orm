@@ -7,10 +7,11 @@
 
 description = 'Support for testing Hibernate ORM functionality'
 
-apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+apply from: rootProject.file( 'gradle/relocated-published-java-module.gradle' )
 
 dependencies {
     api project( ':hibernate-core' )
+    api project( ':hibernate-community-dialects' )
 
     api testLibs.junit4
     api testLibs.junit5Api
@@ -20,13 +21,13 @@ dependencies {
     api testLibs.assertjCore
 
     api testLibs.mockito
-    api testLibs.mockitoInline
+//    api testLibs.mockitoInline
 
     api testLibs.byteman
     api testLibs.bytemanInstall
     api testLibs.bytemanBmunit
 
-    api testLibs.xapool
+//    api testLibs.xapool
     api( testLibs.jbossTxSpi ) {
         transitive=false;
     }
@@ -39,11 +40,12 @@ dependencies {
 
     api testLibs.log4j2
 
-    implementation libs.hcann
+    implementation libs.hibernateModels
     implementation libs.jandex
     implementation testLibs.wildFlyTxnClient
+    implementation testLibs.junit5Engine
+    implementation testLibs.junit5Launcher
+
+    annotationProcessor project( ':hibernate-processor' )
 }
 
-tasks.checkstyleMain {
-    exclude '**/org/hibernate/orm/test/legacy/**'
-}

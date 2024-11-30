@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
 
@@ -15,14 +13,17 @@ import org.hibernate.type.descriptor.java.JavaType;
  */
 public abstract class AbstractSqmPathSource<J> implements SqmPathSource<J> {
 	private final String localPathName;
+	protected final SqmPathSource<J> pathModel;
 	private final DomainType<J> domainType;
 	private final BindableType jpaBindableType;
 
 	public AbstractSqmPathSource(
 			String localPathName,
+			SqmPathSource<J> pathModel,
 			DomainType<J> domainType,
 			BindableType jpaBindableType) {
 		this.localPathName = localPathName;
+		this.pathModel = pathModel == null ? this : pathModel;
 		this.domainType = domainType;
 		this.jpaBindableType = jpaBindableType;
 	}
@@ -38,7 +39,7 @@ public abstract class AbstractSqmPathSource<J> implements SqmPathSource<J> {
 	}
 
 	@Override
-	public DomainType<?> getSqmPathType() {
+	public DomainType<J> getSqmPathType() {
 		return domainType;
 	}
 

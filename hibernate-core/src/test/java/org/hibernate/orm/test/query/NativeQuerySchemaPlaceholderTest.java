@@ -1,11 +1,16 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.query;
 
 import java.util.List;
 
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKeyGroup;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -23,7 +28,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 		annotatedClasses = { NativeQuerySchemaPlaceholderTest.TestEntity.class }
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-15269")
+@JiraKeyGroup( value = {
+		@JiraKey( value = "HHH-15269" ),
+		@JiraKey( value = "HHH-18215" )
+} )
 public class NativeQuerySchemaPlaceholderTest {
 
 	@BeforeEach
@@ -55,13 +63,29 @@ public class NativeQuerySchemaPlaceholderTest {
 					nativeQuery.executeUpdate();
 				}
 		);
-
 		scope.inTransaction(
 				session -> {
 					List<TestEntity> testEntities = session.createQuery( "from TestEntity", TestEntity.class )
 							.list();
 					TestEntity testEntity = testEntities.get( 0 );
 					assertThat( testEntity.name, is( "updated_test" ) );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					NativeQueryImplementor<Tuple> nativeQuery = session.createNativeQuery(
+							"UPDATE {h-schema}TestEntity SET name = '{updated_test'"
+					);
+					nativeQuery.executeUpdate();
+				}
+		);
+		scope.inTransaction(
+				session -> {
+					List<TestEntity> testEntities = session.createQuery( "from TestEntity", TestEntity.class )
+							.list();
+					TestEntity testEntity = testEntities.get( 0 );
+					assertThat( testEntity.name, is( "{updated_test" ) );
 				}
 		);
 	}
@@ -71,7 +95,8 @@ public class NativeQuerySchemaPlaceholderTest {
 		scope.inTransaction(
 				session -> {
 					NativeQueryImplementor<Long> nativeQuery = session.createNativeQuery(
-							"select id from {h-schema}TestEntity", Long.class
+							"select id from {h-schema}TestEntity",
+							Long.class
 					);
 					List<Long> results = nativeQuery.list();
 					assertThat( results.get( 0 ), is( 1l ) );

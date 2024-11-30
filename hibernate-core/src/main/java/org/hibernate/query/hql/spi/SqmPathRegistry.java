@@ -1,18 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.hql.spi;
 
 import java.util.function.Function;
 
 import org.hibernate.Incubating;
-import org.hibernate.spi.NavigablePath;
+import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmAliasedNode;
+import org.hibernate.spi.NavigablePath;
 
 /**
  * Registry for SqmPath references providing the ability to access them
@@ -31,6 +32,24 @@ public interface SqmPathRegistry {
 	 * Register an SqmPath
 	 */
 	void register(SqmPath<?> sqmPath);
+
+	/**
+	 * Register an SqmFrom by alias only.
+	 * Effectively, this makes the from node only resolvable via the alias,
+	 * which means that the from node is ignored in {@link #findFromExposing(String)}.
+	 */
+	void registerByAliasOnly(SqmFrom<?, ?> sqmFrom);
+
+	/**
+	 * Used with {@linkplain JpaCompliance#isJpaQueryComplianceEnabled() JPA compliance}
+	 * to treat secondary query roots as cross-joins.  Here we will replace the {@code sqmRoot}
+	 * with the {@code sqmJoin}
+	 *
+	 * @apiNote Care should be taken when calling this method to ensure that nothing
+	 * has used the previous registration between its registration and this call.
+	 * Generally, most callers want {@link #register(SqmPath)} instead.
+	 */
+	<E> void replace(SqmEntityJoin<?,E> sqmJoin, SqmRoot<E> sqmRoot);
 
 	/**
 	 * Find a SqmFrom by its identification variable (alias).

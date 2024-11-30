@@ -1,39 +1,28 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
 
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
-import org.hibernate.type.descriptor.java.BooleanJavaType;
-import org.hibernate.type.descriptor.java.CharacterJavaType;
-import org.hibernate.type.descriptor.java.JavaType;
-
-import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
 /**
- * Handles conversion to/from Boolean as `Y` or `N`
+ * Handles conversion to/from {@code Boolean} as {@code 'Y'} or {@code 'N'}
  *
  * @author Steve Ebersole
  */
 @Converter
-public class YesNoConverter implements AttributeConverter<Boolean, Character>, BasicValueConverter<Boolean, Character> {
+public class YesNoConverter extends CharBooleanConverter {
 	/**
 	 * Singleton access
 	 */
 	public static final YesNoConverter INSTANCE = new YesNoConverter();
 
-	@Override
-	public Character convertToDatabaseColumn(Boolean attribute) {
-		return toRelationalValue( attribute );
-	}
+	private static final String[] VALUES = {"N", "Y"};
 
 	@Override
-	public Boolean convertToEntityAttribute(Character dbData) {
-		return toDomainValue( dbData );
+	protected String[] getValues() {
+		return VALUES;
 	}
 
 	@Override
@@ -59,15 +48,5 @@ public class YesNoConverter implements AttributeConverter<Boolean, Character>, B
 		}
 
 		return domainForm ? 'Y' : 'N';
-	}
-
-	@Override
-	public JavaType<Boolean> getDomainJavaType() {
-		return BooleanJavaType.INSTANCE;
-	}
-
-	@Override
-	public JavaType<Character> getRelationalJavaType() {
-		return CharacterJavaType.INSTANCE;
 	}
 }

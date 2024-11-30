@@ -1,4 +1,18 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.annotations.manytoone;
+
+import org.hibernate.boot.beanvalidation.ValidationMode;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -8,23 +22,16 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.NotNull;
 
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.beanvalidation.ValidationMode;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-13959")
+@JiraKey(value = "HHH-13959")
+@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
 public class NotNullManyToOneTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected void configure(Configuration configuration) {
-		configuration.setProperty( AvailableSettings.JPA_VALIDATION_MODE, ValidationMode.AUTO.name() );
+		configuration.setProperty( AvailableSettings.JAKARTA_VALIDATION_MODE, ValidationMode.AUTO );
 	}
 
 	@Override
@@ -40,7 +47,7 @@ public class NotNullManyToOneTest extends BaseCoreFunctionalTestCase {
 		inTransaction(
 				session -> {
 					Parent parent = new Parent( new Child() );
-					session.save( parent );
+					session.persist( parent );
 				}
 		);
 	}
@@ -50,7 +57,7 @@ public class NotNullManyToOneTest extends BaseCoreFunctionalTestCase {
 		inTransaction(
 				session -> {
 					Child child = new Child();
-					session.save( child );
+					session.persist( child );
 				}
 		);
 	}

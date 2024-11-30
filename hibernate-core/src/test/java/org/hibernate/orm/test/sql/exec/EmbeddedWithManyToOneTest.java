@@ -1,15 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
- */
-
-/*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql.exec;
 
@@ -44,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 )
 @SessionFactory(
 		generateStatistics = true,
-		statementInspectorClass = SQLStatementInspector.class)
+		useCollectingStatementInspector = true)
 public class EmbeddedWithManyToOneTest {
 
 	@BeforeEach
@@ -55,8 +46,8 @@ public class EmbeddedWithManyToOneTest {
 					PK userKey = new PK( subsystem, "Fab" );
 					SystemUser user = new SystemUser( 1, userKey, "Fab" );
 
-					session.save( subsystem );
-					session.save( user );
+					session.persist( subsystem );
+					session.persist( user );
 				}
 		);
 	}
@@ -73,7 +64,7 @@ public class EmbeddedWithManyToOneTest {
 
 	@Test
 	public void testGet(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
@@ -87,7 +78,7 @@ public class EmbeddedWithManyToOneTest {
 
 	@Test
 	public void testHqlSelect(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {

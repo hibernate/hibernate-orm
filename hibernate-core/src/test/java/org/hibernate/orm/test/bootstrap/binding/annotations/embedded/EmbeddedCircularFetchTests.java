@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bootstrap.binding.annotations.embedded;
 
@@ -20,7 +18,7 @@ import jakarta.persistence.Table;
 import org.hibernate.Hibernate;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -54,13 +52,13 @@ public class EmbeddedCircularFetchTests {
 	//		- `org.hibernate.orm.test.fetch.circular.manytoone`
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9642")
+	@JiraKey(value = "HHH-9642")
 	public void testCircularFetchAcrossComponent(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					RootEntity root = new RootEntity();
 					root.id = 1;
-					session.save( root );
+					session.persist( root );
 
 					LeafEntity leafEntity1 = new LeafEntity();
 					leafEntity1.id = 10;
@@ -68,8 +66,8 @@ public class EmbeddedCircularFetchTests {
 					LeafEntity leafEntity2 = new LeafEntity();
 					leafEntity2.id = 11;
 
-					session.save( leafEntity1 );
-					session.save( leafEntity2 );
+					session.persist( leafEntity1 );
+					session.persist( leafEntity2 );
 
 					leafEntity2.rootEntity = root;
 					leafEntity1.rootEntity = root;

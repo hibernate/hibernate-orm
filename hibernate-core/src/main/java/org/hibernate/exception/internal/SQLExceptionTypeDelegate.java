@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.exception.internal;
 
@@ -28,6 +26,8 @@ import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.exception.spi.AbstractSQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.ConversionContext;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * A {@link org.hibernate.exception.spi.SQLExceptionConverter} implementation
  * that does conversion based on the {@link SQLException} subtype hierarchy
@@ -41,7 +41,7 @@ public class SQLExceptionTypeDelegate extends AbstractSQLExceptionConversionDele
 	}
 
 	@Override
-	public JDBCException convert(SQLException sqlException, String message, String sql) {
+	public @Nullable JDBCException convert(SQLException sqlException, String message, String sql) {
 		if ( sqlException instanceof SQLClientInfoException
 				|| sqlException instanceof SQLInvalidAuthorizationSpecException
 				|| sqlException instanceof SQLNonTransientConnectionException
@@ -50,7 +50,7 @@ public class SQLExceptionTypeDelegate extends AbstractSQLExceptionConversionDele
 		}
 		else if ( sqlException instanceof DataTruncation ||
 				sqlException instanceof SQLDataException ) {
-			throw new DataException( message, sqlException, sql );
+			return new DataException( message, sqlException, sql );
 		}
 		else if ( sqlException instanceof SQLIntegrityConstraintViolationException ) {
 			return new ConstraintViolationException(

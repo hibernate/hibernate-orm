@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.enumerated.mapkey;
 
@@ -24,8 +22,6 @@ import jakarta.persistence.UniqueConstraint;
 @Table(name = "social_network_profile", uniqueConstraints = {@UniqueConstraint(columnNames = {"social_network", "network_id"})})
 public class SocialNetworkProfile {
 	@jakarta.persistence.Id
-	@jakarta.persistence.GeneratedValue(generator = "system-uuid")
-	@org.hibernate.annotations.GenericGenerator(name = "system-uuid", strategy = "uuid2")
 	@jakarta.persistence.Column(name = "id", unique = true)
 	private String id;
 
@@ -44,6 +40,7 @@ public class SocialNetworkProfile {
 	}
 
 	protected SocialNetworkProfile(User user, SocialNetwork socialNetworkType, String networkId) {
+		this.id = "snp_" + networkId + "_" + user.getId();
 		this.user = user;
 		this.socialNetworkType = socialNetworkType;
 		this.networkId = networkId;

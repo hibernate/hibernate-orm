@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
@@ -14,6 +13,7 @@ import org.hibernate.action.internal.CollectionRecreateAction;
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
 import org.hibernate.action.internal.QueuedOperationCollectionAction;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.internal.Collections;
@@ -21,13 +21,13 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CascadingActions;
+import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.service.spi.EventListenerGroup;
-import org.hibernate.event.service.spi.JpaBootstrapSensitive;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.FlushEntityEvent;
 import org.hibernate.event.spi.FlushEntityEventListener;
@@ -35,25 +35,21 @@ import org.hibernate.event.spi.FlushEvent;
 import org.hibernate.event.spi.PersistContext;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.EntityPrinter;
+import org.hibernate.internal.util.collections.IdentityMap;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.engine.internal.Collections.skipRemoval;
 
 /**
  * A convenience base class for listeners whose functionality results in flushing.
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractFlushingEventListener implements JpaBootstrapSensitive {
+public abstract class AbstractFlushingEventListener {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, AbstractFlushingEventListener.class.getName() );
-
-	private boolean jpaBootstrap;
-
-	@Override
-	public void wasJpaBootstrap(boolean wasJpaBootstrap) {
-		this.jpaBootstrap = wasJpaBootstrap;
-	}
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, AbstractFlushingEventListener.class.getName() );
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Pre-flushing section
@@ -71,9 +67,32 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 
 		LOG.trace( "Flushing session" );
 
-		EventSource session = event.getSession();
+		final EventSource session = event.getSession();
 
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		preFlush( session, persistenceContext );
+
+		flushEverythingToExecutions( event, persistenceContext, session );
+	}
+
+	protected void flushEverythingToExecutions(FlushEvent event, PersistenceContext persistenceContext, EventSource session) {
+		persistenceContext.setFlushing( true );
+		try {
+			int entityCount = flushEntities( event, persistenceContext );
+			int collectionCount = flushCollections( session, persistenceContext );
+
+			event.setNumberOfEntitiesProcessed( entityCount );
+			event.setNumberOfCollectionsProcessed( collectionCount );
+		}
+		finally {
+			persistenceContext.setFlushing( false);
+		}
+
+		//some statistics
+		logFlushResults( event );
+	}
+
+	protected void preFlush(EventSource session, PersistenceContext persistenceContext) {
 		session.getInterceptor().preFlush( persistenceContext.managedEntitiesIterator() );
 
 		prepareEntityFlushes( session, persistenceContext );
@@ -84,21 +103,6 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		// now, any collections that are initialized
 		// inside this block do not get updated - they
 		// are ignored until the next flush
-
-		persistenceContext.setFlushing( true );
-		try {
-			int entityCount = flushEntities( event, persistenceContext );
-			int collectionCount = flushCollections( session, persistenceContext );
-
-			event.setNumberOfEntitiesProcessed( entityCount );
-			event.setNumberOfCollectionsProcessed( collectionCount );
-		}
-		finally {
-			persistenceContext.setFlushing(false);
-		}
-
-		//some statistics
-		logFlushResults( event );
 	}
 
 	protected void logFlushResults(FlushEvent event) {
@@ -107,22 +111,23 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		}
 		final EventSource session = event.getSession();
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		final ActionQueue actionQueue = session.getActionQueue();
 		LOG.debugf(
 				"Flushed: %s insertions, %s updates, %s deletions to %s objects",
-				session.getActionQueue().numberOfInsertions(),
-				session.getActionQueue().numberOfUpdates(),
-				session.getActionQueue().numberOfDeletions(),
+				actionQueue.numberOfInsertions(),
+				actionQueue.numberOfUpdates(),
+				actionQueue.numberOfDeletions(),
 				persistenceContext.getNumberOfManagedEntities()
 		);
 		LOG.debugf(
 				"Flushed: %s (re)creations, %s updates, %s removals to %s collections",
-				session.getActionQueue().numberOfCollectionCreations(),
-				session.getActionQueue().numberOfCollectionUpdates(),
-				session.getActionQueue().numberOfCollectionRemovals(),
+				actionQueue.numberOfCollectionCreations(),
+				actionQueue.numberOfCollectionUpdates(),
+				actionQueue.numberOfCollectionRemovals(),
 				persistenceContext.getCollectionEntriesSize()
 		);
 		new EntityPrinter( session.getFactory() ).toString(
-				persistenceContext.getEntitiesByKey().entrySet()
+				persistenceContext.getEntityHoldersByKey().entrySet()
 		);
 	}
 
@@ -135,16 +140,40 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 
 		LOG.debug( "Processing flush-time cascades" );
 
-		final PersistContext context = getContext();
+		final PersistContext context = getContext( session );
 		//safe from concurrent modification because of how concurrentEntries() is implemented on IdentityMap
 		for ( Map.Entry<Object,EntityEntry> me : persistenceContext.reentrantSafeEntityEntries() ) {
 //		for ( Map.Entry me : IdentityMap.concurrentEntries( persistenceContext.getEntityEntries() ) ) {
-			EntityEntry entry = me.getValue();
-			Status status = entry.getStatus();
-			if ( status == Status.MANAGED || status == Status.SAVING || status == Status.READ_ONLY ) {
+			final EntityEntry entry = me.getValue();
+			if ( flushable( entry ) ) {
 				cascadeOnFlush( session, entry.getPersister(), me.getKey(), context );
 			}
 		}
+
+		// perform these checks after all cascade persist events have been
+		// processed, so that all entities which will be persisted are
+		// persistent when we do the check (I wonder if we could move this
+		// into Nullability, instead of abusing the Cascade infrastructure)
+		for ( Map.Entry<Object, EntityEntry> me : persistenceContext.reentrantSafeEntityEntries() ) {
+			final EntityEntry entry = me.getValue();
+			if ( flushable( entry ) ) {
+				Cascade.cascade(
+						CascadingActions.CHECK_ON_FLUSH,
+						CascadePoint.BEFORE_FLUSH,
+						session,
+						entry.getPersister(),
+						me.getKey(),
+						null
+				);
+			}
+		}
+	}
+
+	private static boolean flushable(EntityEntry entry) {
+		final Status status = entry.getStatus();
+		return status == Status.MANAGED
+			|| status == Status.SAVING
+			|| status == Status.READ_ONLY;
 	}
 
 	private void cascadeOnFlush(EventSource session, EntityPersister persister, Object object, PersistContext anything)
@@ -152,19 +181,19 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		persistenceContext.incrementCascadeLevel();
 		try {
-			Cascade.cascade( getCascadingAction(), CascadePoint.BEFORE_FLUSH, session, persister, object, anything );
+			Cascade.cascade( getCascadingAction(session), CascadePoint.BEFORE_FLUSH, session, persister, object, anything );
 		}
 		finally {
 			persistenceContext.decrementCascadeLevel();
 		}
 	}
 
-	protected PersistContext getContext() {
-		return jpaBootstrap ? PersistContext.create() : null;
+	protected PersistContext getContext(EventSource session) {
+		return PersistContext.create();
 	}
 
-	protected CascadingAction<PersistContext> getCascadingAction() {
-		return jpaBootstrap ? CascadingActions.PERSIST_ON_FLUSH : CascadingActions.SAVE_UPDATE;
+	protected CascadingAction<PersistContext> getCascadingAction(EventSource session) {
+		return CascadingActions.PERSIST_ON_FLUSH;
 	}
 
 	/**
@@ -177,7 +206,12 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		// and reset reached, doupdate, etc.
 
 		LOG.debug( "Dirty checking collections" );
-		persistenceContext.forEachCollectionEntry( (pc,ce) -> ce.preFlush( pc ), true );
+		final Map<PersistentCollection<?>, CollectionEntry> collectionEntries = persistenceContext.getCollectionEntries();
+		if ( collectionEntries != null ) {
+			for ( Map.Entry<PersistentCollection<?>, CollectionEntry> entry : ( (IdentityMap<PersistentCollection<?>, CollectionEntry>) collectionEntries ).entryArray() ) {
+				entry.getValue().preFlush( entry.getKey() );
+			}
+		}
 	}
 
 	/**
@@ -191,8 +225,8 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		LOG.trace( "Flushing entities and processing referenced collections" );
 
 		final EventSource source = event.getSession();
-		final EventListenerGroup<FlushEntityEventListener> flushListeners = source.getFactory()
-				.getFastSessionServices().eventListenerGroup_FLUSH_ENTITY;
+		final EventListenerGroup<FlushEntityEventListener> flushListeners =
+				event.getFactory().getFastSessionServices().eventListenerGroup_FLUSH_ENTITY;
 
 		// Among other things, updateReachables() will recursively load all
 		// collections that are moving roles. This might cause entities to
@@ -203,21 +237,48 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		final Map.Entry<Object,EntityEntry>[] entityEntries = persistenceContext.reentrantSafeEntityEntries();
 		final int count = entityEntries.length;
 
+		FlushEntityEvent entityEvent = null; //allow reuse of the event as it's heavily allocated in certain use cases
+		int eventGenerationId = 0; //Used to double-check the instance reuse won't cause problems
+
 		for ( Map.Entry<Object,EntityEntry> me : entityEntries ) {
 			// Update the status of the object and if necessary, schedule an update
 
-			EntityEntry entry = me.getValue();
-			Status status = entry.getStatus();
+			final EntityEntry entry = me.getValue();
+			final Status status = entry.getStatus();
 
 			if ( status != Status.LOADING && status != Status.GONE ) {
-				final FlushEntityEvent entityEvent = new FlushEntityEvent( source, me.getKey(), entry );
+				entityEvent = createOrReuseEventInstance( entityEvent, source, me.getKey(), entry );
+
+				entityEvent.setInstanceGenerationId( ++eventGenerationId );
+
 				flushListeners.fireEventOnEachListener( entityEvent, FlushEntityEventListener::onFlushEntity );
+				entityEvent.setAllowedToReuse( true );
+				assert entityEvent.getInstanceGenerationId() == eventGenerationId;
 			}
 		}
 
 		source.getActionQueue().sortActions();
 
 		return count;
+	}
+
+	/**
+	 * Reuses a FlushEntityEvent for a new purpose, if possible;
+	 * if not possible a new actual instance is returned.
+	 */
+	private FlushEntityEvent createOrReuseEventInstance(
+			FlushEntityEvent possiblyValidExistingInstance,
+			EventSource source,
+			Object key,
+			EntityEntry entry) {
+		if ( possiblyValidExistingInstance == null || !possiblyValidExistingInstance.isAllowedToReuse() ) {
+			//need to create a new instance
+			return new FlushEntityEvent( source, key, entry );
+		}
+		else {
+			possiblyValidExistingInstance.resetAndReuseEventInstance( key, entry );
+			return possiblyValidExistingInstance;
+		}
 	}
 
 	/**
@@ -228,14 +289,20 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 			throws HibernateException {
 		LOG.trace( "Processing unreferenced collections" );
 
-		final int count = persistenceContext.getCollectionEntriesSize();
-
-		persistenceContext.forEachCollectionEntry(
-				(persistentCollection, collectionEntry) -> {
-					if ( !collectionEntry.isReached() && !collectionEntry.isIgnore() ) {
-						Collections.processUnreachableCollection( persistentCollection, session );
-					}
-				}, true );
+		final Map<PersistentCollection<?>, CollectionEntry> collectionEntries = persistenceContext.getCollectionEntries();
+		final int count;
+		if ( collectionEntries == null ) {
+			count = 0;
+		}
+		else {
+			count = collectionEntries.size();
+			for ( Map.Entry<PersistentCollection<?>, CollectionEntry> me : ( (IdentityMap<PersistentCollection<?>, CollectionEntry>) collectionEntries ).entryArray() ) {
+				final CollectionEntry ce = me.getValue();
+				if ( !ce.isReached() && !ce.isIgnore() ) {
+					Collections.processUnreachableCollection( me.getKey(), session );
+				}
+			}
+		}
 
 		// Schedule updates to collections:
 
@@ -258,15 +325,17 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 					}
 					if ( ce.isDoremove() ) {
 						interceptor.onCollectionRemove( coll, ce.getLoadedKey() );
-						actionQueue.addAction(
-								new CollectionRemoveAction(
-										coll,
-										ce.getLoadedPersister(),
-										ce.getLoadedKey(),
-										ce.isSnapshotEmpty( coll ),
-										session
-								)
-						);
+						if ( !skipRemoval( session, ce.getLoadedPersister(), ce.getLoadedKey() ) ) {
+							actionQueue.addAction(
+									new CollectionRemoveAction(
+											coll,
+											ce.getLoadedPersister(),
+											ce.getLoadedKey(),
+											ce.isSnapshotEmpty( coll ),
+											session
+									)
+							);
+						}
 					}
 					if ( ce.isDoupdate() ) {
 						interceptor.onCollectionUpdate( coll, ce.getLoadedKey() );
@@ -322,8 +391,8 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		try {
 			jdbcCoordinator.flushBeginning();
 			persistenceContext.setFlushing( true );
-			// we need to lock the collection caches before executing entity inserts/updates in order to
-			// account for bi-directional associations
+			// we need to lock the collection caches before executing entity inserts/updates
+			// in order to account for bidirectional associations
 			final ActionQueue actionQueue = session.getActionQueue();
 			actionQueue.prepareActions();
 			actionQueue.executeActions();
@@ -350,7 +419,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		persistenceContext.clearCollectionsByKey();
-		
+
 		// the database has changed now, so the subselect results need to be invalidated
 		// the batch fetching queues should also be cleared - especially the collection batch fetching one
 		persistenceContext.getBatchFetchQueue().clear();
@@ -358,7 +427,8 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		persistenceContext.forEachCollectionEntry(
 				(persistentCollection, collectionEntry) -> {
 					collectionEntry.postFlush( persistentCollection );
-					if ( collectionEntry.getLoadedPersister() == null ) {
+					final Object key;
+					if ( collectionEntry.getLoadedPersister() == null || ( key = collectionEntry.getLoadedKey() ) == null ) {
 						//if the collection is dereferenced, unset its session reference and remove from the session cache
 						//iter.remove(); //does not work, since the entrySet is not backed by the set
 						persistentCollection.unsetSession( session );
@@ -366,9 +436,9 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 					}
 					else {
 						//otherwise recreate the mapping between the collection and its key
-						CollectionKey collectionKey = new CollectionKey(
+						final CollectionKey collectionKey = new CollectionKey(
 								collectionEntry.getLoadedPersister(),
-								collectionEntry.getLoadedKey()
+								key
 						);
 						persistenceContext.addCollectionByKey( collectionKey, persistentCollection );
 					}

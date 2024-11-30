@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa;
 
@@ -14,7 +12,7 @@ import jakarta.persistence.LockModeType;
 
 /**
  * The hints explicitly defined by the Jakarta Persistence specification
- * which are available for both queries and loading
+ * which are available for both queries and loading.
  *
  * @see jakarta.persistence.EntityManager#setProperty
  * @see jakarta.persistence.EntityManager#find(Class, Object, Map)
@@ -62,8 +60,9 @@ public interface SpecHints {
 	String HINT_SPEC_QUERY_TIMEOUT = "jakarta.persistence.query.timeout";
 
 	/**
-	 * Hint specifying how Hibernate should handle retrieving data from
-	 * the second level cache.
+	 * Hint specifying how Hibernate should interact with the second level cache
+	 * when it has the opportunity to retrieve data from the cache. The value must
+	 * be a {@link jakarta.persistence.CacheRetrieveMode}.
 	 *
 	 * @see jakarta.persistence.CacheRetrieveMode
 	 * @see jakarta.persistence.EntityManager#setProperty
@@ -73,8 +72,9 @@ public interface SpecHints {
 	String HINT_SPEC_CACHE_RETRIEVE_MODE = "jakarta.persistence.cache.retrieveMode";
 
 	/**
-	 * Hint specifying how Hibernate should handle retrieving data from
-	 * the second level cache.
+	 * Hint specifying how Hibernate should interact with the second level cache
+	 * when it has the opportunity to store data in the cache. The value must be a
+	 * {@link jakarta.persistence.CacheStoreMode}.
 	 *
 	 * @see jakarta.persistence.CacheStoreMode
 	 * @see jakarta.persistence.EntityManager#setProperty

@@ -1,36 +1,35 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.dialect;
 
 import java.util.Locale;
 
-import org.hibernate.dialect.SQLServer2012Dialect;
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.query.spi.Limit;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
 
 /**
- * Tests the Limit/Offset handler for {@link SQLServer2012Dialect}.
+ * Tests the Limit/Offset handler for {@link SQLServerDialect, v11}.
  *
  * @author Chris Cranford
  */
 public class SQLServer2012DialectTestCase extends BaseUnitTestCase {
-	private SQLServer2012Dialect dialect;
+	private SQLServerDialect dialect;
 
 	@Before
 	public void setup() {
-		dialect = new SQLServer2012Dialect();
+		dialect = new SQLServerDialect( DatabaseVersion.make( 11 ) );
 	}
 
 	@After
@@ -39,7 +38,7 @@ public class SQLServer2012DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8768")
+	@JiraKey(value = "HHH-8768")
 	public void testGetLimitStringMaxRowsOnly() {
 		final String input = "select distinct f1 as f53245 from table846752 order by f234, f67 desc";
 		assertEquals(
@@ -49,7 +48,7 @@ public class SQLServer2012DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8768")
+	@JiraKey(value = "HHH-8768")
 	public void testGetLimitStringWithOffsetAndMaxRows() {
 		final String input = "select distinct f1 as f53245 from table846752 order by f234, f67 desc";
 		assertEquals(
@@ -59,7 +58,7 @@ public class SQLServer2012DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8768")
+	@JiraKey(value = "HHH-8768")
 	public void testGetLimitStringMaxRowsOnlyNoOrderBy() {
 		final String input = "select f1 from table";
 		assertEquals(
@@ -69,7 +68,7 @@ public class SQLServer2012DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8768")
+	@JiraKey(value = "HHH-8768")
 	public void testGetLimitStringWithOffsetAndMaxRowsNoOrderBy() {
 		final String input = "select f1 from table";
 		assertEquals(

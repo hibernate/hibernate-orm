@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.orm.junit;
 
@@ -17,8 +15,8 @@ import jakarta.persistence.ValidationMode;
 import jakarta.persistence.spi.PersistenceUnitTransactionType;
 
 import org.hibernate.jpa.spi.JpaCompliance;
-import org.hibernate.resource.jdbc.spi.StatementInspector;
 
+import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.domain.DomainModelDescriptor;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.junit.jupiter.api.TestInstance;
@@ -30,7 +28,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
  * @author Steve Ebersole
  */
 @Inherited
-@Target( ElementType.TYPE )
+@Target( {ElementType.TYPE, ElementType.METHOD} )
 @Retention( RetentionPolicy.RUNTIME )
 
 @TestInstance( TestInstance.Lifecycle.PER_CLASS )
@@ -84,12 +82,6 @@ public @interface Jpa {
 	boolean closedComplianceEnabled() default false;
 
 	/**
-	 * @see JpaCompliance#isJpaListComplianceEnabled()
-	 * @see org.hibernate.cfg.AvailableSettings#DEFAULT_LIST_SEMANTICS
-	 */
-	boolean listMappingComplianceEnabled() default false;
-
-	/**
 	 * @see JpaCompliance#isJpaOrderByMappingComplianceEnabled()
 	 */
 	boolean orderByMappingComplianceEnabled() default false;
@@ -122,4 +114,12 @@ public @interface Jpa {
 	String[] annotatedClassNames() default {};
 	String[] annotatedPackageNames() default {};
 	String[] xmlMappings() default {};
+
+	/**
+	 * Shortcut for adding {@code @Setting( name = AvailableSettings.STATEMENT_INSPECTOR, value = "org.hibernate.testing.jdbc.SQLStatementInspector"}
+	 * to the integration settings.
+	 * Note: if the statement inspector is also explicitly specified as a setting, it will be overridden by the shortcut
+	 * @see SQLStatementInspector
+	 */
+	boolean useCollectingStatementInspector() default false;
 }

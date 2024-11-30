@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.cascade.multilevel;
 
@@ -21,14 +19,13 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
 import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ImplicitListAsBagProvider;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -93,7 +90,7 @@ public class MultiLevelCascadeCollectionEmbeddableTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12294" )
+	@JiraKey( value = "HHH-12294" )
 	public void testHibernateDeleteEntityInitializeCollections(EntityManagerFactoryScope scope) {
 		if ( !initialized ) {
 			initialize(scope);
@@ -269,10 +266,8 @@ public class MultiLevelCascadeCollectionEmbeddableTest {
 		private AnotherSubSubEntityId id;
 
 		@ManyToOne(fetch = FetchType.LAZY)
-		@JoinColumns({
-				@JoinColumn(name = "ID_NUM", referencedColumnName = "ID_NUM", insertable = false, updatable = false),
-				@JoinColumn(name = "PERSON", referencedColumnName = "FAMILY_IDENTIFIER", insertable = false, updatable = false)
-		})
+		@JoinColumn(name = "ID_NUM", referencedColumnName = "ID_NUM", insertable = false, updatable = false)
+		@JoinColumn(name = "PERSON", referencedColumnName = "FAMILY_IDENTIFIER", insertable = false, updatable = false)
 		private SubEntity subEntity;
 	}
 
@@ -336,10 +331,8 @@ public class MultiLevelCascadeCollectionEmbeddableTest {
 		private SubSubEntityId id;
 
 		@ManyToOne(fetch = FetchType.LAZY)
-		@JoinColumns({
-				@JoinColumn(name = "ID_NUM", referencedColumnName = "ID_NUM", insertable = false, updatable = false),
-				@JoinColumn(name = "IND_NUM", referencedColumnName = "IND_NUM", insertable = false, updatable = false)
-		})
+		@JoinColumn(name = "ID_NUM", referencedColumnName = "ID_NUM", insertable = false, updatable = false)
+		@JoinColumn(name = "IND_NUM", referencedColumnName = "IND_NUM", insertable = false, updatable = false)
 		private SubEntity subEntity;
 	}
 

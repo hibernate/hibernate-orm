@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bootstrap.binding.annotations.attributeOverrides;
 
@@ -22,7 +20,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -36,7 +34,6 @@ import org.junit.jupiter.api.Test;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -52,7 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SessionFactory
 public class EmbeddedOverrideTests {
 	@Test
-	@TestForIssue(jiraKey = "HHH-8630")
+	@JiraKey(value = "HHH-8630")
 	public void testModel(DomainModelScope scope) {
 		assertTrue( SchemaUtil.isColumnPresent( "DOMESTIC_CUSTOMER", "DC_address_street", scope.getDomainModel() ) );
 		assertTrue( SchemaUtil.isColumnPresent( "FOREIGN_CUSTOMER", "FC_address_street", scope.getDomainModel() ) );
@@ -127,10 +124,10 @@ public class EmbeddedOverrideTests {
 				session -> {
 					session.createQuery( "from DomesticCustomer", DomesticCustomer.class )
 							.list()
-							.forEach( cust -> session.delete( cust ) );
+							.forEach( cust -> session.remove( cust ) );
 					session.createQuery( "from ForeignCustomer", ForeignCustomer.class )
 							.list()
-							.forEach( cust -> session.delete( cust ) );
+							.forEach( cust -> session.remove( cust ) );
 				}
 		);
 	}

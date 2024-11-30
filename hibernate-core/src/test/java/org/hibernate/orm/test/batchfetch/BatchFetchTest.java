@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.batchfetch;
 
@@ -58,7 +56,7 @@ public class BatchFetchTest {
 					Model hsv = new Model( cars );
 					hsv.setName( "hsv" );
 					hsv.setDescription( "Holden Commodore HSV" );
-					session.save( cars );
+					session.persist( cars );
 
 					ossProductLine.setDescription( "OSS" );
 					Model jboss = new Model( ossProductLine );
@@ -70,7 +68,7 @@ public class BatchFetchTest {
 					Model cache = new Model( ossProductLine );
 					cache.setName( "JBossCache" );
 					cache.setDescription( "JBoss TreeCache" );
-					session.save( ossProductLine );
+					session.persist( ossProductLine );
 				}
 		);
 
@@ -127,8 +125,8 @@ public class BatchFetchTest {
 					ProductLine oss = list.get( 1 );
 					assertEquals( cars.getModels().size(), 2 );
 					assertEquals( oss.getModels().size(), 3 );
-					session.delete( cars );
-					session.delete( oss );
+					session.remove( cars );
+					session.remove( oss );
 				}
 		);
 	}
@@ -140,7 +138,7 @@ public class BatchFetchTest {
 		scope.inTransaction(
 				session -> {
 					for ( int i = 0; i < size; i++ ) {
-						session.save( new BatchLoadableEntity( i ) );
+						session.persist( new BatchLoadableEntity( i ) );
 					}
 				}
 		);
@@ -149,13 +147,13 @@ public class BatchFetchTest {
 				session -> {
 					// load them all as proxies
 					for ( int i = 0; i < size; i++ ) {
-						BatchLoadableEntity entity = session.load( BatchLoadableEntity.class, i );
+						BatchLoadableEntity entity = session.getReference( BatchLoadableEntity.class, i );
 						assertFalse( Hibernate.isInitialized( entity ) );
 					}
 					scope.getSessionFactory().getStatistics().clear();
 					// now start initializing them...
 					for ( int i = 0; i < size; i++ ) {
-						BatchLoadableEntity entity = session.load( BatchLoadableEntity.class, i );
+						BatchLoadableEntity entity = session.getReference( BatchLoadableEntity.class, i );
 						Hibernate.initialize( entity );
 						assertTrue( Hibernate.isInitialized( entity ) );
 					}
@@ -192,4 +190,3 @@ public class BatchFetchTest {
 		);
 	}
 }
-

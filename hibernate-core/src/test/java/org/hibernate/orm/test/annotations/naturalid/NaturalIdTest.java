@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.naturalid;
 
@@ -22,10 +20,13 @@ import org.hibernate.stat.Statistics;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.cfg.CacheSettings.USE_QUERY_CACHE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * Test case for NaturalId annotation
@@ -33,7 +34,6 @@ import static org.junit.Assert.assertNotNull;
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
-@SuppressWarnings("unchecked")
 public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 	@After
 	public void cleanupData() {
@@ -67,7 +67,7 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testNaturalIdCached() {
 		saveSomeCitizens();
-		
+
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		State france = this.getState( s, "Ile de France" );
@@ -136,26 +136,76 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	public void testManyToOneNaturalLoadByNaturalId() {
+		NaturalIdOnManyToOne singleManyToOne1 = new NaturalIdOnManyToOne();
+		NaturalIdOnManyToOne singleManyToOne2 = new NaturalIdOnManyToOne();
+
+		Citizen c1 = new Citizen();
+		c1.setFirstname( "Emmanuel" );
+		c1.setLastname( "Bernard" );
+		c1.setSsn( "1234" );
+
+		State france = new State();
+		france.setName( "Ile de France" );
+		c1.setState( france );
+
+		singleManyToOne1.setCitizen( c1 );
+		singleManyToOne2.setCitizen( null );
+
+		inTransaction(
+				session -> {
+					session.persist( france );
+					session.persist( c1 );
+					session.persist( singleManyToOne1 );
+					session.persist( singleManyToOne2 );
+				}
+		);
+
+		inSession(
+				session -> {
+					session.getSessionFactory().getCache().evictNaturalIdData(); // we want to go to the database
+					session.beginTransaction();
+					try {
+						NaturalIdOnManyToOne instance1 = session.byNaturalId( NaturalIdOnManyToOne.class )
+								.using( "citizen", c1 )
+								.load();
+						Assertions.assertNotNull( instance1 );
+						Assertions.assertNotNull( instance1.getCitizen() );
+
+						NaturalIdOnManyToOne instance2 = session.byNaturalId( NaturalIdOnManyToOne.class )
+								.using( "citizen", null ).load();
+
+						Assertions.assertNotNull( instance2 );
+						assertNull( instance2.getCitizen() );
+					}
+					finally {
+						session.getTransaction().rollback();
+					}
+				}
+		);
+	}
+
+	@Test
 	public void testNaturalIdLoaderCached() {
 		Statistics stats = sessionFactory().getStatistics();
 		stats.setStatisticsEnabled( true );
 		stats.clear();
-		
+
 		assertEquals( "NaturalId Cache Hits", 0, stats.getNaturalIdCacheHitCount() );
 		assertEquals( "NaturalId Cache Misses", 0, stats.getNaturalIdCacheMissCount() );
 		assertEquals( "NaturalId Cache Puts", 0, stats.getNaturalIdCachePutCount() );
 		assertEquals( "NaturalId Cache Queries", 0, stats.getNaturalIdQueryExecutionCount() );
 
 		saveSomeCitizens();
-		
+
 		assertEquals( "NaturalId Cache Hits", 0, stats.getNaturalIdCacheHitCount() );
 		assertEquals( "NaturalId Cache Misses", 0, stats.getNaturalIdCacheMissCount() );
 		assertEquals( "NaturalId Cache Puts", 2, stats.getNaturalIdCachePutCount() );
 		assertEquals( "NaturalId Cache Queries", 0, stats.getNaturalIdQueryExecutionCount() );
 
-		
+
 		//Try NaturalIdLoadAccess after insert
-		
+
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		State france = this.getState( s, "Ile de France" );
@@ -176,8 +226,8 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 		// cleanup
 		tx.rollback();
 		s.close();
-		
-		
+
+
 		//Try NaturalIdLoadAccess
 
 		s = openSession();
@@ -199,9 +249,9 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 		tx.rollback();
 		s.close();
 
-		
+
 		//Try NaturalIdLoadAccess after load
-		
+
 		s = openSession();
 		tx = s.beginTransaction();
 		france = this.getState( s, "Ile de France" );
@@ -326,6 +376,6 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected void configure(Configuration cfg) {
-		cfg.setProperty( "hibernate.cache.use_query_cache", "true" );
+		cfg.setProperty( USE_QUERY_CACHE, true );
 	}
 }

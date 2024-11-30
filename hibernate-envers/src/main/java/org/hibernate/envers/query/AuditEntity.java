@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.query;
 
@@ -202,7 +200,6 @@ public class AuditEntity {
 	 * 		<li>an AuditProperty (see {@link #property(String)})</li>
 	 * 		<li>an other AuditFunction</li>
 	 * </ul>
-	 * @return
 	 */
 	public static AuditFunction function(final String function, final Object... arguments) {
 		List<Object> argumentList = new ArrayList<>();
@@ -212,7 +209,7 @@ public class AuditEntity {
 
 	/**
 	 * Adds a restriction for the type of the current entity.
-	 * 
+	 *
 	 * @param type the entity type to restrict the current alias to
 	 */
 	public static AuditCriterion entityType(final Class<?> type) {

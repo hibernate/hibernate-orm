@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
 
@@ -38,6 +36,7 @@ import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.results.internal.ResolvedSqlSelection;
 import org.hibernate.type.BasicType;
@@ -121,16 +120,14 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 					columnName,
 					false,
 					null,
-					null,
-					mapping.getJdbcMapping(),
-					factory
+					mapping.getJdbcMapping()
 			);
 			final Expression expression = subSelections.get( i ).getExpression();
 			final Expression finalExpression;
 			if ( expression == windowFunction ) {
 				finalExpression = new SelfRenderingAggregateFunctionSqlAstExpression(
 						"min",
-						(sqlAppender, sqlAstArguments, walker1) -> {
+						(sqlAppender, sqlAstArguments, returnType, walker1) -> {
 							sqlAppender.appendSql( "min(" );
 							sqlAstArguments.get( 0 ).accept( walker1 );
 							sqlAppender.append( ')' );
@@ -148,7 +145,6 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 			columnNames.add( columnName );
 			selectClause.addSqlSelection(
 					new ResolvedSqlSelection(
-							i + 1,
 							i,
 							finalExpression,
 							(BasicType<Object>) mapping.getJdbcMapping()
@@ -184,21 +180,16 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 					// so we need to introduce an intermediate selection item
 					final int valuesPosition = selectClause.getSqlSelections().size();
 					final String columnName = "col" + valuesPosition;
-					final JdbcMapping jdbcMapping = realExpression.getExpressionType()
-							.getJdbcMappings()
-							.get( 0 );
+					final JdbcMapping jdbcMapping = realExpression.getExpressionType().getSingleJdbcMapping();
 					final ColumnReference columnReference = new ColumnReference(
 							identifierVariable,
 							columnName,
 							false,
 							null,
-							null,
-							jdbcMapping,
-							factory
+							jdbcMapping
 					);
 					final int subValuesPosition = subSelectClause.getSqlSelections().size();
 					final SqlSelection subSelection = new ResolvedSqlSelection(
-							subValuesPosition + 1,
 							subValuesPosition,
 							realExpression,
 							(BasicType<Object>) jdbcMapping
@@ -249,21 +240,16 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 							// so we need to introduce an intermediate selection item
 							final int valuesPosition = selectClause.getSqlSelections().size();
 							final String columnName = "col" + valuesPosition;
-							final JdbcMapping jdbcMapping = realExpression.getExpressionType()
-									.getJdbcMappings()
-									.get( 0 );
+							final JdbcMapping jdbcMapping = realExpression.getExpressionType().getSingleJdbcMapping();
 							final ColumnReference columnReference = new ColumnReference(
 									identifierVariable,
 									columnName,
 									false,
 									null,
-									null,
-									jdbcMapping,
-									factory
+									jdbcMapping
 							);
 							final int subValuesPosition = subSelectClause.getSqlSelections().size();
 							final SqlSelection subSelection = new ResolvedSqlSelection(
-									subValuesPosition + 1,
 									subValuesPosition,
 									realExpression,
 									(BasicType<Object>) jdbcMapping
@@ -311,21 +297,16 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 						// so we need to introduce an intermediate selection item
 						final int valuesPosition = selectClause.getSqlSelections().size();
 						final String columnName = "col" + valuesPosition;
-						final JdbcMapping jdbcMapping = realExpression.getExpressionType()
-								.getJdbcMappings()
-								.get( 0 );
+						final JdbcMapping jdbcMapping = realExpression.getExpressionType().getSingleJdbcMapping();
 						final ColumnReference columnReference = new ColumnReference(
 								identifierVariable,
 								columnName,
 								false,
 								null,
-								null,
-								jdbcMapping,
-								factory
+								jdbcMapping
 						);
 						final int subValuesPosition = subSelectClause.getSqlSelections().size();
 						final SqlSelection subSelection = new ResolvedSqlSelection(
-								subValuesPosition + 1,
 								subValuesPosition,
 								realExpression,
 								(BasicType<Object>) jdbcMapping
@@ -365,7 +346,6 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 			columnNames.add( columnName );
 			subSelectClause.addSqlSelection(
 					new ResolvedSqlSelection(
-							oldValueIndex + 1,
 							oldValueIndex,
 							sortExpression,
 							(BasicType<Object>) mapping.getJdbcMapping()
@@ -377,9 +357,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 							columnName,
 							false,
 							null,
-							null,
-							mapping.getJdbcMapping(),
-							factory
+							mapping.getJdbcMapping()
 					)
 			);
 		}
@@ -417,7 +395,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 		final QueryPartTableGroup queryPartTableGroup = new QueryPartTableGroup(
 				navigablePath,
 				null,
-				subQuerySpec,
+				new SelectStatement( subQuerySpec ),
 				identifierVariable,
 				columnNames,
 				false,

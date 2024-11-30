@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemaupdate.idgenerator;
 
@@ -31,6 +29,7 @@ import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,7 +50,7 @@ public class TableGeneratorsTest extends BaseUnitTestCase {
 
 	@Before
 	public void setUp() throws Exception {
-		ssr = new StandardServiceRegistryBuilder()
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( Environment.HBM2DDL_AUTO, "none" )
 				.build();
 
@@ -61,6 +60,7 @@ public class TableGeneratorsTest extends BaseUnitTestCase {
 		metadata = (MetadataImplementor) new MetadataSources( ssr )
 				.addAnnotatedClass( TestEntity.class )
 				.buildMetadata();
+		metadata.orderColumns( true );
 		metadata.validate();
 	}
 
@@ -78,7 +78,7 @@ public class TableGeneratorsTest extends BaseUnitTestCase {
 				isCommandGenerated( commands, expectedTestEntityTableCreationCommand )
 		);
 
-		final String expectedIdTableGeneratorCreationCommand = "CREATE TABLE ID_TABLE_GENERATOR \\(PK .*, VALUE .*, PRIMARY KEY \\(PK\\)\\);";
+		final String expectedIdTableGeneratorCreationCommand = "CREATE TABLE ID_TABLE_GENERATOR \\(VALUE .*, PK .*, PRIMARY KEY \\(PK\\)\\);";
 
 		assertTrue(
 				"The command '" + expectedIdTableGeneratorCreationCommand + "' has not been correctly generated",

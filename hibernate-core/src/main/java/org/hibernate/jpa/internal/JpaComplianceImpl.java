@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.internal;
 
@@ -12,7 +10,6 @@ import org.hibernate.jpa.spi.JpaCompliance;
  * @author Andrea Boriero
  */
 public class JpaComplianceImpl implements JpaCompliance {
-	private final boolean listCompliance;
 	private final boolean orderByMappingCompliance;
 	private final boolean proxyCompliance;
 	private final boolean globalGeneratorNameScopeCompliance;
@@ -21,9 +18,9 @@ public class JpaComplianceImpl implements JpaCompliance {
 	private final boolean closedCompliance;
 	private final boolean cachingCompliance;
 	private final boolean loadByIdCompliance;
+	private final boolean cascadeCompliance;
 
 	public JpaComplianceImpl(
-			boolean listCompliance,
 			boolean orderByMappingCompliance,
 			boolean proxyCompliance,
 			boolean globalGeneratorNameScopeCompliance,
@@ -31,16 +28,17 @@ public class JpaComplianceImpl implements JpaCompliance {
 			boolean transactionCompliance,
 			boolean closedCompliance,
 			boolean cachingCompliance,
-			boolean loadByIdCompliance) {
+			boolean loadByIdCompliance,
+			boolean cascadeCompliance) {
 		this.queryCompliance = queryCompliance;
 		this.transactionCompliance = transactionCompliance;
-		this.listCompliance = listCompliance;
 		this.closedCompliance = closedCompliance;
 		this.proxyCompliance = proxyCompliance;
 		this.cachingCompliance = cachingCompliance;
 		this.globalGeneratorNameScopeCompliance = globalGeneratorNameScopeCompliance;
 		this.orderByMappingCompliance = orderByMappingCompliance;
 		this.loadByIdCompliance = loadByIdCompliance;
+		this.cascadeCompliance = cascadeCompliance;
 	}
 
 	@Override
@@ -54,8 +52,8 @@ public class JpaComplianceImpl implements JpaCompliance {
 	}
 
 	@Override
-	public boolean isJpaListComplianceEnabled() {
-		return listCompliance;
+	public boolean isJpaCascadeComplianceEnabled() {
+		return cascadeCompliance;
 	}
 
 	@Override
@@ -90,7 +88,6 @@ public class JpaComplianceImpl implements JpaCompliance {
 
 	public static class JpaComplianceBuilder {
 		private boolean queryCompliance;
-		private boolean listCompliance;
 		private boolean orderByMappingCompliance;
 		private boolean proxyCompliance;
 		private boolean globalGeneratorNameScopeCompliance;
@@ -98,12 +95,13 @@ public class JpaComplianceImpl implements JpaCompliance {
 		private boolean transactionCompliance;
 		private boolean closedCompliance;
 		private boolean loadByIdCompliance;
+		private boolean cascadeCompliance;
 
 		public JpaComplianceBuilder() {
 		}
 
-		public JpaComplianceBuilder setListCompliance(boolean listCompliance) {
-			this.listCompliance = listCompliance;
+		public JpaComplianceBuilder setCascadeCompliance(boolean cascadeCompliance) {
+			this.cascadeCompliance = cascadeCompliance;
 			return this;
 		}
 
@@ -149,7 +147,6 @@ public class JpaComplianceImpl implements JpaCompliance {
 
 		JpaCompliance createJpaCompliance() {
 			return new JpaComplianceImpl(
-					listCompliance,
 					orderByMappingCompliance,
 					proxyCompliance,
 					globalGeneratorNameScopeCompliance,
@@ -157,7 +154,8 @@ public class JpaComplianceImpl implements JpaCompliance {
 					transactionCompliance,
 					closedCompliance,
 					cachingCompliance,
-					loadByIdCompliance
+					loadByIdCompliance,
+					cascadeCompliance
 			);
 		}
 	}

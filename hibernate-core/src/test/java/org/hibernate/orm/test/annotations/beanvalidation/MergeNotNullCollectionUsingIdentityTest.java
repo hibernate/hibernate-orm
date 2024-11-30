@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.beanvalidation;
 
@@ -19,6 +17,7 @@ import jakarta.persistence.Table;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.constraints.NotNull;
 
+import org.hibernate.boot.beanvalidation.ValidationMode;
 import org.junit.Test;
 
 import org.hibernate.Session;
@@ -27,8 +26,10 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.hibernate.cfg.ValidationSettings.JAKARTA_VALIDATION_MODE;
 
 /**
  * @author Ryan Emerson
@@ -37,7 +38,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 		DialectChecks.SupportsIdentityColumns.class,
 		DialectChecks.SupportsNoColumnInsert.class
 }, jiraKey = "HHH-9979")
-@TestForIssue( jiraKey = "HHH-9979")
+@JiraKey( value = "HHH-9979")
 public class MergeNotNullCollectionUsingIdentityTest extends BaseCoreFunctionalTestCase {
 
 	@Override
@@ -48,7 +49,7 @@ public class MergeNotNullCollectionUsingIdentityTest extends BaseCoreFunctionalT
 	@Override
 	protected void configure(Configuration cfg) {
 		super.configure( cfg );
-		cfg.setProperty( "javax.persistence.validation.mode", "AUTO" );
+		cfg.setProperty( JAKARTA_VALIDATION_MODE, ValidationMode.AUTO );
 	}
 
 	@Test
@@ -71,7 +72,7 @@ public class MergeNotNullCollectionUsingIdentityTest extends BaseCoreFunctionalT
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.delete( parent );
+		s.remove( parent );
 		t.commit();
 		s.close();
 	}
@@ -90,7 +91,7 @@ public class MergeNotNullCollectionUsingIdentityTest extends BaseCoreFunctionalT
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.delete( parent );
+		s.remove( parent );
 		t.commit();
 		s.close();
 	}

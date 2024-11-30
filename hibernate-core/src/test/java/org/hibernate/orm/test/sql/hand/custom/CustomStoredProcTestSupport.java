@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql.hand.custom;
 
@@ -29,7 +27,7 @@ import static org.junit.Assert.fail;
  *
  * @author Gail Badner
  */
-@SuppressWarnings( {"UnusedDeclaration"})
+@SuppressWarnings("unused")
 public abstract class CustomStoredProcTestSupport extends CustomSQLTestSupport {
 
 	@Override
@@ -42,7 +40,7 @@ public abstract class CustomStoredProcTestSupport extends CustomSQLTestSupport {
 		Session s = openSession();
 //		Query namedQuery = s.getNamedQuery( "simpleScalar" );
 		ProcedureCall namedQuery = s.createNamedStoredProcedureQuery( "simpleScalar" );
-		namedQuery.setParameter( "number", 43 );
+		namedQuery.setParameter( "p_number", 43 );
 		List list = namedQuery.getResultList();
 		Object o[] = ( Object[] ) list.get( 0 );
 		assertEquals( o[0], "getAll" );
@@ -105,10 +103,10 @@ public abstract class CustomStoredProcTestSupport extends CustomSQLTestSupport {
 		ProcedureCall namedQuery = s.createNamedStoredProcedureQuery( "selectAllEmployments" );
 		List list = namedQuery.getResultList();
 		assertTrue( list.get( 0 ) instanceof Employment );
-		s.delete( emp );
-		s.delete( ifa );
-		s.delete( jboss );
-		s.delete( gavin );
+		s.remove( emp );
+		s.remove( ifa );
+		s.remove( jboss );
+		s.remove( gavin );
 
 		t.commit();
 		s.close();

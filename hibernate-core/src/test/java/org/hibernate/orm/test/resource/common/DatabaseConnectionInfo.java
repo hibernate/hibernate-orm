@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.resource.common;
 
@@ -24,7 +22,7 @@ public class DatabaseConnectionInfo {
 	public static final DatabaseConnectionInfo INSTANCE = new DatabaseConnectionInfo();
 
 	public static final String DRIVER = "org.h2.Driver";
-	public static final String URL = "jdbc:h2:mem:hibernate-core";
+	public static final String URL = "jdbc:h2:mem:hibernate-core;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE";
 	public static final String USER = "hibernate";
 	public static final String PASS = "hibernate";
 

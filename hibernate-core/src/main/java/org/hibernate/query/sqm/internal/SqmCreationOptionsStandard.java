@@ -1,26 +1,39 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.internal;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.hql.spi.SqmCreationOptions;
+import org.hibernate.query.spi.QueryEngineOptions;
 
 /**
  * @author Steve Ebersole
  */
 public class SqmCreationOptionsStandard implements SqmCreationOptions {
-	private final SessionFactoryImplementor sessionFactory;
+	private final QueryEngineOptions queryEngineOptions;
 
-	public SqmCreationOptionsStandard(SessionFactoryImplementor sessionFactory) {
-		this.sessionFactory = sessionFactory;
+	public SqmCreationOptionsStandard(QueryEngineOptions queryEngineOptions) {
+		this.queryEngineOptions = queryEngineOptions;
 	}
 
 	@Override
 	public boolean useStrictJpaCompliance() {
-		return sessionFactory.getSessionFactoryOptions().getJpaCompliance().isJpaQueryComplianceEnabled();
+		return queryEngineOptions.getJpaCompliance().isJpaQueryComplianceEnabled();
+	}
+
+	@Override
+	public boolean isJsonFunctionsEnabled() {
+		return queryEngineOptions.isJsonFunctionsEnabled();
+	}
+
+	@Override
+	public boolean isXmlFunctionsEnabled() {
+		return queryEngineOptions.isXmlFunctionsEnabled();
+	}
+
+	@Override
+	public boolean isPortableIntegerDivisionEnabled() {
+		return queryEngineOptions.isPortableIntegerDivisionEnabled();
 	}
 }

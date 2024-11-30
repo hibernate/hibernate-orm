@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
 
@@ -12,13 +10,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.internal.JdbcLiteralFormatterCharacterData;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -48,40 +46,45 @@ public class VarcharJdbcType implements AdjustableJdbcType {
 	}
 
 	@Override
-	public <T> BasicJavaType<T> getJdbcRecommendedJavaTypeMapping(
+	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		if ( length != null && length == 1 ) {
-			return (BasicJavaType<T>) typeConfiguration.getJavaTypeRegistry().getDescriptor( Character.class );
-		}
-		return (BasicJavaType<T>) typeConfiguration.getJavaTypeRegistry().getDescriptor( String.class );
+		return typeConfiguration.getJavaTypeRegistry()
+				.getDescriptor( length != null && length == 1 ? Character.class : String.class );
 	}
 
 	@Override
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
-		//noinspection unchecked
-		return new JdbcLiteralFormatterCharacterData( javaType );
+		return new JdbcLiteralFormatterCharacterData<>( javaType );
 	}
 
 	@Override
-	public JdbcType resolveIndicatedType(
-			JdbcTypeIndicators indicators,
-			JavaType<?> domainJtd) {
+	public JdbcType resolveIndicatedType(JdbcTypeIndicators indicators, JavaType<?> domainJtd) {
 		assert domainJtd != null;
+		return indicators.getTypeConfiguration().getJdbcTypeRegistry()
+				.getDescriptor( indicators.resolveJdbcTypeCode( resolveIndicatedJdbcTypeCode( indicators ) ) );
+	}
 
-		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
-		final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
-
-		final int jdbcTypeCode;
+	protected int resolveIndicatedJdbcTypeCode(JdbcTypeIndicators indicators) {
 		if ( indicators.isLob() ) {
-			jdbcTypeCode = indicators.isNationalized() ? Types.NCLOB : Types.CLOB;
+			return indicators.isNationalized() ? Types.NCLOB : Types.CLOB;
+		}
+		else if ( shouldUseMaterializedLob( indicators ) ) {
+			return indicators.isNationalized() ? SqlTypes.MATERIALIZED_NCLOB : SqlTypes.MATERIALIZED_CLOB;
 		}
 		else {
-			jdbcTypeCode = indicators.isNationalized() ? Types.NVARCHAR : Types.VARCHAR;
+			return indicators.isNationalized() ? Types.NVARCHAR : Types.VARCHAR;
 		}
+	}
 
-		return jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
+	protected boolean shouldUseMaterializedLob(JdbcTypeIndicators indicators) {
+		final Dialect dialect = indicators.getDialect();
+		final long length = indicators.getColumnLength();
+		final long maxLength = indicators.isNationalized() ?
+				dialect.getMaxNVarcharCapacity() :
+				dialect.getMaxVarcharCapacity();
+		return length > maxLength && dialect.useMaterializedLobWhenCapacityExceeded();
 	}
 
 	@Override

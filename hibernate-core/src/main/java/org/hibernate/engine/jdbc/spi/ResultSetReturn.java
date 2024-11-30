@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.spi;
 
@@ -12,86 +10,73 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 
 /**
- * Contract for extracting ResultSets from Statements, executing Statements,
- * managing Statement/ResultSet resources, and logging statement calls.
- * 
- * TODO: This could eventually utilize the new Return interface.  It would be
- * great to have a common API shared.
+ * Contract for extracting {@link ResultSet}s from {@link Statement}s, executing the statements,
+ * managing resources, and logging statement calls.
+ * <p>
+ * Generally the methods here for dealing with {@link CallableStatement} are extremely limited
  *
- * Generally the methods here dealing with CallableStatement are extremely limited, relying on the legacy
- *
- * 
  * @author Brett Meyer
  * @author Steve Ebersole
+ *
+ * @see JdbcCoordinator#getResultSetReturn()
  */
 public interface ResultSetReturn {
-	
+
 	/**
-	 * Extract the ResultSet from the PreparedStatement.
-	 * <p/>
-	 * If user passes {@link CallableStatement} reference, this method calls {@link #extract(CallableStatement)}
-	 * internally.  Otherwise, generally speaking, {@link PreparedStatement#executeQuery()} is called
+	 * Extract the {@link ResultSet} from the {@link PreparedStatement}.
 	 *
-	 * @param statement The PreparedStatement from which to extract the ResultSet
+	 * @param statement The {@link PreparedStatement} from which to extract the {@link ResultSet}
 	 *
-	 * @return The extracted ResultSet
+	 * @return The extracted {@link ResultSet}
 	 */
-	ResultSet extract(PreparedStatement statement);
-	
+	ResultSet extract(PreparedStatement statement, String sql);
+
 	/**
-	 * Extract the ResultSet from the CallableStatement.  Note that this is the limited legacy form which delegates to
-	 * {@link org.hibernate.dialect.Dialect#getResultSet}.  Better option is to integrate
-	 * {@link org.hibernate.procedure.ProcedureCall}-like hooks
+	 * Performs the given SQL statement, expecting a {@link ResultSet} in return
 	 *
-	 * @param callableStatement The CallableStatement from which to extract the ResultSet
-	 *
-	 * @return The extracted ResultSet
-	 */
-	ResultSet extract(CallableStatement callableStatement);
-	
-	/**
-	 * Performs the given SQL statement, expecting a ResultSet in return
-	 *
-	 * @param statement The JDBC Statement object to use
+	 * @param statement The JDBC {@link Statement} object to use
 	 * @param sql The SQL to execute
 	 *
-	 * @return The resulting ResultSet
+	 * @return The resulting {@link ResultSet}
 	 */
 	ResultSet extract(Statement statement, String sql);
-	
+
 	/**
-	 * Execute the PreparedStatement return its first ResultSet, if any.  If there is no ResultSet, returns {@code null}
+	 * Execute the {@link PreparedStatement} return its first {@link ResultSet}, if any.
+	 * If there is no {@link ResultSet}, returns {@code null}
 	 *
-	 * @param statement The PreparedStatement to execute
+	 * @param statement The {@link PreparedStatement} to execute
+	 * @param sql For error reporting
 	 *
-	 * @return The extracted ResultSet, or {@code null}
+	 * @return The extracted {@link ResultSet}, or {@code null}
 	 */
-	ResultSet execute(PreparedStatement statement);
-	
+	ResultSet execute(PreparedStatement statement, String sql);
+
 	/**
-	 * Performs the given SQL statement, returning its first ResultSet, if any.  If there is no ResultSet,
-	 * returns {@code null}
+	 * Performs the given SQL statement, returning its first {@link ResultSet}, if any.
+	 * If there is no {@link ResultSet}, returns {@code null}
 	 *
-	 * @param statement The JDBC Statement object to use
+	 * @param statement The JDBC {@link Statement} object to use
 	 * @param sql The SQL to execute
 	 *
-	 * @return The extracted ResultSet, or {@code null}
+	 * @return The extracted {@link ResultSet}, or {@code null}
 	 */
 	ResultSet execute(Statement statement, String sql);
-	
+
 	/**
-	 * Execute the PreparedStatement, returning its "affected row count".
+	 * Execute the {@link PreparedStatement}, returning its "affected row count".
 	 *
-	 * @param statement The PreparedStatement to execute
+	 * @param statement The {@link PreparedStatement} to execute
+	 * @param sql For error reporting
 	 *
 	 * @return The {@link PreparedStatement#executeUpdate()} result
 	 */
-	int executeUpdate(PreparedStatement statement);
-	
+	int executeUpdate(PreparedStatement statement, String sql);
+
 	/**
 	 * Execute the given SQL statement returning its "affected row count".
 	 *
-	 * @param statement The JDBC Statement object to use
+	 * @param statement The JDBC {@link Statement} object to use
 	 * @param sql The SQL to execute
 	 *
 	 * @return The {@link PreparedStatement#executeUpdate(String)} result

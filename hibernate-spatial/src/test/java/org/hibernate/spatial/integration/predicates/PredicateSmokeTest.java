@@ -1,14 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.spatial.integration.predicates;
 
 import java.util.List;
 
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.spatial.predicate.GeolatteSpatialPredicates;
 import org.hibernate.spatial.testing.IsSupportedBySpatial;
 import org.hibernate.spatial.testing.SpatialSessionFactoryAware;
@@ -18,6 +16,7 @@ import org.hibernate.spatial.testing.domain.SpatialDomainModel;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -34,6 +33,7 @@ import static org.geolatte.geom.crs.CoordinateReferenceSystems.WGS84;
 @DomainModel(modelDescriptorClasses = SpatialDomainModel.class)
 @SessionFactory
 @RequiresDialectFeature(feature = IsSupportedBySpatial.class)
+@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 11, reason = "See https://hibernate.atlassian.net/browse/HHH-15669")
 public class PredicateSmokeTest extends SpatialSessionFactoryAware {
 
 	Polygon<G2D> poly = polygon(

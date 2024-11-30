@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.propertyref.inheritence.discrim;
 
@@ -70,9 +68,9 @@ public class SubclassPropertyRefTest {
 					Customer c = (Customer) session.createQuery( "from Customer" ).uniqueResult();
 					assertSame(  a.getCustomer(), c );
 					assertSame(  a.getPerson(), c );
-					session.delete( a );
-					session.delete( a.getCustomer() );
-					session.delete( a.getPerson() );
+					session.remove( a );
+					session.remove( a.getCustomer() );
+					session.remove( a.getPerson() );
 				}
 		);
 	}

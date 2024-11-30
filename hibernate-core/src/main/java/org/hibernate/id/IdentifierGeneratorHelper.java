@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id;
 
@@ -12,17 +10,30 @@ import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.Objects;
+import java.util.Properties;
 
-import org.hibernate.HibernateException;
-import org.hibernate.dialect.Dialect;
+import org.hibernate.Internal;
+import org.hibernate.TransientObjectException;
+import org.hibernate.boot.registry.selector.spi.StrategySelector;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.id.enhanced.ImplicitDatabaseObjectNamingStrategy;
+import org.hibernate.id.enhanced.StandardNamingStrategy;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.type.CustomType;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
+
+import static org.hibernate.cfg.MappingSettings.ID_DB_STRUCTURE_NAMING_STRATEGY;
+import static org.hibernate.engine.internal.ForeignKeys.getEntityIdentifierIfNotUnsaved;
+import static org.hibernate.internal.log.IncubationLogger.INCUBATION_LOGGER;
+import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
+import static org.hibernate.spi.NavigablePath.IDENTIFIER_MAPPER_PROPERTY;
 
 /**
  * Factory and helper methods for {@link IdentifierGenerator} framework.
@@ -30,157 +41,25 @@ import org.hibernate.type.Type;
  * @author Gavin King
  * @author Steve Ebersole
  */
+@Internal
 public final class IdentifierGeneratorHelper {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( IdentifierGeneratorHelper.class );
 
 	/**
-	 * Marker object returned from {@link IdentifierGenerator#generate} to indicate that we should short-circuit any
-	 * continued generated id checking.  Currently this is only used in the case of the
+	 * Marker object returned from {@link IdentifierGenerator#generate} to indicate that we should
+	 * short-circuit any continued generated id checking. Currently, this is only used in the case of the
 	 * {@linkplain ForeignGenerator foreign} generator as a way to signal that we should use the associated
 	 * entity's id value.
+	 *
+	 * @deprecated This is not an elegant way to do anything
 	 */
+	@Deprecated(forRemoval = true, since = "6.2")
 	public static final Serializable SHORT_CIRCUIT_INDICATOR = new Serializable() {
 		@Override
 		public String toString() {
 			return "SHORT_CIRCUIT_INDICATOR";
 		}
 	};
-
-	/**
-	 * Marker object returned from {@link IdentifierGenerator#generate} to indicate that the entity's identifier will
-	 * be generated as part of the database insertion.
-	 */
-	public static final Serializable POST_INSERT_INDICATOR = new Serializable() {
-		@Override
-		public String toString() {
-			return "POST_INSERT_INDICATOR";
-		}
-	};
-
-
-	/**
-	 * Get the generated identifier when using identity columns
-	 *
-	 * @param rs The result set from which to extract the generated identity.
-	 * @param identifier The name of the identifier column
-	 * @param type The expected type mapping for the identity value.
-	 * @param dialect The current database dialect.
-	 *
-	 * @return The generated identity value
-	 *
-	 * @throws SQLException Can be thrown while accessing the result set
-	 * @throws HibernateException Indicates a problem reading back a generated identity value.
-	 */
-	public static Object getGeneratedIdentity(ResultSet rs, String identifier, Type type, Dialect dialect)
-			throws SQLException, HibernateException {
-		if ( !rs.next() ) {
-			throw new HibernateException( "The database returned no natively generated identity value" );
-		}
-		final Object id = get( rs, identifier, type, dialect );
-		LOG.debugf( "Natively generated identity: %s", id );
-		return id;
-	}
-
-	/**
-	 * Extract the value from the result set (which is assumed to already have been positioned to the appropriate row)
-	 * and wrp it in the appropriate Java numeric type.
-	 *
-	 * @param rs The result set from which to extract the value.
-	 * @param identifier The name of the identifier column
-	 * @param type The expected type of the value.
-	 * @param dialect The current database dialect.
-	 *
-	 * @return The extracted value.
-	 *
-	 * @throws SQLException Indicates problems access the result set
-	 * @throws IdentifierGenerationException Indicates an unknown type.
-	 */
-	public static Object get(ResultSet rs, String identifier, Type type, Dialect dialect)
-			throws SQLException, IdentifierGenerationException {
-		if ( type instanceof ResultSetIdentifierConsumer ) {
-			return ( (ResultSetIdentifierConsumer) type ).consumeIdentifier( rs );
-		}
-		if ( type instanceof CustomType ) {
-			final CustomType<?> customType = (CustomType<?>) type;
-			if (customType.getUserType() instanceof ResultSetIdentifierConsumer) {
-				return ( (ResultSetIdentifierConsumer) customType.getUserType() ).consumeIdentifier( rs );
-			}
-		}
-		ResultSetMetaData resultSetMetaData;
-		int columnCount = 1;
-		try {
-			resultSetMetaData = rs.getMetaData();
-			columnCount = resultSetMetaData.getColumnCount();
-		}
-		catch (Exception e) {
-			//Oracle driver will throw NPE
-		}
-
-		Class<?> clazz = type.getReturnedClass();
-		if ( columnCount == 1 ) {
-			if ( clazz == Long.class ) {
-				return rs.getLong( 1 );
-			}
-			else if ( clazz == Integer.class ) {
-				return rs.getInt( 1 );
-			}
-			else if ( clazz == Short.class ) {
-				return rs.getShort( 1 );
-			}
-			else if ( clazz == String.class ) {
-				return rs.getString( 1 );
-			}
-			else if ( clazz == BigInteger.class ) {
-				return rs.getBigDecimal( 1 ).setScale( 0, RoundingMode.UNNECESSARY ).toBigInteger();
-			}
-			else if ( clazz == BigDecimal.class ) {
-				return rs.getBigDecimal( 1 ).setScale( 0, RoundingMode.UNNECESSARY );
-			}
-			else {
-				throw new IdentifierGenerationException(
-						"unrecognized id type : " + type.getName() + " -> " + clazz.getName()
-				);
-			}
-		}
-		else {
-			try {
-				return extractIdentifier( rs, identifier, type, clazz );
-			}
-			catch (SQLException e) {
-				if ( StringHelper.isQuoted( identifier, dialect ) ) {
-					return extractIdentifier( rs, StringHelper.unquote( identifier, dialect ), type, clazz );
-				}
-				throw e;
-			}
-		}
-	}
-
-	private static Object extractIdentifier(ResultSet rs, String identifier, Type type, Class<?> clazz)
-			throws SQLException {
-		if ( clazz == Long.class ) {
-			return rs.getLong( identifier );
-		}
-		else if ( clazz == Integer.class ) {
-			return rs.getInt( identifier );
-		}
-		else if ( clazz == Short.class ) {
-			return rs.getShort( identifier );
-		}
-		else if ( clazz == String.class ) {
-			return rs.getString( identifier );
-		}
-		else if ( clazz == BigInteger.class ) {
-			return rs.getBigDecimal( identifier ).setScale( 0, RoundingMode.UNNECESSARY ).toBigInteger();
-		}
-		else if ( clazz == BigDecimal.class ) {
-			return rs.getBigDecimal( identifier ).setScale( 0, RoundingMode.UNNECESSARY );
-		}
-		else {
-			throw new IdentifierGenerationException(
-					"unrecognized id type : " + type.getName() + " -> " + clazz.getName()
-			);
-		}
-	}
 
 	public static IntegralDataTypeHolder getIntegralDataTypeHolder(Class<?> integralType) {
 		if ( integralType == Long.class
@@ -251,6 +130,69 @@ public final class IdentifierGeneratorHelper {
 		throw new IdentifierGenerationException( "Unknown IntegralDataTypeHolder impl [" + holder + "]" );
 	}
 
+	public static Object getForeignId(
+			String entityName, String propertyName, SharedSessionContractImplementor sessionImplementor, Object object) {
+		final EntityPersister entityDescriptor =
+				sessionImplementor.getFactory().getMappingMetamodel()
+						.getEntityDescriptor( entityName );
+		if ( sessionImplementor.isSessionImplementor()
+				&& sessionImplementor.asSessionImplementor().contains( entityName, object ) ) {
+			//abort the save (the object is already saved by a circular cascade)
+			return SHORT_CIRCUIT_INDICATOR;
+			//throw new IdentifierGenerationException("save associated object first, or disable cascade for inverse association");
+		}
+		else {
+			return identifier( sessionImplementor, entityType( propertyName, entityDescriptor ),
+					associatedEntity( entityName, propertyName, object, entityDescriptor ) );
+		}
+	}
+
+	private static Object associatedEntity(
+			String entityName, String propertyName, Object object, EntityPersister entityDescriptor) {
+		final Object associatedObject = entityDescriptor.getPropertyValue( object, propertyName );
+		if ( associatedObject == null ) {
+			throw new IdentifierGenerationException( "Could not assign id from null association '" + propertyName
+					+ "' of entity '" + entityName + "'" );
+		}
+		return associatedObject;
+	}
+
+	private static Object identifier(
+			SharedSessionContractImplementor sessionImplementor,
+			EntityType foreignValueSourceType,
+			Object associatedEntity) {
+		final String associatedEntityName = foreignValueSourceType.getAssociatedEntityName();
+		try {
+			return getEntityIdentifierIfNotUnsaved( associatedEntityName, associatedEntity, sessionImplementor );
+		}
+		catch (TransientObjectException toe) {
+			if ( sessionImplementor.isSessionImplementor() ) {
+				sessionImplementor.asSessionImplementor().persist( associatedEntityName, associatedEntity );
+				return sessionImplementor.getContextEntityIdentifier( associatedEntity );
+			}
+			else if ( sessionImplementor.isStatelessSession() ) {
+				return sessionImplementor.asStatelessSession().insert( associatedEntityName, associatedEntity );
+			}
+			else {
+				throw new IdentifierGenerationException("sessionImplementor is neither Session nor StatelessSession");
+			}
+		}
+	}
+
+	private static EntityType entityType(String propertyName, EntityPersister entityDescriptor) {
+		final Type propertyType = entityDescriptor.getPropertyType( propertyName );
+		if ( propertyType instanceof EntityType ) {
+			// the normal case
+			return (EntityType) propertyType;
+		}
+		else {
+			// try identifier mapper
+			final String mapperPropertyName = IDENTIFIER_MAPPER_PROPERTY + "." + propertyName;
+			return (EntityType) entityDescriptor.getPropertyType( mapperPropertyName );
+		}
+	}
+
+	@Internal
 	public static class BasicHolder implements IntegralDataTypeHolder {
 		private final Class<?> exactType;
 		private long value = Long.MIN_VALUE;
@@ -405,7 +347,7 @@ public final class IdentifierGeneratorHelper {
 
 		@Override
 		public int hashCode() {
-			return (int) ( value ^ ( value >>> 32 ) );
+			return Long.hashCode(value);
 		}
 	}
 
@@ -689,6 +631,31 @@ public final class IdentifierGeneratorHelper {
 		public int hashCode() {
 			return Objects.hashCode( value );
 		}
+	}
+
+	public static ImplicitDatabaseObjectNamingStrategy getNamingStrategy(Properties params, ServiceRegistry serviceRegistry) {
+		final StrategySelector strategySelector = serviceRegistry.requireService( StrategySelector.class );
+
+		final String namingStrategySetting = coalesceSuppliedValues(
+				() -> {
+					final String localSetting = getString( ID_DB_STRUCTURE_NAMING_STRATEGY, params );
+					if ( localSetting != null ) {
+						INCUBATION_LOGGER.incubatingSetting( ID_DB_STRUCTURE_NAMING_STRATEGY );
+					}
+					return localSetting;
+				},
+				() -> {
+					final ConfigurationService configurationService = serviceRegistry.requireService( ConfigurationService.class );
+					final String globalSetting = getString( ID_DB_STRUCTURE_NAMING_STRATEGY, configurationService.getSettings() );
+					if ( globalSetting != null ) {
+						INCUBATION_LOGGER.incubatingSetting( ID_DB_STRUCTURE_NAMING_STRATEGY );
+					}
+					return globalSetting;
+				},
+				StandardNamingStrategy.class::getName
+		);
+
+		return strategySelector.resolveStrategy( ImplicitDatabaseObjectNamingStrategy.class, namingStrategySetting );
 	}
 
 	/**

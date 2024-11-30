@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.foreignkeys;
 
@@ -20,15 +18,15 @@ import jakarta.persistence.ManyToOne;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.mapping.Table;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 /**
  * @author Yanming Zhou
  */
-@TestForIssue(jiraKey = "HHH-14230")
+@JiraKey(value = "HHH-14230")
 public class HHH14230 {
 
 	private static final String TABLE_NAME = "test_entity";
@@ -36,7 +34,7 @@ public class HHH14230 {
 
 	@Test
 	public void test() {
-		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().build()) {
+		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistry()) {
 			Metadata metadata = new MetadataSources( serviceRegistry )
 					.addAnnotatedClass( TestEntity.class ).buildMetadata();
 			Table table = StreamSupport.stream( metadata.getDatabase().getNamespaces().spliterator(), false )

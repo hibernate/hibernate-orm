@@ -1,10 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.spatial.testing.dialects.sqlserver;
 
 import org.hibernate.spatial.testing.dialects.NativeSQLTemplates;
@@ -28,7 +25,6 @@ import static org.hibernate.spatial.CommonSpatialFunction.ST_INTERSECTS;
 import static org.hibernate.spatial.CommonSpatialFunction.ST_ISEMPTY;
 import static org.hibernate.spatial.CommonSpatialFunction.ST_ISSIMPLE;
 import static org.hibernate.spatial.CommonSpatialFunction.ST_OVERLAPS;
-import static org.hibernate.spatial.CommonSpatialFunction.ST_RELATE;
 import static org.hibernate.spatial.CommonSpatialFunction.ST_SRID;
 import static org.hibernate.spatial.CommonSpatialFunction.ST_SYMDIFFERENCE;
 import static org.hibernate.spatial.CommonSpatialFunction.ST_TOUCHES;
@@ -56,7 +52,7 @@ public class SqlServerNativeSqlTemplates extends NativeSQLTemplates {
 				"select id, geom.STIntersects(geometry::::STGeomFromText(:filter, 4326)) as result from %s"
 		);
 		sqls.put( ST_CROSSES,
-				  "select id, geom.STCrosses(geometry::::STGeomFromText(:filter, 4326)) as result from %s"
+				"select id, geom.STCrosses(geometry::::STGeomFromText(:filter, 4326)) as result from %s"
 		);
 		sqls.put( ST_CONTAINS, "select id, geom.STContains(geometry::::STGeomFromText(:filter, 4326)) as result from %s" );
 

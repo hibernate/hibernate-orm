@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.spi;
 
@@ -11,18 +9,19 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
-import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Component;
@@ -30,8 +29,10 @@ import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.type.Type;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -114,22 +115,22 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 	}
 
 	@Override
-	public NamedHqlQueryDefinition getNamedHqlQueryMapping(String name) {
+	public NamedHqlQueryDefinition<?> getNamedHqlQueryMapping(String name) {
 		return delegate.getNamedHqlQueryMapping( name );
 	}
 
 	@Override
-	public void visitNamedHqlQueryDefinitions(Consumer<NamedHqlQueryDefinition> definitionConsumer) {
+	public void visitNamedHqlQueryDefinitions(Consumer<NamedHqlQueryDefinition<?>> definitionConsumer) {
 		delegate.visitNamedHqlQueryDefinitions( definitionConsumer );
 	}
 
 	@Override
-	public NamedNativeQueryDefinition getNamedNativeQueryMapping(String name) {
+	public NamedNativeQueryDefinition<?> getNamedNativeQueryMapping(String name) {
 		return delegate.getNamedNativeQueryMapping( name );
 	}
 
 	@Override
-	public void visitNamedNativeQueryDefinitions(Consumer<NamedNativeQueryDefinition> definitionConsumer) {
+	public void visitNamedNativeQueryDefinitions(Consumer<NamedNativeQueryDefinition<?>> definitionConsumer) {
 		delegate.visitNamedNativeQueryDefinitions( definitionConsumer );
 	}
 
@@ -214,6 +215,16 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 	}
 
 	@Override
+	public SqmFunctionRegistry getFunctionRegistry() {
+		return delegate.getFunctionRegistry();
+	}
+
+	@Override
+	public void orderColumns(boolean forceOrdering) {
+		delegate.orderColumns( false );
+	}
+
+	@Override
 	public void validate() throws MappingException {
 		delegate.validate();
 	}
@@ -233,10 +244,21 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 		delegate().visitRegisteredComponents( consumer );
 	}
 
+	@Override
+	public Component getGenericComponent(Class<?> componentClass) {
+		return delegate().getGenericComponent( componentClass );
+	}
 
 	@Override
-	public NamedObjectRepository buildNamedQueryRepository(SessionFactoryImplementor sessionFactory) {
-		return delegate().buildNamedQueryRepository( sessionFactory );
+	public DiscriminatorType<?> resolveEmbeddableDiscriminatorType(
+			Class<?> embeddableClass,
+			Supplier<DiscriminatorType<?>> supplier) {
+		return delegate().resolveEmbeddableDiscriminatorType( embeddableClass, supplier );
+	}
+
+	@Override
+	public NamedObjectRepository buildNamedQueryRepository() {
+		return delegate().buildNamedQueryRepository();
 	}
 
 	@Override

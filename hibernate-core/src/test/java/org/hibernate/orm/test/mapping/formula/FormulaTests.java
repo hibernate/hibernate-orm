@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.formula;
 
@@ -15,8 +13,9 @@ import jakarta.persistence.criteria.Root;
 import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.Formula;
 
+import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
@@ -105,7 +104,7 @@ public class FormulaTests {
 		@Formula(value = "credit * rate")
 		private Double interest;
 
-		@Formula(value = "rate * 100 || '%'")
+		@Formula(value = "(rate * 100) || '%'")
 		@DialectOverride.Formula(dialect = MySQLDialect.class,
 				override = @Formula("concat(rate * 100, '%')"))
 		@DialectOverride.Formula(dialect = HSQLDialect.class,
@@ -120,6 +119,8 @@ public class FormulaTests {
 				override = @Formula("ltrim(str(rate * 100, 10, 2)) + '%'"))
 		@DialectOverride.Formula(dialect = SybaseDialect.class,
 				override = @Formula("ltrim(str(rate * 100, 10, 2)) + '%'"))
+		@DialectOverride.Formula(dialect = FirebirdDialect.class,
+				override = @Formula("cast(rate * 100 as decimal(10,2)) || '%'"))
 		private String ratePercent;
 
 		public Long getId() {

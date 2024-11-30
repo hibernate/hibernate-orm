@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
@@ -10,19 +8,21 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.Objects;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.type.Type;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Uniquely identifies of an entity instance in a particular Session by identifier.
  * Note that it's only safe to be used within the scope of a Session: it doesn't consider for example the tenantId
  * as part of the equality definition.
- * <p/>
+ * <p>
  * Information used to determine uniqueness consists of the entity-name and the identifier value (see {@link #equals}).
- * <p/>
+ * <p>
  * Performance considerations: lots of instances of this type are created at runtime. Make sure each one is as small as possible
  * by storing just the essential needed.
  *
@@ -37,15 +37,15 @@ public final class EntityKey implements Serializable {
 
 	/**
 	 * Construct a unique identifier for an entity class instance.
-	 * <p/>
-	 * NOTE : This signature has changed to accommodate both entity mode and multi-tenancy, both of which relate to
-	 * the Session to which this key belongs.  To help minimize the impact of these changes in the future, the
-	 * {@link SessionImplementor#generateEntityKey} method was added to hide the session-specific changes.
+	 *
+	 * @apiNote This signature has changed to accommodate both entity mode and multi-tenancy, both of which relate to
+	 *          the session to which this key belongs. To help minimize the impact of these changes in the future, the
+	 *          {@link SessionImplementor#generateEntityKey} method was added to hide the session-specific changes.
 	 *
 	 * @param id The entity id
 	 * @param persister The entity persister
 	 */
-	public EntityKey(Object id, EntityPersister persister) {
+	public EntityKey(@Nullable Object id, EntityPersister persister) {
 		this.persister = persister;
 		if ( id == null ) {
 			throw new AssertionFailure( "null identifier (" + persister.getEntityName() + ")" );
@@ -57,13 +57,14 @@ public final class EntityKey implements Serializable {
 	private int generateHashCode() {
 		int result = 17;
 		final String rootEntityName = persister.getRootEntityName();
-		result = 37 * result + ( rootEntityName != null ? rootEntityName.hashCode() : 0 );
-		result = 37 * result + persister.getIdentifierType().getHashCode( identifier, persister.getFactory() );
+		result = 37 * result + rootEntityName.hashCode();
+		final Type identifierType = persister.getIdentifierType().getTypeForEqualsHashCode();
+		result = 37 * result + ( identifierType == null ? identifier.hashCode() : identifierType.getHashCode( identifier, persister.getFactory() ) );
 		return result;
 	}
 
-	public boolean isBatchLoadable() {
-		return persister.isBatchLoadable();
+	public boolean isBatchLoadable(LoadQueryInfluencers influencers) {
+		return influencers.effectivelyBatchLoadable( persister );
 	}
 
 	public Object getIdentifierValue() {
@@ -83,7 +84,7 @@ public final class EntityKey implements Serializable {
 	}
 
 	@Override
-	public boolean equals(Object other) {
+	public boolean equals(@Nullable Object other) {
 		if ( this == other ) {
 			return true;
 		}
@@ -98,16 +99,15 @@ public final class EntityKey implements Serializable {
 	}
 
 	private boolean sameIdentifier(final EntityKey otherKey) {
-		return persister.getIdentifierType().isEqual( otherKey.identifier, this.identifier, persister.getFactory() );
+		final Type identifierType;
+		return this.identifier == otherKey.identifier || (
+				(identifierType = persister.getIdentifierType().getTypeForEqualsHashCode()) == null && identifier.equals( otherKey.identifier )
+						|| identifierType != null && identifierType.isEqual( otherKey.identifier, this.identifier, persister.getFactory() ) );
 	}
 
 	private boolean samePersistentType(final EntityKey otherKey) {
-		if ( otherKey.persister == persister ) {
-			return true;
-		}
-		else {
-			return Objects.equals( otherKey.persister.getRootEntityName(), persister.getRootEntityName() );
-		}
+		return otherKey.persister == persister
+			|| otherKey.persister.getRootEntityName().equals( persister.getRootEntityName() );
 	}
 
 	@Override
@@ -117,8 +117,7 @@ public final class EntityKey implements Serializable {
 
 	@Override
 	public String toString() {
-		return "EntityKey" +
-				MessageHelper.infoString( this.persister, identifier, persister.getFactory() );
+		return "EntityKey" + MessageHelper.infoString( this.persister, identifier, persister.getFactory() );
 	}
 
 	/**

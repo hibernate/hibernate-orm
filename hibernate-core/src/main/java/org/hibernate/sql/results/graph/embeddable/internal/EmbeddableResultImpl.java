@@ -1,15 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
 
-import java.util.List;
-
-import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
@@ -21,45 +18,53 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchParentAccess;
-import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
+import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerParent;
+import org.hibernate.sql.results.graph.InitializerProducer;
+import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResult;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
+import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
  */
-public class EmbeddableResultImpl<T> extends AbstractFetchParent implements EmbeddableResultGraphNode, DomainResult<T>, EmbeddableResult<T> {
+public class EmbeddableResultImpl<T> extends AbstractFetchParent implements EmbeddableResultGraphNode,
+		DomainResult<T>,
+		EmbeddableResult<T>,
+		InitializerProducer<EmbeddableResultImpl<T>> {
 	private final String resultVariable;
 	private final boolean containsAnyNonScalars;
-	private final NavigablePath initializerNavigablePath;
+	private final EmbeddableMappingType fetchContainer;
+	private final BasicFetch<?> discriminatorFetch;
 
 	public EmbeddableResultImpl(
 			NavigablePath navigablePath,
 			EmbeddableValuedModelPart modelPart,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		super( modelPart.getEmbeddableTypeDescriptor(), navigablePath );
-		this.resultVariable = resultVariable;
 		/*
 			An `{embeddable_result}` sub-path is created for the corresponding initializer to differentiate it from a fetch-initializer if this embedded is also fetched.
 			The Jakarta Persistence spec says that any embedded value selected in the result should not be part of the state of any managed entity.
 			Using this `{embeddable_result}` sub-path avoids this situation.
 		*/
-		this.initializerNavigablePath = navigablePath.append( "{embeddable_result}" );
+		super( navigablePath.append( "{embeddable_result}" ) );
+		this.fetchContainer = modelPart.getEmbeddableTypeDescriptor();
+		this.resultVariable = resultVariable;
 
 		final FromClauseAccess fromClauseAccess = creationState.getSqlAstCreationState().getFromClauseAccess();
 
 		fromClauseAccess.resolveTableGroup(
-				navigablePath,
+				getNavigablePath(),
 				np -> {
 					final EmbeddableValuedModelPart embeddedValueMapping = modelPart.getEmbeddableTypeDescriptor().getEmbeddedValueMapping();
-					final TableGroup tableGroup = fromClauseAccess.findTableGroup( navigablePath.getParent() );
+					final TableGroup tableGroup = fromClauseAccess.findTableGroup( NullnessUtil.castNonNull( np.getParent() ).getParent() );
 					final TableGroupJoin tableGroupJoin = embeddedValueMapping.createTableGroupJoin(
-							navigablePath,
+							np,
 							tableGroup,
 							resultVariable,
+							null,
 							SqlAstJoinType.INNER,
 							true,
 							false,
@@ -70,15 +75,17 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 				}
 		);
 
+		this.discriminatorFetch = creationState.visitEmbeddableDiscriminatorFetch( this, false );
+
 		afterInitialize( this, creationState );
 
 		// after-after-initialize :D
-		containsAnyNonScalars = determineIfContainedAnyScalars( fetches );
+		containsAnyNonScalars = determineIfContainedAnyScalars( getFetches() );
 	}
 
-	private static boolean determineIfContainedAnyScalars(List<Fetch> fetches) {
-		for ( int i = 0; i < fetches.size(); i++ ) {
-			if ( fetches.get( i ).containsAnyNonScalarResults() ) {
+	private static boolean determineIfContainedAnyScalars(ImmutableFetchList fetches) {
+		for ( Fetch fetch : fetches ) {
+			if ( fetch.containsAnyNonScalarResults() ) {
 				return true;
 			}
 		}
@@ -98,7 +105,7 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 
 	@Override
 	public EmbeddableMappingType getFetchContainer() {
-		return (EmbeddableMappingType) super.getFetchContainer();
+		return this.fetchContainer;
 	}
 
 	@Override
@@ -118,19 +125,22 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 
 	@Override
 	public DomainResultAssembler<T> createResultAssembler(
-			FetchParentAccess parentAccess,
+			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
-		final EmbeddableInitializer initializer = (EmbeddableInitializer) creationState.resolveInitializer(
-				initializerNavigablePath,
-				getReferencedModePart(),
-				() -> new EmbeddableResultInitializer(
-						this,
-						parentAccess,
-						creationState
-				)
-		);
-
 		//noinspection unchecked
-		return new EmbeddableAssembler( initializer );
+		return new EmbeddableAssembler( creationState.resolveInitializer( this, parent, this ).asEmbeddableInitializer() );
+	}
+
+	@Override
+	public Initializer<?> createInitializer(
+			EmbeddableResultImpl<T> resultGraphNode,
+			InitializerParent<?> parent,
+			AssemblerCreationState creationState) {
+		return resultGraphNode.createInitializer( parent, creationState );
+	}
+
+	@Override
+	public Initializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {
+		return new EmbeddableInitializerImpl( this, discriminatorFetch, parent, creationState, true );
 	}
 }

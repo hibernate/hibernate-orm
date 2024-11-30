@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.dialect.functional;
 
@@ -25,11 +23,12 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.lock.PessimisticEntityLockException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -37,9 +36,6 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-
-//import org.hibernate.criterion.Order;
-//import org.hibernate.criterion.Projections;
 
 /**
  * used driver hibernate.connection.driver_class com.microsoft.sqlserver.jdbc.SQLServerDriver
@@ -56,7 +52,7 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8916")
+	@JiraKey(value = "HHH-8916")
 	public void testPaginationWithCTEQueryNoOffset() {
 		// This used to throw SQLServerException: Incorrect syntax near 'SEL'
 		doInHibernate( this::sessionFactory, session -> {
@@ -77,7 +73,7 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8916")
+	@JiraKey(value = "HHH-8916")
 	public void testPaginationWithCTEQueryNoOffsetNewLine() {
 		// This used to throw SQLServerException: Incorrect syntax near 'SEL'
 		doInHibernate( this::sessionFactory, session -> {
@@ -103,7 +99,7 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8916")
+	@JiraKey(value = "HHH-8916")
 	public void testPaginationWithCTEQueryWithOffsetAndOrderBy() {
 		// This used to throw a StringIndexOutOfBoundsException
 		doInHibernate( this::sessionFactory, session -> {
@@ -130,7 +126,7 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8916")
+	@JiraKey(value = "HHH-8916")
 	public void testPaginationWithCTEQueryWithOffset() {
 		// This used to throw a StringIndexOutOfBoundsException
 		doInHibernate( this::sessionFactory, session -> {
@@ -156,7 +152,7 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7369")
+	@JiraKey(value = "HHH-7369")
 	public void testPaginationWithScalarQuery() throws Exception {
 		doInHibernate( this::sessionFactory, session -> {
 			for ( int i = 0; i < 10; i++ ) {
@@ -178,7 +174,7 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7368")
+	@JiraKey(value = "HHH-7368")
 	public void testPaginationWithTrailingSemicolon() throws Exception {
 		doInHibernate( this::sessionFactory, session -> {
 			session.createNativeQuery( "select id from Product2 where description like 'Kit%' order by id;" )
@@ -223,7 +219,7 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7370")
+	@JiraKey(value = "HHH-7370")
 	public void testPaginationWithMaxOnly() {
 		doInHibernate( this::sessionFactory, session -> {
 			for ( int i = 30; i < 40; i++ ) {
@@ -241,7 +237,7 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-6627")
+	@JiraKey(value = "HHH-6627")
 	public void testPaginationWithAggregation() {
 		doInHibernate( this::sessionFactory, session -> {
 			// populating test data
@@ -289,7 +285,7 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7752")
+	@JiraKey(value = "HHH-7752")
 	public void testPaginationWithFormulaSubquery() {
 		doInHibernate( this::sessionFactory, session -> {
 			// populating test data
@@ -303,7 +299,6 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 			session.persist( new Contact( 1L, "Lukasz", "Antoniak", "owner", folder1 ) );
 			session.persist( new Contact( 2L, "Kinga", "Mroz", "co-owner", folder2 ) );
 			session.flush();
-			session.clear();
 			session.refresh( folder1 );
 			session.refresh( folder2 );
 			session.clear();
@@ -318,7 +313,7 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7781")
+	@JiraKey(value = "HHH-7781")
 	public void testPaginationWithCastOperator() {
 		doInHibernate( this::sessionFactory, session -> {
 			for ( int i = 40; i < 50; i++ ) {
@@ -336,7 +331,7 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-3961")
+	@JiraKey(value = "HHH-3961")
 	public void testLockNowaitSqlServer() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -370,28 +365,28 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 		long start = System.currentTimeMillis();
 		thread.start();
 		try {
-			s2.buildLockRequest( opt ).lock( kit2 );
+			s2.lock( kit2, opt );
 		}
-		catch ( LockTimeoutException e ) {
-			// OK
+		catch ( PessimisticEntityLockException e ) {
+			assertTrue( e.getCause() instanceof LockTimeoutException );
 		}
 		long end = System.currentTimeMillis();
 		thread.join();
 		long differenceInMillis = end - start;
 		assertTrue(
-				"Lock NoWait blocked for " + differenceInMillis + " ms, this is definitely to much for Nowait",
+				"Lock NoWait blocked for " + differenceInMillis + " ms, this is definitely too much for Nowait",
 				differenceInMillis < 2000
 		);
 
 		s2.getTransaction().rollback();
 		s.getTransaction().begin();
-		s.delete( kit );
+		s.remove( kit );
 		s.getTransaction().commit();
 	}
 
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10879")
+	@JiraKey(value = "HHH-10879")
 	public void testKeyReservedKeyword() {
 		doInHibernate( this::sessionFactory, session -> {
 			final KeyHolder keyHolder = new KeyHolder();

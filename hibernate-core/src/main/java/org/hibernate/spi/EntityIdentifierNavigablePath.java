@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.spi;
 
@@ -10,8 +8,8 @@ import org.hibernate.Incubating;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 
 /**
- * Specialized NavigablePath implementation for handling special cases
- * pertaining to entity identifiers
+ * Specialized implementation of {@link NavigablePath} for handling special cases
+ * pertaining to entity identifiers.
  *
  * @author Andrea Boriero
  */
@@ -20,7 +18,12 @@ public class EntityIdentifierNavigablePath extends NavigablePath {
 	private final String identifierAttributeName;
 
 	public EntityIdentifierNavigablePath(NavigablePath parent, String identifierAttributeName) {
-		super( parent, EntityIdentifierMapping.ROLE_LOCAL_NAME );
+		super( parent, EntityIdentifierMapping.ID_ROLE_NAME );
+		this.identifierAttributeName = identifierAttributeName;
+	}
+
+	public EntityIdentifierNavigablePath(NavigablePath parent, String alias, String identifierAttributeName) {
+		super( parent, EntityIdentifierMapping.ID_ROLE_NAME, alias );
 		this.identifierAttributeName = identifierAttributeName;
 	}
 
@@ -30,7 +33,7 @@ public class EntityIdentifierNavigablePath extends NavigablePath {
 
 	@Override
 	public String getLocalName() {
-		return EntityIdentifierMapping.ROLE_LOCAL_NAME;
+		return EntityIdentifierMapping.ID_ROLE_NAME;
 	}
 
 	@Override

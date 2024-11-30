@@ -1,38 +1,52 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.results;
 
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-
 import org.hibernate.Incubating;
-import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
+import java.util.function.BiConsumer;
+
 /**
- * Responsible for building a single {@link DomainResult} instance as part of
- * the overall mapping of native / procedure query results.
+ * Responsible for building a single {@link DomainResult}.
+ * Given the following HQL for illustration,
+ * <pre>
+ *     select b from Book b join fetch b.authors
+ * </pre>
+ * we have a single result : `Book(b)`
+ *
+ * @see FetchBuilder
  *
  * @author Steve Ebersole
  */
 @Incubating
-public interface ResultBuilder {
+public interface ResultBuilder extends GraphNodeBuilder {
+	/**
+	 * Build a result
+	 *
+	 * @param jdbcResultsMetadata The JDBC values and metadata
+	 * @param resultPosition The position in the domain results for the result to be built
+	 * @param domainResultCreationState Access to useful stuff
+	 */
 	DomainResult<?> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState);
 
+	/**
+	 * The Java type of the value returned for a {@linkplain DomainResult result} built by this builder.
+	 *
+	 * @see DomainResult#getResultJavaType()
+	 */
 	Class<?> getJavaType();
 
 	ResultBuilder cacheKeyInstance();
 
-	default void visitFetchBuilders(BiConsumer<String, FetchBuilder> consumer) {
+	default void visitFetchBuilders(BiConsumer<Fetchable, FetchBuilder> consumer) {
 	}
 }

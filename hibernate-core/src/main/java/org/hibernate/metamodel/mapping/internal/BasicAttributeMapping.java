@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
@@ -11,25 +9,22 @@ import java.util.function.BiConsumer;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.mapping.IndexedConsumer;
-import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
+import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -38,8 +33,6 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
-import org.hibernate.tuple.ValueGeneration;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -53,6 +46,8 @@ public class BasicAttributeMapping
 
 	private final String tableExpression;
 	private final String mappedColumnExpression;
+	private final Integer temporalPrecision;
+	private final SelectablePath selectablePath;
 	private final boolean isFormula;
 	private final String customReadExpression;
 	private final String customWriteExpression;
@@ -62,6 +57,12 @@ public class BasicAttributeMapping
 	private final Integer scale;
 
 	private final JdbcMapping jdbcMapping;
+	private final boolean isLob;
+	private final boolean nullable;
+	private final boolean insertable;
+	private final boolean updateable;
+	private final boolean partitioned;
+	private final boolean isLazy;
 
 	private final JavaType domainTypeDescriptor;
 
@@ -69,11 +70,13 @@ public class BasicAttributeMapping
 			String attributeName,
 			NavigableRole navigableRole,
 			int stateArrayPosition,
-			AttributeMetadataAccess attributeMetadataAccess,
+			int fetchableIndex,
+			AttributeMetadata attributeMetadata,
 			FetchTiming mappedFetchTiming,
 			FetchStyle mappedFetchStyle,
 			String tableExpression,
 			String mappedColumnExpression,
+			SelectablePath selectablePath,
 			boolean isFormula,
 			String customReadExpression,
 			String customWriteExpression,
@@ -81,28 +84,42 @@ public class BasicAttributeMapping
 			Long length,
 			Integer precision,
 			Integer scale,
+			Integer temporalPrecision,
+			boolean isLob,
+			boolean nullable,
+			boolean insertable,
+			boolean updateable,
+			boolean partitioned,
 			JdbcMapping jdbcMapping,
 			ManagedMappingType declaringType,
-			PropertyAccess propertyAccess,
-			ValueGeneration valueGeneration) {
+			PropertyAccess propertyAccess) {
 		super(
 				attributeName,
 				stateArrayPosition,
-				attributeMetadataAccess,
+				fetchableIndex,
+				attributeMetadata,
 				mappedFetchTiming,
 				mappedFetchStyle,
 				declaringType,
-				propertyAccess,
-				valueGeneration
+				propertyAccess
 		);
 		this.navigableRole = navigableRole;
 		this.tableExpression = tableExpression;
 		this.mappedColumnExpression = mappedColumnExpression;
+		this.temporalPrecision = temporalPrecision;
+		this.selectablePath = selectablePath == null
+				? new SelectablePath( mappedColumnExpression )
+				: selectablePath;
 		this.isFormula = isFormula;
 		this.columnDefinition = columnDefinition;
 		this.length = length;
 		this.precision = precision;
 		this.scale = scale;
+		this.isLob = isLob;
+		this.nullable = nullable;
+		this.insertable = insertable;
+		this.updateable = updateable;
+		this.partitioned = partitioned;
 		this.jdbcMapping = jdbcMapping;
 		this.domainTypeDescriptor = jdbcMapping.getJavaTypeDescriptor();
 
@@ -114,37 +131,54 @@ public class BasicAttributeMapping
 		else {
 			this.customWriteExpression = customWriteExpression;
 		}
+		this.isLazy = navigableRole.getParent().getParent() == null && declaringType.findContainingEntityMapping()
+				.getEntityPersister()
+				.getBytecodeEnhancementMetadata()
+				.getLazyAttributesMetadata()
+				.isLazyAttribute( attributeName );
 	}
 
 	public static BasicAttributeMapping withSelectableMapping(
 			ManagedMappingType declaringType,
 			BasicValuedModelPart original,
 			PropertyAccess propertyAccess,
-			ValueGeneration valueGeneration,
+			boolean insertable,
+			boolean updateable,
 			SelectableMapping selectableMapping) {
 		String attributeName = null;
 		int stateArrayPosition = 0;
-		AttributeMetadataAccess attributeMetadataAccess = null;
-		if ( original instanceof SingleAttributeIdentifierMapping ) {
-			final SingleAttributeIdentifierMapping mapping = (SingleAttributeIdentifierMapping) original;
+		AttributeMetadata attributeMetadata;
+		if ( original instanceof SingleAttributeIdentifierMapping mapping ) {
 			attributeName = mapping.getAttributeName();
-			attributeMetadataAccess = null;
+			attributeMetadata = new SimpleAttributeMetadata(
+					propertyAccess,
+					mapping.getExpressibleJavaType().getMutabilityPlan(),
+					selectableMapping.isNullable(),
+					insertable,
+					updateable,
+					false,
+					true
+			);
 		}
-		else if ( original instanceof SingularAttributeMapping ) {
-			final SingularAttributeMapping mapping = (SingularAttributeMapping) original;
+		else if ( original instanceof SingularAttributeMapping mapping ) {
 			attributeName = mapping.getAttributeName();
 			stateArrayPosition = mapping.getStateArrayPosition();
-			attributeMetadataAccess = mapping.getAttributeMetadataAccess();
+			attributeMetadata = mapping.getAttributeMetadata();
+		}
+		else {
+			attributeMetadata = null;
 		}
 		return new BasicAttributeMapping(
 				attributeName,
 				original.getNavigableRole(),
 				stateArrayPosition,
-				attributeMetadataAccess,
+				original.getFetchableKey(),
+				attributeMetadata,
 				FetchTiming.IMMEDIATE,
 				FetchStyle.JOIN,
 				selectableMapping.getContainingTableExpression(),
 				selectableMapping.getSelectionExpression(),
+				selectableMapping.getSelectablePath(),
 				selectableMapping.isFormula(),
 				selectableMapping.getCustomReadExpression(),
 				selectableMapping.getCustomWriteExpression(),
@@ -152,10 +186,15 @@ public class BasicAttributeMapping
 				selectableMapping.getLength(),
 				selectableMapping.getPrecision(),
 				selectableMapping.getScale(),
+				selectableMapping.getTemporalPrecision(),
+				selectableMapping.isLob(),
+				selectableMapping.isNullable(),
+				insertable,
+				updateable,
+				selectableMapping.isPartitioned(),
 				original.getJdbcMapping(),
 				declaringType,
-				propertyAccess,
-				valueGeneration
+				propertyAccess
 		);
 	}
 
@@ -180,8 +219,47 @@ public class BasicAttributeMapping
 	}
 
 	@Override
+	public String getSelectableName() {
+		return selectablePath.getSelectableName();
+	}
+
+	@Override
+	public SelectablePath getSelectablePath() {
+		return selectablePath;
+	}
+
+	@Override
+	public boolean isLob() {
+		return isLob;
+	}
+
+	@Override
 	public boolean isFormula() {
 		return isFormula;
+	}
+
+	@Override
+	public boolean isNullable() {
+		return nullable;
+	}
+
+	public boolean isLazy() {
+		return isLazy;
+	}
+
+	@Override
+	public boolean isInsertable() {
+		return insertable;
+	}
+
+	@Override
+	public boolean isUpdateable() {
+		return updateable;
+	}
+
+	@Override
+	public boolean isPartitioned() {
+		return partitioned;
 	}
 
 	@Override
@@ -191,6 +269,11 @@ public class BasicAttributeMapping
 
 	@Override
 	public String getCustomWriteExpression() {
+		return customWriteExpression;
+	}
+
+	@Override
+	public String getWriteExpression() {
 		return customWriteExpression;
 	}
 
@@ -215,6 +298,11 @@ public class BasicAttributeMapping
 	}
 
 	@Override
+	public Integer getTemporalPrecision() {
+		return temporalPrecision;
+	}
+
+	@Override
 	public String getContainingTableExpression() {
 		return tableExpression;
 	}
@@ -235,41 +323,35 @@ public class BasicAttributeMapping
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final SqlSelection sqlSelection = resolveSqlSelection( navigablePath, tableGroup, true, null, creationState );
+		final SqlSelection sqlSelection = resolveSqlSelection( navigablePath, tableGroup, null, creationState );
 
 		//noinspection unchecked
 		return new BasicResult(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				jdbcMapping,
-				navigablePath
+				navigablePath,
+				false,
+				!sqlSelection.isVirtual()
 		);
 	}
 
 	private SqlSelection resolveSqlSelection(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
-			boolean allowFkOptimization,
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
 		final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
 		final TableReference tableReference = tableGroup.resolveTableReference(
 				navigablePath,
-				getContainingTableExpression(),
-				allowFkOptimization
+				this,
+				getContainingTableExpression()
 		);
 
 		return expressionResolver.resolveSqlSelection(
 				expressionResolver.resolveSqlExpression(
-						SqlExpressionResolver.createColumnReferenceKey(
-								tableReference,
-								mappedColumnExpression
-						),
-						sqlAstProcessingState -> new ColumnReference(
-								tableReference,
-								this,
-								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
-						)
+						tableReference,
+						this
 				),
 				jdbcMapping.getJdbcJavaType(),
 				fetchParent,
@@ -282,7 +364,7 @@ public class BasicAttributeMapping
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		resolveSqlSelection( navigablePath, tableGroup, true, null, creationState );
+		resolveSqlSelection( navigablePath, tableGroup, null, creationState );
 	}
 
 	@Override
@@ -291,7 +373,7 @@ public class BasicAttributeMapping
 			TableGroup tableGroup,
 			DomainResultCreationState creationState,
 			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
-		selectionConsumer.accept( resolveSqlSelection( navigablePath, tableGroup, true, null, creationState ), getJdbcMapping() );
+		selectionConsumer.accept( resolveSqlSelection( navigablePath, tableGroup, null, creationState ), getJdbcMapping() );
 	}
 
 	@Override
@@ -303,12 +385,13 @@ public class BasicAttributeMapping
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		final int valuesArrayPosition;
-		// Lazy property. A valuesArrayPosition of -1 will lead to
-		// returning a domain result assembler that returns LazyPropertyInitializer.UNFETCHED_PROPERTY
-		final EntityMappingType containingEntityMapping = findContainingEntityMapping();
-		if ( fetchTiming == FetchTiming.DELAYED
-				&& containingEntityMapping.getEntityPersister().getPropertyLaziness()[getStateArrayPosition()] ) {
+		boolean coerceResultType = false;
+		final SqlSelection sqlSelection;
+		if ( fetchTiming == FetchTiming.DELAYED && isLazy ) {
+			// Lazy property. A valuesArrayPosition of -1 will lead to
+			// returning a domain result assembler that returns LazyPropertyInitializer.UNFETCHED_PROPERTY
 			valuesArrayPosition = -1;
+			sqlSelection = null;
 		}
 		else {
 			final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
@@ -318,8 +401,17 @@ public class BasicAttributeMapping
 
 			assert tableGroup != null;
 
-			final SqlSelection sqlSelection = resolveSqlSelection( fetchablePath, tableGroup, true, fetchParent, creationState );
+			sqlSelection = resolveSqlSelection(
+					fetchablePath,
+					tableGroup,
+					fetchParent,
+					creationState
+			);
 			valuesArrayPosition = sqlSelection.getValuesArrayPosition();
+			if ( sqlSelection.getExpressionType() != null) {
+				// if the expression type is different that the expected type coerce the value
+				coerceResultType = sqlSelection.getExpressionType().getSingleJdbcMapping().getJdbcJavaType() != getJdbcMapping().getJdbcJavaType();
+			}
 		}
 
 		return new BasicFetch<>(
@@ -327,28 +419,24 @@ public class BasicAttributeMapping
 				fetchParent,
 				fetchablePath,
 				this,
+				getJdbcMapping().getValueConverter(),
 				fetchTiming,
-				creationState
+				true,
+				creationState,
+				coerceResultType,
+				sqlSelection != null && !sqlSelection.isVirtual()
 		);
 	}
 
 	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		if ( jdbcMapping.getValueConverter() != null ) {
-			//noinspection unchecked
-			return jdbcMapping.getValueConverter().toRelationalValue( value );
-		}
-		return value;
-	}
-
-	@Override
-	public int forEachDisassembledJdbcValue(
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		valuesConsumer.consume( offset, value, getJdbcMapping() );
+		valuesConsumer.consume( offset, x, y, value, getJdbcMapping() );
 		return getJdbcTypeCount();
 	}
 
@@ -365,7 +453,14 @@ public class BasicAttributeMapping
 	}
 
 	@Override
-	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		valueConsumer.consume( disassemble( domainValue, session ), this );
+	public <X, Y> int breakDownJdbcValues(
+			Object domainValue,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
+			SharedSessionContractImplementor session) {
+		valueConsumer.consume( offset, x, y, disassemble( domainValue, session ), this );
+		return getJdbcTypeCount();
 	}
 }

@@ -1,13 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
 
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -35,16 +34,16 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *         For other collection mappings, describes the elements
  *     </li>
  *     <li>
- *         For discriminated association mappings (`@Any` and `@ManyToAny`), describes the discriminator
- *         value.
+ *         For discriminated association mappings ({@link Any @Any} and {@link ManyToAny @ManyToAny}), describes the
+ *         discriminator value.
  *     </li>
  * </ul>
- * <p/>
+ * <p>
  * This code is generally as one of the values defined in {@link java.sql.Types}, but are not
  * limited to these.  The code is resolved against an internal registry of {@link JdbcType}
- * references.  See the user-guide for additional details.
- * <p/>
- * See <a href="package-summary.html#basic-value-mapping"/> for high-level discussion
+ * references.  See the user guide for additional details.
+ * <p>
+ * See <a href="package-summary.html#basic-value-mapping">basic-value-mapping</a> for high-level discussion
  * of basic value mapping.
  *
  * @see JdbcType
@@ -55,14 +54,14 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @since 6.0
  */
-@java.lang.annotation.Target({METHOD, FIELD, ANNOTATION_TYPE})
+@Target({METHOD, FIELD, ANNOTATION_TYPE})
 @Inherited
 @Retention(RUNTIME)
 public @interface JdbcTypeCode {
 	/**
 	 * The standard {@linkplain java.sql.Types JDBC Types} code or a custom code.
-	 * This ultimately decides which {@link JdbcType}
-	 * is used to "understand" the described SQL data type
+	 * This ultimately decides which {@link JdbcType} is used to "understand" the
+	 * described SQL data type.
 	 */
 	int value();
 }

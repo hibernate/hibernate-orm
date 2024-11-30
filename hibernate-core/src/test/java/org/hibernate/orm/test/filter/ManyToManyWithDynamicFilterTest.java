@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.filter;
 
@@ -20,9 +18,8 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
-import org.hibernate.internal.util.collections.CollectionHelper;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -52,11 +49,11 @@ public class ManyToManyWithDynamicFilterTest {
 		scope.inTransaction( session -> {
 			final Role r1 = new Role( 1, "R1", false );
 			final Role r2 = new Role( 2, "R2", false );
-			session.save( r1 );
-			session.save( r2 );
+			session.persist( r1 );
+			session.persist( r2 );
 
 			final User user = new User( 1, "A", true, r1, r2 );
-			session.save( user );
+			session.persist( user );
 		} );
 	}
 
@@ -69,7 +66,7 @@ public class ManyToManyWithDynamicFilterTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11410")
+	@JiraKey(value = "HHH-11410")
 	void testManyToManyCollectionWithActiveFilterOnJoin(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			session.enableFilter( "activeUserFilter" );
@@ -82,7 +79,7 @@ public class ManyToManyWithDynamicFilterTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11410")
+	@JiraKey(value = "HHH-11410")
 	void testManyToManyCollectionWithNoFilterOnJoin(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final User user = session.get( User.class, 1 );

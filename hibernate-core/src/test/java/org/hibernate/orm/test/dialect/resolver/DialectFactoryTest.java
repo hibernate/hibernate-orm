@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.dialect.resolver;
 
@@ -10,7 +8,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.selector.spi.StrategySelectionException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.*;
@@ -23,6 +20,7 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
 import org.hibernate.orm.test.dialect.TestingDialects;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,7 +28,6 @@ import org.junit.Test;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 import static org.junit.Assert.*;
 
@@ -46,7 +43,7 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 		final BootstrapServiceRegistry bootReg = new BootstrapServiceRegistryBuilder().applyClassLoader(
 				DialectFactoryTest.class.getClassLoader()
 		).build();
-		registry = new StandardServiceRegistryBuilder( bootReg ).build();
+		registry = ServiceRegistryUtil.serviceRegistryBuilder( bootReg ).build();
 
 		dialectFactory = new DialectFactoryImpl();
 		dialectFactory.injectServices( (ServiceRegistryImplementor) registry );
@@ -66,16 +63,16 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 		configValues.put( Environment.DIALECT, "H2" );
 		assertEquals( H2Dialect.class, dialectFactory.buildDialect( configValues, null ).getClass() );
 
-		configValues.put( Environment.DIALECT, "Oracle10g" );
-		assertEquals( Oracle10gDialect.class, dialectFactory.buildDialect( configValues, null ).getClass() );
+		configValues.put( Environment.DIALECT, "Oracle" );
+		assertEquals( OracleDialect.class, dialectFactory.buildDialect( configValues, null ).getClass() );
 	}
 
 	@Test
 	public void testExplicitlySuppliedDialectClassName() {
 		final Map<String, Object> configValues = new HashMap<>();
 
-		configValues.put( Environment.DIALECT, "org.hibernate.dialect.HSQLDialect" );
-		assertEquals( HSQLDialect.class, dialectFactory.buildDialect( configValues, null ).getClass() );
+		configValues.put( Environment.DIALECT, PostgreSQLDialect.class.getName() );
+		assertEquals( PostgreSQLDialect.class, dialectFactory.buildDialect( configValues, null ).getClass() );
 
 		configValues.put( Environment.DIALECT, "org.hibernate.dialect.NoSuchDialect" );
 		try {
@@ -108,8 +105,8 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 		}
 
 		Map<String,Object> props = new HashMap<>();
-		props.put( Environment.DIALECT, "org.hibernate.dialect.HSQLDialect" );
-		assertEquals( HSQLDialect.class, dialectFactory.buildDialect( props, null ).getClass() );
+		props.put( Environment.DIALECT, PostgreSQLDialect.class.getName() );
+		assertEquals( PostgreSQLDialect.class, dialectFactory.buildDialect( props, null ).getClass() );
 	}
 
 	@Test
@@ -141,10 +138,6 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 		testDetermination( "PostgreSQL", 9, 6, PostgreSQLDialect.class, resolver );
 		testDetermination( "PostgreSQL", 10, 0, PostgreSQLDialect.class, resolver );
 		testDetermination( "EnterpriseDB", 9, 2, PostgresPlusDialect.class, resolver );
-		testDetermination( "Apache Derby", 10, 4, DerbyDialect.class, resolver );
-		testDetermination( "Apache Derby", 10, 5, DerbyDialect.class, resolver );
-		testDetermination( "Apache Derby", 10, 6, DerbyDialect.class, resolver );
-		testDetermination( "Apache Derby", 11, 5, DerbyDialect.class, resolver );
 		testDetermination( "Microsoft SQL Server Database", SQLServerDialect.class, resolver );
 		testDetermination( "Microsoft SQL Server", SQLServerDialect.class, resolver );
 		testDetermination( "Sybase SQL Server", SybaseASEDialect.class, resolver );

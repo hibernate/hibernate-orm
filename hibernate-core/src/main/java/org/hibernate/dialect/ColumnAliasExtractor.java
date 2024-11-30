@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
@@ -12,11 +10,12 @@ import java.sql.SQLException;
 /**
  * Strategy for extracting the unique column alias out of a {@link ResultSetMetaData}.  This is used during the
  * "auto discovery" phase of native SQL queries.
- * <p/>
+ * <p>
  * Generally this should be done via {@link ResultSetMetaData#getColumnLabel}, but not all drivers do this correctly.
  *
  * @author Steve Ebersole
  */
+@FunctionalInterface
 public interface ColumnAliasExtractor {
 	/**
 	 * Extract the unique column alias.
@@ -38,6 +37,6 @@ public interface ColumnAliasExtractor {
 	/**
 	 * An extractor which uses {@link ResultSetMetaData#getColumnName}
 	 */
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	ColumnAliasExtractor COLUMN_NAME_EXTRACTOR = ResultSetMetaData::getColumnName;
 }

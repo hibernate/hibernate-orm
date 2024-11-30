@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
@@ -42,11 +40,12 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 			return existing;
 		}
 
+		final SqmPath<?> lhsCopy = getLhs().copy( context );
 		final SqmIndexedCollectionAccessPath<T> path = context.registerCopy(
 				this,
 				new SqmIndexedCollectionAccessPath<T>(
-						getNavigablePath(),
-						getLhs().copy( context ),
+						getNavigablePathCopy( lhsCopy ),
+						lhsCopy,
 						selectorExpression.copy( context )
 				)
 		);
@@ -67,7 +66,7 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		final SqmPath<?> sqmPath = get( name );
+		final SqmPath<?> sqmPath = get( name, true );
 		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
 		return sqmPath;
 	}
@@ -85,7 +84,7 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 	@Override
 	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
 		if ( getReferencedPathSource().getSqmPathType() instanceof EntityDomainType ) {
-			return new SqmTreatedSimplePath<>( this, treatTarget, nodeBuilder() );
+			return getTreatedPath( treatTarget );
 		}
 
 		throw new UnsupportedOperationException(  );

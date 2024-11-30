@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
 
@@ -26,6 +24,7 @@ import org.hibernate.pretty.MessageHelper;
  * <li>A <em>managed entity</em> (the {@code managedEntity} method parameter) is
  *     the managed entity that is the result of merging an entity.
  * </ul>
+ * <p>
  * A merge entity can be transient, detached, or managed. If it is managed, then
  * it is identical to its resulting managed entity.
  * <p>
@@ -53,6 +52,7 @@ import org.hibernate.pretty.MessageHelper;
  * <li>The map returned by {@link #invertMap()} will only contain the "newest"
  *     (most recently added) managed-to-merge cross-reference to its merge entity.
  * </ul>
+ * <p>
  * The following method is intended to be used by an implementation of
  * {@link org.hibernate.event.spi.MergeEventListener} to add a merge entity and its
  * corresponding managed entity to a {@code MergeContext} and indicate if the merge
@@ -88,8 +88,8 @@ public class MergeContext implements Map<Object,Object> {
 	// TODO: merge mergeEntityToOperatedOnFlagMap into mergeToManagedEntityXref, since they have the same key.
 	//       need to check if this would hurt performance.
 	private final Map<Object,Boolean> mergeEntityToOperatedOnFlagMap = new IdentityHashMap<>( 10 );
-	    // key is a merge entity;
-	    // value is a flag indicating if the merge entity is currently in the merge process.
+		// key is a merge entity;
+		// value is a flag indicating if the merge entity is currently in the merge process.
 
 	public MergeContext(EventSource session, EntityCopyObserver entityCopyObserver){
 		this.session = session;
@@ -181,11 +181,11 @@ public class MergeContext implements Map<Object,Object> {
 	 * If this MergeContext already contains a cross-reference for {@code mergeEntity} when this
 	 * method is called, then <code>managedEntity</code> must be the same as what is already associated
 	 * with {@code mergeEntity}.
-	 * <p/>
+	 * <p>
 	 * This method assumes that the merge process is not yet operating on {@code mergeEntity}.
 	 * Later when {@code mergeEntity} enters the merge process, {@link #setOperatedOn(Object, boolean)}
 	 * should be called.
-	 * <p/>
+	 * <p>
 	 * @param mergeEntity the merge entity; must be non-null
 	 * @param managedEntity the managed entity result; must be non-null
 	 * @return previous managed entity associated with specified merge entity, or null if
@@ -232,12 +232,7 @@ public class MergeContext implements Map<Object,Object> {
 			// this is a new mapping for mergeEntity in mergeToManagedEntityXref
 			if  ( oldMergeEntity != null ) {
 				// oldMergeEntity was a different merge entity with the same corresponding managed entity;
-				entityCopyObserver.entityCopyDetected(
-						managedEntity,
-						mergeEntity,
-						oldMergeEntity,
-						session
-				);
+				entityCopyObserver.entityCopyDetected( managedEntity, mergeEntity, oldMergeEntity, session );
 			}
 			if ( oldOperatedOn != null ) {
 				throw new IllegalStateException(
@@ -368,5 +363,9 @@ public class MergeContext implements Map<Object,Object> {
 		}
 		// Entity was not found in current persistence context. Use Object#toString() method.
 		return "[" + entity + "]";
+	}
+
+	public EventSource getEventSource() {
+		return session;
 	}
 }

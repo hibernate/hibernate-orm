@@ -1,0 +1,41 @@
+[[partitioning]]
+=== Partitioning
+:root-project-dir: ../../../../../../..
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-partition-key: {core-project-dir}/src/test/java/org/hibernate/orm/test/mapping/identifier
+:extrasdir: extras
+
+In data management, it is sometimes necessary to split data of a table into various (physical) partitions,
+based on partition keys and a partitioning scheme.
+
+Due to the nature of partitioning, it is vital for the database to know the partition key of a row for certain operations,
+like SQL update and delete statements. If a database doesn't know the partition of a row that should be updated or deleted,
+then it must look for the row in all partitions, leading to poor performance.
+
+The `@PartitionKey` annotation is a way to tell Hibernate about the column, such that it can include a column restriction as
+predicate into SQL update and delete statements for entity state changes.
+
+[[partition-key-mapping]]
+==== Partition Key Mapping
+
+Partition keys are defined in terms of one or more persistent attributes.
+
+[[partition-key-simple-basic-attribute-mapping-example]]
+.Partition key using single basic attribute
+====
+[source,java]
+----
+include::{example-dir-partition-key}/SimplePartitionKeyTest.java[tags=partition-key-simple-basic-attribute-mapping-example,indent=0]
+----
+====
+
+When updating or deleting an entity, Hibernate will include a partition key constraint similar to this
+
+[[partition-key-simple-basic-attribute-sql-example]]
+====
+[source,sql]
+----
+update user_tbl set firstname=?,lastname=?,tenantKey=? where id=? and tenantKey=?
+delete from user_tbl where id=? and tenantKey=?
+----
+====

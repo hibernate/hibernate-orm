@@ -1,32 +1,33 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.predicate;
 
+import org.hibernate.metamodel.model.domain.SimpleDomainType;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+
+import static org.hibernate.query.sqm.internal.TypecheckUtil.areTypesComparable;
 
 /**
  * @author Steve Ebersole
  */
 public class SqmMemberOfPredicate extends AbstractNegatableSqmPredicate {
 	private final SqmExpression<?> leftHandExpression;
-	private final SqmPath<?> pluralPath;
+	private final SqmPluralValuedSimplePath<?> pluralPath;
 
-	public SqmMemberOfPredicate(SqmExpression<?> leftHandExpression, SqmPath<?> pluralPath, NodeBuilder nodeBuilder) {
+	public SqmMemberOfPredicate(SqmExpression<?> leftHandExpression, SqmPluralValuedSimplePath<?> pluralPath, NodeBuilder nodeBuilder) {
 		this( leftHandExpression, pluralPath, false, nodeBuilder );
 	}
 
 	public SqmMemberOfPredicate(
 			SqmExpression<?> leftHandExpression,
-			SqmPath<?> pluralPath,
+			SqmPluralValuedSimplePath<?> pluralPath,
 			boolean negated,
 			NodeBuilder nodeBuilder) {
 		super( negated, nodeBuilder );
@@ -34,9 +35,19 @@ public class SqmMemberOfPredicate extends AbstractNegatableSqmPredicate {
 		this.pluralPath = pluralPath;
 		this.leftHandExpression = leftHandExpression;
 
-		leftHandExpression.applyInferableType(
-				( (SqmPluralValuedSimplePath<?>) pluralPath ).getReferencedPathSource().getElementType()
-		);
+		final SimpleDomainType<?> simpleDomainType = pluralPath.getReferencedPathSource().getElementType();
+
+		if ( !areTypesComparable( leftHandExpression.getNodeType(), simpleDomainType, nodeBuilder ) ) {
+			throw new SemanticException(
+					String.format(
+							"Cannot compare left expression of type '%s' with right expression of type '%s'",
+							leftHandExpression.getNodeType().getTypeName(),
+							pluralPath.getNodeType().getTypeName()
+					)
+			);
+		}
+
+		leftHandExpression.applyInferableType( simpleDomainType );
 	}
 
 	@Override
@@ -62,7 +73,7 @@ public class SqmMemberOfPredicate extends AbstractNegatableSqmPredicate {
 		return leftHandExpression;
 	}
 
-	public SqmPath<?> getPluralPath() {
+	public SqmPluralValuedSimplePath<?> getPluralPath() {
 		return pluralPath;
 	}
 

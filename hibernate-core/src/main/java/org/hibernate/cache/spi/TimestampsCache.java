@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi;
 
@@ -12,19 +10,30 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
- * Wrapper for a {@link TimestampsRegion} adding handling of stale results
+ * Tracks invalidation of "query spaces" (tables) for the purpose of
+ * determining if a cached query result set is stale. Implementations
+ * use a {@linkplain TimestampsRegion special region} the second-level
+ * cache to store invalidation timestamps.
+ * <ul>
+ * <li>A query space is {@linkplain #invalidate invalidated} in the
+ *     {@code TimestampsCache} when a SQL DML statement executed by
+ *     Hibernate affects the corresponding table.
+ * <li>A cached query result set is {@linkplain #isUpToDate checked for
+ *     staleness} against the {@code TimestampsCache} when it is read
+ *     from a {@link QueryResultsRegion} by a {@link QueryResultsCache}.
+ * </ul>
  *
  * @author Steve Ebersole
  */
 public interface TimestampsCache {
 	/**
-	 * The region used to store all timestamps data
+	 * The region used to store all timestamp data.
 	 */
 	TimestampsRegion getRegion();
 
 	/**
 	 * Perform pre-invalidation of the passed spaces (table names)
-	 * against the timestamps region data
+	 * against the timestamp region data.
 	 */
 	void preInvalidate(
 			String[] spaces,
@@ -32,7 +41,7 @@ public interface TimestampsCache {
 
 	/**
 	 * Perform invalidation of the passed spaces (table names)
-	 * against the timestamps region data
+	 * against the timestamp region data.
 	 */
 	void invalidate(
 			String[] spaces,

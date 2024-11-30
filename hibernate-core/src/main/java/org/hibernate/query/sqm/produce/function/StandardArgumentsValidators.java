@@ -1,18 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.produce.function;
 
-import org.hibernate.QueryException;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.type.spi.TypeConfiguration;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+
+import static java.util.Arrays.asList;
 
 /**
  * @author Steve Ebersole
@@ -29,9 +27,6 @@ public final class StandardArgumentsValidators {
 	 */
 	public static final ArgumentsValidator NONE = new ArgumentsValidator() {
 		@Override
-		public void validate(List<? extends SqmTypedNode<?>> arguments, String functionName, QueryEngine queryEngine) {}
-
-		@Override
 		public String getSignature() {
 			return "([arg0[, ...]])";
 		}
@@ -42,9 +37,12 @@ public final class StandardArgumentsValidators {
 	 */
 	public static final ArgumentsValidator NO_ARGS = new ArgumentsValidator() {
 		@Override
-		public void validate(List<? extends SqmTypedNode<?>> arguments, String functionName, QueryEngine queryEngine) {
-			if (!arguments.isEmpty()) {
-				throw new QueryException(
+		public void validate(
+				List<? extends SqmTypedNode<?>> arguments,
+				String functionName,
+				TypeConfiguration typeConfiguration) {
+			if ( !arguments.isEmpty() ) {
+				throw new FunctionArgumentException(
 						String.format(
 								Locale.ROOT,
 								"Function %s has no parameters, but %d arguments given",
@@ -67,9 +65,12 @@ public final class StandardArgumentsValidators {
 		}
 		return new ArgumentsValidator() {
 			@Override
-			public void validate(List<? extends SqmTypedNode<?>> arguments, String functionName, QueryEngine queryEngine) {
-				if (arguments.size() < minNumOfArgs) {
-					throw new QueryException(
+			public void validate(
+					List<? extends SqmTypedNode<?>> arguments,
+					String functionName,
+					TypeConfiguration typeConfiguration) {
+				if ( arguments.size() < minNumOfArgs ) {
+					throw new FunctionArgumentException(
 							String.format(
 									Locale.ROOT,
 									"Function %s() requires at least %d arguments, but only %d arguments given",
@@ -101,9 +102,12 @@ public final class StandardArgumentsValidators {
 	public static ArgumentsValidator exactly(int number) {
 		return new ArgumentsValidator() {
 			@Override
-			public void validate(List<? extends SqmTypedNode<?>> arguments, String functionName, QueryEngine queryEngine) {
-				if (arguments.size() != number) {
-					throw new QueryException(
+			public void validate(
+					List<? extends SqmTypedNode<?>> arguments,
+					String functionName,
+					TypeConfiguration typeConfiguration) {
+				if ( arguments.size() != number ) {
+					throw new FunctionArgumentException(
 							String.format(
 									Locale.ROOT,
 									"Function %s() has %d parameters, but %d arguments given",
@@ -137,9 +141,12 @@ public final class StandardArgumentsValidators {
 	public static ArgumentsValidator max(int maxNumOfArgs) {
 		return new ArgumentsValidator() {
 			@Override
-			public void validate(List<? extends SqmTypedNode<?>> arguments, String functionName, QueryEngine queryEngine) {
-				if (arguments.size() > maxNumOfArgs) {
-					throw new QueryException(
+			public void validate(
+					List<? extends SqmTypedNode<?>> arguments,
+					String functionName,
+					TypeConfiguration typeConfiguration) {
+				if ( arguments.size() > maxNumOfArgs ) {
+					throw new FunctionArgumentException(
 							String.format(
 									Locale.ROOT,
 									"Function %s() allows at most %d arguments, but %d arguments given",
@@ -169,9 +176,12 @@ public final class StandardArgumentsValidators {
 	public static ArgumentsValidator between(int minNumOfArgs, int maxNumOfArgs) {
 		return new ArgumentsValidator() {
 			@Override
-			public void validate(List<? extends SqmTypedNode<?>> arguments, String functionName, QueryEngine queryEngine) {
+			public void validate(
+					List<? extends SqmTypedNode<?>> arguments,
+					String functionName,
+					TypeConfiguration typeConfiguration) {
 				if (arguments.size() < minNumOfArgs || arguments.size() > maxNumOfArgs) {
-					throw new QueryException(
+					throw new FunctionArgumentException(
 							String.format(
 									Locale.ROOT,
 									"Function %s() requires between %d and %d arguments, but %d arguments given",
@@ -203,11 +213,16 @@ public final class StandardArgumentsValidators {
 	}
 
 	public static ArgumentsValidator of(Class<?> javaType) {
-		return (arguments, functionName, queryEngine) -> arguments.forEach(
-				arg -> {
-					Class<?> argType = arg.getNodeJavaType().getJavaTypeClass();
+		return new ArgumentsValidator() {
+			@Override
+			public void validate(
+					List<? extends SqmTypedNode<?>> arguments,
+					String functionName,
+					TypeConfiguration typeConfiguration) {
+				for ( SqmTypedNode<?> argument : arguments ) {
+					Class<?> argType = argument.getNodeJavaType().getJavaTypeClass();
 					if ( !javaType.isAssignableFrom( argType ) ) {
-						throw new QueryException(
+						throw new FunctionArgumentException(
 								String.format(
 										Locale.ROOT,
 										"Function %s() has parameters of type %s, but argument of type %s given",
@@ -218,16 +233,27 @@ public final class StandardArgumentsValidators {
 						);
 					}
 				}
-		);
+			}
+		};
 	}
 
 	public static ArgumentsValidator composite(ArgumentsValidator... validators) {
-		return composite( Arrays.asList( validators ) );
+		return composite( asList( validators ) );
 	}
 
 	public static ArgumentsValidator composite(List<ArgumentsValidator> validators) {
-		return (arguments, functionName, queryEngine) -> validators.forEach(
-				individualValidator -> individualValidator.validate( arguments, functionName, queryEngine)
-		);
+		return new ArgumentsValidator() {
+			@Override
+			public void validate(
+					List<? extends SqmTypedNode<?>> arguments,
+					String functionName,
+					TypeConfiguration typeConfiguration) {
+				validators.forEach( individualValidator -> individualValidator.validate(
+						arguments,
+						functionName,
+						typeConfiguration
+				) );
+			}
+		};
 	}
 }

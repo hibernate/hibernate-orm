@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id.uuid.strategy;
 
@@ -13,10 +11,12 @@ import jakarta.persistence.Id;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
+import org.hibernate.dialect.SybaseDialect;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -32,13 +32,15 @@ import static org.hamcrest.MatcherAssert.assertThat;
 		annotatedClasses = CustomStrategyTest.Node.class
 )
 @SessionFactory
+@SkipForDialect( dialectClass = SybaseDialect.class, matchSubTypes = true,
+		reason = "Skipped for Sybase to avoid problems with UUIDs potentially ending with a trailing 0 byte")
 public class CustomStrategyTest {
 
 	@Test
 	public void testUsage(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			Node node = new Node();
-			session.save( node );
+			session.persist( node );
 			assertThat(node.id, notNullValue());
 			assertThat(node.id.variant(), is(2));
 			assertThat(node.id.version(), is(1));

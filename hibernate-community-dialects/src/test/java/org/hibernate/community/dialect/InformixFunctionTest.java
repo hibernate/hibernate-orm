@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -14,7 +12,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -50,7 +48,7 @@ public class InformixFunctionTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10846" )
+	@JiraKey( value = "HHH-10846" )
 	public void testConcat(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -66,7 +64,7 @@ public class InformixFunctionTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10846" )
+	@JiraKey( value = "HHH-10846" )
 	public void testSubstring(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -82,7 +80,7 @@ public class InformixFunctionTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10846" )
+	@JiraKey( value = "HHH-10846" )
 	public void testSubstr(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -98,7 +96,7 @@ public class InformixFunctionTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10846" )
+	@JiraKey( value = "HHH-10846" )
 	public void testCoalesceAndNvl(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -122,7 +120,7 @@ public class InformixFunctionTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10800" )
+	@JiraKey( value = "HHH-10800" )
 	public void testCurrentDate(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -145,7 +143,7 @@ public class InformixFunctionTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10800" )
+	@JiraKey( value = "HHH-10800" )
 	public void testCurrentTimestamp(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -206,5 +204,3 @@ public class InformixFunctionTest {
 		private String district;
 	}
 }
-
-

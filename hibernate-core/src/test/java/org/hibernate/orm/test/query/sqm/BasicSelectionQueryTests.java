@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.sqm;
 
@@ -15,6 +13,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Tuple;
 
 import org.hibernate.ScrollMode;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.SelectionQuery;
@@ -24,6 +23,7 @@ import org.hibernate.testing.orm.domain.contacts.Contact;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -38,11 +38,12 @@ import static org.junit.jupiter.api.Assertions.fail;
 		annotatedClasses = BasicSelectionQueryTests.DummyEntity.class
 )
 @SessionFactory
+@SkipForDialect( dialectClass = HANADialect.class, reason = "HANA does not support scrollable results")
 public class BasicSelectionQueryTests {
 	@Test
 	public void typedEntitySelectTest(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			final SelectionQuery<Contact> query = session.createSelectionQuery( "select c from Contact c", Contact.class );
+			final SelectionQuery<DummyEntity> query = session.createSelectionQuery( "select c from DummyEntity c", DummyEntity.class );
 			checkResults( query, session );
 		} );
 	}
@@ -51,7 +52,7 @@ public class BasicSelectionQueryTests {
 	public void rawEntitySelectTest(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			// its unbounded
-			final SelectionQuery<?> query = session.createSelectionQuery( "select c from Contact c" );
+			final SelectionQuery<?> query = session.createSelectionQuery( "select c from DummyEntity c" );
 			checkResults( query, session );
 		} );
 	}
@@ -188,9 +189,9 @@ public class BasicSelectionQueryTests {
 	@Entity( name = "DummyEntity" )
 	@Table( name = "DummyEntity" )
 	public static class DummyEntity {
-	    @Id
-	    private Integer id;
-	    @Basic
+		@Id
+		private Integer id;
+		@Basic
 		private String name;
 
 		private DummyEntity() {

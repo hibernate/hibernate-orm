@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cache;
 
@@ -29,7 +27,7 @@ import org.hibernate.stat.CacheRegionStatistics;
 import org.hibernate.stat.QueryStatistics;
 import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
@@ -54,7 +52,7 @@ public class SharedDomainDataAndQueryResultsTest extends BaseNonConfigCoreFuncti
 	private static final String PREFIX = "test";
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-13586")
+	@JiraKey( value = "HHH-13586")
 	public void testAllCachedStatistics() {
 
 		final Statistics statistics = sessionFactory().getStatistics();
@@ -274,7 +272,7 @@ public class SharedDomainDataAndQueryResultsTest extends BaseNonConfigCoreFuncti
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-13586")
+	@JiraKey( value = "HHH-13586")
 	public void testCacheImplementorGetRegion() {
 		rebuildSessionFactory();
 
@@ -304,7 +302,7 @@ public class SharedDomainDataAndQueryResultsTest extends BaseNonConfigCoreFuncti
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-13586")
+	@JiraKey( value = "HHH-13586")
 	public void testEvictCaches() {
 
 		final Statistics statistics = sessionFactory().getStatistics();
@@ -397,7 +395,7 @@ public class SharedDomainDataAndQueryResultsTest extends BaseNonConfigCoreFuncti
 				this::sessionFactory, session -> {
 					List<Dog> dogs = session.createQuery( "from Dog", Dog.class ).getResultList();
 					for ( Dog dog : dogs ) {
-						session.delete( dog );
+						session.remove( dog );
 					}
 				}
 		);

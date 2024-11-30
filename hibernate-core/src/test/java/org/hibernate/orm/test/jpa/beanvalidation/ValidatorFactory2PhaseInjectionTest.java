@@ -1,13 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.beanvalidation;
 
 import java.net.URL;
-import java.util.Collections;
 
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.validation.Validation;
@@ -19,6 +16,8 @@ import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+
 import org.hibernate.orm.test.jpa.xml.versions.JpaXsdVersionsTest;
 
 
@@ -60,7 +59,7 @@ public class ValidatorFactory2PhaseInjectionTest {
 						return HibernatePersistenceProvider.class.getResource( "/org/hibernate/jpa/persistence_1_0.xsd" );
 					}
 				},
-				Collections.emptyMap()
+				ServiceRegistryUtil.createBaseSettings()
 		);
 		emfb.withValidatorFactory( vf );
 

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.loading.multiLoad;
 
@@ -10,17 +8,18 @@ import java.util.List;
 import java.util.Objects;
 
 import org.hibernate.CacheMode;
+import org.hibernate.Hibernate;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.engine.spi.Status;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.loader.ast.internal.MultiKeyLoadHelper;
 import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -53,7 +52,7 @@ import static org.junit.Assert.assertTrue;
 		settings = {
 				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true" ),
 				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
-				@Setting( name = AvailableSettings.HBM2DDL_DATABASE_ACTION, value = "create-drop" )
+				@Setting( name = AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, value = "create-drop" )
 		}
 )
 @DomainModel(
@@ -70,7 +69,7 @@ public class MultiLoadTest {
 				session -> {
 					session.setCacheMode( CacheMode.IGNORE );
 					for ( int i = 1; i <= 60; i++ ) {
-						session.save( new SimpleEntity( i, "Entity #" + i ) );
+						session.persist( new SimpleEntity( i, "Entity #" + i ) );
 					}
 				}
 		);
@@ -99,26 +98,83 @@ public class MultiLoadTest {
 							statementInspector.getSqlQueries().get( 0 ),
 							'?'
 					);
-					assertThat( paramCount, is( 5 ) );
+
+					final Dialect dialect = session.getSessionFactory()
+							.getFastSessionServices()
+							.jdbcServices
+							.getDialect();
+					if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
+						assertThat( paramCount, is( 1 ) );
+					}
+					else {
+						assertThat( paramCount, is( 5 ) );
+					}
 				}
 		);
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10984" )
-	public void testUnflushedDeleteAndThenMultiLoad(SessionFactoryScope scope) {
+	@JiraKey( value = "HHH-10984" )
+	public void testUnflushedDeleteAndThenMultiLoadPart0(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					// delete one of them (but do not flush)...
-					session.delete( session.load( SimpleEntity.class, 5 ) );
+					SimpleEntity s4 = session.getReference(SimpleEntity.class, 5);
+					session.remove( s4 );
+
+					assertFalse( Hibernate.isInitialized( s4 ) );
 
 					// as a baseline, assert based on how load() handles it
-					SimpleEntity s5 = session.load( SimpleEntity.class, 5 );
+					SimpleEntity s5 = session.getReference( SimpleEntity.class, 5 );
 					assertNotNull( s5 );
+					assertFalse( Hibernate.isInitialized( s5 ) );
+				}
+		);
+	}
+
+	@Test
+	@JiraKey( value = "HHH-10984" )
+	public void testUnflushedDeleteAndThenMultiLoadPart1(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					// delete one of them (but do not flush)...
+					SimpleEntity s4 = session.getReference( SimpleEntity.class, 5 );
+					Hibernate.initialize( s4 );
+					session.remove( s4 );
+
+					// as a baseline, assert based on how load() handles it
+					SimpleEntity s5 = session.getReference( SimpleEntity.class, 5 );
+					assertNotNull( s5 );
+				}
+		);
+	}
+
+	@Test
+	@JiraKey( value = "HHH-10984" )
+	public void testUnflushedDeleteAndThenMultiLoadPart2(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					// delete one of them (but do not flush)...
+					SimpleEntity s4 = session.getReference( SimpleEntity.class, 5 );
+					Hibernate.initialize( s4 );
+					session.remove( s4 );
 
 					// and then, assert how get() handles it
-					s5 = session.get( SimpleEntity.class, 5 );
+					SimpleEntity s5 = session.get( SimpleEntity.class, 5 );
 					assertNull( s5 );
+				}
+		);
+	}
+
+	@Test
+	@JiraKey( value = "HHH-10984" )
+	public void testUnflushedDeleteAndThenMultiLoadPart3(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					// delete one of them (but do not flush)...
+					SimpleEntity s4 = session.getReference( SimpleEntity.class, 5 );
+					Hibernate.initialize( s4 );
+					session.remove( s4 );
 
 					// finally assert how multiLoad handles it
 					List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).multiLoad( ids( 56 ) );
@@ -128,7 +184,22 @@ public class MultiLoadTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10617" )
+	@JiraKey( value = "HHH-10984" )
+	public void testUnflushedDeleteAndThenMultiLoadPart4(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					// delete one of them (but do not flush)...
+					session.remove( session.getReference( SimpleEntity.class, 5 ) );
+
+					// and then, assert how get() handles it
+					SimpleEntity s5 = session.get( SimpleEntity.class, 5 );
+					assertNull( s5 );
+				}
+		);
+	}
+
+	@Test
+	@JiraKey( value = "HHH-10617" )
 	public void testDuplicatedRequestedIds(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -142,7 +213,7 @@ public class MultiLoadTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10617")
+	@JiraKey(value = "HHH-10617")
 	public void testDuplicatedRequestedIdswithDisableOrderedReturn(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -156,7 +227,7 @@ public class MultiLoadTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10617" )
+	@JiraKey( value = "HHH-10617" )
 	public void testNonExistentIdRequest(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -203,7 +274,37 @@ public class MultiLoadTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12944")
+	public void testBasicMultiLoadWithManagedAndNoCheckingProxied(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					SimpleEntity first = session.byId( SimpleEntity.class ).getReference( 1 );
+					List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).multiLoad( ids( 56 ) );
+					assertEquals( 56, list.size() );
+					// this check is HIGHLY specific to implementation in the batch loader
+					// which puts existing managed entities first...
+					assertSame( first, list.get( 0 ) );
+				}
+		);
+	}
+
+	@Test
+	public void testBasicMultiLoadWithManagedAndCheckingProxied(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					SimpleEntity first = session.byId( SimpleEntity.class ).getReference( 1 );
+					List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class )
+							.enableSessionCheck( true )
+							.multiLoad( ids( 56 ) );
+					assertEquals( 56, list.size() );
+					// this check is HIGHLY specific to implementation in the batch loader
+					// which puts existing managed entities first...
+					assertSame( first, list.get( 0 ) );
+				}
+		);
+	}
+
+	@Test
+	@JiraKey(value = "HHH-12944")
 	public void testMultiLoadFrom2ndLevelCache(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
@@ -251,13 +352,23 @@ public class MultiLoadTest {
 							statementInspector.getSqlQueries().get( 0 ),
 							'?'
 					);
-					assertThat( paramCount, is( 2 ) );
+
+					final Dialect dialect = session.getSessionFactory()
+							.getFastSessionServices()
+							.jdbcServices
+							.getDialect();
+					if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
+						assertThat( paramCount, is( 1 ) );
+					}
+					else {
+						assertThat( paramCount, is( 2 ) );
+					}
 				}
 		);
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12944")
+	@JiraKey(value = "HHH-12944")
 	public void testUnorderedMultiLoadFrom2ndLevelCache(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
@@ -306,13 +417,23 @@ public class MultiLoadTest {
 							statementInspector.getSqlQueries().get( 0 ),
 							'?'
 					);
-					assertThat( paramCount, is( 2 ) );
+
+					final Dialect dialect = session.getSessionFactory()
+							.getFastSessionServices()
+							.jdbcServices
+							.getDialect();
+					if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
+						assertThat( paramCount, is( 1 ) );
+					}
+					else {
+						assertThat( paramCount, is( 2 ) );
+					}
 				}
 		);
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12944")
+	@JiraKey(value = "HHH-12944")
 	public void testOrderedMultiLoadFrom2ndLevelCachePendingDelete(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
@@ -337,13 +458,23 @@ public class MultiLoadTest {
 							statementInspector.getSqlQueries().get( 0 ),
 							'?'
 					);
-					assertThat( paramCount, is( 2 ) );
+
+					final Dialect dialect = session.getSessionFactory()
+							.getFastSessionServices()
+							.jdbcServices
+							.getDialect();
+					if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
+						assertThat( paramCount, is( 1 ) );
+					}
+					else {
+						assertThat( paramCount, is( 2 ) );
+					}
 				}
 		);
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12944")
+	@JiraKey(value = "HHH-12944")
 	public void testOrderedMultiLoadFrom2ndLevelCachePendingDeleteReturnRemoved(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
@@ -368,18 +499,28 @@ public class MultiLoadTest {
 
 					final EntityEntry entry = session.getPersistenceContext()
 							.getEntry( deletedEntity );
-					assertTrue( entry.getStatus() == Status.DELETED || entry.getStatus() == Status.GONE );
+					assertTrue( entry.getStatus().isDeletedOrGone() );
 
 					final int paramCount = StringHelper.countUnquoted(
 							statementInspector.getSqlQueries().get( 0 ),
 							'?'
 					);
-					assertThat( paramCount, is( 2 ) );
+
+					final Dialect dialect = session.getSessionFactory()
+							.getFastSessionServices()
+							.jdbcServices
+							.getDialect();
+					if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
+						assertThat( paramCount, is( 1 ) );
+					}
+					else {
+						assertThat( paramCount, is( 2 ) );
+					}
 				} );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12944")
+	@JiraKey(value = "HHH-12944")
 	public void testUnorderedMultiLoadFrom2ndLevelCachePendingDelete(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
@@ -404,12 +545,22 @@ public class MultiLoadTest {
 							statementInspector.getSqlQueries().get( 0 ),
 							'?'
 					);
-					assertThat( paramCount, is( 2 ) );
+
+					final Dialect dialect = session.getSessionFactory()
+							.getFastSessionServices()
+							.jdbcServices
+							.getDialect();
+					if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
+						assertThat( paramCount, is( 1 ) );
+					}
+					else {
+						assertThat( paramCount, is( 2 ) );
+					}
 				} );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12944")
+	@JiraKey(value = "HHH-12944")
 	public void testUnorderedMultiLoadFrom2ndLevelCachePendingDeleteReturnRemoved(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
@@ -433,15 +584,24 @@ public class MultiLoadTest {
 							.equals( 2 ) ).findAny().orElse( null );
 					assertNotNull( deletedEntity );
 
-					final EntityEntry entry = ( (SharedSessionContractImplementor) session ).getPersistenceContext()
-							.getEntry( deletedEntity );
-					assertTrue( entry.getStatus() == Status.DELETED || entry.getStatus() == Status.GONE );
+					final EntityEntry entry = session.getPersistenceContext().getEntry( deletedEntity );
+					assertTrue( entry.getStatus().isDeletedOrGone() );
 
 					final int paramCount = StringHelper.countUnquoted(
 							statementInspector.getSqlQueries().get( 0 ),
 							'?'
 					);
-					assertThat( paramCount, is( 2 ) );
+
+					final Dialect dialect = session.getSessionFactory()
+							.getFastSessionServices()
+							.jdbcServices
+							.getDialect();
+					if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
+						assertThat( paramCount, is( 1 ) );
+					}
+					else {
+						assertThat( paramCount, is( 2 ) );
+					}
 				} );
 	}
 
@@ -483,8 +643,8 @@ public class MultiLoadTest {
 
 					assertEquals( 56, list.size() );
 					assertFalse( session.getPersistenceContext()
-										 .getBatchFetchQueue()
-										 .containsEntityKey( entityKey ) );
+										.getBatchFetchQueue()
+										.containsEntityKey( entityKey ) );
 
 				}
 		);

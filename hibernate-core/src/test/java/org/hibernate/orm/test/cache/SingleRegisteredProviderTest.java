@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cache;
 
@@ -11,7 +9,6 @@ import java.util.Collection;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cache.internal.NoCachingRegionFactory;
 import org.hibernate.cache.spi.RegionFactory;
@@ -20,6 +17,7 @@ import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionPro
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -32,7 +30,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class SingleRegisteredProviderTest extends BaseUnitTestCase {
 	@Test
 	public void testCachingExplicitlyDisabled() {
-		try (final StandardServiceRegistry registry = new StandardServiceRegistryBuilder()
+		try (final StandardServiceRegistry registry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" )
 				.build()) {
 			assertThat( registry.getService( RegionFactory.class ), instanceOf( NoCachingRegionFactory.class ) );
@@ -49,7 +47,7 @@ public class SingleRegisteredProviderTest extends BaseUnitTestCase {
 
 			assertThat( implementors.size(), equalTo( 1 ) );
 
-			final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder( bsr )
+			final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder( bsr )
 					.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, "" )
 					.build();
 
@@ -72,7 +70,7 @@ public class SingleRegisteredProviderTest extends BaseUnitTestCase {
 					implementors.iterator().next()
 			);
 
-			final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder( bsr )
+			final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder( bsr )
 					.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, "" )
 					.build();
 
@@ -96,7 +94,7 @@ public class SingleRegisteredProviderTest extends BaseUnitTestCase {
 					DriverManagerConnectionProviderImpl.class
 			);
 
-			final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder( bsr ).build();
+			final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder( bsr ).build();
 
 			final ConnectionProvider configuredProvider = ssr.getService( ConnectionProvider.class );
 

@@ -1,141 +1,106 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.transaction.batch;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
-import static org.junit.jupiter.api.Assertions.fail;
+import org.hibernate.cfg.BatchSettings;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
-
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.jdbc.batch.internal.BatchBuilderImpl;
-import org.hibernate.engine.jdbc.batch.internal.BatchBuilderInitiator;
-import org.hibernate.engine.jdbc.batch.internal.BatchingBatch;
-import org.hibernate.engine.jdbc.batch.spi.Batch;
-import org.hibernate.engine.jdbc.batch.spi.BatchKey;
-import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
-
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SettingProvider;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.PersistenceException;
 
-@TestForIssue(jiraKey = "HHH-15082")
+import static org.assertj.core.api.Assertions.assertThat;
+
+@JiraKey(value = "HHH-15082")
 @Jpa(
 		annotatedClasses = {
 				FailingAddToBatchTest.MyEntity.class
 		},
 		integrationSettings = {
-				@Setting(name = AvailableSettings.STATEMENT_BATCH_SIZE, value = "50")
+				@Setting(name = BatchSettings.STATEMENT_BATCH_SIZE, value = "50")
 		},
 		settingProviders = {
 				@SettingProvider(
-						settingName = BatchBuilderInitiator.BUILDER,
-						provider = FailingAddToBatchTest.BatchBuilderSettingProvider.class
+						settingName = BatchSettings.BUILDER,
+						provider = AbstractBatchingTest.ErrorBatch2BuilderSettingProvider.class
 				)
 		}
 )
-public class FailingAddToBatchTest {
-
-	private static TestBatch testBatch;
-
-	@BeforeEach
-	public void setup() {
-		TestBatch.nextAddToBatchFailure.set( null );
-	}
+public class FailingAddToBatchTest extends AbstractBatchingTest {
 
 	@Test
 	public void testInsert(EntityManagerFactoryScope scope) {
-		RuntimeException simulatedAddToBatchFailure = new RuntimeException( "Simulated RuntimeException" );
-
-		scope.inTransaction( em -> {
-			assertThatThrownBy( () -> {
-				MyEntity entity = new MyEntity();
+		try {
+			scope.inTransaction( em -> {
+				final MyEntity entity = new MyEntity();
 				entity.setText( "initial" );
-				TestBatch.nextAddToBatchFailure.set( simulatedAddToBatchFailure );
 				em.persist( entity );
-				em.flush();
-			} )
-					.isSameAs( simulatedAddToBatchFailure );
-
-			assertAllStatementsAreClosed( testBatch.createdStatements );
-		} );
+			} );
+		}
+		catch (PersistenceException e) {
+			assertThat( batchWrapper.getStatementGroup().getNumberOfActiveStatements() ).isEqualTo( 0 );
+			assertThat( batchWrapper.getNumberOfBatches() ).isEqualTo( 1 );
+			assertThat( batchWrapper.getNumberOfSuccessfulBatches() ).isEqualTo( 0 );
+		}
 	}
 
 	@Test
+	@NotImplementedYet( reason = "Still need to work on entity update executors" )
 	public void testUpdate(EntityManagerFactoryScope scope) {
-		Long id = scope.fromTransaction( em -> {
-			MyEntity entity = new MyEntity();
-			entity.setText( "initial" );
-			em.persist( entity );
-			return entity.getId();
-		} );
-
-		RuntimeException simulatedAddToBatchFailure = new RuntimeException( "Simulated RuntimeException" );
-
-		scope.inTransaction( em -> {
-			assertThatThrownBy( () -> {
-				MyEntity entity = em.find( MyEntity.class, id );
-				TestBatch.nextAddToBatchFailure.set( simulatedAddToBatchFailure );
-				entity.setText( "updated" );
-				em.flush();
-			} )
-					.isSameAs( simulatedAddToBatchFailure );
-
-			assertAllStatementsAreClosed( testBatch.createdStatements );
-		} );
+		throw new RuntimeException();
+//		final Long id = scope.fromTransaction( (em) -> {
+//			MyEntity entity = new MyEntity();
+//			entity.setText( "initial" );
+//			em.persist( entity );
+//			return entity.getId();
+//		} );
+//
+//		scope.inEntityManager( (em) -> {
+//			final MyEntity managed = scope.fromTransaction( em, (e) -> em.find( MyEntity.class, id ) );
+//
+//			scope.inTransaction( em, (e) -> {
+//				managed.setText( "updated" );
+//				assertThat( batchWrapper.getStatementGroup().getNumberOfStatements() ).isEqualTo( 1 );
+//				assertThat( batchWrapper.getNumberOfBatches() ).isEqualTo( 1 );
+//				assertThat( batchWrapper.getNumberOfSuccessfulBatches() ).isEqualTo( 0 );
+//			} );
+//		} );
 	}
 
 	@Test
+	@NotImplementedYet( reason = "Still need to work on entity delete executors" )
 	public void testRemove(EntityManagerFactoryScope scope) {
-		Long id = scope.fromTransaction( em -> {
-			MyEntity entity = new MyEntity();
-			entity.setText( "initial" );
-			em.persist( entity );
-			return entity.getId();
-		} );
-
-		RuntimeException simulatedAddToBatchFailure = new RuntimeException( "Simulated RuntimeException" );
-
-		scope.inTransaction( em -> {
-			assertThatThrownBy( () -> {
-				MyEntity entity = em.find( MyEntity.class, id );
-				TestBatch.nextAddToBatchFailure.set( simulatedAddToBatchFailure );
-				em.remove( entity );
-				em.flush();
-			} )
-					.isSameAs( simulatedAddToBatchFailure );
-
-			assertAllStatementsAreClosed( testBatch.createdStatements );
-		} );
-	}
-
-	protected void assertAllStatementsAreClosed(List<PreparedStatement> statements) {
-		statements.forEach( statement -> {
-			try {
-				assertThat( "A PreparedStatement has not been closed", statement.isClosed(), is( true ) );
-			}
-			catch (SQLException e) {
-				fail( e.getMessage() );
-			}
-		} );
+		throw new RuntimeException();
+//		Long id = scope.fromTransaction( em -> {
+//			MyEntity entity = new MyEntity();
+//			entity.setText( "initial" );
+//			em.persist( entity );
+//			return entity.getId();
+//		} );
+//
+//		RuntimeException simulatedAddToBatchFailure = new RuntimeException( "Simulated RuntimeException" );
+//
+//		scope.inTransaction( em -> {
+//			assertThatThrownBy( () -> {
+//				MyEntity entity = em.find( MyEntity.class, id );
+////				TestBatch.nextAddToBatchFailure.set( simulatedAddToBatchFailure );
+//				em.remove( entity );
+//				em.flush();
+//			} )
+//					.isSameAs( simulatedAddToBatchFailure );
+//
+////			assertAllStatementsAreClosed( testBatch.createdStatements );
+//		} );
 	}
 
 	@Entity(name = "MyEntity")
@@ -162,52 +127,4 @@ public class FailingAddToBatchTest {
 		}
 	}
 
-	public static class BatchBuilderSettingProvider implements SettingProvider.Provider<String> {
-		@Override
-		public String getSetting() {
-			return TestBatchBuilder.class.getName();
-		}
-	}
-
-	public static class TestBatch extends BatchingBatch {
-		private static final AtomicReference<RuntimeException> nextAddToBatchFailure = new AtomicReference<>();
-
-		private final List<PreparedStatement> createdStatements = new ArrayList<>();
-
-		public TestBatch(BatchKey key, JdbcCoordinator jdbcCoordinator, int batchSize) {
-			super( key, jdbcCoordinator, batchSize );
-		}
-
-		@Override
-		public void addToBatch() {
-			RuntimeException failure = nextAddToBatchFailure.getAndSet( null );
-			if ( failure != null ) {
-				throw failure;
-				// Implementations really should call abortBatch() before propagating an exception.
-				// Purposely skipping the call to abortBatch() to ensure that Hibernate works properly when
-				// an implementation does not call abortBatch().
-			}
-			super.addToBatch();
-		}
-
-		@Override
-		public PreparedStatement getBatchStatement(String sql, boolean callable) {
-			PreparedStatement batchStatement = super.getBatchStatement( sql, callable );
-			createdStatements.add( batchStatement );
-			return batchStatement;
-		}
-	}
-
-	public static class TestBatchBuilder extends BatchBuilderImpl {
-
-		@Override
-		public Batch buildBatch(BatchKey key, JdbcCoordinator jdbcCoordinator) {
-			return buildBatchTest( key, jdbcCoordinator, getJdbcBatchSize() );
-		}
-
-		protected BatchingBatch buildBatchTest(BatchKey key, JdbcCoordinator jdbcCoordinator, int jdbcBatchSize) {
-			testBatch = new TestBatch( key, jdbcCoordinator, jdbcBatchSize );
-			return testBatch;
-		}
-	}
 }

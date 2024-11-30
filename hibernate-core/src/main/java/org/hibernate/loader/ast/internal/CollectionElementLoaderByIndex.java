@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.ast.internal;
 
@@ -12,7 +10,6 @@ import java.util.List;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -24,16 +21,13 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.spi.Callback;
-import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.exec.spi.JdbcSelect;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
@@ -43,11 +37,25 @@ import org.hibernate.sql.results.spi.ListResultsConsumer;
 public class CollectionElementLoaderByIndex implements Loader {
 	private final PluralAttributeMapping attributeMapping;
 	private final SelectStatement sqlAst;
-	private final List<JdbcParameter> jdbcParameters;
+	private final JdbcParametersList jdbcParameters;
 	private final int baseIndex;
 
 	private final int keyJdbcCount;
 
+	/**
+	 * Shortened form of {@link #CollectionElementLoaderByIndex(PluralAttributeMapping, int, LoadQueryInfluencers, SessionFactoryImplementor)}
+	 * which applied the collection mapping's {@linkplain PluralAttributeMapping.IndexMetadata#getListIndexBase()}
+	 */
+	public CollectionElementLoaderByIndex(
+			PluralAttributeMapping attributeMapping,
+			LoadQueryInfluencers influencers,
+			SessionFactoryImplementor sessionFactory) {
+		this( attributeMapping, attributeMapping.getIndexMetadata().getListIndexBase(), influencers, sessionFactory );
+	}
+
+	/**
+	 * @param baseIndex A base value to apply to the relational index values processed on {@link #incrementIndexByBase}
+	 */
 	public CollectionElementLoaderByIndex(
 			PluralAttributeMapping attributeMapping,
 			int baseIndex,
@@ -78,7 +86,7 @@ public class CollectionElementLoaderByIndex implements Loader {
 		List<ModelPart> partsToSelect = new ArrayList<>();
 		partsToSelect.add( attributeMapping.getElementDescriptor() );
 
-		this.jdbcParameters = new ArrayList<>( keyJdbcCount );
+		final JdbcParametersList.Builder jdbcParametersBuilder = JdbcParametersList.newBuilder( keyJdbcCount );
 		this.sqlAst = LoaderSelectBuilder.createSelect(
 				attributeMapping,
 				partsToSelect,
@@ -87,9 +95,10 @@ public class CollectionElementLoaderByIndex implements Loader {
 				1,
 				influencers,
 				LockOptions.NONE,
-				jdbcParameters::add,
+				jdbcParametersBuilder::add,
 				sessionFactory
 		);
+		this.jdbcParameters = jdbcParametersBuilder.build();
 	}
 
 	@Override
@@ -105,7 +114,7 @@ public class CollectionElementLoaderByIndex implements Loader {
 		return sqlAst;
 	}
 
-	public List<JdbcParameter> getJdbcParameters() {
+	public JdbcParametersList getJdbcParameters() {
 		return jdbcParameters;
 	}
 
@@ -119,60 +128,29 @@ public class CollectionElementLoaderByIndex implements Loader {
 
 		int offset = jdbcParameterBindings.registerParametersForEachJdbcValue(
 				key,
-				Clause.WHERE,
 				attributeMapping.getKeyDescriptor(),
 				jdbcParameters,
 				session
 		);
 		offset += jdbcParameterBindings.registerParametersForEachJdbcValue(
 				incrementIndexByBase( index ),
-				Clause.WHERE,
 				offset,
 				attributeMapping.getIndexDescriptor(),
 				jdbcParameters,
 				session
 		);
 		assert offset == jdbcParameters.size();
-		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlAst )
+		final JdbcOperationQuerySelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlAst )
 				.translate( jdbcParameterBindings, QueryOptions.NONE );
 
 		List<Object> list = jdbcServices.getJdbcSelectExecutor().list(
 				jdbcSelect,
 				jdbcParameterBindings,
-				new ExecutionContext() {
-					@Override
-					public SharedSessionContractImplementor getSession() {
-						return session;
-					}
-
-					@Override
-					public CollectionKey getCollectionKey() {
-						return null;
-					}
-
-					@Override
-					public QueryOptions getQueryOptions() {
-						return QueryOptions.NONE;
-					}
-
-					@Override
-					public String getQueryIdentifier(String sql) {
-						return sql;
-					}
-
-					@Override
-					public QueryParameterBindings getQueryParameterBindings() {
-						return QueryParameterBindings.NO_PARAM_BINDINGS;
-					}
-
-					@Override
-					public Callback getCallback() {
-						return null;
-					}
-
-				},
+				new BaseExecutionContext( session ),
 				RowTransformerStandardImpl.instance(),
-				ListResultsConsumer.UniqueSemantic.FILTER
+				null,
+				ListResultsConsumer.UniqueSemantic.FILTER,
+				1
 		);
 
 		if ( list.isEmpty() ) {
@@ -181,9 +159,19 @@ public class CollectionElementLoaderByIndex implements Loader {
 		return list.get( 0 );
 	}
 
+	/**
+	 * If the index being loaded by for a List and the mapping specified a
+	 * {@linkplain org.hibernate.annotations.ListIndexBase base-index}, this will return
+	 * the passed {@code index} value incremented by the base.  Otherwise, the passed {@code index}
+	 * is returned.
+	 *
+	 * @param index The relational index value; specifically without any mapped base applied
+	 *
+	 * @return The appropriately incremented base
+	 */
 	protected Object incrementIndexByBase(Object index) {
-		if ( baseIndex != 0 ) {
-			index = (Integer) index + baseIndex;
+		if ( baseIndex > 0 ) {
+			return (Integer) index + baseIndex;
 		}
 		return index;
 	}

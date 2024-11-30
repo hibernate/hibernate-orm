@@ -1,18 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.spi;
 
 import java.util.List;
 
+import org.hibernate.AssertionFailure;
+import org.hibernate.metamodel.model.domain.DiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
+import org.hibernate.query.sqm.InterpretationException;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.sql.internal.SelfInterpretingSqmPath;
-import org.hibernate.query.sqm.tree.SqmStatement;
-import org.hibernate.query.sqm.tree.SqmVisitableNode;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
@@ -20,18 +19,23 @@ import org.hibernate.query.sqm.tree.domain.NonAggregatedCompositeSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmAnyValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
+import org.hibernate.query.sqm.tree.domain.SqmCteRoot;
 import org.hibernate.query.sqm.tree.domain.SqmDerivedRoot;
+import org.hibernate.query.sqm.tree.domain.SqmElementAggregateFunction;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmFkExpression;
+import org.hibernate.query.sqm.tree.domain.SqmFunctionRoot;
+import org.hibernate.query.sqm.tree.domain.SqmIndexAggregateFunction;
+import org.hibernate.query.sqm.tree.domain.SqmFunctionPath;
 import org.hibernate.query.sqm.tree.domain.SqmIndexedCollectionAccessPath;
 import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
-import org.hibernate.query.sqm.tree.domain.SqmElementAggregateFunction;
-import org.hibernate.query.sqm.tree.domain.SqmIndexAggregateFunction;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralPartJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedFrom;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
+import org.hibernate.query.sqm.tree.expression.AsWrapperSqmExpression;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmAggregateFunction;
 import org.hibernate.query.sqm.tree.expression.SqmAny;
@@ -53,27 +57,38 @@ import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
+import org.hibernate.query.sqm.tree.expression.SqmHqlNumericLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralEmbeddableType;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
+import org.hibernate.query.sqm.tree.expression.SqmNamedExpression;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmOrderedSetAggregateFunction;
 import org.hibernate.query.sqm.tree.expression.SqmOver;
 import org.hibernate.query.sqm.tree.expression.SqmOverflow;
 import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
+import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
 import org.hibernate.query.sqm.tree.expression.SqmStar;
 import org.hibernate.query.sqm.tree.expression.SqmSummarization;
 import org.hibernate.query.sqm.tree.expression.SqmToDuration;
 import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
+import org.hibernate.query.sqm.tree.expression.SqmWindow;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
+import org.hibernate.query.sqm.tree.from.SqmCteJoin;
 import org.hibernate.query.sqm.tree.from.SqmDerivedJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
+import org.hibernate.query.sqm.tree.from.SqmFunctionJoin;
+import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.insert.SqmConflictClause;
+import org.hibernate.query.sqm.tree.insert.SqmConflictUpdateAction;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
 import org.hibernate.query.sqm.tree.insert.SqmValues;
@@ -91,6 +106,7 @@ import org.hibernate.query.sqm.tree.predicate.SqmMemberOfPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNegatedPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNullnessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmTruthnessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmJpaCompoundSelection;
@@ -99,6 +115,7 @@ import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
+import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
@@ -107,7 +124,6 @@ import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmSetClause;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
-import org.hibernate.service.ServiceRegistry;
 
 /**
  * Base support for an SQM walker
@@ -115,19 +131,6 @@ import org.hibernate.service.ServiceRegistry;
  * @author Steve Ebersole
  */
 public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Object> {
-	private final ServiceRegistry serviceRegistry;
-
-	public BaseSemanticQueryWalker(ServiceRegistry serviceRegistry) {
-		this.serviceRegistry = serviceRegistry;
-	}
-
-	public ServiceRegistry getServiceRegistry() {
-		return serviceRegistry;
-	}
-
-	public Object visitStatement(SqmStatement<?> sqmStatement) {
-		return sqmStatement.accept( this );
-	}
 
 	@Override
 	public Object visitSelectStatement(SqmSelectStatement<?> statement) {
@@ -170,6 +173,10 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 			stateField.accept( this );
 		}
 		statement.getSelectQueryPart().accept( this );
+		final SqmConflictClause<?> conflictClause = statement.getConflictClause();
+		if ( conflictClause != null ) {
+			visitConflictClause( conflictClause );
+		}
 		return statement;
 	}
 
@@ -183,7 +190,27 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 		for ( SqmValues sqmValues : statement.getValuesList() ) {
 			visitValues( sqmValues );
 		}
+		final SqmConflictClause<?> conflictClause = statement.getConflictClause();
+		if ( conflictClause != null ) {
+			visitConflictClause( conflictClause );
+		}
 		return statement;
+	}
+
+	@Override
+	public Object visitConflictClause(SqmConflictClause<?> sqmConflictClause) {
+		final SqmConflictUpdateAction<?> updateAction = sqmConflictClause.getConflictAction();
+		for ( SqmPath<?> stateField : sqmConflictClause.getConstraintPaths() ) {
+			stateField.accept( this );
+		}
+		if ( updateAction != null ) {
+			visitSetClause( updateAction.getSetClause() );
+			final SqmWhereClause whereClause = updateAction.getWhereClause();
+			if ( whereClause != null ) {
+				visitWhereClause( whereClause );
+			}
+		}
+		return sqmConflictClause;
 	}
 
 	@Override
@@ -196,8 +223,20 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 
 	@Override
 	public Object visitCteStatement(SqmCteStatement<?> sqmCteStatement) {
-		visitStatement( sqmCteStatement.getCteDefinition() );
+		visitSelectQuery( sqmCteStatement.getCteDefinition() );
 		return sqmCteStatement;
+	}
+
+	protected Object visitSelectQuery(SqmSelectQuery<?> selectQuery) {
+		if ( selectQuery instanceof SqmSelectStatement<?> statement ) {
+			return visitSelectStatement( statement );
+		}
+		else if ( selectQuery instanceof SqmSubQuery<?> subquery ) {
+			return visitSubQueryExpression( subquery );
+		}
+		else {
+			throw new AssertionFailure( "Unrecognized SQM select query type" );
+		}
 	}
 
 	@Override
@@ -239,67 +278,190 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 
 	@Override
 	public Object visitFromClause(SqmFromClause fromClause) {
-		fromClause.visitRoots( root -> root.accept( this ) );
+		fromClause.visitRoots( this::consumeFromClauseRoot );
 		return fromClause;
+	}
+
+	protected void consumeFromClauseRoot(SqmRoot<?> sqmRoot) {
+		if ( sqmRoot instanceof SqmDerivedRoot<?> derivedRoot ) {
+			derivedRoot.getQueryPart().accept( this );
+		}
+		else if ( sqmRoot instanceof SqmFunctionRoot<?> functionRoot ) {
+			functionRoot.getFunction().accept( this );
+		}
+		consumeJoins( sqmRoot );
+	}
+
+	private void consumeJoins(SqmRoot<?> sqmRoot) {
+		if ( sqmRoot.getOrderedJoins() == null ) {
+			consumeExplicitJoins( sqmRoot );
+		}
+		else {
+			for ( SqmJoin<?, ?> join : sqmRoot.getOrderedJoins() ) {
+				consumeExplicitJoin( join, false );
+			}
+		}
+	}
+
+	protected void consumeExplicitJoins(SqmFrom<?, ?> sqmFrom) {
+		sqmFrom.visitSqmJoins( sqmJoin -> consumeExplicitJoin( sqmJoin, true ) );
+		final List<SqmTreatedFrom<?,?,?>> sqmTreats = sqmFrom.getSqmTreats();
+		if ( !sqmTreats.isEmpty() ) {
+			for ( SqmFrom<?, ?> sqmTreat : sqmTreats ) {
+				consumeTreat( sqmTreat );
+			}
+		}
+	}
+
+	protected void consumeTreat(SqmFrom<?, ?> sqmTreat) {
+		consumeExplicitJoins( sqmTreat );
+	}
+
+	protected void consumeExplicitJoin(
+			SqmJoin<?, ?> sqmJoin,
+			boolean transitive) {
+		if ( sqmJoin instanceof SqmAttributeJoin<?, ?> join ) {
+			consumeAttributeJoin( join, transitive );
+		}
+		else if ( sqmJoin instanceof SqmCrossJoin<?> crossJoin ) {
+			consumeCrossJoin( crossJoin, transitive );
+		}
+		else if ( sqmJoin instanceof SqmEntityJoin<?,?> entityJoin ) {
+			consumeEntityJoin( entityJoin, transitive );
+		}
+		else if ( sqmJoin instanceof SqmDerivedJoin<?> derivedJoin ) {
+			consumeDerivedJoin( derivedJoin, transitive );
+		}
+		else if ( sqmJoin instanceof SqmFunctionJoin<?> functionJoin ) {
+			consumeFunctionJoin( functionJoin, transitive );
+		}
+		else if ( sqmJoin instanceof SqmCteJoin<?> cteJoin ) {
+			consumeCteJoin( cteJoin, transitive );
+		}
+		else if ( sqmJoin instanceof SqmPluralPartJoin<?, ?> pluralPartJoin ) {
+			consumePluralPartJoin( pluralPartJoin, transitive );
+		}
+		else {
+			throw new InterpretationException( "Could not visit SqmJoin [" + sqmJoin.getNavigablePath() + "] of type [" + sqmJoin.getClass().getName() + "]" );
+		}
+	}
+
+	protected void consumeAttributeJoin(SqmAttributeJoin<?, ?> sqmJoin, boolean transitive) {
+		if ( sqmJoin.getJoinPredicate() != null ) {
+			sqmJoin.getJoinPredicate().accept( this );
+		}
+		if ( transitive ) {
+			consumeExplicitJoins( sqmJoin );
+		}
+	}
+
+	protected void consumeCrossJoin(SqmCrossJoin<?> sqmJoin, boolean transitive) {
+		if ( transitive ) {
+			consumeExplicitJoins( sqmJoin );
+		}
+	}
+
+	protected void consumeEntityJoin(SqmEntityJoin<?,?> sqmJoin, boolean transitive) {
+		if ( sqmJoin.getJoinPredicate() != null ) {
+			sqmJoin.getJoinPredicate().accept( this );
+		}
+		if ( transitive ) {
+			consumeExplicitJoins( sqmJoin );
+		}
+	}
+
+	protected void consumeDerivedJoin(SqmDerivedJoin<?> sqmJoin, boolean transitive) {
+		sqmJoin.getQueryPart().accept( this );
+		if ( sqmJoin.getJoinPredicate() != null ) {
+			sqmJoin.getJoinPredicate().accept( this );
+		}
+		if ( transitive ) {
+			consumeExplicitJoins( sqmJoin );
+		}
+	}
+
+	protected void consumeFunctionJoin(SqmFunctionJoin<?> sqmJoin, boolean transitive) {
+		sqmJoin.getFunction().accept( this );
+		if ( sqmJoin.getJoinPredicate() != null ) {
+			sqmJoin.getJoinPredicate().accept( this );
+		}
+		if ( transitive ) {
+			consumeExplicitJoins( sqmJoin );
+		}
+	}
+
+	protected void consumeCteJoin(SqmCteJoin<?> sqmJoin, boolean transitive) {
+		if ( sqmJoin.getJoinPredicate() != null ) {
+			sqmJoin.getJoinPredicate().accept( this );
+		}
+		if ( transitive ) {
+			consumeExplicitJoins( sqmJoin );
+		}
+	}
+
+	protected void consumePluralPartJoin(SqmPluralPartJoin<?, ?> sqmJoin, boolean transitive) {
+		if ( sqmJoin.getJoinPredicate() != null ) {
+			sqmJoin.getJoinPredicate().accept( this );
+		}
+		if ( transitive ) {
+			consumeExplicitJoins( sqmJoin );
+		}
 	}
 
 	@Override
 	public Object visitRootPath(SqmRoot<?> sqmRoot) {
-		sqmRoot.visitReusablePaths( path -> path.accept( this ) );
-		sqmRoot.visitSqmJoins( sqmJoin -> sqmJoin.accept( this ) );
 		return sqmRoot;
 	}
 
 	@Override
 	public Object visitRootDerived(SqmDerivedRoot<?> sqmRoot) {
-		sqmRoot.getQueryPart().accept( this );
-		sqmRoot.visitReusablePaths( path -> path.accept( this ) );
-		sqmRoot.visitSqmJoins( sqmJoin -> sqmJoin.accept( this ) );
+		return sqmRoot;
+	}
+
+	@Override
+	public Object visitRootFunction(SqmFunctionRoot<?> sqmRoot) {
+		return sqmRoot;
+	}
+
+	@Override
+	public Object visitRootCte(SqmCteRoot<?> sqmRoot) {
 		return sqmRoot;
 	}
 
 	@Override
 	public Object visitCrossJoin(SqmCrossJoin<?> joinedFromElement) {
-		joinedFromElement.visitReusablePaths( path -> path.accept( this ) );
-		joinedFromElement.visitSqmJoins( sqmJoin -> sqmJoin.accept( this ) );
 		return joinedFromElement;
 	}
 
 	@Override
 	public Object visitPluralPartJoin(SqmPluralPartJoin<?, ?> joinedFromElement) {
-		joinedFromElement.visitReusablePaths( path -> path.accept( this ) );
-		joinedFromElement.visitSqmJoins( sqmJoin -> sqmJoin.accept( this ) );
 		return joinedFromElement;
 	}
 
 	@Override
-	public Object visitQualifiedEntityJoin(SqmEntityJoin<?> joinedFromElement) {
-		joinedFromElement.visitReusablePaths( path -> path.accept( this ) );
-		joinedFromElement.visitSqmJoins( sqmJoin -> sqmJoin.accept( this ) );
-		if ( joinedFromElement.getJoinPredicate() != null ) {
-			joinedFromElement.getJoinPredicate().accept( this );
-		}
+	public Object visitQualifiedEntityJoin(SqmEntityJoin<?,?> joinedFromElement) {
 		return joinedFromElement;
 	}
+
+
 
 	@Override
 	public Object visitQualifiedAttributeJoin(SqmAttributeJoin<?,?> joinedFromElement) {
-		joinedFromElement.visitReusablePaths( path -> path.accept( this ) );
-		joinedFromElement.visitSqmJoins( sqmJoin -> sqmJoin.accept( this ) );
-		if ( joinedFromElement.getJoinPredicate() != null ) {
-			joinedFromElement.getJoinPredicate().accept( this );
-		}
 		return joinedFromElement;
 	}
 
 	@Override
 	public Object visitQualifiedDerivedJoin(SqmDerivedJoin<?> joinedFromElement) {
-		joinedFromElement.getQueryPart().accept( this );
-		joinedFromElement.visitReusablePaths( path -> path.accept( this ) );
-		joinedFromElement.visitSqmJoins( sqmJoin -> sqmJoin.accept( this ) );
-		if ( joinedFromElement.getJoinPredicate() != null ) {
-			joinedFromElement.getJoinPredicate().accept( this );
-		}
+		return joinedFromElement;
+	}
+
+	@Override
+	public Object visitQualifiedFunctionJoin(SqmFunctionJoin<?> joinedFromElement) {
+		return joinedFromElement;
+	}
+
+	@Override
+	public Object visitQualifiedCteJoin(SqmCteJoin<?> joinedFromElement) {
 		return joinedFromElement;
 	}
 
@@ -339,7 +501,7 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	}
 
 	@Override
-	public Object visitSelfInterpretingSqmPath(SelfInterpretingSqmPath<?> path) {
+	public Object visitDiscriminatorPath(DiscriminatorSqmPath<?> path) {
 		return path;
 	}
 
@@ -359,9 +521,13 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	}
 
 	@Override
+	public Object visitFunctionPath(SqmFunctionPath<?> functionPath) {
+		visitFunction( functionPath.getFunction() );
+		return functionPath;
+	}
+
+	@Override
 	public Object visitCorrelation(SqmCorrelation<?, ?> correlation) {
-		correlation.visitReusablePaths( path -> path.accept( this ) );
-		correlation.visitSqmJoins( sqmJoin -> sqmJoin.accept( this ) );
 		return correlation;
 	}
 
@@ -406,7 +572,7 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 
 	@Override
 	public Object visitWhereClause(SqmWhereClause whereClause) {
-		if ( whereClause == null ) {
+		if ( whereClause == null || whereClause.getPredicate() == null ) {
 			return null;
 		}
 
@@ -443,6 +609,12 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 
 	@Override
 	public Object visitIsNullPredicate(SqmNullnessPredicate predicate) {
+		predicate.getExpression().accept( this );
+		return predicate;
+	}
+
+	@Override
+	public Object visitIsTruePredicate(SqmTruthnessPredicate predicate) {
 		predicate.getExpression().accept( this );
 		return predicate;
 	}
@@ -581,12 +753,17 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	}
 
 	@Override
-	public Object visitAnyDiscriminatorTypeExpression(AnyDiscriminatorSqmPath expression) {
+	public Object visitEmbeddableTypeLiteralExpression(SqmLiteralEmbeddableType<?> expression) {
 		return expression;
 	}
 
 	@Override
-	public Object visitAnyDiscriminatorTypeValueExpression(SqmAnyDiscriminatorValue expression) {
+	public Object visitAnyDiscriminatorTypeExpression(AnyDiscriminatorSqmPath<?> expression) {
+		return expression;
+	}
+
+	@Override
+	public Object visitAnyDiscriminatorTypeValueExpression(SqmAnyDiscriminatorValue<?> expression) {
 		return expression;
 	}
 
@@ -604,13 +781,9 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 
 	@Override
 	public Object visitFunction(SqmFunction<?> sqmFunction) {
-		sqmFunction.getArguments().forEach(
-				e -> {
-					if ( e instanceof SqmVisitableNode ) {
-						( (SqmVisitableNode) e ).accept( this );
-					}
-				}
-		);
+		for ( SqmTypedNode<?> argument : sqmFunction.getArguments() ) {
+			argument.accept( this );
+		}
 		if ( sqmFunction instanceof SqmAggregateFunction<?> ) {
 			final SqmPredicate filter = ( (SqmAggregateFunction<?>) sqmFunction ).getFilter();
 			if ( filter != null ) {
@@ -619,6 +792,14 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 			if ( sqmFunction instanceof SqmOrderedSetAggregateFunction<?> ) {
 				visitOrderByClause( ( (SqmOrderedSetAggregateFunction<?>) sqmFunction ).getWithinGroup() );
 			}
+		}
+		return sqmFunction;
+	}
+
+	@Override
+	public Object visitSetReturningFunction(SqmSetReturningFunction<?> sqmFunction) {
+		for ( SqmTypedNode<?> argument : sqmFunction.getArguments() ) {
+			argument.accept( this );
 		}
 		return sqmFunction;
 	}
@@ -675,19 +856,25 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	@Override
 	public Object visitOver(SqmOver<?> over) {
 		over.getExpression().accept( this );
-		for ( SqmExpression<?> partition : over.getPartitions() ) {
+		over.getWindow().accept( this );
+		return over;
+	}
+
+	@Override
+	public Object visitWindow(SqmWindow window) {
+		for ( SqmExpression<?> partition : window.getPartitions() ) {
 			partition.accept( this );
 		}
-		for ( SqmSortSpecification sqmSortSpecification : over.getOrderList() ) {
+		for ( SqmSortSpecification sqmSortSpecification : window.getOrderList() ) {
 			visitSortSpecification( sqmSortSpecification );
 		}
-		if ( over.getStartExpression() != null ) {
-			over.getStartExpression().accept( this );
+		if ( window.getStartExpression() != null ) {
+			window.getStartExpression().accept( this );
 		}
-		if ( over.getEndExpression() != null ) {
-			over.getEndExpression().accept( this );
+		if ( window.getEndExpression() != null ) {
+			window.getEndExpression().accept( this );
 		}
-		return over;
+		return window;
 	}
 
 	@Override
@@ -725,6 +912,11 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	}
 
 	@Override
+	public <N extends Number> Object visitHqlNumericLiteral(SqmHqlNumericLiteral<N> numericLiteral) {
+		return numericLiteral;
+	}
+
+	@Override
 	public Object visitTuple(SqmTuple<?> sqmTuple) {
 		sqmTuple.getGroupedExpressions().forEach( e -> e.accept( this ) );
 		return sqmTuple;
@@ -755,6 +947,7 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 
 	@Override
 	public Object visitSubQueryExpression(SqmSubQuery<?> expression) {
+		visitCteContainer( expression );
 		expression.getQueryPart().accept( this );
 		return expression;
 	}
@@ -824,4 +1017,15 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 		return sqmFieldLiteral;
 	}
 
+	@Override
+	public Object visitAsWrapperExpression(AsWrapperSqmExpression<?> expression) {
+		expression.getExpression().accept( this );
+		return expression;
+	}
+
+	@Override
+	public Object visitNamedExpression(SqmNamedExpression<?> expression) {
+		expression.getExpression().accept( this );
+		return expression;
+	}
 }

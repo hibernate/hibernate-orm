@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sql.internal;
 
@@ -18,16 +16,16 @@ import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 
 /**
- * Keeps details of a named native-sql query
+ * Keeps details of a named native SQL query
  *
  * @author Max Andersen
  * @author Steve Ebersole
  */
-public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento implements NamedNativeQueryMemento {
+public class NamedNativeQueryMementoImpl<E> extends AbstractNamedQueryMemento<E> implements NamedNativeQueryMemento<E> {
 	private final String sqlString;
+	private final String originalSqlString;
 
 	private final String resultSetMappingName;
-	private final Class<?> resultSetMappingClass;
 
 	private final Set<String> querySpaces;
 
@@ -37,9 +35,10 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 
 	public NamedNativeQueryMementoImpl(
 			String name,
+			Class<E> resultClass,
 			String sqlString,
+			String originalSqlString,
 			String resultSetMappingName,
-			Class resultSetMappingClass,
 			Set<String> querySpaces,
 			Boolean cacheable,
 			String cacheRegion,
@@ -54,6 +53,7 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 			Map<String,Object> hints) {
 		super(
 				name,
+				resultClass,
 				cacheable,
 				cacheRegion,
 				cacheMode,
@@ -65,10 +65,10 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 				hints
 		);
 		this.sqlString = sqlString;
+		this.originalSqlString = originalSqlString;
 		this.resultSetMappingName = resultSetMappingName == null || resultSetMappingName.isEmpty()
 				? null
 				: resultSetMappingName;
-		this.resultSetMappingClass = resultSetMappingClass;
 		this.querySpaces = querySpaces;
 		this.firstResult = firstResult;
 		this.maxResults = maxResults;
@@ -76,10 +76,6 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 
 	public String getResultSetMappingName() {
 		return resultSetMappingName;
-	}
-
-	public Class<?> getResultSetMappingClass() {
-		return resultSetMappingClass;
 	}
 
 	public Set<String> getQuerySpaces() {
@@ -92,13 +88,13 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 	}
 
 	@Override
-	public String getResultMappingName() {
-		return resultSetMappingName;
+	public String getOriginalSqlString() {
+		return originalSqlString;
 	}
 
 	@Override
-	public Class<?> getResultMappingClass() {
-		return resultSetMappingClass;
+	public String getResultMappingName() {
+		return resultSetMappingName;
 	}
 
 	@Override
@@ -112,12 +108,13 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 	}
 
 	@Override
-	public NamedNativeQueryMemento makeCopy(String name) {
-		return new NamedNativeQueryMementoImpl(
+	public NamedNativeQueryMemento<E> makeCopy(String name) {
+		return new NamedNativeQueryMementoImpl<>(
 				name,
+				getResultType(),
 				sqlString,
+				originalSqlString,
 				resultSetMappingName,
-				resultSetMappingClass,
 				querySpaces,
 				getCacheable(),
 				getCacheRegion(),
@@ -139,8 +136,8 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 	}
 
 	@Override
-	public <T> NativeQueryImplementor<T> toQuery(SharedSessionContractImplementor session) {
-		return new NativeQueryImpl<>( this, session );
+	public NativeQueryImplementor<E> toQuery(SharedSessionContractImplementor session) {
+		return new NativeQueryImpl<>( this, getResultType(), session );
 	}
 
 	@Override

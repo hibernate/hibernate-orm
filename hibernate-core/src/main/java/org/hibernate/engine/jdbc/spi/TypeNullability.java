@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.spi;
 
@@ -39,19 +37,11 @@ public enum TypeNullability {
 	 * @return The corresponding enum.
 	 */
 	public static TypeNullability interpret(short code) {
-		switch ( code ) {
-			case DatabaseMetaData.typeNullable: {
-				return NULLABLE;
-			}
-			case DatabaseMetaData.typeNoNulls: {
-				return NON_NULLABLE;
-			}
-			case DatabaseMetaData.typeNullableUnknown: {
-				return UNKNOWN;
-			}
-			default: {
-				throw new IllegalArgumentException( "Unknown type nullability code [" + code + "] encountered" );
-			}
-		}
+		return switch (code) {
+			case DatabaseMetaData.typeNullable -> NULLABLE;
+			case DatabaseMetaData.typeNoNulls -> NON_NULLABLE;
+			case DatabaseMetaData.typeNullableUnknown -> UNKNOWN;
+			default -> throw new IllegalArgumentException( "Unknown type nullability code [" + code + "] encountered" );
+		};
 	}
 }

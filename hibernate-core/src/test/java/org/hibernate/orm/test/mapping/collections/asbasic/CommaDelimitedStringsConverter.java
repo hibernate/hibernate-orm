@@ -1,17 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.collections.asbasic;
 
-import java.util.Arrays;
 import java.util.List;
+
 
 import jakarta.persistence.AttributeConverter;
 
+
 import static org.hibernate.internal.util.StringHelper.join;
+import static org.hibernate.internal.util.collections.CollectionHelper.listOf;
 
 /**
  * @author Steve Ebersole
@@ -31,8 +31,7 @@ public class CommaDelimitedStringsConverter implements AttributeConverter<List<S
 		if ( dbData == null ) {
 			return null;
 		}
-		return Arrays.asList( dbData.split( "," ) );
+		return listOf( dbData.split( "," ) );
 	}
 }
 //end::ex-csv-converter[]
-

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper.relation;
 
@@ -19,10 +17,7 @@ import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.EntityTools;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.proxy.HibernateProxy;
 import org.jboss.logging.Logger;
-
-import jakarta.persistence.PersistenceException;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -63,19 +58,6 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 		// bi-directional relation, we always store the "old", unchanged data, to prevent storing changes made
 		// to this field. It is the responsibility of the collection to properly update it if it really changed.
 		Object entity = nonInsertableFake ? oldObj : newObj;
-
-		// fix HHH-13760 - try to aggressively un-proxy this entity to help get the correct type of data later
-		// in mapToMapFromEntity. But it might fail while getImplementation() if object is deleted or other reasons.
-		// We catch the exception and fallback to call mapToMapFromEntity directly with the HibernateProxy entity
-		if ( lazyMapping && entity instanceof HibernateProxy ) {
-			try {
-				entity = ((HibernateProxy) entity).getHibernateLazyInitializer().getImplementation();
-			}
-			catch ( PersistenceException e ) {
-				log.debug( "Ignore PersistenceException while initializing the entity, " +
-					"and fallback to call mapToMapFromEntity directly" );
-			}
-		}
 
 		delegate.mapToMapFromEntity( newData, entity );
 

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.select;
 
@@ -11,28 +9,18 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.predicate.PredicateContainer;
-import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.basic.BasicResult;
-import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
  */
-public class QuerySpec extends QueryPart implements SqlAstNode, PredicateContainer, Expression, DomainResultProducer {
+public class QuerySpec extends QueryPart implements SqlAstNode, PredicateContainer {
 
 	private final FromClause fromClause;
 	private final SelectClause selectClause;
@@ -129,67 +117,4 @@ public class QuerySpec extends QueryPart implements SqlAstNode, PredicateContain
 		sqlTreeWalker.visitQuerySpec( this );
 	}
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Expression
-
-	@Override
-	public JdbcMappingContainer getExpressionType() {
-		final List<SqlSelection> sqlSelections = selectClause.getSqlSelections();
-		switch ( sqlSelections.size() ) {
-			case 1:
-				return sqlSelections.get( 0 ).getExpressionType();
-			default:
-				// todo (6.0): At some point we should create an ArrayTupleType and return that
-			case 0:
-				return null;
-		}
-	}
-
-	@Override
-	public void applySqlSelections(DomainResultCreationState creationState) {
-		TypeConfiguration typeConfiguration = creationState.getSqlAstCreationState().getCreationContext().getMappingMetamodel().getTypeConfiguration();
-		for ( SqlSelection sqlSelection : selectClause.getSqlSelections() ) {
-			sqlSelection.getExpressionType().forEachJdbcType(
-					(index, jdbcMapping) -> {
-						creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
-								this,
-								jdbcMapping.getJdbcJavaType(),
-								null,
-								typeConfiguration
-						);
-					}
-			);
-		}
-	}
-
-	@Override
-	public DomainResult createDomainResult(String resultVariable, DomainResultCreationState creationState) {
-		final TypeConfiguration typeConfiguration = creationState.getSqlAstCreationState()
-				.getCreationContext()
-				.getMappingMetamodel()
-				.getTypeConfiguration();
-		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
-		if ( selectClause.getSqlSelections().size() == 1 ) {
-			final SqlSelection first = selectClause.getSqlSelections().get( 0 );
-			final JdbcMapping jdbcMapping = first.getExpressionType()
-					.getJdbcMappings()
-					.get( 0 );
-
-			final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
-					this,
-					jdbcMapping.getJdbcJavaType(),
-					null,
-					typeConfiguration
-			);
-
-			return new BasicResult<>(
-					sqlSelection.getValuesArrayPosition(),
-					resultVariable,
-					jdbcMapping
-			);
-		}
-		else {
-			throw new UnsupportedOperationException("Domain result for non-scalar subquery shouldn't be created");
-		}
-	}
 }

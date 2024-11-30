@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities;
 
@@ -18,6 +16,7 @@ import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -105,11 +104,10 @@ public class EntityInstantiator {
 		final Map originalId = (Map) versionsEntity.get( enversService.getConfig().getOriginalIdPropertyName() );
 		for ( Object key : originalId.keySet() ) {
 			final Object value = originalId.get( key );
-			if ( value instanceof HibernateProxy ) {
-				final HibernateProxy hibernateProxy = (HibernateProxy) value;
-				final LazyInitializer initializer = hibernateProxy.getHibernateLazyInitializer();
-				final String entityName = initializer.getEntityName();
-				final Object entityId = initializer.getInternalIdentifier();
+			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( value );
+			if ( lazyInitializer != null ) {
+				final String entityName = lazyInitializer.getEntityName();
+				final Object entityId = lazyInitializer.getInternalIdentifier();
 				if ( enversService.getEntitiesConfigurations().isVersioned( entityName ) ) {
 					final String entityClassName = enversService.getEntitiesConfigurations().get( entityName ).getEntityClassName();
 					final Class entityClass = ReflectionTools.loadClass(

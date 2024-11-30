@@ -1,29 +1,26 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.sql.SQLException;
-import java.sql.Types;
+import java.util.Collection;
 
 import org.hibernate.HibernateException;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.BinaryStream;
-import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
+import org.hibernate.engine.jdbc.internal.ArrayBackedBinaryStream;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
-import org.hibernate.type.BasicArrayType;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -51,9 +48,28 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 			TypeConfiguration typeConfiguration,
 			Dialect dialect,
 			BasicType<T> elementType,
-			ColumnTypeInformation columnTypeInformation) {
+			ColumnTypeInformation columnTypeInformation,
+			JdbcTypeIndicators stdIndicators) {
+		if ( stdIndicators.isLob() ) {
+			final Class<?> javaTypeClass = getJavaTypeClass();
+			if ( javaTypeClass == Byte[].class ) {
+				return typeConfiguration.getBasicTypeRegistry().resolve(
+						ByteArrayJavaType.INSTANCE,
+						ByteArrayJavaType.INSTANCE.getRecommendedJdbcType( stdIndicators )
+				);
+			}
+			if ( javaTypeClass == Character[].class ) {
+				return typeConfiguration.getBasicTypeRegistry().resolve(
+						CharacterArrayJavaType.INSTANCE,
+						CharacterArrayJavaType.INSTANCE.getRecommendedJdbcType( stdIndicators )
+				);
+			}
+		}
 		final Class<?> elementJavaTypeClass = elementType.getJavaTypeDescriptor().getJavaTypeClass();
-		if ( elementType instanceof BasicPluralType<?, ?> || elementJavaTypeClass != null && elementJavaTypeClass.isArray() ) {
+		if ( elementType instanceof BasicPluralType<?, ?>
+				|| elementJavaTypeClass != null && elementJavaTypeClass.isArray()
+				&& elementJavaTypeClass != byte[].class ) {
+			// No support for nested arrays, except for byte[][]
 			return null;
 		}
 		final ArrayJavaType<T> arrayJavaType;
@@ -65,21 +81,10 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 			// Register the array type as that will be resolved in the next step
 			typeConfiguration.getJavaTypeRegistry().addDescriptor( arrayJavaType );
 		}
-		return typeConfiguration.standardBasicTypeForJavaType(
-				arrayJavaType.getJavaType(),
-				javaType -> {
-					JdbcType arrayJdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( Types.ARRAY );
-					if ( arrayJdbcType instanceof ArrayJdbcType ) {
-						arrayJdbcType = ( (ArrayJdbcType) arrayJdbcType ).resolveType(
-								typeConfiguration,
-								dialect,
-								elementType,
-								columnTypeInformation
-						);
-					}
-					return new BasicArrayType<>( elementType, arrayJdbcType, javaType );
-				}
-		);
+		final BasicValueConverter<T, ?> valueConverter = elementType.getValueConverter();
+		return valueConverter == null
+				? resolveType( typeConfiguration, dialect, arrayJavaType, elementType, columnTypeInformation, stdIndicators )
+				: createTypeUsingConverter( typeConfiguration, dialect, elementType, columnTypeInformation, stdIndicators, valueConverter );
 	}
 
 	@Override
@@ -255,13 +260,11 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 			return (X) value;
 		}
 		else if ( type == byte[].class ) {
-			// byte[] can only be requested if the value should be serialized
-			return (X) SerializationHelper.serialize( value );
+			return (X) toBytes( value );
 		}
 		else if ( type == BinaryStream.class ) {
-			// BinaryStream can only be requested if the value should be serialized
 			//noinspection unchecked
-			return (X) new BinaryStreamImpl( SerializationHelper.serialize( value ) );
+			return (X) new ArrayBackedBinaryStream( toBytes( value ) );
 		}
 		else if ( type.isArray() ) {
 			final Class<?> preferredJavaTypeClass = type.getComponentType();
@@ -282,10 +285,10 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 			return null;
 		}
 
-		if ( value instanceof java.sql.Array ) {
+		if ( value instanceof java.sql.Array array ) {
 			try {
 				//noinspection unchecked
-				value = (X) ( (java.sql.Array) value ).getArray();
+				value = (X) array.getArray();
 			}
 			catch ( SQLException ex ) {
 				// This basically shouldn't happen unless you've lost connection to the database.
@@ -293,8 +296,7 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 			}
 		}
 
-		if ( value instanceof Object[] ) {
-			final Object[] raw = (Object[]) value;
+		if ( value instanceof Object[] raw ) {
 			final Class<T> componentClass = getElementJavaType().getJavaTypeClass();
 			//noinspection unchecked
 			final T[] wrapped = (T[]) java.lang.reflect.Array.newInstance( componentClass, raw.length );
@@ -311,18 +313,67 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 			}
 			return wrapped;
 		}
-		else if ( value instanceof byte[] ) {
-			// When the value is a byte[], this is a deserialization request
-			//noinspection unchecked
-			return (T[]) SerializationHelper.deserialize( (byte[]) value );
+		else if ( value instanceof byte[] bytes ) {
+			return fromBytes( bytes );
 		}
-		else if ( value instanceof BinaryStream ) {
+		else if ( value instanceof BinaryStream binaryStream ) {
 			// When the value is a BinaryStream, this is a deserialization request
+			return fromBytes( binaryStream.getBytes() );
+		}
+		else if ( getElementJavaType().isInstance( value ) ) {
+			// Support binding a single element as parameter value
 			//noinspection unchecked
-			return (T[]) SerializationHelper.deserialize( ( (BinaryStream) value ).getBytes() );
+			final T[] wrapped = (T[]) java.lang.reflect.Array.newInstance( getElementJavaType().getJavaTypeClass(), 1 );
+			//noinspection unchecked
+			wrapped[0] = (T) value;
+			return wrapped;
+		}
+		else if ( value instanceof Collection<?> collection ) {
+			//noinspection unchecked
+			final T[] wrapped = (T[]) java.lang.reflect.Array.newInstance( getElementJavaType().getJavaTypeClass(), collection.size() );
+			int i = 0;
+			for ( Object e : collection ) {
+				wrapped[i++] = getElementJavaType().wrap( e, options );
+			}
+			return wrapped;
 		}
 
 		throw unknownWrap( value.getClass() );
+	}
+
+	private static <T> byte[] toBytes(T[] value) {
+		if ( value.getClass().getComponentType().isEnum() ) {
+			final byte[] array = new byte[value.length];
+			for (int i = 0; i < value.length; i++ ) {
+				// encode null enum value as -1
+				array[i] = value[i] == null ? -1 : (byte) ((Enum<?>) value[i]).ordinal();
+			}
+			return array;
+
+		}
+		else {
+			// byte[] can only be requested if the value should be serialized
+			return SerializationHelper.serialize( value );
+		}
+	}
+
+	private T[] fromBytes(byte[] bytes) {
+		final Class<T> elementClass = getElementJavaType().getJavaTypeClass();
+		if ( elementClass.isEnum() ) {
+			final Object[] array = (Object[]) Array.newInstance( elementClass, bytes.length );
+			for (int i = 0; i < bytes.length; i++ ) {
+				// null enum value was encoded as -1
+				array[i] = bytes[i] == -1 ? null : elementClass.getEnumConstants()[bytes[i]];
+			}
+			//noinspection unchecked
+			return (T[]) array;
+
+		}
+		else {
+			// When the value is a byte[], this is a deserialization request
+			//noinspection unchecked
+			return (T[]) SerializationHelper.deserialize(bytes);
+		}
 	}
 
 	private static class ArrayMutabilityPlan<T> implements MutabilityPlan<T[]> {
@@ -346,7 +397,7 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 				return null;
 			}
 			//noinspection unchecked
-			T[] copy = (T[]) Array.newInstance( componentClass, value.length );
+			final T[] copy = (T[]) Array.newInstance( componentClass, value.length );
 			for ( int i = 0; i < value.length; i ++ ) {
 				copy[ i ] = componentPlan.deepCopy( value[ i ] );
 			}

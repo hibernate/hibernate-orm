@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping;
 
@@ -13,14 +11,20 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 
 /**
- * Things which can have {@link org.hibernate.annotations.Where}
+ * Things which can have {@link org.hibernate.annotations.SQLRestriction}
  * declarations - entities and collections
  *
  * @see FilterRestrictable
  */
 public interface WhereRestrictable {
+
 	/**
-	 * Apply the {@link org.hibernate.annotations.Where} restrictions
+	 * Does this restrictable have a where restriction?
+	 */
+	boolean hasWhereRestrictions();
+
+	/**
+	 * Apply the {@link org.hibernate.annotations.SQLRestriction} restrictions
 	 */
 	void applyWhereRestrictions(
 			Consumer<Predicate> predicateConsumer,

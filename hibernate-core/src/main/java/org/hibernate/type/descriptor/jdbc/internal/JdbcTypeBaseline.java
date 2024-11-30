@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc.internal;
 
@@ -18,21 +16,30 @@ import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.DateJdbcType;
 import org.hibernate.type.descriptor.jdbc.DecimalJdbcType;
 import org.hibernate.type.descriptor.jdbc.DoubleJdbcType;
+import org.hibernate.type.descriptor.jdbc.DurationJdbcType;
 import org.hibernate.type.descriptor.jdbc.FloatJdbcType;
+import org.hibernate.type.descriptor.jdbc.InstantJdbcType;
 import org.hibernate.type.descriptor.jdbc.IntegerJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.LocalDateJdbcType;
+import org.hibernate.type.descriptor.jdbc.LocalDateTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.LocalTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.LongVarbinaryJdbcType;
 import org.hibernate.type.descriptor.jdbc.LongVarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.NumericJdbcType;
+import org.hibernate.type.descriptor.jdbc.OffsetDateTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.OffsetTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.RealJdbcType;
+import org.hibernate.type.descriptor.jdbc.RowIdJdbcType;
 import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimeWithTimeZoneJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampWithTimeZoneJdbcType;
 import org.hibernate.type.descriptor.jdbc.TinyIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
-import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
+import org.hibernate.type.descriptor.jdbc.ZonedDateTimeJdbcType;
 
 /**
  * Registers the base {@link JdbcType} instances.
@@ -60,18 +67,30 @@ public class JdbcTypeBaseline {
 		target.addDescriptor( SmallIntJdbcType.INSTANCE );
 		target.addDescriptor( TinyIntJdbcType.INSTANCE );
 
+		target.addDescriptor( InstantJdbcType.INSTANCE );
+		target.addDescriptor( LocalDateTimeJdbcType.INSTANCE );
+		target.addDescriptor( LocalDateJdbcType.INSTANCE );
+		target.addDescriptor( LocalTimeJdbcType.INSTANCE );
+		target.addDescriptor( OffsetDateTimeJdbcType.INSTANCE );
+		target.addDescriptor( OffsetTimeJdbcType.INSTANCE );
+		target.addDescriptor( ZonedDateTimeJdbcType.INSTANCE );
+
 		target.addDescriptor( DateJdbcType.INSTANCE );
 		target.addDescriptor( TimestampJdbcType.INSTANCE );
 		target.addDescriptor( TimestampWithTimeZoneJdbcType.INSTANCE );
 		target.addDescriptor( TimeJdbcType.INSTANCE );
+		target.addDescriptor( TimeWithTimeZoneJdbcType.INSTANCE );
+		target.addDescriptor( DurationJdbcType.INSTANCE );
 
 		target.addDescriptor( BinaryJdbcType.INSTANCE );
 		target.addDescriptor( VarbinaryJdbcType.INSTANCE );
 		target.addDescriptor( LongVarbinaryJdbcType.INSTANCE );
+		target.addDescriptor( new LongVarbinaryJdbcType( SqlTypes.LONG32VARBINARY) );
 
 		target.addDescriptor( CharJdbcType.INSTANCE );
 		target.addDescriptor( VarcharJdbcType.INSTANCE );
 		target.addDescriptor( LongVarcharJdbcType.INSTANCE );
+		target.addDescriptor( new LongVarcharJdbcType( SqlTypes.LONG32VARCHAR) );
 
 		target.addDescriptor( BlobJdbcType.DEFAULT );
 		target.addDescriptor( ClobJdbcType.DEFAULT );
@@ -82,5 +101,8 @@ public class JdbcTypeBaseline {
 		target.addDescriptor( Types.NVARCHAR, VarcharJdbcType.INSTANCE );
 		target.addDescriptor( Types.LONGNVARCHAR, LongVarcharJdbcType.INSTANCE );
 		target.addDescriptor( Types.NCLOB, ClobJdbcType.DEFAULT );
+		target.addDescriptor( new LongVarcharJdbcType( SqlTypes.LONG32NVARCHAR) );
+
+		target.addDescriptor( RowIdJdbcType.INSTANCE );
 	}
 }

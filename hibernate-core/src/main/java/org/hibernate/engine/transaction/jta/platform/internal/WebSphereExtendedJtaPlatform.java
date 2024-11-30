@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.transaction.jta.platform.internal;
 
@@ -17,25 +15,28 @@ import jakarta.transaction.SystemException;
 import jakarta.transaction.Transaction;
 import jakarta.transaction.TransactionManager;
 import jakarta.transaction.UserTransaction;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import javax.transaction.xa.XAResource;
 
 import org.hibernate.HibernateException;
 
 /**
  * JTA platform implementation intended for use with WebSphere Application Server (WAS).
- * <p/>
+ * <p>
  * WAS, unlike every other app server on the planet, does not allow direct access to the JTS TransactionManager.
  * Instead, for common transaction-related tasks users must utilize a proprietary API known as ExtendedJTATransaction.
- * <p/>
+ * <p>
  * Even more unfortunate, the exact TransactionManagerLookup to use inside of WAS is highly dependent upon<ul>
  *     <li>WAS version</li>
  *     <li>the WAS container in which Hibernate will be utilized</li>
  * </ul>
- * <p/>
+ * <p>
  * This class is reported to work on WAS version 6 in any of the standard J2EE/Java EE component containers.
  *
  * @author Gavin King
- * @author <a href="mailto:jesper@udby.com>Jesper Udby</a>
+ * @author Jesper Udby
  * @author Steve Ebersole
  */
 public class WebSphereExtendedJtaPlatform extends AbstractJtaPlatform {
@@ -147,7 +148,7 @@ public class WebSphereExtendedJtaPlatform extends AbstractJtaPlatform {
 				final InvocationHandler ih = new InvocationHandler() {
 
 					@Override
-					public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+					public @Nullable Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 						if ( "afterCompletion".equals( method.getName() ) ) {
 							int status = args[2].equals(Boolean.TRUE) ?
 									Status.STATUS_COMMITTED :
@@ -186,7 +187,7 @@ public class WebSphereExtendedJtaPlatform extends AbstractJtaPlatform {
 			}
 
 			@Override
-			public boolean equals(Object other) {
+			public boolean equals(@Nullable Object other) {
 				if ( !(other instanceof TransactionAdapter) ) {
 					return false;
 				}

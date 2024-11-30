@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.internal;
 
@@ -25,19 +23,7 @@ public class EmbeddableInstantiatorRecordStandard extends AbstractPojoInstantiat
 		super( javaType );
 
 		final Class<?>[] componentTypes = ReflectHelper.getRecordComponentTypes( javaType );
-		this.constructor = resolveConstructor( javaType, componentTypes );
-	}
-
-	protected static Constructor<?> resolveConstructor(Class<?> recordClass, Class<?>[] componentTypes) {
-		try {
-			return recordClass.getConstructor( componentTypes );
-		}
-		catch (NoSuchMethodException e) {
-			throw new IllegalArgumentException(
-					"Could not determine the canonical record constructor for: " + recordClass.getName(),
-					e
-			);
-		}
+		this.constructor = ReflectHelper.getConstructorOrNull( javaType, componentTypes );
 	}
 
 	@Override
@@ -50,7 +36,7 @@ public class EmbeddableInstantiatorRecordStandard extends AbstractPojoInstantiat
 			return constructor.newInstance( valuesAccess.getValues() );
 		}
 		catch ( Exception e ) {
-			throw new InstantiationException( "Could not instantiate entity: ", getMappedPojoClass(), e );
+			throw new InstantiationException( "Could not instantiate entity", getMappedPojoClass(), e );
 		}
 	}
 }

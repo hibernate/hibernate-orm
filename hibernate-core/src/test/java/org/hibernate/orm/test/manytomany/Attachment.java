@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.manytomany;
 
@@ -17,46 +15,46 @@ import java.util.Set;
  */
 @Entity
 public class Attachment {
-    @Id
-    @GeneratedValue
-    private Integer id;
+	@Id
+	@GeneratedValue
+	private Integer id;
 
-    @ManyToMany
-    private Set<Advertisement> advertisements;
+	@ManyToMany
+	private Set<Advertisement> advertisements;
 
-    private String fileName;
+	private String fileName;
 
-    private String deleted = "false";
+	private String deleted = "false";
 
-    public Integer getId() {
-        return id;
-    }
+	public Integer getId() {
+		return id;
+	}
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
-    public Set<Advertisement> getAdvertisements() {
-        return advertisements;
-    }
+	public Set<Advertisement> getAdvertisements() {
+		return advertisements;
+	}
 
-    public void setAdvertisements(Set<Advertisement> advertisements) {
-        this.advertisements = advertisements;
-    }
+	public void setAdvertisements(Set<Advertisement> advertisements) {
+		this.advertisements = advertisements;
+	}
 
-    public String getFileName() {
-        return fileName;
-    }
+	public String getFileName() {
+		return fileName;
+	}
 
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
-    }
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
+	}
 
-    public String getDeleted() {
-        return deleted;
-    }
+	public String getDeleted() {
+		return deleted;
+	}
 
-    public void setDeleted(String deleted) {
-        this.deleted = deleted;
-    }
+	public void setDeleted(String deleted) {
+		this.deleted = deleted;
+	}
 }

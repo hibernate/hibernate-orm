@@ -1,22 +1,20 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing;
 
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.DialectDelegateWrapper;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.TiDBDialect;
-
-import org.hibernate.testing.orm.junit.DialectFeatureCheck;
 
 /**
  * Container class for different implementation of the {@link DialectCheck} interface.
@@ -97,12 +95,6 @@ abstract public class DialectChecks {
 		}
 	}
 
-	public static class SupportsParametersInInsertSelectCheck implements DialectCheck {
-		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsParametersInInsertSelect();
-		}
-	}
-
 	public static class HasSelfReferentialForeignKeyBugCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
 			return dialect.hasSelfReferentialForeignKeyBug();
@@ -111,10 +103,11 @@ abstract public class DialectChecks {
 
 	public static class SupportsRowValueConstructorSyntaxCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect instanceof AbstractHANADialect
-					|| dialect instanceof CockroachDialect
-					|| dialect instanceof MySQLDialect
-					|| dialect instanceof PostgreSQLDialect;
+			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
+			return dialect instanceof HANADialect
+				|| dialect instanceof CockroachDialect
+				|| dialect instanceof MySQLDialect
+				|| dialect instanceof PostgreSQLDialect;
 		}
 	}
 
@@ -197,12 +190,6 @@ abstract public class DialectChecks {
 		}
 	}
 
-	public static class SupportSkipLocked implements DialectCheck {
-		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsSkipLocked();
-		}
-	}
-
 	public static class SupportNoWait implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
 			return dialect.supportsNoWait();
@@ -229,7 +216,9 @@ abstract public class DialectChecks {
 
 	public static class SupportsJdbcDriverProxying implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return !( dialect instanceof DB2Dialect ) && !( dialect instanceof DerbyDialect );
+			return !( dialect instanceof DB2Dialect
+					|| dialect instanceof DerbyDialect
+					|| dialect instanceof FirebirdDialect );
 		}
 	}
 
@@ -293,7 +282,7 @@ abstract public class DialectChecks {
 		public boolean isMatch(Dialect dialect) {
 			return dialect.supportsOrderByInSubquery()
 					// For some reason, HANA doesn't support order by in correlated subqueries...
-					&& !( dialect instanceof AbstractHANADialect );
+					&& !( dialect instanceof HANADialect );
 		}
 	}
 
@@ -301,6 +290,19 @@ abstract public class DialectChecks {
 		public boolean isMatch(Dialect dialect) {
 			// TiDB db does not support subqueries for ON condition
 			return !( dialect instanceof TiDBDialect );
+		}
+	}
+
+	public static class SupportsRecursiveCtes implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return dialect.supportsRecursiveCTE();
+		}
+	}
+
+	public static class SupportsRowId implements DialectCheck {
+		@Override
+		public boolean isMatch(Dialect dialect) {
+			return dialect.rowId("") != null;
 		}
 	}
 }

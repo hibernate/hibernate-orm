@@ -1,17 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id: $
-
 package org.hibernate.orm.test.annotations.lob;
 
 import java.sql.Types;
 
+import org.hibernate.annotations.JavaType;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.descriptor.java.CharacterArrayJavaType;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -20,8 +17,8 @@ import jakarta.persistence.Id;
 /**
  * An entity containing data that is materialized into a String immediately.
  * The hibernate type mapped for {@link #LONGVARCHAR} determines the SQL type
- * asctually used.
- * 
+ * actually used.
+ *
  * @author Gail Badner
  */
 @Entity
@@ -60,6 +57,7 @@ public class LongStringHolder {
 	}
 
 	@JdbcTypeCode( Types.LONGVARCHAR )
+	@JavaType( CharacterArrayJavaType.class )
 	public Character[] getWhatEver() {
 		return whatEver;
 	}

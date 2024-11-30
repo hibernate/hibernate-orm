@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
 
@@ -14,7 +12,6 @@ import org.hibernate.query.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.function.SelfRenderingOrderedSetAggregateFunctionSqlAstExpression;
-import org.hibernate.query.sqm.function.SelfRenderingSqmAggregateFunction;
 import org.hibernate.query.sqm.function.SelfRenderingSqmOrderedSetAggregateFunction;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
@@ -50,8 +47,7 @@ public class InverseDistributionWindowEmulation extends InverseDistributionFunct
 			SqmPredicate filter,
 			SqmOrderByClause withinGroupClause,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		return new SelfRenderingInverseDistributionFunction<>(
 				arguments,
 				filter,
@@ -69,9 +65,7 @@ public class InverseDistributionWindowEmulation extends InverseDistributionFunct
 				else if ( currentClause != Clause.SELECT ) {
 					throw new IllegalArgumentException( "Can't emulate [" + getName() + "] in clause " + currentClause + ". Only the SELECT clause is supported" );
 				}
-				final ReturnableType<?> resultType = resolveResultType(
-						walker.getCreationContext().getMappingMetamodel().getTypeConfiguration()
-				);
+				final ReturnableType<?> resultType = resolveResultType( walker );
 
 				List<SqlAstNode> arguments = resolveSqlAstArguments( getArguments(), walker );
 				ArgumentsValidator argumentsValidator = getArgumentsValidator();
@@ -100,12 +94,12 @@ public class InverseDistributionWindowEmulation extends InverseDistributionFunct
 				}
 				final SelfRenderingFunctionSqlAstExpression function = new SelfRenderingOrderedSetAggregateFunctionSqlAstExpression(
 						getFunctionName(),
-						getRenderingSupport(),
+						getFunctionRenderer(),
 						arguments,
 						getFilter() == null ? null : (Predicate) getFilter().accept( walker ),
 						withinGroup,
 						resultType,
-						getMappingModelExpressible( walker, resultType )
+						getMappingModelExpressible( walker, resultType, arguments )
 				);
 				final Over<Object> windowFunction = new Over<>( function, new ArrayList<>(), Collections.emptyList() );
 				walker.registerQueryTransformer(

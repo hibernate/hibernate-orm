@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
@@ -12,9 +10,7 @@ package org.hibernate.engine.spi;
  *
  * @author Gunnar Morling
  */
-public abstract class AbstractDelegatingSessionBuilderImplementor<T extends SessionBuilderImplementor>
-		extends AbstractDelegatingSessionBuilder<T>
-		implements SessionBuilderImplementor<T> {
+public abstract class AbstractDelegatingSessionBuilderImplementor extends AbstractDelegatingSessionBuilder implements SessionBuilderImplementor {
 
 	public AbstractDelegatingSessionBuilderImplementor(SessionBuilderImplementor delegate) {
 		super( delegate );

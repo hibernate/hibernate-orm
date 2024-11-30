@@ -1,0 +1,70 @@
+= Hibernate {version}
+Steve Ebersole
+:awestruct-tags: ["Hibernate ORM", "Releases"]
+:awestruct-layout: blog-post
+
+:version: 6.4.0.CR1
+:family: 6.4
+
+:docs-url: https://docs.jboss.org/hibernate/orm/{family}
+:javadocs-url: {docs-url}/javadocs
+:migration-guide-url: {docs-url}/migration-guide/migration-guide.html
+:intro-guide-url: {docs-url}/introduction/html_single/Hibernate_Introduction.html
+:user-guide-url: {docs-url}/userguide/html_single/Hibernate_User_Guide.html
+
+6.4 adds some cool new features, in addition to many improvements and fixes.
+
+[[soft-delete]]
+== Soft Delete
+
+
+6.4 adds support for soft deletes using the new `@SoftDelete` annotation.
+
+[source,java]
+----
+@Entity
+@SoftDelete
+class Account {
+	...
+}
+----
+
+Dealing with values as deleted/non-deleted versus active/inactive (reversed) is simple using an annotation attribute:
+
+This has the ability to easily handle active v. deleted tracking using a simple annotation attribute:
+
+[source,java]
+----
+@Entity
+@SoftDelete(strategy=ACTIVE)
+class Account {
+	...
+}
+----
+
+It even supports pluggable converters for storing the indicator value into the database.strategy
+
+See the link:{userGuideBase}#soft-delete[User Guide] for details.
+
+
+
+
+
+== Finally,
+
+For additional details, see:
+
+- the https://hibernate.org/orm/releases/6.0/[release page]
+- the link:{migration-guide-url}[Migration Guide]
+- the link:{intro-guide-url}[Hibernate 6 Introduction]
+- the link:{user-guide-url}[User Guide]
+
+See also the following resources related to supported APIs:
+
+- the https://hibernate.org/community/compatibility-policy/[compatibility policy]
+- the link:{docs-url}/incubating/incubating.txt[incubating API report] (`@Incubating`)
+- the link:{docs-url}/deprecated/deprecated.txt[deprecated API report] (`@Deprecated` + `@Remove`)
+- the link:{docs-url}/internals/internal.txt[internal API report] (internal packages, `@Internal`)
+
+Visit the https://hibernate.org/community/[website] for details on getting in touch with us.
+

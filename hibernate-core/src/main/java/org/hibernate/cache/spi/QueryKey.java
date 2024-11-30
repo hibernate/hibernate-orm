@@ -1,13 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Set;
 
@@ -16,8 +15,14 @@ import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryParameterBindings;
 
 /**
- * A key that identifies a particular query with bound parameter values.  This is the object Hibernate uses
- * as its key into its query cache.
+ * A key that identifies a particular query with bound parameter values.
+ * This object is used as a key into the {@linkplain QueryResultsCache
+ * query results cache}.
+ * <p>
+ * Note that the fields of this object must contain every explicit and
+ * implicit setting and parameter argument that affects the result list
+ * of the query, including things like the {@link #maxRows limit} and
+ * {@link #firstRow offset} and {@link #enabledFilterNames enabled filters}.
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -33,7 +38,7 @@ public class QueryKey implements Serializable {
 			String sqlQueryString,
 			Limit limit,
 			QueryParameterBindings parameterBindings,
-			SharedSessionContractImplementor persistenceContext) {
+			SharedSessionContractImplementor session) {
 		// todo (6.0) : here is where we should centralize cacheable-or-not
 		//		if this method returns null, the query should be considered un-cacheable
 		//
@@ -44,11 +49,10 @@ public class QueryKey implements Serializable {
 
 		return new QueryKey(
 				sqlQueryString,
-				parameterBindings.generateQueryKeyMemento( persistenceContext ),
+				parameterBindings.generateQueryKeyMemento( session ),
 				limitToUse.getFirstRow(),
 				limitToUse.getMaxRows(),
-				persistenceContext.getTenantIdentifier(),
-				persistenceContext.getLoadQueryInfluencers().getEnabledFilterNames()
+				session.getLoadQueryInfluencers().getEnabledFilterNames()
 		);
 	}
 
@@ -57,8 +61,7 @@ public class QueryKey implements Serializable {
 	private final ParameterBindingsMemento parameterBindingsMemento;
 	private final Integer firstRow;
 	private final Integer maxRows;
-	private final String tenantIdentifier;
-	private final Set<String> enabledFilterNames;
+	private final String[] enabledFilterNames;
 
 	/**
 	 * For performance reasons, the hashCode is cached; however, it is marked transient so that it can be
@@ -71,14 +74,12 @@ public class QueryKey implements Serializable {
 			ParameterBindingsMemento parameterBindingsMemento,
 			Integer firstRow,
 			Integer maxRows,
-			String tenantIdentifier,
 			Set<String> enabledFilterNames) {
 		this.sqlQueryString = sql;
 		this.parameterBindingsMemento = parameterBindingsMemento;
 		this.firstRow = firstRow;
 		this.maxRows = maxRows;
-		this.tenantIdentifier = tenantIdentifier;
-		this.enabledFilterNames = enabledFilterNames;
+		this.enabledFilterNames = enabledFilterNames.toArray( String[]::new );
 		this.hashCode = generateHashCode();
 	}
 
@@ -98,15 +99,11 @@ public class QueryKey implements Serializable {
 	private int generateHashCode() {
 		int result = 13;
 		result = 37 * result + sqlQueryString.hashCode();
-		result = 37 * result + ( firstRow==null ? 0 : firstRow );
-		result = 37 * result + ( maxRows==null ? 0 : maxRows );
-		result = 37 * result + ( tenantIdentifier==null ? 0 : tenantIdentifier.hashCode() );
-		// the collections are too complicated to incorporate into the hashcode.  but they really
-		// aren't needed in the hashcode calculation - they are handled in `#equals` and the calculation
-		// without them is a good hashing code.
-		//
-		// todo (6.0) : maybe even just base it on `sqlQueryString`?
-
+		// Don't include the firstRow and maxRows in the hash as these values are rarely useful for query caching
+//		result = 37 * result + ( firstRow==null ? 0 : firstRow );
+//		result = 37 * result + ( maxRows==null ? 0 : maxRows );
+		result = 37 * result + parameterBindingsMemento.hashCode();
+		result = 37 * result + Arrays.hashCode( enabledFilterNames );
 		return result;
 	}
 
@@ -128,10 +125,6 @@ public class QueryKey implements Serializable {
 			return false;
 		}
 
-		if ( ! Objects.equals( tenantIdentifier, that.tenantIdentifier ) ) {
-			return false;
-		}
-
 		if ( ! Objects.equals( firstRow, that.firstRow )
 				|| ! Objects.equals( maxRows, that.maxRows ) ) {
 			return false;
@@ -142,7 +135,7 @@ public class QueryKey implements Serializable {
 			return false;
 		}
 
-		if ( ! Objects.equals( enabledFilterNames, that.enabledFilterNames ) ) {
+		if ( ! Arrays.equals( enabledFilterNames, that.enabledFilterNames ) ) {
 			return false;
 		}
 

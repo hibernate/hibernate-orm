@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.collectionelement.ordered;
 
@@ -12,13 +10,13 @@ import java.util.List;
 
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.query.sqm.SortOrder;
+import org.hibernate.query.SortDirection;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragmentImpl;
 import org.hibernate.metamodel.mapping.ordering.ast.OrderingSpecification;
 import org.hibernate.persister.collection.BasicCollectionPersister;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -33,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Steve Ebersole
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 @DomainModel(
 		annotatedClasses = {
@@ -65,7 +63,7 @@ public class ElementCollectionSortingTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-6875")
+	@JiraKey(value = "HHH-6875")
 	public void testSortingEmbeddableCollectionOfPrimitives(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -83,8 +81,8 @@ public class ElementCollectionSortingTest {
 					lukasz.getNickNamesDescendingNaturalSort().add( "lantoniak" );
 					lukasz.getNickNamesDescendingNaturalSort().add( "antoniak" );
 
-					session.save( steve );
-					session.save( lukasz );
+					session.persist( steve );
+					session.persist( lukasz );
 					session.flush();
 
 					session.clear();
@@ -121,19 +119,19 @@ public class ElementCollectionSortingTest {
 							session,
 							Person.class.getName(),
 							"nickNamesAscendingNaturalSort",
-							SortOrder.ASCENDING
+							SortDirection.ASCENDING
 					);
 					checkSQLOrderBy(
 							session,
 							Person.class.getName(),
 							"nickNamesDescendingNaturalSort",
-							SortOrder.DESCENDING
+							SortDirection.DESCENDING
 					);
 				}
 		);
 	}
 
-	private void checkSQLOrderBy(Session session, String entityName, String propertyName, SortOrder order) {
+	private void checkSQLOrderBy(Session session, String entityName, String propertyName, SortDirection order) {
 		String roleName = entityName + "." + propertyName;
 		String alias = "alias1";
 		BasicCollectionPersister collectionPersister = (BasicCollectionPersister) session

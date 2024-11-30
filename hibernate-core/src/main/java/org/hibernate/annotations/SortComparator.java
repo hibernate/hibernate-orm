@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
 
@@ -20,16 +18,16 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Sorting is performed in memory, by Java's {@link java.util.TreeSet} or {@link java.util.TreeMap},
  * and is maintained by any operation that mutates the collection.
  * <ul>
- * <li>Use {@link SortNatural} in its {@link java.util.Comparator natural order}.
+ * <li>Use {@link SortNatural} to sort by {@linkplain java.util.Comparator natural order}.
  * <li>Use {@link jakarta.persistence.OrderBy} to order using an expression written in HQL.
- * <li>Use {@link OrderBy} to order using an expression written in native SQL.
+ * <li>Use {@link SQLOrder} to order using an expression written in native SQL.
  * </ul>
  * <p>
  * It is illegal to use both {@code SortComparator} and {@link SortNatural}.
  *
  * @see SortComparator
  * @see jakarta.persistence.OrderBy
- * @see OrderBy
+ * @see SQLOrder
  *
  * @author Steve Ebersole
  */

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
@@ -25,7 +23,6 @@ import org.hibernate.MultiIdentifierLoadAccess;
 import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.NaturalIdMultiLoadAccess;
 import org.hibernate.ReplicationMode;
-import org.hibernate.Session;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
@@ -37,10 +34,9 @@ import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.event.spi.DeleteContext;
-import org.hibernate.event.spi.MergeContext;
-import org.hibernate.event.spi.PersistContext;
-import org.hibernate.event.spi.RefreshContext;
+import org.hibernate.event.spi.EventManager;
+import org.hibernate.event.spi.EventSource;
+import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
@@ -49,6 +45,7 @@ import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.MutationQuery;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.JpaCriteriaInsert;
 import org.hibernate.query.criteria.JpaCriteriaInsertSelect;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryProducerImplementor;
@@ -57,24 +54,31 @@ import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.stat.SessionStatistics;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.FindOption;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
+import jakarta.persistence.LockOption;
+import jakarta.persistence.RefreshOption;
+import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaSelect;
 import jakarta.persistence.criteria.CriteriaUpdate;
 import jakarta.persistence.metamodel.Metamodel;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * This class is meant to be extended.
- *
- * Wraps and delegates all methods to a {@link SessionImplementor} and
- * a {@link Session}. This is useful for custom implementations of this
- * API so that only some methods need to be overridden
+ * A wrapper class that delegates all method invocations to a delegate instance of
+ * {@link SessionImplementor}. This is useful for custom implementations of that
+ * API, so that only some methods need to be overridden
+ * <p>
  * (Used by Hibernate Search).
  *
- * @author <a href="mailto:sanne@hibernate.org">Sanne Grinovero</a> (C) 2012 Red Hat Inc.
+ * @author Sanne Grinovero
  */
 @SuppressWarnings("deprecation")
 public class SessionDelegatorBaseImpl implements SessionImplementor {
@@ -86,8 +90,10 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	/**
-	 * Returns the underlying delegate. Be careful that it has a different behavior from the {@link #getDelegate()}
-	 * method coming from the EntityManager interface which returns the current session.
+	 * Returns the delegate session.
+	 * <p>
+	 * @apiNote This returns a different object to the {@link #getDelegate()}
+	 *          method inherited from {@link jakarta.persistence.EntityManager}.
 	 *
 	 * @see SessionDelegatorBaseImpl#getDelegate()
 	 */
@@ -103,6 +109,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public String getTenantIdentifier() {
 		return delegate.getTenantIdentifier();
+	}
+
+	@Override
+	public Object getTenantIdentifierValue() {
+		return delegate.getTenantIdentifierValue();
 	}
 
 	@Override
@@ -161,7 +172,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public EntityPersister getEntityPersister(String entityName, Object object) throws HibernateException {
+	public EntityPersister getEntityPersister(@Nullable String entityName, Object object) throws HibernateException {
 		return delegate.getEntityPersister( entityName, object );
 	}
 
@@ -201,8 +212,28 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public CacheRetrieveMode getCacheRetrieveMode() {
+		return delegate.getCacheRetrieveMode();
+	}
+
+	@Override
+	public CacheStoreMode getCacheStoreMode() {
+		return delegate.getCacheStoreMode();
+	}
+
+	@Override
 	public void setCacheMode(CacheMode cm) {
 		delegate.setCacheMode( cm );
+	}
+
+	@Override
+	public void setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+		delegate.setCacheStoreMode( cacheStoreMode );
+	}
+
+	@Override
+	public void setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+		delegate.setCacheRetrieveMode( cacheRetrieveMode );
 	}
 
 	@Override
@@ -213,6 +244,16 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public boolean isCriteriaCopyTreeEnabled() {
 		return delegate.isCriteriaCopyTreeEnabled();
+	}
+
+	@Override
+	public boolean getNativeJdbcParametersIgnored() {
+		return delegate.getNativeJdbcParametersIgnored();
+	}
+
+	@Override
+	public void setNativeJdbcParametersIgnored(boolean nativeJdbcParametersIgnored) {
+		delegate.setNativeJdbcParametersIgnored( nativeJdbcParametersIgnored );
 	}
 
 	@Override
@@ -233,11 +274,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public void markForRollbackOnly() {
 		delegate.markForRollbackOnly();
-	}
-
-	@Override
-	public long getTransactionStartTimestamp() {
-		return delegate.getTransactionStartTimestamp();
 	}
 
 	@Override
@@ -271,6 +307,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public void lock(Object entity, LockModeType lockMode, LockOption... options) {
+		delegate.lock( entity, lockMode, options );
+	}
+
+	@Override
 	public void flush() {
 		delegate.flush();
 	}
@@ -278,6 +319,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public boolean isEventSource() {
 		return delegate.isEventSource();
+	}
+
+	@Override
+	public EventSource asEventSource() {
+		return delegate.asEventSource();
 	}
 
 	@Override
@@ -353,6 +399,17 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public boolean autoFlushIfRequired(Set<String> querySpaces) throws HibernateException {
 		return delegate.autoFlushIfRequired( querySpaces );
+	}
+
+	@Override
+	public boolean autoFlushIfRequired(Set<String> querySpaces, boolean skipPreFlush)
+			throws HibernateException {
+		return delegate.autoFlushIfRequired( querySpaces, skipPreFlush );
+	}
+
+	@Override
+	public void autoPreFlush() {
+		delegate.autoPreFlush();
 	}
 
 	@Override
@@ -436,8 +493,18 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public <T> RootGraph<T> createEntityGraph(Class<T> rootType, String graphName) {
+		return delegate.createEntityGraph( rootType, graphName );
+	}
+
+	@Override
 	public RootGraphImplementor<?> getEntityGraph(String graphName) {
 		return delegate.getEntityGraph( graphName );
+	}
+
+	@Override
+	public <T> QueryImplementor<T> createQuery(CriteriaSelect<T> selectQuery) {
+		return delegate.createQuery( selectQuery );
 	}
 
 	@Override
@@ -468,6 +535,12 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsert insertSelect) {
+		//noinspection resource
+		return delegate().createMutationQuery( insertSelect );
+	}
+
+	@Override
 	public <T> QueryImplementor<T> createQuery(CriteriaQuery<T> criteriaQuery) {
 		return queryDelegate().createQuery( criteriaQuery );
 	}
@@ -480,6 +553,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override @SuppressWarnings("rawtypes")
 	public QueryImplementor createQuery(CriteriaDelete deleteQuery) {
 		return queryDelegate().createQuery( deleteQuery );
+	}
+
+	@Override
+	public <T> QueryImplementor<T> createQuery(TypedQueryReference<T> typedQueryReference) {
+		return queryDelegate().createQuery( typedQueryReference );
 	}
 
 	@Override @SuppressWarnings("rawtypes")
@@ -627,11 +705,9 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	/**
-	 * This is an implementation of EntityManager#getDelegate(). It returns the current session and not the delegate
-	 * session as it is what we want. The name of the method is misleading here but, as it is part of JPA, we cannot do
-	 * anything about it.
-	 * <p>
-	 * To get the underlying delegate, use {@link #delegate()} instead.
+	 * This is the implementation of {@link jakarta.persistence.EntityManager#getDelegate()}.
+	 * It returns this object and <em>not</em> what we call the "delegate" session here.
+	 * To get the delegate session, use {@link #delegate()} instead.
 	 *
 	 * @see SessionDelegatorBaseImpl#delegate()
 	 */
@@ -660,7 +736,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return delegate.createStoredProcedureCall( procedureName, resultSetMappings );
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Override
 	public SharedSessionBuilder sessionWithOptions() {
 		return delegate.sessionWithOptions();
@@ -732,36 +807,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public <T> T load(Class<T> theClass, Object id, LockMode lockMode) {
-		return delegate.load( theClass, id, lockMode );
-	}
-
-	@Override
-	public <T> T load(Class<T> theClass, Object id, LockOptions lockOptions) {
-		return delegate.load( theClass, id, lockOptions );
-	}
-
-	@Override
-	public Object load(String entityName, Object id, LockMode lockMode) {
-		return delegate.load( entityName, id, lockMode );
-	}
-
-	@Override
-	public Object load(String entityName, Object id, LockOptions lockOptions) {
-		return delegate.load( entityName, id, lockOptions );
-	}
-
-	@Override
-	public <T> T load(Class<T> theClass, Object id) {
-		return delegate.load( theClass, id );
-	}
-
-	@Override
-	public Object load(String entityName, Object id) {
-		return delegate.load( entityName, id );
-	}
-
-	@Override
 	public void load(Object object, Object id) {
 		delegate.load( object, id );
 	}
@@ -774,36 +819,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public void replicate(String entityName, Object object, ReplicationMode replicationMode) {
 		delegate.replicate( entityName, object, replicationMode );
-	}
-
-	@Override
-	public Object save(Object object) {
-		return delegate.save( object );
-	}
-
-	@Override
-	public Object save(String entityName, Object object) {
-		return delegate.save( entityName, object );
-	}
-
-	@Override
-	public void saveOrUpdate(Object object) {
-		delegate.saveOrUpdate( object );
-	}
-
-	@Override
-	public void saveOrUpdate(String entityName, Object object) {
-		delegate.saveOrUpdate( entityName, object );
-	}
-
-	@Override
-	public void update(Object object) {
-		delegate.update( object );
-	}
-
-	@Override
-	public void update(String entityName, Object object) {
-		delegate.update( entityName, object );
 	}
 
 	@Override
@@ -827,23 +842,43 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public <T> T find(Class<T> entityClass, Object primaryKey) {
+	public <T> @Nullable T find(Class<T> entityClass, Object primaryKey) {
 		return delegate.find( entityClass, primaryKey );
 	}
 
 	@Override
-	public <T> T find(Class<T> entityClass, Object primaryKey, Map<String, Object> properties) {
+	public <T> @Nullable T find(Class<T> entityClass, Object primaryKey, Map<String, Object> properties) {
 		return delegate.find( entityClass, primaryKey, properties );
 	}
 
 	@Override
-	public <T> T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode) {
+	public <T> @Nullable T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode) {
 		return delegate.find( entityClass, primaryKey, lockMode );
 	}
 
 	@Override
-	public <T> T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode, Map<String, Object> properties) {
+	public <T> @Nullable T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode, Map<String, Object> properties) {
 		return delegate.find( entityClass, primaryKey, lockMode, properties );
+	}
+
+	@Override
+	public <T> T find(Class<T> entityClass, Object primaryKey, FindOption... options) {
+		return delegate.find( entityClass, primaryKey, options );
+	}
+
+	@Override
+	public <T> T find(EntityGraph<T> entityGraph, Object primaryKey, FindOption... options) {
+		return delegate.find( entityGraph, primaryKey, options );
+	}
+
+	@Override
+	public <T> T find(Class<T> entityType, Object id, LockMode lockMode) {
+		return delegate.find( entityType, id, lockMode );
+	}
+
+	@Override
+	public <T> T find(Class<T> entityType, Object id, LockOptions lockOptions) {
+		return delegate.find( entityType, id, lockOptions );
 	}
 
 	@Override
@@ -862,28 +897,18 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public void delete(Object object) {
-		delegate.delete( object );
-	}
-
-	@Override
-	public void delete(String entityName, Object object) {
-		delegate.delete( entityName, object );
-	}
-
-	@Override
 	public void lock(Object object, LockMode lockMode) {
 		delegate.lock( object, lockMode );
 	}
 
 	@Override
-	public void lock(String entityName, Object object, LockMode lockMode) {
-		delegate.lock( entityName, object, lockMode );
+	public void lock(String entityName, Object object, LockOptions lockOptions) {
+		delegate.lock( entityName, object, lockOptions );
 	}
 
 	@Override
-	public LockRequest buildLockRequest(LockOptions lockOptions) {
-		return delegate.buildLockRequest( lockOptions );
+	public void lock(Object object, LockOptions lockOptions) {
+		delegate.lock( object, lockOptions );
 	}
 
 	@Override
@@ -907,8 +932,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public void refresh(String entityName, Object object) {
-		delegate.refresh( entityName, object );
+	public void refresh(Object entity, RefreshOption... options) {
+		delegate.refresh( entity, options );
 	}
 
 	@Override
@@ -919,11 +944,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public void refresh(Object object, LockOptions lockOptions) {
 		delegate.refresh( object, lockOptions );
-	}
-
-	@Override
-	public void refresh(String entityName, Object object, LockOptions lockOptions) {
-		delegate.refresh( entityName, object, lockOptions );
 	}
 
 	@Override
@@ -939,6 +959,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public void detach(Object entity) {
 		delegate.detach( entity );
+	}
+
+	@Override
+	public <E> List<E> findMultiple(Class<E> entityType, List<Object> ids, FindOption... options) {
+		return delegate.findMultiple( entityType, ids, options );
 	}
 
 	@Override
@@ -1112,33 +1137,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public void merge(String entityName, Object object, MergeContext copiedAlready) throws HibernateException {
-		delegate.merge( entityName, object, copiedAlready );
-	}
-
-	@Override
-	public void persist(String entityName, Object object, PersistContext createdAlready) throws HibernateException {
-		delegate.persist( entityName, object, createdAlready );
-	}
-
-	@Override
-	public void persistOnFlush(String entityName, Object object, PersistContext copiedAlready) {
-		delegate.persistOnFlush( entityName, object, copiedAlready );
-	}
-
-	@Override
-	public void refresh(String entityName, Object object, RefreshContext refreshedAlready) throws HibernateException {
-		delegate.refresh( entityName, object, refreshedAlready );
-	}
-
-	@Override
-	public void delete(String entityName, Object child, boolean isCascadeDeleteEnabled, DeleteContext transientEntities) {
-		delegate.delete( entityName, child, isCascadeDeleteEnabled, transientEntities );
-	}
-
-	@Override
-	public void removeOrphanBeforeUpdates(String entityName, Object child) {
-		delegate.removeOrphanBeforeUpdates( entityName, child );
+	public void forceFlush(EntityKey e) throws HibernateException {
+		delegate.forceFlush( e );
 	}
 
 	@Override
@@ -1167,8 +1167,33 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public EventManager getEventManager() {
+		return delegate.getEventManager();
+	}
+
+	@Override
 	public void setJdbcBatchSize(Integer jdbcBatchSize) {
 		delegate.setJdbcBatchSize( jdbcBatchSize );
+	}
+
+	@Override
+	public boolean isSubselectFetchingEnabled() {
+		return delegate.isSubselectFetchingEnabled();
+	}
+
+	@Override
+	public void setSubselectFetchingEnabled(boolean enabled) {
+		delegate.setSubselectFetchingEnabled( enabled );
+	}
+
+	@Override
+	public int getFetchBatchSize() {
+		return delegate.getFetchBatchSize();
+	}
+
+	@Override
+	public void setFetchBatchSize(int batchSize) {
+		delegate.setFetchBatchSize( batchSize );
 	}
 
 	@Override

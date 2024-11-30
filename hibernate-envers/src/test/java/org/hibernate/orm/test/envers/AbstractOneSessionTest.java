@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers;
 
@@ -17,12 +15,12 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.configuration.EnversSettings;
-import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Before;
 
 /**
@@ -43,6 +41,8 @@ public abstract class AbstractOneSessionTest extends AbstractEnversTest {
 		config = new Configuration();
 		URL url = Thread.currentThread().getContextClassLoader().getResource( getHibernateConfigurationFileName() );
 		config.configure( new File( url.toURI() ) );
+		// Envers tests expect sequences to not skip values...
+		config.setProperty( EnversSettings.REVISION_SEQUENCE_NOCACHE, "true" );
 
 		String auditStrategy = getAuditStrategy();
 		if ( auditStrategy != null && !"".equals( auditStrategy ) ) {
@@ -54,6 +54,8 @@ public abstract class AbstractOneSessionTest extends AbstractEnversTest {
 		addProperties( config );
 
 		this.initMappings();
+
+		ServiceRegistryUtil.applySettings( config.getProperties() );
 
 		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( config.getProperties() );
 		sessionFactory = config.buildSessionFactory( serviceRegistry );

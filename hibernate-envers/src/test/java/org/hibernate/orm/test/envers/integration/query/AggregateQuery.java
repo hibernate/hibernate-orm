@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.query;
 
@@ -17,7 +15,7 @@ import org.hibernate.orm.test.envers.entities.IntTestEntity;
 import org.hibernate.orm.test.envers.entities.ids.UnusualIdNamingEntity;
 import org.hibernate.orm.test.envers.tools.TestTools;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -96,7 +94,7 @@ public class AggregateQuery extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8036")
+	@JiraKey(value = "HHH-8036")
 	public void testEntityIdProjection() {
 		Integer maxId = (Integer) getAuditReader().createQuery().forRevisionsOfEntity( IntTestEntity.class, true, true )
 				.addProjection( AuditEntity.id().max() )
@@ -106,7 +104,7 @@ public class AggregateQuery extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8036")
+	@JiraKey(value = "HHH-8036")
 	public void testEntityIdRestriction() {
 		List<IntTestEntity> list = getAuditReader().createQuery().forRevisionsOfEntity(
 				IntTestEntity.class,
@@ -124,7 +122,7 @@ public class AggregateQuery extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8036")
+	@JiraKey(value = "HHH-8036")
 	public void testEntityIdOrdering() {
 		List<IntTestEntity> list = getAuditReader().createQuery().forRevisionsOfEntity(
 				IntTestEntity.class,
@@ -138,7 +136,7 @@ public class AggregateQuery extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8036")
+	@JiraKey(value = "HHH-8036")
 	public void testUnusualIdFieldName() {
 		UnusualIdNamingEntity entity = (UnusualIdNamingEntity) getAuditReader().createQuery()
 				.forRevisionsOfEntity( UnusualIdNamingEntity.class, true, true )
@@ -148,7 +146,7 @@ public class AggregateQuery extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8036")
+	@JiraKey(value = "HHH-8036")
 	public void testEntityIdModifiedFlagNotSupported() {
 		try {
 			getAuditReader().createQuery().forRevisionsOfEntity( IntTestEntity.class, true, true )

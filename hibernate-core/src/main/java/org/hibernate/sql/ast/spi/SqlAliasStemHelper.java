@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.spi;
 
@@ -11,6 +9,7 @@ import org.hibernate.internal.util.StringHelper;
 
 /**
  * @author Steve Ebersole
+ * @author Gavin King
  */
 public class SqlAliasStemHelper {
 	/**
@@ -19,13 +18,7 @@ public class SqlAliasStemHelper {
 	public static final SqlAliasStemHelper INSTANCE = new SqlAliasStemHelper();
 
 	public String generateStemFromEntityName(String entityName) {
-		final String simpleName = toSimpleEntityName( entityName );
-
-		// ideally I'd like to build the alias base from acronym form of the name.  E.g.
-		// 'TransportationMethod` becomes 'tm', 'ShippingDestination` becomes 'sd', etc
-
-		// for now, just use the first letter
-		return Character.toString( Character.toLowerCase( simpleName.charAt( 0 ) ) );
+		return acronym( toSimpleEntityName( entityName ) );
 	}
 
 	private String toSimpleEntityName(String entityName) {
@@ -41,7 +34,23 @@ public class SqlAliasStemHelper {
 	}
 
 	public String generateStemFromAttributeName(String attributeName) {
-		// see note above, again for now just use the first letter
-		return Character.toString( Character.toLowerCase( attributeName.charAt( 0 ) ) );
+		return acronym(attributeName);
+	}
+
+
+	private String acronym(String name) {
+		StringBuilder string = new StringBuilder();
+		char last = '\0';
+		for (int i = 0; i<name.length(); i++ ) {
+			char ch = name.charAt(i);
+			if ( Character.isLetter(ch) ) {
+				if ( string.length() == 0
+						|| Character.isUpperCase(ch) && !Character.isUpperCase(last) ) {
+					string.append( Character.toLowerCase(ch) );
+				}
+			}
+			last = ch;
+		}
+		return string.length() == 0 ? "z" : string.toString();
 	}
 }

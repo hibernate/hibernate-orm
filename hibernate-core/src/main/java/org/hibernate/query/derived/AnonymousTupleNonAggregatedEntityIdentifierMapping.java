@@ -1,29 +1,27 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.derived;
 
-import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.Incubating;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
+import org.hibernate.event.spi.MergeContext;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
-import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.internal.IdClassEmbeddable;
-import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.metamodel.mapping.internal.VirtualIdEmbeddable;
 import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.query.sqm.SqmExpressible;
+
+import jakarta.persistence.metamodel.Attribute;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Christian Beikov
@@ -35,17 +33,38 @@ public class AnonymousTupleNonAggregatedEntityIdentifierMapping extends Anonymou
 	private final NonAggregatedIdentifierMapping delegate;
 
 	public AnonymousTupleNonAggregatedEntityIdentifierMapping(
-			Map<String, ModelPart> modelParts,
+			SqmExpressible<?> sqmExpressible,
+			SqlTypedMapping[] sqlTypedMappings,
+			int selectionIndex,
+			String selectionExpression,
+			Set<String> compatibleTableExpressions,
+			Set<Attribute<?, ?>> attributes,
 			DomainType<?> domainType,
 			String componentName,
 			NonAggregatedIdentifierMapping delegate) {
 		super(
-				modelParts,
+				sqmExpressible,
+				sqlTypedMappings,
+				selectionIndex,
+				selectionExpression,
+				compatibleTableExpressions,
+				attributes,
 				domainType,
 				componentName,
-				delegate
+				delegate,
+				-1
 		);
 		this.delegate = delegate;
+	}
+
+	@Override
+	public Nature getNature() {
+		return Nature.VIRTUAL;
+	}
+
+	@Override
+	public String getAttributeName() {
+		return null;
 	}
 
 	@Override
@@ -54,13 +73,14 @@ public class AnonymousTupleNonAggregatedEntityIdentifierMapping extends Anonymou
 	}
 
 	@Override
-	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
-		return delegate.getIdentifier( entity, session );
-	}
-
-	@Override
 	public Object getIdentifier(Object entity) {
 		return delegate.getIdentifier( entity );
+	}
+
+
+	@Override
+	public Object getIdentifier(Object entity, MergeContext mergeContext) {
+		return delegate.getIdentifier( entity, mergeContext );
 	}
 
 	@Override
@@ -84,13 +104,13 @@ public class AnonymousTupleNonAggregatedEntityIdentifierMapping extends Anonymou
 	}
 
 	@Override
-	public MappingType getMappedType() {
+	public EmbeddableMappingType getMappedType() {
 		return this;
 	}
 
 	@Override
 	public EmbeddableMappingType getPartMappingType() {
-		return (EmbeddableMappingType) super.getPartMappingType();
+		return this;
 	}
 
 	@Override
@@ -116,5 +136,10 @@ public class AnonymousTupleNonAggregatedEntityIdentifierMapping extends Anonymou
 	@Override
 	public FetchTiming getTiming() {
 		return FetchTiming.IMMEDIATE;
+	}
+
+	@Override
+	public boolean areEqual(@Nullable Object one, @Nullable Object other, SharedSessionContractImplementor session) {
+		return delegate.areEqual( one, other, session );
 	}
 }

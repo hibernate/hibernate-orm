@@ -1,19 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.event.spi;
 
-import java.io.Serializable;
-
 /**
- * Registry of Callbacks by entity and type
+ * Registry of JPA entity lifecycle callbacks by entity and type.
  *
  * @author Steve Ebersole
  */
-public interface CallbackRegistry extends Serializable {
+public interface CallbackRegistry {
 	/**
 	 * Do we have any registered callbacks of the given type for the given entity?
 	 *
@@ -35,4 +31,12 @@ public interface CallbackRegistry extends Serializable {
 	void postRemove(Object entity);
 
 	boolean postLoad(Object entity);
+
+	/**
+	 * Signals that the CallbackRegistry will no longer be used.
+	 * In particular, it is important to release references to class types
+	 * to avoid classloader leaks.
+	 */
+	void release();
+
 }

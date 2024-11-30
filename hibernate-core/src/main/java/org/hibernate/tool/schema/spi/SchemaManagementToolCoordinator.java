@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.spi;
 
@@ -23,7 +21,6 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.TargetType;
-import org.hibernate.tool.schema.internal.DefaultSchemaFilter;
 import org.hibernate.tool.schema.internal.ExceptionHandlerHaltImpl;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
 import org.hibernate.tool.schema.internal.Helper;
@@ -50,10 +47,12 @@ import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_DROP_T
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 
 /**
- * Responsible for coordinating SchemaManagementTool execution(s) for auto-tooling whether
- * from JPA or hbm2ddl.auto.
- * <p/>
- * The main entry point is {@link #process}
+ * Responsible for coordinating {@link SchemaManagementTool} execution
+ * whether from {@value AvailableSettings#HBM2DDL_AUTO}, JPA-standard
+ * {@value AvailableSettings#JAKARTA_HBM2DDL_DATABASE_ACTION}, or
+ * {@link org.hibernate.relational.SchemaManager}.
+ * <p>
+ * The main entry point is {@link #process}.
  *
  * @author Steve Ebersole
  */
@@ -114,7 +113,7 @@ public class SchemaManagementToolCoordinator {
 
 
 		final SchemaManagementTool tool = serviceRegistry.getService( SchemaManagementTool.class );
-		final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
+		final ConfigurationService configService = serviceRegistry.requireService( ConfigurationService.class );
 
 		final boolean haltOnError = configService.getSetting(
 				AvailableSettings.HBM2DDL_HALT_ON_ERROR,
@@ -171,17 +170,6 @@ public class SchemaManagementToolCoordinator {
 	public static ExecutionOptions buildExecutionOptions(
 			final Map<String,Object> configurationValues,
 			final ExceptionHandler exceptionHandler) {
-		return buildExecutionOptions(
-				configurationValues,
-				DefaultSchemaFilter.INSTANCE,
-				exceptionHandler
-		);
-	}
-
-	public static ExecutionOptions buildExecutionOptions(
-			final Map<String,Object> configurationValues,
-			final SchemaFilter schemaFilter,
-			final ExceptionHandler exceptionHandler) {
 		return new ExecutionOptions() {
 			@Override
 			public boolean shouldManageNamespaces() {
@@ -196,11 +184,6 @@ public class SchemaManagementToolCoordinator {
 			@Override
 			public ExceptionHandler getExceptionHandler() {
 				return exceptionHandler;
-			}
-
-			@Override
-			public SchemaFilter getSchemaFilter() {
-				return schemaFilter;
 			}
 		};
 	}
@@ -296,6 +279,18 @@ public class SchemaManagementToolCoordinator {
 						contributableInclusionFilter
 				);
 				break;
+			}
+			case TRUNCATE: {
+				tool.getSchemaTruncator( executionOptions.getConfigurationValues() ).doTruncate(
+						metadata,
+						executionOptions,
+						contributableInclusionFilter,
+						buildDatabaseTargetDescriptor(
+								executionOptions.getConfigurationValues(),
+								CreateSettingSelector.INSTANCE,
+								serviceRegistry
+						)
+				);
 			}
 		}
 	}
@@ -502,6 +497,17 @@ public class SchemaManagementToolCoordinator {
 		Object getScriptTargetSetting(Map<?,?> configurationValues);
 	}
 
+	private static Object getConfigurationValue(final Map<?,?> configurationValues, final String referenceKey, final String legacyKey) {
+		Object setting = configurationValues.get( referenceKey );
+		if ( setting == null ) {
+			setting = configurationValues.get( legacyKey );
+			if ( setting != null ) {
+				DEPRECATION_LOGGER.deprecatedSetting( referenceKey, legacyKey );
+			}
+		}
+		return setting;
+	}
+
 	private static class CreateSettingSelector implements SettingSelector {
 		/**
 		 * Singleton access
@@ -510,29 +516,17 @@ public class SchemaManagementToolCoordinator {
 
 		@Override
 		public Object getSourceTypeSetting(Map<?,?> configurationValues) {
-			Object setting = configurationValues.get( HBM2DDL_CREATE_SOURCE );
-			if ( setting == null ) {
-				setting = configurationValues.get( JAKARTA_HBM2DDL_CREATE_SOURCE );
-			}
-			return setting;
+			return getConfigurationValue( configurationValues, JAKARTA_HBM2DDL_CREATE_SOURCE, HBM2DDL_CREATE_SOURCE );
 		}
 
 		@Override
 		public Object getScriptSourceSetting(Map<?,?> configurationValues) {
-			Object setting = configurationValues.get( HBM2DDL_CREATE_SCRIPT_SOURCE );
-			if ( setting == null ) {
-				setting = configurationValues.get( JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE );
-			}
-			return setting;
+			return getConfigurationValue( configurationValues, JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE, HBM2DDL_CREATE_SCRIPT_SOURCE );
 		}
 
 		@Override
 		public Object getScriptTargetSetting(Map<?,?> configurationValues) {
-			Object setting = configurationValues.get( HBM2DDL_SCRIPTS_CREATE_TARGET );
-			if ( setting == null ) {
-				setting = configurationValues.get( JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET );
-			}
-			return setting;
+			return getConfigurationValue( configurationValues, JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET, HBM2DDL_SCRIPTS_CREATE_TARGET );
 		}
 	}
 
@@ -544,29 +538,17 @@ public class SchemaManagementToolCoordinator {
 
 		@Override
 		public Object getSourceTypeSetting(Map<?,?> configurationValues) {
-			Object setting = configurationValues.get( HBM2DDL_DROP_SOURCE );
-			if ( setting == null ) {
-				setting = configurationValues.get( JAKARTA_HBM2DDL_DROP_SOURCE );
-			}
-			return setting;
+			return getConfigurationValue( configurationValues, JAKARTA_HBM2DDL_DROP_SOURCE, HBM2DDL_DROP_SOURCE );
 		}
 
 		@Override
 		public Object getScriptSourceSetting(Map<?,?> configurationValues) {
-			Object setting = configurationValues.get( HBM2DDL_DROP_SCRIPT_SOURCE );
-			if ( setting == null ) {
-				setting = configurationValues.get( JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE );
-			}
-			return setting;
+			return getConfigurationValue( configurationValues, JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE, HBM2DDL_DROP_SCRIPT_SOURCE );
 		}
 
 		@Override
 		public Object getScriptTargetSetting(Map<?,?> configurationValues) {
-			Object setting = configurationValues.get( HBM2DDL_SCRIPTS_DROP_TARGET );
-			if ( setting == null ) {
-				setting = configurationValues.get( JAKARTA_HBM2DDL_SCRIPTS_DROP_TARGET );
-			}
-			return setting;
+			return getConfigurationValue( configurationValues, JAKARTA_HBM2DDL_SCRIPTS_DROP_TARGET, HBM2DDL_SCRIPTS_DROP_TARGET );
 		}
 	}
 
@@ -594,11 +576,7 @@ public class SchemaManagementToolCoordinator {
 		@Override
 		public Object getScriptTargetSetting(Map<?,?> configurationValues) {
 			// for now, reuse the CREATE script target setting
-			Object setting = configurationValues.get( HBM2DDL_SCRIPTS_CREATE_TARGET );
-			if ( setting == null ) {
-				setting = configurationValues.get( JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET );
-			}
-			return setting;
+			return getConfigurationValue( configurationValues, JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET, HBM2DDL_SCRIPTS_CREATE_TARGET );
 		}
 	}
 
@@ -730,19 +708,18 @@ public class SchemaManagementToolCoordinator {
 			return Action.interpretHbm2ddlSetting( scriptsActionSetting );
 		}
 
-		public static Set<ActionGrouping> interpret(Metadata metadata, Map<?,?> configurationValues) {
+		public static Set<ActionGrouping> interpret(Set<String> contributors, Map<?,?> configurationValues) {
 			// these represent the base (non-contributor-specific) values
 			final Action rootDatabaseAction = determineJpaDbActionSetting( configurationValues, null, null );
 			final Action rootScriptAction = determineJpaScriptActionSetting( configurationValues, null, null );
 
 			final Action rootAutoAction = determineAutoSettingImpliedAction( configurationValues, null, null );
 
-			final Set<String> contributors = metadata.getContributors();
 			final Set<ActionGrouping> groupings = new HashSet<>( contributors.size() );
 
 			// for each contributor, look for specific tooling config values
 			for ( String contributor : contributors ) {
-				Action databaseActionToUse = determineJpaDbActionSetting( configurationValues, contributor, rootDatabaseAction );;
+				Action databaseActionToUse = determineJpaDbActionSetting( configurationValues, contributor, rootDatabaseAction );
 				Action scriptActionToUse = determineJpaScriptActionSetting( configurationValues, contributor, rootScriptAction );
 
 				if ( databaseActionToUse == null && scriptActionToUse == null ) {
@@ -770,6 +747,10 @@ public class SchemaManagementToolCoordinator {
 			}
 
 			return groupings;
+		}
+
+		public static Set<ActionGrouping> interpret(Metadata metadata, Map<?,?> configurationValues) {
+			return interpret( metadata.getContributors(), configurationValues );
 		}
 
 		@Override

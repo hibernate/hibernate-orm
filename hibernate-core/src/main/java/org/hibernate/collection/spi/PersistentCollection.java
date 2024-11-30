@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.collection.spi;
 
@@ -16,30 +14,36 @@ import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.mutation.InsertRowsCoordinator;
 import org.hibernate.type.Type;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Persistent collections are treated as value objects by Hibernate.
- * ie. they have no independent existence beyond the object holding
- * a reference to them. Unlike instances of entity classes, they are
+ * They have no independent existence beyond the entity holding a
+ * reference to them. Unlike instances of entity classes, they are
  * automatically deleted when unreferenced and automatically become
  * persistent when held by a persistent object. Collections can be
  * passed between different objects (change "roles") and this might
  * cause their elements to move from one database table to another.
  * <p>
- * Hibernate "wraps" a java collection in an instance of
- * PersistentCollection. This mechanism is designed to support
- * tracking of changes to the collection's persistent state and
- * lazy instantiation of collection elements. The downside is that
+ * Hibernate "wraps" a Java collection in an instance of
+ * {@code PersistentCollection}. This mechanism is allows for
+ * tracking of changes to the persistent state of the collection and
+ * lazy fetching of the collection elements. The downside is that
  * only certain abstract collection types are supported and any
- * extra semantics are lost
+ * extra semantics associated with the particular implementation of
+ * the generic collection type are lost. For example, every
+ * {@link java.util.List} behaves like an {@code ArrayList}, and
+ * every {@link java.util.SortedMap} behaves like a {@code TreeMap}.
  * <p>
  * Applications should <em>never</em> use classes in this package
  * directly, unless extending the "framework" here.
  * <p>
- * Changes to <em>structure</em> of the collection are recorded by the
- * collection calling back to the session. Changes to mutable
- * elements (ie. composite elements) are discovered by cloning their
+ * Changes to <em>structure</em> of the collection are recorded by
+ * the collection calling back to the session. Changes to mutable
+ * elements (composite elements) are discovered by cloning their
  * state when the collection is initialized and comparing at flush
  * time.
  *
@@ -48,7 +52,7 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 @Incubating
-public interface PersistentCollection<E> {
+public interface PersistentCollection<E> extends LazyInitializable {
 	/**
 	 * Get the owning entity. Note that the owner is only
 	 * set during the flush cycle, and when a new collection
@@ -56,7 +60,7 @@ public interface PersistentCollection<E> {
 	 *
 	 * @return The owner
 	 */
-	Object getOwner();
+	@Nullable Object getOwner();
 
 	/**
 	 * Set the reference to the owning entity
@@ -78,7 +82,7 @@ public interface PersistentCollection<E> {
 	 * @param role The collection role
 	 * @param snapshot The snapshot state
 	 */
-	void setSnapshot(Object key, String role, Serializable snapshot);
+	void setSnapshot(@Nullable Object key, @Nullable String role, @Nullable Serializable snapshot);
 
 	/**
 	 * After flushing, clear any "queued" additions, since the
@@ -212,11 +216,6 @@ public interface PersistentCollection<E> {
 	Serializable getSnapshot(CollectionPersister persister);
 
 	/**
-	 * To be called internally by the session, forcing immediate initialization.
-	 */
-	void forceInitialization();
-
-	/**
 	 * Does the given element/entry exist in the collection?
 	 *
 	 * @param entry The object to check if it exists as a collection element
@@ -225,6 +224,22 @@ public interface PersistentCollection<E> {
 	 * @return {@code true} if the given entry is a collection element
 	 */
 	boolean entryExists(Object entry, int i);
+
+	/**
+	 * Whether the given entry should be included in recreation events
+	 *
+	 * @apiNote Defined to match signature of {@link InsertRowsCoordinator.EntryFilter#include}
+	 */
+	default boolean includeInRecreate(
+			Object entry,
+			int i,
+			PersistentCollection<?> collection,
+			PluralAttributeMapping attributeDescriptor) {
+		assert collection == this;
+		assert attributeDescriptor != null;
+
+		return entryExists( entry, i );
+	}
 
 	/**
 	 * Do we need to insert this element?
@@ -236,6 +251,39 @@ public interface PersistentCollection<E> {
 	 * @return {@code true} if the element needs inserting
 	 */
 	boolean needsInserting(Object entry, int i, Type elemType);
+
+	/**
+	 * Whether to include the entry for insertion operations
+	 *
+	 * @apiNote Defined to match signature of {@link InsertRowsCoordinator.EntryFilter#include}
+	 */
+	default boolean includeInInsert(
+			Object entry,
+			int entryPosition,
+			PersistentCollection<?> collection,
+			PluralAttributeMapping attributeDescriptor) {
+		assert collection == this;
+		assert attributeDescriptor != null;
+
+		return needsInserting( entry, entryPosition, attributeDescriptor.getCollectionDescriptor().getElementType() );
+	}
+
+	/**
+	 * Do we need to update this element?
+	 *
+	 * @param entry The collection element to check
+	 * @param entryPosition The index (for indexed collections)
+	 * @param attributeDescriptor The type for the element
+	 * @return {@code true} if the element needs updating
+	 */
+	default boolean needsUpdating(
+			Object entry,
+			int entryPosition,
+			PluralAttributeMapping attributeDescriptor) {
+		assert attributeDescriptor != null;
+
+		return needsUpdating( entry, entryPosition, attributeDescriptor.getCollectionDescriptor().getElementType() );
+	}
 
 	/**
 	 * Do we need to update this element?
@@ -279,13 +327,6 @@ public interface PersistentCollection<E> {
 	 * Is this PersistentCollection in the process of being initialized?
 	 */
 	boolean isInitializing();
-
-	/**
-	 * Is this instance initialized?
-	 *
-	 * @return Was this collection initialized?  Or is its data still not (fully) loaded?
-	 */
-	boolean wasInitialized();
 
 	/**
 	 * Called prior to the initialization of this yet-uninitialized collection.  Pairs
@@ -362,14 +403,14 @@ public interface PersistentCollection<E> {
 	 *
 	 * @return the current collection key value
 	 */
-	Object getKey();
+	@Nullable Object getKey();
 
 	/**
 	 * Get the current role name
 	 *
 	 * @return the collection role name
 	 */
-	String getRole();
+	@Nullable String getRole();
 
 	/**
 	 * Is the collection unreferenced?
@@ -395,10 +436,10 @@ public interface PersistentCollection<E> {
 	/**
 	 * Was {@code collection} provided directly to this PersistentCollection
 	 * (i.e., provided as an argument to a constructor)?
-	 * <p/>
+	 * <p>
 	 * Implementors that can copy elements out of a directly provided
 	 * collection into the wrapped collection should override this method.
-	 * <p/>
+	 * <p>
 	 * @param collection The collection
 	 * @return true, if {@code collection} was provided directly to this
 	 * PersistentCollection; false, otherwise.
@@ -418,7 +459,7 @@ public interface PersistentCollection<E> {
 	 *
 	 * @return The internally stored snapshot state
 	 */
-	Serializable getStoredSnapshot();
+	@Nullable Serializable getStoredSnapshot();
 
 	/**
 	 * Mark the collection as dirty

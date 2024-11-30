@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.internal;
 
@@ -11,30 +9,30 @@ import java.util.Set;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.AbstractNamedQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.sql.internal.NamedNativeQueryMementoImpl;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 
 /**
  * @author Steve Ebersole
  */
-public class NamedNativeQueryDefinitionImpl extends AbstractNamedQueryDefinition implements NamedNativeQueryDefinition {
+public class NamedNativeQueryDefinitionImpl<E> extends AbstractNamedQueryDefinition<E> implements NamedNativeQueryDefinition<E> {
 	private final String sqlString;
 	private final String resultSetMappingName;
-	private final String resultSetMappingClassName;
 	private final Set<String> querySpaces;
-	private Integer firstResult;
-	private Integer maxResults;
+	private final Integer firstResult;
+	private final Integer maxResults;
 
 	public NamedNativeQueryDefinitionImpl(
 			String name,
+			@Nullable Class<E> resultType,
 			String sqlString,
 			String resultSetMappingName,
-			String resultSetMappingClassName,
 			Set<String> querySpaces,
 			Boolean cacheable,
 			String cacheRegion,
@@ -46,9 +44,11 @@ public class NamedNativeQueryDefinitionImpl extends AbstractNamedQueryDefinition
 			String comment,
 			Integer firstResult,
 			Integer maxResults,
-			Map<String,Object> hints) {
+			Map<String,Object> hints,
+			String location) {
 		super(
 				name,
+				resultType,
 				cacheable,
 				cacheRegion,
 				cacheMode,
@@ -58,11 +58,11 @@ public class NamedNativeQueryDefinitionImpl extends AbstractNamedQueryDefinition
 				timeout,
 				fetchSize,
 				comment,
-				hints
+				hints,
+				location
 		);
 		this.sqlString = sqlString;
 		this.resultSetMappingName = resultSetMappingName;
-		this.resultSetMappingClassName = resultSetMappingClassName;
 		this.querySpaces = querySpaces;
 		this.firstResult = firstResult;
 		this.maxResults = maxResults;
@@ -79,21 +79,13 @@ public class NamedNativeQueryDefinitionImpl extends AbstractNamedQueryDefinition
 	}
 
 	@Override
-	public String getResultSetMappingClassName() {
-		return resultSetMappingClassName;
-	}
-
-	@Override
-	public NamedNativeQueryMemento resolve(SessionFactoryImplementor factory) {
-		final Class resultSetMappingClass = StringHelper.isNotEmpty( resultSetMappingClassName )
-				? factory.getServiceRegistry().getService( ClassLoaderService.class ).classForName( resultSetMappingClassName )
-				: null;
-
-		return new NamedNativeQueryMementoImpl(
+	public NamedNativeQueryMemento<E> resolve(SessionFactoryImplementor factory) {
+		return new NamedNativeQueryMementoImpl<>(
 				getRegistrationName(),
+				getResultType(),
+				sqlString,
 				sqlString,
 				resultSetMappingName,
-				resultSetMappingClass,
 				querySpaces,
 				getCacheable(),
 				getCacheRegion(),

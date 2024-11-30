@@ -1,12 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.spi;
 
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
 
@@ -24,12 +23,21 @@ import org.hibernate.type.descriptor.java.spi.EntityJavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * ResultsConsumer for creating a List of results
  *
  * @author Steve Ebersole
  */
 public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
+
+	/**
+	 * Let's be reasonable: a row estimate greater than 1M rows is probably either a misestimate or a bug,
+	 * so let's set {@code 2^20} which is a bit above 1M as maximum collection size.
+	 */
+	private static final int INITIAL_COLLECTION_SIZE_LIMIT = 1 << 20;
+
 	private static final ListResultsConsumer<?> NEVER_DE_DUP_CONSUMER = new ListResultsConsumer<>( UniqueSemantic.NEVER );
 	private static final ListResultsConsumer<?> ALLOW_DE_DUP_CONSUMER = new ListResultsConsumer<>( UniqueSemantic.ALLOW );
 	private static final ListResultsConsumer<?> IGNORE_DUP_CONSUMER = new ListResultsConsumer<>( UniqueSemantic.NONE );
@@ -89,19 +97,55 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 	}
 
 	private final UniqueSemantic uniqueSemantic;
-	private final ResultHandler<R> resultHandler;
 
 	public ListResultsConsumer(UniqueSemantic uniqueSemantic) {
 		this.uniqueSemantic = uniqueSemantic;
+	}
 
-		if ( uniqueSemantic == UniqueSemantic.FILTER ) {
-			resultHandler = ListResultsConsumer::deDuplicationHandling;
+	private static class Results<R> {
+		private final ArrayList<R> results;
+		private final JavaType<R> resultJavaType;
+
+		public Results(JavaType<R> resultJavaType, int initialSize) {
+			this.resultJavaType = resultJavaType;
+			this.results = initialSize > 0 ? new ArrayList<>( initialSize ) : new ArrayList<>();
 		}
-		else if ( uniqueSemantic == UniqueSemantic.ASSERT ) {
-			resultHandler = ListResultsConsumer::duplicationErrorHandling;
+
+		public boolean addUnique(R result) {
+			for ( int i = 0; i < results.size(); i++ ) {
+				if ( resultJavaType.areEqual( results.get( i ), result ) ) {
+					return false;
+				}
+			}
+			results.add( result );
+			return true;
 		}
-		else {
-			resultHandler = ListResultsConsumer::applyAll;
+
+		public void add(R result) {
+			results.add( result );
+		}
+
+		public List<R> getResults() {
+			return results;
+		}
+	}
+
+	private static class EntityResult<R> extends Results<R> {
+		private static final Object DUMP_VALUE = new Object();
+
+		private final IdentityHashMap<R, Object> added;
+
+		public EntityResult(JavaType<R> resultJavaType, int initialSize) {
+			super( resultJavaType, initialSize );
+			added = initialSize > 0 ? new IdentityHashMap<>( initialSize ) : new IdentityHashMap<>();
+		}
+
+		public boolean addUnique(R result) {
+			if ( added.put( result, DUMP_VALUE ) == null ) {
+				super.add( result );
+				return true;
+			}
+			return false;
 		}
 	}
 
@@ -113,60 +157,68 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 			JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState,
 			RowProcessingStateStandardImpl rowProcessingState,
 			RowReader<R> rowReader) {
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final TypeConfiguration typeConfiguration = session.getTypeConfiguration();
 		final QueryOptions queryOptions = rowProcessingState.getQueryOptions();
 
+		rowReader.startLoading( rowProcessingState );
+
 		RuntimeException ex = null;
+		persistenceContext.beforeLoad();
+		persistenceContext.getLoadContexts().register( jdbcValuesSourceProcessingState );
 		try {
-			persistenceContext.getLoadContexts().register( jdbcValuesSourceProcessingState );
-
-			final List<R> results = new ArrayList<>();
-
 			final JavaType<R> domainResultJavaType = resolveDomainResultJavaType(
 					rowReader.getDomainResultResultJavaType(),
 					rowReader.getResultJavaTypes(),
 					typeConfiguration
 			);
 
-			final ResultHandler<R> resultHandlerToUse;
+			final boolean isEntityResultType = domainResultJavaType instanceof EntityJavaType;
+			final int initialCollectionSize = Math.min( jdbcValues.getResultCountEstimate(), INITIAL_COLLECTION_SIZE_LIMIT );
 
-			if ( uniqueSemantic == UniqueSemantic.ALLOW
-					&& domainResultJavaType instanceof EntityJavaType ) {
-				resultHandlerToUse = ListResultsConsumer::deDuplicationHandling;
+			final Results<R> results;
+			if ( isEntityResultType
+					&& ( uniqueSemantic == UniqueSemantic.ALLOW
+						|| uniqueSemantic == UniqueSemantic.FILTER ) ) {
+				results = new EntityResult<>( domainResultJavaType, initialCollectionSize );
 			}
 			else {
-				resultHandlerToUse = this.resultHandler;
+				results = new Results<>( domainResultJavaType, initialCollectionSize );
 			}
 
-			while ( rowProcessingState.next() ) {
-				final R row = rowReader.readRow( rowProcessingState, processingOptions );
-				resultHandlerToUse.handle( row, domainResultJavaType, results, rowProcessingState );
-				rowProcessingState.finishRowProcessing();
+			final int readRows;
+			if ( uniqueSemantic == UniqueSemantic.FILTER
+					|| uniqueSemantic == UniqueSemantic.ASSERT && rowReader.hasCollectionInitializers()
+					|| uniqueSemantic == UniqueSemantic.ALLOW && isEntityResultType ) {
+				readRows = readUnique( rowProcessingState, rowReader, results );
+			}
+			else if ( uniqueSemantic == UniqueSemantic.ASSERT ) {
+				readRows = readUniqueAssert( rowProcessingState, rowReader, results );
+			}
+			else {
+				readRows = read( rowProcessingState, rowReader, results );
 			}
 
-			try {
-				jdbcValuesSourceProcessingState.finishUp();
-			}
-			finally {
-				persistenceContext.getLoadContexts().deregister( jdbcValuesSourceProcessingState );
-			}
+			rowReader.finishUp( rowProcessingState );
+			jdbcValuesSourceProcessingState.finishUp( readRows > 1 );
 
 			//noinspection unchecked
-			final ResultListTransformer<R> resultListTransformer = (ResultListTransformer<R>) queryOptions.getResultListTransformer();
+			final ResultListTransformer<R> resultListTransformer =
+					(ResultListTransformer<R>) queryOptions.getResultListTransformer();
 			if ( resultListTransformer != null ) {
-				return resultListTransformer.transformList( results );
+				return resultListTransformer.transformList( results.getResults() );
 			}
 
-			return results;
+			return results.getResults();
 		}
 		catch (RuntimeException e) {
 			ex = e;
 		}
 		finally {
 			try {
-				rowReader.finishUp( jdbcValuesSourceProcessingState );
 				jdbcValues.finishUp( session );
+				persistenceContext.afterLoad();
+				persistenceContext.getLoadContexts().deregister( jdbcValuesSourceProcessingState );
 				persistenceContext.initializeNonLazyCollections();
 			}
 			catch (RuntimeException e) {
@@ -186,99 +238,84 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 		throw new IllegalStateException( "Should not reach this" );
 	}
 
-	/**
-	 * Essentially a tri-consumer for applying the different duplication strategies.
-	 *
-	 * @see UniqueSemantic
-	 */
-	@FunctionalInterface
-	private interface ResultHandler<R> {
-		void handle(R result, JavaType<R> transformedJavaType, List<R> results, RowProcessingStateStandardImpl rowProcessingState);
-	}
-
-	public static <R> void deDuplicationHandling(
-			R result,
-			JavaType<R> transformedJavaType,
-			List<R> results,
-			RowProcessingStateStandardImpl rowProcessingState) {
-		withDuplicationCheck(
-				result,
-				transformedJavaType,
-				results,
-				rowProcessingState,
-				false
-		);
-	}
-
-	private static <R> void withDuplicationCheck(
-			R result,
-			JavaType<R> transformedJavaType,
-			List<R> results,
+	private static <R> int read(
 			RowProcessingStateStandardImpl rowProcessingState,
-			boolean throwException) {
-		boolean addResult = true;
+			RowReader<R> rowReader,
+			Results<R> results) {
+		int readRows = 0;
+		while ( rowProcessingState.next() ) {
+			results.add( rowReader.readRow( rowProcessingState ) );
+			rowProcessingState.finishRowProcessing( true );
+			readRows++;
+		}
+		return readRows;
+	}
 
-		for ( int i = 0; i < results.size(); i++ ) {
-			final R existingResult = results.get( i );
-			if ( transformedJavaType.areEqual( result, existingResult ) ) {
-				if ( throwException && ! rowProcessingState.hasCollectionInitializers ) {
-					throw new HibernateException(
-							String.format(
-									Locale.ROOT,
-									"Duplicate row was found and `%s` was specified",
-									UniqueSemantic.ASSERT
-							)
-					);
-				}
-
-				addResult = false;
-				break;
+	private static <R> int readUniqueAssert(
+			RowProcessingStateStandardImpl rowProcessingState,
+			RowReader<R> rowReader,
+			Results<R> results) {
+		int readRows = 0;
+		while ( rowProcessingState.next() ) {
+			if ( !results.addUnique( rowReader.readRow( rowProcessingState ) ) ) {
+				throw new HibernateException(
+						String.format(
+								Locale.ROOT,
+								"Duplicate row was found and `%s` was specified",
+								UniqueSemantic.ASSERT
+						)
+				);
 			}
+			rowProcessingState.finishRowProcessing( true );
+			readRows++;
 		}
-
-		if ( addResult ) {
-			results.add( result );
-		}
+		return readRows;
 	}
 
-	public static <R> void duplicationErrorHandling(
-			R result,
-			JavaType<R> transformedJavaType,
-			List<R> results,
-			RowProcessingStateStandardImpl rowProcessingState) {
-		withDuplicationCheck(
-				result,
-				transformedJavaType,
-				results,
-				rowProcessingState,
-				true
-		);
-	}
-
-	public static <R> void applyAll(
-			R result,
-			JavaType<R> transformedJavaType,
-			List<R> results,
-			RowProcessingStateStandardImpl rowProcessingState) {
-		results.add( result );
+	private static <R> int readUnique(
+			RowProcessingStateStandardImpl rowProcessingState,
+			RowReader<R> rowReader,
+			Results<R> results) {
+		int readRows = 0;
+		while ( rowProcessingState.next() ) {
+			final boolean added = results.addUnique( rowReader.readRow( rowProcessingState ) );
+			rowProcessingState.finishRowProcessing( added );
+			readRows++;
+		}
+		return readRows;
 	}
 
 	private JavaType<R> resolveDomainResultJavaType(
 			Class<R> domainResultResultJavaType,
-			List<JavaType<?>> resultJavaTypes,
+			List<@Nullable JavaType<?>> resultJavaTypes,
 			TypeConfiguration typeConfiguration) {
 		final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 
 		if ( domainResultResultJavaType != null ) {
-			return javaTypeRegistry.resolveDescriptor( domainResultResultJavaType );
+			final JavaType<R> resultJavaType = javaTypeRegistry.resolveDescriptor( domainResultResultJavaType );
+			// Could be that the user requested a more general type than the actual type,
+			// so resolve the most concrete type since this type is used to determine equality of objects
+			if ( resultJavaTypes.size() == 1 && isMoreConcrete( resultJavaType, resultJavaTypes.get( 0 ) ) ) {
+				//noinspection unchecked
+				return (JavaType<R>) resultJavaTypes.get( 0 );
+			}
+			return resultJavaType;
 		}
 
 		if ( resultJavaTypes.size() == 1 ) {
+			final JavaType<?> firstJavaType = resultJavaTypes.get( 0 );
+			if ( firstJavaType == null ) {
+				return javaTypeRegistry.resolveDescriptor( Object.class );
+			}
 			//noinspection unchecked
-			return (JavaType<R>) resultJavaTypes.get( 0 );
+			return (JavaType<R>) firstJavaType;
 		}
 
 		return javaTypeRegistry.resolveDescriptor( Object[].class );
+	}
+
+	private static boolean isMoreConcrete(JavaType<?> resultJavaType, @Nullable JavaType<?> javaType) {
+		return javaType != null && resultJavaType.getJavaTypeClass().isAssignableFrom( javaType.getJavaTypeClass() );
 	}
 
 	@Override

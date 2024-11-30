@@ -1,16 +1,18 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.internal;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
@@ -40,12 +42,15 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	private Boolean resultCachingEnabled;
 	private String resultCacheRegionName;
 	private Boolean readOnlyEnabled;
+	private Boolean queryPlanCachingEnabled;
 
-	private TupleTransformer tupleTransformer;
-	private ResultListTransformer resultListTransformer;
+	private TupleTransformer<?> tupleTransformer;
+	private ResultListTransformer<?> resultListTransformer;
 
 	private RootGraphImplementor<?> rootGraph;
 	private GraphSemantic graphSemantic;
+	private Set<String> enabledFetchProfiles;
+	private Set<String> disabledFetchProfiles;
 
 	@Override
 	public Integer getTimeout() {
@@ -61,6 +66,7 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 		return flushMode;
 	}
 
+	@Override
 	public void setFlushMode(FlushMode flushMode) {
 		this.flushMode = flushMode;
 	}
@@ -70,6 +76,7 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 		return comment;
 	}
 
+	@Override
 	public void setComment(String comment) {
 		this.comment = comment;
 	}
@@ -88,12 +95,12 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	}
 
 	@Override
-	public void setTupleTransformer(TupleTransformer transformer) {
+	public void setTupleTransformer(TupleTransformer<?> transformer) {
 		this.tupleTransformer = transformer;
 	}
 
 	@Override
-	public void setResultListTransformer(ResultListTransformer transformer) {
+	public void setResultListTransformer(ResultListTransformer<?> transformer) {
 		this.resultListTransformer = transformer;
 	}
 
@@ -141,6 +148,7 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 		return resultCachingEnabled;
 	}
 
+	@Override
 	public void setResultCachingEnabled(boolean resultCachingEnabled) {
 		this.resultCachingEnabled = resultCachingEnabled;
 	}
@@ -151,15 +159,26 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	}
 
 	@Override
-	public TupleTransformer getTupleTransformer() {
+	public Boolean getQueryPlanCachingEnabled() {
+		return queryPlanCachingEnabled;
+	}
+
+	@Override
+	public void setQueryPlanCachingEnabled(Boolean queryPlanCachingEnabled) {
+		this.queryPlanCachingEnabled = queryPlanCachingEnabled;
+	}
+
+	@Override
+	public TupleTransformer<?> getTupleTransformer() {
 		return tupleTransformer;
 	}
 
 	@Override
-	public ResultListTransformer getResultListTransformer() {
+	public ResultListTransformer<?> getResultListTransformer() {
 		return resultListTransformer;
 	}
 
+	@Override
 	public void setResultCacheRegionName(String resultCacheRegionName) {
 		this.resultCacheRegionName = resultCacheRegionName;
 	}
@@ -191,17 +210,49 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	}
 
 	@Override
+	public void enableFetchProfile(String profileName) {
+		if ( enabledFetchProfiles == null ) {
+			enabledFetchProfiles = new HashSet<>();
+		}
+		enabledFetchProfiles.add( profileName );
+		if ( disabledFetchProfiles != null ) {
+			disabledFetchProfiles.remove( profileName );
+		}
+	}
+
+	@Override
+	public void disableFetchProfile(String profileName) {
+		if ( disabledFetchProfiles == null ) {
+			disabledFetchProfiles = new HashSet<>();
+		}
+		disabledFetchProfiles.add( profileName );
+		if ( enabledFetchProfiles != null ) {
+			enabledFetchProfiles.remove( profileName );
+		}
+	}
+
+	@Override
+	public Set<String> getEnabledFetchProfiles() {
+		return enabledFetchProfiles;
+	}
+
+	@Override
+	public Set<String> getDisabledFetchProfiles() {
+		return disabledFetchProfiles;
+	}
+
+	@Override
 	public AppliedGraph getAppliedGraph() {
 		return this;
 	}
 
 	@Override
-	public RootGraphImplementor<?> getGraph() {
+	public @Nullable RootGraphImplementor<?> getGraph() {
 		return rootGraph;
 	}
 
 	@Override
-	public GraphSemantic getSemantic() {
+	public @Nullable GraphSemantic getSemantic() {
 		return graphSemantic;
 	}
 }

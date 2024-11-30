@@ -1,14 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.insertordering;
 
 import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
+
+import org.hibernate.annotations.BatchSize;
+
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.junit.After;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;
@@ -25,16 +30,12 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
-import org.hibernate.annotations.BatchSize;
-
-import org.hibernate.testing.TestForIssue;
-import org.junit.After;
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-9864")
+@JiraKey(value = "HHH-9864")
 public class InsertOrderingWithJoinedTableMultiLevelInheritance extends BaseInsertOrderingTest {
 
 	@Override
@@ -74,18 +75,55 @@ public class InsertOrderingWithJoinedTableMultiLevelInheritance extends BaseInse
 			clearBatches();
 		} );
 
-		verifyPreparedStatementCount( 17 );
+		// 1 for Person (1)
+		// 2 for SpecialPerson (3)
+		// 2 for AnotherPerson (5)
+		// 3 for President (8)
+		// 1 for Address (9)
+		// 1 for Office (10)
+		verifyPreparedStatementCount( 10 );
+
+		sessionFactoryScope().inTransaction( (session) -> {
+			// 2 Address per loop (4)
+			// 1 Office per loop (2)
+			// 1 Person per loop (2)
+			// 1 SpecialPerson per loop (2)
+			// 1 AnotherPerson per loop (2)
+			// 1 President per loop (2)
+			final Long addressCount = session
+					.createSelectionQuery( "select count(1) from Address", Long.class )
+					.getSingleResult();
+			assertThat( addressCount ).isEqualTo( 4L );
+
+			final Long officeCount = session
+					.createSelectionQuery( "select count(1) from Office", Long.class )
+					.getSingleResult();
+			assertThat( officeCount ).isEqualTo( 2L );
+
+			final Long presidentCount = session
+					.createSelectionQuery( "select count(1) from President", Long.class )
+					.getSingleResult();
+			assertThat( presidentCount ).isEqualTo( 2L );
+
+			final Long anotherPersonCount = session
+					.createSelectionQuery( "select count(1) from AnotherPerson", Long.class )
+					.getSingleResult();
+			assertThat( presidentCount ).isEqualTo( 2L );
+
+		} );
+
+
 	}
 
 	@After
 	protected void cleanupTestData() {
 		sessionFactoryScope().inTransaction( session -> {
-			session.createQuery( "delete Address" ).executeUpdate();
-			session.createQuery( "delete Person" ).executeUpdate();
-			session.createQuery( "delete SpecialPerson" ).executeUpdate();
-			session.createQuery( "delete AnotherPerson" ).executeUpdate();
-			session.createQuery( "delete Office" ).executeUpdate();
-			session.createQuery( "delete President" ).executeUpdate();
+			session.createMutationQuery( "delete Address" ).executeUpdate();
+			session.createMutationQuery( "delete Person" ).executeUpdate();
+			session.createMutationQuery( "delete SpecialPerson" ).executeUpdate();
+			session.createMutationQuery( "delete AnotherPerson" ).executeUpdate();
+			session.createMutationQuery( "delete Office" ).executeUpdate();
+			session.createMutationQuery( "delete President" ).executeUpdate();
 		} );
 	}
 

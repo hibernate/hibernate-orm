@@ -1,16 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.embeddables;
 
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -33,7 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 		}
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-15453")
+@JiraKey(value = "HHH-15453")
 public class EmbeddableWithManyToManyTest {
 
 	@Test
@@ -45,7 +44,9 @@ public class EmbeddableWithManyToManyTest {
 
 					Product product = new Product( 2L, "Sugar", new Users( user ) );
 					Product mergedProduct = session.merge( product );
-					assertThat( mergedProduct.getUsers().getUsers() ).isNotNull();
+					Set<User> users = mergedProduct.getUsers().getUsers();
+					assertThat( users ).isNotNull();
+					assertThat( users ).contains( user );
 				}
 		);
 
@@ -134,6 +135,24 @@ public class EmbeddableWithManyToManyTest {
 
 		public String getName() {
 			return name;
+		}
+
+
+		@Override
+		public boolean equals(Object o) {
+			if ( this == o ) {
+				return true;
+			}
+			if ( o == null || getClass() != o.getClass() ) {
+				return false;
+			}
+			User user = (User) o;
+			return Objects.equals( id, user.id ) && Objects.equals( name, user.name );
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash( id, name );
 		}
 	}
 }

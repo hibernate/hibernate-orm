@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.transaction;
 
@@ -28,13 +26,14 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
 import org.hibernate.internal.SessionImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SettingProvider;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -66,6 +65,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 )
 public class CloseEntityManagerWithActiveTransactionTest {
 
+	@BeforeAll
+	public void beforeAll(EntityManagerFactoryScope scope) throws Exception {
+		// This makes sure that hbm2ddl runs before we start a transaction for a test
+		// This is important for database that only support SNAPSHOT/SERIALIZABLE isolation,
+		// because a test transaction still sees the state before the DDL executed
+		scope.getEntityManagerFactory();
+	}
+
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) throws Exception {
 		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
@@ -92,7 +99,7 @@ public class CloseEntityManagerWithActiveTransactionTest {
 
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10942")
+	@JiraKey(value = "HHH-10942")
 	public void testPersistThenCloseWithAnActiveTransaction(EntityManagerFactoryScope scope) throws Exception {
 		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
 		try {
@@ -119,7 +126,7 @@ public class CloseEntityManagerWithActiveTransactionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11166")
+	@JiraKey(value = "HHH-11166")
 	public void testMergeThenCloseWithAnActiveTransaction(EntityManagerFactoryScope scope) throws Exception {
 		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
 		try {
@@ -162,7 +169,7 @@ public class CloseEntityManagerWithActiveTransactionTest {
 
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11269")
+	@JiraKey(value = "HHH-11269")
 	public void testMergeWithDeletionOrphanRemovalThenCloseWithAnActiveTransaction(EntityManagerFactoryScope scope)
 			throws Exception {
 		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
@@ -203,7 +210,7 @@ public class CloseEntityManagerWithActiveTransactionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11166")
+	@JiraKey(value = "HHH-11166")
 	public void testUpdateThenCloseWithAnActiveTransaction(EntityManagerFactoryScope scope) throws Exception {
 		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
 		try {
@@ -244,7 +251,7 @@ public class CloseEntityManagerWithActiveTransactionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11166")
+	@JiraKey(value = "HHH-11166")
 	public void testRemoveThenCloseWithAnActiveTransaction(EntityManagerFactoryScope scope) throws Exception {
 		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
 		try {
@@ -286,7 +293,7 @@ public class CloseEntityManagerWithActiveTransactionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11099")
+	@JiraKey(value = "HHH-11099")
 	public void testCommitReleasesLogicalConnection(EntityManagerFactoryScope scope) throws Exception {
 		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
 		try {

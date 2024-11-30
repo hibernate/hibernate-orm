@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
@@ -11,9 +9,12 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.XmlJdbcType;
 
 /**
@@ -21,7 +22,19 @@ import org.hibernate.type.descriptor.jdbc.XmlJdbcType;
  */
 public class OracleXmlJdbcType extends XmlJdbcType {
 
-	public static final OracleXmlJdbcType INSTANCE = new OracleXmlJdbcType();
+	public static final OracleXmlJdbcType INSTANCE = new OracleXmlJdbcType( null );
+
+	private OracleXmlJdbcType(EmbeddableMappingType embeddableMappingType) {
+		super( embeddableMappingType );
+	}
+
+	@Override
+	public AggregateJdbcType resolveAggregateJdbcType(
+			EmbeddableMappingType mappingType,
+			String sqlType,
+			RuntimeModelCreationContext creationContext) {
+		return new OracleXmlJdbcType( mappingType );
+	}
 
 	@Override
 	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {

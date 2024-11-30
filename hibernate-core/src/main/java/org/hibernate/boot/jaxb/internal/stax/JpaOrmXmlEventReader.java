@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.jaxb.internal.stax;
 
@@ -21,6 +19,7 @@ import javax.xml.stream.events.XMLEvent;
 import javax.xml.stream.util.EventReaderDelegate;
 
 import org.hibernate.boot.xsd.MappingXsdSupport;
+import org.hibernate.boot.xsd.XsdHelper;
 
 /**
  * StAX EVentReader which handles a few oddities specific to JPA {@code orm.xml}
@@ -119,7 +118,7 @@ public class JpaOrmXmlEventReader extends EventReaderDelegate {
 			if ( VERSION_ATTRIBUTE_NAME.equals( originalAttribute.getName().getLocalPart() ) ) {
 				final String specifiedVersion = originalAttribute.getValue();
 
-				if ( ! MappingXsdSupport.isValidJpaVersion( specifiedVersion ) ) {
+				if ( ! XsdHelper.isValidJpaVersion( specifiedVersion ) ) {
 					throw new BadVersionException( specifiedVersion );
 				}
 
@@ -156,7 +155,7 @@ public class JpaOrmXmlEventReader extends EventReaderDelegate {
 	}
 
 	private Namespace mapNamespace(Namespace originalNamespace) {
-		if ( MappingXsdSupport.shouldBeMappedToLatestJpaDescriptor( originalNamespace.getNamespaceURI() ) ) {
+		if ( XsdHelper.shouldBeMappedToLatestJpaDescriptor( originalNamespace.getNamespaceURI() ) ) {
 			// this is a namespace "to map" so map it
 			return xmlEventFactory.createNamespace(
 					originalNamespace.getPrefix(),

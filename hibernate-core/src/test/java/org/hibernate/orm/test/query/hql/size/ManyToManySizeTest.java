@@ -1,10 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.orm.test.query.hql.size;
 
 import java.util.ArrayList;
@@ -16,9 +13,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 
 import org.hibernate.Hibernate;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.annotations.Imported;
+import org.hibernate.community.dialect.DerbyDialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -30,8 +28,8 @@ import org.junit.jupiter.api.Test;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
-@TestForIssue( jiraKey = "HHH-13619" )
-@DomainModel( annotatedClasses = { ManyToManySizeTest.Company.class, ManyToManySizeTest.Customer.class } )
+@JiraKey( value = "HHH-13619" )
+@DomainModel( annotatedClasses = { ManyToManySizeTest.Company.class, ManyToManySizeTest.Customer.class, ManyToManySizeTest.CompanyDto.class } )
 @SessionFactory
 public class ManyToManySizeTest {
 
@@ -82,7 +80,7 @@ public class ManyToManySizeTest {
 		scope.inTransaction(
 				(session) -> {
 					final List results = session.createQuery(
-							"select new org.hibernate.orm.test.query.hql.size.ManyToManySizeTest$CompanyDto(" +
+							"select new ManyToManySizeTest$CompanyDto(" +
 									" c.id, c.name, size( c.customers ) )" +
 									" from Company c" +
 									" group by c.id, c.name" +
@@ -111,7 +109,7 @@ public class ManyToManySizeTest {
 		scope.inTransaction(
 				(session) -> {
 					final List results = session.createQuery(
-							"select new org.hibernate.orm.test.query.hql.size.ManyToManySizeTest$CompanyDto(" +
+							"select new ManyToManySizeTest$CompanyDto(" +
 									" c.id, c.name, size( c.customers ) )" +
 									" from Company c left join c.customers cu" +
 									" group by c.id, c.name" +
@@ -140,7 +138,7 @@ public class ManyToManySizeTest {
 		scope.inTransaction(
 				(session) -> {
 					final List results = session.createQuery(
-							"select new org.hibernate.orm.test.query.hql.size.ManyToManySizeTest$CompanyDto(" +
+							"select new ManyToManySizeTest$CompanyDto(" +
 									" c.id, c.name, size( c.customers ) )" +
 									" from Company c inner join c.customers cu" +
 									" group by c.id, c.name" +
@@ -165,7 +163,7 @@ public class ManyToManySizeTest {
 		scope.inTransaction(
 				(session) -> {
 					final List results = session.createQuery(
-							"select new org.hibernate.orm.test.query.hql.size.ManyToManySizeTest$CompanyDto(" +
+							"select new ManyToManySizeTest$CompanyDto(" +
 									" c.id, c.name, size( cu ) )" +
 									" from Company c inner join c.customers cu" +
 									" group by c.id, c.name" +
@@ -190,7 +188,7 @@ public class ManyToManySizeTest {
 		scope.inTransaction(
 				session -> {
 					final List results = session.createQuery(
-							"select new org.hibernate.orm.test.query.hql.size.ManyToManySizeTest$CompanyDto(" +
+							"select new ManyToManySizeTest$CompanyDto(" +
 									" c.id, c.name, size( c.customers ) )" +
 									" from Company c" +
 									" where c.id != 0" +
@@ -294,7 +292,7 @@ public class ManyToManySizeTest {
 		scope.inTransaction(
 				(session) -> {
 					for ( Company company : session.createQuery( "from Company", Company.class ).list() ) {
-						session.delete( company );
+						session.remove( company );
 					}
 				}
 		);
@@ -335,6 +333,7 @@ public class ManyToManySizeTest {
 		}
 	}
 
+	@Imported
 	public static class CompanyDto {
 
 		public int id;

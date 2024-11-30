@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy;
 
@@ -11,49 +9,48 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import org.hibernate.Hibernate;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Gail Badner
  */
-@TestForIssue( jiraKey = "HHH-13640" )
-@RunWith(BytecodeEnhancerRunner.class)
+@JiraKey( "HHH-13640" )
+@DomainModel(
+		annotatedClasses = {
+				ProxyInitializeAndUpdateInlineDirtyTrackingTest.Animal.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+				@Setting( name = AvailableSettings.USE_QUERY_CACHE, value = "false" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @EnhancementOptions(lazyLoading = true,inlineDirtyChecking = true)
-public class ProxyInitializeAndUpdateInlineDirtyTrackingTest extends BaseNonConfigCoreFunctionalTestCase {
-
-	@Override
-	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
-		super.configureSessionFactoryBuilder( sfb );
-		sfb.applyStatisticsSupport( true );
-		sfb.applySecondLevelCacheSupport( false );
-		sfb.applyQueryCacheSupport( false );
-	}
-
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-		sources.addAnnotatedClass( Animal.class );
-	}
+public class ProxyInitializeAndUpdateInlineDirtyTrackingTest {
 
 	@Test
-	public void testInitializeWithGetter() {
-		inTransaction(
+	public void testInitializeWithGetter(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Animal animal = new Animal();
 					animal.name = "animal";
@@ -64,9 +61,9 @@ public class ProxyInitializeAndUpdateInlineDirtyTrackingTest extends BaseNonConf
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
-					Animal animal = session.load( Animal.class, "animal" );
+					Animal animal = session.getReference( Animal.class, "animal" );
 					assertFalse( Hibernate.isInitialized( animal ) );
 					assertEquals( "female", animal.getSex() );
 					assertTrue( Hibernate.isInitialized( animal ) );
@@ -75,7 +72,7 @@ public class ProxyInitializeAndUpdateInlineDirtyTrackingTest extends BaseNonConf
 				}
 		);
 
-		inSession(
+		scope.inSession(
 				session -> {
 					Animal animal = session.get( Animal.class, "animal" );
 					assertTrue( Hibernate.isInitialized( animal ) );
@@ -87,8 +84,8 @@ public class ProxyInitializeAndUpdateInlineDirtyTrackingTest extends BaseNonConf
 	}
 
 	@Test
-	public void testInitializeWithSetter() {
-		inTransaction(
+	public void testInitializeWithSetter(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Animal animal = new Animal();
 					animal.name = "animal";
@@ -99,9 +96,9 @@ public class ProxyInitializeAndUpdateInlineDirtyTrackingTest extends BaseNonConf
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
-					Animal animal = session.load( Animal.class, "animal" );
+					Animal animal = session.getReference( Animal.class, "animal" );
 					assertFalse( Hibernate.isInitialized( animal ) );
 					animal.setSex( "other" );
 					// Setting the attribute value should have initialized animal.
@@ -109,7 +106,7 @@ public class ProxyInitializeAndUpdateInlineDirtyTrackingTest extends BaseNonConf
 				}
 		);
 
-		inSession(
+		scope.inSession(
 				session -> {
 					Animal animal = session.get( Animal.class, "animal" );
 					assertTrue( Hibernate.isInitialized( animal ) );
@@ -121,8 +118,8 @@ public class ProxyInitializeAndUpdateInlineDirtyTrackingTest extends BaseNonConf
 	}
 
 	@Test
-	public void testMergeUpdatedOntoUninitialized() {
-		inTransaction(
+	public void testMergeUpdatedOntoUninitialized(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Animal animal = new Animal();
 					animal.name = "animal";
@@ -132,9 +129,7 @@ public class ProxyInitializeAndUpdateInlineDirtyTrackingTest extends BaseNonConf
 				}
 		);
 
-		final Animal animalInitialized = doInHibernate(
-				this::sessionFactory,
-				session -> {
+		final Animal animalInitialized = scope.fromTransaction( session -> {
 					final Animal animal = session.get( Animal.class, "animal" );
 					assertTrue( Hibernate.isInitialized( animal ) );
 					assertEquals( "female", animal.getSex() );
@@ -146,9 +141,9 @@ public class ProxyInitializeAndUpdateInlineDirtyTrackingTest extends BaseNonConf
 		animalInitialized.setAge( 4 );
 		animalInitialized.setSex( "other" );
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
-					final Animal animal = session.load( Animal.class, "animal" );
+					final Animal animal = session.getReference( Animal.class, "animal" );
 					assertFalse( Hibernate.isInitialized( animal ) );
 					session.merge( animalInitialized );
 					assertTrue( Hibernate.isInitialized( animal ) );
@@ -157,7 +152,7 @@ public class ProxyInitializeAndUpdateInlineDirtyTrackingTest extends BaseNonConf
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					final Animal animal = session.get( Animal.class, "animal" );
 					assertTrue( Hibernate.isInitialized( animal ) );
@@ -168,8 +163,8 @@ public class ProxyInitializeAndUpdateInlineDirtyTrackingTest extends BaseNonConf
 	}
 
 	@Test
-	public void testMergeUpdatedOntoUpdated() {
-		inTransaction(
+	public void testMergeUpdatedOntoUpdated(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Animal animal = new Animal();
 					animal.name = "animal";
@@ -179,9 +174,7 @@ public class ProxyInitializeAndUpdateInlineDirtyTrackingTest extends BaseNonConf
 				}
 		);
 
-		final Animal animalInitialized = doInHibernate(
-				this::sessionFactory,
-				session -> {
+		final Animal animalInitialized = scope.fromTransaction( session -> {
 					final Animal animal = session.get( Animal.class, "animal" );
 					assertTrue( Hibernate.isInitialized( animal ) );
 					assertEquals( "female", animal.getSex() );
@@ -193,7 +186,7 @@ public class ProxyInitializeAndUpdateInlineDirtyTrackingTest extends BaseNonConf
 		animalInitialized.setAge( 4 );
 		animalInitialized.setSex( "other" );
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					final Animal animal = session.get( Animal.class, "animal" );
 					assertTrue( Hibernate.isInitialized( animal ) );
@@ -205,7 +198,7 @@ public class ProxyInitializeAndUpdateInlineDirtyTrackingTest extends BaseNonConf
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					final Animal animal = session.get( Animal.class, "animal" );
 					assertTrue( Hibernate.isInitialized( animal ) );
@@ -216,8 +209,8 @@ public class ProxyInitializeAndUpdateInlineDirtyTrackingTest extends BaseNonConf
 	}
 
 	@Test
-	public void testMergeUninitializedOntoUninitialized() {
-		inTransaction(
+	public void testMergeUninitializedOntoUninitialized(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Animal animal = new Animal();
 					animal.name = "animal";
@@ -227,25 +220,23 @@ public class ProxyInitializeAndUpdateInlineDirtyTrackingTest extends BaseNonConf
 				}
 		);
 
-		final Animal animalUninitialized = doInHibernate(
-				this::sessionFactory,
-				session -> {
-					final Animal animal = session.load( Animal.class, "animal" );
+		final Animal animalUninitialized = scope.fromTransaction( session -> {
+					final Animal animal = session.getReference( Animal.class, "animal" );
 					assertFalse( Hibernate.isInitialized( animal ) );
 					return animal;
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
-					final Animal animal = session.load( Animal.class, "animal" );
+					final Animal animal = session.getReference( Animal.class, "animal" );
 					assertFalse( Hibernate.isInitialized( animal ) );
 					session.merge( animalUninitialized );
 					assertFalse( Hibernate.isInitialized( animal ) );
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					final Animal animal = session.get( Animal.class, "animal" );
 					assertTrue( Hibernate.isInitialized( animal ) );
@@ -256,8 +247,8 @@ public class ProxyInitializeAndUpdateInlineDirtyTrackingTest extends BaseNonConf
 	}
 
 	@Test
-	public void testMergeUninitializedOntoUpdated() {
-		inTransaction(
+	public void testMergeUninitializedOntoUpdated(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Animal animal = new Animal();
 					animal.name = "animal";
@@ -267,16 +258,14 @@ public class ProxyInitializeAndUpdateInlineDirtyTrackingTest extends BaseNonConf
 				}
 		);
 
-		final Animal animalUninitialized = doInHibernate(
-				this::sessionFactory,
-				session -> {
-					final Animal animal = session.load( Animal.class, "animal" );
+		final Animal animalUninitialized = scope.fromTransaction( session -> {
+					final Animal animal = session.getReference( Animal.class, "animal" );
 					assertFalse( Hibernate.isInitialized( animal ) );
 					return animal;
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					final Animal animal = session.get( Animal.class, "animal" );
 					assertTrue( Hibernate.isInitialized( animal ) );
@@ -289,7 +278,7 @@ public class ProxyInitializeAndUpdateInlineDirtyTrackingTest extends BaseNonConf
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					final Animal animal = session.get( Animal.class, "animal" );
 					assertTrue( Hibernate.isInitialized( animal ) );
@@ -299,9 +288,9 @@ public class ProxyInitializeAndUpdateInlineDirtyTrackingTest extends BaseNonConf
 		);
 	}
 
-	@After
-	public void cleanUpTestData() {
-		inTransaction(
+	@AfterEach
+	public void cleanUpTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "delete from Animal" ).executeUpdate();
 				}

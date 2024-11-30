@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.transaction.backend.jta.internal;
 
@@ -15,6 +13,8 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
+
+import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT;
 
 /**
  * Concrete builder for JTA-based TransactionCoordinator instances.
@@ -44,8 +44,8 @@ public class JtaTransactionCoordinatorBuilderImpl implements TransactionCoordina
 
 	@Override
 	public PhysicalConnectionHandlingMode getDefaultConnectionHandlingMode() {
-		// todo : I want to change this to PhysicalConnectionHandlingMode#IMMEDIATE_ACQUISITION_AND_HOLD
-		return PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT;
+		// todo : I want to change this to IMMEDIATE_ACQUISITION_AND_HOLD
+		return DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT;
 	}
 
 	@Override
@@ -55,7 +55,7 @@ public class JtaTransactionCoordinatorBuilderImpl implements TransactionCoordina
 
 	@Override
 	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
-		this.jtaPlatform = serviceRegistry.getService( JtaPlatform.class );
+		jtaPlatform = serviceRegistry.getService( JtaPlatform.class );
 	}
 
 }

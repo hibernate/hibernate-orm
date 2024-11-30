@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.components;
 
@@ -14,14 +12,14 @@ import org.hibernate.orm.test.envers.entities.components.UniquePropsNotAuditedEn
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-6636")
+@JiraKey(value = "HHH-6636")
 public class PropertiesGroupTest extends BaseEnversFunctionalTestCase {
 	private PersistentClass uniquePropsAudit = null;
 	private PersistentClass uniquePropsNotAuditedAudit = null;

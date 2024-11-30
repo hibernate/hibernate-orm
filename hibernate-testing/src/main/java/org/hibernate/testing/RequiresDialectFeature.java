@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing;
 
@@ -16,9 +14,11 @@ import java.lang.annotation.Target;
  * specified feature.
  *
  * @author Hardy Ferentschik
+ * @deprecated Use JUnit 5 and {@link org.hibernate.testing.orm.junit.RequiresDialectFeature} instead.
  */
 @Target({ ElementType.METHOD, ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
+@Deprecated(forRemoval = true)
 public @interface RequiresDialectFeature {
 	/**
 	 * @return Class which checks the necessary dialect feature

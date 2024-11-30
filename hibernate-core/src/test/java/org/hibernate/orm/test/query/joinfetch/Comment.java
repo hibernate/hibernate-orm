@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id: Comment.java 6797 2005-05-16 12:08:03Z oneovthafew $
 package org.hibernate.orm.test.query.joinfetch;
 
 import java.util.Calendar;
@@ -14,7 +10,7 @@ import java.util.Calendar;
  * @author Gavin King
  */
 public class Comment {
-	
+
 	private String text;
 	private Item item;
 	private Calendar timestamp;
@@ -32,7 +28,7 @@ public class Comment {
 	public void setTimestamp(Calendar timestamp) {
 		this.timestamp = timestamp;
 	}
-	
+
 	Comment() {}
 	public Comment(Item item, String comment) {
 		this.text = comment;

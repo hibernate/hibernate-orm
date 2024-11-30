@@ -1,28 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.mapping;
 
-import java.util.Arrays;
-import java.util.List;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-
-import org.hibernate.cfg.AvailableSettings;
-
-import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.SettingProvider;
-
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
 
 /**
  * @author Vlad Mihalcea
@@ -32,12 +23,7 @@ import org.junit.jupiter.api.Test;
 				DefaultCascadeTest.Parent.class,
 				DefaultCascadeTest.Child.class
 		},
-		//	using 'xmlMappings = { "org/hibernate/orm/test/jpa/mapping/orm.xml" }' also works
-		settingProviders = {
-				@SettingProvider(
-						settingName = AvailableSettings.ORM_XML_FILES,
-						provider = DefaultCascadeTest.EJB3DDMappingProvider.class )
-		}
+		xmlMappings = "org/hibernate/orm/test/jpa/mapping/orm.xml"
 )
 public class DefaultCascadeTest {
 
@@ -85,10 +71,4 @@ public class DefaultCascadeTest {
 		private Parent parent;
 	}
 
-	public static class EJB3DDMappingProvider implements SettingProvider.Provider<List<String>> {
-		@Override
-		public List<String> getSetting() {
-			return Arrays.asList( "org/hibernate/orm/test/jpa/mapping/orm.xml" );
-		}
-	}
 }

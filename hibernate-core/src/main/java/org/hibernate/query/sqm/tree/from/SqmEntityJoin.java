@@ -1,15 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.from;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.spi.NavigablePath;
-import org.hibernate.query.PathException;
+import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.query.criteria.JpaEntityJoin;
+import org.hibernate.query.criteria.JpaExpression;
+import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
@@ -19,23 +18,28 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedEntityJoin;
+import org.hibernate.query.sqm.tree.domain.SqmSingularValuedJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedEntityJoin;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.spi.NavigablePath;
+
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.metamodel.EntityType;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmEntityJoin<T> extends AbstractSqmJoin<T, T> implements SqmQualifiedJoin<T,T>, JpaEntityJoin<T> {
-	private final SqmRoot<?> sqmRoot;
-	private SqmPredicate joinPredicate;
+public class SqmEntityJoin<L,R> extends AbstractSqmJoin<L,R> implements SqmSingularValuedJoin<L,R>, JpaEntityJoin<L,R> {
+	private final SqmRoot<L> sqmRoot;
 
 	public SqmEntityJoin(
-			EntityDomainType<T> joinedEntityDescriptor,
+			EntityDomainType<R> joinedEntityDescriptor,
 			String alias,
 			SqmJoinType joinType,
-			SqmRoot<?> sqmRoot) {
+			SqmRoot<L> sqmRoot) {
 		this(
 				SqmCreationHelper.buildRootNavigablePath( joinedEntityDescriptor.getHibernateEntityName(), alias ),
 				joinedEntityDescriptor,
@@ -47,21 +51,34 @@ public class SqmEntityJoin<T> extends AbstractSqmJoin<T, T> implements SqmQualif
 
 	protected SqmEntityJoin(
 			NavigablePath navigablePath,
-			EntityDomainType<T> joinedEntityDescriptor,
+			EntityDomainType<R> joinedEntityDescriptor,
 			String alias,
 			SqmJoinType joinType,
-			SqmRoot<?> sqmRoot) {
+			SqmRoot<L> sqmRoot) {
 		super( navigablePath, joinedEntityDescriptor, sqmRoot, alias, joinType, sqmRoot.nodeBuilder() );
 		this.sqmRoot = sqmRoot;
 	}
 
+	public SqmEntityJoin(
+			EntityType<R> entity,
+			String alias,
+			JoinType joinType,
+			SqmRoot<L> root) {
+		this( (EntityDomainType<R>) entity, alias, SqmJoinType.from( joinType ), root );
+	}
+
 	@Override
-	public SqmEntityJoin<T> copy(SqmCopyContext context) {
-		final SqmEntityJoin<T> existing = context.getCopy( this );
+	public boolean isImplicitlySelectable() {
+		return true;
+	}
+
+	@Override
+	public SqmEntityJoin<L,R> copy(SqmCopyContext context) {
+		final SqmEntityJoin<L,R> existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmEntityJoin<T> path = context.registerCopy(
+		final SqmEntityJoin<L,R> path = context.registerCopy(
 				this,
 				new SqmEntityJoin<>(
 						getNavigablePath(),
@@ -75,18 +92,23 @@ public class SqmEntityJoin<T> extends AbstractSqmJoin<T, T> implements SqmQualif
 		return path;
 	}
 
-	protected void copyTo(SqmEntityJoin<T> target, SqmCopyContext context) {
-		super.copyTo( target, context );
-		target.joinPredicate = joinPredicate == null ? null : joinPredicate.copy( context );
+	public SqmRoot<L> getRoot() {
+		return sqmRoot;
 	}
 
-	public SqmRoot<?> getRoot() {
-		return sqmRoot;
+	@Override
+	public SqmFrom<?, L> getParent() {
+		return getRoot();
 	}
 
 	@Override
 	public SqmRoot<?> findRoot() {
 		return getRoot();
+	}
+
+	@Override
+	public JoinType getJoinType() {
+		return getSqmJoinType().getCorrespondingJpaJoinType();
 	}
 
 	@Override
@@ -98,19 +120,19 @@ public class SqmEntityJoin<T> extends AbstractSqmJoin<T, T> implements SqmQualif
 	}
 
 	@Override
-	public EntityDomainType<T> getModel() {
-		return (EntityDomainType<T>) super.getModel();
+	public EntityDomainType<R> getModel() {
+		return (EntityDomainType<R>) super.getModel();
 	}
 
 	@Override
-	public SqmPath<?> getLhs() {
+	public SqmFrom<?,L> getLhs() {
 		// An entity-join has no LHS
 		return null;
 	}
 
 	@Override
-	public EntityDomainType<T> getReferencedPathSource() {
-		return (EntityDomainType<T>) super.getReferencedPathSource();
+	public EntityDomainType<R> getReferencedPathSource() {
+		return (EntityDomainType<R>) super.getReferencedPathSource();
 	}
 
 	public String getEntityName() {
@@ -118,12 +140,23 @@ public class SqmEntityJoin<T> extends AbstractSqmJoin<T, T> implements SqmQualif
 	}
 
 	@Override
-	public SqmPredicate getJoinPredicate() {
-		return joinPredicate;
+	public SqmEntityJoin<L,R> on(JpaExpression<Boolean> restriction) {
+		return (SqmEntityJoin<L,R>) super.on( restriction );
 	}
 
-	public void setJoinPredicate(SqmPredicate predicate) {
-		this.joinPredicate = predicate;
+	@Override
+	public SqmEntityJoin<L,R> on(Expression<Boolean> restriction) {
+		return (SqmEntityJoin<L,R>) super.on( restriction );
+	}
+
+	@Override
+	public SqmEntityJoin<L,R> on(JpaPredicate... restrictions) {
+		return (SqmEntityJoin<L,R>) super.on( restrictions );
+	}
+
+	@Override
+	public SqmEntityJoin<L,R> on(Predicate... restrictions) {
+		return (SqmEntityJoin<L,R>) super.on( restrictions );
 	}
 
 	@Override
@@ -136,34 +169,51 @@ public class SqmEntityJoin<T> extends AbstractSqmJoin<T, T> implements SqmQualif
 	// JPA
 
 	@Override
-	public <S extends T> SqmTreatedEntityJoin<T,S> treatAs(Class<S> treatJavaType) throws PathException {
-		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
+	public <S extends R> SqmTreatedEntityJoin<L,R,S> treatAs(Class<S> treatAsType) {
+		return treatAs( nodeBuilder().getDomainModel().entity( treatAsType ) );
 	}
+
 	@Override
-	public <S extends T> SqmTreatedEntityJoin<T,S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
-		final SqmTreatedEntityJoin<T,S> treat = findTreat( treatTarget, null );
+	public <S extends R> SqmTreatedEntityJoin<L,R,S> treatAs(EntityDomainType<S> treatAsType) {
+		final SqmTreatedEntityJoin<L,R,S> treat = findTreat( treatAsType, null );
 		if ( treat == null ) {
-			return addTreat( new SqmTreatedEntityJoin<>( this, treatTarget, null ) );
+			return addTreat( new SqmTreatedEntityJoin<>( this, treatAsType, null ) );
 		}
 		return treat;
 	}
 
 	@Override
-	public <S extends T> SqmFrom<?, S> treatAs(Class<S> treatJavaType, String alias) {
+	public <S extends R> SqmTreatedEntityJoin<L,R,S> treatAs(Class<S> treatJavaType, String alias) {
 		throw new UnsupportedOperationException( "Entity join treats can not be aliased" );
 	}
 
 	@Override
-	public <S extends T> SqmFrom<?, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
+	public <S extends R> SqmTreatedEntityJoin<L,R,S> treatAs(EntityDomainType<S> treatTarget, String alias) {
 		throw new UnsupportedOperationException( "Entity join treats can not be aliased" );
 	}
 
 	@Override
-	public SqmCorrelatedEntityJoin<T> createCorrelation() {
+	public <S extends R> SqmTreatedEntityJoin<L,R,S> treatAs(Class<S> treatJavaType, String alias, boolean fetched) {
+		throw new UnsupportedOperationException( "Entity join treats can not be aliased" );
+	}
+
+	@Override
+	public <S extends R> SqmTreatedEntityJoin<L,R,S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetched) {
+		throw new UnsupportedOperationException( "Entity join treats can not be aliased" );
+	}
+
+	@Override
+	public PersistentAttribute<? super L, ?> getAttribute() {
+		// there is no attribute
+		return null;
+	}
+
+	@Override
+	public SqmCorrelatedEntityJoin<L,R> createCorrelation() {
 		return new SqmCorrelatedEntityJoin<>( this );
 	}
 
-	public SqmEntityJoin<T> makeCopy(SqmCreationProcessingState creationProcessingState) {
+	public SqmEntityJoin<L,R> makeCopy(SqmCreationProcessingState creationProcessingState) {
 		final SqmPathRegistry pathRegistry = creationProcessingState.getPathRegistry();
 		return new SqmEntityJoin<>(
 				getReferencedPathSource(),
@@ -172,4 +222,6 @@ public class SqmEntityJoin<T> extends AbstractSqmJoin<T, T> implements SqmQualif
 				pathRegistry.findFromByPath( getRoot().getNavigablePath() )
 		);
 	}
+
+
 }

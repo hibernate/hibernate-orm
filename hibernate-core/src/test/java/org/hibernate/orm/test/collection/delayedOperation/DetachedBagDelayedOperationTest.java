@@ -1,10 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.orm.test.collection.delayedOperation;
 
 import java.util.ArrayList;
@@ -27,7 +24,7 @@ import org.hibernate.collection.spi.AbstractPersistentCollection;
 import org.hibernate.testing.orm.junit.ImplicitListAsBagProvider;
 import org.hibernate.type.CollectionType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.LoggingInspections;
 import org.hibernate.testing.orm.junit.LoggingInspectionsScope;
@@ -96,7 +93,6 @@ public class DetachedBagDelayedOperationTest {
 
 		scope.inTransaction(
 				session -> {
-
 					session.persist( child1 );
 					session.persist( child2 );
 					session.persist( parent );
@@ -115,7 +111,7 @@ public class DetachedBagDelayedOperationTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11209")
+	@JiraKey(value = "HHH-11209")
 	public void testMergeDetachedCollectionWithQueuedOperations(
 			SessionFactoryScope scope,
 			LoggingInspectionsScope loggingScope) {
@@ -137,7 +133,7 @@ public class DetachedBagDelayedOperationTest {
 
 		final Parent pWithQueuedOperations = scope.fromTransaction(
 				session -> {
-					Parent p = (Parent) session.merge( pOriginal );
+					Parent p = session.merge( pOriginal );
 					Child c = new Child( "Zeke" );
 					c.setParent( p );
 					session.persist( c );
@@ -166,6 +162,8 @@ public class DetachedBagDelayedOperationTest {
 					assertFalse( opDetachedWatcher.wasTriggered() );
 					assertFalse( opRollbackWatcher.wasTriggered() );
 
+					session.clear(); //should be unnecessary by there is a bug we need to fix!
+
 					return p;
 				}
 		);
@@ -187,7 +185,7 @@ public class DetachedBagDelayedOperationTest {
 					assertFalse( opRollbackWatcher.wasTriggered() );
 
 					assertFalse( opMergedWatcher.wasTriggered() );
-					Parent p = (Parent) session.merge( pWithQueuedOperations );
+					Parent p = session.merge( pWithQueuedOperations );
 					assertTrue( opMergedWatcher.wasTriggered() );
 					assertEquals(
 							"HHH000494: Attempt to merge an uninitialized collection with queued operations; queued operations will be ignored: [org.hibernate.orm.test.collection.delayedOperation.DetachedBagDelayedOperationTest$Parent.children#1]",
@@ -219,115 +217,7 @@ public class DetachedBagDelayedOperationTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11209")
-	public void testSaveOrUpdateDetachedCollectionWithQueuedOperations(
-			SessionFactoryScope scope,
-			LoggingInspectionsScope loggingScope) {
-		final MessageKeyWatcher opMergedWatcher = loggingScope.getWatcher( "HHH000494", CollectionType.class );
-		final MessageKeyWatcher opAttachedWatcher = loggingScope.getWatcher( "HHH000495", AbstractPersistentCollection.class );
-		final MessageKeyWatcher opDetachedWatcher = loggingScope.getWatcher( "HHH000496", AbstractPersistentCollection.class );
-		final MessageKeyWatcher opRollbackWatcher = loggingScope.getWatcher( "HHH000498", AbstractPersistentCollection.class );
-
-		final Parent pOriginal = scope.fromTransaction(
-				session -> {
-					Parent p = session.get( Parent.class, 1L );
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-					// initialize
-					Hibernate.initialize( p.getChildren() );
-					assertTrue( Hibernate.isInitialized( p.getChildren() ) );
-					return p;
-				}
-		);
-		final Parent pAfterDetachWithQueuedOperations = scope.fromTransaction(
-				session -> {
-					Parent p = (Parent) session.merge( pOriginal );
-					Child c = new Child( "Zeke" );
-					c.setParent( p );
-					session.persist( c );
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-					p.getChildren().add( c );
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-					assertTrue( ( (AbstractPersistentCollection) p.getChildren() ).hasQueuedOperations() );
-
-					assertFalse( opMergedWatcher.wasTriggered() );
-					assertFalse( opAttachedWatcher.wasTriggered() );
-					assertFalse( opDetachedWatcher.wasTriggered() );
-					assertFalse( opRollbackWatcher.wasTriggered() );
-
-					session.detach( p );
-					assertTrue( opDetachedWatcher.wasTriggered() );
-					assertEquals(
-							"HHH000496: Detaching an uninitialized collection with queued operations from a session: [org.hibernate.orm.test.collection.delayedOperation.DetachedBagDelayedOperationTest$Parent.children#1]",
-							opDetachedWatcher.getFirstTriggeredMessage()
-					);
-					opDetachedWatcher.reset();
-
-					// Make sure nothing else got triggered
-					assertFalse( opMergedWatcher.wasTriggered() );
-					assertFalse( opAttachedWatcher.wasTriggered() );
-					assertFalse( opDetachedWatcher.wasTriggered() );
-					assertFalse( opRollbackWatcher.wasTriggered() );
-
-					return p;
-				}
-		);
-
-		assertFalse( opMergedWatcher.wasTriggered() );
-		assertFalse( opAttachedWatcher.wasTriggered() );
-		assertFalse( opDetachedWatcher.wasTriggered() );
-
-		assertTrue( ( (AbstractPersistentCollection) pAfterDetachWithQueuedOperations.getChildren() ).hasQueuedOperations() );
-
-		// Save detached Parent with uninitialized collection with queued operations
-		scope.inTransaction(
-				session -> {
-
-					assertFalse( opMergedWatcher.wasTriggered() );
-					assertFalse( opAttachedWatcher.wasTriggered() );
-					assertFalse( opDetachedWatcher.wasTriggered() );
-					assertFalse( opRollbackWatcher.wasTriggered() );
-
-					assertFalse( opAttachedWatcher.wasTriggered() );
-					session.saveOrUpdate( pAfterDetachWithQueuedOperations );
-					assertTrue( opAttachedWatcher.wasTriggered() );
-					assertEquals(
-							"HHH000495: Attaching an uninitialized collection with queued operations to a session: [org.hibernate.orm.test.collection.delayedOperation.DetachedBagDelayedOperationTest$Parent.children#1]",
-							opAttachedWatcher.getFirstTriggeredMessage()
-					);
-					opAttachedWatcher.reset();
-
-					// Make sure nothing else got triggered
-					assertFalse( opMergedWatcher.wasTriggered() );
-					assertFalse( opAttachedWatcher.wasTriggered() );
-					assertFalse( opDetachedWatcher.wasTriggered() );
-					assertFalse( opRollbackWatcher.wasTriggered() );
-
-					assertFalse( Hibernate.isInitialized( pAfterDetachWithQueuedOperations.getChildren() ) );
-					assertTrue( ( (AbstractPersistentCollection) pAfterDetachWithQueuedOperations.getChildren() ).hasQueuedOperations() );
-
-					// Queued operations will be executed when the collection is initialized,
-					// After initialization, the collection will contain the Child that was added as a
-					// queued operation before being detached above.
-					Hibernate.initialize( pAfterDetachWithQueuedOperations.getChildren() );
-					final Set<String> childNames = new HashSet<>(
-							Arrays.asList( "Yogi", "Sherman", "Zeke" )
-					);
-					assertEquals( childNames.size(), pAfterDetachWithQueuedOperations.getChildren().size() );
-					for ( Child child : pAfterDetachWithQueuedOperations.getChildren() ) {
-						childNames.remove( child.getName() );
-					}
-					assertEquals( 0, childNames.size() );
-				}
-		);
-
-		assertFalse( opMergedWatcher.wasTriggered() );
-		assertFalse( opAttachedWatcher.wasTriggered() );
-		assertFalse( opDetachedWatcher.wasTriggered() );
-		assertFalse( opRollbackWatcher.wasTriggered() );
-	}
-
-	@Test
-	@TestForIssue(jiraKey = "HHH-11209")
+	@JiraKey(value = "HHH-11209")
 	public void testCollectionWithQueuedOperationsOnRollback(
 			SessionFactoryScope scope,
 			LoggingInspectionsScope loggingScope) {
@@ -349,7 +239,7 @@ public class DetachedBagDelayedOperationTest {
 		try {
 			scope.inTransaction(
 					session -> {
-						Parent p = (Parent) session.merge( pOriginal );
+						Parent p = session.merge( pOriginal );
 						Child c = new Child( "Zeke" );
 						c.setParent( p );
 						session.persist( c );

@@ -1,14 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.timestamp;
 
 import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.sql.Time;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -26,11 +24,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 /**
  * @author Vlad Mihalcea
@@ -40,8 +33,6 @@ public class JdbcTimeDefaultTimeZoneTest
 		extends BaseSessionFactoryFunctionalTest {
 
 	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider(
-			true,
-			false
 	);
 
 	@Override
@@ -67,7 +58,7 @@ public class JdbcTimeDefaultTimeZoneTest
 	}
 
 	@Test
-	public void testTimeZone() {
+	public void testTimeZone() throws Throwable {
 
 		connectionProvider.clear();
 		inTransaction( s -> {
@@ -80,12 +71,11 @@ public class JdbcTimeDefaultTimeZoneTest
 		assertEquals( 1, connectionProvider.getPreparedStatements().size() );
 		PreparedStatement ps = connectionProvider.getPreparedStatements()
 				.get( 0 );
-		try {
-			verify( ps, times( 1 ) ).setTime( anyInt(), any( Time.class ) );
-		}
-		catch (SQLException e) {
-			fail( e.getMessage() );
-		}
+		List<Object[]> setTimeCalls = connectionProvider.spyContext.getCalls(
+				PreparedStatement.class.getMethod( "setTime", int.class, Time.class ),
+				ps
+		);
+		assertEquals( 1, setTimeCalls.size() );
 
 		inTransaction( s -> {
 			Person person = s.find( Person.class, 1L );
@@ -105,4 +95,3 @@ public class JdbcTimeDefaultTimeZoneTest
 		private Time createdOn = new Time( 0 );
 	}
 }
-

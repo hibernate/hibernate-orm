@@ -1,13 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
 
 import java.util.List;
 
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
@@ -38,6 +37,7 @@ public class SqlFunction
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> arguments,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		final QueryLiteral<String> sqlFragmentLiteral = (QueryLiteral<String>) arguments.get( 0 );
 		final String sqlFragment = sqlFragmentLiteral.getLiteralValue();
@@ -47,13 +47,14 @@ public class SqlFunction
 				final SqlAstNode argument = arguments.get( i );
 				final int paramIndex = sqlFragment.indexOf( '?', index );
 				if ( paramIndex == -1 ) {
-					throw new IllegalArgumentException( "The SQL function passes an argument at index " + i + " but the fragment contains no placeholder for the argument: " + sqlFragment );
+					throw new IllegalArgumentException( "The SQL function passes an argument at index " + i
+							+ " but the fragment contains no placeholder for the argument: " + sqlFragment );
 				}
 				sqlAppender.append( sqlFragment, index, paramIndex );
 				argument.accept( walker );
 				index = paramIndex + 1;
 			}
-
+			sqlAppender.append( sqlFragment, index, sqlFragment.length() );
 		}
 		else {
 			sqlAppender.appendSql( sqlFragment );

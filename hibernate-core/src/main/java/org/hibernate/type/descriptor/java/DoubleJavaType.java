@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
@@ -36,9 +34,15 @@ public class DoubleJavaType extends AbstractClassJavaType<Double> implements
 	}
 
 	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
+	@Override
 	public String toString(Double value) {
 		return value == null ? null : value.toString();
 	}
+
 	@Override
 	public Double fromString(CharSequence string) {
 		return Double.valueOf( string.toString() );
@@ -50,7 +54,7 @@ public class DoubleJavaType extends AbstractClassJavaType<Double> implements
 		if ( value == null ) {
 			return null;
 		}
-		if ( Double.class.isAssignableFrom( type ) ) {
+		if ( Double.class.isAssignableFrom( type ) || type == Object.class ) {
 			return (X) value;
 		}
 		if ( Float.class.isAssignableFrom( type ) ) {
@@ -79,47 +83,41 @@ public class DoubleJavaType extends AbstractClassJavaType<Double> implements
 		}
 		throw unknownUnwrap( type );
 	}
+
 	@Override
 	public <X> Double wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
-		if ( value instanceof Double ) {
-			return (Double) value;
+		if ( value instanceof Double doubleValue ) {
+			return doubleValue;
 		}
-		if ( value instanceof Number ) {
-			return ( (Number) value ).doubleValue();
+		if ( value instanceof Number number ) {
+			return number.doubleValue();
 		}
-		else if ( value instanceof String ) {
-			return Double.valueOf( ( (String) value ) );
+		else if ( value instanceof String string ) {
+			return Double.valueOf( string );
 		}
 		throw unknownWrap( value.getClass() );
 	}
 
 	@Override
 	public boolean isWider(JavaType<?> javaType) {
-		switch ( javaType.getJavaType().getTypeName() ) {
-			case "byte":
-			case "java.lang.Byte":
-			case "short":
-			case "java.lang.Short":
-			case "int":
-			case "java.lang.Integer":
-			case "long":
-			case "java.lang.Long":
-			case "float":
-			case "java.lang.Float":
-			case "java.math.BigInteger":
-			case "java.math.BigDecimal":
-				return true;
-			default:
-				return false;
-		}
+		return switch ( javaType.getTypeName() ) {
+			case
+				"byte", "java.lang.Byte",
+				"short", "java.lang.Short",
+				"int", "java.lang.Integer",
+				"long", "java.lang.Long",
+				"float", "java.lang.Float",
+				"java.math.BigInteger",
+				"java.math.BigDecimal" -> true;
+			default -> false;
+		};
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Override
-	public Class getPrimitiveClass() {
+	public Class<?> getPrimitiveClass() {
 		return double.class;
 	}
 
@@ -160,48 +158,36 @@ public class DoubleJavaType extends AbstractClassJavaType<Double> implements
 			return null;
 		}
 
-		if ( value instanceof Double ) {
-			return ( (Double) value );
+		if ( value instanceof Double doubleValue ) {
+			return doubleValue;
 		}
 
-		if ( value instanceof Byte ) {
-			return ( (Byte) value ).doubleValue();
+		if ( value instanceof Float floatValue ) {
+			return CoercionHelper.toDouble( floatValue );
 		}
 
-		if ( value instanceof Short ) {
-			return ( (Short) value ).doubleValue();
+		if ( value instanceof BigInteger bigInteger ) {
+			return CoercionHelper.toDouble( bigInteger );
 		}
 
-		if ( value instanceof Integer ) {
-			return ( (Integer) value ).doubleValue();
+		if ( value instanceof BigDecimal bigDecimal ) {
+			return CoercionHelper.toDouble( bigDecimal );
 		}
 
-		if ( value instanceof Long ) {
-			return ( (Long) value ).doubleValue();
+		if ( value instanceof Number number ) {
+			return number.doubleValue();
 		}
 
-		if ( value instanceof Float ) {
-			return CoercionHelper.toDouble( (Float) value );
-		}
-
-		if ( value instanceof BigInteger ) {
-			return CoercionHelper.toDouble( (BigInteger) value );
-		}
-
-		if ( value instanceof BigDecimal ) {
-			return CoercionHelper.toDouble( (BigDecimal) value );
-		}
-
-		if ( value instanceof String ) {
+		if ( value instanceof String string ) {
 			return CoercionHelper.coerceWrappingError(
-					() -> Double.parseDouble( (String) value )
+					() -> Double.parseDouble( string )
 			);
 		}
 
 		throw new CoercionException(
 				String.format(
 						Locale.ROOT,
-						"Cannot coerce value `%s` [%s] as Double",
+						"Cannot coerce value '%s' [%s] to Double",
 						value,
 						value.getClass().getName()
 				)

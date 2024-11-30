@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.collection.spi;
 
@@ -20,13 +18,14 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.BasicCollectionPersister;
 
 /**
- * A persistent wrapper for a {@code java.util.SortedMap}. Underlying
+ * A persistent wrapper for a {@link java.util.SortedMap}. Underlying
  * collection is a {@code TreeMap}.
  *
- * @apiNote Incubating in terms of making this non-internal.  These contracts
- * will be getting cleaned up in following releases.
+ * @apiNote Incubating in terms of making this non-internal.
+ *          These contracts will be getting cleaned up in following
+ *          releases.
  *
- * @author <a href="mailto:doug.currie@alum.mit.edu">e</a>
+ * @author Doug Currie
  */
 @Incubating
 public class PersistentSortedMap<K,E> extends PersistentMap<K,E> implements SortedMap<K,E> {
@@ -35,7 +34,7 @@ public class PersistentSortedMap<K,E> extends PersistentMap<K,E> implements Sort
 	/**
 	 * Constructs a PersistentSortedMap.  This form needed for SOAP libraries, etc
 	 */
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public PersistentSortedMap() {
 	}
 

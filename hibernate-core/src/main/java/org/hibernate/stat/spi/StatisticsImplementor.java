@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.stat.spi;
 
@@ -10,10 +8,13 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.service.Service;
 import org.hibernate.stat.Statistics;
 
+import java.util.Map;
+
+import static java.util.Collections.emptyMap;
+
 /**
- * Statistics SPI for the Hibernate core.  This is essentially the
- * "statistic collector" API, its the contract called to collect various stats.
- * 
+ * A service SPI for collecting statistics about various events that occur at runtime.
+ *
  * @author Emmanuel Bernard
  */
 public interface StatisticsImplementor extends Statistics, Service {
@@ -189,7 +190,7 @@ public interface StatisticsImplementor extends Statistics, Service {
 	 * Callback indicating a get from natural id cache resulted in a hit.
 	 */
 	void naturalIdCacheHit(NavigableRole rootEntityName, String regionName);
-	
+
 	/**
 	 * Callback indicating a get from natural id cache resulted in a miss.
 	 */
@@ -274,5 +275,18 @@ public interface StatisticsImplementor extends Statistics, Service {
 	 */
 	default void queryCompiled(String hql, long microseconds) {
 		//For backward compatibility
+	}
+
+	/**
+	 * Register the execution of a slow SQL query.
+	 */
+	default void slowQuery(String sql, long executionTime) {
+		//For backward compatibility
+	}
+
+	@Override
+	default Map<String, Long> getSlowQueries() {
+		//For backward compatibility
+		return emptyMap();
 	}
 }

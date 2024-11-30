@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
 
@@ -11,13 +9,20 @@ import java.lang.annotation.Retention;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Defines the start index value for a list index as stored on the database.  This base is subtracted from the
- * incoming database value on reads to determine the List position; it is added to the List position index when
- * writing to the database.
- *
- * By default list indexes are stored starting at zero.
- *
- * Generally used in conjunction with {@link jakarta.persistence.OrderColumn}.
+ * Specifies the base value for the {@linkplain jakarta.persistence.OrderColumn
+ * order column} of a persistent list or array, that is, the order column value
+ * of the first element of the list or array.
+ * <ul>
+ * <li>When a row is read from the database, this base value is subtracted
+ *     from the order column value to determine an index in the list or array.
+ * <li>When an element is written to the database, the base value is added to
+ *     the list or array index to determine the order column value.
+ *</ul>
+ * <p>
+ * By default, the base value for an order column is zero, as required by JPA.
+ * <p>
+ * This annotation is usually used in conjunction with the JPA-defined
+ * {@link jakarta.persistence.OrderColumn}.
  *
  * @see jakarta.persistence.OrderColumn
  *

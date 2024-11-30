@@ -1,6 +1,8 @@
 [[naming]]
 === Naming strategies
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/naming
+:root-project-dir: ../../../../../../..
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-naming: {core-project-dir}/src/test/java/org/hibernate/orm/test/naming
 
 Part of the mapping of an object model to the relational database is
 mapping names from the object model to the corresponding database names.
@@ -12,22 +14,6 @@ Hibernate looks at this as 2-stage process:
 	<<ImplicitNamingStrategy>> contract.
 * Second is the resolving of this logical name to a physical name which is defined
 	by the <<PhysicalNamingStrategy>> contract.
-
-
-[NOTE]
-.Historical NamingStrategy contract
-====
-Historically Hibernate defined just a single `org.hibernate.cfg.NamingStrategy`.  That singular
-NamingStrategy contract actually combined the separate concerns that are now modeled individually
-as ImplicitNamingStrategy and PhysicalNamingStrategy.
-
-Also, the NamingStrategy contract was often not flexible enough to properly apply a given naming
-"rule", either because the API lacked the information to decide or because the API was honestly
-not well defined as it grew.
-
-Due to these limitations, `org.hibernate.cfg.NamingStrategy` has been deprecated
-in favor of ImplicitNamingStrategy and PhysicalNamingStrategy.
-====
 
 At the core, the idea behind each naming strategy is to minimize the amount of
 repetitive information a developer must provide for mapping a domain model.
@@ -113,7 +99,7 @@ whose naming standards are to:
 ====
 [source,java]
 ----
-include::{sourcedir}/AcmeCorpPhysicalNamingStrategy.java[]
+include::{example-dir-naming}/AcmeCorpPhysicalNamingStrategy.java[]
 ----
 ====
 

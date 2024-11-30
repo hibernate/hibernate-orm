@@ -1,12 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.immutable.entitywithmutablecollection;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.QueryException;
@@ -40,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Gail Badner
  */
-@SuppressWarnings({ "UnusedDeclaration" })
+@SuppressWarnings("unused")
 @SessionFactory(generateStatistics = true)
 public abstract class AbstractEntityWithOneToManyTest {
 	private boolean isContractPartiesInverse;
@@ -122,7 +121,7 @@ public abstract class AbstractEntityWithOneToManyTest {
 					if ( isContractPartiesBidirectional ) {
 						assertSame( c, party.getContract() );
 					}
-					s.delete( c );
+					s.remove( c );
 
 					assertPartyAndContractAreDeleted( s );
 
@@ -158,7 +157,7 @@ public abstract class AbstractEntityWithOneToManyTest {
 					if ( isContractPartiesBidirectional ) {
 						assertSame( c, party.getContract() );
 					}
-					s.delete( c );
+					s.remove( c );
 					assertPartyAndContractAreDeleted( s );
 				}
 		);
@@ -184,8 +183,11 @@ public abstract class AbstractEntityWithOneToManyTest {
 
 		Contract contract = new Contract( null, "gail", "phone" );
 		contract.addParty( firstParty );
+
 		scope.inTransaction(
-				s -> s.save( contract )
+				s -> {
+					s.merge( contract );
+				}
 		);
 
 		assertInsertCount( 1, sessionFactory );
@@ -200,7 +202,7 @@ public abstract class AbstractEntityWithOneToManyTest {
 						assertEquals( 0, c.getParties().size() );
 						Party party = getParty( s );
 						assertNull( party.getContract() );
-						s.delete( party );
+						s.remove( party );
 					}
 					else {
 						assertEquals( 1, c.getParties().size() );
@@ -210,7 +212,7 @@ public abstract class AbstractEntityWithOneToManyTest {
 							assertSame( c, party.getContract() );
 						}
 					}
-					s.delete( c );
+					s.remove( c );
 					assertPartyAndContractAreDeleted( s );
 
 				}
@@ -256,7 +258,7 @@ public abstract class AbstractEntityWithOneToManyTest {
 					if ( isContractPartiesBidirectional ) {
 						assertSame( c, party.getContract() );
 					}
-					s.delete( c );
+					s.remove( c );
 					assertPartyAndContractAreDeleted( s );
 				}
 		);
@@ -307,7 +309,7 @@ public abstract class AbstractEntityWithOneToManyTest {
 					Contract c = getContract( s );
 					if ( isContractPartiesInverse ) {
 						assertEquals( 0, c.getParties().size() );
-						s.delete( firstParty );
+						s.remove( firstParty );
 					}
 					else {
 						assertEquals( 1, c.getParties().size() );
@@ -317,7 +319,7 @@ public abstract class AbstractEntityWithOneToManyTest {
 							assertSame( c, party.getContract() );
 						}
 					}
-					s.delete( c );
+					s.remove( c );
 					assertPartyAndContractAreDeleted( s );
 				}
 		);
@@ -350,7 +352,7 @@ public abstract class AbstractEntityWithOneToManyTest {
 		contract.addParty( firstParty );
 
 		scope.inTransaction(
-				s -> s.update( contract )
+				s -> s.merge( contract )
 		);
 
 		assertInsertCount( 0 , sessionFactory);
@@ -364,7 +366,7 @@ public abstract class AbstractEntityWithOneToManyTest {
 					Contract c = getContract( s );
 					if ( isContractPartiesInverse ) {
 						assertEquals( 0, c.getParties().size() );
-						s.delete( firstParty );
+						s.remove( firstParty );
 					}
 					else {
 						assertEquals( 1, c.getParties().size() );
@@ -374,7 +376,7 @@ public abstract class AbstractEntityWithOneToManyTest {
 							assertSame( c, party.getContract() );
 						}
 					}
-					s.delete( c );
+					s.remove( c );
 					assertPartyAndContractAreDeleted( s );
 				}
 		);
@@ -405,7 +407,7 @@ public abstract class AbstractEntityWithOneToManyTest {
 		contract.addParty( newParty );
 
 		scope.inTransaction(
-				s -> s.update( contract )
+				s -> s.merge( contract )
 		);
 
 		assertInsertCount( 1, sessionFactory );
@@ -421,17 +423,14 @@ public abstract class AbstractEntityWithOneToManyTest {
 						if ( aParty.getId() == firstParty.getId() ) {
 							assertEquals( "party", aParty.getName() );
 						}
-						else if ( aParty.getId() == newParty.getId() ) {
-							assertEquals( "new party", aParty.getName() );
-						}
 						else {
-							fail( "unknown party" );
+							assertEquals( "new party", aParty.getName() );
 						}
 						if ( isContractPartiesBidirectional ) {
 							assertSame( c, aParty.getContract() );
 						}
 					}
-					s.delete( c );
+					s.remove( c );
 					assertPartyAndContractAreDeleted( s );
 				}
 		);
@@ -477,7 +476,7 @@ public abstract class AbstractEntityWithOneToManyTest {
 					Contract c = getContract( s );
 					if ( isContractPartiesInverse ) {
 						assertEquals( 0, c.getParties().size() );
-						s.delete( firstParty );
+						s.remove( firstParty );
 					}
 					else {
 						assertEquals( 1, c.getParties().size() );
@@ -487,7 +486,7 @@ public abstract class AbstractEntityWithOneToManyTest {
 							assertSame( c, party.getContract() );
 						}
 					}
-					s.delete( c );
+					s.remove( c );
 					assertPartyAndContractAreDeleted( s );
 				}
 		);
@@ -541,7 +540,7 @@ public abstract class AbstractEntityWithOneToManyTest {
 							assertSame( c, aParty.getContract() );
 						}
 					}
-					s.delete( c );
+					s.remove( c );
 					assertPartyAndContractAreDeleted( s );
 				}
 		);
@@ -580,7 +579,7 @@ public abstract class AbstractEntityWithOneToManyTest {
 					}
 					c.removeParty( party );
 					contract2.addParty( party );
-					s.save( contract2 );
+					s.persist( contract2 );
 				}
 		);
 
@@ -610,8 +609,8 @@ public abstract class AbstractEntityWithOneToManyTest {
 							assertSame( c2, party.getContract() );
 						}
 					}
-					s.delete( c );
-					s.delete( c2 );
+					s.remove( c );
+					s.remove( c2 );
 					assertPartyAndContractAreDeleted( s );
 
 				}
@@ -683,8 +682,8 @@ public abstract class AbstractEntityWithOneToManyTest {
 							assertSame( c2, party.getContract() );
 						}
 					}
-					s.delete( c );
-					s.delete( c2 );
+					s.remove( c );
+					s.remove( c2 );
 					assertPartyAndContractAreDeleted( s );
 
 				}
@@ -720,8 +719,8 @@ public abstract class AbstractEntityWithOneToManyTest {
 
 		scope.inTransaction(
 				s -> {
-					s.update( contract );
-					s.update( firstParty );
+					s.merge( contract );
+					s.merge( firstParty );
 				}
 		);
 
@@ -746,9 +745,9 @@ public abstract class AbstractEntityWithOneToManyTest {
 						if ( isContractPartiesBidirectional ) {
 							assertNull( party.getContract() );
 						}
-						s.delete( party );
+						s.remove( party );
 					}
-					s.delete( c );
+					s.remove( c );
 					assertPartyAndContractAreDeleted( s );
 
 				}
@@ -811,9 +810,9 @@ public abstract class AbstractEntityWithOneToManyTest {
 						if ( isContractPartiesBidirectional ) {
 							assertNull( party.getContract() );
 						}
-						s.delete( party );
+						s.remove( party );
 					}
-					s.delete( c );
+					s.remove( c );
 					assertPartyAndContractAreDeleted( s );
 				}
 
@@ -843,9 +842,15 @@ public abstract class AbstractEntityWithOneToManyTest {
 
 		scope.inTransaction(
 				s -> {
-					s.update( contract );
-					contract.removeParty( firstParty );
-					s.delete( firstParty );
+					Contract merged = s.merge( contract );
+					Iterator<Party> iterator = merged.getParties().iterator();
+					while ( iterator.hasNext() ) {
+						Party p = iterator.next();
+						if ( p.getId() == firstParty.getId() ) {
+							iterator.remove();
+							s.remove( p );
+						}
+					}
 				}
 		);
 
@@ -859,7 +864,7 @@ public abstract class AbstractEntityWithOneToManyTest {
 					assertEquals( 0, c.getParties().size() );
 					Party party = getParty( s );
 					assertNull( party );
-					s.delete( c );
+					s.remove( c );
 					assertPartyAndContractAreDeleted( s );
 				}
 		);
@@ -894,8 +899,8 @@ public abstract class AbstractEntityWithOneToManyTest {
 
 		scope.inTransaction(
 				s -> {
-					s.update( contract );
-					s.delete( firstParty );
+					Contract merged = s.merge( contract );
+					s.remove( s.merge( firstParty ) );
 				}
 		);
 
@@ -907,7 +912,7 @@ public abstract class AbstractEntityWithOneToManyTest {
 				s -> {
 					Contract c = getContract( s );
 					assertEquals( 0, c.getParties().size() );
-					s.delete( c );
+					s.remove( c );
 					assertPartyAndContractAreDeleted( s );
 				}
 		);
@@ -942,7 +947,7 @@ public abstract class AbstractEntityWithOneToManyTest {
 		}
 
 		scope.inTransaction(
-				s -> s.update( contract )
+				s -> s.merge( contract )
 		);
 
 		assertUpdateCount( isContractVersioned ? 1 : 0 , sessionFactory);
@@ -955,7 +960,7 @@ public abstract class AbstractEntityWithOneToManyTest {
 					assertEquals( 0, c.getVariations().size() );
 					ContractVariation cv = getContractVariation( s );
 					assertNull( cv );
-					s.delete( c );
+					s.remove( c );
 					assertPartyAndContractAreDeleted( s );
 
 				}
@@ -1004,7 +1009,7 @@ public abstract class AbstractEntityWithOneToManyTest {
 					assertEquals( 0, c.getVariations().size() );
 					ContractVariation cv = getContractVariation( s );
 					assertNull( cv );
-					s.delete( c );
+					s.remove( c );
 					assertPartyAndContractAreDeleted( s );
 				}
 		);
@@ -1032,11 +1037,17 @@ public abstract class AbstractEntityWithOneToManyTest {
 
 		scope.inTransaction(
 				s -> {
-					s.update( contract );
-					contract.getVariations().remove( contractVariation );
-					contractVariation.setContract( null );
-					assertEquals( 0, contract.getVariations().size() );
-					s.delete( contractVariation );
+					Contract merged = s.merge( contract );
+					Iterator<ContractVariation> iterator = merged.getVariations().iterator();
+
+					while ( iterator.hasNext() ) {
+						ContractVariation cv = iterator.next();
+						if ( cv.getId() == contractVariation.getId() ) {
+							iterator.remove();
+							cv.setContract( null );
+							s.remove( cv );
+						}
+					}
 				}
 		);
 
@@ -1050,7 +1061,7 @@ public abstract class AbstractEntityWithOneToManyTest {
 					assertEquals( 0, c.getVariations().size() );
 					ContractVariation cv = getContractVariation( s );
 					assertNull( cv );
-					s.delete( c );
+					s.remove( c );
 					assertPartyAndContractAreDeleted( s );
 				}
 		);
@@ -1065,52 +1076,51 @@ public abstract class AbstractEntityWithOneToManyTest {
 
 		clearCounts(sessionFactory);
 
-		Contract cOrig = new Contract( null, "gail", "phone" );
-		Party partyOrig = new Party( "party" );
-		cOrig.addParty( partyOrig );
-
-		scope.inTransaction(
-				s -> s.persist( cOrig )
-		);
+		// Create a Contract with one Party
+		final Contract originalContract = new Contract( null, "gail", "phone" );
+		final Party originalParty = new Party( "party" );
+		originalContract.addParty( originalParty );
+		scope.inTransaction( (session) -> session.persist( originalContract ) );
 
 		assertInsertCount( 2 , sessionFactory);
 		assertUpdateCount( 0, sessionFactory );
 		clearCounts(sessionFactory);
 
-		scope.inTransaction(
-				s -> {
-					Contract c = s.get( Contract.class, cOrig.getId() );
-					Party newParty = new Party( "new party" );
-					c.addParty( newParty );
-				}
-		);
+		// Load the Contract created above and add a new Party
+		//		- this should trigger a version increment, if `isContractVersioned`
+		scope.inTransaction( (session) -> {
+			final Contract loadedContract = session.get( Contract.class, originalContract.getId() );
+			Party newParty = new Party( "new party" );
+			loadedContract.addParty( newParty );
+		} );
 
 		assertInsertCount( 1, sessionFactory );
 		assertUpdateCount( isContractVersioned ? 1 : 0 , sessionFactory);
 		clearCounts(sessionFactory);
 
-		scope.inSession(
-				s -> {
-					cOrig.removeParty( partyOrig );
-					try {
-						s.merge( cOrig );
-						assertFalse( isContractVersioned );
-					}
-					catch (PersistenceException ex) {
-						assertTyping( StaleObjectStateException.class, ex.getCause() );
-						assertTrue( isContractVersioned );
-					}
-					finally {
-						s.getTransaction().rollback();
-					}
-				}
-		);
+		// Using the now stale `originalContract` reference, remove the
+		// first Party.  If `isContractVersioned`, this should trigger
+		// a staleness exception
+		scope.inSession( (session) -> {
+			originalContract.removeParty( originalParty );
+			try {
+				session.merge( originalContract );
+				assertFalse( isContractVersioned );
+			}
+			catch (PersistenceException ex) {
+				assertTyping( StaleObjectStateException.class, ex.getCause() );
+				assertTrue( isContractVersioned );
+			}
+			finally {
+				session.getTransaction().rollback();
+			}
+		} );
 
 
 		scope.inTransaction(
 				s -> {
 					Contract c = getContract( s );
-					s.delete( c );
+					s.remove( c );
 					assertPartyAndContractAreDeleted( s );
 
 				}
@@ -1153,8 +1163,8 @@ public abstract class AbstractEntityWithOneToManyTest {
 				s -> {
 					s.beginTransaction();
 					cOrig.removeParty( partyOrig );
-					s.update( cOrig );
 					try {
+						s.merge( cOrig );
 						s.getTransaction().commit();
 						assertFalse( isContractVersioned );
 					}
@@ -1177,8 +1187,8 @@ public abstract class AbstractEntityWithOneToManyTest {
 					Map<String, Object> properties = new HashMap();
 					properties.put("javax.persistence.fetchgraph", entityGraph);
 					Contract c = s.find( Contract.class, cOrig.getId(), properties );
-					s.createQuery( "delete from Party" ).executeUpdate();
-					s.delete( c );
+					s.createMutationQuery( "delete from Party" ).executeUpdate();
+					s.remove( c );
 					s.flush();
 					assertPartyAndContractAreDeleted( s );
 				}

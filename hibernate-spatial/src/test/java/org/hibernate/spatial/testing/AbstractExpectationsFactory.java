@@ -1,12 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.spatial.testing;
 
+import java.lang.invoke.MethodHandles;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -25,7 +23,7 @@ import org.locationtech.jts.io.WKTReader;
  * An <code>AbstractExpectationsFactory</code> provides the expected
  * values to be used in the integration tests of the spatial functions
  * provided by specific providers.
- * <p/>
+ * <p>
  * The expected values are returned as a map of (identifier, expected value) pairs.
  *
  * @author Karel Maesen, Geovise BVBA
@@ -43,6 +41,7 @@ public abstract class AbstractExpectationsFactory {
 	public final static int BOOLEAN = 5;
 	public final static int OBJECT = -1;
 	private static final HSMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			HSMessageLogger.class,
 			AbstractExpectationsFactory.class.getName()
 	);

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.lob;
 
@@ -11,14 +9,12 @@ import java.sql.Clob;
 import java.sql.SQLException;
 import java.util.List;
 
-import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.testing.orm.junit.RequiresDialects;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -31,7 +27,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
-import jakarta.persistence.Tuple;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -40,8 +35,9 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-11477")
-@RequiresDialects({ @RequiresDialect(PostgreSQLDialect.class), @RequiresDialect(CockroachDialect.class) })
+@JiraKey(value = "HHH-11477")
+// Note that Cockroach doesn't support LOB functions. See https://github.com/cockroachdb/cockroach/issues/26725
+@RequiresDialect(PostgreSQLDialect.class)
 @DomainModel(
 		annotatedClasses = LobStringTest.TestEntity.class
 )
@@ -61,7 +57,7 @@ public class LobStringTest {
 			entity.setFirstLobField( value1 );
 			entity.setSecondLobField( value2 );
 			entity.setClobField( session.getLobHelper().createClob( value2 ) );
-			session.save( entity );
+			session.persist( entity );
 		} );
 
 		scope.inTransaction( session -> {
@@ -79,7 +75,7 @@ public class LobStringTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11477")
+	@JiraKey(value = "HHH-11477")
 	public void testHqlQuery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final Query query = session.createQuery( "from TestEntity" );
@@ -103,7 +99,7 @@ public class LobStringTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11477")
+	@JiraKey(value = "HHH-11477")
 	@RequiresDialect(PostgreSQLDialect.class)
 	public void testUsingStringLobAnnotatedPropertyInNativeQuery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
@@ -132,7 +128,7 @@ public class LobStringTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11477")
+	@JiraKey(value = "HHH-11477")
 	@RequiresDialect(PostgreSQLDialect.class)
 	public void testSelectStringLobAnnotatedInNativeQuery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
@@ -150,7 +146,7 @@ public class LobStringTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11477")
+	@JiraKey(value = "HHH-11477")
 	@RequiresDialect(PostgreSQLDialect.class)
 	public void testUsingLobPropertyInNativeQuery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
@@ -168,7 +164,7 @@ public class LobStringTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11477")
+	@JiraKey(value = "HHH-11477")
 	@RequiresDialect(PostgreSQLDialect.class)
 	public void testSelectClobPropertyInNativeQuery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {

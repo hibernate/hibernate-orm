@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.internal;
 
@@ -17,12 +15,12 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * An EntityEntry implementation for mutable entities.
+ * An {@link EntityEntry} implementation for mutable entities.
  *
  * @author Gavin King
- * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>
+ * @author Emmanuel Bernard
  * @author Gunnar Morling
- * @author <a href="mailto:sanne@hibernate.org">Sanne Grinovero </a>
+ * @author Sanne Grinovero
  */
 public final class MutableEntityEntry extends AbstractEntityEntry {
 

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper.id;
 
@@ -17,8 +15,10 @@ import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.EntityType;
+
 
 /**
  * An extension to the {@link SingleIdMapper} implementation that supports the use case of an {@code @IdClass}
@@ -49,7 +49,7 @@ public class VirtualEntitySingleIdMapper extends SingleIdMapper {
 
 		// Either loads the entity from the session's 1LC if it already exists or potentially creates a
 		// proxy object to represent the entity by identifier so that we can reference it in the map.
-		final Object entity = session.load( this.entityName, value );
+		final Object entity = session.getReference( this.entityName, value );
 		data.put( propertyData.getName(), entity );
 	}
 
@@ -59,35 +59,31 @@ public class VirtualEntitySingleIdMapper extends SingleIdMapper {
 			return;
 		}
 
-		doPrivileged( () -> {
-			final Getter getter = ReflectionTools.getGetter(
-					objFrom.getClass(),
-					propertyData,
-					getServiceRegistry()
-			);
+		final Getter getter = ReflectionTools.getGetter(
+				objFrom.getClass(),
+				propertyData,
+				getServiceRegistry()
+		);
 
-			final Setter setter = ReflectionTools.getSetter(
-					objTo.getClass(),
-					propertyData,
-					getServiceRegistry()
-			);
+		final Setter setter = ReflectionTools.getSetter(
+				objTo.getClass(),
+				propertyData,
+				getServiceRegistry()
+		);
 
-			// Get the value from the containing entity
-			final Object value = getter.get( objFrom );
-			if ( value == null ) {
-				return null;
-			}
+		// Get the value from the containing entity
+		final Object value = getter.get( objFrom );
+		if ( value == null ) {
+			return;
+		}
 
-			if ( !value.getClass().equals( propertyData.getVirtualReturnClass() ) ) {
-				setter.set( objTo, getAssociatedEntityIdMapper().mapToIdFromEntity( value ) );
-			}
-			else {
-				// This means we're setting the object
-				setter.set( objTo, value );
-			}
-
-			return null;
-		} );
+		if ( !value.getClass().equals( propertyData.getVirtualReturnClass() ) ) {
+			setter.set( objTo, getAssociatedEntityIdMapper().mapToIdFromEntity( value ) );
+		}
+		else {
+			// This means we're setting the object
+			setter.set( objTo, value );
+		}
 	}
 
 	@Override
@@ -101,27 +97,25 @@ public class VirtualEntitySingleIdMapper extends SingleIdMapper {
 			return false;
 		}
 
-		return doPrivileged( () -> {
-			final Setter setter = ReflectionTools.getSetter(
-					obj.getClass(),
-					propertyData,
-					getServiceRegistry()
-			);
-			final Class<?> paramClass = ReflectionTools.getType(
-					obj.getClass(),
-					propertyData,
-					getServiceRegistry()
-			);
+		final Setter setter = ReflectionTools.getSetter(
+				obj.getClass(),
+				propertyData,
+				getServiceRegistry()
+		);
+		final Class<?> paramClass = ReflectionTools.getType(
+				obj.getClass(),
+				propertyData,
+				getServiceRegistry()
+		);
 
-			if ( paramClass != null && paramClass.equals( propertyData.getVirtualReturnClass() ) ) {
-				setter.set( obj, getAssociatedEntityIdMapper().mapToIdFromEntity( value ) );
-			}
-			else {
-				setter.set( obj, value );
-			}
+		if ( paramClass != null && paramClass.equals( propertyData.getVirtualReturnClass() ) ) {
+			setter.set( obj, getAssociatedEntityIdMapper().mapToIdFromEntity( value ) );
+		}
+		else {
+			setter.set( obj, value );
+		}
 
-			return true;
-		} );
+		return true;
 	}
 
 	@Override
@@ -130,9 +124,9 @@ public class VirtualEntitySingleIdMapper extends SingleIdMapper {
 			data.put( propertyData.getName(), null );
 		}
 		else {
-			if ( obj instanceof HibernateProxy ) {
-				final HibernateProxy proxy = (HibernateProxy) obj;
-				data.put( propertyData.getName(), proxy.getHibernateLazyInitializer().getInternalIdentifier() );
+			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( obj );
+			if ( lazyInitializer != null ) {
+				data.put( propertyData.getName(), lazyInitializer.getInternalIdentifier() );
 			}
 			else {
 				final Object value = getValueFromObject( propertyData, obj );

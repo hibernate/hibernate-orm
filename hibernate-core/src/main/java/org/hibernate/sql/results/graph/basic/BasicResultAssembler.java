@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.basic;
 
@@ -10,11 +8,9 @@ import java.util.Locale;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.results.ResultsLogger;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -26,39 +22,40 @@ public class BasicResultAssembler<J> implements DomainResultAssembler<J> {
 		return new BasicResultAssembler<>( selection.getValuesArrayPosition(), javaType );
 	}
 
-	private final int valuesArrayPosition;
-	private final JavaType<J> assembledJavaType;
+	protected final int valuesArrayPosition;
+	protected final JavaType<J> assembledJavaType;
 	private final BasicValueConverter<J,?> valueConverter;
+	private final boolean unwrapRowProcessingState;
 
-	public BasicResultAssembler(
-			int valuesArrayPosition,
-			JavaType<J> assembledJavaType) {
-		this( valuesArrayPosition, assembledJavaType, null );
+	public BasicResultAssembler(int valuesArrayPosition, JavaType<J> assembledJavaType) {
+		this( valuesArrayPosition, assembledJavaType, null, false );
 	}
 
 	public BasicResultAssembler(
 			int valuesArrayPosition,
 			JavaType<J> assembledJavaType,
-			BasicValueConverter<J, ?> valueConverter) {
+			BasicValueConverter<J, ?> valueConverter,
+			boolean unwrapRowProcessingState) {
 		this.valuesArrayPosition = valuesArrayPosition;
 		this.assembledJavaType = assembledJavaType;
 		this.valueConverter = valueConverter;
+		this.unwrapRowProcessingState = unwrapRowProcessingState;
 	}
 
 	/**
 	 * Access to the raw value (unconverted, if a converter applied)
 	 */
 	public Object extractRawValue(RowProcessingState rowProcessingState) {
+		if ( unwrapRowProcessingState ) {
+			rowProcessingState = rowProcessingState.unwrap();
+		}
 		return rowProcessingState.getJdbcValue( valuesArrayPosition );
 	}
 
 	@Override
 	public J assemble(
-			RowProcessingState rowProcessingState,
-			JdbcValuesSourceProcessingOptions options) {
+			RowProcessingState rowProcessingState) {
 		final Object jdbcValue = extractRawValue( rowProcessingState );
-
-		ResultsLogger.RESULTS_MESSAGE_LOGGER.debugf( "Extracted JDBC value [%d] - [%s]", valuesArrayPosition, jdbcValue );
 
 		if ( valueConverter != null ) {
 			if ( jdbcValue != null ) {
@@ -68,7 +65,7 @@ public class BasicResultAssembler<J> implements DomainResultAssembler<J> {
 							String.format(
 									Locale.ROOT,
 									"Expecting raw JDBC value of type `%s`, but found `%s` : [%s]",
-									valueConverter.getRelationalJavaType().getJavaType().getTypeName(),
+									valueConverter.getRelationalJavaType().getTypeName(),
 									jdbcValue.getClass().getName(),
 									jdbcValue
 							)
@@ -82,6 +79,11 @@ public class BasicResultAssembler<J> implements DomainResultAssembler<J> {
 
 		//noinspection unchecked
 		return (J) jdbcValue;
+	}
+
+	@Override
+	public void resolveState(RowProcessingState rowProcessingState) {
+		extractRawValue( rowProcessingState );
 	}
 
 	@Override

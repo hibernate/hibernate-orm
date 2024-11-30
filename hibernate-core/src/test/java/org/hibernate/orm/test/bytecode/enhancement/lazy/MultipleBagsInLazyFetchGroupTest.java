@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy;
 
@@ -15,84 +13,68 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import org.hibernate.boot.internal.SessionFactoryBuilderImpl;
-import org.hibernate.boot.internal.SessionFactoryOptionsBuilder;
-import org.hibernate.boot.spi.SessionFactoryBuilderService;
-import org.hibernate.cfg.Configuration;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Christian Beikov
  */
-@RunWith( BytecodeEnhancerRunner.class )
-public class MultipleBagsInLazyFetchGroupTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+			MultipleBagsInLazyFetchGroupTest.StringsEntity.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class MultipleBagsInLazyFetchGroupTest {
 
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{StringsEntity.class};
-    }
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		assertTrue( scope.getSessionFactory().getSessionFactoryOptions().isCollectionsInDefaultFetchGroupEnabled() );
 
-    @Override
-    protected void configure(Configuration configuration) {
-        super.configure( configuration );
-        configuration.getStandardServiceRegistryBuilder().addService(
-                SessionFactoryBuilderService.class,
-                (SessionFactoryBuilderService) (metadata, bootstrapContext) -> {
-                    SessionFactoryOptionsBuilder optionsBuilder = new SessionFactoryOptionsBuilder(
-                            metadata.getMetadataBuildingOptions().getServiceRegistry(),
-                            bootstrapContext
-                    );
-                    optionsBuilder.enableCollectionInDefaultFetchGroup( true );
-                    return new SessionFactoryBuilderImpl( metadata, optionsBuilder );
-                }
-        );
-    }
+		scope.inTransaction( em -> {
+			StringsEntity entity = new StringsEntity();
+			entity.id = 1L;
+			entity.text = "abc";
+			entity.someStrings = new ArrayList<>( Arrays.asList( "a", "b", "c" ) );
+			entity.someStrings2 = new ArrayList<>( Arrays.asList( "a", "b", "c" ) );
+			em.persist( entity );
+		} );
+	}
 
-    @Before
-    public void prepare() {
-        doInJPA( this::sessionFactory, em -> {
-            StringsEntity entity = new StringsEntity();
-            entity.id = 1L;
-            entity.text = "abc";
-            entity.someStrings = new ArrayList<>( Arrays.asList( "a", "b", "c" ) );
-            entity.someStrings2 = new ArrayList<>( Arrays.asList( "a", "b", "c" ) );
-            em.persist( entity );
-        } );
-    }
+	@Test
+	public void test(SessionFactoryScope scope) {
+		Assertions.assertTrue( scope.getSessionFactory().getSessionFactoryOptions().isCollectionsInDefaultFetchGroupEnabled() );
+		scope.inTransaction( entityManager -> {
+			StringsEntity entity = entityManager.getReference( StringsEntity.class, 1L );
+			assertEquals( 3, entity.someStrings.size() );
+			assertEquals( 3, entity.someStrings2.size() );
+		} );
+	}
 
-    @Test
-    public void test() {
-        doInJPA( this::sessionFactory, entityManager -> {
-            StringsEntity entity = entityManager.getReference( StringsEntity.class, 1L );
-            assertEquals( 3, entity.someStrings.size() );
-            assertEquals( 3, entity.someStrings2.size() );
-        } );
-    }
+	// --- //
 
-    // --- //
+	@Entity
+	@Table( name = "STRINGS_ENTITY" )
+	static class StringsEntity {
 
-    @Entity
-    @Table( name = "STRINGS_ENTITY" )
-    private static class StringsEntity {
+		@Id
+		Long id;
 
-        @Id
-        Long id;
+		String text;
 
-        String text;
+		@ElementCollection(fetch = FetchType.EAGER)
+		List<String> someStrings;
 
-        @ElementCollection(fetch = FetchType.EAGER)
-        List<String> someStrings;
-
-        @ElementCollection(fetch = FetchType.EAGER)
-        List<String> someStrings2;
-    }
+		@ElementCollection(fetch = FetchType.EAGER)
+		List<String> someStrings2;
+	}
 }

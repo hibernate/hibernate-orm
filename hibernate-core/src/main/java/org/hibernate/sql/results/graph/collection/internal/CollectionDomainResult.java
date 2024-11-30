@@ -1,17 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.collection.internal;
-
-import java.util.Collections;
-import java.util.List;
 
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.CollectionInitializerProducer;
 import org.hibernate.collection.spi.CollectionSemantics;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -21,17 +17,20 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
+import org.hibernate.sql.results.graph.InitializerParent;
+import org.hibernate.sql.results.graph.InitializerProducer;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.collection.CollectionResultGraphNode;
+import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
  */
-public class CollectionDomainResult implements DomainResult, CollectionResultGraphNode, FetchParent {
+public class CollectionDomainResult implements DomainResult, CollectionResultGraphNode, FetchParent,
+		InitializerProducer<CollectionDomainResult> {
 	private final NavigablePath loadingPath;
 	private final PluralAttributeMapping loadingAttribute;
 
@@ -52,10 +51,11 @@ public class CollectionDomainResult implements DomainResult, CollectionResultGra
 		this.loadingAttribute = loadingAttribute;
 		this.resultVariable = resultVariable;
 		this.tableGroup = tableGroup;
-
-		fkResult = loadingAttribute.getKeyDescriptor().createKeyDomainResult(
+		// The collection is always the target side
+		this.fkResult = loadingAttribute.getKeyDescriptor().createKeyDomainResult(
 				loadingPath,
 				tableGroup,
+				ForeignKeyDescriptor.Nature.TARGET,
 				this,
 				creationState
 		);
@@ -88,27 +88,31 @@ public class CollectionDomainResult implements DomainResult, CollectionResultGra
 
 	@Override
 	public DomainResultAssembler createResultAssembler(
-			FetchParentAccess parentAccess,
+			InitializerParent parent,
 			AssemblerCreationState creationState) {
-		final CollectionInitializer initializer = (CollectionInitializer) creationState.resolveInitializer(
-				getNavigablePath(),
-				getReferencedModePart(),
-				() -> {
-					final DomainResultAssembler fkAssembler = fkResult.createResultAssembler( null, creationState );
+		return new CollectionAssembler( loadingAttribute, creationState.resolveInitializer( this, parent, this ).asCollectionInitializer() );
+	}
 
-					return initializerProducer.produceInitializer(
-							loadingPath,
-							loadingAttribute,
-							null,
-							LockMode.READ,
-							fkAssembler,
-							fkAssembler,
-							creationState
-					);
-				}
+	@Override
+	public CollectionInitializer<?> createInitializer(
+			CollectionDomainResult resultGraphNode,
+			InitializerParent<?> parent,
+			AssemblerCreationState creationState) {
+		return resultGraphNode.createInitializer( parent, creationState );
+	}
+
+	@Override
+	public CollectionInitializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {
+		return initializerProducer.produceInitializer(
+				loadingPath,
+				loadingAttribute,
+				parent,
+				LockMode.READ,
+				fkResult,
+				fkResult,
+				true,
+				creationState
 		);
-
-		return new EagerCollectionAssembler( loadingAttribute, initializer );
 	}
 
 	@Override
@@ -127,13 +131,23 @@ public class CollectionDomainResult implements DomainResult, CollectionResultGra
 	}
 
 	@Override
-	public List<Fetch> getFetches() {
-		return Collections.emptyList();
+	public ImmutableFetchList getFetches() {
+		return ImmutableFetchList.EMPTY;
 	}
 
 	@Override
 	public Fetch findFetch(Fetchable fetchable) {
 		return null;
+	}
+
+	@Override
+	public boolean hasJoinFetches() {
+		return false;
+	}
+
+	@Override
+	public boolean containsCollectionFetches() {
+		return false;
 	}
 
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.referencedcolumnname;
 
@@ -47,8 +45,8 @@ public class ReferencedColumnNameTest extends BaseCoreFunctionalTestCase {
 					assertNotNull( h.getPostman() );
 					assertEquals( "Bob", h.getPostman().getName() );
 					Postman pm = h.getPostman();
-					s.delete( h );
-					s.delete( pm );
+					s.remove( h );
+					s.remove( pm );
 				}
 		);
 	}
@@ -74,8 +72,8 @@ public class ReferencedColumnNameTest extends BaseCoreFunctionalTestCase {
 					assertNotNull( rambler );
 					assertNotNull( rambler.getBags() );
 					assertEquals( 1, rambler.getBags().size() );
-					s.delete( rambler.getBags().iterator().next() );
-					s.delete( rambler );
+					s.remove( rambler.getBags().iterator().next() );
+					s.remove( rambler );
 				}
 		);
 	}
@@ -99,8 +97,8 @@ public class ReferencedColumnNameTest extends BaseCoreFunctionalTestCase {
 					assertNotNull( luggage.getHasInside() );
 					assertEquals( 1, luggage.getHasInside().size() );
 
-					s.delete( luggage.getHasInside().iterator().next() );
-					s.delete( luggage );
+					s.remove( luggage.getHasInside().iterator().next() );
+					s.remove( luggage );
 
 				}
 		);
@@ -144,10 +142,10 @@ public class ReferencedColumnNameTest extends BaseCoreFunctionalTestCase {
 		assertEquals( whiteHouse.getAddress(), bill.getLivesIn().iterator().next().getAddress() );
 
 		whiteHouse = bill.getLivesIn().iterator().next();
-		s.delete( whiteHouse );
+		s.remove( whiteHouse );
 		Iterator it = whiteHouse.getHasInhabitants().iterator();
 		while ( it.hasNext() ) {
-			s.delete( it.next() );
+			s.remove( it.next() );
 		}
 		tx.commit();
 		s.close();
@@ -206,7 +204,7 @@ public class ReferencedColumnNameTest extends BaseCoreFunctionalTestCase {
 
 		inTransaction(
 				s -> {
-					s.save( house );
+					s.persist( house );
 					s.flush();
 
 					HousePlaces get = s.get( HousePlaces.class, house.id );
@@ -257,7 +255,7 @@ public class ReferencedColumnNameTest extends BaseCoreFunctionalTestCase {
 
 //					assertNotNull( s.createCriteria( HousePlaces.class )
 //										   .add( Restrictions.eq( "neighbourPlaces.livingRoom.owner", "his" ) ).uniqueResult() );
-					s.delete( house );
+					s.remove( house );
 
 				}
 		);

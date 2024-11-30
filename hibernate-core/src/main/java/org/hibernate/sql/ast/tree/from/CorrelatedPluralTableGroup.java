@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.from;
 
@@ -10,6 +8,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -60,15 +59,51 @@ public class CorrelatedPluralTableGroup extends CorrelatedTableGroup implements 
 	}
 
 	@Override
-	protected TableReference getTableReferenceInternal(
+	public TableReference getTableReference(
+			NavigablePath navigablePath,
+			ValuedModelPart modelPart,
+			String tableExpression,
+			boolean resolve) {
+		final TableReference tableReference = super.getTableReference(
+				navigablePath,
+				modelPart,
+				tableExpression,
+				resolve
+		);
+		if ( tableReference != null ) {
+			return tableReference;
+		}
+		if ( indexTableGroup != null && ( navigablePath == null || indexTableGroup.getNavigablePath().isParent( navigablePath ) ) ) {
+			final TableReference indexTableReference = indexTableGroup.getTableReference(
+					navigablePath,
+					modelPart,
+					tableExpression,
+					resolve
+			);
+			if ( indexTableReference != null ) {
+				return indexTableReference;
+			}
+		}
+		if ( elementTableGroup != null && ( navigablePath == null || elementTableGroup.getNavigablePath().isParent( navigablePath ) ) ) {
+			final TableReference elementTableReference = elementTableGroup.getTableReference(
+					navigablePath,
+					modelPart,
+					tableExpression,
+					resolve
+			);
+			return elementTableReference;
+		}
+		return null;
+	}
+
+	@Override
+	public TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization,
 			boolean resolve) {
-		final TableReference tableReference = super.getTableReferenceInternal(
+		final TableReference tableReference = super.getTableReference(
 				navigablePath,
 				tableExpression,
-				allowFkOptimization,
 				resolve
 		);
 		if ( tableReference != null ) {
@@ -78,7 +113,6 @@ public class CorrelatedPluralTableGroup extends CorrelatedTableGroup implements 
 			final TableReference indexTableReference = indexTableGroup.getTableReference(
 					navigablePath,
 					tableExpression,
-					allowFkOptimization,
 					resolve
 			);
 			if ( indexTableReference != null ) {
@@ -89,12 +123,9 @@ public class CorrelatedPluralTableGroup extends CorrelatedTableGroup implements 
 			final TableReference elementTableReference = elementTableGroup.getTableReference(
 					navigablePath,
 					tableExpression,
-					allowFkOptimization,
 					resolve
 			);
-			if ( elementTableReference != null ) {
-				return elementTableReference;
-			}
+			return elementTableReference;
 		}
 		return null;
 	}

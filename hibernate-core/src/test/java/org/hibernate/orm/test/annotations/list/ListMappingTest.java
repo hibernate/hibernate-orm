@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.list;
 
@@ -27,7 +25,7 @@ import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToStdout;
 
 
-import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,7 +47,7 @@ public class ListMappingTest  {
 
 	@BeforeEach
 	public void before() {
-		ssr = new StandardServiceRegistryBuilder()
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.FORMAT_SQL, false )
 				.build();
 	}
@@ -75,7 +73,7 @@ public class ListMappingTest  {
 		org.hibernate.mapping.List asList = (org.hibernate.mapping.List) lineItemsBinding;
 
 		// assert the OrderColumn details
-		final Column positionColumn = (Column) asList.getIndex().getColumnIterator().next();
+		final Column positionColumn = (Column) asList.getIndex().getSelectables().get( 0 );
 		assertThat( positionColumn.getName(), equalTo( "position" ) );
 
 		// make sure the OrderColumn is part of the collection table

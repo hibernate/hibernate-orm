@@ -1,30 +1,28 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.fetchstrategyhelper;
 
 import java.util.HashSet;
 import java.util.Set;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-
-import org.junit.Test;
 
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.persister.entity.OuterJoinLoadable;
-import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.metamodel.mapping.internal.FetchOptionsHelper;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.type.AssociationType;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
+
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 import static org.junit.Assert.assertSame;
 
@@ -32,8 +30,8 @@ import static org.junit.Assert.assertSame;
  * @author Gail Badner
  */
 public class FetchStrategyHelperTest extends BaseCoreFunctionalTestCase {
-	
-	
+
+
 	@Test
 	public void testManyToOneDefaultFetch() {
 		final AssociationType associationType = determineAssociationType( AnEntity.class, "otherEntityDefault" );
@@ -168,18 +166,16 @@ public class FetchStrategyHelperTest extends BaseCoreFunctionalTestCase {
 	}
 
 	private org.hibernate.FetchMode determineFetchMode(Class<?> entityClass, String path) {
-        OuterJoinLoadable entityPersister = (OuterJoinLoadable) sessionFactory().getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor(entityClass.getName());
-		int index = ( (UniqueKeyLoadable) entityPersister ).getPropertyIndex( path );
+		AbstractEntityPersister entityPersister = (AbstractEntityPersister)
+				sessionFactory().getMappingMetamodel().getEntityDescriptor(entityClass.getName());
+		int index = entityPersister.getPropertyIndex( path );
 		return  entityPersister.getFetchMode( index );
 	}
 
 	private AssociationType determineAssociationType(Class<?> entityClass, String path) {
-        OuterJoinLoadable entityPersister = (OuterJoinLoadable) sessionFactory().getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor(entityClass.getName());
-		int index = ( (UniqueKeyLoadable) entityPersister ).getPropertyIndex( path );
+		AbstractEntityPersister entityPersister = (AbstractEntityPersister)
+				sessionFactory().getMappingMetamodel().getEntityDescriptor(entityClass.getName());
+		int index = entityPersister.getPropertyIndex( path );
 		return (AssociationType) entityPersister.getSubclassPropertyType( index );
 	}
 

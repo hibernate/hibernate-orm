@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.various;
 
@@ -14,12 +12,12 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeReference;
-import org.hibernate.type.DbTimestampType;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -36,7 +34,7 @@ public class TimestampTest extends BaseUnitTestCase {
 
 	@BeforeClassOnce
 	public void setUp() {
-		ssr = new StandardServiceRegistryBuilder().build();
+		ssr = ServiceRegistryUtil.serviceRegistry();
 		metadata = (MetadataImplementor) new MetadataSources( ssr )
 				.addAnnotatedClass( VMTimestamped.class )
 				.addAnnotatedClass( DBTimestamped.class )
@@ -58,7 +56,7 @@ public class TimestampTest extends BaseUnitTestCase {
 
 	@Test
 	public void testTimestampSourceIsDB() throws Exception {
-		assertTimestampSource( DBTimestamped.class, DbTimestampType.INSTANCE );
+		assertTimestampSource( DBTimestamped.class, StandardBasicTypes.TIMESTAMP );
 	}
 
 	private void assertTimestampSource(Class<?> clazz, BasicTypeReference<?> typeReference) throws Exception {

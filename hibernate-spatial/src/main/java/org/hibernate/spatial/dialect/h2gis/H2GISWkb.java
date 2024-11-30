@@ -1,16 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.spatial.dialect.h2gis;
 
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.invoke.MethodHandles;
 import java.sql.Blob;
 
 import org.hibernate.HibernateException;
@@ -34,7 +32,7 @@ import org.geolatte.geom.jts.JTS;
 
 /**
  * A utility class to serialize from/to H2GIS WKB's.
- * <p/>
+ * <p>
  * <p>Note: this utility makes it unnecessary to have a dependency on GeoDB. As long as GeoDB is
  * not available in common maven repositories, such a dependency is to be avoided.</p>
  *
@@ -43,6 +41,7 @@ import org.geolatte.geom.jts.JTS;
 public class H2GISWkb {
 
 	private static final HSMessageLogger LOGGER = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			HSMessageLogger.class,
 			H2GISWkb.class.getName()
 	);

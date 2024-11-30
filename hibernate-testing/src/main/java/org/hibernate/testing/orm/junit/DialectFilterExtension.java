@@ -1,12 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.orm.junit;
 
-import java.util.List;
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
@@ -35,10 +34,30 @@ public class DialectFilterExtension implements ExecutionCondition {
 
 		log.debugf( "Checking Dialect [%s] - context = %s", dialect, context.getDisplayName() );
 
-		final List<RequiresDialect> effectiveRequiresDialects = TestingUtil.findEffectiveRepeatingAnnotation(
+		final Collection<RequiresDialect> effectiveRequiresDialects = TestingUtil.collectAnnotations(
 				context,
 				RequiresDialect.class,
-				RequiresDialects.class
+				RequiresDialects.class,
+				(methodAnnotation, methodAnnotations, classAnnotation, classAnnotations) -> {
+					final LinkedHashMap<Class<?>, RequiresDialect> map = new LinkedHashMap<>();
+					if ( classAnnotation != null ) {
+						map.put( classAnnotation.value(), classAnnotation );
+					}
+					if ( classAnnotations != null ) {
+						for ( RequiresDialect annotation : classAnnotations ) {
+							map.put( annotation.value(), annotation );
+						}
+					}
+					if ( methodAnnotation != null ) {
+						map.put( methodAnnotation.value(), methodAnnotation );
+					}
+					if ( methodAnnotations != null ) {
+						for ( RequiresDialect annotation : methodAnnotations ) {
+							map.put( annotation.value(), annotation );
+						}
+					}
+					return map.values();
+				}
 		);
 
 		if ( !effectiveRequiresDialects.isEmpty() ) {
@@ -65,6 +84,8 @@ public class DialectFilterExtension implements ExecutionCondition {
 							matchingMicroVersion,
 							dialect,
 							requiresDialect.matchSubTypes()
+									? VersionMatchMode.SAME_OR_NEWER
+									: VersionMatchMode.SAME
 					);
 				}
 				else {
@@ -111,12 +132,27 @@ public class DialectFilterExtension implements ExecutionCondition {
 		return buffer.toString();
 	}
 
-	private boolean versionsMatch(
+	public static boolean versionsMatch(
 			int matchingMajorVersion,
 			int matchingMinorVersion,
 			int matchingMicroVersion,
 			Dialect dialect,
 			boolean matchNewerVersions) {
+		return versionsMatch(
+				matchingMajorVersion,
+				matchingMinorVersion,
+				matchingMicroVersion,
+				dialect,
+				matchNewerVersions ? VersionMatchMode.SAME_OR_NEWER : VersionMatchMode.SAME
+		);
+	}
+
+	public static boolean versionsMatch(
+			int matchingMajorVersion,
+			int matchingMinorVersion,
+			int matchingMicroVersion,
+			Dialect dialect,
+			VersionMatchMode matchMode) {
 		if ( matchingMajorVersion < 0 ) {
 			return false;
 		}
@@ -129,19 +165,47 @@ public class DialectFilterExtension implements ExecutionCondition {
 			matchingMicroVersion = 0;
 		}
 
-		if ( matchNewerVersions ) {
+		if ( matchMode == VersionMatchMode.SAME_OR_NEWER ) {
 			return dialect.getVersion().isSameOrAfter( matchingMajorVersion, matchingMinorVersion, matchingMicroVersion );
 		}
-		else {
-			return dialect.getVersion().isSame( matchingMajorVersion );
+		if ( matchMode == VersionMatchMode.SAME_OR_OLDER
+				&& dialect.getVersion().isBefore( matchingMajorVersion, matchingMinorVersion, matchingMicroVersion ) ) {
+			return true;
 		}
+		return dialect.getVersion().isSame( matchingMajorVersion );
+	}
+
+	public enum VersionMatchMode {
+		SAME,
+		SAME_OR_NEWER,
+		SAME_OR_OLDER
 	}
 
 	private ConditionEvaluationResult evaluateSkipConditions(ExtensionContext context, Dialect dialect, String enabledResult) {
-		final List<SkipForDialect> effectiveSkips = TestingUtil.findEffectiveRepeatingAnnotation(
+		final Collection<SkipForDialect> effectiveSkips = TestingUtil.collectAnnotations(
 				context,
 				SkipForDialect.class,
-				SkipForDialectGroup.class
+				SkipForDialectGroup.class,
+				(methodAnnotation, methodAnnotations, classAnnotation, classAnnotations) -> {
+					final LinkedHashMap<Class<?>, SkipForDialect> map = new LinkedHashMap<>();
+					if ( classAnnotation != null ) {
+						map.put( classAnnotation.dialectClass(), classAnnotation );
+					}
+					if ( classAnnotations != null ) {
+						for ( SkipForDialect annotation : classAnnotations ) {
+							map.put( annotation.dialectClass(), annotation );
+						}
+					}
+					if ( methodAnnotation != null ) {
+						map.put( methodAnnotation.dialectClass(), methodAnnotation );
+					}
+					if ( methodAnnotations != null ) {
+						for ( SkipForDialect annotation : methodAnnotations ) {
+							map.put( annotation.dialectClass(), annotation );
+						}
+					}
+					return map.values();
+				}
 		);
 
 		for ( SkipForDialect effectiveSkipForDialect : effectiveSkips ) {
@@ -155,6 +219,8 @@ public class DialectFilterExtension implements ExecutionCondition {
 						effectiveSkipForDialect.microVersion(),
 						dialect,
 						effectiveSkipForDialect.matchSubTypes()
+								? VersionMatchMode.SAME_OR_OLDER
+								: VersionMatchMode.SAME
 				);
 
 				if ( versionsMatch ) {
@@ -184,7 +250,7 @@ public class DialectFilterExtension implements ExecutionCondition {
 			}
 		}
 
-		List<RequiresDialectFeature> effectiveRequiresDialectFeatures = TestingUtil.findEffectiveRepeatingAnnotation(
+		Collection<RequiresDialectFeature> effectiveRequiresDialectFeatures = TestingUtil.collectAnnotations(
 				context,
 				RequiresDialectFeature.class,
 				RequiresDialectFeatureGroup.class
@@ -192,18 +258,21 @@ public class DialectFilterExtension implements ExecutionCondition {
 
 		for ( RequiresDialectFeature effectiveRequiresDialectFeature : effectiveRequiresDialectFeatures ) {
 			try {
-				final DialectFeatureCheck dialectFeatureCheck = effectiveRequiresDialectFeature.feature()
-						.newInstance();
-				if ( !dialectFeatureCheck.apply( dialect ) ) {
+				final Class<? extends DialectFeatureCheck> featureClass = effectiveRequiresDialectFeature.feature();
+				final DialectFeatureCheck featureCheck = featureClass.getConstructor().newInstance();
+				boolean testResult = featureCheck.apply( dialect );
+				if ( effectiveRequiresDialectFeature.reverse() ) {
+					testResult = !testResult;
+				}
+				if ( !testResult ) {
 					return ConditionEvaluationResult.disabled(
 							String.format(
 									Locale.ROOT,
 									"Failed @RequiresDialectFeature [%s]",
-									effectiveRequiresDialectFeature.feature()
-							) );
+									featureClass ) );
 				}
 			}
-			catch (InstantiationException | IllegalAccessException e) {
+			catch (ReflectiveOperationException e) {
 				throw new RuntimeException( "Unable to instantiate DialectFeatureCheck class", e );
 			}
 		}

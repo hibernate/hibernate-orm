@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.tools.query;
 
@@ -32,8 +30,8 @@ import org.hibernate.envers.query.criteria.AuditProperty;
 import org.hibernate.envers.query.criteria.internal.CriteriaTools;
 import org.hibernate.envers.query.order.NullPrecedence;
 import org.hibernate.envers.tools.Pair;
+import org.hibernate.internal.util.QuotingHelper;
 import org.hibernate.query.Query;
-import org.hibernate.query.internal.QueryLiteralHelper;
 import org.hibernate.type.BasicType;
 
 /**
@@ -367,10 +365,10 @@ public class QueryBuilder {
 				final Pair<String, String> fragment = fragmentIterator.next();
 				sb.append( OrderByFragmentFunction.FUNCTION_NAME ).append( '(' );
 				// The first argument is the sqm alias of the from node
-				QueryLiteralHelper.appendStringLiteral( sb, fragment.getFirst() );
+				QuotingHelper.appendSingleQuoteEscapedString( sb, fragment.getFirst() );
 				sb.append( ", " );
 				// The second argument is the collection role that contains the order by fragment
-				QueryLiteralHelper.appendStringLiteral( sb, fragment.getSecond() );
+				QuotingHelper.appendSingleQuoteEscapedString( sb, fragment.getSecond() );
 				sb.append( ')' );
 				if ( fragmentIterator.hasNext() ) {
 					sb.append( ", " );

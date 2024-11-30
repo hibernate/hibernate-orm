@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.relational;
 
@@ -14,9 +12,9 @@ import org.hibernate.boot.model.naming.Identifier;
  *     <li>{@link java.sql.DatabaseMetaData#isCatalogAtStart}</li>
  *     <li>{@link java.sql.DatabaseMetaData#getCatalogSeparator()}</li>
  * </ol>
- * <p/>
+ * <p>
  * Also, be careful about the usage of {@link #render}.  If the intention is to get the name
- * as used in the database, the {@link org.hibernate.engine.jdbc.env.spi.JdbcEnvironment} ->
+ * as used in the database, the {@link org.hibernate.engine.jdbc.env.spi.JdbcEnvironment} to
  * {@link org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter#format} should be
  * used instead.
  *
@@ -28,10 +26,10 @@ public interface QualifiedName {
 	Identifier getObjectName();
 
 	/**
-	 * Returns a String-form of the qualified name.
-	 * <p/>
-	 * Depending on intention, may not be appropriate.  May want
-	 * {@link SqlStringGenerationContext#format}
+	 * Returns a string form of the qualified name.
+	 * <p>
+	 * Depending on intention, may not be appropriate.
+	 * May want {@link SqlStringGenerationContext#format}
 	 * instead.
 	 *
 	 * @return The string form

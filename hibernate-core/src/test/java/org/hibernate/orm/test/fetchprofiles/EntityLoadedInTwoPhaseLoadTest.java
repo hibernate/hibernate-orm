@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.fetchprofiles;
 
@@ -15,12 +13,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
 import org.hibernate.LazyInitializationException;
-import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfile;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -28,13 +25,13 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-@TestForIssue( jiraKey = "HHH-12297")
+@JiraKey( value = "HHH-12297")
 public class EntityLoadedInTwoPhaseLoadTest extends BaseCoreFunctionalTestCase {
 
 	static final String FETCH_PROFILE_NAME = "fp1";
 
 	public void configure(Configuration cfg) {
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
+		cfg.setProperty( Environment.GENERATE_STATISTICS, true );
 	}
 
 	@Test
@@ -119,7 +116,7 @@ public class EntityLoadedInTwoPhaseLoadTest extends BaseCoreFunctionalTestCase {
 
 	@Entity(name = "MidEntity")
 	@FetchProfile(name = FETCH_PROFILE_NAME, fetchOverrides = {
-			@FetchProfile.FetchOverride(entity = Mid.class, association = "finish", mode = FetchMode.JOIN)
+			@FetchProfile.FetchOverride(entity = Mid.class, association = "finish")
 	})
 	public static class Mid {
 
@@ -157,8 +154,8 @@ public class EntityLoadedInTwoPhaseLoadTest extends BaseCoreFunctionalTestCase {
 
 	@Entity(name = "StartEntity")
 	@FetchProfile(name = FETCH_PROFILE_NAME, fetchOverrides = {
-			@FetchProfile.FetchOverride(entity = Start.class, association = "via1", mode = FetchMode.JOIN),
-			@FetchProfile.FetchOverride(entity = Start.class, association = "via2", mode = FetchMode.JOIN)
+			@FetchProfile.FetchOverride(entity = Start.class, association = "via1"),
+			@FetchProfile.FetchOverride(entity = Start.class, association = "via2")
 	})
 	public static class Start {
 
@@ -208,7 +205,7 @@ public class EntityLoadedInTwoPhaseLoadTest extends BaseCoreFunctionalTestCase {
 
 	@Entity(name = "Via1Entity")
 	@FetchProfile(name = FETCH_PROFILE_NAME, fetchOverrides = {
-			@FetchProfile.FetchOverride(entity = Via1.class, association = "mid", mode = FetchMode.JOIN)
+			@FetchProfile.FetchOverride(entity = Via1.class, association = "mid")
 	})
 	public static class Via1 {
 
@@ -246,7 +243,7 @@ public class EntityLoadedInTwoPhaseLoadTest extends BaseCoreFunctionalTestCase {
 
 	@Entity(name = "Via2Entity")
 	@FetchProfile(name = FETCH_PROFILE_NAME, fetchOverrides = {
-			@FetchProfile.FetchOverride(entity = Via2.class, association = "mid", mode = FetchMode.JOIN)
+			@FetchProfile.FetchOverride(entity = Via2.class, association = "mid")
 	})
 	public static class Via2 {
 

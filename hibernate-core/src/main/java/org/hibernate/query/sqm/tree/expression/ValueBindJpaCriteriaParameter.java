@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
@@ -19,7 +17,7 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T>{
 	private final T value;
 
 	public ValueBindJpaCriteriaParameter(
-			BindableType<T> type,
+			BindableType<? super T> type,
 			T value,
 			NodeBuilder nodeBuilder) {
 		super( null, type, false, nodeBuilder );
@@ -52,14 +50,19 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T>{
 
 	@Override
 	public boolean equals(Object o) {
-		if ( this == o ) {
-			return true;
-		}
-		return false;
+		return this == o;
 	}
 
 	@Override
 	public int hashCode() {
 		return System.identityHashCode( this );
+	}
+
+	@Override
+	public int compareTo(SqmParameter anotherParameter) {
+		if ( this == anotherParameter ) {
+			return 0;
+		}
+		return 1;
 	}
 }

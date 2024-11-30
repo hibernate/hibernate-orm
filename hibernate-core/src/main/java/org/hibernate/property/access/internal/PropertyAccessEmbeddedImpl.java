@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.property.access.internal;
 
@@ -17,12 +15,14 @@ import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.Setter;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
- * PropertyAccess for handling non-aggregated composites.
- * <p/>
- * IMPL NOTE : We actually use a singleton for the Setter; we cannot for the getter mainly
- * because we need to differentiate {@link Getter#getReturnTypeClass()}.  Ultimately I'd prefer to
- * model that "common information" on PropertyAccess itself.
+ * {@link PropertyAccess} for handling non-aggregated composites.
+ *
+ * @implNote We actually use a singleton for the {@link Setter}; we cannot for the getter mainly
+ *           because we need to differentiate {@link Getter#getReturnTypeClass()}. Ultimately I'd
+ *           prefer to model that "common information" on {@link PropertyAccess} itself.
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -31,10 +31,10 @@ public class PropertyAccessEmbeddedImpl implements PropertyAccess {
 	private final PropertyAccessStrategyEmbeddedImpl strategy;
 	private final GetterImpl getter;
 
-	@SuppressWarnings("UnusedParameters")
 	public PropertyAccessEmbeddedImpl(
 			PropertyAccessStrategyEmbeddedImpl strategy,
-			Class containerType,
+			Class<?> containerType,
+			@SuppressWarnings("UnusedParameters")
 			String propertyName) {
 		this.strategy = strategy;
 		this.getter = new GetterImpl( containerType );
@@ -56,9 +56,9 @@ public class PropertyAccessEmbeddedImpl implements PropertyAccess {
 	}
 
 	private static class GetterImpl implements Getter {
-		private final Class containerType;
+		private final Class<?> containerType;
 
-		public GetterImpl(Class containerType) {
+		public GetterImpl(Class<?> containerType) {
 			this.containerType = containerType;
 		}
 
@@ -67,6 +67,7 @@ public class PropertyAccessEmbeddedImpl implements PropertyAccess {
 			return owner;
 		}
 
+		@SuppressWarnings("rawtypes")
 		@Override
 		public Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
 			return owner;
@@ -83,17 +84,17 @@ public class PropertyAccessEmbeddedImpl implements PropertyAccess {
 		}
 
 		@Override
-		public Member getMember() {
+		public @Nullable Member getMember() {
 			return null;
 		}
 
 		@Override
-		public String getMethodName() {
+		public @Nullable String getMethodName() {
 			return null;
 		}
 
 		@Override
-		public Method getMethod() {
+		public @Nullable Method getMethod() {
 			return null;
 		}
 	}
@@ -105,17 +106,17 @@ public class PropertyAccessEmbeddedImpl implements PropertyAccess {
 		public static final SetterImpl INSTANCE = new SetterImpl();
 
 		@Override
-		public void set(Object target, Object value) {
+		public void set(Object target, @Nullable Object value) {
 			// nothing to do
 		}
 
 		@Override
-		public String getMethodName() {
+		public @Nullable String getMethodName() {
 			return null;
 		}
 
 		@Override
-		public Method getMethod() {
+		public @Nullable Method getMethod() {
 			return null;
 		}
 	}

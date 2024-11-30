@@ -1,10 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql;
+
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -12,9 +11,14 @@ import java.util.Map;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+
 
 /**
- * An SQL {@code INSERT} statement
+ * A SQL {@code INSERT} statement.
  *
  * @author Gavin King
  */
@@ -26,10 +30,20 @@ public class Insert {
 
 	protected Map<String,String> columns = new LinkedHashMap<>();
 
-	private Dialect dialect;
+	private final Dialect dialect;
+	private final ParameterMarkerStrategy parameterMarkerStrategy;
+	private int parameterCount;
 
-	public Insert(Dialect dialect) {
+	public Insert(SessionFactoryImplementor sessionFactory) {
+		this(
+				sessionFactory.getFastSessionServices().dialect,
+				sessionFactory.getFastSessionServices().parameterMarkerStrategy
+		);
+	}
+
+	public Insert(Dialect dialect, ParameterMarkerStrategy parameterMarkerStrategy) {
 		this.dialect = dialect;
+		this.parameterMarkerStrategy = parameterMarkerStrategy;
 	}
 
 	protected Dialect getDialect() {
@@ -39,6 +53,10 @@ public class Insert {
 	public Insert setComment(String comment) {
 		this.comment = comment;
 		return this;
+	}
+
+	public Map<String, String> getColumns() {
+		return columns;
 	}
 
 	public Insert addColumn(String columnName) {
@@ -76,9 +94,22 @@ public class Insert {
 	}
 
 	public Insert addIdentityColumn(String columnName) {
-		String value = dialect.getIdentityColumnSupport().getIdentityInsertString();
-		if ( value != null ) {
-			addColumn( columnName, value );
+		final IdentityColumnSupport identityColumnSupport = dialect.getIdentityColumnSupport();
+		if ( identityColumnSupport.hasIdentityInsertKeyword() ) {
+			addColumn( columnName, identityColumnSupport.getIdentityInsertString() );
+		}
+		return this;
+	}
+
+	public Insert addGeneratedColumns(String[] columnNames, OnExecutionGenerator generator) {
+		if ( generator.referenceColumnsInSql( dialect ) ) {
+			String[] columnValues = generator.getReferencedColumnValues( dialect );
+			if ( columnNames.length != columnValues.length ) {
+				throw new MappingException("wrong number of generated columns"); //TODO!
+			}
+			for ( int i = 0; i < columnNames.length; i++ ) {
+				addColumn( columnNames[i], columnValues[i] );
+			}
 		}
 		return this;
 	}
@@ -89,13 +120,15 @@ public class Insert {
 	}
 
 	public String toStatementString() {
-		StringBuilder buf = new StringBuilder( columns.size()*15 + tableName.length() + 10 );
+		final StringBuilder buf = new StringBuilder( columns.size()*15 + tableName.length() + 10 );
+
 		if ( comment != null ) {
 			buf.append( "/* " ).append( Dialect.escapeComment( comment ) ).append( " */ " );
 		}
-		buf.append("insert into ")
-			.append(tableName);
-		if ( columns.size()==0 ) {
+
+		buf.append( "insert into " ).append( tableName );
+
+		if ( columns.isEmpty() ) {
 			if ( dialect.supportsNoColumnsInsert() ) {
 				buf.append( ' ' ).append( dialect.getNoColumnsInsertString() );
 			}
@@ -110,24 +143,39 @@ public class Insert {
 			}
 		}
 		else {
-			buf.append(" (");
-			Iterator<String> iter = columns.keySet().iterator();
-			while ( iter.hasNext() ) {
-				buf.append( iter.next() );
-				if ( iter.hasNext() ) {
-					buf.append( ", " );
-				}
-			}
-			buf.append(") values (");
-			iter = columns.values().iterator();
-			while ( iter.hasNext() ) {
-				buf.append( iter.next() );
-				if ( iter.hasNext() ) {
-					buf.append( ", " );
-				}
-			}
-			buf.append(')');
+			buf.append( " (" );
+			renderInsertionSpec( buf );
+			buf.append( ") values (" );
+			renderRowValues( buf );
+			buf.append( ')' );
 		}
 		return buf.toString();
+	}
+
+
+	private void renderInsertionSpec(StringBuilder buf) {
+		final Iterator<String> itr = columns.keySet().iterator();
+		while ( itr.hasNext() ) {
+			buf.append( itr.next() );
+			if ( itr.hasNext() ) {
+				buf.append( ", " );
+			}
+		}
+	}
+
+	private void renderRowValues(StringBuilder buf) {
+		final Iterator<String> itr = columns.values().iterator();
+		while ( itr.hasNext() ) {
+			buf.append( normalizeExpressionFragment( itr.next() ) );
+			if ( itr.hasNext() ) {
+				buf.append( ", " );
+			}
+		}
+	}
+
+	private String normalizeExpressionFragment(String rhs) {
+		return rhs.equals( "?" )
+				? parameterMarkerStrategy.createMarker( ++parameterCount, null )
+				: rhs;
 	}
 }

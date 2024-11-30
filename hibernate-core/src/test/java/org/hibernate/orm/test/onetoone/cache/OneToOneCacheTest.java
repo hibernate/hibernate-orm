@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.onetoone.cache;
 
 import java.lang.reflect.Constructor;
@@ -10,6 +14,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -90,7 +95,8 @@ public class OneToOneCacheTest {
 
 							person.setName( String.format( "%s%d", personClass.getName(), i ) );
 
-							ids.add( session.save( person ) );
+							session.persist( person );
+							ids.add( person.getId() );
 						}
 						catch (Exception e) {
 							throw new RuntimeException( e );
@@ -120,6 +126,7 @@ public class OneToOneCacheTest {
 	}
 
 	@Test
+	@FailureExpected( jiraKey = "HHH-14216", reason = "The changes introduces by HHH-14216 have been reverted see https://github.com/hibernate/hibernate-orm/pull/5061 discussion")
 	public void OneToOneCacheByForeignKey(SessionFactoryScope scope) throws Exception {
 		OneToOneTest( PersonByFK.class, DetailsByFK.class, scope );
 	}

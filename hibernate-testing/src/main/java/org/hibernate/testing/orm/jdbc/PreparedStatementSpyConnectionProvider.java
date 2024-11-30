@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.orm.jdbc;
 
@@ -14,18 +12,13 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
 import org.hibernate.testing.jdbc.ConnectionProviderDelegate;
-
-import org.mockito.ArgumentMatchers;
-import org.mockito.MockSettings;
-import org.mockito.Mockito;
-import org.mockito.internal.util.MockUtil;
+import org.hibernate.testing.jdbc.JdbcSpies;
+import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 
 /**
  * This {@link ConnectionProvider} extends any other ConnectionProvider that would be used by default taken the current configuration properties, and it
@@ -36,48 +29,39 @@ import org.mockito.internal.util.MockUtil;
  */
 public class PreparedStatementSpyConnectionProvider extends ConnectionProviderDelegate {
 
-	private static final MockSettings MOCK_SETTINGS = Mockito.withSettings()
-			.stubOnly() //important optimisation: uses far less memory, at tradeoff of mocked methods no longer being verifiable but we often don't need that.
-			.defaultAnswer( org.mockito.Answers.CALLS_REAL_METHODS );
-	private static final MockSettings VERIFIABLE_MOCK_SETTINGS = Mockito.withSettings()
-			.defaultAnswer( org.mockito.Answers.CALLS_REAL_METHODS );
-	// We must keep around the mocked connections, otherwise they are garbage collected and trigger finalizers
-	// Since we use CALLS_REAL_METHODS this might close underlying IO resources which makes other objects unusable
-	private static final Queue<Object> MOCKS = new LinkedBlockingQueue<>();
-
 	private final Map<PreparedStatement, String> preparedStatementMap = new LinkedHashMap<>();
-
 	private final List<String> executeStatements = new ArrayList<>( 4 );
 	private final List<String> executeUpdateStatements = new ArrayList<>( 4 );
 
+	public final JdbcSpies.SpyContext spyContext = new JdbcSpies.SpyContext()
+			.registerCallback(
+					(spy, method, args, result) -> {
+						if ( method.getDeclaringClass() == Connection.class
+								&& method.getName().equals( "prepareStatement" ) ) {
+							preparedStatementMap.put( (PreparedStatement) result, (String) args[0] );
+						}
+						else if ( method.getDeclaringClass() == Statement.class
+								&& method.getName().equals( "execute" ) ) {
+							executeStatements.add( (String) args[0] );
+						}
+						else if ( method.getDeclaringClass() == Statement.class
+								&& method.getName().equals( "executeUpdate" ) ) {
+							executeUpdateStatements.add( (String) args[0] );
+						}
+					}
+			);
+
+
 	private final List<Connection> acquiredConnections = new ArrayList<>( 4 );
 	private final List<Connection> releasedConnections = new ArrayList<>( 4 );
-	private final MockSettings settingsForStatements;
-	private final MockSettings settingsForConnections;
 
-	/**
-	 * @deprecated best use the {@link #PreparedStatementSpyConnectionProvider(boolean,boolean)} method to be explicit about the limitations.
-	 */
-	@Deprecated
 	public PreparedStatementSpyConnectionProvider() {
-		this( false, false, false );
+		this( false );
 	}
 
-	/**
-	 * Careful: the default is to use mocks which do not allow to verify invocations, as otherwise the
-	 * memory usage of the testsuite is extremely high.
-	 * When you really need to verify invocations, set the relevant constructor parameter to true.
-	 */
-	public PreparedStatementSpyConnectionProvider(
-			boolean allowMockVerificationOnStatements,
-			boolean allowMockVerificationOnConnections) {
-		this( allowMockVerificationOnStatements, allowMockVerificationOnConnections, false );
-	}
-
-	public PreparedStatementSpyConnectionProvider(boolean allowMockVerificationOnStatements, boolean allowMockVerificationOnConnections, boolean forceSupportsAggressiveRelease) {
+	public PreparedStatementSpyConnectionProvider(boolean forceSupportsAggressiveRelease) {
 		super(forceSupportsAggressiveRelease);
-		this.settingsForStatements = allowMockVerificationOnStatements ? VERIFIABLE_MOCK_SETTINGS : MOCK_SETTINGS;
-		this.settingsForConnections = allowMockVerificationOnConnections ? VERIFIABLE_MOCK_SETTINGS : MOCK_SETTINGS;
+		setConnectionProvider( SharedDriverManagerConnectionProviderImpl.getInstance() );
 	}
 
 	protected Connection actualConnection() throws SQLException {
@@ -87,16 +71,15 @@ public class PreparedStatementSpyConnectionProvider extends ConnectionProviderDe
 	@Override
 	public Connection getConnection() throws SQLException {
 		Connection connection = instrumentConnection( actualConnection() );
-		MOCKS.add( connection );
 		acquiredConnections.add( connection );
 		return connection;
 	}
 
 	@Override
-	public void closeConnection(Connection conn) throws SQLException {
-		acquiredConnections.remove( conn );
-		releasedConnections.add( conn );
-		super.closeConnection( (Connection) MockUtil.getMockSettings( conn ).getSpiedInstance() );
+	public void closeConnection(Connection connection) throws SQLException {
+		acquiredConnections.remove( connection );
+		releasedConnections.add( connection );
+		super.closeConnection( spyContext.getSpiedInstance( connection ) );
 	}
 
 	@Override
@@ -106,51 +89,7 @@ public class PreparedStatementSpyConnectionProvider extends ConnectionProviderDe
 	}
 
 	private Connection instrumentConnection(Connection connection) {
-		if ( MockUtil.isMock( connection ) ) {
-			return connection;
-		}
-		Connection connectionSpy = spy( connection, settingsForConnections );
-		try {
-			Mockito.doAnswer( invocation -> {
-				PreparedStatement statement = (PreparedStatement) invocation.callRealMethod();
-				PreparedStatement statementSpy = spy( statement, settingsForStatements );
-				String sql = (String) invocation.getArguments()[0];
-				preparedStatementMap.put( statementSpy, sql );
-				return statementSpy;
-			} ).when( connectionSpy ).prepareStatement( ArgumentMatchers.anyString() );
-
-			Mockito.doAnswer( invocation -> {
-				PreparedStatement statement = (PreparedStatement) invocation.callRealMethod();
-				PreparedStatement statementSpy = spy( statement, settingsForStatements );
-				String sql = (String) invocation.getArguments()[0];
-				preparedStatementMap.put( statementSpy, sql );
-				return statementSpy;
-			} ).when( connectionSpy ).prepareCall( ArgumentMatchers.anyString() );
-
-			Mockito.doAnswer( invocation -> {
-				Statement statement = (Statement) invocation.callRealMethod();
-				Statement statementSpy = spy( statement, settingsForStatements );
-				Mockito.doAnswer( statementInvocation -> {
-					String sql = (String) statementInvocation.getArguments()[0];
-					executeStatements.add( sql );
-					return statementInvocation.callRealMethod();
-				} ).when( statementSpy ).execute( ArgumentMatchers.anyString() );
-				Mockito.doAnswer( statementInvocation -> {
-					String sql = (String) statementInvocation.getArguments()[0];
-					executeUpdateStatements.add( sql );
-					return statementInvocation.callRealMethod();
-				} ).when( statementSpy ).executeUpdate( ArgumentMatchers.anyString() );
-				return statementSpy;
-			} ).when( connectionSpy ).createStatement();
-		}
-		catch ( SQLException e ) {
-			throw new IllegalArgumentException( e );
-		}
-		return connectionSpy;
-	}
-
-	private static <T> T spy(T subject, MockSettings mockSettings) {
-		return Mockito.mock( (Class<T>) subject.getClass(), mockSettings.spiedInstance( subject ) );
+		return JdbcSpies.spy( connection, spyContext );
 	}
 
 	/**
@@ -159,7 +98,7 @@ public class PreparedStatementSpyConnectionProvider extends ConnectionProviderDe
 	public void clear() {
 		acquiredConnections.clear();
 		releasedConnections.clear();
-		preparedStatementMap.keySet().forEach( Mockito::reset );
+		spyContext.clear();
 		preparedStatementMap.clear();
 		executeStatements.clear();
 		executeUpdateStatements.clear();
@@ -209,6 +148,14 @@ public class PreparedStatementSpyConnectionProvider extends ConnectionProviderDe
 	 */
 	public List<PreparedStatement> getPreparedStatements() {
 		return new ArrayList<>( preparedStatementMap.keySet() );
+	}
+
+	/**
+	 * @return the PreparedStatements that were executed since the last clear operation,
+	 * along with each statement's corresponding SQL.
+	 */
+	public Map<PreparedStatement, String> getPreparedStatementsAndSql() {
+		return preparedStatementMap;
 	}
 
 	/**

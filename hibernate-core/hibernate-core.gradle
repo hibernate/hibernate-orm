@@ -7,15 +7,14 @@
 import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
-    id 'org.hibernate.build.xjc-jakarta'
+    id "local-xjc-plugin"
 }
 
 description = 'Hibernate\'s core ORM functionality'
 
-apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+apply from: rootProject.file( 'gradle/relocated-published-java-module.gradle' )
 apply plugin: 'org.hibernate.orm.antlr'
 apply plugin: 'org.hibernate.matrix-test'
-
 
 configurations {
     tests {
@@ -28,8 +27,7 @@ dependencies {
     api jakartaLibs.jpa
     api jakartaLibs.jta
 
-    implementation libs.hcann
-    implementation libs.jandex
+    implementation libs.hibernateModels
     implementation libs.classmate
     implementation libs.byteBuddy
 
@@ -45,9 +43,15 @@ dependencies {
     compileOnly jakartaLibs.jsonbApi
     compileOnly libs.jackson
     compileOnly libs.jacksonXml
+    compileOnly dbLibs.postgresql
+
+//    annotationProcessor project( ":annotation-descriptor-generator" )
+    compileOnly project( ":annotation-descriptor-generator" )
 
     testImplementation project(':hibernate-testing')
     testImplementation project(':hibernate-ant')
+    testImplementation project(':hibernate-scan-jandex')
+
     testImplementation testLibs.shrinkwrapApi
     testImplementation testLibs.shrinkwrap
     testImplementation testLibs.shrinkwrapDescriptors
@@ -61,13 +65,19 @@ dependencies {
         transitive = true
     }
     testImplementation "joda-time:joda-time:2.3"
+    testImplementation dbLibs.h2
+    testImplementation libs.hibernateModelsJandex
 
     testRuntimeOnly libs.byteBuddy
     testRuntimeOnly testLibs.weld
     testRuntimeOnly testLibs.wildFlyTxnClient
-    testRuntimeOnly libs.jackson
+    testImplementation libs.jandex
+    testImplementation jakartaLibs.jsonb
+    testImplementation libs.jackson
+    testRuntimeOnly libs.jacksonXml
+    testRuntimeOnly libs.jacksonJsr310
 
-    testAnnotationProcessor project( ':hibernate-jpamodelgen' )
+    testAnnotationProcessor project( ':hibernate-processor' )
 
     // NOTE: it seems like, since 4.10, the Antlr Tool no longer defines
     // transitive dep on the corresponding Antlr Runtime.  At least, I get
@@ -75,10 +85,6 @@ dependencies {
     // dependency here.
     antlr libs.antlr
     antlr libs.antlrRuntime
-
-    xjc jakartaLibs.xjc
-    xjc jakartaLibs.jaxb
-    xjc rootProject.fileTree(dir: 'patched-libs/jaxb2-basics', include: '*.jar')
 }
 
 jar {
@@ -94,17 +100,8 @@ ext {
 }
 
 sourceSets {
-    main {
-        // add the XJC generated JAXB classes to the main source-set
-        java{
-            srcDir project.jaxbTargetDir
-        }
-    }
-
-    // resources inherently exclude sources
     test {
         resources {
-            srcDir 'src/test/java'
             srcDir 'src/test/resources'
             srcDir 'src/test/bundles'
         }
@@ -124,23 +121,40 @@ xjc {
             xjcBindingFile = file( 'src/main/xjb/hbm-mapping-bindings.xjb' )
             xjcExtensions += ['inheritance', 'simplify']
         }
+        configuration {
+            xsdFile = file( 'src/main/resources/org/hibernate/xsd/cfg/configuration-3.2.0.xsd' )
+            xjcBindingFile = file( 'src/main/xjb/configuration-bindings.xjb' )
+            xjcExtensions += ['inheritance', 'simplify']
+        }
         mapping {
-            xsdFile = file( 'src/main/resources/org/hibernate/xsd/mapping/mapping-3.1.0.xsd' )
+            xsdFile = file( 'src/main/resources/org/hibernate/xsd/mapping/mapping-7.0.xsd' )
             xjcBindingFile = file( 'src/main/xjb/mapping-bindings.xjb' )
             xjcExtensions += ['inheritance', 'simplify']
         }
     }
 }
 
-task copyBundleResources (type: Copy) {
+task copyBundleResourcesXml (type: Copy) {
     inputs.property( "db", db )
+    inputs.property( "dbHost", dbHost )
     ext {
         bundlesTargetDir = file( "${buildDir}/bundles" )
-        bundleTokens = dbBundle[db]
+        // Escape
+        bundleTokens = [
+                'db.dialect' : dbBundle[db]['db.dialect'].replace("&", "&amp;"),
+                'jdbc.driver' : dbBundle[db]['jdbc.driver'].replace("&", "&amp;"),
+                'jdbc.user' : dbBundle[db]['jdbc.user'].replace("&", "&amp;"),
+                'jdbc.pass' : dbBundle[db]['jdbc.pass'].replace("&", "&amp;"),
+                'jdbc.url' : dbBundle[db]['jdbc.url'].replace("&", "&amp;"),
+                'jdbc.datasource' : dbBundle[db]['jdbc.datasource'].replace("&", "&amp;"),
+                'connection.init_sql' : dbBundle[db]['connection.init_sql'].replace("&", "&amp;")
+        ]
         ext.bundleTokens['buildDirName'] = project.relativePath( buildDir )
     }
 
-    from file('src/test/bundles/templates')
+    from('src/test/bundles/templates') {
+        include '**/*.xml'
+    }
     into ext.bundlesTargetDir
     filter( ReplaceTokens, tokens: ext.bundleTokens)
 
@@ -149,14 +163,39 @@ task copyBundleResources (type: Copy) {
     }
 }
 
+task copyBundleResourcesNonXml (type: Copy) {
+    inputs.property( "db", db )
+    ext {
+        bundlesTargetDir = file( "${buildDir}/bundles" )
+        // Escape
+        bundleTokens = dbBundle[db]
+        ext.bundleTokens['buildDirName'] = project.relativePath( buildDir )
+    }
+
+    from('src/test/bundles/templates') {
+        exclude '**/*.xml'
+    }
+    into ext.bundlesTargetDir
+    filter( ReplaceTokens, tokens: ext.bundleTokens)
+
+    doFirst {
+        ext.bundlesTargetDir.mkdirs()
+    }
+}
+
+task copyBundleResources (type: Copy) {
+    inputs.property( "db", db )
+    dependsOn tasks.copyBundleResourcesXml
+    dependsOn tasks.copyBundleResourcesNonXml
+}
+
 processTestResources {
     dependsOn copyBundleResources
-    duplicatesStrategy = DuplicatesStrategy.WARN
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
 sourcesJar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-
 }
 
 task testJar(type: Jar, dependsOn: testClasses) {
@@ -167,6 +206,22 @@ task testJar(type: Jar, dependsOn: testClasses) {
 
 artifacts {
     tests testJar
+}
+
+tasks.register( "generateAnnotationClasses", JavaCompile ) {
+    description = "Generate concrete classes for Hibernate and JPA annotations"
+
+    source = sourceSets.main.allJava
+    include "org/hibernate/annotations/*"
+    classpath = sourceSets.main.runtimeClasspath + sourceSets.main.compileClasspath
+    options.annotationProcessorPath = sourceSets.main.compileClasspath
+    options.compilerArgs = [
+            "-proc:only",
+            "-processor",
+            "org.hibernate.orm.build.annotations.ClassGeneratorProcessor"
+    ]
+
+    destinationDirectory.set( project.layout.buildDirectory.dir( "generated/sources/annotations/" ) )
 }
 
 task generateEnversStaticMetamodel(
@@ -184,7 +239,7 @@ task generateEnversStaticMetamodel(
     options.compilerArgs = [
             "-proc:only",
             "-processor",
-            "org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor"
+            "org.hibernate.processor.HibernateProcessor"
     ]
 
     // put static metamodel classes back out to the source tree since they're version controlled.
@@ -193,6 +248,8 @@ task generateEnversStaticMetamodel(
 
 tasks.withType( Test.class ).each { test ->
     test.systemProperty 'file.encoding', 'utf-8'
+    // Allow creating a function in HSQLDB for this Java method
+    test.systemProperty 'hsqldb.method_class_names', 'org.hibernate.orm.test.jpa.transaction.TransactionTimeoutTest.sleep'
 
     // See org.hibernate.boot.model.naming.NamingHelperTest.DefaultCharset.set
     test.jvmArgs( ['--add-opens', 'java.base/java.nio.charset=ALL-UNNAMED'] )
@@ -200,74 +257,25 @@ tasks.withType( Test.class ).each { test ->
     test.jvmArgs( ['--add-opens', 'java.base/java.security=ALL-UNNAMED'] )
     test.jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
 
+    //Avoid Log4J2 classloader leaks:
+    test.jvmArgs( ['-Dlog4j2.disableJmx=true'] )
+
     test.beforeTest { descriptor ->
         //println "Starting test: " + descriptor
     }
-
-    // Allow to exclude specific tests
-    if (project.hasProperty('excludeTests')) {
-        test.filter {
-            excludeTestsMatching project.property('excludeTests').toString()
-        }
+    if ( project.db == "h2" || project.db == "hsqldb" ) {
+        // Parallel test runs when running with in-memory databases
+        test.maxParallelForks = Runtime.runtime.availableProcessors().intdiv( 2 ) ?: 1
     }
 }
 
-// Tests with records
-if ( gradle.ext.javaVersions.test.release.asInt() >= 17 && gradle.ext.javaToolchainEnabled ) {
-
-    // Add a new source set, which contains tests that can run on JDK17+
-    sourceSets {
-        testJava17 {
-            java {
-                srcDirs = ['src/test/java17']
-            }
-            // Refer to the main test resources to avoid processing variables twice
-            resources {
-                srcDir 'target/resources/test'
-            }
-        }
+tasks.named( "javadoc", Javadoc ) {
+    configure(options) {
+        overview = rootProject.file( "shared/javadoc/overview.html" )
     }
-
-    // For the new source set, we need to configure the source and target version to 17
-    compileTestJava17Java {
-        javaCompiler = javaToolchains.compilerFor {
-            languageVersion = gradle.ext.javaVersions.test.compiler
-        }
-        sourceCompatibility = 17
-        targetCompatibility = 17
-        // We also depend on the main test resources
-        dependsOn( tasks.processTestResources )
-    }
-
-    // The source set gets a custom configuration which extends the normal test implementation config
-    configurations {
-        testJava17Implementation.extendsFrom(testImplementation, testRuntimeOnly)
-    }
-
-    // Add the output from src/main/java as dependency
-    dependencies {
-        testJava17Implementation files(sourceSets.main.output.classesDirs) {
-            builtBy compileJava
-        }
-    }
-
-    // We execute the Java 17 tests in a custom test task
-    task java17Test(type: Test) {
-        javaLauncher = javaToolchains.launcherFor {
-            languageVersion = gradle.ext.javaVersions.test.launcher
-        }
-        useJUnitPlatform()
-        testClassesDirs = sourceSets.testJava17.output.classesDirs
-        classpath = sourceSets.testJava17.runtimeClasspath
-
-        if ( gradle.ext.javaVersions.test.launcher.asInt() >= 19 ) {
-            logger.warn( "The version of Java bytecode that will be tested is not supported by Bytebuddy by default. " +
-                                 " Setting 'net.bytebuddy.experimental=true'." )
-            systemProperty 'net.bytebuddy.experimental', true
-        }
-    }
-
-    testClasses.dependsOn compileTestJava17Java
-    // And run this as part of the check task by default
-    check.dependsOn java17Test
 }
+
+tasks.sourcesJar.dependsOn ':hibernate-core:generateGraphParser'
+tasks.sourcesJar.dependsOn ':hibernate-core:generateHqlParser'
+tasks.sourcesJar.dependsOn ':hibernate-core:generateSqlScriptParser'
+tasks.sourcesJar.dependsOn ':hibernate-core:generateOrderingParser'

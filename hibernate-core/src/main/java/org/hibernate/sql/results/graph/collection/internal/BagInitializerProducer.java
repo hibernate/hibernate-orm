@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
@@ -11,17 +9,19 @@ import org.hibernate.collection.spi.CollectionInitializerProducer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
-import org.hibernate.sql.results.graph.DomainResultAssembler;
+import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Steve Ebersole
  */
 public class BagInitializerProducer implements CollectionInitializerProducer {
 	private final PluralAttributeMapping bagDescriptor;
-	private final Fetch collectionIdFetch;
+	private final @Nullable Fetch collectionIdFetch;
 	private final Fetch elementFetch;
 
 	public BagInitializerProducer(
@@ -44,39 +44,26 @@ public class BagInitializerProducer implements CollectionInitializerProducer {
 	}
 
 	@Override
-	public CollectionInitializer produceInitializer(
+	public CollectionInitializer<?> produceInitializer(
 			NavigablePath navigablePath,
-			PluralAttributeMapping attributeMapping,
-			FetchParentAccess parentAccess,
+			PluralAttributeMapping attribute,
+			InitializerParent<?> parent,
 			LockMode lockMode,
-			DomainResultAssembler<?> collectionKeyAssembler,
-			DomainResultAssembler<?> collectionValueKeyAssembler,
+			DomainResult<?> collectionKeyResult,
+			DomainResult<?> collectionValueKeyResult,
+			boolean isResultInitializer,
 			AssemblerCreationState creationState) {
-		final DomainResultAssembler<?> elementAssembler = elementFetch.createAssembler(
-				parentAccess,
-				creationState
-		);
-
-		final DomainResultAssembler<?> collectionIdAssembler;
-		if ( bagDescriptor.getIdentifierDescriptor() == null ) {
-			collectionIdAssembler = null;
-		}
-		else {
-			collectionIdAssembler = collectionIdFetch.createAssembler(
-					parentAccess,
-					creationState
-			);
-		}
-
 		return new BagInitializer(
-				bagDescriptor,
-				parentAccess,
 				navigablePath,
+				bagDescriptor,
+				parent,
 				lockMode,
-				collectionKeyAssembler,
-				collectionValueKeyAssembler,
-				elementAssembler,
-				collectionIdAssembler
+				collectionKeyResult,
+				collectionValueKeyResult,
+				isResultInitializer,
+				creationState,
+				elementFetch,
+				collectionIdFetch
 		);
 	}
 }

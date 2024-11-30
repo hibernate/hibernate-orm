@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.from;
 
@@ -10,12 +8,12 @@ import java.util.function.Consumer;
 
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
+import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Steve Ebersole
@@ -31,98 +29,62 @@ public interface TableGroupJoinProducer extends TableGroupProducer {
 	boolean isSimpleJoinPredicate(Predicate predicate);
 
 	/**
-	 * Create a TableGroupJoin as defined for this producer
+	 * Create a TableGroupJoin.
 	 *
-	 * The sqlAstJoinType may be null to signal that the join is for an implicit path.
-	 * When addsPredicate is <code>true</code>, the SQM join for the attribute contains an explicit <code>ON</code> clause,
-	 * and is <code>false</code> otherwise.
-	 */
-	default TableGroupJoin createTableGroupJoin(
-			NavigablePath navigablePath,
-			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAstJoinType sqlAstJoinType,
-			boolean fetched,
-			boolean addsPredicate,
-			SqlAstCreationState creationState) {
-		return createTableGroupJoin(
-				navigablePath,
-				lhs,
-				explicitSourceAlias,
-				sqlAstJoinType,
-				fetched,
-				addsPredicate,
-				creationState.getSqlAliasBaseGenerator(),
-				creationState.getSqlExpressionResolver(),
-				creationState.getFromClauseAccess(),
-				creationState.getCreationContext()
-		);
-	}
-
-	/**
-	 * Create a TableGroupJoin as defined for this producer
-	 *
-	 * The sqlAstJoinType may be null to signal that the join is for an implicit path.
-	 * When addsPredicate is <code>true</code>, the SQM join for the attribute contains an explicit <code>ON</code> clause,
-	 * and is <code>false</code> otherwise.
+	 * @param navigablePath The NavigablePath to the join
+	 * @param lhs The join's (L)eft-(H)and (S)ide
+	 * @param explicitSqlAliasBase A specific SqlAliasBase to use.  May be {@code null} indicating one should be created using the {@linkplain SqlAliasBaseGenerator} from {@code creationState}
+	 * @param sqlAstJoinType An explicit join-type. May be null to signal that the join is for an implicit path.
+	 * @param addsPredicate Indicates there are explicit, additional predicates (from an SQM tree ON/WITH clause)
 	 */
 	TableGroupJoin createTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAstJoinType sqlAstJoinType,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase explicitSqlAliasBase,
+			@Nullable SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
 			boolean addsPredicate,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
-			FromClauseAccess fromClauseAccess,
-			SqlAstCreationContext creationContext);
+			SqlAstCreationState creationState);
 
 	/**
-	 * Create a TableGroupJoin as defined for this producer, but as root TableGroup.
-	 * The main purpose of this is for correlating an association in a subquery
-	 * i.e. `...  alias where exists (select 1 from SomeEntity e where alias.association.attr = 1)`.
+	 * Create the "join", but return a TableGroup.  Intended for creating sub-query
+	 * correlations.  E.g., given
+	 * <pre>
+	 *     from SomeEntity e
+	 *     where exists (
+	 *         select 1
+	 *         from AnotherEntity a
+	 *         where e.association.attr = 1
+	 *     )
+	 * </pre>
+	 * We call this for the `e.association` path.
 	 *
-	 * The sqlAstJoinType may be null to signal that the join is for an implicit path.
-	 */
-	default TableGroup createRootTableGroupJoin(
-			NavigablePath navigablePath,
-			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAstJoinType sqlAstJoinType,
-			boolean fetched,
-			Consumer<Predicate> predicateConsumer,
-			SqlAstCreationState creationState) {
-		return createRootTableGroupJoin(
-				navigablePath,
-				lhs,
-				explicitSourceAlias,
-				sqlAstJoinType,
-				fetched,
-				predicateConsumer,
-				creationState.getSqlAliasBaseGenerator(),
-				creationState.getSqlExpressionResolver(),
-				creationState.getFromClauseAccess(),
-				creationState.getCreationContext()
-		);
-	}
-
-	/**
-	 * Create a TableGroupJoin as defined for this producer, but as root TableGroup.
-	 * The main purpose of this is for correlating an association in a subquery
-	 * i.e. `...  alias where exists (select 1 from SomeEntity e where alias.association.attr = 1)`.
-	 *
-	 * The sqlAstJoinType may be null to signal that the join is for an implicit path.
+	 * @param navigablePath The NavigablePath to the join
+	 * @param lhs The join's (L)eft-(H)and (S)ide
+	 * @param explicitSqlAliasBase A specific SqlAliasBase to use.  May be {@code null} indicating one should be created using the {@linkplain SqlAliasBaseGenerator} from {@code creationState}
+	 * @param sqlAstJoinType An explicit join-type. May be null to signal that the join is for an implicit path.
+	 * @param predicateConsumer Consumer for additional predicates from the producer's mapping.
 	 */
 	TableGroup createRootTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAstJoinType sqlAstJoinType,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase explicitSqlAliasBase,
+			@Nullable SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
-			Consumer<Predicate> predicateConsumer,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
-			FromClauseAccess fromClauseAccess,
-			SqlAstCreationContext creationContext);
+			@Nullable Consumer<Predicate> predicateConsumer,
+			SqlAstCreationState creationState);
+
+	default SqlAstJoinType determineSqlJoinType(TableGroup lhs, @Nullable SqlAstJoinType requestedJoinType, boolean fetched) {
+		if ( requestedJoinType != null ) {
+			return requestedJoinType;
+		}
+
+		if ( fetched ) {
+			return getDefaultSqlAstJoinType( lhs );
+		}
+
+		return SqlAstJoinType.INNER;
+	}
 }

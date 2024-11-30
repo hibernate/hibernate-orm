@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -16,13 +14,14 @@ import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
  * Simple smoke style tests to make sure visitors keep working.
- * 
+ *
  * @author max
  */
 @BaseUnitTest
@@ -33,7 +32,7 @@ public class PersistentClassVisitorTest {
 
 	@BeforeEach
 	public void prepare() {
-		serviceRegistry = new StandardServiceRegistryBuilder().build();
+		serviceRegistry = ServiceRegistryUtil.serviceRegistry();
 		metadataBuildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
 	}
 

@@ -1,20 +1,27 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.ondelete.toone;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
 
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.dialect.SybaseDialect;
 
+import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 
 /**
@@ -31,22 +38,17 @@ import org.junit.jupiter.api.Test;
 public class ToOneOnDeleteTest {
 
 	@AfterEach
-	public void tearDown(SessionFactoryScope scope){
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from Parent" ).executeUpdate();
-					session.createQuery( "delete from Child" ).executeUpdate();
-					session.createQuery( "delete from GrandChild" ).executeUpdate();
-				}
-		);
+	public void tearDown(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
 	}
 
 	@Test
 	@SkipForDialect(
 			dialectClass = SybaseDialect.class,
 			matchSubTypes = true,
-			reason = "HHH-13559 on-delete=\"cascade\" is not supported for unidirectional to-one associations using Sybase"
+			reason = "Sybase does not support on delete actions"
 	)
+	@SkipForDialect(dialectClass = TiDBDialect.class)
 	public void testManyToOne(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -83,11 +85,27 @@ public class ToOneOnDeleteTest {
 
 		scope.inTransaction(
 				session -> {
-					Parent parent = session.get( Parent.class, 1L );
-					session.delete( parent );
+					assertNotNull( session.get(Child.class, 1L) );
+					assertNotNull( session.get(Child.class, 2L) );
+					assertNotNull( session.get(GrandChild.class, 2L) );
+					assertNotNull( session.get(GrandChild.class, 3L) );
 				}
 		);
-	}
+		scope.inTransaction(
+				session -> {
+					Parent parent = session.get( Parent.class, 1L );
+					session.remove( parent );
+				}
+		);
+		scope.inTransaction(
+				session -> {
+					assertNull( session.get(Child.class, 1L) );
+					assertNull( session.get(Child.class, 2L) );
+					assertNull( session.get(GrandChild.class, 2L) );
+					assertNull( session.get(GrandChild.class, 3L) );
+					assertNull( session.get( Parent.class, 1L ) );
+				}
+		);	}
 
 
 	@Entity(name = "Parent")
@@ -120,7 +138,7 @@ public class ToOneOnDeleteTest {
 
 		private String name;
 
-		@OneToOne
+		@ManyToOne
 		@OnDelete(action = OnDeleteAction.CASCADE)
 		private Child parent;
 	}

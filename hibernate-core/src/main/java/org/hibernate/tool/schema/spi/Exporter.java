@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.spi;
 
@@ -13,10 +11,10 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.internal.util.collections.ArrayHelper;
 
 /**
- * Defines a contract for exporting of database objects (tables, sequences, etc) for use in SQL {@code CREATE} and
- * {@code DROP} scripts.
- * <p/>
- * This is an ORM-centric contract
+ * Defines a contract for exporting of database objects (tables, sequences, etc)
+ * for use in SQL {@code CREATE} and {@code DROP} scripts.
+ *
+ * @apiNote This is an ORM-centric contract.
  *
  * @author Steve Ebersole
  */

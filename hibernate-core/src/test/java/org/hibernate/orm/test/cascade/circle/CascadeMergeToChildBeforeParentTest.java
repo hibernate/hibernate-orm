@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cascade.circle;
 
@@ -32,7 +30,7 @@ import org.junit.jupiter.api.Test;
  * -------- (1 : N) ---- Vehicle--(1 : N)------------
  * <p>
  * Arrows indicate the direction of cascade-merge.
- * <p/>
+ * <p>
  * I believe it reproduces the following issue:
  * http://opensource.atlassian.com/projects/hibernate/browse/HHH-3544
  *
@@ -68,7 +66,7 @@ public class CascadeMergeToChildBeforeParentTest {
 		scope.inTransaction(
 				session -> {
 					r.setName( "routeA" );
-					session.save( r );
+					session.persist( r );
 				}
 		);
 
@@ -118,7 +116,7 @@ public class CascadeMergeToChildBeforeParentTest {
 				session -> {
 					r.setName( "routeA" );
 
-					session.save( r );
+					session.persist( r );
 				}
 		);
 
@@ -183,7 +181,7 @@ public class CascadeMergeToChildBeforeParentTest {
 				session -> {
 					r.setName( "routeA" );
 
-					session.save( r );
+					session.persist( r );
 				}
 		);
 

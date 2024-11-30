@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.hbm2ddl;
 
@@ -34,7 +32,7 @@ import org.apache.tools.ant.types.FileSet;
 
 /**
  * An Ant task for {@code SchemaUpdate}.
- * <p/>
+ * <p>
  * <pre>
  * &lt;taskdef name="schemaupdate"
  *     classname="org.hibernate.tool.hbm2ddl.SchemaUpdateTask"
@@ -53,7 +51,7 @@ import org.apache.tools.ant.types.FileSet;
  * @see SchemaUpdate
  */
 public class SchemaUpdateTask extends MatchingTask {
-	private List<FileSet> fileSets = new LinkedList<>();
+	private final List<FileSet> fileSets = new LinkedList<>();
 	private File propertiesFile;
 	private File configurationFile;
 	private File outputFile;
@@ -65,7 +63,7 @@ public class SchemaUpdateTask extends MatchingTask {
 	private String implicitNamingStrategy = null;
 	private String physicalNamingStrategy = null;
 
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public void addFileset(FileSet fileSet) {
 		fileSets.add( fileSet );
 	}
@@ -75,7 +73,7 @@ public class SchemaUpdateTask extends MatchingTask {
 	 *
 	 * @param propertiesFile the properties file name
 	 */
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public void setProperties(File propertiesFile) {
 		if ( !propertiesFile.exists() ) {
 			throw new BuildException( "Properties file: " + propertiesFile + " does not exist." );
@@ -90,7 +88,7 @@ public class SchemaUpdateTask extends MatchingTask {
 	 *
 	 * @param configurationFile the file name
 	 */
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public void setConfig(File configurationFile) {
 		this.configurationFile = configurationFile;
 	}
@@ -100,7 +98,7 @@ public class SchemaUpdateTask extends MatchingTask {
 	 *
 	 * @param text true to enable text-only mode
 	 */
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public void setText(boolean text) {
 		this.text = text;
 	}
@@ -110,52 +108,52 @@ public class SchemaUpdateTask extends MatchingTask {
 	 *
 	 * @param quiet true to enable quiet mode
 	 */
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public void setQuiet(boolean quiet) {
 		this.quiet = quiet;
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public void setNamingStrategy(String namingStrategy) {
 		DeprecationLogger.DEPRECATION_LOGGER.logDeprecatedNamingStrategyAntArgument();
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public void setImplicitNamingStrategy(String implicitNamingStrategy) {
 		this.implicitNamingStrategy = implicitNamingStrategy;
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public void setPhysicalNamingStrategy(String physicalNamingStrategy) {
 		this.physicalNamingStrategy = physicalNamingStrategy;
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public File getOutputFile() {
 		return outputFile;
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public void setOutputFile(File outputFile) {
 		this.outputFile = outputFile;
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public boolean isHaltOnError() {
 		return haltOnError;
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public void setHaltOnError(boolean haltOnError) {
 		this.haltOnError = haltOnError;
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public String getDelimiter() {
 		return delimiter;
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public void setDelimiter(String delimiter) {
 		this.delimiter = delimiter;
 	}
@@ -195,7 +193,7 @@ public class SchemaUpdateTask extends MatchingTask {
 			throw new BuildException( "File not found: " + e.getMessage(), e );
 		}
 		catch (IOException e) {
-			throw new BuildException( "IOException : " + e.getMessage(), e );
+			throw new BuildException( "IOException: " + e.getMessage(), e );
 		}
 		catch (BuildException e) {
 			throw e;
@@ -217,7 +215,7 @@ public class SchemaUpdateTask extends MatchingTask {
 		else {
 			try (FileInputStream fip = new FileInputStream( propertiesFile )){
 				properties.load( fip );
-			} 
+			}
 		}
 
 		registryBuilder.applySettings( properties );
@@ -253,7 +251,7 @@ public class SchemaUpdateTask extends MatchingTask {
 
 	@SuppressWarnings("deprecation")
 	private void configure(MetadataBuilder metadataBuilder, StandardServiceRegistry serviceRegistry) {
-		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		final ClassLoaderService classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
 
 		if ( implicitNamingStrategy != null ) {
 			try {

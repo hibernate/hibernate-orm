@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa;
 
@@ -17,7 +15,7 @@ import jakarta.persistence.Parameter;
 import jakarta.persistence.Query;
 import jakarta.persistence.TemporalType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
@@ -30,7 +28,7 @@ import static org.junit.Assert.fail;
 public class EntityManagerClosedTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12110")
+	@JiraKey( value = "HHH-12110")
 	public void testGetMetamodel() {
 		EntityManager em = getOrCreateEntityManager();
 		em.close();
@@ -44,7 +42,7 @@ public class EntityManagerClosedTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12110")
+	@JiraKey( value = "HHH-12110")
 	public void testGetMetamodelWithTransaction () {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -66,7 +64,7 @@ public class EntityManagerClosedTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12110")
+	@JiraKey( value = "HHH-12110")
 	public void testGetCriteriaBuilder() {
 		EntityManager em = getOrCreateEntityManager();
 		em.close();
@@ -80,7 +78,7 @@ public class EntityManagerClosedTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12110")
+	@JiraKey( value = "HHH-12110")
 	public void testGetCriteriaBuilderWithTransaction() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -102,7 +100,7 @@ public class EntityManagerClosedTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12110")
+	@JiraKey( value = "HHH-12110")
 	public void testGetEntityManagerFactory() {
 		EntityManager em = getOrCreateEntityManager();
 		em.close();
@@ -116,7 +114,7 @@ public class EntityManagerClosedTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12110")
+	@JiraKey( value = "HHH-12110")
 	public void testGetEntityManagerFactoryWithTransaction() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -138,7 +136,7 @@ public class EntityManagerClosedTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12110")
+	@JiraKey( value = "HHH-12110")
 	public void testCreateNamedQuery() {
 		EntityManager em = getOrCreateEntityManager();
 		em.close();
@@ -152,7 +150,7 @@ public class EntityManagerClosedTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12110")
+	@JiraKey( value = "HHH-12110")
 	public void testCreateNamedQueryWithTransaction() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -174,7 +172,7 @@ public class EntityManagerClosedTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12110")
+	@JiraKey( value = "HHH-12110")
 	public void testGetFlushMode() {
 		EntityManager em = getOrCreateEntityManager();
 		em.close();
@@ -188,7 +186,7 @@ public class EntityManagerClosedTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12110")
+	@JiraKey( value = "HHH-12110")
 	public void testSetFlushMode() {
 		EntityManager em = getOrCreateEntityManager();
 		em.close();
@@ -202,7 +200,7 @@ public class EntityManagerClosedTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12110")
+	@JiraKey( value = "HHH-12110")
 	public void testGetDelegate() {
 		EntityManager em = getOrCreateEntityManager();
 		em.close();
@@ -216,7 +214,7 @@ public class EntityManagerClosedTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12110")
+	@JiraKey( value = "HHH-12110")
 	public void testQueryGetParametersWithTransaction() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -240,7 +238,7 @@ public class EntityManagerClosedTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12110")
+	@JiraKey( value = "HHH-12110")
 	public void testQueryGetParameterByPositionWithTransaction() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -264,7 +262,7 @@ public class EntityManagerClosedTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12110")
+	@JiraKey( value = "HHH-12110")
 	public void testQueryGetParameterByNameWithTransaction() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -287,7 +285,7 @@ public class EntityManagerClosedTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12110")
+	@JiraKey( value = "HHH-12110")
 	public void testQueryGetParameterValueByParameterWithTransaction() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -312,7 +310,7 @@ public class EntityManagerClosedTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12110")
+	@JiraKey( value = "HHH-12110")
 	public void testQueryGetParameterValueByStringWithTransaction() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -336,7 +334,7 @@ public class EntityManagerClosedTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12110")
+	@JiraKey( value = "HHH-12110")
 	public void testQueryIsBound() {
 		EntityManager em = getOrCreateEntityManager();
 		Query query = em.createQuery( "from AnEntity where name = :name" );
@@ -353,7 +351,7 @@ public class EntityManagerClosedTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12110")
+	@JiraKey( value = "HHH-12110")
 	public void testQuerySetFirstResult() {
 		EntityManager em = getOrCreateEntityManager();
 		Query query = em.createQuery( "from AnEntity where name = :name" );
@@ -369,7 +367,7 @@ public class EntityManagerClosedTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12110")
+	@JiraKey( value = "HHH-12110")
 	public void testQuerySetFlushMode() {
 		EntityManager em = getOrCreateEntityManager();
 		Query query = em.createQuery( "from AnEntity where name = :name" );
@@ -385,7 +383,7 @@ public class EntityManagerClosedTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12110")
+	@JiraKey( value = "HHH-12110")
 	public void testQuerySetLockMode() {
 		EntityManager em = getOrCreateEntityManager();
 		Query query = em.createQuery( "from AnEntity where name = :name" );
@@ -401,7 +399,7 @@ public class EntityManagerClosedTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12110")
+	@JiraKey( value = "HHH-12110")
 	public void testQuerySetCalendarDateParameterByPosition() {
 		EntityManager em = getOrCreateEntityManager();
 		Query query = em.createQuery( "from AnEntity where birthDay = ?1" );
@@ -416,7 +414,7 @@ public class EntityManagerClosedTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12110")
+	@JiraKey( value = "HHH-12110")
 	public void testQuerySetDateParameterByPosition() {
 		EntityManager em = getOrCreateEntityManager();
 		Query query = em.createQuery( "from AnEntity where birthDay = ?1" );
@@ -431,7 +429,7 @@ public class EntityManagerClosedTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12110")
+	@JiraKey( value = "HHH-12110")
 	public void testQuerySetIntParameterByPosition() {
 		EntityManager em = getOrCreateEntityManager();
 		Query query = em.createQuery( "from AnEntity where intValue = ?1" );
@@ -446,7 +444,7 @@ public class EntityManagerClosedTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12110")
+	@JiraKey( value = "HHH-12110")
 	public void testQuerySetCalendarDateParameterByParameter() {
 		EntityManager em = getOrCreateEntityManager();
 		Query query = em.createQuery( "from AnEntity where birthDay = ?1" );
@@ -462,7 +460,7 @@ public class EntityManagerClosedTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12110")
+	@JiraKey( value = "HHH-12110")
 	public void testQuerySetDateParameterByParameter() {
 		EntityManager em = getOrCreateEntityManager();
 		Query query = em.createQuery( "from AnEntity where birthDay = ?1" );
@@ -478,7 +476,7 @@ public class EntityManagerClosedTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12110")
+	@JiraKey( value = "HHH-12110")
 	public void testQuerySetIntParameterByParameter() {
 		EntityManager em = getOrCreateEntityManager();
 		Query query = em.createQuery( "from AnEntity where intValue = ?1" );
@@ -494,7 +492,7 @@ public class EntityManagerClosedTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12110")
+	@JiraKey( value = "HHH-12110")
 	public void testQuerySetCalendarParameterByName() {
 		EntityManager em = getOrCreateEntityManager();
 		Query query = em.createQuery( "from AnEntity where birthDay = :bday" );
@@ -509,7 +507,7 @@ public class EntityManagerClosedTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12110")
+	@JiraKey( value = "HHH-12110")
 	public void testQueryGetSingleResult() {
 		EntityManager em = getOrCreateEntityManager();
 		Query query = em.createQuery( "from AnEntity" );
@@ -524,7 +522,7 @@ public class EntityManagerClosedTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12110")
+	@JiraKey( value = "HHH-12110")
 	public void testQuerySetDateParameterByName() {
 		EntityManager em = getOrCreateEntityManager();
 		Query query = em.createQuery( "from AnEntity where birthDay = :bday" );
@@ -539,7 +537,7 @@ public class EntityManagerClosedTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12110")
+	@JiraKey( value = "HHH-12110")
 	public void testQuerySetIntParameterByName() {
 		EntityManager em = getOrCreateEntityManager();
 		Query query = em.createQuery( "from AnEntity where intValue = :ival" );
@@ -554,7 +552,7 @@ public class EntityManagerClosedTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12110")
+	@JiraKey( value = "HHH-12110")
 	public void testQueryGetFlushMode() {
 		EntityManager em = getOrCreateEntityManager();
 		Query query = em.createQuery( "from AnEntity" );
@@ -569,7 +567,7 @@ public class EntityManagerClosedTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12110")
+	@JiraKey( value = "HHH-12110")
 	public void testQueryGetFlushModeWithTransaction() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -591,7 +589,7 @@ public class EntityManagerClosedTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12110")
+	@JiraKey( value = "HHH-12110")
 	public void testQueryGetLockModeWithTransaction() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -614,7 +612,7 @@ public class EntityManagerClosedTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12110")
+	@JiraKey( value = "HHH-12110")
 	public void testQueryGetMaxResultsWithTransaction() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -636,7 +634,7 @@ public class EntityManagerClosedTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12110")
+	@JiraKey( value = "HHH-12110")
 	public void testQueryGetFirstResultWithTransaction() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

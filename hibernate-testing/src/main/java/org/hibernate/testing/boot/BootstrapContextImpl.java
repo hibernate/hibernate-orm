@@ -1,20 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.boot;
 
 import java.util.Collection;
 import java.util.Map;
 
-import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
-import org.hibernate.boot.internal.ClassmateContext;
+import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
@@ -27,11 +24,11 @@ import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.metamodel.internal.ManagedTypeRepresentationResolverStandard;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
-import org.hibernate.type.internal.BasicTypeImpl;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.jboss.jandex.IndexView;
 
 /**
  * @author Andrea Boriero
@@ -63,8 +60,13 @@ public class BootstrapContextImpl implements BootstrapContext {
 	}
 
 	@Override
-	public BeanInstanceProducer getBeanInstanceProducer() {
-		return delegate.getBeanInstanceProducer();
+	public SqmFunctionRegistry getFunctionRegistry() {
+		return delegate.getFunctionRegistry();
+	}
+
+	@Override
+	public BeanInstanceProducer getCustomTypeProducer() {
+		return delegate.getCustomTypeProducer();
 	}
 
 	@Override
@@ -118,12 +120,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 	}
 
 	@Override
-	public ReflectionManager getReflectionManager() {
-		return delegate.getReflectionManager();
-	}
-
-	@Override
-	public IndexView getJandexView() {
+	public Object getJandexView() {
 		return delegate.getJandexView();
 	}
 
@@ -153,11 +150,11 @@ public class BootstrapContextImpl implements BootstrapContext {
 	}
 
 	@Override
-	public void registerAdHocBasicType(BasicTypeImpl<?> basicType) {
+	public void registerAdHocBasicType(BasicType<?> basicType) {
 	}
 
 	@Override
-	public <T> BasicTypeImpl<T> resolveAdHocBasicType(String key) {
+	public <T> BasicType<T> resolveAdHocBasicType(String key) {
 		return null;
 	}
 

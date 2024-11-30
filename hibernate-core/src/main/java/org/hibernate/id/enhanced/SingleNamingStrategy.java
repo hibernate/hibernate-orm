@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.enhanced;
 
@@ -18,10 +16,11 @@ import org.hibernate.service.ServiceRegistry;
 import static org.hibernate.id.enhanced.TableGenerator.DEF_TABLE;
 
 /**
- * ImplicitDatabaseObjectNamingStrategy using a single structure for
- * all implicit names:<ul>
- *     <li>{@value ImplicitDatabaseObjectNamingStrategy#DEF_SEQUENCE} for sequences</li>
- *     <li>{@value TableGenerator#DEF_TABLE} for tables</li>
+ * An {@link ImplicitDatabaseObjectNamingStrategy} using a single structure for all
+ * implicit names:
+ * <ul>
+ *     <li>{@value ImplicitDatabaseObjectNamingStrategy#DEF_SEQUENCE} for sequences
+ *     <li>{@value TableGenerator#DEF_TABLE} for tables
  * </ul>
  *
  * @author Andrea Boriero
@@ -35,12 +34,13 @@ public class SingleNamingStrategy implements ImplicitDatabaseObjectNamingStrateg
 			Identifier schemaName,
 			Map<?, ?> configValues,
 			ServiceRegistry serviceRegistry) {
-		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 
 		return new QualifiedSequenceName(
 				catalogName,
 				schemaName,
-				jdbcEnvironment.getIdentifierHelper().toIdentifier( DEF_SEQUENCE )
+				serviceRegistry.requireService( JdbcEnvironment.class )
+						.getIdentifierHelper()
+						.toIdentifier( DEF_SEQUENCE )
 		);
 	}
 
@@ -49,11 +49,12 @@ public class SingleNamingStrategy implements ImplicitDatabaseObjectNamingStrateg
 			Identifier schemaName,
 			Map<?, ?> configValues,
 			ServiceRegistry serviceRegistry) {
-		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 		return new QualifiedNameParser.NameParts(
 				catalogName,
 				schemaName,
-				jdbcEnvironment.getIdentifierHelper().toIdentifier( DEF_TABLE )
+				serviceRegistry.requireService( JdbcEnvironment.class )
+						.getIdentifierHelper()
+						.toIdentifier( DEF_TABLE )
 		);
 	}
 }

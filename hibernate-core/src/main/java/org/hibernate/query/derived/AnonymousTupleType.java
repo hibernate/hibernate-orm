@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.derived;
 
@@ -14,23 +12,30 @@ import java.util.Map;
 import org.hibernate.Incubating;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.UnsupportedMappingException;
+import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
+import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
-import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.TupleType;
 import org.hibernate.query.ReturnableType;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.ObjectArrayJavaType;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 
 /**
@@ -39,8 +44,10 @@ import org.hibernate.type.descriptor.java.ObjectArrayJavaType;
 @Incubating
 public class AnonymousTupleType<T> implements TupleType<T>, DomainType<T>, ReturnableType<T>, SqmPathSource<T> {
 
-	private final ObjectArrayJavaType javaTypeDescriptor;
-	private final SqmSelectableNode<?>[] components;
+	private final JavaType<T> javaTypeDescriptor;
+	private final @Nullable NavigablePath[] componentSourcePaths;
+	private final SqmExpressible<?>[] expressibles;
+	private final String[] componentNames;
 	private final Map<String, Integer> componentIndexMap;
 
 	public AnonymousTupleType(SqmSubQuery<T> subQuery) {
@@ -48,16 +55,53 @@ public class AnonymousTupleType<T> implements TupleType<T>, DomainType<T>, Retur
 	}
 
 	public AnonymousTupleType(SqmSelectableNode<?>[] components) {
-		this.components = components;
-		this.javaTypeDescriptor = new ObjectArrayJavaType( getTypeDescriptors( components ) );
+		final SqmExpressible<?>[] expressibles = new SqmExpressible<?>[components.length];
+		final NavigablePath[] componentSourcePaths = new NavigablePath[components.length];
+		for ( int i = 0; i < components.length; i++ ) {
+			expressibles[i] = components[i].getNodeType();
+			if ( components[i] instanceof SqmPath<?> path ) {
+				componentSourcePaths[i] = path.getNavigablePath();
+			}
+		}
+		this.expressibles = expressibles;
+		this.componentSourcePaths = componentSourcePaths;
+		this.componentNames = new String[components.length];
+		//noinspection unchecked
+		this.javaTypeDescriptor = (JavaType<T>) new ObjectArrayJavaType( getTypeDescriptors( components ) );
 		final Map<String, Integer> map = CollectionHelper.linkedMapOfSize( components.length );
 		for ( int i = 0; i < components.length; i++ ) {
 			final SqmSelectableNode<?> component = components[i];
 			final String alias = component.getAlias();
 			if ( alias == null ) {
-				throw new IllegalArgumentException( "Component at index " + i + " has no alias, but alias is required" );
+				throw new SemanticException( "Select item at position " + (i+1) + " in select list has no alias"
+						+ " (aliases are required in CTEs and in subqueries occurring in from clause)" );
 			}
 			map.put( alias, i );
+			componentNames[i] = alias;
+		}
+		this.componentIndexMap = map;
+	}
+
+	public AnonymousTupleType(SqmExpressible<?>[] expressibles, String[] componentNames) {
+		this.componentSourcePaths = new NavigablePath[componentNames.length];
+		this.expressibles = expressibles;
+		this.componentNames = componentNames;
+		final Map<String, Integer> map = CollectionHelper.linkedMapOfSize( expressibles.length );
+		int elementIndex = -1;
+		for ( int i = 0; i < componentNames.length; i++ ) {
+			if ( CollectionPart.Nature.ELEMENT.getName().equals( componentNames[i] ) ) {
+				elementIndex = i;
+			}
+			map.put( componentNames[i], i );
+		}
+		// The expressible java type of this tuple type must be equal to the element type if it exists
+		if ( elementIndex == -1 ) {
+			//noinspection unchecked
+			this.javaTypeDescriptor = (JavaType<T>) new ObjectArrayJavaType( getTypeDescriptors( expressibles ) );
+		}
+		else {
+			//noinspection unchecked
+			this.javaTypeDescriptor = (JavaType<T>) expressibles[elementIndex].getExpressibleJavaType();
 		}
 		this.componentIndexMap = map;
 	}
@@ -81,21 +125,49 @@ public class AnonymousTupleType<T> implements TupleType<T>, DomainType<T>, Retur
 		return typeDescriptors;
 	}
 
+	private static JavaType<?>[] getTypeDescriptors(SqmExpressible<?>[] components) {
+		final JavaType<?>[] typeDescriptors = new JavaType<?>[components.length];
+		for ( int i = 0; i < components.length; i++ ) {
+			typeDescriptors[i] = components[i].getExpressibleJavaType();
+		}
+		return typeDescriptors;
+	}
+
+	public static SqlTypedMapping[] toSqlTypedMappings(List<SqlSelection> sqlSelections) {
+		final SqlTypedMapping[] jdbcMappings = new SqlTypedMapping[sqlSelections.size()];
+		for ( int i = 0; i < sqlSelections.size(); i++ ) {
+			final JdbcMappingContainer expressionType = sqlSelections.get( i ).getExpressionType();
+			if ( expressionType instanceof SqlTypedMapping sqlTypedMapping ) {
+				jdbcMappings[i] = sqlTypedMapping;
+			}
+			else {
+				jdbcMappings[i] = new SqlTypedMappingImpl( expressionType.getSingleJdbcMapping() );
+			}
+		}
+		return jdbcMappings;
+	}
 	public AnonymousTupleTableGroupProducer resolveTableGroupProducer(
 			String aliasStem,
 			List<SqlSelection> sqlSelections,
 			FromClauseAccess fromClauseAccess) {
-		return new AnonymousTupleTableGroupProducer( this, aliasStem, sqlSelections, fromClauseAccess );
+		return resolveTableGroupProducer( aliasStem, toSqlTypedMappings( sqlSelections ), fromClauseAccess );
+	}
+
+	public AnonymousTupleTableGroupProducer resolveTableGroupProducer(
+			String aliasStem,
+			SqlTypedMapping[] jdbcMappings,
+			FromClauseAccess fromClauseAccess) {
+		return new AnonymousTupleTableGroupProducer( this, aliasStem, jdbcMappings, fromClauseAccess );
 	}
 
 	@Override
 	public int componentCount() {
-		return components.length;
+		return expressibles.length;
 	}
 
 	@Override
 	public String getComponentName(int index) {
-		return components[index].getAlias();
+		return componentNames[index];
 	}
 
 	@Override
@@ -105,17 +177,21 @@ public class AnonymousTupleType<T> implements TupleType<T>, DomainType<T>, Retur
 
 	@Override
 	public SqmExpressible<?> get(int index) {
-		return components[index].getExpressible();
+		return expressibles[index];
 	}
 
 	@Override
 	public SqmExpressible<?> get(String componentName) {
 		final Integer index = componentIndexMap.get( componentName );
-		return index == null ? null : components[index].getExpressible();
+		return index == null ? null : expressibles[index];
 	}
 
-	public SqmSelectableNode<?> getSelectableNode(int index) {
-		return components[index];
+	protected Integer getIndex(String componentName) {
+		return componentIndexMap.get( componentName );
+	}
+
+	public @Nullable NavigablePath getComponentSourcePath(int index) {
+		return componentSourcePaths[index];
 	}
 
 	@Override
@@ -124,42 +200,31 @@ public class AnonymousTupleType<T> implements TupleType<T>, DomainType<T>, Retur
 		if ( index == null ) {
 			return null;
 		}
-		final SqmSelectableNode<?> component = components[index];
-		if ( component instanceof SqmPath<?> ) {
-			final SqmPath<?> sqmPath = (SqmPath<?>) component;
-			if ( sqmPath.getNodeType() instanceof SingularPersistentAttribute<?, ?> ) {
-				//noinspection unchecked,rawtypes
-				return new AnonymousTupleSqmAssociationPathSource(
-						name,
-						sqmPath,
-						( (SingularPersistentAttribute<?, ?>) sqmPath.getNodeType() ).getType()
-				);
-			}
-			else if ( sqmPath.getNodeType() instanceof PluralPersistentAttribute<?, ?, ?> ) {
-				//noinspection unchecked,rawtypes
-				return new AnonymousTupleSqmAssociationPathSource(
-						name,
-						sqmPath,
-						( (PluralPersistentAttribute<?, ?, ?>) sqmPath.getNodeType() ).getElementType()
-				);
-			}
-			else if ( sqmPath.getNodeType() instanceof EntityDomainType<?> ) {
-				//noinspection unchecked,rawtypes
-				return new AnonymousTupleSqmAssociationPathSource(
-						name,
-						sqmPath,
-						(SimpleDomainType<?>) sqmPath.getNodeType()
-				);
-			}
-			else {
-				return new AnonymousTupleSqmPathSource<>( name, sqmPath );
-			}
+		final SqmExpressible<?> expressible = expressibles[index];
+		final DomainType<?> sqmType = expressible.getSqmType();
+		if ( expressible instanceof PluralPersistentAttribute<?, ?, ?> pluralAttribute ) {
+			//noinspection unchecked,rawtypes
+			return new AnonymousTupleSqmAssociationPathSourceNew(
+					name,
+					pluralAttribute,
+					sqmType,
+					pluralAttribute.getElementType()
+			);
 		}
-		else {
+		else if ( sqmType instanceof BasicType<?> ) {
 			return new AnonymousTupleSimpleSqmPathSource<>(
 					name,
-					(DomainType<? extends Object>) component.getExpressible(),
+					sqmType,
 					BindableType.SINGULAR_ATTRIBUTE
+			);
+		}
+		else {
+			//noinspection unchecked,rawtypes
+			return new AnonymousTupleSqmAssociationPathSourceNew(
+					name,
+					(SqmPathSource) expressible,
+					sqmType,
+					(SimpleDomainType) sqmType
 			);
 		}
 	}
@@ -186,7 +251,12 @@ public class AnonymousTupleType<T> implements TupleType<T>, DomainType<T>, Retur
 	}
 
 	@Override
-	public DomainType<?> getSqmPathType() {
+	public DomainType<T> getSqmPathType() {
+		return this;
+	}
+
+	@Override
+	public DomainType<T> getSqmType() {
 		return this;
 	}
 
@@ -210,7 +280,7 @@ public class AnonymousTupleType<T> implements TupleType<T>, DomainType<T>, Retur
 
 	@Override
 	public String toString() {
-		return "AnonymousTupleType" + Arrays.toString( components );
+		return "AnonymousTupleType" + Arrays.toString( expressibles );
 	}
 
 }

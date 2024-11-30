@@ -1,19 +1,20 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.transform;
 
 import java.lang.reflect.Constructor;
 
-import org.hibernate.QueryException;
+import org.hibernate.InstantiationException;
 import org.hibernate.query.TypedTupleTransformer;
 
 /**
  * Wraps the tuples in a constructor call.
+ *
+ * @deprecated since {@link ResultTransformer} is deprecated
  */
+@Deprecated
 public class AliasToBeanConstructorResultTransformer<T> implements ResultTransformer<T>, TypedTupleTransformer<T> {
 
 	private final Constructor<T> constructor;
@@ -41,10 +42,7 @@ public class AliasToBeanConstructorResultTransformer<T> implements ResultTransfo
 			return constructor.newInstance( tuple );
 		}
 		catch ( Exception e ) {
-			throw new QueryException(
-					"could not instantiate class [" + constructor.getDeclaringClass().getName() + "] from tuple",
-					e
-			);
+			throw new InstantiationException( "Could not instantiate class", constructor.getDeclaringClass(), e );
 		}
 	}
 

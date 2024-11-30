@@ -1,21 +1,20 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
 import java.sql.DatabaseMetaData;
 import java.sql.Types;
 
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.community.dialect.sequence.MaxDBSequenceSupport;
 import org.hibernate.community.dialect.sequence.SequenceInformationExtractorSAPDBDatabaseImpl;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
+import org.hibernate.dialect.pagination.LimitLimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
@@ -24,9 +23,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.TrimSpec;
-import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sqm.mutation.internal.temptable.AfterUseAction;
-import org.hibernate.query.sqm.mutation.internal.temptable.BeforeUseAction;
+import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
+import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -89,8 +87,9 @@ public class MaxDBDialect extends Dialect {
 				return "long byte";
 			case CLOB:
 				return "long varchar";
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override
@@ -129,14 +128,14 @@ public class MaxDBDialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return LimitOffsetLimitHandler.INSTANCE;
+		return LimitLimitHandler.INSTANCE;
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry(functionContributions);
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 		functionFactory.log();
 		functionFactory.pi();
 		functionFactory.cot();
@@ -168,24 +167,24 @@ public class MaxDBDialect extends Dialect {
 		functionFactory.adddateSubdateAddtimeSubtime();
 		functionFactory.addMonths();
 
-		final BasicType<Integer> integerType = queryEngine.getTypeConfiguration().getBasicTypeRegistry()
+		final BasicType<Integer> integerType = functionContributions.getTypeConfiguration().getBasicTypeRegistry()
 				.resolve( StandardBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "extract", "?1(?2)", integerType );
+		functionContributions.getFunctionRegistry().registerPattern( "extract", "?1(?2)", integerType );
 
-		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "nullif", "case ?1 when ?2 then null else ?1 end" )
+		functionContributions.getFunctionRegistry().patternDescriptorBuilder( "nullif", "case ?1 when ?2 then null else ?1 end" )
 				.setExactArgumentCount(2)
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "index" )
+		functionContributions.getFunctionRegistry().namedDescriptorBuilder( "index" )
 				.setInvariantType( integerType )
 				.setArgumentCountBetween( 2, 4 )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
+		functionContributions.getFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
 				integerType, "index(?2,?1)", "index(?2,?1,?3)",
 				STRING, STRING, INTEGER,
-				queryEngine.getTypeConfiguration()
+				functionContributions.getTypeConfiguration()
 		).setArgumentListSignature("(pattern, string[, start])");
 	}
 
@@ -201,8 +200,8 @@ public class MaxDBDialect extends Dialect {
 	}
 
 	@Override
-	public String trimPattern(TrimSpec specification, char character) {
-		return AbstractTransactSQLDialect.replaceLtrimRtrim( specification, character);
+	public String trimPattern(TrimSpec specification, boolean isWhitespace) {
+		return AbstractTransactSQLDialect.replaceLtrimRtrim( specification, isWhitespace );
 	}
 
 	@Override
@@ -329,5 +328,14 @@ public class MaxDBDialect extends Dialect {
 	public boolean supportsJdbcConnectionLobCreation(DatabaseMetaData databaseMetaData) {
 		return false;
 	}
-}
 
+	@Override
+	public String getDual() {
+		return "dual";
+	}
+
+	@Override
+	public String getFromDualForSelectOnly() {
+		return " from " + getDual();
+	}
+}

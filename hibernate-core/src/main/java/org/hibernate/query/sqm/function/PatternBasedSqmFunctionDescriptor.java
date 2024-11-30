@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.function;
 
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentTypeResolver;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
@@ -23,7 +22,7 @@ import java.util.List;
  * Support for HQL functions that have different representations
  * in different SQL dialects, where the difference can be handled
  * via a pattern template.
- * <p/>
+ * <p>
  * In HQL we might define a function {@code concat(?1, ?2)} to
  * concatenate two strings p1 and p2. Dialects register different
  * instances of this class using the same name (concat) but with
@@ -35,7 +34,7 @@ import java.util.List;
  * last parameter may be a vararg, indicated with the syntax
  * {@code (?1 || ?2...)}.
  *
- * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
+ * @author Alexey Loubyansky
  */
 public class PatternBasedSqmFunctionDescriptor
 		extends AbstractSqmSelfRenderingFunctionDescriptor {
@@ -76,6 +75,7 @@ public class PatternBasedSqmFunctionDescriptor
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		renderer.render( sqlAppender, sqlAstArguments, null, walker );
 	}
@@ -85,6 +85,7 @@ public class PatternBasedSqmFunctionDescriptor
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
 			Predicate filter,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		renderer.render( sqlAppender, sqlAstArguments, filter, walker );
 	}
@@ -95,6 +96,7 @@ public class PatternBasedSqmFunctionDescriptor
 			List<? extends SqlAstNode> sqlAstArguments,
 			Predicate filter,
 			List<SortSpecification> withinGroup,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		renderer.render( sqlAppender, sqlAstArguments, filter, withinGroup, walker );
 	}
@@ -106,6 +108,7 @@ public class PatternBasedSqmFunctionDescriptor
 			Predicate filter,
 			Boolean respectNulls,
 			Boolean fromFirst,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		renderer.render( sqlAppender, sqlAstArguments, filter, respectNulls, fromFirst, walker );
 	}

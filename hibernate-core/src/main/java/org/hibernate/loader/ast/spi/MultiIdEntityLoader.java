@@ -1,21 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.ast.spi;
 
 import java.util.List;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
 
 /**
  * Loader subtype for loading multiple entities by multiple identifier values.
  */
-public interface MultiIdEntityLoader<T> extends MultiLoader<T> {
+public interface MultiIdEntityLoader<T> extends EntityMultiLoader<T> {
 	/**
 	 * Load multiple entities by id.  The exact result depends on the passed options.
 	 */
-	<K> List<T> load(K[] ids, MultiIdLoadOptions options, SharedSessionContractImplementor session);
+	<K> List<T> load(K[] ids, MultiIdLoadOptions options, EventSource session);
 }

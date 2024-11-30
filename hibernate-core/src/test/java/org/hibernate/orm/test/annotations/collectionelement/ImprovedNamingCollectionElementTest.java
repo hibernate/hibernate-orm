@@ -1,14 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.collectionelement;
 
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
@@ -26,7 +24,7 @@ import org.junit.jupiter.api.Test;
 public class ImprovedNamingCollectionElementTest extends DefaultNamingCollectionElementTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9387")
+	@JiraKey(value = "HHH-9387")
 	public void testDefaultTableNameOwnerEntityNameAndPKColumnOverride(SessionFactoryScope scope) {
 		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
@@ -36,7 +34,7 @@ public class ImprovedNamingCollectionElementTest extends DefaultNamingCollection
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9387")
+	@JiraKey(value = "HHH-9387")
 	public void testDefaultTableNameOwnerPrimaryTableAndEntityNamesOverride(SessionFactoryScope scope) {
 		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
@@ -46,7 +44,7 @@ public class ImprovedNamingCollectionElementTest extends DefaultNamingCollection
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9389")
+	@JiraKey(value = "HHH-9389")
 	public void testDefaultJoinColumnOwnerEntityNameAndPKColumnOverride(SessionFactoryScope scope) {
 		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
@@ -56,7 +54,7 @@ public class ImprovedNamingCollectionElementTest extends DefaultNamingCollection
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9389")
+	@JiraKey(value = "HHH-9389")
 	public void testDefaultJoinColumnOwnerPrimaryTableAndEntityNamesOverride(SessionFactoryScope scope) {
 		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).

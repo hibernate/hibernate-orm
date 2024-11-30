@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cache;
 
@@ -16,7 +14,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -31,7 +29,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Andreas Berger
  */
-@TestForIssue(jiraKey = "HHH-4910")
+@JiraKey(value = "HHH-4910")
 public class CollectionCacheEvictionTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -51,10 +49,10 @@ public class CollectionCacheEvictionTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void configure(Configuration cfg) {
 		super.configure( cfg );
-		cfg.setProperty( Environment.AUTO_EVICT_COLLECTION_CACHE, "true" );
-		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "true" );
-		cfg.setProperty( Environment.USE_QUERY_CACHE, "true" );
-		cfg.setProperty( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG.name() );
+		cfg.setProperty( Environment.AUTO_EVICT_COLLECTION_CACHE, true );
+		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, true );
+		cfg.setProperty( Environment.USE_QUERY_CACHE, true );
+		cfg.setProperty( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG );
 	}
 
 	@Override
@@ -63,13 +61,13 @@ public class CollectionCacheEvictionTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 
 		Company company1 = new Company( 1 );
-		s.save( company1 );
+		s.persist( company1 );
 
 		User user = new User( 1, company1 );
-		s.save( user );
+		s.persist( user );
 
 		Company company2 = new Company( 2 );
-		s.save( company2 );
+		s.persist( company2 );
 
 		s.getTransaction().commit();
 		s.close();
@@ -89,7 +87,7 @@ public class CollectionCacheEvictionTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testCachedValueAfterEviction() {
-        CollectionPersister persister = sessionFactory().getRuntimeMetamodels()
+		CollectionPersister persister = sessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getCollectionDescriptor(Company.class.getName() + ".users");
 
@@ -124,7 +122,7 @@ public class CollectionCacheEvictionTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 1, company.getUsers().size() );
 
 		User user = new User( 2, company );
-		s.save( user );
+		s.persist( user );
 
 		s.getTransaction().commit();
 		s.close();
@@ -150,7 +148,7 @@ public class CollectionCacheEvictionTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 
 		User user = new User( 2, company );
-		s.save( user );
+		s.persist( user );
 
 		s.getTransaction().commit();
 		s.close();
@@ -171,7 +169,7 @@ public class CollectionCacheEvictionTest extends BaseCoreFunctionalTestCase {
 		// init cache of collection
 		assertEquals( 1, company.getUsers().size() );
 
-		s.delete( company.getUsers().get( 0 ) );
+		s.remove( company.getUsers().get( 0 ) );
 
 		s.getTransaction().commit();
 		s.close();
@@ -199,7 +197,7 @@ public class CollectionCacheEvictionTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		s.delete( company.getUsers().get( 0 ) );
+		s.remove( company.getUsers().get( 0 ) );
 
 		s.getTransaction().commit();
 		s.close();
@@ -254,7 +252,7 @@ public class CollectionCacheEvictionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10631")
+	@JiraKey(value = "HHH-10631")
 	public void testCollectionCacheEvictionUpdateWhenChildIsSetToNull() {
 		Session s = openSession();
 		s.beginTransaction();

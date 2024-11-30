@@ -1,15 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.spi;
 
 import java.sql.Statement;
 import java.util.List;
+import java.util.Set;
+
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -17,6 +18,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
+import org.hibernate.sql.results.spi.ListResultsConsumer;
 
 /**
  * Encapsulates options for the execution of a HQL/Criteria/native query
@@ -54,13 +56,13 @@ public interface QueryOptions {
 	 * Transformer applied to the query to transform the structure of each "row"
 	 * in the results
 	 */
-	TupleTransformer<?> getTupleTransformer();
+	@Nullable TupleTransformer<?> getTupleTransformer();
 
 	/**
 	 * Transformer applied to the query to transform the structure of the
 	 * overall results
 	 */
-	ResultListTransformer<?> getResultListTransformer();
+	@Nullable ResultListTransformer<?> getResultListTransformer();
 
 	/**
 	 * Should results from the query be cached?
@@ -98,6 +100,21 @@ public interface QueryOptions {
 	 */
 	String getResultCacheRegionName();
 
+	/**
+	 * Should the query plan of the query be cached?
+	 */
+	Boolean getQueryPlanCachingEnabled();
+
+	/**
+	 * The explicitly enabled profiles for this query
+	 */
+	Set<String> getEnabledFetchProfiles();
+
+	/**
+	 * The explicitly disabled profiles for this query
+	 */
+	Set<String> getDisabledFetchProfiles();
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JDBC / SQL options
@@ -124,6 +141,7 @@ public interface QueryOptions {
 	 * @see Statement#getFetchSize
 	 */
 	Integer getFetchSize();
+
 	/**
 	 * The limit to the query results.  May also be accessed via
 	 * {@link #getFirstRow} and {@link #getMaxRows}
@@ -171,9 +189,28 @@ public interface QueryOptions {
 			&& (limit.getFirstRow() != null || limit.getMaxRows() != null);
 	}
 
+	default ListResultsConsumer.UniqueSemantic getUniqueSemantic(){
+		return null;
+	}
+
 	/**
-	 * Singleton access
+	 * Provide singleton access for frequently needed options:
 	 */
 	QueryOptions NONE = new QueryOptionsAdapter() {
 	};
+
+	QueryOptions READ_WRITE = new QueryOptionsAdapter() {
+		@Override
+		public Boolean isReadOnly() {
+			return Boolean.FALSE;
+		}
+	};
+
+	QueryOptions READ_ONLY = new QueryOptionsAdapter() {
+		@Override
+		public Boolean isReadOnly() {
+			return Boolean.TRUE;
+		}
+	};
+
 }

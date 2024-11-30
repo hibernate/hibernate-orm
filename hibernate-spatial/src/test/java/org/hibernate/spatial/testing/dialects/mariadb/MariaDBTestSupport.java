@@ -1,17 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.spatial.testing.dialects.mariadb;
 
 import java.util.Map;
 
 import org.hibernate.spatial.CommonSpatialFunction;
 import org.hibernate.spatial.GeomCodec;
-import org.hibernate.spatial.dialect.mysql.MySQLGeometryJdbcType;
 import org.hibernate.spatial.testing.datareader.TestData;
 import org.hibernate.spatial.testing.datareader.TestSupport;
 import org.hibernate.spatial.testing.dialects.NativeSQLTemplates;
@@ -44,12 +40,6 @@ public class MariaDBTestSupport extends TestSupport {
 
 	@Override
 	public GeomCodec codec() {
-		return new GeomCodec() {
-			@Override
-			public Geometry<?> toGeometry(Object in) {
-				return MySQLGeometryJdbcType.INSTANCE.toGeometry( (byte[])in );
-			}
-
-		};
+		return in -> (Geometry<?>) in;
 	}
 }

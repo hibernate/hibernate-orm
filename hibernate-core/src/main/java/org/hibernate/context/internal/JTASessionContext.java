@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.context.internal;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import jakarta.transaction.Synchronization;
@@ -46,6 +45,7 @@ import org.jboss.logging.Logger;
  */
 public class JTASessionContext extends AbstractCurrentSessionContext {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			JTASessionContext.class.getName()
 	);
@@ -63,7 +63,7 @@ public class JTASessionContext extends AbstractCurrentSessionContext {
 
 	@Override
 	public Session currentSession() throws HibernateException {
-		final JtaPlatform jtaPlatform = factory().getServiceRegistry().getService( JtaPlatform.class );
+		final JtaPlatform jtaPlatform = factory().getServiceRegistry().requireService( JtaPlatform.class );
 		final TransactionManager transactionManager = jtaPlatform.retrieveTransactionManager();
 		if ( transactionManager == null ) {
 			throw new HibernateException( "No TransactionManagerLookup specified" );

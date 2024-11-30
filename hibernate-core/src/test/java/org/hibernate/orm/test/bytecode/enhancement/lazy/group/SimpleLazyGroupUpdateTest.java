@@ -1,25 +1,25 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.group;
 
 import org.hibernate.annotations.LazyGroup;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
@@ -28,120 +28,121 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import static org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils.getFieldByReflection;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-11155, HHH-11506" )
-@RunWith( BytecodeEnhancerRunner.class )
-@CustomEnhancementContext( {EnhancerTestContext.class, SimpleLazyGroupUpdateTest.NoDirtyCheckingContext.class} )
-public class SimpleLazyGroupUpdateTest extends BaseCoreFunctionalTestCase {
+@JiraKey("HHH-11155")
+@JiraKey("HHH-11506")
+@DomainModel(
+		annotatedClasses = {
+				SimpleLazyGroupUpdateTest.TestEntity.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting(name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false"),
+				@Setting(name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "true"),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+@CustomEnhancementContext({ EnhancerTestContext.class, SimpleLazyGroupUpdateTest.NoDirtyCheckingContext.class })
+public class SimpleLazyGroupUpdateTest {
 
-    public static final String REALLY_BIG_STRING = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+	public static final String REALLY_BIG_STRING = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
 
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class[]{TestEntity.class};
-    }
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			s.persist( new TestEntity( 1L, "entity 1", "blah", REALLY_BIG_STRING ) );
+		} );
+	}
 
-    @Override
-    protected void configure(Configuration configuration) {
-        configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
-        configuration.setProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
-    }
+	@Test
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			TestEntity entity = s.get( TestEntity.class, 1L );
+			assertLoaded( entity, "name" );
+			assertNotLoaded( entity, "lifeStory" );
+			assertNotLoaded( entity, "reallyBigString" );
 
-    @Before
-    public void prepare() {
-        doInHibernate( this::sessionFactory, s -> {
-            s.save( new TestEntity( 1L, "entity 1", "blah", REALLY_BIG_STRING ) );
-        } );
-    }
+			entity.lifeStory = "blah blah blah";
+			assertLoaded( entity, "name" );
+			assertLoaded( entity, "lifeStory" );
+			assertNotLoaded( entity, "reallyBigString" );
+		} );
 
-    @Test
-    public void test() {
-        doInHibernate( this::sessionFactory, s -> {
-            TestEntity entity = s.get( TestEntity.class, 1L );
-            assertLoaded( entity, "name" );
-            assertNotLoaded( entity, "lifeStory" );
-            assertNotLoaded( entity, "reallyBigString" );
+		scope.inTransaction( s -> {
+			TestEntity entity = s.get( TestEntity.class, 1L );
 
-            entity.lifeStory = "blah blah blah";
-            assertLoaded( entity, "name" );
-            assertLoaded( entity, "lifeStory" );
-            assertNotLoaded( entity, "reallyBigString" );
-        } );
+			assertLoaded( entity, "name" );
+			assertNotLoaded( entity, "lifeStory" );
+			assertNotLoaded( entity, "reallyBigString" );
+			assertEquals( "blah blah blah", entity.lifeStory );
+			assertEquals( REALLY_BIG_STRING, entity.reallyBigString );
+		} );
+	}
 
-        doInHibernate( this::sessionFactory, s -> {
-            TestEntity entity = s.get( TestEntity.class, 1L );
+	private void assertLoaded(Object owner, String name) {
+		// NOTE we assume null == not-loaded
+		Object fieldByReflection = getFieldByReflection( owner, name );
+		assertNotNull( fieldByReflection, "Expecting field '" + name + "' to be loaded, but it was not" );
+	}
 
-            assertLoaded( entity, "name" );
-            assertNotLoaded( entity, "lifeStory" );
-            assertNotLoaded( entity, "reallyBigString" );
-            assertEquals( "blah blah blah", entity.lifeStory );
-            assertEquals( REALLY_BIG_STRING, entity.reallyBigString );
-        } );
-    }
+	private void assertNotLoaded(Object owner, String name) {
+		// NOTE we assume null == not-loaded
+		Object fieldByReflection = getFieldByReflection( owner, name );
+		assertNull( fieldByReflection, "Expecting field '" + name + "' to be not loaded, but it was" );
+	}
 
-    private void assertLoaded(Object owner, String name) {
-        // NOTE we assume null == not-loaded
-        Object fieldByReflection = getFieldByReflection( owner, name );
-        assertNotNull( "Expecting field '" + name + "' to be loaded, but it was not", fieldByReflection );
-    }
+	@AfterEach
+	public void cleanup(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			s.createQuery( "delete TestEntity" ).executeUpdate();
+		} );
+	}
 
-    private void assertNotLoaded(Object owner, String name) {
-        // NOTE we assume null == not-loaded
-        Object fieldByReflection = getFieldByReflection( owner, name );
-        assertNull( "Expecting field '" + name + "' to be not loaded, but it was", fieldByReflection );
-    }
+	// --- //
 
-    @After
-    public void cleanup() {
-        doInHibernate( this::sessionFactory, s -> {
-            s.createQuery( "delete TestEntity" ).executeUpdate();
-        } );
-    }
+	@Entity( name = "TestEntity" )
+	@Table( name = "TEST_ENTITY" )
+	static class TestEntity {
 
-    // --- //
+		@Id
+		Long id;
 
-    @Entity( name = "TestEntity" )
-    @Table( name = "TEST_ENTITY" )
-    private static class TestEntity {
+		String name;
 
-        @Id
-        Long id;
+		@Basic( fetch = FetchType.LAZY )
+		@LazyGroup( "grp1" )
+		String lifeStory;
 
-        String name;
+		@Basic( fetch = FetchType.LAZY )
+		@LazyGroup( "grp2" )
+		String reallyBigString;
 
-        @Basic( fetch = FetchType.LAZY )
-        @LazyGroup( "grp1" )
-        String lifeStory;
+		TestEntity() {
+		}
 
-        @Basic( fetch = FetchType.LAZY )
-        @LazyGroup( "grp2" )
-        String reallyBigString;
+		TestEntity(Long id, String name, String lifeStory, String reallyBigString) {
+			this.id = id;
+			this.name = name;
+			this.lifeStory = lifeStory;
+			this.reallyBigString = reallyBigString;
+		}
+	}
 
-        TestEntity() {
-        }
+	// --- //
 
-        TestEntity(Long id, String name, String lifeStory, String reallyBigString) {
-            this.id = id;
-            this.name = name;
-            this.lifeStory = lifeStory;
-            this.reallyBigString = reallyBigString;
-        }
-    }
+	public static class NoDirtyCheckingContext extends EnhancerTestContext {
 
-    // --- //
-
-    public static class NoDirtyCheckingContext extends EnhancerTestContext {
-
-        @Override
-        public boolean doDirtyCheckingInline(UnloadedClass classDescriptor) {
-            return false;
-        }
-    }
+		@Override
+		public boolean doDirtyCheckingInline(UnloadedClass classDescriptor) {
+			return false;
+		}
+	}
 }

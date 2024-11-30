@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
 
@@ -11,18 +9,15 @@ import java.util.Map;
 import java.util.Objects;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
- * Abstract superclass of the built in Type hierarchy.
+ * Abstract superclass of the built-in {@link Type} hierarchy.
  *
  * @author Gavin King
  */
 public abstract class AbstractType implements Type {
-	protected static final Size LEGACY_DICTATED_SIZE = new Size();
-	protected static final Size LEGACY_DEFAULT_SIZE = new Size( 19, 2, 255L, Size.LobMultiplier.NONE ); // to match legacy behavior
 
 	@Override
 	public boolean isAssociationType() {
@@ -44,36 +39,32 @@ public abstract class AbstractType implements Type {
 		return false;
 	}
 
-	@Override
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
 	public int compare(Object x, Object y) {
 		return ( (Comparable) x ).compareTo(y);
 	}
 
 	@Override
 	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner)
-	throws HibernateException {
+			throws HibernateException {
+		return value == null ? null : (Serializable) deepCopy( value, session.getFactory() );
+	}
 
-		if (value==null) {
-			return null;
-		}
-		else {
-			return (Serializable) deepCopy( value, session.getFactory() );
-		}
+	@Override
+	public Serializable disassemble(Object value, SessionFactoryImplementor sessionFactory)
+			throws HibernateException {
+		return value == null ? null : (Serializable) deepCopy( value, sessionFactory );
 	}
 
 	@Override
 	public Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner)
 	throws HibernateException {
-		if ( cached==null ) {
-			return null;
-		}
-		else {
-			return deepCopy( cached, session.getFactory() );
-		}
+		return cached == null ? null : deepCopy( cached, session.getFactory() );
 	}
 
 	@Override
-	public boolean isDirty(Object old, Object current, SharedSessionContractImplementor session) throws HibernateException {
+	public boolean isDirty(Object old, Object current, SharedSessionContractImplementor session)
+			throws HibernateException {
 		return !isSame( old, current );
 	}
 
@@ -84,8 +75,8 @@ public abstract class AbstractType implements Type {
 
 	@Override
 	public boolean isModified(Object old, Object current, boolean[] checkable, SharedSessionContractImplementor session)
-	throws HibernateException {
-		return isDirty(old, current, session);
+			throws HibernateException {
+		return isDirty( old, current, session );
 	}
 
 	@Override
@@ -105,12 +96,12 @@ public abstract class AbstractType implements Type {
 
 	@Override
 	public boolean isEqual(Object x, Object y, SessionFactoryImplementor factory) {
-		return isEqual(x, y );
+		return isEqual( x, y );
 	}
 
 	@Override
 	public int getHashCode(Object x, SessionFactoryImplementor factory) {
-		return getHashCode(x );
+		return getHashCode( x );
 	}
 
 	@Override
@@ -122,24 +113,20 @@ public abstract class AbstractType implements Type {
 			Map<Object, Object> copyCache,
 			ForeignKeyDirection foreignKeyDirection)
 	throws HibernateException {
-		boolean include;
-		if ( isAssociationType() ) {
-			AssociationType atype = (AssociationType) this;
-			include = atype.getForeignKeyDirection()==foreignKeyDirection;
+		return needsReplacement( foreignKeyDirection ) ? replace( original, target, session, owner, copyCache ) : target;
+	}
+
+	private boolean needsReplacement(ForeignKeyDirection foreignKeyDirection) {
+		// Collection and OneToOne are the only associations that could be TO_PARENT
+		if ( this instanceof CollectionType || this instanceof OneToOneType ) {
+			final AssociationType associationType = (AssociationType) this;
+			return associationType.getForeignKeyDirection() == foreignKeyDirection;
 		}
 		else {
-			include = ForeignKeyDirection.FROM_PARENT ==foreignKeyDirection;
+			return ForeignKeyDirection.FROM_PARENT == foreignKeyDirection;
 		}
-		return include ? replace(original, target, session, owner, copyCache) : target;
 	}
 
 	@Override
 	public void beforeAssemble(Serializable cached, SharedSessionContractImplementor session) {}
-
-	/*public Object copy(Object original, Object target, SharedSessionContractImplementor session, Object owner, Map copyCache)
-	throws HibernateException {
-		if (original==null) return null;
-		return assemble( disassemble(original, session), session, owner );
-	}*/
-
 }

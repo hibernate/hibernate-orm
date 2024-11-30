@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.jdbc;
 
@@ -13,7 +11,7 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 
 /**
- * A registry for tracking JDBC resources
+ * A registry for tracking JDBC resources.
  *
  * @author Steve Ebersole
  */
@@ -45,7 +43,7 @@ public interface ResourceRegistry {
 
 	/**
 	 * Register a JDBC result set.
-	 * <p/>
+	 * <p>
 	 * Implementation note: Second parameter has been introduced to prevent
 	 * multiple registrations of the same statement in case {@link ResultSet#getStatement()}
 	 * does not return original {@link Statement} object.

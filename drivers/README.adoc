@@ -1,0 +1,4 @@
+== Extra JDBC Drivers
+
+This directory is a place to drop JDBC drivers (or any test related jars) to be added to the project's
+`testRuntimeOnly` class-path.

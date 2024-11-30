@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 import java.math.BigDecimal;
@@ -19,7 +17,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  * Descriptor for {@link Byte} handling.
  *
  * @author Steve Ebersole
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 public class ByteJavaType extends AbstractClassJavaType<Byte>
 		implements PrimitiveJavaType<Byte>, VersionJavaType<Byte> {
@@ -32,9 +30,15 @@ public class ByteJavaType extends AbstractClassJavaType<Byte>
 	}
 
 	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
+	@Override
 	public String toString(Byte value) {
 		return value == null ? null : value.toString();
 	}
+
 	@Override
 	public Byte fromString(CharSequence string) {
 		return Byte.valueOf( string.toString() );
@@ -46,7 +50,7 @@ public class ByteJavaType extends AbstractClassJavaType<Byte>
 		if ( value == null ) {
 			return null;
 		}
-		if ( Byte.class.isAssignableFrom( type ) ) {
+		if ( Byte.class.isAssignableFrom( type ) || type == Object.class ) {
 			return (X) value;
 		}
 		if ( Short.class.isAssignableFrom( type ) ) {
@@ -75,14 +79,14 @@ public class ByteJavaType extends AbstractClassJavaType<Byte>
 		if ( value == null ) {
 			return null;
 		}
-		if ( value instanceof Byte ) {
-			return (Byte) value;
+		if ( value instanceof Byte byteValue ) {
+			return byteValue;
 		}
-		if ( value instanceof Number ) {
-			return ( (Number) value ).byteValue();
+		if ( value instanceof Number number ) {
+			return number.byteValue();
 		}
-		if ( value instanceof String ) {
-			return Byte.valueOf( ( (String) value ) );
+		if ( value instanceof String string ) {
+			return Byte.valueOf( string );
 		}
 		throw unknownWrap( value.getClass() );
 	}
@@ -128,53 +132,54 @@ public class ByteJavaType extends AbstractClassJavaType<Byte>
 			return null;
 		}
 
-		if ( value instanceof Byte ) {
-			return (Byte) value;
+		if ( value instanceof Byte byteValue ) {
+			return byteValue;
 		}
 
-		if ( value instanceof Short ) {
-			return CoercionHelper.toByte( (Short) value );
+		if ( value instanceof Short shotValue ) {
+			return CoercionHelper.toByte( shotValue );
 		}
 
-		if ( value instanceof Integer ) {
-			return CoercionHelper.toByte( (Integer) value );
+		if ( value instanceof Integer integerValue ) {
+			return CoercionHelper.toByte( integerValue );
 		}
 
-		if ( value instanceof Long ) {
-			return CoercionHelper.toByte( (Long) value );
+		if ( value instanceof Long longValue ) {
+			return CoercionHelper.toByte( longValue );
 		}
 
-		if ( value instanceof Double ) {
-			return CoercionHelper.toByte( (Double) value );
+		if ( value instanceof Double doubleValue ) {
+			return CoercionHelper.toByte( doubleValue );
 		}
 
-		if ( value instanceof Float ) {
-			return CoercionHelper.toByte( (Float) value );
+		if ( value instanceof Float floatValue ) {
+			return CoercionHelper.toByte( floatValue );
 		}
 
-		if ( value instanceof BigInteger ) {
-			return CoercionHelper.toByte( (BigInteger) value );
+		if ( value instanceof BigInteger bigInteger ) {
+			return CoercionHelper.toByte( bigInteger );
 		}
 
-		if ( value instanceof BigDecimal ) {
-			return CoercionHelper.toByte( (BigDecimal) value );
+		if ( value instanceof BigDecimal bigDecimal ) {
+			return CoercionHelper.toByte( bigDecimal );
 		}
 
-		if ( value instanceof String ) {
+		if ( value instanceof String string ) {
 			return CoercionHelper.coerceWrappingError(
-					() -> Byte.parseByte( (String) value )
+					() -> Byte.parseByte( string )
 			);
 		}
 
 		throw new CoercionException(
 				String.format(
 						Locale.ROOT,
-						"Cannot coerce value `%s` [%s] as Byte",
+						"Cannot coerce value '%s' [%s] to Byte",
 						value,
 						value.getClass().getName()
 				)
 		);
 	}
+
 	@Override
 	public Byte next(
 			Byte current,
@@ -188,7 +193,10 @@ public class ByteJavaType extends AbstractClassJavaType<Byte>
 	@Override
 	public Byte seed(
 			Long length,
-			Integer precision, Integer scale, SharedSessionContractImplementor session) {
+			Integer precision,
+			Integer scale,
+			SharedSessionContractImplementor session) {
 		return ZERO;
 	}
+
 }

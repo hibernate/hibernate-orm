@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.exception.internal;
 
@@ -15,6 +13,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * A {@link SQLExceptionConverter} that delegates to a chain of
@@ -44,7 +44,7 @@ public class StandardSQLExceptionConverter implements SQLExceptionConverter {
 	 * @deprecated use {@link #StandardSQLExceptionConverter(SQLExceptionConversionDelegate...)}
 	 */
 	@Deprecated(since = "6.0")
-	public void addDelegate(SQLExceptionConversionDelegate delegate) {
+	public void addDelegate(@Nullable SQLExceptionConversionDelegate delegate) {
 		if ( delegate != null ) {
 			this.delegates.add( delegate );
 		}

@@ -1,14 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.criteria;
 
 import java.util.List;
 
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.common.FetchClauseType;
 
 /**
  * Models a query part i.e. the commonalities between a query group and a query specification.
@@ -31,15 +29,17 @@ public interface JpaQueryPart<T> extends JpaCriteriaNode {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Limit/Offset/Fetch clause
 
-	<X> JpaExpression<X> getOffset();
+	//TODO: these operations should only accept integer literals or parameters
 
-	JpaQueryPart<T> setOffset(JpaExpression<?> offset);
+	JpaExpression<? extends Number> getOffset();
 
-	<X> JpaExpression<X> getFetch();
+	JpaQueryPart<T> setOffset(JpaExpression<? extends Number> offset);
 
-	JpaQueryPart<T> setFetch(JpaExpression<?> fetch);
+	JpaExpression<? extends Number> getFetch();
 
-	JpaQueryPart<T> setFetch(JpaExpression<?> fetch, FetchClauseType fetchClauseType);
+	JpaQueryPart<T> setFetch(JpaExpression<? extends Number> fetch);
+
+	JpaQueryPart<T> setFetch(JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType);
 
 	FetchClauseType getFetchClauseType();
 }

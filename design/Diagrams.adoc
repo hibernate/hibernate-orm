@@ -1,0 +1,74 @@
+= Class Diagrams
+:author:Jan Schatteman
+:toc:
+:toclevels: 2
+
+Some high-level Hibernate class diagrams
+
+:numbered:
+== org.hibernate.query.Query
+
+[plantuml,query,png]
+.Query class diagram
+----
+@startuml
+interface jakarta.persistence.Query
+interface jakarta.persistence.TypedQuery extends jakarta.persistence.Query
+
+interface CommonQueryContract
+interface MutationQuery
+interface SelectionQuery
+interface Query
+interface QueryImplementor
+interface NativeQuery
+interface NativeQueryImplementor
+class AbstractCommonQueryContract
+class AbstractSelectionQuery
+class AbstractQuery
+class NativeQueryImpl
+
+interface MutationQuery extends CommonQueryContract
+interface SelectionQuery extends CommonQueryContract
+interface Query extends MutationQuery, SelectionQuery, jakarta.persistence.TypedQuery
+interface QueryImplementor extends Query
+interface NativeQuery extends Query
+interface NativeQueryImplementor extends NativeQuery
+
+MutationQuery -[hidden]-> SelectionQuery
+AbstractCommonQueryContract .right.> CommonQueryContract
+AbstractSelectionQuery -up-|> AbstractCommonQueryContract
+AbstractSelectionQuery .right.> SelectionQuery
+AbstractQuery -up-|> AbstractSelectionQuery
+AbstractQuery -right.> QueryImplementor
+NativeQueryImpl -up-|> AbstractQuery
+NativeQueryImpl .right.> NativeQueryImplementor
+
+@enduml
+----
+== org.hibernate.spi.NavigablePath
+
+[plantuml,path,png]
+.DotIdentifierSequence class diagram
+----
+@startuml
+
+interface DotIdentifierSequence
+class NavigablePath
+class TreatedNavigablePath extends NavigablePath
+class EntityIdentifierNavigablePath extends NavigablePath
+class o.h.metamodel.mapping.SelectablePath
+interface o.h.query.hql.internal.FullyQualifiedReflectivePathSource extends DotIdentifierSequence, o.h.query.hql.spi.SemanticPathPart
+class o.h.query.hql.internal.FullyQualifiedReflectivePath
+class o.h.query.hql.internal.FullyQualifiedReflectivePathTerminal
+
+NavigablePath .up.> DotIdentifierSequence
+o.h.metamodel.mapping.SelectablePath .up.> DotIdentifierSequence
+o.h.query.hql.internal.FullyQualifiedReflectivePath .up.> o.h.query.hql.internal.FullyQualifiedReflectivePathSource
+o.h.query.hql.internal.FullyQualifiedReflectivePathTerminal -up-|> o.h.query.hql.internal.FullyQualifiedReflectivePath
+
+@enduml
+----
+
+
+
+==

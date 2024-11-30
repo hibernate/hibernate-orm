@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.derivedidentities.e5.c;
 
@@ -32,10 +30,10 @@ public class ForeignGeneratorViaMapsIdTest extends BaseNonConfigCoreFunctionalTe
 		s.persist( d );
 		s.flush();
 		s.clear();
-		d = (MedicalHistory) s.get( MedicalHistory.class, e.id);
+		d = s.get( MedicalHistory.class, e.id);
 		assertEquals( e.id, d.id );
-		s.delete( d );
-		s.delete( d.patient );
+		s.remove( d );
+		s.remove( d.patient );
 		s.getTransaction().rollback();
 		s.close();
 	}

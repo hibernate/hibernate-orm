@@ -1,14 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine;
 
+import jakarta.persistence.FetchType;
+
 /**
- * Enumeration of values describing <b>WHEN</b> fetching should occur.
- * 
+ * Enumeration of values describing <em>when</em> fetching should occur.
+ *
  * @author Steve Ebersole
  * @see FetchStyle
  */
@@ -20,5 +20,12 @@ public enum FetchTiming {
 	/**
 	 * Performing fetching later, when needed.  Also called lazy fetching.
 	 */
-	DELAYED
+	DELAYED;
+
+	public static FetchTiming forType(FetchType type) {
+		return switch (type) {
+			case EAGER -> IMMEDIATE;
+			case LAZY -> DELAYED;
+		};
+	}
 }

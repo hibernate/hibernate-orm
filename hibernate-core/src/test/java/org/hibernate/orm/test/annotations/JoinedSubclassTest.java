@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations;
 
@@ -42,7 +40,7 @@ public class JoinedSubclassTest extends BaseCoreFunctionalTestCase {
 					assertNotNull( f );
 					assertEquals( "Channel", f.getSea() );
 					assertEquals( 2, f.getSize() );
-					s.delete( f );
+					s.remove( f );
 				}
 		);
 	}
@@ -67,8 +65,8 @@ public class JoinedSubclassTest extends BaseCoreFunctionalTestCase {
 					assertNotNull( f );
 					assertEquals( country, f.getCountry() );
 					assertEquals( 2, f.getSize() );
-					s.delete( f );
-					s.delete( f.getCountry() );
+					s.remove( f );
+					s.remove( f.getCountry() );
 				}
 		);
 	}

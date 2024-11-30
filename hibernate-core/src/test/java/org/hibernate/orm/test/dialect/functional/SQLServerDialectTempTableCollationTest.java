@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.dialect.functional;
 
@@ -22,7 +20,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.SQLServerDialect;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.transaction.TransactionUtil;
@@ -35,7 +33,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
  * @author Nathan Xu
  */
 @RequiresDialect( SQLServerDialect.class )
-@TestForIssue( jiraKey = "HHH-3326" )
+@JiraKey( value = "HHH-3326" )
 public class SQLServerDialectTempTableCollationTest extends BaseCoreFunctionalTestCase {
 
 	private String originalDBCollation;

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
@@ -14,10 +12,12 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 /**
  * Allows creation of a new {@link Session} with specific options.
- * 
+ *
  * @author Steve Ebersole
+ *
+ * @see SessionFactory#withOptions()
  */
-public interface SessionBuilder<T extends SessionBuilder> {
+public interface SessionBuilder {
 	/**
 	 * Opens a session with the specified options.
 	 *
@@ -32,20 +32,20 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T interceptor(Interceptor interceptor);
+	SessionBuilder interceptor(Interceptor interceptor);
 
 	/**
 	 * Signifies that no {@link Interceptor} should be used.
-	 * <p/>
+	 * <p>
 	 * By default, if no {@code Interceptor} is explicitly specified, the
 	 * {@code Interceptor} associated with the {@link SessionFactory} is
 	 * inherited by the new {@link Session}.
-	 * <p/>
+	 * <p>
 	 * Calling {@link #interceptor(Interceptor)} with null has the same effect.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T noInterceptor();
+	SessionBuilder noInterceptor();
 
 	/**
 	 * Applies the given {@link StatementInspector} to the session.
@@ -54,7 +54,7 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T statementInspector(StatementInspector statementInspector);
+	SessionBuilder statementInspector(StatementInspector statementInspector);
 
 	/**
 	 * Adds a specific connection to the session options.
@@ -63,7 +63,7 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T connection(Connection connection);
+	SessionBuilder connection(Connection connection);
 
 	/**
 	 * Signifies that the connection release mode from the original session
@@ -73,7 +73,7 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T connectionHandlingMode(PhysicalConnectionHandlingMode mode);
+	SessionBuilder connectionHandlingMode(PhysicalConnectionHandlingMode mode);
 
 	/**
 	 * Should the session built automatically join in any ongoing JTA transactions.
@@ -84,7 +84,7 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @see jakarta.persistence.SynchronizationType#SYNCHRONIZED
 	 */
-	T autoJoinTransactions(boolean autoJoinTransactions);
+	SessionBuilder autoJoinTransactions(boolean autoJoinTransactions);
 
 	/**
 	 * Should the session be automatically cleared on a failed transaction?
@@ -93,8 +93,7 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	@SuppressWarnings("UnusedReturnValue")
-	T autoClear(boolean autoClear);
+	SessionBuilder autoClear(boolean autoClear);
 
 	/**
 	 * Specify the initial FlushMode to use for the opened Session
@@ -105,7 +104,7 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @see jakarta.persistence.PersistenceContextType
 	 */
-	T flushMode(FlushMode flushMode);
+	SessionBuilder flushMode(FlushMode flushMode);
 
 	/**
 	 * Define the tenant identifier to be associated with the opened session.
@@ -113,8 +112,20 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 * @param tenantIdentifier The tenant identifier.
 	 *
 	 * @return {@code this}, for method chaining
+	 * @deprecated Use {@link #tenantIdentifier(Object)} instead
 	 */
-	T tenantIdentifier(String tenantIdentifier);
+	@Deprecated(since = "6.4", forRemoval = true)
+	SessionBuilder tenantIdentifier(String tenantIdentifier);
+
+	/**
+	 * Define the tenant identifier to be associated with the opened session.
+	 *
+	 * @param tenantIdentifier The tenant identifier.
+	 *
+	 * @return {@code this}, for method chaining
+	 * @since 6.4
+	 */
+	SessionBuilder tenantIdentifier(Object tenantIdentifier);
 
 	/**
 	 * Add one or more {@link SessionEventListener} instances to the list of
@@ -124,17 +135,17 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T eventListeners(SessionEventListener... listeners);
+	SessionBuilder eventListeners(SessionEventListener... listeners);
 
 	/**
 	 * Remove all listeners intended for the built session currently held here,
 	 * including any auto-apply ones; in other words, start with a clean slate.
 	 *
-	 * {@code this}, for method chaining
+	 * @return {@code this}, for method chaining
 	 */
-	T clearEventListeners();
+	SessionBuilder clearEventListeners();
 
-	T jdbcTimeZone(TimeZone timeZone);
+	SessionBuilder jdbcTimeZone(TimeZone timeZone);
 
 	/**
 	 * Should the session be automatically closed after transaction completion?
@@ -145,5 +156,5 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @see jakarta.persistence.PersistenceContextType
 	 */
-	T autoClose(boolean autoClose);
+	SessionBuilder autoClose(boolean autoClose);
 }

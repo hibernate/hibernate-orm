@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 import java.math.BigDecimal;
@@ -29,10 +27,17 @@ public class ShortJavaType extends AbstractClassJavaType<Short>
 	public ShortJavaType() {
 		super( Short.class );
 	}
+
+	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
 	@Override
 	public String toString(Short value) {
 		return value == null ? null : value.toString();
 	}
+
 	@Override
 	public Short fromString(CharSequence string) {
 		return Short.valueOf( string.toString() );
@@ -40,13 +45,10 @@ public class ShortJavaType extends AbstractClassJavaType<Short>
 
 	@Override
 	public boolean isWider(JavaType<?> javaType) {
-		switch ( javaType.getJavaType().getTypeName() ) {
-			case "byte":
-			case "java.lang.Byte":
-				return true;
-			default:
-				return false;
-		}
+		return switch ( javaType.getTypeName() ) {
+			case "byte", "java.lang.Byte" -> true;
+			default -> false;
+		};
 	}
 
 	@SuppressWarnings("unchecked")
@@ -55,7 +57,7 @@ public class ShortJavaType extends AbstractClassJavaType<Short>
 		if ( value == null ) {
 			return null;
 		}
-		if ( Short.class.isAssignableFrom( type ) ) {
+		if ( Short.class.isAssignableFrom( type ) || type == Object.class ) {
 			return (X) value;
 		}
 		if ( Byte.class.isAssignableFrom( type ) ) {
@@ -78,19 +80,20 @@ public class ShortJavaType extends AbstractClassJavaType<Short>
 		}
 		throw unknownUnwrap( type );
 	}
+
 	@Override
 	public <X> Short wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof Short) {
-			return (Short) value;
+		if (value instanceof Short shortValue) {
+			return shortValue;
 		}
-		if (value instanceof Number) {
-			return ( (Number) value ).shortValue();
+		if (value instanceof Number number) {
+			return number.shortValue();
 		}
-		if (value instanceof String) {
-			return Short.valueOf( ( (String) value ) );
+		if (value instanceof String string) {
+			return Short.valueOf( string );
 		}
 		throw unknownWrap( value.getClass() );
 	}
@@ -136,48 +139,48 @@ public class ShortJavaType extends AbstractClassJavaType<Short>
 			return null;
 		}
 
-		if ( value instanceof Short ) {
-			return (short) value;
+		if ( value instanceof Short shortValue ) {
+			return shortValue;
 		}
 
-		if ( value instanceof Byte ) {
-			return CoercionHelper.toShort( (Byte) value );
+		if ( value instanceof Byte byteValue ) {
+			return CoercionHelper.toShort( byteValue );
 		}
 
-		if ( value instanceof Integer ) {
-			return CoercionHelper.toShort( (Integer) value );
+		if ( value instanceof Integer integerValue ) {
+			return CoercionHelper.toShort( integerValue );
 		}
 
-		if ( value instanceof Long ) {
-			return CoercionHelper.toShort( (Long) value );
+		if ( value instanceof Long longValue ) {
+			return CoercionHelper.toShort( longValue );
 		}
 
-		if ( value instanceof Double ) {
-			return CoercionHelper.toShort( (Double) value );
+		if ( value instanceof Double doubleValue ) {
+			return CoercionHelper.toShort( doubleValue );
 		}
 
-		if ( value instanceof Float ) {
-			return CoercionHelper.toShort( (Float) value );
+		if ( value instanceof Float floatValue ) {
+			return CoercionHelper.toShort( floatValue );
 		}
 
-		if ( value instanceof BigInteger ) {
-			return CoercionHelper.toShort( (BigInteger) value );
+		if ( value instanceof BigInteger bigInteger ) {
+			return CoercionHelper.toShort( bigInteger );
 		}
 
-		if ( value instanceof BigDecimal ) {
-			return CoercionHelper.toShort( (BigDecimal) value );
+		if ( value instanceof BigDecimal bigDecimal ) {
+			return CoercionHelper.toShort( bigDecimal );
 		}
 
-		if ( value instanceof String ) {
+		if ( value instanceof String string ) {
 			return CoercionHelper.coerceWrappingError(
-					() -> Short.parseShort( (String) value )
+					() -> Short.parseShort( string )
 			);
 		}
 
 		throw new CoercionException(
 				String.format(
 						Locale.ROOT,
-						"Cannot coerce value `%s` [%s] as Short",
+						"Cannot coerce value '%s' [%s] to Short",
 						value,
 						value.getClass().getName()
 				)
@@ -186,7 +189,9 @@ public class ShortJavaType extends AbstractClassJavaType<Short>
 	@Override
 	public Short seed(
 			Long length,
-			Integer precision, Integer scale, SharedSessionContractImplementor session) {
+			Integer precision,
+			Integer scale,
+			SharedSessionContractImplementor session) {
 		return ZERO;
 	}
 
@@ -199,4 +204,5 @@ public class ShortJavaType extends AbstractClassJavaType<Short>
 			SharedSessionContractImplementor session) {
 		return (short) ( current + 1 );
 	}
+
 }

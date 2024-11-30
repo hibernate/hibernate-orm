@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.hbm2ddl;
 import org.hibernate.mapping.Column;
@@ -54,16 +52,12 @@ public class ForeignKeyMetadata {
 	public boolean matches(ForeignKey fk) {
 		if ( refTable.equalsIgnoreCase( fk.getReferencedTable().getName() ) ) {
 			if ( fk.getColumnSpan() == references.size() ) {
-				List fkRefs;
-				if ( fk.isReferenceToPrimaryKey() ) {
-					fkRefs = fk.getReferencedTable().getPrimaryKey().getColumns();
-				}
-				else {
-					fkRefs = fk.getReferencedColumns();
-				}
+				List<Column> fkRefs = fk.isReferenceToPrimaryKey()
+						? fk.getReferencedTable().getPrimaryKey().getColumns()
+						: fk.getReferencedColumns();
 				for ( int i = 0; i < fk.getColumnSpan(); i++ ) {
 					Column column = fk.getColumn( i );
-					Column ref = ( Column ) fkRefs.get( i );
+					Column ref = fkRefs.get( i );
 					if ( !hasReference( column, ref ) ) {
 						return false;
 					}
@@ -73,7 +67,7 @@ public class ForeignKeyMetadata {
 		}
 		return false;
 	}
-	
+
 	public String toString() {
 		return "ForeignKeyMetadata(" + name + ')';
 	}

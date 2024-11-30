@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.criteria.components;
 
@@ -27,7 +25,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
@@ -40,7 +38,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-6562")
+@JiraKey(value = "HHH-6562")
 @Jpa(annotatedClasses = {
 		EntitySuperclassComponentWithCollectionTest.Employee.class,
 		EntitySuperclassComponentWithCollectionTest.Manager.class,
@@ -170,7 +168,6 @@ public class EntitySuperclassComponentWithCollectionTest {
 	}
 
 	@Entity(name = "Manager")
-	@Table(name = "MANAGER")
 	public static class Manager extends Employee {
 	}
 
@@ -275,7 +272,6 @@ public class EntitySuperclassComponentWithCollectionTest {
 	}
 
 	@Entity(name = "Leader")
-	@Table(name = "LEADER")
 	public static class Leader extends Person {
 	}
 

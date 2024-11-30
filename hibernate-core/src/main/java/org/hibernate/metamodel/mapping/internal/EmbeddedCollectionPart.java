@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
@@ -13,10 +11,9 @@ import java.util.function.Consumer;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -25,17 +22,15 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBasicImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
-import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.PluralTableGroup;
@@ -53,6 +48,10 @@ import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableFetchImpl;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableResultImpl;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static java.util.Objects.requireNonNullElse;
 
 /**
  * @author Steve Ebersole
@@ -91,6 +90,11 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 
 		this.containingTableExpression = containingTableExpression;
 		this.sqlAliasStem = sqlAliasStem;
+	}
+
+	@Override
+	public PluralAttributeMapping getCollectionAttribute() {
+		return collectionDescriptor.getAttributeMapping();
 	}
 
 	@Override
@@ -137,6 +141,11 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	@Override
 	public String getFetchableName() {
 		return getNature().getName();
+	}
+
+	@Override
+	public int getFetchableKey() {
+		return nature == Nature.INDEX || !collectionDescriptor.hasIndex() ? 0 : 1;
 	}
 
 	@Override
@@ -202,16 +211,13 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 					final TableReference tableReference = tableGroup.resolveTableReference(
 							tableGroup.getNavigablePath()
 									.append( getNavigableRole().getNavigableName() ),
+							this,
 							selection.getContainingTableExpression()
 					);
 					expressions.add(
 							sqlExpressionResolver.resolveSqlExpression(
-									SqlExpressionResolver.createColumnReferenceKey( tableReference, selection.getSelectionExpression() ),
-									sqlAstProcessingState -> new ColumnReference(
-											tableReference,
-											selection,
-											sqlAstCreationState.getCreationContext().getSessionFactory()
-									)
+									tableReference,
+									selection
 							)
 					);
 				}
@@ -223,32 +229,22 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	public TableGroupJoin createTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAstJoinType requestedJoinType,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase explicitSqlAliasBase,
+			@Nullable SqlAstJoinType requestedJoinType,
 			boolean fetched,
 			boolean addsPredicate,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
-			FromClauseAccess fromClauseAccess,
-			SqlAstCreationContext creationContext) {
-		final SqlAstJoinType joinType;
-		if ( requestedJoinType == null ) {
-			joinType = SqlAstJoinType.INNER;
-		}
-		else {
-			joinType = requestedJoinType;
-		}
+			SqlAstCreationState creationState) {
+		final SqlAstJoinType joinType = requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
 		final TableGroup tableGroup = createRootTableGroupJoin(
 				navigablePath,
 				lhs,
 				explicitSourceAlias,
+				explicitSqlAliasBase,
 				requestedJoinType,
 				fetched,
 				null,
-				aliasBaseGenerator,
-				sqlExpressionResolver,
-				fromClauseAccess,
-				creationContext
+				creationState
 		);
 
 		return new TableGroupJoin( navigablePath, joinType, tableGroup, null );
@@ -258,16 +254,13 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	public TableGroup createRootTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAstJoinType requestedJoinType,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase explicitSqlAliasBase,
+			@Nullable SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
-			Consumer<Predicate> predicateConsumer,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
-			FromClauseAccess fromClauseAccess,
-			SqlAstCreationContext creationContext) {
+			@Nullable Consumer<Predicate> predicateConsumer,
+			SqlAstCreationState creationState) {
 		assert lhs.getModelPart() instanceof PluralAttributeMapping;
-
 		return new StandardVirtualTableGroup( navigablePath, this, lhs, fetched );
 	}
 
@@ -304,11 +297,6 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	}
 
 	@Override
-	public JavaType<?> getJavaType() {
-		return getEmbeddableTypeDescriptor().getJavaType();
-	}
-
-	@Override
 	public JavaType<?> getExpressibleJavaType() {
 		return getJavaType();
 	}
@@ -324,16 +312,6 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	}
 
 	@Override
-	public int getNumberOfFetchables() {
-		return getEmbeddableTypeDescriptor().getNumberOfAttributeMappings();
-	}
-
-	@Override
-	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		getEmbeddableTypeDescriptor().breakDownJdbcValues( domainValue, valueConsumer, session );
-	}
-
-	@Override
 	public FetchStyle getStyle() {
 		return FetchStyle.JOIN;
 	}
@@ -341,6 +319,15 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	@Override
 	public FetchTiming getTiming() {
 		return FetchTiming.IMMEDIATE;
+	}
+
+	@Override
+	public boolean containsTableReference(String tableExpression) {
+		if ( collectionDescriptor.isOneToMany() ) {
+			return ( (EntityCollectionPart) collectionDescriptor.getAttributeMapping().getElementDescriptor() )
+					.getPartMappingType().containsTableReference( tableExpression );
+		}
+		return collectionDescriptor.getAttributeMapping().containsTableReference( tableExpression );
 	}
 
 }

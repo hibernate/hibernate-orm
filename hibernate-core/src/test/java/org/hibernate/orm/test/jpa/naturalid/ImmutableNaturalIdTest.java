@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.naturalid;
 
@@ -41,7 +39,7 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 	}
 
 	@Test
-	public void testUpdate() {
+	public void testMerge() {
 		// prepare some test data...
 		User user = new User();
 		inTransaction(
@@ -49,30 +47,29 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 					user.setUserName( "steve" );
 					user.setEmail( "steve@hibernate.org" );
 					user.setPassword( "brewhaha" );
-					session.save( user );
+					session.persist( user );
 				}
 		);
 
 		// 'user' is now a detached entity, so lets change a property and reattch...
 		user.setPassword( "homebrew" );
-		inTransaction(
+		User merged = fromTransaction(
 				session ->
-						session.update( user )
+						session.merge( user )
 		);
 
 		// clean up
 		inTransaction(
 				session ->
-						session.delete( user )
+						session.remove( session.getReference(merged) )
 		);
 	}
 
 	@Test
-	public void testNaturalIdCheck() throws Exception {
+	public void testNaturalIdCheck()  {
 		sessionFactoryScope().inSession(
 				session -> {
 					Transaction t = session.beginTransaction();
-
 					User u = new User( "steve", "superSecret" );
 					session.persist( u );
 					u.setUserName( "Steve" );
@@ -84,8 +81,6 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 						//expected
 						t.rollback();
 					}
-					u.setUserName( "steve" );
-					session.delete( u );
 					session.close();
 				}
 		);

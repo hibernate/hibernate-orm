@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.manytomany;
 
@@ -58,11 +56,11 @@ public class ManyToManyBidirectionalTest {
 			bookByAuthor1AndAuthor2.addAuthor( author1 );
 			bookByAuthor1AndAuthor2.addAuthor( author2 );
 
-			session.save( author1 );
-			session.save( author2 );
-			session.save( bookByAuthor1 );
-			session.save( bookByAuthor2 );
-			session.save( bookByAuthor1AndAuthor2 );
+			session.persist( author1 );
+			session.persist( author2 );
+			session.persist( bookByAuthor1 );
+			session.persist( bookByAuthor2 );
+			session.persist( bookByAuthor1AndAuthor2 );
 
 		} );
 	}

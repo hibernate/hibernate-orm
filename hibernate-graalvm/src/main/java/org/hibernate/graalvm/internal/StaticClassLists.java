@@ -1,10 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.graalvm.internal;
+
 
 import org.hibernate.tool.schema.internal.script.MultiLineSqlScriptExtractor;
 import org.hibernate.type.EnumType;
@@ -50,7 +49,6 @@ final class StaticClassLists {
 				org.hibernate.event.spi.LoadEventListener[].class,
 				org.hibernate.event.spi.ResolveNaturalIdEventListener[].class,
 				org.hibernate.event.spi.InitializeCollectionEventListener[].class,
-				org.hibernate.event.spi.SaveOrUpdateEventListener[].class,
 				org.hibernate.event.spi.PersistEventListener[].class,
 				org.hibernate.event.spi.MergeEventListener[].class,
 				org.hibernate.event.spi.DeleteEventListener[].class,
@@ -66,17 +64,19 @@ final class StaticClassLists {
 				org.hibernate.event.spi.PreLoadEventListener[].class,
 				org.hibernate.event.spi.PreDeleteEventListener[].class,
 				org.hibernate.event.spi.PreUpdateEventListener[].class,
+				org.hibernate.event.spi.PreUpsertEventListener[].class,
 				org.hibernate.event.spi.PreInsertEventListener[].class,
 				org.hibernate.event.spi.PostLoadEventListener[].class,
 				org.hibernate.event.spi.PostDeleteEventListener[].class,
 				org.hibernate.event.spi.PostUpdateEventListener[].class,
+				org.hibernate.event.spi.PostUpsertEventListener[].class,
 				org.hibernate.event.spi.PostInsertEventListener[].class,
 				org.hibernate.event.spi.PreCollectionRecreateEventListener[].class,
 				org.hibernate.event.spi.PreCollectionRemoveEventListener[].class,
 				org.hibernate.event.spi.PreCollectionUpdateEventListener[].class,
 				org.hibernate.event.spi.PostCollectionRecreateEventListener[].class,
 				org.hibernate.event.spi.PostCollectionRemoveEventListener[].class,
-				org.hibernate.event.spi.PostCollectionUpdateEventListener[].class
+				org.hibernate.event.spi.PostCollectionUpdateEventListener[].class,
 		};
 	}
 

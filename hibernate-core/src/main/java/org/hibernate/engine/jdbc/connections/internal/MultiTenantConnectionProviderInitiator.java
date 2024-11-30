@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.connections.internal;
 
@@ -14,6 +12,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.connections.spi.DataSourceBasedMultiTenantConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
+import org.hibernate.resource.beans.internal.Helper;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
@@ -24,7 +23,7 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class MultiTenantConnectionProviderInitiator implements StandardServiceInitiator<MultiTenantConnectionProvider> {
+public class MultiTenantConnectionProviderInitiator implements StandardServiceInitiator<MultiTenantConnectionProvider<?>> {
 	private static final Logger log = Logger.getLogger( MultiTenantConnectionProviderInitiator.class );
 
 	/**
@@ -33,15 +32,21 @@ public class MultiTenantConnectionProviderInitiator implements StandardServiceIn
 	public static final MultiTenantConnectionProviderInitiator INSTANCE = new MultiTenantConnectionProviderInitiator();
 
 	@Override
-	public Class<MultiTenantConnectionProvider> getServiceInitiated() {
-		return MultiTenantConnectionProvider.class;
+	public Class<MultiTenantConnectionProvider<?>> getServiceInitiated() {
+		//noinspection unchecked
+		return (Class<MultiTenantConnectionProvider<?>>) (Class<?>) MultiTenantConnectionProvider.class;
 	}
 
 	@Override
-	public MultiTenantConnectionProvider initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
+	public MultiTenantConnectionProvider<?> initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		if ( !configurationValues.containsKey( AvailableSettings.MULTI_TENANT_CONNECTION_PROVIDER ) ) {
-			// nothing to do, but given the separate hierarchies have to handle this here.
-			return null;
+			return Helper.getBean(
+				Helper.getBeanContainer( registry ),
+				MultiTenantConnectionProvider.class,
+				true,
+				true,
+				null
+			);
 		}
 
 		final Object configValue = configurationValues.get( AvailableSettings.MULTI_TENANT_CONNECTION_PROVIDER );
@@ -50,25 +55,25 @@ public class MultiTenantConnectionProviderInitiator implements StandardServiceIn
 			// DataSourceBasedMultiTenantConnectionProviderImpl
 			final Object dataSourceConfigValue = configurationValues.get( AvailableSettings.DATASOURCE );
 			if ( dataSourceConfigValue instanceof String ) {
-				return new DataSourceBasedMultiTenantConnectionProviderImpl();
+				return new DataSourceBasedMultiTenantConnectionProviderImpl<>();
 			}
 
 			return null;
 		}
 
-		if ( configValue instanceof MultiTenantConnectionProvider ) {
-			return (MultiTenantConnectionProvider) configValue;
+		if ( configValue instanceof MultiTenantConnectionProvider<?> ) {
+			return (MultiTenantConnectionProvider<?>) configValue;
 		}
 		else {
-			final Class<MultiTenantConnectionProvider> implClass;
+			final Class<MultiTenantConnectionProvider<?>> implClass;
 			if ( configValue instanceof Class ) {
 				@SuppressWarnings("unchecked")
-				Class<MultiTenantConnectionProvider> clazz = (Class<MultiTenantConnectionProvider>) configValue;
+				Class<MultiTenantConnectionProvider<?>> clazz = (Class<MultiTenantConnectionProvider<?>>) configValue;
 				implClass = clazz;
 			}
 			else {
 				final String className = configValue.toString();
-				final ClassLoaderService classLoaderService = registry.getService( ClassLoaderService.class );
+				final ClassLoaderService classLoaderService = registry.requireService( ClassLoaderService.class );
 				try {
 					implClass = classLoaderService.classForName( className );
 				}

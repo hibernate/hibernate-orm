@@ -1,10 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel;
+
+import org.hibernate.AssertionFailure;
 
 import java.util.Locale;
 
@@ -15,39 +15,32 @@ import java.util.Locale;
  * @author Steve Ebersole
  */
 public enum RepresentationMode {
-	POJO( "pojo" ),
-	MAP( "dynamic-map", "map" );
-
-	private final String externalName;
-	private final String alternativeExternalName;
-
-	RepresentationMode(String externalName) {
-		this ( externalName, null );
-	}
-
-	RepresentationMode(String externalName, String alternativeExternalName) {
-		this.externalName = externalName;
-		this.alternativeExternalName = alternativeExternalName;
-	}
+	POJO,
+	MAP;
 
 	public String getExternalName() {
-		return externalName;
+		switch (this) {
+			case POJO:
+				return "pojo";
+			case MAP:
+				return "dynamic-map";
+			default:
+				throw new AssertionFailure("Unknown RepresentationMode");
+		}
 	}
 
 	public static RepresentationMode fromExternalName(String externalName) {
 		if ( externalName == null ) {
 			return POJO;
 		}
-
-		if ( MAP.externalName.equalsIgnoreCase( externalName )
-				|| MAP.alternativeExternalName.equalsIgnoreCase( externalName ) ) {
-			return MAP;
+		switch ( externalName.toLowerCase(Locale.ROOT) ) {
+			case "pojo":
+				return POJO;
+			case "dynamic-map":
+			case "map":
+				return MAP;
+			default:
+				throw new IllegalArgumentException("Unknown RepresentationMode");
 		}
-
-		if ( POJO.externalName.equalsIgnoreCase( externalName ) ) {
-			return POJO;
-		}
-
-		return valueOf( externalName.toUpperCase( Locale.ROOT ) );
 	}
 }

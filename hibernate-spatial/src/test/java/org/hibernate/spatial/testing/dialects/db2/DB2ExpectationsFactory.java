@@ -1,15 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.spatial.testing.dialects.db2;
 
 import java.sql.SQLException;
 import java.util.Map;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.spatial.dialect.db2.DB2GeometryType;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.NativeSQLStatement;
@@ -41,7 +38,7 @@ public class DB2ExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getExtent() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	public NativeSQLStatement createNativeExtentStatement() {

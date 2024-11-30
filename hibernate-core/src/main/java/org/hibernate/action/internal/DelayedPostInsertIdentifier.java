@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.action.internal;
 
@@ -14,7 +12,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * generated on insert (like an IDENTITY column) where the insert needed to
  * be delayed because we were outside a transaction when the persist operation
  * was called (save currently still performs the insert).
- * <p/>
+ * <p>
  * The stand-in is only used within the {@link org.hibernate.engine.spi.PersistenceContext}
  * in order to distinguish one instance from another; it is never injected into
  * the entity instance or returned to the client.

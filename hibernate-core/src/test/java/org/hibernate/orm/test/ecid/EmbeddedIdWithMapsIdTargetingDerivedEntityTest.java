@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.ecid;
 
@@ -10,7 +8,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ImplicitListAsBagProvider;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -61,7 +59,7 @@ import static org.hibernate.orm.test.util.SchemaUtil.getColumnNames;
  * at java.base/java.lang.reflect.Method.invoke(Method.java:566)
  * at org.hibernate.testing.junit4.TestClassMetadata.performCallbackInvocation(TestClassMetadata.java:205)
  */
-@TestForIssue(jiraKey = "HHH-13295")
+@JiraKey(value = "HHH-13295")
 @ServiceRegistry(
 		settingProviders = @SettingProvider(
 				settingName = DEFAULT_LIST_SEMANTICS,

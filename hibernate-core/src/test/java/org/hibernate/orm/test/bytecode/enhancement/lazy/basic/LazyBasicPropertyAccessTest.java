@@ -1,23 +1,21 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.basic;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import jakarta.persistence.Access;
-import jakarta.persistence.AccessType;
 import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -27,98 +25,140 @@ import jakarta.persistence.Table;
 
 import static org.hibernate.Hibernate.isPropertyInitialized;
 import static org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils.checkDirtyTracking;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Gail Badner
  */
-@RunWith( BytecodeEnhancerRunner.class )
-public class LazyBasicPropertyAccessTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				LazyBasicPropertyAccessTest.LazyEntity.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting(name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false"),
+				@Setting(name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "true"),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class LazyBasicPropertyAccessTest {
 
-    private LazyEntity entity;
+	private LazyEntity entity;
+	private Long entityId;
 
-    private Long entityId;
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			LazyEntity entity = new LazyEntity();
+			entity.setDescription( "desc" );
+			s.persist( entity );
+			entityId = entity.getId();
+		} );
+	}
 
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{LazyEntity.class};
-    }
+	@Test
+	public void testAttachedUpdate(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			entity = s.get( LazyEntity.class, entityId );
 
-    @Override
-    protected void configure(Configuration configuration) {
-        configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
-        configuration.setProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
-    }
+			assertFalse( isPropertyInitialized( entity, "description" ) );
+			checkDirtyTracking( entity );
 
-    @Before
-    public void prepare() {
-        doInHibernate( this::sessionFactory, s -> {
-            LazyEntity entity = new LazyEntity();
-            entity.description = "desc";
-            s.persist( entity );
-            entityId = entity.id;
-        } );
-    }
+			assertEquals( "desc", entity.getDescription() );
+			assertTrue( isPropertyInitialized( entity, "description" ) );
+		} );
 
-    @Test
-    public void execute() {
-        doInHibernate( this::sessionFactory, s -> {
-            entity = s.get( LazyEntity.class, entityId );
+		scope.inTransaction( s -> {
+			entity = s.get( LazyEntity.class, entityId );
+			assertFalse( isPropertyInitialized( entity, "description" ) );
+			entity.setDescription( "desc1" );
 
-            Assert.assertFalse( isPropertyInitialized( entity, "description" ) );
-            checkDirtyTracking( entity );
+			checkDirtyTracking( entity, "description" );
 
-            assertEquals( "desc", entity.description );
-            assertTrue( isPropertyInitialized( entity, "description" ) );
-        } );
+			assertEquals( "desc1", entity.getDescription() );
+			assertTrue( isPropertyInitialized( entity, "description" ) );
+		} );
 
-        doInHibernate( this::sessionFactory, s -> {
-            entity.description = "desc1";
-            s.update( entity );
+		scope.inTransaction( s -> {
+			entity = s.get( LazyEntity.class, entityId );
+			assertEquals( "desc1", entity.getDescription() );
+		} );
+	}
 
-            // Assert.assertFalse( Hibernate.isPropertyInitialized( entity, "description" ) );
-            checkDirtyTracking( entity, "description" );
+	@Test
+	@JiraKey("HHH-11882")
+	public void testDetachedUpdate(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			entity = s.get( LazyEntity.class, entityId );
 
-            assertEquals( "desc1", entity.description );
-            assertTrue( isPropertyInitialized( entity, "description" ) );
-        } );
+			assertFalse( isPropertyInitialized( entity, "description" ) );
+			checkDirtyTracking( entity );
 
-        doInHibernate( this::sessionFactory, s -> {
-            entity = s.get( LazyEntity.class, entityId );
-            assertEquals( "desc1", entity.description );
-        } );
+			assertEquals( "desc", entity.getDescription() );
+			assertTrue( isPropertyInitialized( entity, "description" ) );
+		} );
 
-        doInHibernate( this::sessionFactory, s -> {
-            entity.description = "desc2";
-            LazyEntity mergedEntity = (LazyEntity) s.merge( entity );
+		scope.inTransaction( s -> {
+			entity.setDescription( "desc1" );
+			LazyEntity merged = s.merge( entity );
 
-            //Assert.assertFalse( Hibernate.isPropertyInitialized( entity, "description" ) );
-            checkDirtyTracking( mergedEntity, "description" );
+			checkDirtyTracking( merged, "description" );
 
-            assertEquals( "desc2", mergedEntity.description );
-            assertTrue( isPropertyInitialized( mergedEntity, "description" ) );
-        } );
+			assertEquals( "desc1", merged.getDescription() );
+			assertTrue( isPropertyInitialized( merged, "description" ) );
+		} );
 
-        doInHibernate( this::sessionFactory, s -> {
-            LazyEntity entity = s.get( LazyEntity.class, entityId );
-            assertEquals( "desc2", entity.description );
-        } );
-    }
+		scope.inTransaction( s -> {
+			entity = s.get( LazyEntity.class, entityId );
+			assertEquals( "desc1", entity.getDescription() );
+		} );
 
-    // --- //
+		scope.inTransaction( s -> {
+			entity.setDescription( "desc2" );
+			LazyEntity mergedEntity = s.merge( entity );
 
-    @Entity
-    @Access( AccessType.FIELD )
-    @Table( name = "LAZY_PROPERTY_ENTITY" )
-    private static class LazyEntity {
+			// Assert.assertFalse( isPropertyInitialized( entity, "description" ) );
+			checkDirtyTracking( mergedEntity, "description" );
 
-        @Id
-        @GeneratedValue
-        Long id;
+			assertEquals( "desc2", mergedEntity.getDescription() );
+			assertTrue( isPropertyInitialized( mergedEntity, "description" ) );
+		} );
 
-        @Basic( fetch = FetchType.LAZY )
-        String description;
-    }
+		scope.inTransaction( s -> {
+			entity = s.get( LazyEntity.class, entityId );
+			assertEquals( "desc2", entity.getDescription() );
+		} );
+	}
+
+	// --- //
+
+	@Entity
+	@Table( name = "LAZY_FIELD_ENTITY" )
+	static class LazyEntity {
+		Long id;
+		String description;
+
+		@Id
+		@GeneratedValue
+		Long getId() {
+			return id;
+		}
+
+		void setId(Long id) {
+			this.id = id;
+		}
+
+		@Basic( fetch = FetchType.LAZY )
+		String getDescription() {
+			return description;
+		}
+
+		void setDescription(String description) {
+			this.description = description;
+		}
+	}
 }

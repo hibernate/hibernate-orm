@@ -1,16 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.entities.customtype;
 
+import jakarta.persistence.ColumnResult;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.SqlResultSetMapping;
 
 import org.hibernate.envers.Audited;
 
@@ -19,6 +19,13 @@ import org.hibernate.envers.Audited;
  */
 @Entity
 @Audited
+@SqlResultSetMapping(
+		name = "e1_e2",
+		columns = {
+				@ColumnResult( name = "enum1", type = String.class ),
+				@ColumnResult( name = "enum2", type = Integer.class )
+		}
+)
 public class EnumTypeEntity {
 	public static enum E1 {X, Y}
 

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm;
 
@@ -16,6 +14,7 @@ import org.hibernate.query.SemanticException;
 public class StrictJpaComplianceViolation extends SemanticException {
 	public enum Type {
 		IMPLICIT_SELECT( "implicit select clause" ),
+		IMPLICIT_FROM( "implicit from clause" ),
 		ALIASED_FETCH_JOIN( "aliased fetch join" ),
 		UNMAPPED_POLYMORPHISM( "unmapped polymorphic reference" ),
 		FUNCTION_CALL( "improper non-standard function call" ),
@@ -28,7 +27,9 @@ public class StrictJpaComplianceViolation extends SemanticException {
 		COLLATIONS( "use of collations" ),
 		SUBQUERY_ORDER_BY( "use of ORDER BY clause in subquery" ),
 		FROM_SUBQUERY( "use of subquery in FROM clause" ),
+		FROM_FUNCTION( "use of functions in FROM clause" ),
 		SET_OPERATIONS( "use of set operations" ),
+		CTES( "use of CTEs (common table expressions)" ),
 		LIMIT_OFFSET_CLAUSE( "use of LIMIT/OFFSET clause" ),
 		IDENTIFICATION_VARIABLE_NOT_DECLARED_IN_FROM_CLAUSE( "use of an alias not declared in the FROM clause" ),
 		FQN_ENTITY_NAME( "use of FQN for entity name" ),
@@ -51,7 +52,7 @@ public class StrictJpaComplianceViolation extends SemanticException {
 	private final Type type;
 
 	public StrictJpaComplianceViolation(Type type) {
-		super( "Strict JPA query language compliance was violated : " + type.description );
+		super( "Strict JPA query language compliance was violated: " + type.description );
 		this.type = type;
 	}
 

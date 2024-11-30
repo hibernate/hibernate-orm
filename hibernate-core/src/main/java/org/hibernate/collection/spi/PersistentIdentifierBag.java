@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.collection.spi;
 
@@ -23,18 +21,21 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
 
+import static org.hibernate.generator.EventType.INSERT;
+
 /**
- * An {@code IdentifierBag} implements "bag" semantics more efficiently than
- * a regular {@code Bag} by adding a synthetic identifier column to the
- * table. This identifier is unique for all rows in the table, allowing very
- * efficient updates and deletes. The value of the identifier is never exposed
- * to the application.
+ * An "identifier bag" implements "bag" semantics more efficiently than a
+ * regular bag by adding a synthetic identifier column to the table. This
+ * identifier is unique over all rows in the table, allowing very efficient
+ * updates and deletes. The value of the identifier is never exposed to the
+ * application.
  * <p>
- * {@code IdentifierBag}s may not be used for a many-to-one association.
+ * Identifier bags may not be used for a many-to-one association.
  * Furthermore, there is no reason to use {@code inverse="true"}.
  *
- * @apiNote Incubating in terms of making this non-internal.  These contracts
- * will be getting cleaned up in following releases.
+ * @apiNote Incubating in terms of making this non-internal.
+ *          These contracts will be getting cleaned up in following
+ *          releases.
  *
  * @author Gavin King
  */
@@ -51,7 +52,7 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 	/**
 	 * Constructs a PersistentIdentifierBag.  This form needed for SOAP libraries, etc
 	 */
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public PersistentIdentifierBag() {
 	}
 
@@ -368,7 +369,7 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 			final Integer loc = i++;
 			if ( !identifiers.containsKey( loc ) ) {
 				//TODO: native ids
-				final Object id = persister.getIdentifierGenerator().generate( getSession(), entry );
+				final Object id = persister.getGenerator().generate( getSession(), entry, null, INSERT );
 				identifiers.put( loc, id );
 			}
 		}

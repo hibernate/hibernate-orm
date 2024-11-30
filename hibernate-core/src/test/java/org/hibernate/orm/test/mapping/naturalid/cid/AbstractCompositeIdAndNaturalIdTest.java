@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.naturalid.cid;
 
@@ -12,7 +10,7 @@ import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.SimpleNaturalIdMapping;
 import org.hibernate.persister.entity.EntityPersister;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,11 +25,11 @@ import static org.junit.Assert.assertThat;
  */
 public abstract class AbstractCompositeIdAndNaturalIdTest {
 	@Test
-	@TestForIssue( jiraKey = "HHH-10360")
+	@JiraKey( value = "HHH-10360")
 	public void testNaturalIdNullability(SessionFactoryScope scope) {
 		final EntityMappingType accountMapping = scope.getSessionFactory().getRuntimeMetamodels().getEntityMappingType( Account.class );
 		final SingularAttributeMapping shortCodeMapping = ((SimpleNaturalIdMapping) accountMapping.getNaturalIdMapping()).getAttribute();
-		final AttributeMetadata shortCodeMetadata = shortCodeMapping.getAttributeMetadataAccess().resolveAttributeMetadata( null );
+		final AttributeMetadata shortCodeMetadata = shortCodeMapping.getAttributeMetadata();
 		assertThat( shortCodeMetadata.isNullable(), is( false ) );
 
 		final EntityPersister rootEntityPersister = accountMapping.getRootEntityDescriptor().getEntityPersister();
@@ -48,7 +46,7 @@ public abstract class AbstractCompositeIdAndNaturalIdTest {
 				(session) -> {
 					// prepare some test data...
 					Account account = new Account( new AccountId( 1 ), NATURAL_ID_VALUE );
-					session.save( account );
+					session.persist( account );
 				}
 		);
 	}

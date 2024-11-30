@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.insertordering;
 
 import jakarta.persistence.CascadeType;
@@ -9,14 +13,14 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.OneToOne;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.jupiter.api.Test;
 
 /**
  * @author Normunds Gavars
  * @author Nathan Xu
  */
-@TestForIssue(jiraKey = "HHH-14227")
+@JiraKey(value = "HHH-14227")
 public class InsertOrderingReferenceDifferentSubclassTest extends BaseInsertOrderingTest {
 
 	@Override
@@ -41,15 +45,15 @@ public class InsertOrderingReferenceDifferentSubclassTest extends BaseInsertOrde
 
 			subclassA2.referenceB = subclassB1;
 
-			session.save( subclassA1 );
-			session.save( subclassA2 );
+			session.persist( subclassA1 );
+			session.persist( subclassA2 );
 
 			clearBatches();
 		} );
 
 		verifyContainsBatches(
-				new Batch( "insert into SubclassB (name, referenceA_id, id) values (?, ?, ?)", 2 ),
-				new Batch( "insert into SubclassA (name, referenceB_id, id) values (?, ?, ?)", 2 )
+				new Batch( "insert into SubclassB (name,referenceA_id,id) values (?,?,?)", 2 ),
+				new Batch( "insert into SubclassA (name,referenceB_id,id) values (?,?,?)", 2 )
 		);
 	}
 

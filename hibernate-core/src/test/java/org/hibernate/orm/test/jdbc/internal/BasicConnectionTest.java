@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jdbc.internal;
 
@@ -16,7 +14,8 @@ import java.sql.Statement;
 
 import org.hibernate.JDBCException;
 import org.hibernate.Session;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.Transaction;
+import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.resource.jdbc.ResourceRegistry;
@@ -37,9 +36,10 @@ public class BasicConnectionTest extends BaseCoreFunctionalTestCase {
 		SessionImplementor sessionImpl = (SessionImplementor) session;
 		boolean caught = false;
 		try {
+			String sql = "select count(*) from NON_EXISTENT";
 			PreparedStatement ps = sessionImpl.getJdbcCoordinator().getStatementPreparer()
-					.prepareStatement( "select count(*) from NON_EXISTENT" );
-			sessionImpl.getJdbcCoordinator().getResultSetReturn().execute( ps );
+					.prepareStatement( sql );
+			sessionImpl.getJdbcCoordinator().getResultSetReturn().execute( ps, sql );
 		}
 		catch ( JDBCException ok ) {
 			caught = true;
@@ -59,6 +59,7 @@ public class BasicConnectionTest extends BaseCoreFunctionalTestCase {
 		JdbcCoordinator jdbcCoord = sessionImpl.getJdbcCoordinator();
 
 		try {
+			Transaction ddlTxn = session.beginTransaction();
 			Statement statement = jdbcCoord.getStatementPreparer().createStatement();
 			String dropSql = sessionFactory().getJdbcServices().getDialect().getDropTableString( "SANDBOX_JDBC_TST" );
 			try {
@@ -74,28 +75,33 @@ public class BasicConnectionTest extends BaseCoreFunctionalTestCase {
 			getResourceRegistry( jdbcCoord ).release( statement );
 			assertFalse( getResourceRegistry( jdbcCoord ).hasRegisteredResources() );
 			assertTrue( jdbcCoord.getLogicalConnection().isPhysicallyConnected() ); // after_transaction specified
+			ddlTxn.commit();
 
-			PreparedStatement ps = jdbcCoord.getStatementPreparer().prepareStatement(
-					"insert into SANDBOX_JDBC_TST( ID, NAME ) values ( ?, ? )" );
+			Transaction dmlTxn = session.beginTransaction();
+			final String insertSql = "insert into SANDBOX_JDBC_TST( ID, NAME ) values ( ?, ? )";
+			PreparedStatement ps = jdbcCoord.getStatementPreparer().prepareStatement( insertSql );
 			ps.setLong( 1, 1 );
 			ps.setString( 2, "name" );
-			jdbcCoord.getResultSetReturn().execute( ps );
+			jdbcCoord.getResultSetReturn().execute( ps, insertSql );
 
-			ps = jdbcCoord.getStatementPreparer().prepareStatement( "select * from SANDBOX_JDBC_TST" );
-			jdbcCoord.getResultSetReturn().extract( ps );
-
+			final String selectSql = "select * from SANDBOX_JDBC_TST";
+			ps = jdbcCoord.getStatementPreparer().prepareStatement( selectSql );
+			jdbcCoord.getResultSetReturn().extract( ps, selectSql );
 			assertTrue( getResourceRegistry( jdbcCoord ).hasRegisteredResources() );
+			dmlTxn.commit();
 		}
 		catch ( SQLException e ) {
 			fail( "incorrect exception type : sqlexception" );
 		}
 		finally {
 			try {
+				Transaction ddlTx = session.beginTransaction();
 				session.doWork( connection -> {
 					final Statement stmnt = connection.createStatement();
 
 					stmnt.execute( sessionFactory().getJdbcServices().getDialect().getDropTableString( "SANDBOX_JDBC_TST" ) );
 				} );
+				ddlTx.commit();
 			}
 			finally {
 				session.close();
@@ -106,6 +112,6 @@ public class BasicConnectionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	private ResourceRegistry getResourceRegistry(JdbcCoordinator jdbcCoord) {
-        return jdbcCoord.getLogicalConnection().getResourceRegistry();
-    }
+		return jdbcCoord.getLogicalConnection().getResourceRegistry();
+	}
 }

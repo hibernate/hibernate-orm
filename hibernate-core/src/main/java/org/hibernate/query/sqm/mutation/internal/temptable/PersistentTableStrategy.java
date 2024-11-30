@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.mutation.internal.temptable;
 
@@ -11,10 +9,14 @@ import java.sql.SQLException;
 
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableHelper;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 
+import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.jboss.logging.Logger;
 
 /**
@@ -29,18 +31,20 @@ public abstract class PersistentTableStrategy {
 
 	public static final String SHORT_NAME = "persistent";
 
-	public static final String DROP_ID_TABLES = "hibernate.hql.bulk_id_strategy.persistent.drop_tables";
+	public static final String CREATE_ID_TABLES = "hibernate.query.mutation_strategy.persistent.create_tables";
 
-	public static final String SCHEMA = "hibernate.hql.bulk_id_strategy.persistent.schema";
-	public static final String CATALOG = "hibernate.hql.bulk_id_strategy.persistent.catalog";
+	public static final String DROP_ID_TABLES = "hibernate.query.mutation_strategy.persistent.drop_tables";
+
+	public static final String SCHEMA = "hibernate.query.mutation_strategy.persistent.schema";
+
+	public static final String CATALOG = "hibernate.query.mutation_strategy.persistent.catalog";
 
 	private final TemporaryTable temporaryTable;
-
 	private final SessionFactoryImplementor sessionFactory;
 
 	private boolean prepared;
-	private boolean created;
-	private boolean released;
+
+	private boolean dropIdTables;
 
 	public PersistentTableStrategy(
 			TemporaryTable temporaryTable,
@@ -53,6 +57,10 @@ public abstract class PersistentTableStrategy {
 		}
 	}
 
+	public EntityMappingType getEntityDescriptor() {
+		return getTemporaryTable().getEntityDescriptor();
+	}
+
 	public void prepare(
 			MappingModelCreationProcess mappingModelCreationProcess,
 			JdbcConnectionAccess connectionAccess) {
@@ -61,6 +69,20 @@ public abstract class PersistentTableStrategy {
 		}
 
 		prepared = true;
+
+		final ConfigurationService configService =
+				mappingModelCreationProcess.getCreationContext()
+						.getBootstrapContext().getServiceRegistry()
+						.requireService( ConfigurationService.class );
+		boolean createIdTables = configService.getSetting(
+				CREATE_ID_TABLES,
+				StandardConverters.BOOLEAN,
+				true
+		);
+
+		if (!createIdTables ) {
+			return;
+		}
 
 		log.debugf( "Creating persistent ID table : %s", getTemporaryTable().getTableExpression() );
 
@@ -84,7 +106,11 @@ public abstract class PersistentTableStrategy {
 
 		try {
 			temporaryTableCreationWork.execute( connection );
-			created = true;
+			this.dropIdTables = configService.getSetting(
+					DROP_ID_TABLES,
+					StandardConverters.BOOLEAN,
+					false
+			);
 		}
 		finally {
 			try {
@@ -93,24 +119,16 @@ public abstract class PersistentTableStrategy {
 			catch (SQLException ignore) {
 			}
 		}
-
-		if ( created ) {
-			// todo (6.0) : register strategy for dropping of the table if requested - DROP_ID_TABLES
-		}
 	}
 
 	public void release(
 			SessionFactoryImplementor sessionFactory,
 			JdbcConnectionAccess connectionAccess) {
-		if ( released ) {
+		if ( !dropIdTables ) {
 			return;
 		}
 
-		released = true;
-
-		if ( created ) {
-			return;
-		}
+		dropIdTables = false;
 
 		final TemporaryTable temporaryTable = getTemporaryTable();
 		log.debugf( "Dropping persistent ID table : %s", temporaryTable.getTableExpression() );

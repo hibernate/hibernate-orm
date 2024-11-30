@@ -1,14 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.eviction;
 
 import org.hibernate.Session;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -26,11 +24,11 @@ public class EvictionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-7912" )
+	@JiraKey( value = "HHH-7912" )
 	public void testNormalUsage() {
 		Session session = openSession();
 		session.beginTransaction();
-		session.save( new IsolatedEvictableEntity( 1 ) );
+		session.persist( new IsolatedEvictableEntity( 1 ) );
 		session.getTransaction().commit();
 		session.close();
 
@@ -45,13 +43,13 @@ public class EvictionTest extends BaseCoreFunctionalTestCase {
 
 		session = openSession();
 		session.beginTransaction();
-		session.delete( entity );
+		session.remove( entity );
 		session.getTransaction().commit();
 		session.close();
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-7912" )
+	@JiraKey( value = "HHH-7912" )
 	public void testEvictingNull() {
 		Session session = openSession();
 		session.beginTransaction();
@@ -66,7 +64,7 @@ public class EvictionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-7912" )
+	@JiraKey( value = "HHH-7912" )
 	public void testEvictingTransientEntity() {
 		Session session = openSession();
 		session.beginTransaction();
@@ -76,11 +74,11 @@ public class EvictionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-7912" )
+	@JiraKey( value = "HHH-7912" )
 	public void testEvictingDetachedEntity() {
 		Session session = openSession();
 		session.beginTransaction();
-		session.save( new IsolatedEvictableEntity( 1 ) );
+		session.persist( new IsolatedEvictableEntity( 1 ) );
 		session.getTransaction().commit();
 		session.close();
 
@@ -99,13 +97,13 @@ public class EvictionTest extends BaseCoreFunctionalTestCase {
 
 		session = openSession();
 		session.beginTransaction();
-		session.delete( entity );
+		session.remove( entity );
 		session.getTransaction().commit();
 		session.close();
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-7912" )
+	@JiraKey( value = "HHH-7912" )
 	public void testEvictingNonEntity() {
 		Session session = openSession();
 		session.beginTransaction();

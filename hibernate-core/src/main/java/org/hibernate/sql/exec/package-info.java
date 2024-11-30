@@ -6,13 +6,7 @@
  */
 
 /**
- * Package defining support for execution of SQL statements through JDBC.  The statement
- * to execute is modelled by {@link org.hibernate.sql.exec.spi.JdbcOperation} and
- * are executed via the corresponding executor.
- *
- * For operations that return ResultSets, be sure to see {@link org.hibernate.sql.results}
- * which provides support for processing results starting with
- * {@link org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping}
+ * Support for execution of SQL statements via JDBC.
  */
 @Incubating
 package org.hibernate.sql.exec;

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.predicate;
 
@@ -16,7 +14,6 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
-import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Models a predicate in the SQL AST
@@ -37,7 +34,7 @@ public interface Predicate extends Expression, DomainResultProducer<Boolean> {
 	default DomainResult<Boolean> createDomainResult(String resultVariable, DomainResultCreationState creationState) {
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
-		final JdbcMapping jdbcMapping = getExpressionType().getJdbcMappings().get( 0 );
+		final JdbcMapping jdbcMapping = getExpressionType().getSingleJdbcMapping();
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				this,
 				jdbcMapping.getJdbcJavaType(),
@@ -55,7 +52,7 @@ public interface Predicate extends Expression, DomainResultProducer<Boolean> {
 
 		sqlExpressionResolver.resolveSqlSelection(
 				this,
-				getExpressionType().getJdbcMappings().get( 0 ).getJdbcJavaType(),
+				getExpressionType().getSingleJdbcMapping().getJdbcJavaType(),
 				null,
 				sqlAstCreationState.getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);

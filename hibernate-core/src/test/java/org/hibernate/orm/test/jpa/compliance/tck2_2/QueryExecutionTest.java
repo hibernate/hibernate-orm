@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.compliance.tck2_2;
 
@@ -123,7 +121,7 @@ public class QueryExecutionTest extends BaseNonConfigCoreFunctionalTestCase {
 				session -> {
 					final Customer customer = session.byId( Customer.class ).load( 1 );
 					if ( customer != null ) {
-						session.delete( customer );
+						session.remove( customer );
 					}
 				}
 		);

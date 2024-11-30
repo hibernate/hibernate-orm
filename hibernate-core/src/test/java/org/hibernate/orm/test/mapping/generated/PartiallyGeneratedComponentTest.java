@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.generated;
 
@@ -28,14 +26,14 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 		xmlMappings = "org/hibernate/orm/test/mapping/generated/ComponentOwner.hbm.xml"
 )
 @SessionFactory
-@RequiresDialect( value = OracleDialect.class, majorVersion = 9 )
+@RequiresDialect( value = OracleDialect.class )
 public class PartiallyGeneratedComponentTest {
 
 	@Test
 	public void testPartialComponentGeneration(SessionFactoryScope scope) {
 		ComponentOwner owner = new ComponentOwner( "initial" );
 		scope.inTransaction(
-				s -> s.save( owner )
+				s -> s.persist( owner )
 		);
 
 		assertNotNull( owner.getComponent(), "expecting insert value generation" );
@@ -58,7 +56,7 @@ public class PartiallyGeneratedComponentTest {
 				s -> {
 					ComponentOwner _owner = s.get( ComponentOwner.class, owner.getId() );
 					assertEquals( previousValue2, _owner.getComponent().getGenerated(), "expecting update value generation" );
-					s.delete( _owner );
+					s.remove( _owner );
 				}
 		);
 	}

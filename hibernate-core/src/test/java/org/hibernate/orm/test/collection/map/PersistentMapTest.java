@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.collection.map;
 
@@ -25,7 +23,7 @@ import jakarta.persistence.Table;
 import org.hibernate.collection.spi.PersistentMap;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -69,7 +67,7 @@ public class PersistentMapTest {
 
 		scope.inTransaction(
 				session -> {
-					session.save( parent );
+					session.persist( parent );
 					session.flush();
 					// at this point, the map on parent has now been replaced with a PersistentMap...
 					PersistentMap children = (PersistentMap) parent.getChildren();
@@ -93,7 +91,7 @@ public class PersistentMapTest {
 					assertTrue( children.isDirty() );
 
 					children.clearDirty();
-					session.delete( child );
+					session.remove( child );
 					children.clear();
 					assertTrue( children.isDirty() );
 					session.flush();
@@ -101,7 +99,7 @@ public class PersistentMapTest {
 					children.clear();
 					assertFalse( children.isDirty() );
 
-					session.delete( parent );
+					session.remove( parent );
 				}
 		);
 	}
@@ -112,7 +110,7 @@ public class PersistentMapTest {
 		Parent p = new Parent( "p1" );
 		scope.inTransaction(
 				session -> {
-					session.save( p );
+					session.persist( p );
 				}
 		);
 
@@ -129,7 +127,7 @@ public class PersistentMapTest {
 		assertEquals( 2, parent.getChildren().size() );
 
 		scope.inTransaction(
-				session -> session.delete( parent )
+				session -> session.remove( parent )
 		);
 	}
 
@@ -140,7 +138,7 @@ public class PersistentMapTest {
 		parent.addChild( child );
 
 		scope.inTransaction(
-				session -> session.save( parent )
+				session -> session.persist( parent )
 		);
 
 		// Now reload the parent and test removing the child
@@ -162,8 +160,8 @@ public class PersistentMapTest {
 				session -> {
 					Parent p = session.get( Parent.class, parent.getName() );
 					assertTrue( p.getChildren().isEmpty() );
-					session.delete( child2 );
-					session.delete( p );
+					session.remove( child2 );
+					session.remove( p );
 				}
 		);
 	}
@@ -187,13 +185,13 @@ public class PersistentMapTest {
 					List<User> list = q.list();
 
 					assertEquals( 1, list.size() );
-					session.delete( list.get( 0 ) );
+					session.remove( list.get( 0 ) );
 				}
 		);
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5732")
+	@JiraKey(value = "HHH-5732")
 	public void testClearMap(SessionFactoryScope scope) {
 		scope.inSession(
 				session -> {
@@ -212,7 +210,7 @@ public class PersistentMapTest {
 
 						user = session.get( User.class, user.id );
 						user.userDatas.clear();
-						session.update( user );
+						session.merge( user );
 
 						Query<UserData> q = session.createQuery( "DELETE FROM " + UserData.class.getName() + " d WHERE d.user = :user" );
 						q.setParameter( "user", user );
@@ -223,15 +221,15 @@ public class PersistentMapTest {
 						session.getTransaction().begin();
 /*
 select
-        userdatas0_.userId as userid2_8_0_,
-        userdatas0_.id as id1_8_0_,
-        userdatas0_.name as name3_0_,
-        userdatas0_.id as id1_8_1_,
-        userdatas0_.userId as userid2_8_1_
-    from
-        UserData userdatas0_
-    where
-        userdatas0_.userId=1
+		userdatas0_.userId as userid2_8_0_,
+		userdatas0_.id as id1_8_0_,
+		userdatas0_.name as name3_0_,
+		userdatas0_.id as id1_8_1_,
+		userdatas0_.userId as userid2_8_1_
+	from
+		UserData userdatas0_
+	where
+		userdatas0_.userId=1
  */
 						assertEquals( 0, session.get( User.class, user.id ).userDatas.size() );
 						assertEquals( 0, session.createQuery( "FROM " + UserData.class.getName() ).list().size() );
@@ -250,7 +248,7 @@ select
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5393")
+	@JiraKey(value = "HHH-5393")
 	public void testMapKeyColumnInEmbeddableElement(SessionFactoryScope scope) {
 		MultilingualString m = new MultilingualString();
 		scope.inTransaction(
@@ -277,13 +275,13 @@ select
 					localizedString = multilingualString.getMap().get( "English Pig Latin" );
 					assertEquals( "English Pig Latin", localizedString.getLanguage() );
 					assertEquals( "amenay", localizedString.getText() );
-					session.delete( multilingualString );
+					session.remove( multilingualString );
 				}
 		);
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HQLPARSER-15")
+	@JiraKey(value = "HQLPARSER-15")
 	public void testJoinFetchElementCollectionWithParentSelect(SessionFactoryScope scope) {
 		MultilingualStringParent parent = new MultilingualStringParent();
 		scope.inTransaction(
@@ -320,14 +318,14 @@ select
 					localizedString = m.getMap().get( "English Pig Latin" );
 					assertEquals( "English Pig Latin", localizedString.getLanguage() );
 					assertEquals( "amenay", localizedString.getText() );
-					session.delete( parent );
-					session.delete( m );
+					session.remove( parent );
+					session.remove( m );
 				}
 		);
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11038")
+	@JiraKey(value = "HHH-11038")
 	public void testMapKeyColumnNonInsertableNonUpdatableBidirOneToMany(SessionFactoryScope scope) {
 		User user = new User();
 		scope.inTransaction(
@@ -352,7 +350,7 @@ select
 		scope.inTransaction(
 				session -> {
 					User u = session.get( User.class, user.id );
-					session.delete( u );
+					session.remove( u );
 					session.createQuery( "delete from " + User.class.getName() ).executeUpdate();
 
 				}
@@ -360,7 +358,7 @@ select
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11038")
+	@JiraKey(value = "HHH-11038")
 	public void testMapKeyColumnNonInsertableNonUpdatableUnidirOneToMany(SessionFactoryScope scope) {
 
 		Integer userId = scope.fromTransaction(
@@ -385,7 +383,7 @@ select
 		scope.inTransaction(
 				session -> {
 					User user = session.get( User.class, userId );
-					session.delete( user );
+					session.remove( user );
 					session.createQuery( "delete from " + User.class.getName() ).executeUpdate();
 				}
 		);

@@ -1,25 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
- * indicated by the @author tags or express copyright attribution
- * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Inc.
- *
- * This copyrighted material is made available to anyone wishing to use, modify,
- * copy, or redistribute it subject to the terms and conditions of the GNU
- * Lesser General Public License, as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
- * for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this distribution; if not, write to:
- * Free Software Foundation, Inc.
- * 51 Franklin Street, Fifth Floor
- * Boston, MA  02110-1301  USA
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.dialect.function;
 
@@ -33,7 +14,7 @@ import java.util.Date;
 
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.query.Query;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -44,14 +25,14 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 /**
- * 
+ *
  * @author Richard H. Tingstad
  */
 @DomainModel(
 		xmlMappings = "org/hibernate/orm/test/dialect/function/Product.hbm.xml"
 )
 @SessionFactory
-@RequiresDialect(value = SybaseASEDialect.class, majorVersion = 11)
+@RequiresDialect(value = SybaseASEDialect.class)
 @SuppressWarnings("rawtypes")
 public class SybaseASEFunctionTest {
 
@@ -62,7 +43,7 @@ public class SybaseASEFunctionTest {
 					Product product = new Product();
 					product.setPrice(new BigDecimal("0.5"));
 					product.setDate( Calendar.getInstance().getTime() );
-					session.save( product );
+					session.persist( product );
 				}
 		);
 	}
@@ -85,7 +66,7 @@ public class SybaseASEFunctionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7070")
+	@JiraKey(value = "HHH-7070")
 	public void testDateaddFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -96,7 +77,7 @@ public class SybaseASEFunctionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7070")
+	@JiraKey(value = "HHH-7070")
 	public void testDatepartFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -107,7 +88,7 @@ public class SybaseASEFunctionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7070")
+	@JiraKey(value = "HHH-7070")
 	public void testDatediffFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -118,7 +99,7 @@ public class SybaseASEFunctionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7070")
+	@JiraKey(value = "HHH-7070")
 	public void testAtn2Function(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

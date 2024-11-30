@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
@@ -10,23 +8,31 @@ import java.time.Clock;
 import java.time.Duration;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.internal.CurrentTimestampGeneration;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Helper for determining the correct clock for precision
  */
 public class ClockHelper {
 
-	private static final Duration TICK_8 = Duration.ofNanos( 10L );
-	private static final Duration TICK_7 = Duration.ofNanos( 100L );
-	private static final Duration TICK_6 = Duration.ofNanos( 1000L );
-	private static final Duration TICK_5 = Duration.ofNanos( 10000L );
-	private static final Duration TICK_4 = Duration.ofNanos( 100000L );
-	private static final Duration TICK_3 = Duration.ofNanos( 1000000L );
-	private static final Duration TICK_2 = Duration.ofNanos( 10000000L );
-	private static final Duration TICK_1 = Duration.ofNanos( 100000000L );
-	private static final Duration TICK_0 = Duration.ofNanos( 1000000000L );
+	private static final Clock TICK_9 = Clock.systemDefaultZone();
+	private static final Clock TICK_8 = forPrecision( TICK_9, 8, 9 );
+	private static final Clock TICK_7 = forPrecision( TICK_9, 7, 9 );
+	private static final Clock TICK_6 = forPrecision( TICK_9, 6, 9 );
+	private static final Clock TICK_5 = forPrecision( TICK_9, 5, 9 );
+	private static final Clock TICK_4 = forPrecision( TICK_9, 4, 9 );
+	private static final Clock TICK_3 = forPrecision( TICK_9, 3, 9 );
+	private static final Clock TICK_2 = forPrecision( TICK_9, 2, 9 );
+	private static final Clock TICK_1 = forPrecision( TICK_9, 1, 9 );
+	private static final Clock TICK_0 = forPrecision( TICK_9, 0, 9 );
 
 	public static Clock forPrecision(Integer precision, SharedSessionContractImplementor session) {
+		return forPrecision( precision, session, 9 );
+	}
+
+	public static Clock forPrecision(Integer precision, SharedSessionContractImplementor session, int maxPrecision) {
 		final int resolvedPrecision;
 		if ( precision == null ) {
 			resolvedPrecision = session.getJdbcServices().getDialect().getDefaultTimestampPrecision();
@@ -34,28 +40,38 @@ public class ClockHelper {
 		else {
 			resolvedPrecision = precision;
 		}
-		final Clock clock = Clock.systemDefaultZone();
-		switch ( resolvedPrecision ) {
+		final Clock baseClock = (Clock) session.getFactory()
+				.getProperties()
+				.get( CurrentTimestampGeneration.CLOCK_SETTING_NAME );
+		return forPrecision( baseClock, resolvedPrecision, maxPrecision );
+	}
+
+	public static Clock forPrecision(int resolvedPrecision, int maxPrecision) {
+		return forPrecision( null, resolvedPrecision, maxPrecision );
+	}
+
+	public static Clock forPrecision(@Nullable Clock baseClock, int resolvedPrecision, int maxPrecision) {
+		switch ( Math.min( resolvedPrecision, maxPrecision ) ) {
 			case 0:
-				return Clock.tick( clock, TICK_0 );
+				return baseClock == null ? TICK_0 : Clock.tick( baseClock, Duration.ofNanos( 1000000000L ) );
 			case 1:
-				return Clock.tick( clock, TICK_1 );
+				return baseClock == null ? TICK_1 : Clock.tick( baseClock, Duration.ofNanos( 100000000L ) );
 			case 2:
-				return Clock.tick( clock, TICK_2 );
+				return baseClock == null ? TICK_2 : Clock.tick( baseClock, Duration.ofNanos( 10000000L ) );
 			case 3:
-				return Clock.tick( clock, TICK_3 );
+				return baseClock == null ? TICK_3 : Clock.tick( baseClock, Duration.ofNanos( 1000000L ) );
 			case 4:
-				return Clock.tick( clock, TICK_4 );
+				return baseClock == null ? TICK_4 : Clock.tick( baseClock, Duration.ofNanos( 100000L ) );
 			case 5:
-				return Clock.tick( clock, TICK_5 );
+				return baseClock == null ? TICK_5 : Clock.tick( baseClock, Duration.ofNanos( 10000L ) );
 			case 6:
-				return Clock.tick( clock, TICK_6 );
+				return baseClock == null ? TICK_6 : Clock.tick( baseClock, Duration.ofNanos( 1000L ) );
 			case 7:
-				return Clock.tick( clock, TICK_7 );
+				return baseClock == null ? TICK_7 : Clock.tick( baseClock, Duration.ofNanos( 100L ) );
 			case 8:
-				return Clock.tick( clock, TICK_8 );
+				return baseClock == null ? TICK_8 : Clock.tick( baseClock, Duration.ofNanos( 10L ) );
 			case 9:
-				return clock;
+				return baseClock == null ? TICK_9 : baseClock;
 		}
 		throw new IllegalArgumentException( "Illegal precision: " + resolvedPrecision );
 	}

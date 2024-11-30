@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping;
 
@@ -32,6 +30,7 @@ import org.hibernate.mapping.ValueVisitor;
 
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,7 +45,7 @@ public class ValueVisitorTest extends BaseUnitTestCase {
 
 	@Before
 	public void prepare() {
-		serviceRegistry = new StandardServiceRegistryBuilder().build();
+		serviceRegistry = ServiceRegistryUtil.serviceRegistry();
 		metadataBuildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
 	}
 
@@ -64,7 +63,7 @@ public class ValueVisitorTest extends BaseUnitTestCase {
 		final RootClass rootClass = new RootClass( metadataBuildingContext );
 
 		ValueVisitor vv = new ValueVisitorValidator();
-		try ( StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().build()) {
+		try ( StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistry()) {
 			MetadataBuildingContextTestingImpl metadataBuildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
 			new Any( metadataBuildingContext, tbl ).accept( vv );
 			new Array( metadataBuildingContext, rootClass ).accept( vv );

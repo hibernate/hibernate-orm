@@ -1,17 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
 
 import java.util.IdentityHashMap;
 
+import org.hibernate.event.internal.DefaultDeleteEventListener;
+
 /**
- * A {@link DeleteEvent} represents a {@linkplain org.hibernate.Session#delete(Object) delete operation}
+ * A {@link DeleteEvent} represents a {@linkplain org.hibernate.Session#remove delete operation}
  * applied to a single entity. A {@code DeleteContext} is propagated across all cascaded delete operations,
  * and keeps track of all the entities we've already visited.
+ *
+ * @see DefaultDeleteEventListener#onDelete(DeleteEvent, DeleteContext)
  *
  * @author Gavin King
  */

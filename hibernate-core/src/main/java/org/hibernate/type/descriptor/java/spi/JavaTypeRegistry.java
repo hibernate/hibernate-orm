@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java.spi;
 
@@ -10,6 +8,8 @@ import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.hibernate.type.descriptor.java.ArrayJavaType;
@@ -22,7 +22,8 @@ import org.hibernate.type.spi.TypeConfigurationAware;
 import org.jboss.logging.Logger;
 
 /**
- * Basically a map from {@link Class} -> {@link JavaType}
+ * A registry mapping {@link Class Java classes} to implementations
+ * of the {@link JavaType} interface.
  *
  * @author Steve Ebersole
  * @author Andrea Boriero
@@ -69,35 +70,12 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// descriptor access
 
+	public void forEachDescriptor(Consumer<JavaType<?>> consumer) {
+		descriptorsByType.values().forEach( consumer );
+	}
+
 	public <T> JavaType<T> getDescriptor(Type javaType) {
 		return resolveDescriptor( javaType );
-//		return RegistryHelper.INSTANCE.resolveDescriptor(
-//				descriptorsByClass,
-//				javaType,
-//				() -> {
-//					log.debugf(
-//							"Could not find matching scoped JavaType for requested Java class [%s]; " +
-//									"falling back to static registry",
-//							javaType.getName()
-//					);
-//
-//					if ( Serializable.class.isAssignableFrom( javaType ) ) {
-//						return new SerializableTypeDescriptor( javaType );
-//					}
-//
-//					if ( !AttributeConverter.class.isAssignableFrom( javaType ) ) {
-//						log.debugf(
-//								"Could not find matching JavaType for requested Java class [%s]; using fallback.  " +
-//										"This means Hibernate does not know how to perform certain basic operations in relation to this Java type." +
-//										"",
-//								javaType.getName()
-//						);
-//						checkEqualsAndHashCode( javaType );
-//					}
-//
-//					return new FallbackJavaType<>( javaType );
-//				}
-//		);
 	}
 
 	public void addDescriptor(JavaType<?> descriptor) {
@@ -114,6 +92,7 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 	}
 
 	public <J> JavaType<J> findDescriptor(Type javaType) {
+		//noinspection unchecked
 		return (JavaType<J>) descriptorsByType.get( javaType );
 	}
 
@@ -130,12 +109,28 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 	}
 
 	public <J> JavaType<J> resolveDescriptor(Type javaType) {
+		return resolveDescriptor( javaType, (elementJavaType, typeConfiguration) -> {
+			final MutabilityPlan<J> determinedPlan = RegistryHelper.INSTANCE.determineMutabilityPlan(
+					elementJavaType,
+					typeConfiguration
+			);
+			if ( determinedPlan != null ) {
+				return determinedPlan;
+			}
+
+			return MutableMutabilityPlan.INSTANCE;
+		} );
+	}
+
+	public <J> JavaType<J> resolveDescriptor(
+			Type javaType,
+			BiFunction<Type, TypeConfiguration, MutabilityPlan<?>> mutabilityPlanCreator) {
 		return resolveDescriptor(
 				javaType,
 				() -> {
 					if ( javaType instanceof ParameterizedType ) {
 						final ParameterizedType parameterizedType = (ParameterizedType) javaType;
-						final JavaType<J> rawType = findDescriptor( ( parameterizedType ).getRawType() );
+						final JavaType<J> rawType = findDescriptor( parameterizedType.getRawType() );
 						if ( rawType != null ) {
 							return rawType.createJavaType( parameterizedType, typeConfiguration );
 						}
@@ -151,21 +146,10 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 						elementTypeDescriptor = null;
 					}
 					if ( elementTypeDescriptor == null ) {
+						//noinspection unchecked
 						elementTypeDescriptor = RegistryHelper.INSTANCE.createTypeDescriptor(
 								elementJavaType,
-								() -> {
-									final MutabilityPlan<J> determinedPlan = RegistryHelper.INSTANCE.determineMutabilityPlan(
-											elementJavaType,
-											typeConfiguration
-									);
-									if ( determinedPlan != null ) {
-										return determinedPlan;
-									}
-
-									//noinspection unchecked
-									return (MutabilityPlan<J>) MutableMutabilityPlan.INSTANCE;
-
-								},
+								() -> (MutabilityPlan<J>) mutabilityPlanCreator.apply( elementJavaType, typeConfiguration ),
 								typeConfiguration
 						);
 					}
@@ -199,25 +183,19 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 						final ParameterizedType parameterizedType = (ParameterizedType) javaType;
 						javaTypeClass = (Class<J>) parameterizedType.getRawType();
 					}
-					final MutabilityPlan<J> mutabilityPlan;
+
 					final MutabilityPlan<J> determinedPlan = RegistryHelper.INSTANCE.determineMutabilityPlan(
 							javaType,
 							typeConfiguration
 					);
-					if ( determinedPlan != null ) {
-						mutabilityPlan = determinedPlan;
-					}
-					else {
-						mutabilityPlan = (MutabilityPlan<J>) MutableMutabilityPlan.INSTANCE;
-					}
-					return entity ? new EntityJavaType<>( javaTypeClass, mutabilityPlan )
+					final MutabilityPlan<J> mutabilityPlan = (determinedPlan != null)
+							? determinedPlan
+							: (MutabilityPlan<J>) MutableMutabilityPlan.INSTANCE;
+
+					return entity
+							? new EntityJavaType<>( javaTypeClass, mutabilityPlan )
 							: new JavaTypeBasicAdaptor<>( javaTypeClass, mutabilityPlan );
 				}
 		);
 	}
-
-	public JavaType<?> resolveDynamicEntityDescriptor(String typeName) {
-		return new DynamicModelJavaType();
-	}
-
 }

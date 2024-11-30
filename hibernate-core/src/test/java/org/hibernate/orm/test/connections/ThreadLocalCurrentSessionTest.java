@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.connections;
 
@@ -17,7 +15,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -75,7 +73,7 @@ public class ThreadLocalCurrentSessionTest extends ConnectionManagementTestCase 
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11067")
+	@JiraKey(value = "HHH-11067")
 	public void testEqualityChecking() {
 		Session session1 = sessionFactory().getCurrentSession();
 		Session session2 = sessionFactory().getCurrentSession();

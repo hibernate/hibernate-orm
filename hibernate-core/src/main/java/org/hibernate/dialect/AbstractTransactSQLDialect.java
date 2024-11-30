@@ -1,17 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.function.CastingConcatFunction;
 import org.hibernate.dialect.function.TransactSQLStrFunction;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.query.sqm.NullOrdering;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
 import org.hibernate.dialect.identity.AbstractTransactSQLIdentityColumnSupport;
@@ -19,10 +17,9 @@ import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.TrimSpec;
-import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sqm.mutation.internal.temptable.AfterUseAction;
+import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.hibernate.dialect.temptable.TemporaryTable;
-import org.hibernate.query.sqm.mutation.internal.temptable.BeforeUseAction;
+import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
@@ -38,7 +35,6 @@ import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Iterator;
 import java.util.Map;
 
 import static org.hibernate.type.SqlTypes.*;
@@ -62,34 +58,25 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 	protected String columnType(int sqlTypeCode) {
 		// note that 'real' is double precision on SQL Server, single precision on Sybase
 		// but 'float' is single precision on Sybase, double precision on SQL Server
-		switch ( sqlTypeCode ) {
-			case BOOLEAN:
-				return "bit";
+		return switch (sqlTypeCode) {
+			case BOOLEAN -> "bit";
 
-			case TINYINT:
-				//'tinyint' is an unsigned type in Sybase and
-				//SQL Server, holding values in the range 0-255
-				//see HHH-6779
-				return "smallint";
-			case INTEGER:
-				//it's called 'int' not 'integer'
-				return "int";
+			// 'tinyint' is an unsigned type in Sybase and
+			// SQL Server, holding values in the range 0-255
+			// see HHH-6779
+			case TINYINT -> "smallint";
 
-			case DATE:
-			case TIME:
-			case TIMESTAMP:
-			case TIME_WITH_TIMEZONE:
-			case TIMESTAMP_WITH_TIMEZONE:
-				return "datetime";
+			//it's called 'int' not 'integer'
+			case INTEGER -> "int";
 
-			case BLOB:
-				return "image";
-			case CLOB:
-				return "text";
-			case NCLOB:
-				return "ntext";
-		}
-		return super.columnType( sqlTypeCode );
+			case DATE, TIME, TIMESTAMP, TIME_WITH_TIMEZONE, TIMESTAMP_WITH_TIMEZONE -> "datetime";
+
+			case BLOB -> "image";
+			case CLOB -> "text";
+			case NCLOB -> "ntext";
+
+			default -> super.columnType( sqlTypeCode );
+		};
 	}
 
 	@Override
@@ -122,13 +109,13 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry(functionContributions);
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 		functionFactory.cot();
-		functionFactory.log();
 		functionFactory.ln_log();
+		functionFactory.log_loglog();
 		functionFactory.log10();
 		functionFactory.atan2_atn2();
 		functionFactory.mod_operator();
@@ -150,45 +137,40 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 		functionFactory.datepartDatename();
 		functionFactory.lastDay_eomonth();
 
-		queryEngine.getSqmFunctionRegistry().register( "least", new CaseLeastGreatestEmulation( true ) );
-		queryEngine.getSqmFunctionRegistry().register( "greatest", new CaseLeastGreatestEmulation( false ) );
-		queryEngine.getSqmFunctionRegistry().register( "str", new TransactSQLStrFunction( queryEngine.getTypeConfiguration() ) );
-		queryEngine.getSqmFunctionRegistry().register(
+		functionFactory.bitandorxornot_operator();
+
+		functionContributions.getFunctionRegistry().register( "least", new CaseLeastGreatestEmulation( true ) );
+		functionContributions.getFunctionRegistry().register( "greatest", new CaseLeastGreatestEmulation( false ) );
+		functionContributions.getFunctionRegistry().register( "str", new TransactSQLStrFunction( functionContributions.getTypeConfiguration() ) );
+		functionContributions.getFunctionRegistry().register(
 				"concat",
 				new CastingConcatFunction(
 						this,
 						"+",
 						false,
 						SqlAstNodeRenderingMode.DEFAULT,
-						queryEngine.getTypeConfiguration()
+						functionContributions.getTypeConfiguration()
 				)
 		);
 	}
 
 	@Override
-	public String trimPattern(TrimSpec specification, char character) {
-		return replaceLtrimRtrim(specification, character);
+	public String trimPattern(TrimSpec specification, boolean isWhitespace) {
+		return replaceLtrimRtrim( specification, isWhitespace );
 	}
 
-	public static String replaceLtrimRtrim(TrimSpec specification, char character) {
-		boolean blank = character == ' ';
-		switch ( specification ) {
-			case LEADING:
-				return blank
-						? "ltrim(?1)"
-						: "replace(replace(ltrim(replace(replace(?1,' ','#%#%'),'@',' ')),' ','@'),'#%#%',' ')"
-								.replace('@', character);
-			case TRAILING:
-				return blank
-						? "rtrim(?1)"
-						: "replace(replace(rtrim(replace(replace(?1,' ','#%#%'),'@',' ')),' ','@'),'#%#%',' ')"
-								.replace('@', character);
-			default:
-				return blank
-						? "ltrim(rtrim(?1))"
-						: "replace(replace(ltrim(rtrim(replace(replace(?1,' ','#%#%'),'@',' '))),' ','@'),'#%#%',' ')"
-								.replace('@', character);
-		}
+	public static String replaceLtrimRtrim(TrimSpec specification, boolean isWhitespace) {
+		return switch (specification) {
+			case LEADING -> isWhitespace
+					? "ltrim(?1)"
+					: "substring(?1,patindex('%[^'+?2+']%',?1),len(?1+'x')-1-patindex('%[^'+?2+']%',?1)+1)";
+			case TRAILING -> isWhitespace
+					? "rtrim(?1)"
+					: "substring(?1,1,len(?1+'x')-1-patindex('%[^'+?2+']%',reverse(?1))+1)";
+			default -> isWhitespace
+					? "ltrim(rtrim(?1))"
+					: "substring(?1,patindex('%[^'+?2+']%',?1),len(?1+'x')-1-patindex('%[^'+?2+']%',?1)-patindex('%[^'+?2+']%',reverse(?1))+2)";
+		};
 	}
 
 	@Override
@@ -219,14 +201,11 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 	@Override
 	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map<String, String[]> keyColumnNames) {
 		// TODO:  merge additional lock options support in Dialect.applyLocksToSql
-		final Iterator itr = aliasedLockOptions.getAliasLockIterator();
 		final StringBuilder buffer = new StringBuilder( sql );
-
-		while ( itr.hasNext() ) {
-			final Map.Entry entry = (Map.Entry) itr.next();
-			final LockMode lockMode = (LockMode) entry.getValue();
+		for ( Map.Entry<String, LockMode> entry: aliasedLockOptions.getAliasSpecificLocks() ) {
+			final LockMode lockMode = entry.getValue();
 			if ( lockMode.greaterThan( LockMode.READ ) ) {
-				final String alias = (String) entry.getKey();
+				final String alias = entry.getKey();
 				int start = -1;
 				int end = -1;
 				if ( sql.endsWith( " " + alias ) ) {
@@ -290,6 +269,11 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 	@Override
 	public NullOrdering getNullOrdering() {
 		return NullOrdering.SMALLEST;
+	}
+
+	@Override
+	public boolean requiresCastForConcatenatingNonStrings() {
+		return true;
 	}
 
 	@Override
@@ -372,7 +356,7 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return new AbstractTransactSQLIdentityColumnSupport();
+		return AbstractTransactSQLIdentityColumnSupport.INSTANCE;
 	}
 
 	@Override

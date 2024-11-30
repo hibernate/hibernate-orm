@@ -1,34 +1,29 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.function.BiConsumer;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.mapping.SelectableConsumer;
-import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.PluralTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -71,6 +66,11 @@ public class BasicValuedCollectionPart
 	}
 
 	@Override
+	public PluralAttributeMapping getCollectionAttribute() {
+		return collectionDescriptor.getAttributeMapping();
+	}
+
+	@Override
 	public MappingType getPartMappingType() {
 		return selectableMapping.getJdbcMapping()::getJavaTypeDescriptor;
 	}
@@ -88,6 +88,26 @@ public class BasicValuedCollectionPart
 	@Override
 	public boolean isFormula() {
 		return selectableMapping.isFormula();
+	}
+
+	@Override
+	public boolean isNullable() {
+		return selectableMapping.isNullable();
+	}
+
+	@Override
+	public boolean isInsertable() {
+		return selectableMapping.isInsertable();
+	}
+
+	@Override
+	public boolean isPartitioned() {
+		return selectableMapping.isPartitioned();
+	}
+
+	@Override
+	public boolean isUpdateable() {
+		return selectableMapping.isUpdateable();
 	}
 
 	@Override
@@ -116,6 +136,11 @@ public class BasicValuedCollectionPart
 	}
 
 	@Override
+	public Integer getTemporalPrecision() {
+		return selectableMapping.getTemporalPrecision();
+	}
+
+	@Override
 	public Integer getScale() {
 		return selectableMapping.getScale();
 	}
@@ -141,20 +166,21 @@ public class BasicValuedCollectionPart
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final SqlSelection sqlSelection = resolveSqlSelection( navigablePath, tableGroup, true, null, creationState );
+		final SqlSelection sqlSelection = resolveSqlSelection( navigablePath, tableGroup, null, creationState );
 
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				selectableMapping.getJdbcMapping(),
-				navigablePath
+				navigablePath,
+				false,
+				!sqlSelection.isVirtual()
 		);
 	}
 
 	private SqlSelection resolveSqlSelection(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
-			boolean allowFkOptimization,
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
 		final SqlExpressionResolver exprResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
@@ -170,20 +196,12 @@ public class BasicValuedCollectionPart
 		}
 		final TableReference tableReference = targetTableGroup.resolveTableReference(
 				navigablePath,
-				getContainingTableExpression(),
-				allowFkOptimization
+				getContainingTableExpression()
 		);
 		return exprResolver.resolveSqlSelection(
 				exprResolver.resolveSqlExpression(
-						SqlExpressionResolver.createColumnReferenceKey(
-								tableReference,
-								selectableMapping.getSelectionExpression()
-						),
-						sqlAstProcessingState -> new ColumnReference(
-								tableReference,
-								selectableMapping,
-								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
-						)
+						tableReference,
+						selectableMapping
 				),
 				getJdbcMapping().getJdbcJavaType(),
 				fetchParent,
@@ -194,7 +212,7 @@ public class BasicValuedCollectionPart
 	@Override
 	public void applySqlSelections(
 			NavigablePath navigablePath, TableGroup tableGroup, DomainResultCreationState creationState) {
-		resolveSqlSelection( navigablePath, tableGroup, true, null, creationState );
+		resolveSqlSelection( navigablePath, tableGroup, null, creationState );
 	}
 
 	@Override
@@ -203,7 +221,7 @@ public class BasicValuedCollectionPart
 			TableGroup tableGroup,
 			DomainResultCreationState creationState,
 			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
-		selectionConsumer.accept( resolveSqlSelection( navigablePath, tableGroup, true, null, creationState ), getJdbcMapping() );
+		selectionConsumer.accept( resolveSqlSelection( navigablePath, tableGroup, null, creationState ), getJdbcMapping() );
 	}
 
 	@Override
@@ -227,6 +245,11 @@ public class BasicValuedCollectionPart
 	}
 
 	@Override
+	public int getFetchableKey() {
+		return nature == Nature.INDEX || !collectionDescriptor.hasIndex() ? 0 : 1;
+	}
+
+	@Override
 	public FetchOptions getMappedFetchOptions() {
 		return this;
 	}
@@ -239,11 +262,13 @@ public class BasicValuedCollectionPart
 			boolean selected,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		ResultsLogger.RESULTS_LOGGER.debugf(
-				"Generating Fetch for collection-part : `%s` -> `%s`",
-				collectionDescriptor.getRole(),
-				nature.getName()
-		);
+		if ( ResultsLogger.RESULTS_LOGGER.isDebugEnabled() ) {
+			ResultsLogger.RESULTS_LOGGER.debugf(
+					"Generating Fetch for collection-part : `%s` -> `%s`",
+					collectionDescriptor.getRole(),
+					nature.getName()
+			);
+		}
 
 		NavigablePath parentNavigablePath = fetchablePath.getParent();
 		if ( parentNavigablePath instanceof EntityIdentifierNavigablePath ) {
@@ -253,7 +278,7 @@ public class BasicValuedCollectionPart
 		final TableGroup tableGroup = creationState.getSqlAstCreationState()
 				.getFromClauseAccess()
 				.findTableGroup( parentNavigablePath );
-		final SqlSelection sqlSelection = resolveSqlSelection( fetchablePath, tableGroup, true, fetchParent, creationState );
+		final SqlSelection sqlSelection = resolveSqlSelection( fetchablePath, tableGroup, fetchParent, creationState );
 
 		return new BasicFetch<>(
 				sqlSelection.getValuesArrayPosition(),
@@ -261,13 +286,22 @@ public class BasicValuedCollectionPart
 				fetchablePath,
 				this,
 				FetchTiming.IMMEDIATE,
-				creationState
+				creationState,
+				!sqlSelection.isVirtual()
 		);
 	}
 
 	@Override
-	public List<JdbcMapping> getJdbcMappings() {
-		return Collections.singletonList( getJdbcMapping() );
+	public JdbcMapping getJdbcMapping(int index) {
+		if ( index != 0 ) {
+			throw new IndexOutOfBoundsException( index );
+		}
+		return getJdbcMapping();
+	}
+
+	@Override
+	public JdbcMapping getSingleJdbcMapping() {
+		return getJdbcMapping();
 	}
 
 	@Override
@@ -293,26 +327,37 @@ public class BasicValuedCollectionPart
 	}
 
 	@Override
-	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		valueConsumer.consume( domainValue, this );
-	}
-
-	@Override
-	public int forEachDisassembledJdbcValue(
-			Object value,
-			Clause clause,
+	public <X, Y> int breakDownJdbcValues(
+			Object domainValue,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
 			SharedSessionContractImplementor session) {
-		valuesConsumer.consume( offset, value, getJdbcMapping() );
+		valueConsumer.consume( offset, x, y, disassemble( domainValue, session ), this );
 		return getJdbcTypeCount();
 	}
 
 	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		if ( selectableMapping.getJdbcMapping().getValueConverter() != null ) {
-			return selectableMapping.getJdbcMapping().getValueConverter().toRelationalValue( value );
-		}
-		return value;
+	public <X, Y> int decompose(
+			Object domainValue, int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
+			SharedSessionContractImplementor session) {
+		valueConsumer.consume( offset, x, y, disassemble( domainValue, session ), this );
+		return getJdbcTypeCount();
+	}
+
+	@Override
+	public <X, Y> int forEachDisassembledJdbcValue(
+			Object value,
+			int offset,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			SharedSessionContractImplementor session) {
+		valuesConsumer.consume( offset, x, y, value, getJdbcMapping() );
+		return getJdbcTypeCount();
 	}
 }

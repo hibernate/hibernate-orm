@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemaupdate;
 
@@ -16,8 +14,9 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -25,16 +24,17 @@ import org.junit.Test;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-10197")
+@JiraKey(value = "HHH-10197")
 public class QuotedTableNameWithForeignKeysSchemaUpdateTest extends BaseUnitTestCase {
 
 	@Before
 	public void setUp() {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 		try {
 			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
 					.addResource( "org/hibernate/orm/test/schemaupdate/UserGroup.hbm.xml" )
 					.buildMetadata();
+			metadata.orderColumns( false );
 			metadata.validate();
 			new SchemaUpdate().execute( EnumSet.of( TargetType.DATABASE ), metadata );
 		}
@@ -45,7 +45,7 @@ public class QuotedTableNameWithForeignKeysSchemaUpdateTest extends BaseUnitTest
 
 	@Test
 	public void testUpdateExistingSchema() {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 		try {
 			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
 					.addResource( "org/hibernate/orm/test/schemaupdate/UserGroup.hbm.xml" )
@@ -59,7 +59,7 @@ public class QuotedTableNameWithForeignKeysSchemaUpdateTest extends BaseUnitTest
 
 	@Test
 	public void testGeneratingUpdateScript() {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 		try {
 
 			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
@@ -74,7 +74,7 @@ public class QuotedTableNameWithForeignKeysSchemaUpdateTest extends BaseUnitTest
 
 	@After
 	public void tearDown() {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 		try {
 
 			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )

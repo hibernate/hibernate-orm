@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
@@ -12,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -47,10 +46,9 @@ public class SqmMapEntryReference<K,V>
 		this.mapPath = mapPath;
 		this.nodeBuilder = nodeBuilder;
 
-		this.mapEntryTypeDescriptor = nodeBuilder.getDomainModel()
-				.getTypeConfiguration()
-				.getJavaTypeRegistry()
-				.getDescriptor( Map.Entry.class );
+		this.mapEntryTypeDescriptor =
+				nodeBuilder.getTypeConfiguration().getJavaTypeRegistry()
+						.getDescriptor( Map.Entry.class );
 	}
 
 	@Override
@@ -122,6 +120,11 @@ public class SqmMapEntryReference<K,V>
 	}
 
 	@Override
+	public DomainType<Map.Entry<K, V>> getSqmType() {
+		return null;
+	}
+
+	@Override
 	public Class<Map.Entry<K, V>> getBindableJavaType() {
 		return getNodeType().getBindableJavaType();
 	}
@@ -152,6 +155,26 @@ public class SqmMapEntryReference<K,V>
 	}
 
 	@Override
+	public Predicate equalTo(Expression<?> value) {
+		throw new UnsupportedOperationException( "Whatever JPA" );
+	}
+
+	@Override
+	public Predicate equalTo(Object value) {
+		throw new UnsupportedOperationException( "Whatever JPA" );
+	}
+
+	@Override
+	public Predicate notEqualTo(Expression<?> value) {
+		throw new UnsupportedOperationException( "Whatever JPA" );
+	}
+
+	@Override
+	public Predicate notEqualTo(Object value) {
+		throw new UnsupportedOperationException( "Whatever JPA" );
+	}
+
+	@Override
 	public Predicate in(Object... values) {
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
@@ -173,6 +196,11 @@ public class SqmMapEntryReference<K,V>
 
 	@Override
 	public <X> Expression<X> as(Class<X> type) {
+		throw new UnsupportedOperationException( "Whatever JPA" );
+	}
+
+	@Override
+	public <X> Expression<X> cast(Class<X> type) {
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
 }

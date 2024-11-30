@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.orm.jdbc;
 
@@ -30,7 +28,7 @@ public class TimeZoneConnectionProvider
 		this.defaultTimeZone =  System.setProperty( "user.timezone", customTimeZone);
 		TimeZone.setDefault(TimeZone.getTimeZone( customTimeZone ));
 		// Clear the connection pool to avoid issues with drivers that initialize the session TZ to the system TZ
-		SharedDriverManagerConnectionProviderImpl.getInstance().reset();
+		SharedDriverManagerConnectionProviderImpl.getInstance().onDefaultTimeZoneChange();
 	}
 
 	@Override
@@ -39,6 +37,6 @@ public class TimeZoneConnectionProvider
 		System.setProperty( "user.timezone", defaultTimeZone);
 		TimeZone.setDefault(TimeZone.getTimeZone( defaultTimeZone ));
 		// Clear the connection pool to avoid issues with drivers that initialize the session TZ to the system TZ
-		SharedDriverManagerConnectionProviderImpl.getInstance().reset();
+		SharedDriverManagerConnectionProviderImpl.getInstance().onDefaultTimeZoneChange();
 	}
 }

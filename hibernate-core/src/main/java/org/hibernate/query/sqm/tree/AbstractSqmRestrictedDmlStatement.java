@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree;
 
@@ -22,7 +20,6 @@ import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
 import jakarta.persistence.metamodel.EntityType;
 
 /**
@@ -33,22 +30,27 @@ public abstract class AbstractSqmRestrictedDmlStatement<T> extends AbstractSqmDm
 
 	private SqmWhereClause whereClause;
 
+	/**
+	 * Constructor for HQL statements.
+	 */
 	public AbstractSqmRestrictedDmlStatement(SqmQuerySource querySource, NodeBuilder nodeBuilder) {
 		super( querySource, nodeBuilder );
 	}
 
+	/**
+	 * Constructor for Criteria statements.
+	 */
 	public AbstractSqmRestrictedDmlStatement(SqmRoot<T> target, SqmQuerySource querySource, NodeBuilder nodeBuilder) {
 		super( target, querySource, nodeBuilder );
 	}
 
-	public AbstractSqmRestrictedDmlStatement(
+	protected AbstractSqmRestrictedDmlStatement(
 			NodeBuilder builder,
 			SqmQuerySource querySource,
 			Set<SqmParameter<?>> parameters,
 			Map<String, SqmCteStatement<?>> cteStatements,
-			boolean withRecursiveCte,
 			SqmRoot<T> target) {
-		super( builder, querySource, parameters, cteStatements, withRecursiveCte, target );
+		super( builder, querySource, parameters, cteStatements, target );
 	}
 
 	protected SqmWhereClause copyWhereClause(SqmCopyContext context) {
@@ -57,25 +59,32 @@ public abstract class AbstractSqmRestrictedDmlStatement<T> extends AbstractSqmDm
 		}
 		else {
 			final SqmWhereClause whereClause = new SqmWhereClause( nodeBuilder() );
-			whereClause.setPredicate( getWhereClause().getPredicate().copy( context ) );
+			final SqmPredicate predicate = getWhereClause().getPredicate();
+			whereClause.setPredicate( predicate==null ? null : predicate.copy( context ) );
 			return whereClause;
 		}
 	}
 
-	public Root<T> from(Class<T> entityClass) {
-		final EntityDomainType<T> entity = nodeBuilder().getDomainModel().entity( entityClass );
-		SqmRoot<T> root = new SqmRoot<>( entity, null, false, nodeBuilder() );
-		setTarget( root );
+	public SqmRoot<T> from(Class<T> entityClass) {
+		return from( nodeBuilder().getDomainModel().entity( entityClass ) );
+	}
+
+	public SqmRoot<T> from(EntityType<T> entity) {
+		final EntityDomainType<T> entityDomainType = (EntityDomainType<T>) entity;
+		final SqmRoot<T> root = getTarget();
+		if ( root.getModel() != entity ) {
+			throw new IllegalArgumentException(
+					String.format(
+							"Expecting DML target entity type [%s] but got [%s]",
+							root.getModel().getHibernateEntityName(),
+							entityDomainType.getName()
+					)
+			);
+		}
 		return root;
 	}
 
-	public Root<T> from(EntityType<T> entity) {
-		SqmRoot<T> root = new SqmRoot<>( (EntityDomainType<T>) entity, null, false, nodeBuilder() );
-		setTarget( root );
-		return root;
-	}
-
-	public Root<T> getRoot() {
+	public SqmRoot<T> getRoot() {
 		return getTarget();
 	}
 

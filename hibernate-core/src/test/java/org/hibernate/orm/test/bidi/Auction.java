@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id: Auction.java 5733 2005-02-14 15:56:06Z oneovthafew $
 package org.hibernate.orm.test.bidi;
 
 import java.util.ArrayList;
@@ -18,7 +14,7 @@ import java.util.List;
 public class Auction {
 	private Long id;
 	private String description;
-	private List bids = new ArrayList();
+	private List<Bid> bids = new ArrayList<Bid>();
 	private Bid successfulBid;
 	private Date end;
 
@@ -30,11 +26,11 @@ public class Auction {
 		this.end = end;
 	}
 
-	public List getBids() {
+	public List<Bid> getBids() {
 		return bids;
 	}
 
-	public void setBids(List bids) {
+	public void setBids(List<Bid> bids) {
 		this.bids = bids;
 	}
 

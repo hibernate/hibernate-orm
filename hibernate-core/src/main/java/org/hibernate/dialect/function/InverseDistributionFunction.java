@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
 
@@ -10,9 +8,10 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
-import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.query.ReturnableType;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
@@ -59,8 +58,7 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 			SqmPredicate filter,
 			SqmOrderByClause withinGroupClause,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		return new SelfRenderingInverseDistributionFunction<>(
 				arguments,
 				filter,
@@ -74,8 +72,9 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
-		render( sqlAppender, sqlAstArguments, null, Collections.emptyList(), walker );
+		render( sqlAppender, sqlAstArguments, null, Collections.emptyList(), returnType, walker );
 	}
 
 	@Override
@@ -83,8 +82,9 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
 			Predicate filter,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
-		render( sqlAppender, sqlAstArguments, filter, Collections.emptyList(), walker );
+		render( sqlAppender, sqlAstArguments, filter, Collections.emptyList(), returnType, walker );
 	}
 
 	@Override
@@ -93,6 +93,7 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 			List<? extends SqlAstNode> sqlAstArguments,
 			Predicate filter,
 			List<SortSpecification> withinGroup,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
 		if ( filter != null && !translator.supportsFilterClause() ) {
 			throw new IllegalArgumentException( "Can't emulate filter clause for inverse distribution function [" + getName() + "]" );
@@ -129,13 +130,12 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 
 	protected class SelfRenderingInverseDistributionFunction<T> extends SelfRenderingSqmOrderedSetAggregateFunction<T> {
 
-		private final SqmOrderByClause withinGroupClause;
-
 		public SelfRenderingInverseDistributionFunction(
 				List<? extends SqmTypedNode<?>> arguments,
 				SqmPredicate filter,
 				SqmOrderByClause withinGroupClause,
-				ReturnableType<T> impliedResultType, QueryEngine queryEngine) {
+				ReturnableType<T> impliedResultType,
+				QueryEngine queryEngine) {
 			super(
 					InverseDistributionFunction.this,
 					InverseDistributionFunction.this,
@@ -148,19 +148,28 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 					queryEngine.getCriteriaBuilder(),
 					InverseDistributionFunction.this.getName()
 			);
-			this.withinGroupClause = withinGroupClause;
+			if ( withinGroupClause == null ) {
+				throw new SemanticException("Inverse distribution function '" + getFunctionName()
+						+ "' must specify 'WITHIN GROUP'");
+			}
 		}
 
 		@Override
-		protected ReturnableType<?> resolveResultType(TypeConfiguration typeConfiguration) {
-			return (ReturnableType<?>) withinGroupClause.getSortSpecifications().get( 0 ).getSortExpression()
-						.getExpressible();
+		protected ReturnableType<?> determineResultType(
+				SqmToSqlAstConverter converter,
+				TypeConfiguration typeConfiguration) {
+			return (ReturnableType<?>)
+					getWithinGroup().getSortSpecifications().get( 0 )
+							.getSortExpression()
+							.getExpressible()
+							.getSqmType();
 		}
 
 		@Override
 		protected MappingModelExpressible<?> getMappingModelExpressible(
 				SqmToSqlAstConverter walker,
-				ReturnableType<?> resultType) {
+				ReturnableType<?> resultType,
+				List<SqlAstNode> arguments) {
 			MappingModelExpressible<?> mapping;
 			if ( resultType instanceof MappingModelExpressible) {
 				// here we have a BasicType, which can be cast
@@ -171,21 +180,23 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 				// here we have something that is not a BasicType,
 				// and we have no way to get a BasicValuedMapping
 				// from it directly
-				final Expression expression = (Expression) withinGroupClause.getSortSpecifications().get( 0 )
-						.getSortExpression()
-						.accept( walker );
-				if ( expression.getExpressionType() instanceof BasicValuedMapping ) {
-					return (BasicValuedMapping) expression.getExpressionType();
+				final Expression expression = (Expression)
+						getWithinGroup().getSortSpecifications().get( 0 )
+								.getSortExpression()
+								.accept( walker );
+				final JdbcMappingContainer expressionType = expression.getExpressionType();
+				if ( expressionType instanceof BasicValuedMapping ) {
+					return (BasicValuedMapping) expressionType;
 				}
 				try {
-					final MappingMetamodelImplementor domainModel = walker.getCreationContext()
+					return walker.getCreationContext()
 							.getSessionFactory()
 							.getRuntimeMetamodels()
-							.getMappingMetamodel();
-					return domainModel.resolveMappingExpressible(
-							getNodeType(),
-							walker.getFromClauseAccess()::getTableGroup
-					);
+							.getMappingMetamodel()
+							.resolveMappingExpressible(
+									getNodeType(),
+									walker.getFromClauseAccess()::getTableGroup
+							);
 				}
 				catch (Exception e) {
 					return null; // this works at least approximately

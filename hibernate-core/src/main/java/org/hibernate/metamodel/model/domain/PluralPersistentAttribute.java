@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain;
 
@@ -14,10 +12,7 @@ import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.SqmPathSource;
 
 /**
- * Hibernate extension to the JPA {@link PluralAttribute} descriptor
- *
- * todo (6.0) : Create an form of plural attribute (and singular) in the API package (org.hibernate.metamodel.model.domain)
- * 		and have this extend it
+ * Extension of the JPA-defined {@link PluralAttribute} interface.
  *
  * @author Steve Ebersole
  */

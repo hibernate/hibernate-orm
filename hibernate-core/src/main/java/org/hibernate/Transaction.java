@@ -1,13 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
 import jakarta.persistence.EntityTransaction;
 import jakarta.transaction.Synchronization;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
@@ -66,13 +65,17 @@ public interface Transaction extends EntityTransaction {
 	 *
 	 * @return The timeout, in seconds.
 	 */
-	int getTimeout();
+	@Nullable Integer getTimeout();
 
 	/**
 	 * Attempt to mark the underlying transaction for rollback only.
+	 * <p>
+	 * Unlike {@link #setRollbackOnly()}, which is specified by JPA
+	 * to throw when the transaction is inactive, this operation may
+	 * be called on an inactive transaction, in which case it has no
+	 * effect.
+	 *
+	 * @see #setRollbackOnly()
 	 */
-	default void markRollbackOnly() {
-		setRollbackOnly();
-	}
-
+	void markRollbackOnly();
 }

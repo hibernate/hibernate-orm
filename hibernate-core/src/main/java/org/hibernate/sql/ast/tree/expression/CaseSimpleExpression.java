@@ -1,10 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.sql.ast.tree.expression;
 
 import java.io.Serializable;
@@ -20,7 +17,6 @@ import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
-import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
@@ -62,7 +58,7 @@ public class CaseSimpleExpression implements Expression, DomainResultProducer {
 	public DomainResult createDomainResult(
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final JdbcMapping jdbcMapping = type.getJdbcMappings().get( 0 );
+		final JdbcMapping jdbcMapping = type.getSingleJdbcMapping();
 		return new BasicResult(
 				creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
 						this,
@@ -82,7 +78,7 @@ public class CaseSimpleExpression implements Expression, DomainResultProducer {
 
 		sqlExpressionResolver.resolveSqlSelection(
 				this,
-				type.getJdbcMappings().get( 0 ).getJdbcJavaType(),
+				type.getSingleJdbcMapping().getJdbcJavaType(),
 				null,
 				sqlAstCreationState.getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);

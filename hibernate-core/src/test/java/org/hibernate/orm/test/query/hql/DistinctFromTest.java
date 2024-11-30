@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hql;
 
@@ -18,6 +16,8 @@ import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Christian Beikov
@@ -115,4 +115,21 @@ public class DistinctFromTest {
 		);
 	}
 
+	@Test void testNulls(SessionFactoryScope scope) {
+		scope.inSession(session -> {
+			assertEquals(1, session.createSelectionQuery("select 1 where 1 is distinct from 0").getResultList().size());
+			assertEquals(0, session.createSelectionQuery("select 1 where 1 is distinct from 1").getResultList().size());
+			assertEquals(1, session.createSelectionQuery("select 1 where 1 is distinct from null").getResultList().size());
+			assertEquals(1, session.createSelectionQuery("select 1 where null is distinct from 1").getResultList().size());
+			assertEquals(1, session.createSelectionQuery("select 1 where null is distinct from 0").getResultList().size());
+			assertEquals(0, session.createSelectionQuery("select 1 where null is distinct from null").getResultList().size());
+
+			assertEquals(0, session.createSelectionQuery("select 1 where 1 is not distinct from 0").getResultList().size());
+			assertEquals(1, session.createSelectionQuery("select 1 where 1 is not distinct from 1").getResultList().size());
+			assertEquals(0, session.createSelectionQuery("select 1 where 1 is not distinct from null").getResultList().size());
+			assertEquals(0, session.createSelectionQuery("select 1 where null is not distinct from 1").getResultList().size());
+			assertEquals(0, session.createSelectionQuery("select 1 where null is not distinct from 0").getResultList().size());
+			assertEquals(1, session.createSelectionQuery("select 1 where null is not distinct from null").getResultList().size());
+		});
+	}
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.jdbc;
 
@@ -12,8 +10,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -91,8 +91,8 @@ public class ConnectionProviderDelegate implements
 	}
 
 	@Override
-	public void closeConnection(Connection conn) throws SQLException {
-		connectionProvider.closeConnection( conn );
+	public void closeConnection(Connection connection) throws SQLException {
+		connectionProvider.closeConnection( connection );
 	}
 
 	@Override
@@ -101,6 +101,11 @@ public class ConnectionProviderDelegate implements
 			return true;
 		}
 		return connectionProvider.supportsAggressiveRelease();
+	}
+
+	@Override
+	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
+		return connectionProvider.getDatabaseConnectionInfo( dialect );
 	}
 
 	@Override

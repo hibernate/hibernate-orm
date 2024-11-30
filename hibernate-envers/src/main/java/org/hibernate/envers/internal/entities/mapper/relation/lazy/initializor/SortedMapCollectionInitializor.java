@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor;
 
@@ -51,23 +49,21 @@ public class SortedMapCollectionInitializor extends MapCollectionInitializor<Sor
 		if ( comparator == null ) {
 			return super.initializeCollection( size );
 		}
-		return doPrivileged( () -> {
-			try {
-				return collectionClass.getConstructor( Comparator.class ).newInstance( comparator );
-			}
-			catch (InstantiationException e) {
-				throw new AuditException( e );
-			}
-			catch (IllegalAccessException e) {
-				throw new AuditException( e );
-			}
-			catch (NoSuchMethodException e) {
-				throw new AuditException( e );
-			}
-			catch (InvocationTargetException e) {
-				throw new AuditException( e );
-			}
-		} );
+		try {
+			return collectionClass.getConstructor( Comparator.class ).newInstance( comparator );
+		}
+		catch (InstantiationException e) {
+			throw new AuditException( e );
+		}
+		catch (IllegalAccessException e) {
+			throw new AuditException( e );
+		}
+		catch (NoSuchMethodException e) {
+			throw new AuditException( e );
+		}
+		catch (InvocationTargetException e) {
+			throw new AuditException( e );
+		}
 	}
 
 }

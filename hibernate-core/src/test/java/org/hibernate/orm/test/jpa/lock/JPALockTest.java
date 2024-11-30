@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.lock;
 
@@ -11,12 +9,13 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.orm.test.jpa.model.AbstractJPATest;
 import org.hibernate.orm.test.jpa.model.Item;
-import org.hibernate.orm.test.jpa.model.MyEntity;
 
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.jdbc.SQLServerSnapshotIsolationConnectionProvider;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -24,7 +23,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -33,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  *
  * @author Steve Ebersole
  */
-@RequiresDialectFeature(feature = DialectFeatureChecks.DoesReadCommittedNotCauseWritersToBlockReadersCheck.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.DoesReadCommittedCauseWritersToBlockReadersCheck.class, reverse = true)
 public class JPALockTest extends AbstractJPATest {
 
 	private SQLServerSnapshotIsolationConnectionProvider connectionProvider = new SQLServerSnapshotIsolationConnectionProvider();
@@ -55,9 +53,9 @@ public class JPALockTest extends AbstractJPATest {
 
 	/**
 	 * Test the equivalent of EJB3 LockModeType.READ
-	 * <p/>
+	 * <p>
 	 * From the spec:
-	 * <p/>
+	 * <p>
 	 * If transaction T1 calls lock(entity, LockModeType.READ) on a versioned object, the entity
 	 * manager must ensure that neither of the following phenomena can occur:<ul>
 	 * <li>P1 (Dirty read): Transaction T1 modifies a row. Another transaction T2 then reads that row and
@@ -66,22 +64,23 @@ public class JPALockTest extends AbstractJPATest {
 	 * so before or after T2 commits.
 	 * <li>P2 (Non-repeatable read): Transaction T1 reads a row. Another transaction T2 then modifies or
 	 * deletes that row, before T1 has committed. Both transactions eventually commit successfully.
-	 * <p/>
+	 * <p>
 	 * This will generally be achieved by the entity manager acquiring a lock on the underlying database row.
 	 * Any such lock may be obtained immediately (so long as it is retained until commit completes), or the
 	 * lock may be deferred until commit time (although even then it must be retained until the commit completes).
 	 * Any implementation that supports repeatable reads in a way that prevents the above phenomena
 	 * is permissible.
-	 * <p/>
+	 * <p>
 	 * The persistence implementation is not required to support calling lock(entity, LockMode-Type.READ)
 	 * on a non-versioned object. When it cannot support such a lock call, it must throw the
 	 * PersistenceException. When supported, whether for versioned or non-versioned objects, LockMode-Type.READ
 	 * must always prevent the phenomena P1 and P2. Applications that call lock(entity, LockModeType.READ)
 	 * on non-versioned objects will not be portable.
-	 * <p/>
+	 * <p>
 	 * EJB3 LockModeType.READ actually maps to the Hibernate LockMode.OPTIMISTIC
 	 */
 	@Test
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "Cockroach uses SERIALIZABLE by default and fails to acquire a write lock after a TX in between committed changes to a row")
 	public void testLockModeTypeRead() {
 		if ( !readCommittedIsolationMaintained( "ejb3 lock tests" ) ) {
 			return;
@@ -92,7 +91,7 @@ public class JPALockTest extends AbstractJPATest {
 		Long itemId = fromTransaction(
 				session -> {
 					it.setName( initialName );
-					session.save( it );
+					session.persist( it );
 					return it.getId();
 				}
 		);
@@ -152,22 +151,22 @@ public class JPALockTest extends AbstractJPATest {
 
 		inTransaction(
 				session ->
-						session.delete( item )
+						session.remove( session.getReference(item) )
 		);
 	}
 
 	/**
 	 * Test the equivalent of EJB3 LockModeType.WRITE
-	 * <p/>
+	 * <p>
 	 * From the spec:
-	 * <p/>
+	 * <p>
 	 * If transaction T1 calls lock(entity, LockModeType.WRITE) on a versioned object, the entity
 	 * manager must avoid the phenomena P1 and P2 (as with LockModeType.READ) and must also force
 	 * an update (increment) to the entity's version column. A forced version update may be performed immediately,
 	 * or may be deferred until a flush or commit. If an entity is removed before a deferred version
 	 * update was to have been applied, the forced version update is omitted, since the underlying database
 	 * row no longer exists.
-	 * <p/>
+	 * <p>
 	 * The persistence implementation is not required to support calling lock(entity, LockMode-Type.WRITE)
 	 * on a non-versioned object. When it cannot support a such lock call, it must throw the
 	 * PersistenceException. When supported, whether for versioned or non-versioned objects, LockMode-Type.WRITE
@@ -176,6 +175,7 @@ public class JPALockTest extends AbstractJPATest {
 	 * lock(entity, LockModeType.WRITE) on non-versioned objects will not be portable.
 	 */
 	@Test
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "Cockroach uses SERIALIZABLE by default and fails to acquire a write lock after a TX in between committed changes to a row")
 	public void testLockModeTypeWrite() {
 		if ( !readCommittedIsolationMaintained( "ejb3 lock tests" ) ) {
 			return;
@@ -186,7 +186,7 @@ public class JPALockTest extends AbstractJPATest {
 		inTransaction(
 				session -> {
 					it.setName( initialName );
-					session.save( it );
+					session.persist( it );
 				}
 		);
 
@@ -266,7 +266,7 @@ public class JPALockTest extends AbstractJPATest {
 
 		inTransaction(
 				session -> {
-					session.delete( item );
+					session.remove( session.getReference(item) );
 				}
 		);
 	}

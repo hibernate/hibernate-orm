@@ -1,16 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.jdbc.internal;
 
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-
-import jakarta.persistence.EnumType;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -22,8 +18,10 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import jakarta.persistence.EnumType;
+
 /**
- * Access to a JDBC ResultSet and information about it.
+ * Access to a JDBC {@link ResultSet} and information about it.
  *
  * @author Steve Ebersole
  */
@@ -31,6 +29,14 @@ public interface ResultSetAccess extends JdbcValuesMetadata {
 	ResultSet getResultSet();
 	SessionFactoryImplementor getFactory();
 	void release();
+	/**
+	 * The estimate for the amount of results that can be expected for pre-sizing collections.
+	 * May return zero or negative values if the count can not be reasonably estimated.
+	 * @since 6.6
+	 */
+	default int getResultCountEstimate() {
+		return -1;
+	}
 
 	default int getColumnCount() {
 		try {
@@ -72,11 +78,7 @@ public interface ResultSetAccess extends JdbcValuesMetadata {
 	}
 
 	@Override
-	default <J> BasicType<J> resolveType(
-			int position,
-			JavaType<J> explicitJavaType,
-			SessionFactoryImplementor sessionFactory) {
-		final TypeConfiguration typeConfiguration = getFactory().getTypeConfiguration();
+	default <J> BasicType<J> resolveType(int position, JavaType<J> explicitJavaType, TypeConfiguration typeConfiguration) {
 		final JdbcServices jdbcServices = getFactory().getJdbcServices();
 		try {
 			final ResultSetMetaData metaData = getResultSet().getMetaData();
@@ -131,6 +133,11 @@ public interface ResultSetAccess extends JdbcValuesMetadata {
 							@Override
 							public EnumType getEnumeratedType() {
 								return resolvedJdbcType.isNumber() ? EnumType.ORDINAL : EnumType.STRING;
+							}
+
+							@Override
+							public Dialect getDialect() {
+								return getFactory().getJdbcServices().getDialect();
 							}
 						}
 				);

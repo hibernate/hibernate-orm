@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.collection.spi;
 
@@ -36,29 +34,23 @@ public class InitializerProducerBuilder {
 			Fetch elementFetch,
 			DomainResultCreationState creationState) {
 		switch ( classification ) {
-			case ARRAY: {
+			case ARRAY:
 				return createArrayInitializerProducer( navigablePath, attributeMapping, fetchParent, selected, indexFetch, elementFetch, creationState );
-			}
 			case BAG:
-			case ID_BAG: {
+			case ID_BAG:
 				return createBagInitializerProducer( navigablePath, attributeMapping, fetchParent, selected, elementFetch, creationState );
-			}
-			case LIST: {
+			case LIST:
 				return createListInitializerProducer( navigablePath, attributeMapping, fetchParent, selected, indexFetch, elementFetch, creationState );
-			}
 			case MAP:
 			case ORDERED_MAP:
-			case SORTED_MAP: {
+			case SORTED_MAP:
 				return createMapInitializerProducer( navigablePath, attributeMapping, fetchParent, selected, indexFetch, elementFetch, creationState );
-			}
 			case SET:
 			case ORDERED_SET:
-			case SORTED_SET: {
+			case SORTED_SET:
 				return createSetInitializerProducer( navigablePath, attributeMapping, fetchParent, selected, elementFetch, creationState );
-			}
-			default: {
+			default:
 				throw new IllegalArgumentException( "Unknown CollectionClassification : " + classification );
-			}
 		}
 	}
 
@@ -228,7 +220,7 @@ public class InitializerProducerBuilder {
 			Fetch elementFetch,
 			DomainResultCreationState creationState) {
 		switch ( classification ) {
-			case ARRAY: {
+			case ARRAY:
 				return createArrayInitializerProducer(
 						navigablePath,
 						attributeMapping,
@@ -238,9 +230,8 @@ public class InitializerProducerBuilder {
 						elementFetch,
 						creationState
 				);
-			}
 			case BAG:
-			case ID_BAG: {
+			case ID_BAG:
 				assert indexFetch == null;
 				return createBagInitializerProducer(
 						navigablePath,
@@ -250,8 +241,7 @@ public class InitializerProducerBuilder {
 						elementFetch,
 						creationState
 				);
-			}
-			case LIST: {
+			case LIST:
 				return createListInitializerProducer(
 						navigablePath,
 						attributeMapping,
@@ -261,10 +251,9 @@ public class InitializerProducerBuilder {
 						elementFetch,
 						creationState
 				);
-			}
 			case MAP:
 			case ORDERED_MAP:
-			case SORTED_MAP: {
+			case SORTED_MAP:
 				return createMapInitializerProducer(
 						navigablePath,
 						attributeMapping,
@@ -274,10 +263,9 @@ public class InitializerProducerBuilder {
 						elementFetch,
 						creationState
 				);
-			}
 			case SET:
 			case ORDERED_SET:
-			case SORTED_SET: {
+			case SORTED_SET:
 				return createSetInitializerProducer(
 						navigablePath,
 						attributeMapping,
@@ -286,10 +274,8 @@ public class InitializerProducerBuilder {
 						elementFetch,
 						creationState
 				);
-			}
-			default: {
+			default:
 				throw new IllegalArgumentException( "Unknown CollectionClassification : " + classification );
-			}
 		}
 	}
 

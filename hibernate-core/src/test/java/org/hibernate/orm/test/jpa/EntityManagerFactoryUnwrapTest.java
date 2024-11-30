@@ -1,19 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id$
-
 package org.hibernate.orm.test.jpa;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.SessionFactoryImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
@@ -27,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * Test various unwrap scenarios for {@code EntityManagerFactory}.
  */
-@TestForIssue(jiraKey = "HHH-9665")
+@JiraKey(value = "HHH-9665")
 @Jpa
 public class EntityManagerFactoryUnwrapTest {
 

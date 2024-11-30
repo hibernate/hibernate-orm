@@ -1,29 +1,38 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.criteria;
 
 import java.util.List;
 import java.util.Set;
+
+import org.hibernate.query.common.FetchClauseType;
+
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Order;
 import jakarta.persistence.criteria.ParameterExpression;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Selection;
 import jakarta.persistence.metamodel.EntityType;
-
-import org.hibernate.query.sqm.FetchClauseType;
 
 /**
  * Extension of the JPA {@link CriteriaQuery}
  *
  * @author Steve Ebersole
  */
-public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCriteria<T>, JpaSelectCriteria<T> {
+public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCriteria<T>, JpaSelectCriteria<T>, JpaCriteriaSelect<T> {
+
+	/**
+	 * A query that returns the number of results of this query.
+	 *
+	 * @since 6.4
+	 *
+	 * @see org.hibernate.query.SelectionQuery#getResultCount()
+	 */
+	JpaCriteriaQuery<Long> createCountQuery();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Limit/Offset/Fetch clause
@@ -48,6 +57,11 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Accessors
+
+	/**
+	 * Return the {@linkplain #getRoots() roots} as a list.
+	 */
+	List<Root<?>> getRootList();
 
 	@Override
 	@SuppressWarnings("unchecked")
@@ -93,6 +107,9 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 	JpaCriteriaQuery<T> where(Predicate... restrictions);
 
 	@Override
+	JpaCriteriaQuery<T> where(List<Predicate> restrictions);
+
+	@Override
 	JpaCriteriaQuery<T> groupBy(Expression<?>... grouping);
 
 	@Override
@@ -105,8 +122,14 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 	JpaCriteriaQuery<T> having(Predicate... restrictions);
 
 	@Override
+	JpaCriteriaQuery<T> having(List<Predicate> restrictions);
+
+	@Override
 	JpaCriteriaQuery<T> orderBy(Order... o);
 
 	@Override
 	JpaCriteriaQuery<T> orderBy(List<Order> o);
+
+	@Override
+	<U> JpaSubQuery<U> subquery(EntityType<U> type);
 }

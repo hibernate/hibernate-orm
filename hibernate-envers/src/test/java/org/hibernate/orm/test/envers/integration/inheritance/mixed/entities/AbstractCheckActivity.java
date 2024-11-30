@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.inheritance.mixed.entities;
 
@@ -32,9 +30,9 @@ public abstract class AbstractCheckActivity extends AbstractActivity {
 	private Integer durationInMinutes;
 	@ManyToOne(targetEntity = AbstractActivity.class, cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
 	@JoinColumns({
-						 @JoinColumn(table = "ACTIVITY_CHECK", referencedColumnName = "id"),
-						 @JoinColumn(table = "ACTIVITY_CHECK", referencedColumnName = "id2")
-				 })
+						@JoinColumn(table = "ACTIVITY_CHECK", referencedColumnName = "id"),
+						@JoinColumn(table = "ACTIVITY_CHECK", referencedColumnName = "id2")
+				})
 	private Activity relatedActivity;
 
 	public Integer getDurationInMinutes() {

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.archive.internal;
 
@@ -22,8 +20,9 @@ import org.hibernate.boot.archive.spi.InputStreamAccess;
 import static org.hibernate.internal.log.UrlMessageBundle.URL_MESSAGE_LOGGER;
 
 /**
- * An ArchiveDescriptor implementation that works on archives accessible through a {@link JarInputStream}.
- * NOTE : This is less efficient implementation than {@link JarFileBasedArchiveDescriptor}
+ * An {@code ArchiveDescriptor} that works on archives accessible through a {@link JarInputStream}.
+ *
+ * @implNote This is less efficient implementation than {@link JarFileBasedArchiveDescriptor}.
  *
  * @author Emmanuel Bernard
  * @author Steve Ebersole

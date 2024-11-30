@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.registry;
 
@@ -11,6 +9,8 @@ import java.util.Map;
 import org.hibernate.service.Service;
 import org.hibernate.service.spi.ServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Contract for an initiator of services that target the standard {@link org.hibernate.service.ServiceRegistry}.
@@ -28,5 +28,5 @@ public interface StandardServiceInitiator<R extends Service> extends ServiceInit
 	 *
 	 * @return The initiated service.
 	 */
-	R initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry);
+	@Nullable R initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry);
 }

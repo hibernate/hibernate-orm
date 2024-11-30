@@ -1,11 +1,3 @@
-######################
-### Query Language ###
-######################
-
-## Query translator factory class
-
-hibernate.query.factory_class @QUERY_TRANSLATOR_FACTORY@
-
 #################
 ### Platforms ###
 #################
@@ -82,7 +74,7 @@ hibernate.connection.url @DB_URL@
 
 ## DB2/400
 
-#hibernate.dialect org.hibernate.dialect.DB2400Dialect
+#hibernate.dialect org.hibernate.dialect.DB2iDialect
 #hibernate.connection.username user
 #hibernate.connection.password password
 
@@ -97,7 +89,7 @@ hibernate.connection.url @DB_URL@
 
 ## Derby (Not supported!)
 
-#hibernate.dialect org.hibernate.dialect.DerbyDialect
+#hibernate.dialect org.hibernate.community.dialect.DerbyDialect
 #hibernate.connection.driver_class org.apache.derby.jdbc.EmbeddedDriver
 #hibernate.connection.username
 #hibernate.connection.password
@@ -169,7 +161,7 @@ hibernate.connection.url @DB_URL@
 
 ## HANA
 
-#hibernate.dialect org.hibernate.dialect.HANAColumnStoreDialect
+#hibernate.dialect org.hibernate.dialect.HANADialect
 #hibernate.connection.driver_class com.sap.db.jdbc.Driver
 #hibernate.connection.url jdbc:sap://localhost:30015
 #hibernate.connection.username HIBERNATE_TEST
@@ -320,11 +312,6 @@ hibernate.default_batch_fetch_size 8
 ## rollback generated identifier values of deleted entities to default values
 
 #hibernate.use_identifier_rollback true
-
-
-## enable bytecode reflection optimizer (disabled by default)
-
-#hibernate.bytecode.use_reflection_optimizer true
 
 
 

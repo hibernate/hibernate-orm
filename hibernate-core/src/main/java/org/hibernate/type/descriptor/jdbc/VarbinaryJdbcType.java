@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
 
@@ -12,10 +10,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.internal.JdbcLiteralFormatterBinary;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -55,11 +54,11 @@ public class VarbinaryJdbcType implements AdjustableJdbcType {
 	}
 
 	@Override
-	public <T> BasicJavaType<T> getJdbcRecommendedJavaTypeMapping(
+	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		return (BasicJavaType<T>) typeConfiguration.getJavaTypeRegistry().getDescriptor( byte[].class );
+		return typeConfiguration.getJavaTypeRegistry().getDescriptor( byte[].class );
 	}
 
 	@Override
@@ -75,9 +74,20 @@ public class VarbinaryJdbcType implements AdjustableJdbcType {
 	@Override
 	public JdbcType resolveIndicatedType(JdbcTypeIndicators indicators, JavaType<?> domainJtd) {
 		final JdbcTypeRegistry jdbcTypeRegistry = indicators.getTypeConfiguration().getJdbcTypeRegistry();
-		return indicators.isLob()
-				? jdbcTypeRegistry.getDescriptor( Types.BLOB )
-				: this;
+		if ( indicators.isLob() ) {
+			return jdbcTypeRegistry.getDescriptor( indicators.resolveJdbcTypeCode( SqlTypes.BLOB ) );
+		}
+		else if ( shouldUseMaterializedLob( indicators ) ) {
+			return jdbcTypeRegistry.getDescriptor( indicators.resolveJdbcTypeCode( SqlTypes.MATERIALIZED_BLOB ) );
+		}
+		return this;
+	}
+
+	protected boolean shouldUseMaterializedLob(JdbcTypeIndicators indicators) {
+		final Dialect dialect = indicators.getDialect();
+		final long length = indicators.getColumnLength();
+		final long maxLength = dialect.getMaxVarbinaryCapacity();
+		return length > maxLength && dialect.useMaterializedLobWhenCapacityExceeded();
 	}
 
 	public <X> ValueBinder<X> getBinder(final JavaType<X> javaType) {

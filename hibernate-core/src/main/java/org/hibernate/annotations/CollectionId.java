@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
 
@@ -26,12 +24,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface CollectionId {
 	/**
-	 * The column containing the collection-id
+	 * The column containing the collection id.
 	 */
 	Column column() default @Column;
 
 	/**
-	 * Implementation for generating values
+	 * Implementation for generating values.
 	 *
 	 * @apiNote Mutually exclusive with {@link #generator()}
 	 */
@@ -39,10 +37,9 @@ public @interface CollectionId {
 
 	/**
 	 * The generator name.
-	 *
-	 * Can specify either a built-in strategy ("sequence", e.g.)
-	 * or a named generatorIdentifierGenerator
-	 * ({@link jakarta.persistence.SequenceGenerator}, e.g.)
+	 * <p>
+	 * Can specify either a built-in strategy ({@code "sequence"}, for example)
+	 * or a named JPA id generator.
 	 *
 	 * @apiNote Mutually exclusive with {@link #generatorImplementation()}
 	 */

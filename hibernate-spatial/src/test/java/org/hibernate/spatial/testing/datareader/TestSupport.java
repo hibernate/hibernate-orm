@@ -1,17 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-/*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
- */
-
 package org.hibernate.spatial.testing.datareader;
 
 import java.util.ArrayList;
@@ -19,13 +9,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.spatial.CommonSpatialFunction;
 import org.hibernate.spatial.GeomCodec;
 import org.hibernate.spatial.testing.dialects.NativeSQLTemplates;
 import org.hibernate.spatial.testing.dialects.PredicateRegexes;
 
 import org.geolatte.geom.Geometry;
+import org.geolatte.geom.GeometryEquality;
+import org.geolatte.geom.GeometryPositionEquality;
 
 import static org.geolatte.geom.builder.DSL.g;
 import static org.geolatte.geom.builder.DSL.polygon;
@@ -57,6 +48,10 @@ public abstract class TestSupport {
 		return new ArrayList<>();
 	}
 
+	public GeometryEquality getGeometryEquality() {
+		return new GeometryPositionEquality();
+	}
+
 	public enum TestDataPurpose {
 		SpatialFunctionsData,
 		StoreRetrieveData
@@ -65,7 +60,7 @@ public abstract class TestSupport {
 	public abstract TestData createTestData(TestDataPurpose purpose);
 
 	public GeomCodec codec() {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	public Geometry<?> getFilterGeometry() {

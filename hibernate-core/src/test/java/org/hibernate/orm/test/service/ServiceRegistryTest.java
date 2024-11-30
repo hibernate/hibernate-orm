@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.service;
 
 import java.util.Map;
@@ -9,7 +13,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.service.NullServiceException;
 import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
@@ -22,7 +25,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
 
 import static org.junit.Assert.assertNull;
@@ -44,7 +49,7 @@ public class ServiceRegistryTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10427")
+	@JiraKey(value = "HHH-10427")
 	public void testOnlyOneInstanceOfTheServiceShouldBeCreated() throws InterruptedException, ExecutionException {
 
 		Future<SlowInitializationService>[] serviceIdentities = execute();
@@ -63,7 +68,7 @@ public class ServiceRegistryTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11395")
+	@JiraKey(value = "HHH-11395")
 	public void testGetService() {
 		assertThat(
 				registry.getService( SlowInitializationService.class ),
@@ -72,13 +77,13 @@ public class ServiceRegistryTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11395")
+	@JiraKey(value = "HHH-11395")
 	public void testGetServiceReturnsNullWhenTheServiceInitiatorInitiateServiceReturnsNull() {
 		assertNull( registry.getService( FakeService.class ) );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11395")
+	@JiraKey(value = "HHH-11395")
 	public void testRequireService() {
 		assertThat(
 				registry.requireService( SlowInitializationService.class ),
@@ -87,13 +92,13 @@ public class ServiceRegistryTest {
 	}
 
 	@Test(expected = NullServiceException.class)
-	@TestForIssue(jiraKey = "HHH-11395")
+	@JiraKey(value = "HHH-11395")
 	public void testRequireServiceThrowsAnExceptionWhenTheServiceInitiatorInitiateServiceReturnsNull() {
 		assertNull( registry.requireService( FakeService.class ) );
 	}
 
 	private ServiceRegistry buildRegistry() {
-		return new StandardServiceRegistryBuilder().addInitiator( new SlowServiceInitiator() )
+		return ServiceRegistryUtil.serviceRegistryBuilder().addInitiator( new SlowServiceInitiator() )
 				.addInitiator( new NullServiceInitiator() )
 				.build();
 	}

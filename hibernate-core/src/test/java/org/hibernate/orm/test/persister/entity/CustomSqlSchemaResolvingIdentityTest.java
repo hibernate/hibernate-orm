@@ -1,34 +1,29 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.persister.entity;
+
+import org.hibernate.annotations.ResultCheckStyle;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLInsert;
+import org.hibernate.annotations.SQLSelect;
+import org.hibernate.annotations.SQLUpdate;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
+
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
-import org.hibernate.annotations.Loader;
-import org.hibernate.annotations.NamedNativeQuery;
-import org.hibernate.annotations.Persister;
-import org.hibernate.annotations.ResultCheckStyle;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLInsert;
-import org.hibernate.annotations.SQLUpdate;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.persister.entity.AbstractEntityPersister;
-import org.hibernate.persister.entity.SingleTableEntityPersister;
-
-import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-
-import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -49,19 +44,19 @@ public class CustomSqlSchemaResolvingIdentityTest {
 
 		String className = CustomEntity.class.getName();
 
-        final AbstractEntityPersister persister = (AbstractEntityPersister) scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(className);
-		String insertQuery = persister.getSQLInsertStrings()[0];
-		String updateQuery = persister.getSQLUpdateStrings()[0];
-		String deleteQuery = persister.getSQLDeleteStrings()[0];
+		final AbstractEntityPersister persister = (AbstractEntityPersister) scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(className);
+		String insertQuery = ( (JdbcMutationOperation) persister.getInsertCoordinator().getStaticMutationOperationGroup().getSingleOperation() ).getSqlString();
+		String updateQuery = ( (JdbcMutationOperation) persister.getUpdateCoordinator().getStaticMutationOperationGroup().getSingleOperation() ).getSqlString();
+		String deleteQuery = ( (JdbcMutationOperation) persister.getDeleteCoordinator().getStaticMutationOperationGroup().getSingleOperation() ).getSqlString();
 
 		assertEquals( "Incorrect custom SQL for insert in  Entity: " + className,
 				"INSERT INTO FOO (name) VALUES (?)", insertQuery );
-		
+
 		assertEquals( "Incorrect custom SQL for delete in  Entity: " + className,
 				"DELETE FROM FOO WHERE id = ?", deleteQuery );
-		
+
 		assertEquals( "Incorrect custom SQL for update in  Entity: " + className,
-				"UPDATE FOO SET name = ? WHERE id = ? ", updateQuery );
+				"UPDATE FOO SET name = ? WHERE id = ?", updateQuery );
 
 		CustomEntity _entitty = scope.fromTransaction( session -> {
 			CustomEntity entity = new CustomEntity();
@@ -79,7 +74,7 @@ public class CustomSqlSchemaResolvingIdentityTest {
 
 		scope.inTransaction( session -> {
 			CustomEntity entity = session.find( CustomEntity.class, _entitty.id );
-			session.delete( entity );
+			session.remove( entity );
 		} );
 
 		scope.inTransaction( session -> {
@@ -89,13 +84,7 @@ public class CustomSqlSchemaResolvingIdentityTest {
 	}
 
 	@Entity(name = "CardWithCustomSQL")
-	@Persister( impl = SingleTableEntityPersister.class )
-	@Loader(namedQuery = "find_foo_by_id")
-	@NamedNativeQuery(
-		name = "find_foo_by_id",
-		query = "SELECT id, name FROM {h-schema}FOO WHERE id = ?",
-		resultClass = CustomEntity.class
-	)
+	@SQLSelect(sql = "SELECT id, name FROM {h-schema}FOO WHERE id = ?")
 	@SQLInsert(sql = "INSERT INTO {h-schema}FOO (name) VALUES (?)")
 	@SQLDelete(sql = "DELETE FROM {h-schema}FOO WHERE id = ?", check = ResultCheckStyle.COUNT)
 	@SQLUpdate(sql = "UPDATE {h-schema}FOO SET name = ? WHERE id = ? ")
@@ -106,7 +95,7 @@ public class CustomSqlSchemaResolvingIdentityTest {
 
 		private String name;
 	}
-	
+
 	@Entity(name = "Dummy")
 	@Table(name = "FOO")
 	public static class Dummy {

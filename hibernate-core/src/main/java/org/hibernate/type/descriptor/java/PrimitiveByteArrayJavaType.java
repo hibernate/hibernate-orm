@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
@@ -14,7 +12,7 @@ import java.util.Arrays;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.BinaryStream;
-import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
+import org.hibernate.engine.jdbc.internal.ArrayBackedBinaryStream;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.compare.RowVersionComparator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -37,8 +35,8 @@ public class PrimitiveByteArrayJavaType extends AbstractClassJavaType<byte[]>
 
 	@Override
 	public boolean areEqual(byte[] one, byte[] another) {
-		return one == another 
-				|| ( one != null && another != null && Arrays.equals( one, another ) );
+		return one == another
+			|| one != null && another != null && Arrays.equals( one, another );
 	}
 
 	@Override
@@ -63,6 +61,16 @@ public class PrimitiveByteArrayJavaType extends AbstractClassJavaType<byte[]>
 				appender.appendSql( '0' );
 			}
 			appender.appendSql( hexStr );
+		}
+	}
+
+	public void appendString(StringBuilder appender, byte[] bytes) {
+		for ( byte aByte : bytes ) {
+			final String hexStr = Integer.toHexString( Byte.toUnsignedInt(aByte) );
+			if ( hexStr.length() == 1 ) {
+				appender.append( '0' );
+			}
+			appender.append( hexStr );
 		}
 	}
 
@@ -99,7 +107,7 @@ public class PrimitiveByteArrayJavaType extends AbstractClassJavaType<byte[]>
 			return (X) new ByteArrayInputStream( value );
 		}
 		if ( BinaryStream.class.isAssignableFrom( type ) ) {
-			return (X) new BinaryStreamImpl( value );
+			return (X) new ArrayBackedBinaryStream( value );
 		}
 		if ( Blob.class.isAssignableFrom( type ) ) {
 			return (X) options.getLobCreator().createBlob( value );
@@ -112,19 +120,23 @@ public class PrimitiveByteArrayJavaType extends AbstractClassJavaType<byte[]>
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof byte[]) {
-			return (byte[]) value;
+		if (value instanceof byte[] bytes) {
+			return bytes;
 		}
-		if (value instanceof InputStream) {
-			return DataHelper.extractBytes( (InputStream) value );
+		if (value instanceof InputStream inputStream) {
+			return DataHelper.extractBytes( inputStream );
 		}
-		if ( value instanceof Blob || DataHelper.isNClob( value.getClass() ) ) {
+		if ( value instanceof Blob blob ) {
 			try {
-				return DataHelper.extractBytes( ( (Blob) value ).getBinaryStream() );
+				return DataHelper.extractBytes( blob.getBinaryStream() );
 			}
 			catch ( SQLException e ) {
 				throw new HibernateException( "Unable to access lob stream", e );
 			}
+		}
+		else if ( value instanceof Byte byteValue ) {
+			// Support binding a single element as parameter value
+			return new byte[]{ byteValue };
 		}
 
 		throw unknownWrap( value.getClass() );

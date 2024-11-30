@@ -1,28 +1,31 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain;
 
 import java.io.Serializable;
-import java.util.Objects;
 
-import org.hibernate.spi.DotIdentifierSequence;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.spi.DotIdentifierSequence;
 import org.hibernate.spi.NavigablePath;
 
 /**
- * Poorly named.
+ * A compound path which represents a {@link org.hibernate.metamodel.mapping.ModelPart}
+ * and uniquely identifies it with the runtime metamodel.
+ * <p/>
+ * The {@linkplain #isRoot() root} will name either an
+ * {@linkplain org.hibernate.metamodel.MappingMetamodel#getEntityDescriptor entity} or
+ * {@linkplain org.hibernate.metamodel.MappingMetamodel#getCollectionDescriptor collection}
  *
- * Should have been named `org.hibernate.metamodel.model.mapping.MappingRole`
  *
- * Represents a compound path of `ModelPart` nodes rooted at an entity-name.
+ * @apiNote Poorly named. Should probably have been `org.hibernate.metamodel.model.mapping.MappingRole`;
+ * the term "navigable" here is meant to indicate that we could navigate to the specific
+ * {@link org.hibernate.metamodel.mapping.ModelPart} given the role.
  *
  * @author Steve Ebersole
  */
-public class NavigableRole implements DotIdentifierSequence, Serializable {
+public final class NavigableRole implements DotIdentifierSequence, Serializable {
 	public static final String IDENTIFIER_MAPPER_PROPERTY = NavigablePath.IDENTIFIER_MAPPER_PROPERTY;
 
 	private final NavigableRole parent;
@@ -101,29 +104,26 @@ public class NavigableRole implements DotIdentifierSequence, Serializable {
 		return fullPath;
 	}
 
-	public boolean isRoot() {
-		return parent == null && StringHelper.isEmpty( localName );
-	}
-
 	@Override
 	public String toString() {
 		return getClass().getSimpleName() + '[' + fullPath + ']';
 	}
 
 	@Override
-	public boolean equals(Object o) {
+	public boolean equals(final Object o) {
 		if ( this == o ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		if ( o == null || NavigableRole.class != o.getClass() ) {
 			return false;
 		}
 		NavigableRole that = (NavigableRole) o;
-		return Objects.equals( getFullPath(), that.getFullPath() );
+		return fullPath.equals( that.fullPath );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( getFullPath() );
+		return this.fullPath.hashCode();
 	}
+
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.pagination;
 
@@ -23,7 +21,7 @@ import static java.util.regex.Pattern.compile;
  * A {@link LimitHandler} compatible with SQL Server 2005 and later
  * that uses {@code top()} and {@code rownumber()}.
  *
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  * @author Chris Cranford
  * @author Gavin King
  */
@@ -69,7 +67,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	 * select [alias-list] from query_
 	 * where rownumber_ &gt;= ? and rownumber_ &lt; ?
 	 * </pre>
-	 *
+	 * <p>
 	 * Where {@code [original-query]} is the original SQL query, with a
 	 * {@code top()} clause added iff the query has an {@code order by}
 	 * clause, and with generated aliases added to any elements of the

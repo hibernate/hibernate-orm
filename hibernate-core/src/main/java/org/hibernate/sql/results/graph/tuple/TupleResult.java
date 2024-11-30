@@ -1,17 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.tuple;
+
+import java.util.BitSet;
 
 import org.hibernate.Internal;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.basic.BasicResultGraphNode;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -24,7 +24,7 @@ public class TupleResult<T> implements DomainResult<T>, BasicResultGraphNode<T> 
 
 	private final NavigablePath navigablePath;
 
-	private final DomainResultAssembler<T> assembler;
+	private final TupleResultAssembler<T> assembler;
 
 	public TupleResult(
 			int[] jdbcValuesArrayPositions,
@@ -71,8 +71,15 @@ public class TupleResult<T> implements DomainResult<T>, BasicResultGraphNode<T> 
 
 	@Override
 	public DomainResultAssembler<T> createResultAssembler(
-			FetchParentAccess parentAccess,
+			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
 		return assembler;
+	}
+
+	@Override
+	public void collectValueIndexesToCache(BitSet valueIndexes) {
+		for ( int valuesArrayPosition : assembler.getValuesArrayPositions() ) {
+			valueIndexes.set( valuesArrayPosition );
+		}
 	}
 }

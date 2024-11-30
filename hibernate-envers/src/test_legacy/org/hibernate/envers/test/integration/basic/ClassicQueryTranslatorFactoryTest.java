@@ -10,12 +10,12 @@ import java.util.Map;
 
 import org.hibernate.cfg.Environment;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-8497")
+@JiraKey(value = "HHH-8497")
 public class ClassicQueryTranslatorFactoryTest extends Simple {
 	@Override
 	protected void addConfigOptions(Map options) {

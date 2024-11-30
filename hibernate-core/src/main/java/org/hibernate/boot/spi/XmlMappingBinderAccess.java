@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.spi;
 
@@ -20,7 +18,7 @@ import org.hibernate.boot.jaxb.internal.FileXmlSource;
 import org.hibernate.boot.jaxb.internal.InputStreamXmlSource;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.boot.jaxb.internal.UrlXmlSource;
-import org.hibernate.boot.jaxb.spi.BindableMappingDescriptor;
+import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.service.ServiceRegistry;
@@ -28,8 +26,9 @@ import org.hibernate.service.ServiceRegistry;
 import org.jboss.logging.Logger;
 
 /**
- * Poor naming.  Models the binder and a class-loader to be a
- * one-stop-shop in terms of {@link #bind binding} a resource
+ * Holds the XML binder and a classloader used for binding mappings.
+ *
+ * @apiNote This class is very poorly named.
  *
  * @author Steve Ebersole
  */
@@ -53,7 +52,10 @@ public class XmlMappingBinderAccess {
 		return mappingBinder;
 	}
 
-	public <X extends BindableMappingDescriptor> Binding<X> bind(String resource) {
+	/**
+	 * Create a {@linkplain Binding binding} from a named URL resource
+	 */
+	public <X extends JaxbBindableMappingDescriptor> Binding<X> bind(String resource) {
 		LOG.tracef( "reading mappings from resource : %s", resource );
 
 		final Origin origin = new Origin( SourceType.RESOURCE, resource );
@@ -66,7 +68,10 @@ public class XmlMappingBinderAccess {
 		return new UrlXmlSource( origin, url ).doBind( getMappingBinder() );
 	}
 
-	public <X extends BindableMappingDescriptor> Binding<X> bind(File file) {
+	/**
+	 * Create a {@linkplain Binding binding} from a File reference
+	 */
+	public <X extends JaxbBindableMappingDescriptor> Binding<X> bind(File file) {
 		final Origin origin = new Origin( SourceType.FILE, file.getPath() );
 		LOG.tracef( "reading mappings from file : %s", origin.getName() );
 
@@ -78,7 +83,10 @@ public class XmlMappingBinderAccess {
 		return new FileXmlSource( origin, file ).doBind( getMappingBinder() );
 	}
 
-	public <X extends BindableMappingDescriptor> Binding<X> bind(InputStreamAccess xmlInputStreamAccess) {
+	/**
+	 * Create a {@linkplain Binding binding} from an input stream
+	 */
+	public <X extends JaxbBindableMappingDescriptor> Binding<X> bind(InputStreamAccess xmlInputStreamAccess) {
 		LOG.tracef( "reading mappings from InputStreamAccess : %s", xmlInputStreamAccess.getStreamName() );
 
 		final Origin origin = new Origin( SourceType.INPUT_STREAM, xmlInputStreamAccess.getStreamName() );
@@ -97,14 +105,20 @@ public class XmlMappingBinderAccess {
 		}
 	}
 
-	public <X extends BindableMappingDescriptor> Binding<X> bind(InputStream xmlInputStream) {
+	/**
+	 * Create a {@linkplain Binding binding} from an input stream
+	 */
+	public <X extends JaxbBindableMappingDescriptor> Binding<X> bind(InputStream xmlInputStream) {
 		LOG.trace( "reading mappings from InputStream" );
 		final Origin origin = new Origin( SourceType.INPUT_STREAM, null );
 		//noinspection unchecked
 		return new InputStreamXmlSource( origin, xmlInputStream, false ).doBind( getMappingBinder() );
 	}
 
-	public <X extends BindableMappingDescriptor> Binding<X> bind(URL url) {
+	/**
+	 * Create a {@linkplain Binding binding} from a URL
+	 */
+	public <X extends JaxbBindableMappingDescriptor> Binding<X> bind(URL url) {
 		final String urlExternalForm = url.toExternalForm();
 		LOG.debugf( "Reading mapping document from URL : %s", urlExternalForm );
 

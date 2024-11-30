@@ -1,76 +1,47 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
- */
-
-/*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
- * indicated by the @author tags or express copyright attribution
- * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Inc.
- *
- * This copyrighted material is made available to anyone wishing to use, modify,
- * copy, or redistribute it subject to the terms and conditions of the GNU
- * Lesser General Public License, as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
- * for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this distribution; if not, write to:
- * Free Software Foundation, Inc.
- * 51 Franklin Street, Fifth Floor
- * Boston, MA  02110-1301  USA
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.collections.custom.declaredtype;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.boot.MetadataSources;
+
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.OneToMany;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
+ * Test that we get an exception when an attribute whose type is not a Collection
+ * is annotated with any of <ul>
+ *     <li>{@linkplain jakarta.persistence.ElementCollection}</li>
+ *     <li>{@linkplain jakarta.persistence.OneToMany}</li>
+ *     <li>{@linkplain jakarta.persistence.ManyToMany}</li>
+ *     <li>{@linkplain org.hibernate.annotations.ManyToAny}</li>
+ * </ul>
+ * The test specifically uses {@linkplain OneToMany}, but the handling is the same
+ *
  * @author Max Rydahl Andersen
- * @author David Weinberg Negative test when specifying a type that can't be mapped as a collection
+ * @author David Weinberg
  */
-public class UserWithUnimplementedCollectionTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[]{ UserWithUnimplementedCollection.class, Email.class };
-	}
-
-	@Override
-	protected String getCacheConcurrencyStrategy() {
-		return "nonstrict-read-write";
-	}
-
-	@Override
-	protected void buildSessionFactory() {
-		try {
-			super.buildSessionFactory();
-			fail( "Expected exception" );
-		}
-		catch (Exception e) {
-			assertThat( e ).isInstanceOf( AnnotationException.class );
-			assertThat( e ).hasMessageStartingWith( "Illegal attempt to map a non collection as a @OneToMany, @ManyToMany or @CollectionOfElements:" );
-			assertThat( e ).hasMessageEndingWith( ".emailAddresses" );
-		}
-	}
-
+@ServiceRegistry
+public class UserWithUnimplementedCollectionTest {
 	@Test
-	public void testSessionFactoryFailsToBeCreated() {
-
+	void testCollectionNotCollectionFailure(ServiceRegistryScope serviceRegistryScope) {
+		final MetadataSources metadataSources = new MetadataSources( serviceRegistryScope.getRegistry() );
+		metadataSources.addAnnotatedClasses( UserWithUnimplementedCollection.class, Email.class );
+		try {
+			metadataSources.buildMetadata();
+			fail( "Expecting an AnnotationException" );
+		}
+		catch (AnnotationException e) {
+			assertThat( e ).hasMessageEndingWith( "is not a collection and may not be a '@OneToMany', '@ManyToMany', or '@ElementCollection'" );
+			assertThat( e ).hasMessageContaining( ".emailAddresses" );
+		}
 	}
-
 }

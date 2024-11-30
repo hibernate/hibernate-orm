@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.type;
 
@@ -11,10 +9,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.community.dialect.InformixDialect;
+
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -27,6 +28,8 @@ import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
+import static org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator.safeRandomUUID;
+
 @DomainModel(
 		annotatedClasses = {
 				UUIDTypeConverterTest.Image.class,
@@ -35,7 +38,8 @@ import jakarta.persistence.Table;
 		}
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-15417")
+@JiraKey(value = "HHH-15417")
+@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix does not support unique / primary constraints on binary columns")
 public class UUIDTypeConverterTest {
 
 	@AfterEach
@@ -65,7 +69,7 @@ public class UUIDTypeConverterTest {
 		);
 		scope.inTransaction(
 				session -> {
-					image.setThumbId( UUID.randomUUID() );
+					image.setThumbId( safeRandomUUID() );
 					session.merge( image );
 					session.flush();
 				}
@@ -77,7 +81,7 @@ public class UUIDTypeConverterTest {
 		scope.inTransaction(
 				session -> {
 					Image image = session.merge( new Image() );
-					image.setThumbId( UUID.randomUUID() );
+					image.setThumbId( safeRandomUUID() );
 					session.merge( image );
 					session.flush();
 				}
@@ -91,7 +95,7 @@ public class UUIDTypeConverterTest {
 					MarbleBox marbleBox = new MarbleBox( List.of( new Marble() ) );
 
 					MarbleBox saved = session.merge( marbleBox );
-					saved.getMarbles().get( 0 ).setMaterialId( UUID.randomUUID() );
+					saved.getMarbles().get( 0 ).setMaterialId( safeRandomUUID() );
 					session.merge( saved );
 				}
 		);
@@ -110,7 +114,7 @@ public class UUIDTypeConverterTest {
 
 		scope.inTransaction(
 				session -> {
-					marbleBox.getMarbles().get( 0 ).setMaterialId( UUID.randomUUID() );
+					marbleBox.getMarbles().get( 0 ).setMaterialId( safeRandomUUID() );
 					session.merge( marbleBox );
 				}
 		);
@@ -121,7 +125,7 @@ public class UUIDTypeConverterTest {
 		@Column(unique = true, length = 16, nullable = false)
 		@jakarta.persistence.Id
 		@Convert(converter = UuidBase64TypeConverter.class)
-		private UUID id = UUID.randomUUID();
+		private UUID id = safeRandomUUID();
 	}
 
 	@Entity(name = "Image")
@@ -130,7 +134,7 @@ public class UUIDTypeConverterTest {
 
 		@Column(unique = true, length = 16, nullable = false)
 		@Convert(converter = UuidBase64TypeConverter.class)
-		private UUID thumbId = UUID.randomUUID();
+		private UUID thumbId = safeRandomUUID();
 
 		private int position;
 

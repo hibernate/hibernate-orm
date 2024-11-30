@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
@@ -14,7 +12,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
 /**
- * Describes the {@link ZoneId} Java type
+ * Describes the {@link ZoneId} Java type.
  */
 public class ZoneIdJavaType extends AbstractClassJavaType<ZoneId> {
 	/**
@@ -28,7 +26,12 @@ public class ZoneIdJavaType extends AbstractClassJavaType<ZoneId> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators indicators) {
-		return indicators.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( Types.VARCHAR );
+		return indicators.getJdbcType( Types.VARCHAR );
+	}
+
+	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
 	}
 
 	@Override
@@ -47,11 +50,12 @@ public class ZoneIdJavaType extends AbstractClassJavaType<ZoneId> {
 		if ( value == null ) {
 			return null;
 		}
-
+		if ( ZoneId.class.isAssignableFrom( type ) ) {
+			return (X) value;
+		}
 		if ( String.class.isAssignableFrom( type ) ) {
 			return (X) toString( value );
 		}
-
 		throw unknownUnwrap( type );
 	}
 
@@ -60,11 +64,13 @@ public class ZoneIdJavaType extends AbstractClassJavaType<ZoneId> {
 		if ( value == null ) {
 			return null;
 		}
-
-		if ( value instanceof String ) {
-			return fromString( (String) value );
+		if ( value instanceof ZoneId zoneId ) {
+			return zoneId;
 		}
-
+		if ( value instanceof String string ) {
+			return fromString( string );
+		}
 		throw unknownWrap( value.getClass() );
 	}
+
 }

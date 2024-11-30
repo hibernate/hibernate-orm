@@ -1,14 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.cte;
 
 import java.util.List;
 
 import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.tree.expression.Literal;
 
 /**
  * A statement using a CTE
@@ -22,10 +21,13 @@ public class CteStatement {
 	private final CteMaterialization materialization;
 	private final CteSearchClauseKind searchClauseKind;
 	private final List<SearchClauseSpecification> searchBySpecifications;
+	private final CteColumn searchColumn;
 	private final List<CteColumn> cycleColumns;
 	private final CteColumn cycleMarkColumn;
-	private final char cycleValue;
-	private final char noCycleValue;
+	private final CteColumn cyclePathColumn;
+	private final Literal cycleValue;
+	private final Literal noCycleValue;
+	private boolean recursive;
 
 	public CteStatement(CteTable cteTable, Statement cteDefinition) {
 		this( cteTable, cteDefinition, CteMaterialization.UNDEFINED );
@@ -37,10 +39,12 @@ public class CteStatement {
 		this.materialization = materialization;
 		this.searchClauseKind = null;
 		this.searchBySpecifications = null;
+		this.searchColumn = null;
 		this.cycleColumns = null;
 		this.cycleMarkColumn = null;
-		this.cycleValue = '\0';
-		this.noCycleValue = '\0';
+		this.cyclePathColumn = null;
+		this.cycleValue = null;
+		this.noCycleValue = null;
 	}
 
 	public CteStatement(
@@ -49,17 +53,21 @@ public class CteStatement {
 			CteMaterialization materialization,
 			CteSearchClauseKind searchClauseKind,
 			List<SearchClauseSpecification> searchBySpecifications,
+			CteColumn searchColumn,
 			List<CteColumn> cycleColumns,
 			CteColumn cycleMarkColumn,
-			char cycleValue,
-			char noCycleValue) {
+			CteColumn cyclePathColumn,
+			Literal cycleValue,
+			Literal noCycleValue) {
 		this.cteTable = cteTable;
 		this.cteDefinition = cteDefinition;
 		this.materialization = materialization;
 		this.searchClauseKind = searchClauseKind;
 		this.searchBySpecifications = searchBySpecifications;
+		this.searchColumn = searchColumn;
 		this.cycleColumns = cycleColumns;
 		this.cycleMarkColumn = cycleMarkColumn;
+		this.cyclePathColumn = cyclePathColumn;
 		this.cycleValue = cycleValue;
 		this.noCycleValue = noCycleValue;
 	}
@@ -84,6 +92,10 @@ public class CteStatement {
 		return searchBySpecifications;
 	}
 
+	public CteColumn getSearchColumn() {
+		return searchColumn;
+	}
+
 	public List<CteColumn> getCycleColumns() {
 		return cycleColumns;
 	}
@@ -92,11 +104,23 @@ public class CteStatement {
 		return cycleMarkColumn;
 	}
 
-	public char getCycleValue() {
+	public CteColumn getCyclePathColumn() {
+		return cyclePathColumn;
+	}
+
+	public Literal getCycleValue() {
 		return cycleValue;
 	}
 
-	public char getNoCycleValue() {
+	public Literal getNoCycleValue() {
 		return noCycleValue;
+	}
+
+	public boolean isRecursive() {
+		return recursive;
+	}
+
+	public void setRecursive() {
+		this.recursive = true;
 	}
 }

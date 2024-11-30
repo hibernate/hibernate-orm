@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.function;
 
@@ -32,7 +30,7 @@ public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFuncti
 
 	public SelfRenderingSqmAggregateFunction(
 			SqmFunctionDescriptor descriptor,
-			FunctionRenderingSupport renderingSupport,
+			FunctionRenderer renderer,
 			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
 			ReturnableType<T> impliedResultType,
@@ -40,7 +38,7 @@ public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFuncti
 			FunctionReturnTypeResolver returnTypeResolver,
 			NodeBuilder nodeBuilder,
 			String name) {
-		super( descriptor, renderingSupport, arguments, impliedResultType, argumentsValidator, returnTypeResolver, nodeBuilder, name );
+		super( descriptor, renderer, arguments, impliedResultType, argumentsValidator, returnTypeResolver, nodeBuilder, name );
 		this.filter = filter;
 	}
 
@@ -58,7 +56,7 @@ public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFuncti
 				this,
 				new SelfRenderingSqmAggregateFunction<>(
 						getFunctionDescriptor(),
-						getRenderingSupport(),
+						getFunctionRenderer(),
 						arguments,
 						filter == null ? null : filter.copy( context ),
 						getImpliedResultType(),
@@ -74,9 +72,7 @@ public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFuncti
 
 	@Override
 	public Expression convertToSqlAst(SqmToSqlAstConverter walker) {
-		final ReturnableType<?> resultType = resolveResultType(
-				walker.getCreationContext().getMappingMetamodel().getTypeConfiguration()
-		);
+		final ReturnableType<?> resultType = resolveResultType( walker );
 
 		List<SqlAstNode> arguments = resolveSqlAstArguments( getArguments(), walker );
 		ArgumentsValidator argumentsValidator = getArgumentsValidator();
@@ -85,11 +81,11 @@ public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFuncti
 		}
 		return new SelfRenderingAggregateFunctionSqlAstExpression(
 				getFunctionName(),
-				getRenderingSupport(),
+				getFunctionRenderer(),
 				arguments,
 				filter == null ? null : walker.visitNestedTopLevelPredicate( filter ),
 				resultType,
-				getMappingModelExpressible( walker, resultType )
+				getMappingModelExpressible( walker, resultType, arguments )
 		);
 	}
 

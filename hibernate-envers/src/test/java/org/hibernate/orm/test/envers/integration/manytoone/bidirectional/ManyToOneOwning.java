@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.manytoone.bidirectional;
 
@@ -30,7 +28,7 @@ public class ManyToOneOwning implements Serializable {
 
 	@ManyToOne
 	@JoinTable(name = "many_to_one_join_table", joinColumns = @JoinColumn(name = "owning_id"),
-			   inverseJoinColumns = @JoinColumn(name = "owned_id"))
+			inverseJoinColumns = @JoinColumn(name = "owned_id"))
 	private OneToManyOwned references;
 
 	public ManyToOneOwning() {

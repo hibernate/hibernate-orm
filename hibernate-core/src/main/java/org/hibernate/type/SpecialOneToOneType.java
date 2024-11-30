@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
 
@@ -12,14 +10,14 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.internal.ForeignKeys;
-import org.hibernate.engine.spi.Mapping;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A one-to-one association that maps to specific formula(s)
  * instead of the primary key column of the owning entity.
- * 
+ *
  * @author Gavin King
  */
 public class SpecialOneToOneType extends OneToOneType {
@@ -28,7 +26,7 @@ public class SpecialOneToOneType extends OneToOneType {
 			TypeConfiguration typeConfiguration,
 			String referencedEntityName,
 			ForeignKeyDirection foreignKeyType,
-			boolean referenceToPrimaryKey, 
+			boolean referenceToPrimaryKey,
 			String uniqueKeyPropertyName,
 			boolean lazy,
 			boolean unwrapProxy,
@@ -37,13 +35,13 @@ public class SpecialOneToOneType extends OneToOneType {
 			boolean constrained) {
 		super(
 				typeConfiguration,
-				referencedEntityName, 
+				referencedEntityName,
 				foreignKeyType,
-				referenceToPrimaryKey, 
-				uniqueKeyPropertyName, 
+				referenceToPrimaryKey,
+				uniqueKeyPropertyName,
 				lazy,
 				unwrapProxy,
-				entityName, 
+				entityName,
 				propertyName,
 				constrained
 			);
@@ -52,13 +50,13 @@ public class SpecialOneToOneType extends OneToOneType {
 	public SpecialOneToOneType(SpecialOneToOneType original, String superTypeEntityName) {
 		super( original, superTypeEntityName );
 	}
-	
-	public int getColumnSpan(Mapping mapping) throws MappingException {
+
+	public int getColumnSpan(MappingContext mapping) throws MappingException {
 		return super.getIdentifierOrUniqueKeyType( mapping ).getColumnSpan( mapping );
 	}
-	
-	public int[] getSqlTypeCodes(Mapping mapping) throws MappingException {
-		return super.getIdentifierOrUniqueKeyType( mapping ).getSqlTypeCodes( mapping );
+
+	public int[] getSqlTypeCodes(MappingContext mappingContext) throws MappingException {
+		return super.getIdentifierOrUniqueKeyType( mappingContext ).getSqlTypeCodes( mappingContext );
 	}
 
 	public boolean useLHSPrimaryKey() {
@@ -79,11 +77,30 @@ public class SpecialOneToOneType extends OneToOneType {
 			Object id = ForeignKeys.getEntityIdentifierIfNotUnsaved( getAssociatedEntityName(), value, session );
 			if (id==null) {
 				throw new AssertionFailure(
-						"cannot cache a reference to an object with a null id: " + 
-						getAssociatedEntityName() 
+						"cannot cache a reference to an object with a null id: " +
+						getAssociatedEntityName()
 				);
 			}
 			return getIdentifierType(session).disassemble(id, session, owner);
+		}
+	}
+
+	@Override
+	public Serializable disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
+		if ( value == null ) {
+			return null;
+		}
+		else {
+			// cache the actual id of the object, not the value of the
+			// property-ref, which might not be initialized
+			Object id = getIdentifier( value, sessionFactory );
+			if ( id == null ) {
+				throw new AssertionFailure(
+						"cannot cache a reference to an object with a null id: " +
+								getAssociatedEntityName()
+				);
+			}
+			return getIdentifierType( sessionFactory ).disassemble( id, sessionFactory );
 		}
 	}
 
@@ -101,7 +118,7 @@ public class SpecialOneToOneType extends OneToOneType {
 			return resolveIdentifier(id, session);
 		}
 	}
-	
+
 
 
 }

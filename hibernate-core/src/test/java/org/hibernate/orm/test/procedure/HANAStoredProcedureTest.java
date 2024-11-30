@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.procedure;
 
@@ -22,7 +20,7 @@ import jakarta.persistence.ParameterMode;
 import jakarta.persistence.StoredProcedureParameter;
 import jakarta.persistence.StoredProcedureQuery;
 
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.result.Output;
@@ -46,7 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Vlad Mihalcea, Jonathan Bregler
  */
-@RequiresDialect(AbstractHANADialect.class)
+@RequiresDialect(HANADialect.class)
 @DomainModel(
 		annotatedClasses = {
 				Person.class,
@@ -282,7 +280,7 @@ public class HANAStoredProcedureTest {
 	@JiraKey( "HHH-12138")
 	public void testStoredProcedureReturnValue(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			Integer phoneCount = session
+			Integer phoneCount = (Integer) session
 					.createNativeQuery( "SELECT fn_count_phones(:personId) FROM SYS.DUMMY", Integer.class )
 					.setParameter( "personId", 1 )
 					.getSingleResult();

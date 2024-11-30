@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.query;
 
@@ -21,7 +19,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.usertype.UserType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import jakarta.persistence.Entity;
@@ -45,7 +43,7 @@ public class QueryParametersValidationTest extends BaseEntityManagerFunctionalTe
 		options.put( AvailableSettings.JPA_LOAD_BY_ID_COMPLIANCE, "true" );
 	}
 
-	@TestForIssue(jiraKey = "HHH-11397")
+	@JiraKey(value = "HHH-11397")
 	@Test(expected = IllegalArgumentException.class)
 	public void setParameterWithWrongTypeShouldThrowIllegalArgumentException() {
 		final EntityManager entityManager = entityManagerFactory().createEntityManager();
@@ -69,7 +67,7 @@ public class QueryParametersValidationTest extends BaseEntityManagerFunctionalTe
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11971")
+	@JiraKey(value = "HHH-11971")
 	public void setPrimitiveParameterShouldNotThrowExceptions() {
 		final EntityManager entityManager = entityManagerFactory().createEntityManager();
 		try {
@@ -88,7 +86,7 @@ public class QueryParametersValidationTest extends BaseEntityManagerFunctionalTe
 	}
 
 	@Test(expected = IllegalArgumentException.class)
-	@TestForIssue( jiraKey = "HHH-11971")
+	@JiraKey( value = "HHH-11971")
 	public void setWrongPrimitiveParameterShouldThrowIllegalArgumentException() {
 		final EntityManager entityManager = entityManagerFactory().createEntityManager();
 		try {
@@ -133,7 +131,8 @@ public class QueryParametersValidationTest extends BaseEntityManagerFunctionalTe
 		}
 
 		@Override
-		public Boolean nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+		public Boolean nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+				throws SQLException {
 			return "Y".equals( rs.getString( position ) );
 		}
 

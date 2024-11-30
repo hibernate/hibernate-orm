@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.entityname;
 
@@ -12,7 +10,7 @@ import jakarta.persistence.Table;
 
 import org.hibernate.DuplicateMappingException;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -22,7 +20,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue( jiraKey = "HHH-13060" )
+@JiraKey( value = "HHH-13060" )
 public class DuplicateEntityNameTest extends BaseCoreFunctionalTestCase {
 
 	protected Class<?>[] getAnnotatedClasses() {
@@ -39,7 +37,7 @@ public class DuplicateEntityNameTest extends BaseCoreFunctionalTestCase {
 			fail("Should throw DuplicateMappingException");
 		}
 		catch (DuplicateMappingException e) {
-			assertEquals( "The [org.hibernate.orm.test.entityname.DuplicateEntityNameTest$Purchase1] and [org.hibernate.orm.test.entityname.DuplicateEntityNameTest$Purchase2] entities share the same JPA entity name: [Purchase], which is not allowed", e.getMessage() );
+			assertEquals( "Entity classes [org.hibernate.orm.test.entityname.DuplicateEntityNameTest$Purchase1] and [org.hibernate.orm.test.entityname.DuplicateEntityNameTest$Purchase2] share the entity name 'Purchase' (entity names must be distinct)", e.getMessage() );
 		}
 	}
 

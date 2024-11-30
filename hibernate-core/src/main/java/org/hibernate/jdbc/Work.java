@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jdbc;
 
@@ -10,9 +8,12 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 /**
- * Contract for performing a discrete piece of JDBC work.
+ * A discrete piece of work making use of a {@linkplain Connection JDBC connection}.
  *
  * @author Steve Ebersole
+ *
+ * @see ReturningWork
+ * @see org.hibernate.SharedSessionContract#doWork(Work)
  */
 @FunctionalInterface
 public interface Work {

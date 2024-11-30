@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
@@ -10,12 +8,13 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Locale;
 
-import org.hibernate.query.SemanticException;
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.UnknownPathException;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.type.descriptor.java.EnumJavaType;
@@ -26,7 +25,7 @@ import org.hibernate.type.descriptor.java.EnumJavaType;
  *
  * @author Steve Ebersole
  */
-public class SqmEnumLiteral<E extends Enum<E>> extends AbstractSqmExpression<E> implements SqmExpressible<E>, SemanticPathPart {
+public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements SqmExpressible<E>, SemanticPathPart {
 	private final E enumValue;
 	private final EnumJavaType<E> referencedEnumTypeDescriptor;
 	private final String enumValueName;
@@ -62,6 +61,16 @@ public class SqmEnumLiteral<E extends Enum<E>> extends AbstractSqmExpression<E> 
 		return expression;
 	}
 
+	@Override
+	public SqmExpressible<E> getExpressible() {
+		return this;
+	}
+
+	@Override
+	public DomainType<E> getSqmType() {
+		return null;
+	}
+
 	public E getEnumValue() {
 		return enumValue;
 	}
@@ -85,11 +94,11 @@ public class SqmEnumLiteral<E extends Enum<E>> extends AbstractSqmExpression<E> 
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		throw new SemanticException(
+		throw new UnknownPathException(
 				String.format(
 						Locale.ROOT,
 						"Static enum reference [%s#%s] cannot be de-referenced",
-						referencedEnumTypeDescriptor.getJavaType().getTypeName(),
+						referencedEnumTypeDescriptor.getTypeName(),
 						enumValueName
 				)
 		);
@@ -100,11 +109,11 @@ public class SqmEnumLiteral<E extends Enum<E>> extends AbstractSqmExpression<E> 
 			SqmExpression<?> selector,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		throw new SemanticException(
+		throw new UnknownPathException(
 				String.format(
 						Locale.ROOT,
 						"Static enum reference [%s#%s] cannot be de-referenced",
-						referencedEnumTypeDescriptor.getJavaType().getTypeName(),
+						referencedEnumTypeDescriptor.getTypeName(),
 						enumValueName
 				)
 		);

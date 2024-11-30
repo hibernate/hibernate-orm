@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.from;
 
@@ -11,6 +9,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -48,50 +47,32 @@ public abstract class DelegatingTableGroup implements TableGroup {
 			int jdbcPosition,
 			int valuesArrayPosition,
 			JavaType javaType,
+			boolean virtual,
 			TypeConfiguration typeConfiguration) {
 		return getTableGroup().createSqlSelection(
 				jdbcPosition,
 				valuesArrayPosition,
 				javaType,
+				virtual,
 				typeConfiguration
 		);
-	}
-
-	@Override
-	public TableReference resolveTableReference(NavigablePath navigablePath, String tableExpression) {
-		return resolveTableReference( navigablePath, tableExpression, true );
-	}
-
-	@Override
-	public TableReference resolveTableReference(String tableExpression) {
-		return resolveTableReference( null, tableExpression, true );
-	}
-
-	@Override
-	public TableReference resolveTableReference(
-			NavigablePath navigablePath,
-			String tableExpression,
-			boolean allowFkOptimization) {
-		return getTableGroup().resolveTableReference( navigablePath, tableExpression, allowFkOptimization );
-	}
-
-	@Override
-	public TableReference getTableReference(NavigablePath navigablePath, String tableExpression) {
-		return getTableReference( navigablePath, tableExpression, true, false );
-	}
-
-	@Override
-	public TableReference getTableReference(String tableExpression) {
-		return getTableReference( null, tableExpression, true, false );
 	}
 
 	@Override
 	public TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization,
 			boolean resolve) {
-		return getTableGroup().getTableReference( navigablePath, tableExpression, allowFkOptimization, resolve );
+		return getTableGroup().getTableReference( navigablePath, tableExpression, resolve );
+	}
+
+	@Override
+	public TableReference getTableReference(
+			NavigablePath navigablePath,
+			ValuedModelPart modelPart,
+			String tableExpression,
+			boolean resolve) {
+		return getTableGroup().getTableReference( navigablePath, modelPart, tableExpression, resolve );
 	}
 
 	@Override

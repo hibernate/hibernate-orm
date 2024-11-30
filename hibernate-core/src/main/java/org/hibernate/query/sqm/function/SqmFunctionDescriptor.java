@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.function;
 
@@ -12,7 +10,6 @@ import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
 
@@ -21,12 +18,67 @@ import static java.util.Collections.singletonList;
 
 /**
  * A factory for SQM nodes representing invocations of a certain
- * named function. When a function names and arguments are
- * encountered in the HQL, a {@code SqmFunctionDescriptor} for
- * the given name is obtained from a {@link SqmFunctionRegistry},
- * and the {@link #generateSqmExpression} method is called with
- * the given argument SQM nodes to produce a subtree of SQM nodes
- * representing the function invocation.
+ * named function.
+ * <p>
+ * When a function call is encountered in the text of an HQL query,
+ * a {@code SqmFunctionDescriptor} for the given name is obtained
+ * from the {@link SqmFunctionRegistry}, and the
+ * {@link #generateSqmExpression} method is called with SQM nodes
+ * representing the invocation arguments. It is the responsibility
+ * of the {@code SqmFunctionDescriptor} to produce a subtree of SQM
+ * nodes representing the function invocation.
+ * <p>
+ * The resulting subtree might be quite complex, since the
+ * {@code SqmFunctionDescriptor} is permitted to perform syntactic
+ * de-sugaring. On the other hand, {@link #generateSqmExpression}
+ * returns {@link SelfRenderingSqmFunction}, which is an object
+ * that is permitted to take over the logic of producing the
+ * SQL AST subtree, so de-sugaring may also be performed there.
+ * <p>
+ * User-written function descriptors may be contributed via a
+ * {@link org.hibernate.boot.model.FunctionContributor} or by
+ * calling {@link org.hibernate.cfg.Configuration#addSqlFunction}.
+ * The {@link SqmFunctionRegistry} exposes methods which simplify
+ * the definition of a function, including
+ * {@link SqmFunctionRegistry#namedDescriptorBuilder(String)} and
+ * {@link SqmFunctionRegistry#patternAggregateDescriptorBuilder(String, String)}.
+ * <p>
+ * For example, this code registers a function named {@code prefixes()}:
+ * <pre>
+ * Configuration config = ... ;
+ * config.addSqlFunction("prefixes",
+ *         new SqmFunctionDescriptor() {
+ *             &#064;Override
+ *             public &lt;T&gt; SelfRenderingSqmFunction&lt;T&gt; generateSqmExpression(
+ *                     List&lt;? extends SqmTypedNode&lt;?&gt;&gt; arguments,
+ *                     ReturnableType&lt;T&gt; impliedResultType,
+ *                     QueryEngine queryEngine) {
+ *                 final SqmFunctionRegistry registry = queryEngine.getSqmFunctionRegistry();
+ *                 final TypeConfiguration types = queryEngine.getTypeConfiguration();
+ *                 return registry.patternDescriptorBuilder("prefix", "(left(?1, character_length(?2)) = ?2)" )
+ *                         .setExactArgumentCount(2)
+ *                         .setParameterTypes(FunctionParameterType.STRING, FunctionParameterType.STRING)
+ *                         .setInvariantType(types.standardBasicTypeForJavaType(Boolean.class))
+ *                         .descriptor()
+ *                         .generateSqmExpression(arguments, impliedResultType, queryEngine);
+ *             }
+ *
+ *             &#064;Override
+ *             public ArgumentsValidator getArgumentsValidator() {
+ *                 return new ArgumentTypesValidator(
+ *                         StandardArgumentsValidators.exactly(2),
+ *                         FunctionParameterType.STRING, FunctionParameterType.STRING
+ *                 );
+ *             }
+ *         }
+ * );
+ * </pre>
+ * The function may be called like this: {@code prefixes('Hibernate',book.title)}.
+ *
+ * @see org.hibernate.query.sqm.function.SqmFunctionRegistry
+ * @see org.hibernate.cfg.Configuration#addSqlFunction
+ * @see org.hibernate.boot.MetadataBuilder#applySqlFunction
+ * @see org.hibernate.boot.model.FunctionContributor
  *
  * @author David Channon
  * @author Steve Ebersole
@@ -45,39 +97,42 @@ public interface SqmFunctionDescriptor {
 	<T> SelfRenderingSqmFunction<T> generateSqmExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration);
+			QueryEngine queryEngine);
 
 	/**
-	 * Like {@link #generateSqmExpression(List, ReturnableType, QueryEngine, TypeConfiguration)}
-	 * but also accepts a filter predicate. This method is intended for aggregate functions.
+	 * Like {@link #generateSqmExpression(List, ReturnableType, QueryEngine)},
+	 * but also accepts a {@code filter} predicate.
+	 * <p>
+	 * This method is intended for aggregate functions.
 	 */
 	default <T> SelfRenderingSqmFunction<T> generateAggregateSqmExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		throw new UnsupportedOperationException( "Not an aggregate function" );
 	}
 
 	/**
-	 * Like {@link #generateSqmExpression(List, ReturnableType, QueryEngine, TypeConfiguration)}
-	 * but also accepts a filter predicate. This method is intended for ordered set-aggregate functions.
+	 * Like {@link #generateSqmExpression(List, ReturnableType, QueryEngine)},
+	 * but also accepts a {@code filter} predicate and an {@code order by} clause.
+	 * <p>
+	 * This method is intended for ordered set aggregate functions.
 	 */
 	default <T> SelfRenderingSqmFunction<T> generateOrderedSetAggregateSqmExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
 			SqmOrderByClause withinGroupClause,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
-		throw new UnsupportedOperationException( "Not an ordered set-aggregate function" );
+			QueryEngine queryEngine) {
+		throw new UnsupportedOperationException( "Not an ordered set aggregate function" );
 	}
 
 	/**
-	 * Like {@link #generateSqmExpression(List, ReturnableType, QueryEngine, TypeConfiguration)}
-	 * but also accepts a filter predicate. This method is intended for aggregate functions.
+	 * Like {@link #generateSqmExpression(List, ReturnableType, QueryEngine)}
+	 * but also accepts a {@code filter} predicate.
+	 * <p>
+	 * This method is intended for window functions.
 	 */
 	default <T> SelfRenderingSqmFunction<T> generateWindowSqmExpression(
 			List<? extends SqmTypedNode<?>> arguments,
@@ -85,74 +140,93 @@ public interface SqmFunctionDescriptor {
 			Boolean respectNulls,
 			Boolean fromFirst,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
-		throw new UnsupportedOperationException( "Not an aggregate function" );
+			QueryEngine queryEngine) {
+		throw new UnsupportedOperationException( "Not a window function" );
 	}
 
 	/**
-	 * Convenience for single argument
+	 * Convenience for a single argument.
 	 */
 	default <T> SelfRenderingSqmFunction<T> generateSqmExpression(
 			SqmTypedNode<?> argument,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		return generateSqmExpression(
 				singletonList(argument),
 				impliedResultType,
-				queryEngine,
-				typeConfiguration
+				queryEngine
 		);
 	}
 
 	/**
-	 * Convenience for no arguments
+	 * Convenience for no arguments.
 	 */
 	default <T> SelfRenderingSqmFunction<T> generateSqmExpression(
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		return generateSqmExpression(
 				emptyList(),
 				impliedResultType,
-				queryEngine,
-				typeConfiguration
+				queryEngine
 		);
 	}
 
 	/**
-	 * Will a call to the described function always include
-	 * parentheses?
+	 * Will a call to the described function always include parentheses?
 	 * <p>
-	 * SqmFunctionTemplate is generally used for rendering of a function.
-	 * However there are cases where Hibernate needs to consume a fragment
-	 * and decide if a token represents a function name.  In cases where
-	 * the token is followed by an open-paren we can safely assume the
-	 * token is a function name.  However, if the next token is not an
-	 * open-paren, the token can still represent a function provided that
-	 * the function has a "no paren" form in the case of no arguments.  E.g.
-	 * Many databases do not require parentheses on functions like
-	 * `current_timestamp`, etc.  This method helps account for those
-	 * cases.
+	 * Instances of this interface are usually used for rendering of functions.
+	 * However, there are cases where Hibernate needs to consume a fragment
+	 * and decide if a token represents a function name.  In cases where the
+	 * token is followed by an opening parenthesis, we can safely assume the
+	 * token is a function name. Bur if the next token is not an opening
+	 * parenthesis, the token might still represent a function if the function
+	 * has a "no paren" form in the case of no arguments.
 	 * <p>
-	 * Note that the most common case, by far, is that a function will always
-	 * include the parentheses - therefore this return is defined as true by
-	 * default.
+	 * For example, many databases do not require parentheses for functions
+	 * like {@code current_timestamp} and friends. This method helps account
+	 * for those cases.
 	 *
-	 * see Template#isFunction
+	 * @apiNote The most common case, by far, is that a function call requires
+	 *          the parentheses. So this method returns true by default.
+	 *
+	 * @return {@code true} by default
 	 */
 	default boolean alwaysIncludesParentheses() {
 		return true;
 	}
 
+	/**
+	 * Used only for pretty-printing the function signature in the log.
+	 *
+	 * @param name the function name
+	 * @return the signature of the function
+	 */
 	default String getSignature(String name) {
 		return name;
 	}
 
+	/**
+	 * What sort of function is this?
+	 *
+	 * @return {@link FunctionKind#NORMAL} by default
+	 */
 	default FunctionKind getFunctionKind() {
 		return FunctionKind.NORMAL;
 	}
 
+	/**
+	 * The object responsible for validating arguments of the function.
+	 *
+	 * @return an instance of {@link ArgumentsValidator}
+	 */
 	ArgumentsValidator getArgumentsValidator();
+
+	/**
+	 * Whether the function renders as a predicate.
+	 *
+	 * @since 7.0
+	 */
+	default boolean isPredicate() {
+		return false;
+	}
 }

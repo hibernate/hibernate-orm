@@ -1,14 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.orm.test.idgen.biginteger.sequence;
 
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -30,7 +27,7 @@ import org.junit.jupiter.api.Test;
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSequences.class )
 public class BigIntegerSequenceGeneratorZeroScaleTest extends BigIntegerSequenceGeneratorTest {
 	@Test
-	@TestForIssue( jiraKey = "HHH-9250")
+	@JiraKey( value = "HHH-9250")
 	public void testBasics(SessionFactoryScope scope) {
 		super.testBasics( scope );
 	}

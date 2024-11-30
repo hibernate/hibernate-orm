@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
@@ -14,7 +12,7 @@ package org.hibernate;
  */
 public class TransactionException extends HibernateException {
 	/**
-	 * Constructs a TransactionException using the specified information.
+	 * Constructs a {@code TransactionException} using the specified information.
 	 *
 	 * @param message The message explaining the exception condition
 	 * @param cause The underlying cause
@@ -24,7 +22,7 @@ public class TransactionException extends HibernateException {
 	}
 
 	/**
-	 * Constructs a TransactionException using the specified information.
+	 * Constructs a {@code TransactionException} using the specified information.
 	 *
 	 * @param message The message explaining the exception condition
 	 */

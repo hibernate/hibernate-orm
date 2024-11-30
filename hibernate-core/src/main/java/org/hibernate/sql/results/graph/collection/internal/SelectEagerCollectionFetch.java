@@ -1,26 +1,28 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.collection.internal;
+
+import java.util.BitSet;
 
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.InitializerParent;
+import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Andrea Boriero
  */
 public class SelectEagerCollectionFetch extends CollectionFetch {
-	private final DomainResult<?> collectionKeyDomainResult;
+	private final @Nullable DomainResult<?> collectionKeyDomainResult;
 
 	public SelectEagerCollectionFetch(
 			NavigablePath fetchedPath,
@@ -41,15 +43,12 @@ public class SelectEagerCollectionFetch extends CollectionFetch {
 		return false;
 	}
 
-	@Override
-	public DomainResultAssembler<?> createAssembler(
-			FetchParentAccess parentAccess,
-			AssemblerCreationState creationState) {
-		return new SelectEagerCollectionAssembler(
+	public CollectionInitializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {
+		return new SelectEagerCollectionInitializer(
 				getNavigablePath(),
 				getFetchedMapping(),
-				parentAccess,
-				collectionKeyDomainResult == null ? null : collectionKeyDomainResult.createResultAssembler( null, creationState ),
+				parent,
+				collectionKeyDomainResult,
 				creationState
 		);
 	}
@@ -57,5 +56,12 @@ public class SelectEagerCollectionFetch extends CollectionFetch {
 	@Override
 	public JavaType<?> getResultJavaType() {
 		return getFetchedMapping().getJavaType();
+	}
+
+	@Override
+	public void collectValueIndexesToCache(BitSet valueIndexes) {
+		if ( collectionKeyDomainResult != null ) {
+			collectionKeyDomainResult.collectValueIndexesToCache( valueIndexes );
+		}
 	}
 }

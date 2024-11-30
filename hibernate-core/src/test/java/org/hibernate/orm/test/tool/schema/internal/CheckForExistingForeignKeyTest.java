@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.tool.schema.internal;
 
 import java.lang.reflect.InvocationTargetException;
@@ -7,7 +11,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.TruthValue;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Namespace.Name;
@@ -30,7 +33,7 @@ import org.hibernate.tool.schema.extract.spi.InformationExtractor;
 import org.hibernate.tool.schema.extract.spi.NameSpaceTablesInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
 import org.hibernate.tool.schema.internal.AbstractSchemaMigrator;
-import org.hibernate.tool.schema.internal.exec.GenerationTarget;
+import org.hibernate.tool.schema.spi.GenerationTarget;
 import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.junit.Assert;
@@ -137,7 +140,7 @@ public class CheckForExistingForeignKeyTest {
 	/**
 	 * If the key has no name it should never be found. Result is that those keys are always recreated. But keys always
 	 * have a name so this is no problem.
-	 * 
+	 *
 	 * @throws NoSuchMethodException - error
 	 * @throws SecurityException - error
 	 * @throws IllegalAccessException - error
@@ -160,7 +163,7 @@ public class CheckForExistingForeignKeyTest {
 
 	/**
 	 * Test key not found if tableinformation is missing.
-	 * 
+	 *
 	 * @throws NoSuchMethodException - error
 	 * @throws SecurityException - error
 	 * @throws IllegalAccessException - error
@@ -183,7 +186,7 @@ public class CheckForExistingForeignKeyTest {
 
 	/**
 	 * Check detection of existing foreign keys with the same name exists.
-	 * 
+	 *
 	 * @throws SecurityException - error
 	 * @throws NoSuchMethodException - error
 	 * @throws InvocationTargetException - error
@@ -220,7 +223,7 @@ public class CheckForExistingForeignKeyTest {
 
 	/**
 	 * Check detection of existing foreign keys with the same name exists.
-	 * 
+	 *
 	 * @throws SecurityException - error
 	 * @throws NoSuchMethodException - error
 	 * @throws InvocationTargetException - error
@@ -258,7 +261,7 @@ public class CheckForExistingForeignKeyTest {
 	/**
 	 * Check detection of existing foreign key with the same mappings for a simple mapping (table1.objectId =>
 	 * table2.id).
-	 * 
+	 *
 	 * @throws SecurityException - error
 	 * @throws NoSuchMethodException - error
 	 * @throws InvocationTargetException - error
@@ -296,7 +299,7 @@ public class CheckForExistingForeignKeyTest {
 	/**
 	 * Check detection of not existing foreign key with the same mappings for a simple mapping (table1.objectId =>
 	 * table2.id).
-	 * 
+	 *
 	 * @throws SecurityException - error
 	 * @throws NoSuchMethodException - error
 	 * @throws InvocationTargetException - error
@@ -358,9 +361,7 @@ public class CheckForExistingForeignKeyTest {
 		String typeName = null;
 		int columnSize = 0;
 		int decimalDigits = 0;
-		TruthValue nullable = null;
-		ColumnInformationImpl columnInformation = new ColumnInformationImpl( containingTableInformation, columnIdentifier, typeCode, typeName, columnSize,
-				decimalDigits, nullable );
-		return columnInformation;
+		return new ColumnInformationImpl( containingTableInformation, columnIdentifier, typeCode, typeName, columnSize,
+				decimalDigits, null );
 	}
 }

@@ -1,54 +1,63 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
 import java.util.Locale;
 
-import org.hibernate.internal.util.StringHelper;
+import static org.hibernate.internal.util.StringHelper.isEmpty;
 
 /**
- * Defines the various policies by which Hibernate might release its underlying
- * JDBC connection.  Inverse of {@link ConnectionAcquisitionMode}.
+ * Enumerates various policies for releasing JDBC {@linkplain java.sql.Connection
+ * connections}. Complementary to {@link ConnectionAcquisitionMode}.
  *
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode
  */
 public enum ConnectionReleaseMode{
 	/**
-	 * Indicates that JDBC connection should be aggressively released after each
-	 * SQL statement is executed. In this mode, the application <em>must</em>
-	 * explicitly close all iterators and scrollable results. This mode may
-	 * only be used with a JTA datasource.
+	 * Indicates that the JDBC connection should be aggressively released after
+	 * each SQL statement is executed. In this mode, the application must
+	 * <em>explicitly</em> close all iterators and scrollable results.
+	 * <p>
+	 * This mode may only be used with a JTA datasource.
 	 */
 	AFTER_STATEMENT,
 
 	/**
-	 * Indicates that JDBC connections should be released before each transaction
-	 * commits/rollbacks (works with both JTA-registered synch and HibernateTransaction API).
-	 * This mode may be used with an application server JTA datasource.
+	 * Indicates that the JDBC connection should be released before each transaction
+	 * commits or rolls back.
+	 * <p>
+	 * This works with both resource-local transactions and with JTA-registered
+	 * synchronizations. It may be used with an application server JTA datasource.
 	 */
 	BEFORE_TRANSACTION_COMPLETION,
 
 	/**
-	 * Indicates that JDBC connections should be released after each transaction
-	 * ends (works with both JTA-registered synch and HibernateTransaction API).
-	 * This mode may not be used with an application server JTA datasource.
-	 * <p/>
-	 * This is the default mode starting in 3.1; was previously {@link #ON_CLOSE}.
+	 * Indicates that the JDBC connection should be released after each transaction
+	 * ends.
+	 * <p>
+	 * This works with both resource-local transactions and with JTA-registered
+	 * synchronizations. But it may not be used with an application server JTA
+	 * datasource.
+	 * <p>
+	 * This is the default mode.
 	 */
 	AFTER_TRANSACTION,
 
 	/**
-	 * Indicates that connections should only be released when the Session is explicitly closed 
-	 * or disconnected; this is the legacy (Hibernate2 and pre-3.1) behavior.
+	 * Indicates that connections should only be released when the session is
+	 * explicitly closed or disconnected.
+	 * <p>
+	 * Prior to Hibernate 3.1, this was the default mode.
 	 */
 	ON_CLOSE;
 
 	/**
-	 * Alias for {@link ConnectionReleaseMode#valueOf(String)} using upper-case version of the incoming name.
+	 * Alias for {@link ConnectionReleaseMode#valueOf(String)} using uppercase
+	 * version of the incoming name.
 	 *
 	 * @param name The name to parse
 	 *
@@ -63,12 +72,12 @@ public enum ConnectionReleaseMode{
 			return null;
 		}
 
-		if ( setting instanceof ConnectionReleaseMode ) {
-			return (ConnectionReleaseMode) setting;
+		if ( setting instanceof ConnectionReleaseMode mode ) {
+			return mode;
 		}
 
 		final String value = setting.toString();
-		if ( StringHelper.isEmpty( value ) ) {
+		if ( isEmpty( value ) ) {
 			return null;
 		}
 

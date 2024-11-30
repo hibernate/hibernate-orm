@@ -1,15 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.mutation.internal.cte;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -28,9 +25,8 @@ import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.mutation.internal.MatchingIdSelectionHelper;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.mutation.spi.AbstractMutationHandler;
-import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
+import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
-import org.hibernate.query.sqm.tree.cte.SqmCteTable;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmStar;
@@ -39,6 +35,7 @@ import org.hibernate.sql.ast.tree.cte.CteColumn;
 import org.hibernate.sql.ast.tree.cte.CteContainer;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
+import org.hibernate.sql.ast.tree.cte.CteTable;
 import org.hibernate.sql.ast.tree.cte.CteTableGroup;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -53,13 +50,13 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.basic.BasicResult;
+import org.hibernate.sql.results.internal.RowTransformerSingularReturnImpl;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Defines how identifier values are selected from the updatable/deletable tables.
@@ -70,12 +67,12 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 
 	public static final String CTE_TABLE_IDENTIFIER = "id";
 
-	private final SqmCteTable cteTable;
+	private final CteTable cteTable;
 	private final DomainParameterXref domainParameterXref;
 	private final CteMutationStrategy strategy;
 
 	public AbstractCteMutationHandler(
-			SqmCteTable cteTable,
+			CteTable cteTable,
 			SqmDeleteOrUpdateStatement<?> sqmStatement,
 			DomainParameterXref domainParameterXref,
 			CteMutationStrategy strategy,
@@ -87,7 +84,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 		this.strategy = strategy;
 	}
 
-	public SqmCteTable getCteTable() {
+	public CteTable getCteTable() {
 		return cteTable;
 	}
 
@@ -101,7 +98,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 
 	@Override
 	public int execute(DomainQueryExecutionContext executionContext) {
-		final SqmDeleteOrUpdateStatement sqmMutationStatement = getSqmDeleteOrUpdateStatement();
+		final SqmDeleteOrUpdateStatement<?> sqmMutationStatement = getSqmDeleteOrUpdateStatement();
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
 		final EntityMappingType entityDescriptor = getEntityDescriptor();
 		final String explicitDmlTargetAlias;
@@ -132,25 +129,18 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 			parameterResolutions = new IdentityHashMap<>();
 		}
 
-		final Map<SqmParameter, MappingModelExpressible> paramTypeResolutions = new LinkedHashMap<>();
-
-		final Predicate restriction = sqmConverter.visitWhereClause(
-				sqmMutationStatement.getWhereClause(),
-				columnReference -> {},
-				(sqmParam, mappingType, jdbcParameters) -> paramTypeResolutions.put( sqmParam, mappingType )
-		);
+		final Predicate restriction = sqmConverter.visitWhereClause( sqmMutationStatement.getWhereClause() );
 		sqmConverter.pruneTableGroupJoins();
 
 		final CteStatement idSelectCte = new CteStatement(
-				BaseSqmToSqlAstConverter.createCteTable( getCteTable(), factory ),
+				getCteTable(),
 				MatchingIdSelectionHelper.generateMatchingIdSelectStatement(
 						entityDescriptor,
 						sqmMutationStatement,
 						true,
 						restriction,
 						sqmConverter,
-						executionContext,
-						factory
+						executionContext
 				),
 				// The id-select cte will be reused multiple times
 				CteMaterialization.MATERIALIZED
@@ -161,7 +151,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 		final List<DomainResult<?>> domainResults = new ArrayList<>( 1 );
 		final SelectStatement statement = new SelectStatement( querySpec, domainResults );
 		final JdbcServices jdbcServices = factory.getJdbcServices();
-		final SqlAstTranslator<JdbcSelect> translator = jdbcServices.getJdbcEnvironment()
+		final SqlAstTranslator<JdbcOperationQuerySelect> translator = jdbcServices.getJdbcEnvironment()
 				.getSqlAstTranslatorFactory()
 				.buildSelectTranslator( factory, statement );
 
@@ -173,14 +163,12 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 						( (SqlExpressible) count).getJdbcMapping()
 				)
 		);
-		querySpec.getSelectClause().addSqlSelection( new SqlSelectionImpl( 1, 0, count ) );
+		querySpec.getSelectClause().addSqlSelection( new SqlSelectionImpl( 0, count ) );
 		querySpec.getFromClause().addRoot(
 				new CteTableGroup(
 						new NamedTableReference(
 								idSelectCte.getCteTable().getTableExpression(),
-								CTE_TABLE_IDENTIFIER,
-								false,
-								factory
+								CTE_TABLE_IDENTIFIER
 						)
 				)
 		);
@@ -193,38 +181,44 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 				executionContext.getQueryParameterBindings(),
 				domainParameterXref,
 				SqmUtil.generateJdbcParamsXref( domainParameterXref, sqmConverter ),
-				factory.getRuntimeMetamodels().getMappingMetamodel(),
-				navigablePath -> sqmConverter.getMutatingTableGroup(),
-				paramTypeResolutions::get,
+				new SqmParameterMappingModelResolutionAccess() {
+					@Override @SuppressWarnings("unchecked")
+					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
+						return (MappingModelExpressible<T>) sqmConverter.getSqmParameterMappingModelExpressibleResolutions().get( parameter );
+					}
+				},
 				executionContext.getSession()
 		);
 		final LockOptions lockOptions = executionContext.getQueryOptions().getLockOptions();
 		final LockMode lockMode = lockOptions.getAliasSpecificLockMode( explicitDmlTargetAlias );
 		// Acquire a WRITE lock for the rows that are about to be modified
 		lockOptions.setAliasSpecificLockMode( explicitDmlTargetAlias, LockMode.WRITE );
-		final JdbcSelect select = translator.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
+		final JdbcOperationQuerySelect select = translator.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 		lockOptions.setAliasSpecificLockMode( explicitDmlTargetAlias, lockMode );
 		executionContext.getSession().autoFlushIfRequired( select.getAffectedTableNames() );
 		List<Object> list = jdbcServices.getJdbcSelectExecutor().list(
 				select,
 				jdbcParameterBindings,
 				SqmJdbcExecutionContextAdapter.omittingLockingAndPaging( executionContext ),
-				row -> row[0],
-				ListResultsConsumer.UniqueSemantic.NONE
+				RowTransformerSingularReturnImpl.instance(),
+				null,
+				ListResultsConsumer.UniqueSemantic.NONE,
+				1
 		);
 		return ( (Number) list.get( 0 ) ).intValue();
 	}
 
-	private Expression createCountStar(
+	/**
+	 * Used by Hibernate Reactive
+	 */
+	protected Expression createCountStar(
 			SessionFactoryImplementor factory,
 			MultiTableSqmMutationConverter sqmConverter) {
 		final SqmExpression<?> arg = new SqmStar( factory.getNodeBuilder() );
-		final TypeConfiguration typeConfiguration = factory.getJpaMetamodel().getTypeConfiguration();
 		return factory.getQueryEngine().getSqmFunctionRegistry().findFunctionDescriptor( "count" ).generateSqmExpression(
 				arg,
 				null,
-				factory.getQueryEngine(),
-				typeConfiguration
+				factory.getQueryEngine()
 		).convertToSqlAst( sqmConverter );
 	}
 
@@ -269,9 +263,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 			SessionFactoryImplementor factory) {
 		final NamedTableReference idSelectTableReference = new NamedTableReference(
 				idSelectCte.getCteTable().getTableExpression(),
-				CTE_TABLE_IDENTIFIER,
-				false,
-				factory
+				CTE_TABLE_IDENTIFIER
 		);
 		final List<CteColumn> cteColumns = idSelectCte.getCteTable().getCteColumns();
 		final int size = cteColumns.size();
@@ -283,13 +275,11 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 				final CteColumn cteColumn = cteColumns.get( i );
 				subQuerySelectClause.addSqlSelection(
 						new SqlSelectionImpl(
-								i + 1,
 								i,
 								new ColumnReference(
 										idSelectTableReference,
 										cteColumn.getColumnExpression(),
-										cteColumn.getJdbcMapping(),
-										factory
+										cteColumn.getJdbcMapping()
 								)
 						)
 				);
@@ -297,20 +287,17 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 		}
 		else {
 			fkModelPart.forEachSelectable(
-					(selectionIndex, selectableMapping) -> {
-						subQuerySelectClause.addSqlSelection(
-								new SqlSelectionImpl(
-										selectionIndex + 1,
-										selectionIndex,
-										new ColumnReference(
-												idSelectTableReference,
-												selectableMapping.getSelectionExpression(),
-												selectableMapping.getJdbcMapping(),
-												factory
-										)
-								)
-						);
-					}
+					(selectionIndex, selectableMapping) -> subQuerySelectClause.addSqlSelection(
+							new SqlSelectionImpl(
+									selectionIndex,
+									new ColumnReference(
+											idSelectTableReference,
+											selectableMapping.getSelectionExpression(),
+											selectableMapping.getJdbcMapping()
+
+									)
+							)
+					)
 			);
 		}
 		return subQuery;
@@ -331,8 +318,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 			return new NamedTableReference(
 					tableExpression,
 					tableReference.getIdentificationVariable(),
-					tableReference.isOptional(),
-					getSessionFactory()
+					tableReference.isOptional()
 			);
 		}
 		else {

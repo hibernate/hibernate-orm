@@ -1,15 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.result;
 
 /**
  * Represents the outputs of executing a JDBC statement accounting for mixing of result sets and update counts
- * hiding the complexity (IMO) of how this is exposed in the JDBC API.
- * <p/>
+ * hiding the complexity of how this is exposed in the JDBC API.
+ * <p>
  * The outputs are exposed as a group of {@link Output} objects, each representing a single result set or update count.
  * Conceptually, Result presents those Returns as an iterator.
  *

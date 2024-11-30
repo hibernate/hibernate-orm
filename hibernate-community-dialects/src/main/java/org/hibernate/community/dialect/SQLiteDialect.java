@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -13,6 +11,8 @@ import java.util.Date;
 import java.util.TimeZone;
 
 import org.hibernate.ScrollMode;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.community.dialect.identity.SQLiteIdentityColumnSupport;
@@ -24,7 +24,7 @@ import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
-import org.hibernate.dialect.unique.DefaultUniqueDelegate;
+import org.hibernate.dialect.unique.AlterTableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -36,12 +36,12 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.mapping.Column;
-import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.NullOrdering;
+import org.hibernate.mapping.UniqueKey;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.sqm.IntervalType;
+import org.hibernate.dialect.NullOrdering;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.TrimSpec;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
@@ -62,11 +62,11 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
-import static org.hibernate.query.sqm.TemporalUnit.DAY;
-import static org.hibernate.query.sqm.TemporalUnit.EPOCH;
-import static org.hibernate.query.sqm.TemporalUnit.MONTH;
-import static org.hibernate.query.sqm.TemporalUnit.QUARTER;
-import static org.hibernate.query.sqm.TemporalUnit.YEAR;
+import static org.hibernate.query.common.TemporalUnit.DAY;
+import static org.hibernate.query.common.TemporalUnit.EPOCH;
+import static org.hibernate.query.common.TemporalUnit.MONTH;
+import static org.hibernate.query.common.TemporalUnit.QUARTER;
+import static org.hibernate.query.common.TemporalUnit.YEAR;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUMERIC;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
@@ -82,27 +82,28 @@ import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithNanos;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
 /**
  * An SQL dialect for SQLite.
  *
  * @author Christian Beikov
- * @author Vlad Mihalcea
  */
 public class SQLiteDialect extends Dialect {
 
-	private static final SQLiteIdentityColumnSupport IDENTITY_COLUMN_SUPPORT = new SQLiteIdentityColumnSupport();
+	private static final DatabaseVersion DEFAULT_VERSION = DatabaseVersion.make( 2, 0 );
 
 	private final UniqueDelegate uniqueDelegate;
 
 	public SQLiteDialect(DialectResolutionInfo info) {
-		this( info.makeCopy() );
+		this( info.makeCopyOrDefault( DEFAULT_VERSION ) );
 		registerKeywords( info );
 	}
 
 	public SQLiteDialect() {
-		this( DatabaseVersion.make( 2, 0 ) );
+		this( DEFAULT_VERSION );
 	}
 
 	public SQLiteDialect(DatabaseVersion version) {
@@ -130,8 +131,9 @@ public class SQLiteDialect extends Dialect {
 			case BINARY:
 			case VARBINARY:
 				return "blob";
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override
@@ -140,7 +142,7 @@ public class SQLiteDialect extends Dialect {
 		return -1;
 	}
 
-	private static class SQLiteUniqueDelegate extends DefaultUniqueDelegate {
+	private static class SQLiteUniqueDelegate extends AlterTableUniqueDelegate {
 		public SQLiteUniqueDelegate(Dialect dialect) {
 			super( dialect );
 		}
@@ -148,6 +150,19 @@ public class SQLiteDialect extends Dialect {
 		public String getColumnDefinitionUniquenessFragment(Column column, SqlStringGenerationContext context) {
 			return " unique";
 		}
+
+		/**
+		 * Alter table support in SQLite is very limited and does
+		 * not include adding a unique constraint (as of 9/2023).
+		 *
+		 * @return always empty String
+		 * @see <a href="https://www.sqlite.org/omitted.html">SQLite SQL omissions</a>
+		 */
+		@Override
+		public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata, SqlStringGenerationContext context) {
+			return "";
+		}
+
 	}
 
 	@Override
@@ -262,14 +277,14 @@ public class SQLiteDialect extends Dialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry(functionContributions);
 
-		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
+		final BasicTypeRegistry basicTypeRegistry = functionContributions.getTypeConfiguration().getBasicTypeRegistry();
 		final BasicType<String> stringType = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
 		final BasicType<Integer> integerType = basicTypeRegistry.resolve( StandardBasicTypes.INTEGER );
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 		functionFactory.mod_operator();
 		functionFactory.leftRight_substr();
 		functionFactory.concat_pipeOperator();
@@ -285,32 +300,32 @@ public class SQLiteDialect extends Dialect {
 		functionFactory.substring_substr();
 		functionFactory.chr_char();
 
-		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
+		functionContributions.getFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
 				integerType,
 				"instr(?2,?1)",
 				"instr(?2,?1,?3)",
 				STRING, STRING, INTEGER,
-				queryEngine.getTypeConfiguration()
+				functionContributions.getTypeConfiguration()
 		).setArgumentListSignature("(pattern, string[, start])");
-		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
+		functionContributions.getFunctionRegistry().registerBinaryTernaryPattern(
 				"lpad",
 				stringType,
 				"(substr(replace(hex(zeroblob(?2)),'00',' '),1,?2-length(?1))||?1)",
 				"(substr(replace(hex(zeroblob(?2)),'00',?3),1,?2-length(?1))||?1)",
 				STRING, INTEGER, STRING,
-				queryEngine.getTypeConfiguration()
+				functionContributions.getTypeConfiguration()
 		).setArgumentListSignature("(string, length[, padding])");
-		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
+		functionContributions.getFunctionRegistry().registerBinaryTernaryPattern(
 				"rpad",
 				stringType,
 				"(?1||substr(replace(hex(zeroblob(?2)),'00',' '),1,?2-length(?1)))",
 				"(?1||substr(replace(hex(zeroblob(?2)),'00',?3),1,?2-length(?1)))",
 				STRING, INTEGER, STRING,
-				queryEngine.getTypeConfiguration()
+				functionContributions.getTypeConfiguration()
 		).setArgumentListSignature("(string, length[, padding])");
 
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder("format", "strftime")
+		functionContributions.getFunctionRegistry().namedDescriptorBuilder("format", "strftime")
 				.setInvariantType( stringType )
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(TEMPORAL, STRING)
@@ -318,14 +333,14 @@ public class SQLiteDialect extends Dialect {
 				.register();
 
 		if (!supportsMathFunctions() ) {
-			queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder(
+			functionContributions.getFunctionRegistry().patternDescriptorBuilder(
 					"floor",
 					"(cast(?1 as int)-(?1<cast(?1 as int)))"
 			).setReturnTypeResolver( StandardFunctionReturnTypeResolvers.useArgType( 1 ) )
 					.setExactArgumentCount( 1 )
 					.setParameterTypes(NUMERIC)
 					.register();
-			queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder(
+			functionContributions.getFunctionRegistry().patternDescriptorBuilder(
 					"ceiling",
 					"(cast(?1 as int)+(?1>cast(?1 as int)))"
 			).setReturnTypeResolver( StandardFunctionReturnTypeResolvers.useArgType( 1 ) )
@@ -338,20 +353,20 @@ public class SQLiteDialect extends Dialect {
 	}
 
 	@Override
-	public String trimPattern(TrimSpec specification, char character) {
+	public String trimPattern(TrimSpec specification, boolean isWhitespace) {
 		switch ( specification ) {
 			case BOTH:
-				return character == ' '
+				return isWhitespace
 						? "trim(?1)"
-						: "trim(?1,'" + character + "')";
+						: "trim(?1,?2)";
 			case LEADING:
-				return character == ' '
+				return isWhitespace
 						? "ltrim(?1)"
-						: "ltrim(?1,'" + character + "')";
+						: "ltrim(?1,?2)";
 			case TRAILING:
-				return character == ' '
+				return isWhitespace
 						? "rtrim(?1)"
-						: "rtrim(?1,'" + character + "')";
+						: "rtrim(?1,?2)";
 		}
 		throw new UnsupportedOperationException( "Unsupported specification: " + specification );
 	}
@@ -399,6 +414,16 @@ public class SQLiteDialect extends Dialect {
 	@Override
 	public NullOrdering getNullOrdering() {
 		return NullOrdering.SMALLEST;
+	}
+
+	/**
+	 * Generated keys are not supported by the (standard) Xerial driver (9/2022).
+	 *
+	 * @return false
+	 */
+	@Override
+	public boolean getDefaultUseGetGeneratedKeys() {
+		return false;
 	}
 
 	@Override
@@ -542,7 +567,7 @@ public class SQLiteDialect extends Dialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return IDENTITY_COLUMN_SUPPORT;
+		return SQLiteIdentityColumnSupport.INSTANCE;
 	}
 
 	@Override
@@ -662,7 +687,7 @@ public class SQLiteDialect extends Dialect {
 				break;
 			case TIMESTAMP:
 				appender.appendSql( "datetime(" );
-				appendAsTimestampWithMicros( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appendAsTimestampWithNanos( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
 				appender.appendSql( ')' );
 				break;
 			default:
@@ -685,7 +710,7 @@ public class SQLiteDialect extends Dialect {
 				break;
 			case TIMESTAMP:
 				appender.appendSql( "datetime(" );
-				appendAsTimestampWithMicros( appender, date, jdbcTimeZone );
+				appendAsTimestampWithNanos( appender, date, jdbcTimeZone );
 				appender.appendSql( ')' );
 				break;
 			default:
@@ -712,7 +737,7 @@ public class SQLiteDialect extends Dialect {
 				break;
 			case TIMESTAMP:
 				appender.appendSql( "datetime(" );
-				appendAsTimestampWithMicros( appender, calendar, jdbcTimeZone );
+				appendAsTimestampWithMillis( appender, calendar, jdbcTimeZone );
 				appender.appendSql( ')' );
 				break;
 			default:

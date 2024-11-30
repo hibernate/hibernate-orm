@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.community.dialect.identity.MimerSQLIdentityColumnSupport;
 import org.hibernate.community.dialect.sequence.MimerSequenceSupport;
@@ -19,10 +18,9 @@ import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.sqm.TemporalUnit;
-import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.IntervalType;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -54,7 +52,7 @@ import static org.hibernate.type.SqlTypes.VARCHAR;
 /**
  * A dialect for Mimer SQL 11.
  *
- * @author <a href="mailto:fredrik.alund@mimer.se">Fredrik lund</a>
+ * @author Fredrik lund
  * @author Gavin King
  */
 public class MimerSQLDialect extends Dialect {
@@ -97,8 +95,9 @@ public class MimerSQLDialect extends Dialect {
 			case CLOB:
 			case NCLOB:
 				return "nclob(2G)";
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override
@@ -112,7 +111,15 @@ public class MimerSQLDialect extends Dialect {
 
 		//Mimer CHARs are ASCII!!
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( VARCHAR, columnType( LONG32VARCHAR ), "nvarchar(" + getMaxNVarcharLength() + ")", this )
+				CapacityDependentDdlType.builder(
+								VARCHAR,
+								isLob( LONG32VARCHAR ) ?
+										CapacityDependentDdlType.LobKind.BIGGEST_LOB :
+										CapacityDependentDdlType.LobKind.NONE,
+								columnType( LONG32VARCHAR ),
+								"nvarchar(" + getMaxNVarcharLength() + ")",
+								this
+						)
 						.withTypeCapacity( getMaxNVarcharLength(), columnType( VARCHAR ) )
 						.build()
 		);
@@ -150,14 +157,14 @@ public class MimerSQLDialect extends Dialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry(functionContributions);
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 		functionFactory.soundex();
 		functionFactory.octetLength();
 		functionFactory.bitLength();
-		functionFactory.truncate();
+		functionFactory.trunc_truncate();
 		functionFactory.repeat();
 		functionFactory.pad_repeat();
 		functionFactory.dayofweekmonthyear();
@@ -326,7 +333,17 @@ public class MimerSQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean useConnectionToCreateLob() {
+		return false;
+	}
+
+	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return new MimerSQLIdentityColumnSupport();
+		return MimerSQLIdentityColumnSupport.INSTANCE;
+	}
+
+	@Override
+	public String getFromDualForSelectOnly() {
+		return " from " + getDual();
 	}
 }

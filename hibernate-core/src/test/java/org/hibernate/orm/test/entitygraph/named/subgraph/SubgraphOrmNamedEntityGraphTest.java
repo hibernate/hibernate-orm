@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.entitygraph.named.subgraph;
 
 import java.util.List;
@@ -5,7 +9,7 @@ import jakarta.persistence.AttributeNode;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -22,7 +26,7 @@ import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
 public class SubgraphOrmNamedEntityGraphTest {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10633" )
+	@JiraKey( value = "HHH-10633" )
 	void testSubgraphsAreLoadedFromOrmXml(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

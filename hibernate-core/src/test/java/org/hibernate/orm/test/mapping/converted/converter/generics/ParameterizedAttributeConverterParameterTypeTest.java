@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.converted.converter.generics;
 
@@ -20,10 +18,10 @@ import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
+import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.boot.BootstrapContextImpl;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -36,15 +34,15 @@ import static org.junit.Assert.assertTrue;
 /**
  * Test the ability to interpret and understand AttributeConverter impls which
  * use parameterized types as one of (typically the "attribute type") its parameter types.
- * 
+ *
  * @author Svein Baardsen
  * @author Steve Ebersole
  */
 @ServiceRegistry
 public class ParameterizedAttributeConverterParameterTypeTest {
-	
+
 	@Test
-	@TestForIssue(jiraKey = "HHH-8804")
+	@JiraKey(value = "HHH-8804")
 	public void testGenericTypeParameters() {
 		final BootstrapContextImpl bootstrapContext = new BootstrapContextImpl();
 		try {
@@ -59,7 +57,7 @@ public class ParameterizedAttributeConverterParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10050" )
+	@JiraKey( value = "HHH-10050" )
 	public void testNestedTypeParameterAutoApplication(ServiceRegistryScope scope) {
 		final Metadata metadata = new MetadataSources( scope.getRegistry() )
 				.addAnnotatedClass( SampleEntity.class )

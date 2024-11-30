@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.type.contributor;
 
@@ -12,7 +10,7 @@ import org.hibernate.annotations.JavaType;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import jakarta.persistence.Entity;
@@ -25,7 +23,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue( jiraKey = "HHH-11409" )
+@JiraKey( value = "HHH-11409" )
 public class ArrayTypeCompositionTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
@@ -94,4 +92,3 @@ public class ArrayTypeCompositionTest extends BaseEntityManagerFunctionalTestCas
 
 
 }
-

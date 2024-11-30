@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.hbm2ddl;
 
@@ -13,10 +11,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.ForeignKey;
-
-import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
  * JDBC table metadata
@@ -29,7 +24,6 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  */
 @Deprecated
 public class TableMetadata {
-	private static final CoreMessageLogger LOG = messageLogger( TableMetadata.class );
 
 	private final String catalog;
 	private final String schema;
@@ -46,14 +40,6 @@ public class TableMetadata {
 		if ( extras ) {
 			initForeignKeys( meta );
 			initIndexes( meta );
-		}
-		String cat = catalog == null ? "" : catalog + '.';
-		String schem = schema == null ? "" : schema + '.';
-		LOG.tableFound( cat + schem + name );
-		LOG.columns( columns.keySet() );
-		if ( extras ) {
-			LOG.foreignKeys( foreignKeys.keySet() );
-			LOG.indexes( indexes.keySet() );
 		}
 	}
 

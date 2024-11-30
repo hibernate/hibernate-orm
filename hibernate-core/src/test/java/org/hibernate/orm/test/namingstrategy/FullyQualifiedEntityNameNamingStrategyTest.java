@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.namingstrategy;
 
@@ -21,8 +19,9 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.PersistentClass;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -37,7 +36,7 @@ public class FullyQualifiedEntityNameNamingStrategyTest {
 
 	@BeforeAll
 	public void setUp() {
-		ssr = new StandardServiceRegistryBuilder().build();
+		ssr = ServiceRegistryUtil.serviceRegistry();
 		metadata = (MetadataImplementor) new MetadataSources( ssr )
 				.addAnnotatedClass( Category.class )
 				.addAnnotatedClass( Item.class )
@@ -55,7 +54,7 @@ public class FullyQualifiedEntityNameNamingStrategyTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-4312")
+	@JiraKey(value = "HHH-4312")
 	public void testEntityTable() throws Exception {
 		final PersistentClass classMapping = metadata.getEntityBinding( Workflow.class.getName() );
 		final String expectedTableName = transformEntityName( Workflow.class.getName() );
@@ -63,7 +62,7 @@ public class FullyQualifiedEntityNameNamingStrategyTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9327")
+	@JiraKey(value = "HHH-9327")
 	public void testElementCollectionTable() {
 		final Collection collectionMapping = metadata.getCollectionBinding(
 				Workflow.class.getName() + ".localized"
@@ -73,7 +72,7 @@ public class FullyQualifiedEntityNameNamingStrategyTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9327")
+	@JiraKey(value = "HHH-9327")
 	public void testManyToManyCollectionTable() {
 		final Collection collectionMapping = metadata.getCollectionBinding(
 				Category.class.getName() + "." + "items"
@@ -83,7 +82,7 @@ public class FullyQualifiedEntityNameNamingStrategyTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9327")
+	@JiraKey( value = "HHH-9327")
 	public void testManyToManyForeignKeys() {
 		final Collection ownerCollectionMapping = metadata.getCollectionBinding(
 				Category.class.getName() + "." + "items"
@@ -93,7 +92,7 @@ public class FullyQualifiedEntityNameNamingStrategyTest {
 
 		boolean ownerFKFound = false;
 		boolean inverseFKFound = false;
-		for ( Iterator it = ownerCollectionMapping.getCollectionTable().getForeignKeyIterator(); it.hasNext(); ) {
+		for (Iterator it = ownerCollectionMapping.getCollectionTable().getForeignKeys().values().iterator(); it.hasNext(); ) {
 			final String fkColumnName = ( (ForeignKey) it.next() ).getColumn( 0 ).getName();
 			if ( expectedOwnerFK.equals( fkColumnName ) ) {
 				ownerFKFound = true;

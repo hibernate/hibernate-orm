@@ -1,32 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
- */
-
-/*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * Copyright (c) 2006-2011, Red Hat Inc. or third-party contributors as
- * indicated by the @author tags or express copyright attribution
- * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Inc.
- *
- * This copyrighted material is made available to anyone wishing to use, modify,
- * copy, or redistribute it subject to the terms and conditions of the GNU
- * Lesser General Public License, as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
- * for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this distribution; if not, write to:
- * Free Software Foundation, Inc.
- * 51 Franklin Street, Fifth Floor
- * Boston, MA  02110-1301  USA
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.fetch.subselect;
 
@@ -40,7 +14,7 @@ import org.hibernate.annotations.FetchMode;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -74,7 +48,7 @@ import static org.junit.Assert.assertTrue;
 public class SubselectFetchCollectionFromBatchTest {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10679")
+	@JiraKey( value = "HHH-10679")
 	public void testSubselectFetchFromEntityBatch(SessionFactoryScope scope) {
 		final EmployeeGroup[] createdGroups = scope.fromTransaction( (s) -> {
 			EmployeeGroup group1 = new EmployeeGroup();
@@ -88,19 +62,19 @@ public class SubselectFetchCollectionFromBatchTest {
 			group2.addEmployee(employee3);
 			group2.addEmployee( employee4 );
 
-			s.save( group1 );
-			s.save( group2 );
+			s.persist( group1 );
+			s.persist( group2 );
 
 			return new EmployeeGroup[] { group1, group2 };
 		});
 
-		final SQLStatementInspector statementInspector = scope.getStatementInspector( SQLStatementInspector.class );
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
 		scope.inTransaction( (s) -> {
 			EmployeeGroup[] loadedGroups = new EmployeeGroup[] {
-					s.load(EmployeeGroup.class, createdGroups[0].getId()),
-					s.load(EmployeeGroup.class, createdGroups[1].getId())
+					s.getReference(EmployeeGroup.class, createdGroups[0].getId()),
+					s.getReference(EmployeeGroup.class, createdGroups[1].getId())
 			};
 
 			// there should have been no SQL queries performed and loadedGroups should only contain proxies
@@ -147,8 +121,8 @@ public class SubselectFetchCollectionFromBatchTest {
 			group2.addEmployee(employee3);
 			group2.addEmployee( employee4 );
 
-			s.save( group1 );
-			s.save( group2 );
+			s.persist( group1 );
+			s.persist( group2 );
 
 			return new Long[] { group1.id, group2.id };
 		} );
@@ -189,7 +163,7 @@ public class SubselectFetchCollectionFromBatchTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10679")
+	@JiraKey( value = "HHH-10679")
 	public void testMultiSubselectFetchSamePersisterQueryList(SessionFactoryScope scope) {
 		final Long[] createdIds = scope.fromTransaction( (s) -> {
 			EmployeeGroup group1 = new EmployeeGroup();
@@ -215,8 +189,8 @@ public class SubselectFetchCollectionFromBatchTest {
 			group2.getLead().addCollaborator( new Employee( "group2 lead's collaborator#1" ) );
 			group2.getLead().addCollaborator( new Employee( "group2 lead's collaborator#2" ) );
 
-			s.save( group1 );
-			s.save( group2 );
+			s.persist( group1 );
+			s.persist( group2 );
 
 			return new Long[] { group1.id, group2.id };
 		} );
@@ -226,8 +200,8 @@ public class SubselectFetchCollectionFromBatchTest {
 
 		scope.inTransaction( (s) -> {
 			EmployeeGroup[] loadedGroups = new EmployeeGroup[] {
-					s.load(EmployeeGroup.class, createdIds[0]),
-					s.load(EmployeeGroup.class, createdIds[1])
+					s.getReference(EmployeeGroup.class, createdIds[0]),
+					s.getReference(EmployeeGroup.class, createdIds[1])
 			};
 
 			// loadedGroups should only contain proxies

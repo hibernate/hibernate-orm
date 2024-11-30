@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemaupdate.foreignkeys;
 
@@ -24,8 +22,9 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,23 +32,21 @@ import org.junit.Test;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-11061")
+@JiraKey(value = "HHH-11061")
 public class SchemaUpdateWithKeywordAutoQuotingEnabledTest extends BaseUnitTestCase {
 	private StandardServiceRegistry ssr;
 	private MetadataImplementor metadata;
 
 	@Before
 	public void setUp() {
-		final StandardServiceRegistryBuilder standardServiceRegistryBuilder = new StandardServiceRegistryBuilder();
-		standardServiceRegistryBuilder.applySetting(
-				org.hibernate.cfg.AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED,
-				"true"
-		);
-		ssr = standardServiceRegistryBuilder.build();
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
+				.applySetting( org.hibernate.cfg.AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED, "true" )
+				.build();
 
 		final MetadataSources metadataSources = new MetadataSources( ssr );
 		metadataSources.addAnnotatedClass( Match.class );
 		metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 		try {
 			createSchema();

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
 
@@ -15,11 +13,12 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.engine.spi.Mapping;
+import org.hibernate.cache.MutableCacheKeyBuilder;
+import org.hibernate.engine.internal.CacheHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -42,9 +41,6 @@ import org.hibernate.usertype.UserVersionType;
  * @apiNote Many of the interfaces implemented here are implemented just to
  * handle the case of the wrapped type implementing them so we can pass them
  * along.
- *
- * todo (6.0) : ^^ this introduces a problem in code that relies on `instance of` checks
- * 		against any of these interfaces when the wrapped type does not
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -70,23 +66,24 @@ public class CustomType<J>
 		this( userType, ArrayHelper.EMPTY_STRING_ARRAY, typeConfiguration );
 	}
 
-	public CustomType(UserType<J> userType, String[] registrationKeys, TypeConfiguration typeConfiguration) throws MappingException {
+	public CustomType(UserType<J> userType, String[] registrationKeys, TypeConfiguration typeConfiguration)
+			throws MappingException {
 		this.userType = userType;
-		this.name = userType.getClass().getName();
+		name = userType.getClass().getName();
 
 		if ( userType instanceof JavaType<?> ) {
 			//noinspection unchecked
-			this.mappedJavaType = (JavaType<J>) userType;
+			mappedJavaType = (JavaType<J>) userType;
 		}
 		else if ( userType instanceof JavaTypedExpressible) {
 			//noinspection unchecked
-			this.mappedJavaType = ( (JavaTypedExpressible<J>) userType ).getExpressibleJavaType();
+			mappedJavaType = ( (JavaTypedExpressible<J>) userType ).getExpressibleJavaType();
 		}
 		else if ( userType instanceof UserVersionType ) {
-			this.mappedJavaType = new UserTypeVersionJavaTypeWrapper<>( (UserVersionType<J>) userType );
+			mappedJavaType = new UserTypeVersionJavaTypeWrapper<>( (UserVersionType<J>) userType );
 		}
 		else {
-			this.mappedJavaType = new UserTypeJavaTypeWrapper<>( userType );
+			mappedJavaType = new UserTypeJavaTypeWrapper<>( userType );
 		}
 
 		final BasicValueConverter<J, Object> valueConverter = userType.getValueConverter();
@@ -94,22 +91,22 @@ public class CustomType<J>
 			// When an explicit value converter is given,
 			// we configure the custom type to use that instead of adapters that delegate to UserType.
 			// This is necessary to support selecting a column with multiple domain type representations.
-			this.jdbcType = userType.getJdbcType( typeConfiguration );
-			this.jdbcJavaType = valueConverter.getRelationalJavaType();
+			jdbcType = userType.getJdbcType( typeConfiguration );
+			jdbcJavaType = valueConverter.getRelationalJavaType();
 			//noinspection unchecked
-			this.valueExtractor = (ValueExtractor<J>) jdbcType.getExtractor( jdbcJavaType );
+			valueExtractor = (ValueExtractor<J>) jdbcType.getExtractor( jdbcJavaType );
 			//noinspection unchecked
-			this.valueBinder = (ValueBinder<J>) jdbcType.getBinder( jdbcJavaType );
+			valueBinder = (ValueBinder<J>) jdbcType.getBinder( jdbcJavaType );
 			//noinspection unchecked
-			this.jdbcLiteralFormatter = (JdbcLiteralFormatter<J>) jdbcType.getJdbcLiteralFormatter( jdbcJavaType );
+			jdbcLiteralFormatter = (JdbcLiteralFormatter<J>) jdbcType.getJdbcLiteralFormatter( jdbcJavaType );
 		}
 		else {
 			// create a JdbcType adapter that uses the UserType binder/extract handling
-			this.jdbcType = new UserTypeSqlTypeAdapter<>( userType, mappedJavaType, typeConfiguration );
-			this.jdbcJavaType = jdbcType.getJdbcRecommendedJavaTypeMapping( null, null, typeConfiguration );
-			this.valueExtractor = jdbcType.getExtractor( mappedJavaType );
-			this.valueBinder = jdbcType.getBinder( mappedJavaType );
-			this.jdbcLiteralFormatter = userType instanceof EnhancedUserType
+			jdbcType = new UserTypeSqlTypeAdapter<>( userType, mappedJavaType, typeConfiguration );
+			jdbcJavaType = jdbcType.getJdbcRecommendedJavaTypeMapping( null, null, typeConfiguration );
+			valueExtractor = jdbcType.getExtractor( mappedJavaType );
+			valueBinder = jdbcType.getBinder( mappedJavaType );
+			jdbcLiteralFormatter = userType instanceof EnhancedUserType
 					? jdbcType.getJdbcLiteralFormatter( mappedJavaType )
 					: null;
 		}
@@ -142,8 +139,8 @@ public class CustomType<J>
 	}
 
 	@Override
-	public int[] getSqlTypeCodes(Mapping pi) {
-		return new int[] { jdbcType.getDefaultSqlTypeCode() };
+	public int[] getSqlTypeCodes(MappingContext mappingContext) {
+		return new int[] { jdbcType.getDdlTypeCode() };
 	}
 
 	@Override
@@ -152,7 +149,7 @@ public class CustomType<J>
 	}
 
 	@Override
-	public int getColumnSpan(Mapping session) {
+	public int getColumnSpan(MappingContext session) {
 		return 1;
 	}
 
@@ -192,17 +189,35 @@ public class CustomType<J>
 
 	@Override
 	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) {
-		return (Serializable) disassemble( value, session );
+		return disassembleForCache( value );
 	}
 
 	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+	public Serializable disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
+		return disassembleForCache( value );
+	}
+
+	private Serializable disassembleForCache(Object value) {
 		final Serializable disassembled = getUserType().disassemble( (J) value );
 		// Since UserType#disassemble is an optional operation,
 		// we have to handle the fact that it could produce a null value,
 		// in which case we will try to use a converter for disassembling,
 		// or if that doesn't exist, simply use the domain value as is
-		if ( disassembled == null && value != null ) {
+		if ( disassembled == null ){
+			final BasicValueConverter<J, Object> valueConverter = getUserType().getValueConverter();
+			if ( valueConverter == null ) {
+				return disassembled;
+			}
+			else {
+				return (Serializable) valueConverter.toRelationalValue( (J) value );
+			}
+		}
+		return disassembled;
+	}
+
+	@Override
+	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+		// Use the value converter if available for conversion to the jdbc representation
 			final BasicValueConverter<J, Object> valueConverter = getUserType().getValueConverter();
 			if ( valueConverter == null ) {
 				return value;
@@ -210,8 +225,28 @@ public class CustomType<J>
 			else {
 				return valueConverter.toRelationalValue( (J) value );
 			}
+	}
+
+	@Override
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+
+		final Serializable disassembled = getUserType().disassemble( (J) value );
+		// Since UserType#disassemble is an optional operation,
+		// we have to handle the fact that it could produce a null value,
+		// in which case we will try to use a converter for disassembling,
+		// or if that doesn't exist, simply use the domain value as is
+		if ( disassembled == null) {
+			CacheHelper.addBasicValueToCacheKey( cacheKey, value, this, session );
 		}
-		return disassembled;
+		else {
+			cacheKey.addValue( disassembled );
+			if ( value == null ) {
+				cacheKey.addHashCode( 0 );
+			}
+			else {
+				cacheKey.addHashCode( getUserType().hashCode( (J) value ) );
+			}
+		}
 	}
 
 	@Override
@@ -279,7 +314,7 @@ public class CustomType<J>
 	}
 
 	@Override
-	public boolean[] toColumnNullness(Object value, Mapping mapping) {
+	public boolean[] toColumnNullness(Object value, MappingContext mapping) {
 		boolean[] result = new boolean[ getColumnSpan(mapping) ];
 		if ( value != null ) {
 			Arrays.fill(result, true);
@@ -388,4 +423,5 @@ public class CustomType<J>
 	public BasicValueConverter<J, Object> getValueConverter() {
 		return userType.getValueConverter();
 	}
+
 }

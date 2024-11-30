@@ -1,18 +1,24 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.orm.test.hql.size;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.jdbc.Expectation;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.junit.Test;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -22,18 +28,10 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.TypedQuery;
 
-import org.hibernate.annotations.ResultCheckStyle;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.Where;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.junit.Assert.assertEquals;
 
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
-
-@TestForIssue(jiraKey = "HHH-14585")
+@JiraKey(value = "HHH-14585")
 @RequiresDialect(value = PostgreSQLDialect.class, comment = "Other databases may not support boolean data types")
 @RequiresDialect(value = H2Dialect.class, comment = "Other databases may not support boolean data types")
 public class WhereClauseOrderBySizeTest extends BaseEntityManagerFunctionalTestCase {
@@ -140,8 +138,9 @@ public class WhereClauseOrderBySizeTest extends BaseEntityManagerFunctionalTestC
 	}
 
 	@Entity(name = "Book")
-	@SQLDelete(sql = "UPDATE Book SET deleted = true WHERE id = ?", check = ResultCheckStyle.COUNT)
-	@Where(clause = "deleted = false")
+	@SQLDelete(sql = "UPDATE Book SET deleted = true WHERE id = ?",
+			verify = Expectation.RowCount.class)
+	@SQLRestriction("deleted = false")
 	public static class Book {
 		@Id
 		@GeneratedValue

@@ -1,14 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.orphan.one2one.fk.reversed.unidirectional;
 
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -35,7 +33,7 @@ public class DeleteOneToOneOrphansTest {
 				session -> {
 					Employee emp = new Employee();
 					emp.setInfo( new EmployeeInfo() );
-					session.save( emp );
+					session.persist( emp );
 				}
 		);
 	}
@@ -80,7 +78,7 @@ public class DeleteOneToOneOrphansTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5267")
+	@JiraKey("HHH-5267")
 	public void testOrphanedWhileDetached(SessionFactoryScope scope) {
 
 		Employee e = scope.fromTransaction(
@@ -102,7 +100,7 @@ public class DeleteOneToOneOrphansTest {
 					e.setInfo( null );
 
 					//save using the new session (this used to work prior to 3.5.x)
-					session.saveOrUpdate( e );
+					session.merge( e );
 				}
 		);
 
@@ -122,7 +120,7 @@ public class DeleteOneToOneOrphansTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-6484")
+	@JiraKey("HHH-6484")
 	public void testReplacedWhileManaged(SessionFactoryScope scope) {
 
 		Employee e = scope.fromTransaction(

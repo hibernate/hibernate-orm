@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.spi;
 
@@ -10,10 +8,13 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.function.Supplier;
 
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
+import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
 import org.hibernate.jdbc.WorkExecutorVisitable;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransactionAccess;
@@ -35,18 +36,33 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	LogicalConnectionImplementor getLogicalConnection();
 
 	/**
-	 * Get a batch instance.
-	 *
-	 * @param key The unique batch key.
-	 *
-	 * @return The batch
+	 * The builder of prepared and callable JDBC statements for
+	 * mutation operations (insert, update and delete) originating
+	 * from persistent context events, as opposed to Query handling
 	 */
-	Batch getBatch(BatchKey key);
+	MutationStatementPreparer getMutationStatementPreparer();
+
+	/**
+	 * Get the {@linkplain Batch batch} for the supplied key, creating one
+	 * if needed using the supplied {@linkplain PreparedStatementGroup statementGroupSupplier}.
+	 *
+	 * @implNote Any previous Batch is executed and released prior to returning
+	 */
+	Batch getBatch(
+			BatchKey key,
+			Integer batchSize,
+			Supplier<PreparedStatementGroup> statementGroupSupplier);
 
 	/**
 	 * Execute the currently managed batch (if any)
 	 */
 	void executeBatch();
+
+	/**
+	 * Conditionally execute the currently managed batch (if any), if the
+	 * keys do not match
+	 */
+	void conditionallyExecuteBatch(BatchKey key);
 
 	/**
 	 * Abort the currently managed batch (if any)
@@ -61,7 +77,7 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	StatementPreparer getStatementPreparer();
 
 	/**
-	 * Obtain the resultset extractor associated with this JDBC coordinator.
+	 * Obtain the {@link ResultSet} extractor associated with this JDBC coordinator.
 	 *
 	 * @return This coordinator's resultset extractor
 	 */
@@ -91,7 +107,7 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 
 	/**
 	 * Signals the end of transaction.
-	 * <p/>
+	 * <p>
 	 * Intended for use from the transaction coordinator, after local transaction completion.  Used to conditionally
 	 * release the JDBC connection aggressively if the configured release mode indicates.
 	 */
@@ -118,7 +134,7 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	 */
 	void cancelLastQuery();
 
-    /**
+	/**
 	 * Calculate the amount of time, in seconds, still remaining before transaction timeout occurs.
 	 *
 	 * @return The number of seconds remaining until a transaction timeout occurs.  A negative value indicates
@@ -140,7 +156,7 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 
 	/**
 	 * Register a query statement as being able to be cancelled.
-	 * 
+	 *
 	 * @param statement The cancel-able query statement.
 	 */
 	void registerLastQuery(Statement statement);

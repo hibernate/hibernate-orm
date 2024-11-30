@@ -1,3 +1,63 @@
 ---
 jira:
   projectKey: "HHH"
+  insertLinksInPullRequests: true
+  ignoreFiles:
+    # Git
+    - ".git*"
+    - "*/.git*"
+    - ".mailmap"
+    # Gradle
+    - "gradlew*"
+    - "gradle/"
+    - "local-build-plugins/"
+    - "build.gradle"
+    # NOT settings.gradle: contains dependency versions, changing those requires a Jira issue
+    - "utilities.gradle"
+    # CI
+    - ".github/"
+    - ".release/"
+    - "ci/"
+    - "databases/"
+    - "*.sh"
+    - "*.bat"
+    - "Jenkinsfile"
+    - "*/Jenkinsfile"
+    - "*.Jenkinsfile"
+    # In-repo documentation
+    - "design/"
+    - "README.adoc"
+    - "MAINTAINERS.md"
+    - "CONTRIBUTING.md"
+    # Misc. build files
+    - "checkerstubs/"
+    - "drivers/"
+    - "edb/"
+    - "etc/"
+    - "javadoc/"
+    - "patched-libs/"
+    - "release/"
+    - "rules/"
+    - "shared/"
+    - ".sdkmanrc"
+    - "*/.sdkmanrc"
+develocity:
+  buildScan:
+    addCheck: true
+    tags:
+      - column: "OS"
+        pattern: "Linux"
+      - column: "OS"
+        pattern: "Windows.*"
+        replacement: "Windows"
+      - column: "Java"
+        pattern: "jdk-(.*)"
+        replacement: "$1"
+      - column: "Java"
+        pattern: "s390x"
+        replacement: "$0"
+      - column: "DB"
+        pattern: "((?:h2|postgres(?:ql)?|pgsql|mysql|mariadb|mssql|tidb|cockroach(?:db)?|oracle|db2|hsqldb|edb|sybase)(?:.*(?=_ci)|.*))(?:_ci)?"
+        replacement: "$1"
+      - pattern: "main|HEAD|\\d+.\\d+|PR-\\d+"
+        replacement: "" # Just remove these tags

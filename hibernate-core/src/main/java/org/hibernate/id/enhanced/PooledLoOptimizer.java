@@ -1,14 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.enhanced;
 
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.Lock;
 
 import org.hibernate.HibernateException;
 import org.hibernate.id.IntegralDataTypeHolder;
@@ -16,8 +17,8 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.jboss.logging.Logger;
 
 /**
- * Variation of {@link PooledOptimizer} which interprets the incoming database value as the lo value, rather than
- * the hi value.
+ * Variation of {@link PooledOptimizer} which interprets the incoming database
+ * value as the lo value, rather than the hi value.
  *
  * @author Steve Ebersole
  *
@@ -25,6 +26,7 @@ import org.jboss.logging.Logger;
  */
 public class PooledLoOptimizer extends AbstractOptimizer {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			PooledLoOptimizer.class.getName()
 	);
@@ -39,12 +41,12 @@ public class PooledLoOptimizer extends AbstractOptimizer {
 	}
 
 	/**
-	 * Constructs a PooledLoOptimizer.
+	 * Constructs a {@code PooledLoOptimizer}.
 	 *
 	 * @param returnClass The Java type of the values to be generated
 	 * @param incrementSize The increment size.
 	 */
-	public PooledLoOptimizer(Class returnClass, int incrementSize) {
+	public PooledLoOptimizer(Class<?> returnClass, int incrementSize) {
 		super( returnClass, incrementSize );
 		if ( incrementSize < 1 ) {
 			throw new HibernateException( "increment size cannot be less than 1" );
@@ -53,22 +55,32 @@ public class PooledLoOptimizer extends AbstractOptimizer {
 	}
 
 	@Override
-	public synchronized Serializable generate(AccessCallback callback) {
-		final GenerationState generationState = locateGenerationState( callback.getTenantIdentifier() );
+	public Serializable generate(AccessCallback callback) {
+		lock.lock();
+		try {
+			final GenerationState generationState = locateGenerationState( callback.getTenantIdentifier() );
 
-		if ( generationState.lastSourceValue == null
-				|| ! generationState.value.lt( generationState.upperLimitValue ) ) {
-			generationState.lastSourceValue = callback.getNextValue();
-			generationState.upperLimitValue = generationState.lastSourceValue.copy().add( incrementSize );
-			generationState.value = generationState.lastSourceValue.copy();
-			// handle cases where initial-value is less that one (hsqldb for instance).
-			while ( generationState.value.lt( 1 ) ) {
-				generationState.value.increment();
+			if ( generationState.lastSourceValue == null
+					|| ! generationState.value.lt( generationState.upperLimitValue ) ) {
+				generationState.lastSourceValue = callback.getNextValue();
+				generationState.upperLimitValue = generationState.lastSourceValue.copy().add( incrementSize );
+				generationState.value = generationState.lastSourceValue.copy();
+				// handle cases where initial-value is less that one (hsqldb for instance).
+				while ( generationState.value.lt( 1 ) ) {
+					generationState.value.increment();
+				}
 			}
+			return generationState.value.makeValueThenIncrement();
 		}
-		return generationState.value.makeValueThenIncrement();
+		finally {
+			lock.unlock();
+		}
 	}
 
+	/**
+	 * Use a lock instead of the monitor lock to avoid pinning when using virtual threads.
+	 */
+	private final Lock lock = new ReentrantLock();
 	private GenerationState noTenantState;
 	private Map<String,GenerationState> tenantSpecificState;
 

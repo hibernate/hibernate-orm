@@ -1,15 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.select;
 
-import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.criteria.JpaQueryPart;
@@ -17,6 +14,8 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+
+import static java.util.Collections.emptyList;
 
 /**
  * Defines the ordering and fetch/offset part of a query which is shared with query groups.
@@ -28,8 +27,8 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 
 	private SqmOrderByClause orderByClause;
 
-	private SqmExpression<?> offsetExpression;
-	private SqmExpression<?> fetchExpression;
+	private SqmExpression<? extends Number> offsetExpression;
+	private SqmExpression<? extends Number> fetchExpression;
 	private FetchClauseType fetchClauseType = FetchClauseType.ROWS_ONLY;
 
 	public SqmQueryPart(NodeBuilder nodeBuilder) {
@@ -85,26 +84,26 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 		this.orderByClause = orderByClause;
 	}
 
-	public SqmExpression<?> getFetchExpression() {
+	public SqmExpression<? extends Number> getFetchExpression() {
 		return fetchExpression;
 	}
 
-	public SqmExpression<?> getOffsetExpression() {
+	public SqmExpression<? extends Number> getOffsetExpression() {
 		return offsetExpression;
 	}
 
-	public void setOffsetExpression(SqmExpression<?> offsetExpression) {
+	public void setOffsetExpression(SqmExpression<? extends Number> offsetExpression) {
 		if ( offsetExpression != null ) {
 			offsetExpression.applyInferableType( nodeBuilder.getIntegerType() );
 		}
 		this.offsetExpression = offsetExpression;
 	}
 
-	public void setFetchExpression(SqmExpression<?> fetchExpression) {
+	public void setFetchExpression(SqmExpression<? extends Number> fetchExpression) {
 		setFetchExpression( fetchExpression, FetchClauseType.ROWS_ONLY );
 	}
 
-	public void setFetchExpression(SqmExpression<?> fetchExpression, FetchClauseType fetchClauseType) {
+	public void setFetchExpression(SqmExpression<? extends Number> fetchExpression, FetchClauseType fetchClauseType) {
 		if ( fetchExpression == null ) {
 			this.fetchExpression = null;
 			this.fetchClauseType = null;
@@ -129,11 +128,7 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 
 	@Override
 	public List<SqmSortSpecification> getSortSpecifications() {
-		if ( getOrderByClause() == null ) {
-			return Collections.emptyList();
-		}
-
-		return getOrderByClause().getSortSpecifications();
+		return getOrderByClause() == null ? emptyList() : getOrderByClause().getSortSpecifications();
 	}
 
 	@Override
@@ -143,38 +138,36 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 		}
 
 		//noinspection unchecked
-		getOrderByClause().setSortSpecifications( (List) sortSpecifications );
+		getOrderByClause().setSortSpecifications( (List<SqmSortSpecification>) sortSpecifications );
 
 		return this;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public SqmExpression<?> getOffset() {
+	public JpaExpression<? extends Number> getOffset() {
 		return getOffsetExpression();
 	}
 
 	@Override
-	public SqmQueryPart<T> setOffset(JpaExpression<?> offset) {
-		setOffsetExpression( (SqmExpression<?>) offset );
+	public SqmQueryPart<T> setOffset(JpaExpression<? extends Number> offset) {
+		setOffsetExpression( (SqmExpression<? extends Number>) offset );
 		return this;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public SqmExpression<?> getFetch() {
+	public JpaExpression<? extends Number> getFetch() {
 		return getFetchExpression();
 	}
 
 	@Override
-	public SqmQueryPart<T> setFetch(JpaExpression<?> fetch) {
-		setFetchExpression( (SqmExpression<?>) fetch );
+	public SqmQueryPart<T> setFetch(JpaExpression<? extends Number> fetch) {
+		setFetchExpression( (SqmExpression<? extends Number>) fetch );
 		return this;
 	}
 
 	@Override
-	public JpaQueryPart<T> setFetch(JpaExpression<?> fetch, FetchClauseType fetchClauseType) {
-		setFetchExpression( (SqmExpression<?>) fetch, fetchClauseType );
+	public JpaQueryPart<T> setFetch(JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType) {
+		setFetchExpression( (SqmExpression<? extends Number>) fetch, fetchClauseType );
 		return this;
 	}
 

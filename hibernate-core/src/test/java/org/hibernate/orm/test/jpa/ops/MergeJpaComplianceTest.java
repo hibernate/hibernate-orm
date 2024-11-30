@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.jpa.ops;
 
 import java.io.Serializable;
@@ -15,13 +19,13 @@ import jakarta.persistence.OneToMany;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil2.fromTransaction;
 import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
 
-@TestForIssue( jiraKey = "HHH-14608")
+@JiraKey( value = "HHH-14608")
 public class MergeJpaComplianceTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.converted.converter.caching;
 
@@ -13,7 +11,7 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.persister.entity.EntityPersister;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -41,7 +39,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class BasicStructuredCachingOfConvertedValueTest {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9615" )
+	@JiraKey( value = "HHH-9615" )
 	@SuppressWarnings("unchecked")
 	public void basicCacheStructureTest(SessionFactoryScope scope) {
 		EntityPersister persister =  scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( Address.class.getName() );
@@ -53,7 +51,7 @@ public class BasicStructuredCachingOfConvertedValueTest {
 
 		scope.inTransaction(
 				(session) -> {
-					session.save( new Address( 1, "123 Main St.", null, PostalArea._78729 ) );
+					session.persist( new Address( 1, "123 Main St.", null, PostalArea._78729 ) );
 				}
 		);
 

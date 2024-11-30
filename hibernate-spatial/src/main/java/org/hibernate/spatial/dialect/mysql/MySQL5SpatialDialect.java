@@ -1,12 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.spatial.dialect.mysql;
 
-import org.hibernate.dialect.MySQL5Dialect;
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.spatial.SpatialDialect;
 
 /**
@@ -16,5 +15,9 @@ import org.hibernate.spatial.SpatialDialect;
  * @deprecated Spatial Dialects are no longer needed
  */
 @Deprecated
-public class MySQL5SpatialDialect extends MySQL5Dialect implements SpatialDialect {
+public class MySQL5SpatialDialect extends MySQLDialect implements SpatialDialect {
+
+	public MySQL5SpatialDialect() {
+		super( DatabaseVersion.make( 5 ) );
+	}
 }

@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id$
 package org.hibernate.orm.test.annotations.onetomany;
 import java.util.HashSet;
 import java.util.Set;
@@ -18,7 +14,7 @@ import jakarta.persistence.OneToMany;
 
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
-import org.hibernate.annotations.OrderBy;
+import org.hibernate.annotations.SQLOrder;
 
 /**
  * Shows a default one to many
@@ -32,7 +28,7 @@ public class Troop {
 	private Set<Soldier> soldiers;
 
 	@OneToMany(mappedBy = "troop", cascade = {CascadeType.ALL}, fetch = FetchType.LAZY)
-	@OrderBy(clause = "name desc")
+	@SQLOrder("name desc")
 	@org.hibernate.annotations.Cascade(org.hibernate.annotations.CascadeType.DELETE_ORPHAN)
 	@OnDelete(action = OnDeleteAction.CASCADE)
 	public Set<Soldier> getSoldiers() {

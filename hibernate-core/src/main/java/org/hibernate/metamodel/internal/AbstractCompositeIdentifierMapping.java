@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.internal;
 
@@ -16,24 +14,21 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
-import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
@@ -50,7 +45,8 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableFetchImpl;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableResultImpl;
-import org.hibernate.type.descriptor.java.JavaType;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Base implementation for composite identifier mappings
@@ -70,10 +66,20 @@ public abstract class AbstractCompositeIdentifierMapping
 			EntityMappingType entityMapping,
 			String tableExpression,
 			MappingModelCreationProcess creationProcess) {
-		this.navigableRole = entityMapping.getNavigableRole().appendContainer( EntityIdentifierMapping.ROLE_LOCAL_NAME );
+		this.navigableRole = entityMapping.getNavigableRole().appendContainer( EntityIdentifierMapping.ID_ROLE_NAME );
 		this.entityMapping = entityMapping;
 		this.tableExpression = tableExpression;
 		this.sessionFactory = creationProcess.getCreationContext().getSessionFactory();
+	}
+
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected AbstractCompositeIdentifierMapping(AbstractCompositeIdentifierMapping original) {
+		this.navigableRole = original.navigableRole;
+		this.entityMapping = original.entityMapping;
+		this.tableExpression = original.tableExpression;
+		this.sessionFactory = original.sessionFactory;
 	}
 
 	@Override
@@ -89,11 +95,6 @@ public abstract class AbstractCompositeIdentifierMapping
 	@Override
 	public EmbeddableMappingType getEmbeddableTypeDescriptor() {
 		return getPartMappingType();
-	}
-
-	@Override
-	public JavaType<?> getJavaType() {
-		return getPartMappingType().getMappedJavaType();
 	}
 
 	@Override
@@ -128,32 +129,22 @@ public abstract class AbstractCompositeIdentifierMapping
 	public TableGroupJoin createTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAstJoinType requestedJoinType,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase explicitSqlAliasBase,
+			@Nullable SqlAstJoinType requestedJoinType,
 			boolean fetched,
 			boolean addsPredicate,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
-			FromClauseAccess fromClauseAccess,
-			SqlAstCreationContext creationContext) {
-		final SqlAstJoinType joinType;
-		if ( requestedJoinType == null ) {
-			joinType = SqlAstJoinType.INNER;
-		}
-		else {
-			joinType = requestedJoinType;
-		}
+			SqlAstCreationState creationState) {
+		final SqlAstJoinType joinType = determineSqlJoinType( lhs, requestedJoinType, fetched );
 		final TableGroup tableGroup = createRootTableGroupJoin(
 				navigablePath,
 				lhs,
 				explicitSourceAlias,
+				explicitSqlAliasBase,
 				requestedJoinType,
 				fetched,
 				null,
-				aliasBaseGenerator,
-				sqlExpressionResolver,
-				fromClauseAccess,
-				creationContext
+				creationState
 		);
 
 		return new TableGroupJoin( navigablePath, joinType, tableGroup, null );
@@ -163,14 +154,12 @@ public abstract class AbstractCompositeIdentifierMapping
 	public TableGroup createRootTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAstJoinType requestedJoinType,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase explicitSqlAliasBase,
+			@Nullable SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
-			Consumer<Predicate> predicateConsumer,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
-			FromClauseAccess fromClauseAccess,
-			SqlAstCreationContext creationContext) {
+			@Nullable Consumer<Predicate> predicateConsumer,
+			SqlAstCreationState creationState) {
 		return new StandardVirtualTableGroup( navigablePath, this, lhs, fetched );
 	}
 
@@ -187,35 +176,46 @@ public abstract class AbstractCompositeIdentifierMapping
 	}
 
 	@Override
-	public int forEachJdbcValue(
+	public <X, Y> int forEachJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
 		int span = 0;
-		final List<AttributeMapping> attributeMappings = getEmbeddableTypeDescriptor().getAttributeMappings();
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final AttributeMapping attributeMapping = attributeMappings.get( i );
-			final Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
-			if ( attributeMapping instanceof ToOneAttributeMapping ) {
-				final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
-				final ForeignKeyDescriptor fkDescriptor = toOneAttributeMapping.getForeignKeyDescriptor();
-				final Object identifier = fkDescriptor.getAssociationKeyFromSide(
-						o,
-						toOneAttributeMapping.getSideNature().inverse(),
-						session
-				);
-				span += fkDescriptor.forEachJdbcValue(
-						identifier,
-						clause,
-						span + offset,
-						valuesConsumer,
-						session
-				);
+		final EmbeddableMappingType embeddableTypeDescriptor = getEmbeddableTypeDescriptor();
+		final int size = embeddableTypeDescriptor.getNumberOfAttributeMappings();
+		if ( value == null ) {
+			for ( int i = 0; i < size; i++ ) {
+				final AttributeMapping attributeMapping = embeddableTypeDescriptor.getAttributeMapping( i );
+				span += attributeMapping.forEachJdbcValue( null, span + offset, x, y, valuesConsumer, session );
 			}
-			else {
-				span += attributeMapping.forEachJdbcValue( o, clause, span + offset, valuesConsumer, session );
+		}
+		else {
+			for ( int i = 0; i < size; i++ ) {
+				final AttributeMapping attributeMapping = embeddableTypeDescriptor.getAttributeMapping( i );
+				final Object o = embeddableTypeDescriptor.getValue( value, i );
+				if ( attributeMapping instanceof ToOneAttributeMapping ) {
+					final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
+					final ForeignKeyDescriptor fkDescriptor = toOneAttributeMapping.getForeignKeyDescriptor();
+					final Object identifier = fkDescriptor.getAssociationKeyFromSide(
+							o,
+							toOneAttributeMapping.getSideNature().inverse(),
+							session
+					);
+					span += fkDescriptor.forEachJdbcValue(
+							identifier,
+							span + offset,
+							x,
+							y,
+							valuesConsumer,
+							session
+					);
+				}
+				else {
+					span += attributeMapping.forEachJdbcValue( o, span + offset, x, y, valuesConsumer, session );
+				}
 			}
 		}
 		return span;
@@ -237,17 +237,7 @@ public abstract class AbstractCompositeIdentifierMapping
 							? defaultTableReference
 							: tableGroup.resolveTableReference( navigablePath, selection.getContainingTableExpression() );
 					final Expression columnReference = sqlAstCreationState.getSqlExpressionResolver()
-							.resolveSqlExpression(
-									SqlExpressionResolver.createColumnReferenceKey(
-											tableReference,
-											selection.getSelectionExpression()
-									),
-									sqlAstProcessingState -> new ColumnReference(
-											tableReference.getIdentificationVariable(),
-											selection,
-											sqlAstCreationState.getCreationContext().getSessionFactory()
-									)
-							);
+							.resolveSqlExpression( tableReference, selection );
 
 					columnReferences.add( (ColumnReference) columnReference );
 				}
@@ -297,6 +287,16 @@ public abstract class AbstractCompositeIdentifierMapping
 
 	protected EntityMappingType getEntityMapping() {
 		return entityMapping;
+	}
+
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return false;
+	}
+
+	@Override
+	public boolean containsTableReference(String tableExpression) {
+		return entityMapping.containsTableReference( tableExpression );
 	}
 
 }

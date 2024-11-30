@@ -1,51 +1,64 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import org.hibernate.cfg.NotYetImplementedException;
-import org.hibernate.graph.internal.SubGraphImpl;
-import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.metamodel.UnsupportedMappingException;
-import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.model.domain.AbstractIdentifiableType;
-import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
-import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
+ * Implementation of {@link jakarta.persistence.metamodel.MappedSuperclassType}.
+ *
  * @author Emmanuel Bernard
  * @author Steve Ebersole
  */
 public class MappedSuperclassTypeImpl<J> extends AbstractIdentifiableType<J> implements MappedSuperclassDomainType<J> {
+
 	public MappedSuperclassTypeImpl(
+			String name,
+			boolean hasIdClass,
+			boolean hasIdProperty,
+			boolean hasVersion,
 			JavaType<J> javaType,
-			MappedSuperclass mappedSuperclass,
 			IdentifiableDomainType<? super J> superType,
-			JpaMetamodel jpaMetamodel) {
+			JpaMetamodelImplementor jpaMetamodel) {
 		super(
-				javaType.getJavaType().getTypeName(),
+				name,
 				javaType,
 				superType,
-				mappedSuperclass.getDeclaredIdentifierMapper() != null || ( superType != null && superType.hasIdClass() ),
-				mappedSuperclass.hasIdentifierProperty(),
-				mappedSuperclass.isVersioned(),
+				hasIdClass,
+				hasIdProperty,
+				hasVersion,
 				jpaMetamodel
 		);
 	}
 
+	public MappedSuperclassTypeImpl(
+			JavaType<J> javaType,
+			MappedSuperclass mappedSuperclass,
+			IdentifiableDomainType<? super J> superType,
+			JpaMetamodelImplementor jpaMetamodel) {
+		this(
+				javaType.getTypeName(),
+				mappedSuperclass.getDeclaredIdentifierMapper() != null
+						|| superType != null && superType.hasIdClass(),
+				mappedSuperclass.hasIdentifierProperty(),
+				mappedSuperclass.isVersioned(),
+				javaType,
+				superType,
+				jpaMetamodel
+		);
+	}
 
 	@Override
 	public String getPathName() {
@@ -80,12 +93,8 @@ public class MappedSuperclassTypeImpl<J> extends AbstractIdentifiableType<J> imp
 			return attribute;
 		}
 
-		if ( "id".equalsIgnoreCase( name ) || EntityIdentifierMapping.ROLE_LOCAL_NAME.equals( name ) ) {
-			final SingularPersistentAttribute<J, ?> idAttribute = findIdAttribute();
-			//noinspection RedundantIfStatement
-			if ( idAttribute != null ) {
-				return idAttribute;
-			}
+		if ( EntityIdentifierMapping.matchesRoleName( name ) ) {
+			return findIdAttribute();
 		}
 
 		return null;
@@ -99,27 +108,6 @@ public class MappedSuperclassTypeImpl<J> extends AbstractIdentifiableType<J> imp
 	@Override
 	public PersistenceType getPersistenceType() {
 		return PersistenceType.MAPPED_SUPERCLASS;
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public <S extends J> SubGraphImplementor<S> makeSubGraph(Class<S> subType) {
-		if ( ! getBindableJavaType().isAssignableFrom( subType ) ) {
-			throw new IllegalArgumentException(
-					String.format(
-							"MappedSuperclass type [%s] cannot be treated as requested sub-type [%s]",
-							getTypeName(),
-							subType.getName()
-					)
-			);
-		}
-
-		return new SubGraphImpl( this, true, jpaMetamodel() );
-	}
-
-	@Override
-	public SubGraphImplementor<J> makeSubGraph() {
-		return makeSubGraph( getBindableJavaType() );
 	}
 
 	@Override

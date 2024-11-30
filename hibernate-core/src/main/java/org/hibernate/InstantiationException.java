@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
@@ -15,7 +13,7 @@ public class InstantiationException extends HibernateException {
 	private final Class<?> clazz;
 
 	/**
-	 * Constructs a InstantiationException.
+	 * Constructs an {@code InstantiationException}.
 	 *
 	 * @param message A message explaining the exception condition
 	 * @param clazz The Class we are attempting to instantiate
@@ -27,7 +25,7 @@ public class InstantiationException extends HibernateException {
 	}
 
 	/**
-	 * Constructs a InstantiationException.
+	 * Constructs an {@code InstantiationException}.
 	 *
 	 * @param message A message explaining the exception condition
 	 * @param clazz The Class we are attempting to instantiate
@@ -37,7 +35,7 @@ public class InstantiationException extends HibernateException {
 	}
 
 	/**
-	 * Constructs a InstantiationException.
+	 * Constructs an {@code InstantiationException}.
 	 *
 	 * @param message A message explaining the exception condition
 	 * @param clazz The Class we are attempting to instantiate
@@ -49,7 +47,7 @@ public class InstantiationException extends HibernateException {
 	}
 
 	/**
-	 * Returns the Class we were attempting to instantiate.
+	 * Returns the {@link Class} we were attempting to instantiate.
 	 *
 	 * @return The class we are unable to instantiate
 	 */
@@ -59,7 +57,9 @@ public class InstantiationException extends HibernateException {
 
 	@Override
 	public String getMessage() {
-		return super.getMessage() + " : " + clazz.getName();
+		final String message = super.getMessage() + " '" + clazz.getName() + "'";
+		final Throwable cause = getCause();
+		return cause != null ? message + " due to: " + cause.getMessage() : message;
 	}
 
 }

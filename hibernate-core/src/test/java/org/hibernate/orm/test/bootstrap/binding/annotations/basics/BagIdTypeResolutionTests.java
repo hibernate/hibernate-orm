@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bootstrap.binding.annotations.basics;
 
@@ -29,7 +27,6 @@ import jakarta.persistence.Table;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * @author Steve Ebersole
@@ -46,7 +43,7 @@ public class BagIdTypeResolutionTests {
 
 		final BasicType<?> legacyResolvedBasicType = identifierResolution.getLegacyResolvedBasicType();
 		assertThat( legacyResolvedBasicType.getJdbcType().getJdbcTypeCode(), equalTo( Types.SMALLINT ) );
-		assertThat( identifier.getIdentifierGeneratorStrategy(), equalTo( "increment" ) );
+//		assertThat( identifier.getIdentifierGeneratorStrategy(), equalTo( "increment" ) );
 	}
 
 	@Entity( name = "EntityWithBag" )

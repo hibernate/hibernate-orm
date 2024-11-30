@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.hbm2ddl;
 
@@ -53,7 +51,7 @@ import org.apache.tools.ant.types.FileSet;
  * @author Gavin King
  */
 public class SchemaValidatorTask extends MatchingTask {
-	private List<FileSet> fileSets = new LinkedList<>();
+	private final List<FileSet> fileSets = new LinkedList<>();
 
 	private File propertiesFile;
 	private File configurationFile;
@@ -62,7 +60,6 @@ public class SchemaValidatorTask extends MatchingTask {
 	private String physicalNamingStrategy = null;
 
 
-	@SuppressWarnings("UnusedDeclaration")
 	public void addFileset(FileSet fileSet) {
 		fileSets.add( fileSet );
 	}
@@ -81,7 +78,7 @@ public class SchemaValidatorTask extends MatchingTask {
 	}
 
 	/**
-	 * Set a <literal>.cfg.xml</literal> file
+	 * Set a {@code .cfg.xml} file
 	 * @param configurationFile the file name
 	 */
 	public void setConfig(File configurationFile) {
@@ -93,17 +90,14 @@ public class SchemaValidatorTask extends MatchingTask {
 		this.configurationFile = configurationFile;
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
 	public void setNamingStrategy(String namingStrategy) {
 		DeprecationLogger.DEPRECATION_LOGGER.logDeprecatedNamingStrategyAntArgument();
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
 	public void setImplicitNamingStrategy(String implicitNamingStrategy) {
 		this.implicitNamingStrategy = implicitNamingStrategy;
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
 	public void setPhysicalNamingStrategy(String physicalNamingStrategy) {
 		this.physicalNamingStrategy = physicalNamingStrategy;
 	}
@@ -141,7 +135,7 @@ public class SchemaValidatorTask extends MatchingTask {
 			throw new BuildException("File not found: " + e.getMessage(), e);
 		}
 		catch (IOException e) {
-			throw new BuildException("IOException : " + e.getMessage(), e);
+			throw new BuildException("IOException: " + e.getMessage(), e);
 		}
 		catch (BuildException e) {
 			throw e;
@@ -182,9 +176,8 @@ public class SchemaValidatorTask extends MatchingTask {
 	private String[] collectFiles() {
 		List<String> files = new ArrayList<>();
 
-		for ( Object fileSet : fileSets ) {
-			final FileSet fs = (FileSet) fileSet;
-			final DirectoryScanner ds = fs.getDirectoryScanner( getProject() );
+		for ( FileSet fileSet : fileSets ) {
+			final DirectoryScanner ds = fileSet.getDirectoryScanner( getProject() );
 
 			for ( String dsFile : ds.getIncludedFiles() ) {
 				File f = new File( dsFile );
@@ -198,9 +191,8 @@ public class SchemaValidatorTask extends MatchingTask {
 		return ArrayHelper.toStringArray( files );
 	}
 
-	@SuppressWarnings("deprecation")
 	private void configure(MetadataBuilder metadataBuilder, StandardServiceRegistry serviceRegistry) {
-		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
+		final StrategySelector strategySelector = serviceRegistry.requireService( StrategySelector.class );
 		if ( implicitNamingStrategy != null ) {
 			metadataBuilder.applyImplicitNamingStrategy(
 					strategySelector.resolveStrategy( ImplicitNamingStrategy.class, implicitNamingStrategy )

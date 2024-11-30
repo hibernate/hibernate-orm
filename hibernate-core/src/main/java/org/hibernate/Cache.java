@@ -1,15 +1,30 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
 /**
- * An API for directly querying and managing the second level cache.
+ * An API for directly querying and managing the second-level cache.
  * <p>
- * Note that only entities and collection roles explicitly annotated
+ * Hibernate has two levels of caching:
+ * <ul>
+ * <li>The <em>first-level cache</em> is better known as the persistence context.
+ *     It's the collection of managed entity instances associated with an open
+ *     {@link Session}.
+ * <li>The <em>second-level cache</em> is shared between all sessions belonging to
+ *     a given {@link SessionFactory}. It stores the state of an entity instance
+ *     in a destructured format, as a tuple of persistent attribute values. The
+ *     second-level cache is also used to store cached query result sets.
+ * </ul>
+ * <p>
+ * By nature, a second-level cache tends to undermine the ACID properties of
+ * transaction processing in a relational database. A second-level cache is often
+ * by far the easiest way to improve the performance of a system, but only at the
+ * cost of making it much more difficult to reason about concurrency. And so the
+ * cache is a potential source of bugs which are difficult to isolate and reproduce.
+ * <p>
+ * Therefore, only entities and collection roles explicitly annotated
  * {@link jakarta.persistence.Cacheable} or {@link org.hibernate.annotations.Cache}
  * are eligible for storage in the second-level cache, and so by default the state
  * of an entity is always retrieved from the database when requested.
@@ -32,7 +47,7 @@ package org.hibernate;
  * <p>
  * Very occasionally, it's necessary or advantageous to control the cache explicitly
  * via programmatic eviction, using, for example, {@link #evictEntityData(Class)} to
- * evicts a whole cache region, or {@link #evictEntityData(Class, Object)}, to evict
+ * evict a whole cache region, or {@link #evictEntityData(Class, Object)}, to evict
  * a single item.
  * <p>
  * If multiple entities or roles are mapped to the same cache region, they share
@@ -45,8 +60,54 @@ package org.hibernate;
  * semantics associated with the underlying caches. In particular, eviction via
  * the methods of this interface causes an immediate "hard" removal outside any
  * current transaction and/or locking scheme.
+ * <p>
+ * The {@link org.hibernate.annotations.Cache} annotation also specifies a
+ * {@link org.hibernate.annotations.CacheConcurrencyStrategy}, a policy governing
+ * access to the second-level cache by concurrent transactions. Either:
+ * <ul>
+ * <li>{@linkplain org.hibernate.annotations.CacheConcurrencyStrategy#READ_ONLY
+ *     read-only access} for immutable data,
+ * <li>{@linkplain org.hibernate.annotations.CacheConcurrencyStrategy#NONSTRICT_READ_WRITE
+ *     read/write access with no locking}, when concurrent updates are
+ *     extremely improbable,
+ * <li>{@linkplain org.hibernate.annotations.CacheConcurrencyStrategy#READ_WRITE
+ *     read/write access using soft locks} when concurrent updates are possible
+ *     but not common, or
+ * <li>{@linkplain org.hibernate.annotations.CacheConcurrencyStrategy#TRANSACTIONAL
+ *     transactional access} when concurrent updates are frequent.
+ * </ul>
+ * <p>
+ * It's important to always explicitly specify an appropriate policy, taking into
+ * account the expected patterns of data access, most importantly, the frequency
+ * of updates.
+ * <p>
+ * Query result sets may also be stored in the second-level cache. A query is made
+ * eligible for caching by calling
+ * {@link org.hibernate.query.SelectionQuery#setCacheable(boolean)}, and may be
+ * assigned to a region of the second-level cache by calling
+ * {@link org.hibernate.query.SelectionQuery#setCacheRegion(String)}. It's very
+ * important to understand that any entity instance in a query result set is cached
+ * by its id. If the entity itself is not {@linkplain org.hibernate.annotations.Cache
+ * cacheable}, or if the instance is not available in the second-level cache at the
+ * time a result set is retrieved from the cache, then the state of the entity must
+ * be read from the database. <em>This negates the benefits of caching the result
+ * set.</em> It's therefore very important to carefully "match" the caching policies
+ * of a query and the entities it returns.
+ * <p>
+ * Hibernate does not itself contain a high-quality implementation of a second-level
+ * cache backend with expiry, persistence, and replication, and depends on a plug-in
+ * implementation of {@link org.hibernate.cache.spi.RegionFactory} to integrate a
+ * backend storage mechanism. Therefore, the second-level cache is completely disabled
+ * by default, unless {@value org.hibernate.cfg.AvailableSettings#CACHE_REGION_FACTORY}
+ * is explicitly specified. For convenience, the second-level cache may also be enabled
+ * or disabled using {@value org.hibernate.cfg.AvailableSettings#USE_SECOND_LEVEL_CACHE}.
  *
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.annotations.Cache
+ * @see org.hibernate.annotations.CacheConcurrencyStrategy
+ * @see org.hibernate.cfg.AvailableSettings#CACHE_REGION_FACTORY
+ * @see org.hibernate.cfg.AvailableSettings#USE_SECOND_LEVEL_CACHE
  */
 public interface Cache extends jakarta.persistence.Cache {
 	/**

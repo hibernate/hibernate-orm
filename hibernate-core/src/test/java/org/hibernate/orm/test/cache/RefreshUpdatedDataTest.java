@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cache;
 
@@ -20,7 +18,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -33,8 +31,8 @@ import jakarta.persistence.Version;
 /**
  * @author Zhenlei Huang
  */
-@TestForIssue(jiraKey = "HHH-10649")
-@RequiresDialect(value = {H2Dialect.class})
+@JiraKey(value = "HHH-10649")
+@RequiresDialect(value = H2Dialect.class)
 public class RefreshUpdatedDataTest extends BaseCoreFunctionalTestCase {
 
 	@Override
@@ -50,11 +48,11 @@ public class RefreshUpdatedDataTest extends BaseCoreFunctionalTestCase {
 		super.configure( cfg );
 		Properties properties = Environment.getProperties();
 		if ( H2Dialect.class.getName().equals( properties.get( Environment.DIALECT ) ) ) {
-			cfg.setProperty( Environment.URL, "jdbc:h2:mem:db-mvcc" );
+			cfg.setProperty( Environment.URL, "jdbc:h2:mem:db-mvcc;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE" );
 		}
 		cfg.setProperty( Environment.CACHE_REGION_PREFIX, "" );
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
-		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "true" );
+		cfg.setProperty( Environment.GENERATE_STATISTICS, true );
+		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, true );
 	}
 
 	@Test
@@ -126,8 +124,8 @@ public class RefreshUpdatedDataTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		s.delete( readWriteCacheableItem );
-		s.delete( readWriteVersionedCacheableItem );
+		s.remove( readWriteCacheableItem );
+		s.remove( readWriteVersionedCacheableItem );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -182,7 +180,7 @@ public class RefreshUpdatedDataTest extends BaseCoreFunctionalTestCase {
 		assertEquals( version, readWriteVersionedCacheableItem.version );
 		assertEquals( 2, readWriteVersionedCacheableItem.getTags().size() );
 
-		s2.delete( readWriteVersionedCacheableItem );
+		s2.remove( readWriteVersionedCacheableItem );
 		s2.getTransaction().commit();
 		s2.close();
 	}

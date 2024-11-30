@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.cid.keymanytoone.association;
 
@@ -24,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 		annotatedClasses = {
 				Card.class, CardField.class, Key.class
 		})
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 public class EagerKeyManyToOneTest {
 	public static final String CARD_ID = "cardId";
 	public static final String KEY_ID = "keyId";
@@ -51,15 +49,15 @@ public class EagerKeyManyToOneTest {
 		scope.inTransaction(
 				session -> {
 					Card card = session.get( Card.class, CARD_ID );
-					session.delete( card.getField());
-					session.delete( card );
+					session.remove( card.getField());
+					session.remove( card );
 				}
 		);
 	}
 
 	@Test
 	public void testLoadEntityWithEagerFetchingToKeyManyToOneReferenceBackToSelf(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {

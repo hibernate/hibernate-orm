@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id.enhanced;
 
@@ -328,7 +326,7 @@ public class OptimizerUnitTest {
 			StandardOptimizerDescriptor descriptor,
 			long initial,
 			int increment) {
-		return OptimizerFactory.buildOptimizer( descriptor.getExternalName(), Long.class, increment, initial );
+		return OptimizerFactory.buildOptimizer( descriptor, Long.class, increment, initial );
 	}
 
 	private static class SourceMock implements AccessCallback {

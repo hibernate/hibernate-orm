@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.boot.database.qualfiedTableNaming;
 
@@ -16,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import org.hibernate.MappingException;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.SQLDelete;
@@ -32,10 +29,12 @@ import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -43,7 +42,11 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.model.MutationOperationGroup;
+import org.hibernate.sql.model.PreparableMutationOperation;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.exec.ScriptTargetOutputToWriter;
@@ -54,9 +57,13 @@ import org.hibernate.tool.schema.spi.TargetDescriptor;
 
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.CustomParameterized;
+import org.hibernate.testing.orm.junit.JiraKeyGroup;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -80,13 +87,21 @@ import jakarta.persistence.TableGenerator;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(CustomParameterized.class)
-@TestForIssue(jiraKey = { "HHH-14921", "HHH-14922", "HHH-15212" })
+@JiraKeyGroup( value = {
+		@JiraKey( value = "HHH-14921" ),
+		@JiraKey( value = "HHH-14922" ),
+		@JiraKey( value = "HHH-15212" ),
+		@JiraKey( value = "HHH-16177" )
+} )
+@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
 public class DefaultCatalogAndSchemaTest {
 
 	private static final String SQL_QUOTE_CHARACTER_CLASS = "([`\"]|\\[|\\])";
 
 	private static final String EXPLICIT_CATALOG = "someExplicitCatalog";
 	private static final String EXPLICIT_SCHEMA = "someExplicitSchema";
+	private static final String IMPLICIT_FILE_LEVEL_CATALOG = "someImplicitFileLevelCatalog";
+	private static final String IMPLICIT_FILE_LEVEL_SCHEMA = "someImplicitFileLevelSchema";
 
 	// Yes this is invalid SQL, and in most cases it simply wouldn't work because of missing columns,
 	// but in this case we don't care: we just want to check catalog/schema substitution.
@@ -218,8 +233,12 @@ public class DefaultCatalogAndSchemaTest {
 				break;
 			case SESSION_FACTORY_SERVICE_REGISTRY:
 				serviceRegistry = createStandardServiceRegistry( configuredDefaultCatalog, configuredDefaultSchema );
-				sfb = new SessionFactoryBuilderImpl( metadata, new SessionFactoryOptionsBuilder( serviceRegistry,
-						((MetadataImpl) metadata).getBootstrapContext() ) );
+				BootstrapContext bootstrapContext = ((MetadataImpl) metadata).getBootstrapContext();
+				sfb = new SessionFactoryBuilderImpl(
+						metadata,
+						new SessionFactoryOptionsBuilder( serviceRegistry, bootstrapContext),
+						bootstrapContext
+				);
 				break;
 			default:
 				throw new IllegalStateException( "Unknown settings mode: " + settingsMode );
@@ -267,14 +286,10 @@ public class DefaultCatalogAndSchemaTest {
 		final BootstrapServiceRegistry bsr = bsrb.build();
 
 		final Map<String, Object> settings = new HashMap<>();
+		settings.put( PersistentTableStrategy.DROP_ID_TABLES, "true" );
 		settings.put( GlobalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
 		settings.put( LocalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
-		if ( !Environment.getProperties().containsKey( Environment.CONNECTION_PROVIDER ) ) {
-			settings.put(
-					AvailableSettings.CONNECTION_PROVIDER,
-					SharedDriverManagerConnectionProviderImpl.getInstance()
-			);
-		}
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS, "true" );
 		if ( defaultCatalog != null ) {
 			settings.put( AvailableSettings.DEFAULT_CATALOG, defaultCatalog );
 		}
@@ -282,7 +297,7 @@ public class DefaultCatalogAndSchemaTest {
 			settings.put( AvailableSettings.DEFAULT_SCHEMA, defaultSchema );
 		}
 
-		final StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder( bsr );
+		final StandardServiceRegistryBuilder ssrb = ServiceRegistryUtil.serviceRegistryBuilder( bsr );
 		ssrb.applySettings( settings );
 		StandardServiceRegistry registry = ssrb.build();
 		toClose.add( registry );
@@ -292,24 +307,45 @@ public class DefaultCatalogAndSchemaTest {
 	@Test
 	public void createSchema_fromSessionFactory() {
 		String script = generateScriptFromSessionFactory( "create" );
+		verifyDDLCreateCatalogOrSchema( script );
+		verifyDDLQualifiers( script );
+	}
+
+	@Test
+	@SkipForDialect(value = SQLServerDialect.class,
+			comment = "SQL Server and Sybase support catalogs but their implementation of DatabaseMetaData"
+					+ " throws exceptions when calling getSchemas/getTables with a non-existing catalog,"
+					+ " which results in nasty errors when generating an update script"
+					+ " and some catalogs don't exist.")
+	@SkipForDialect(value = SybaseDialect.class,
+			comment = "SQL Server and Sybase support catalogs but their implementation of DatabaseMetaData"
+					+ " throws exceptions when calling getSchemas/getTables with a non-existing catalog,"
+					+ " which results in nasty errors when generating an update script"
+					+ " and some catalogs don't exist.")
+	public void updateSchema_fromSessionFactory() {
+		String script = generateScriptFromSessionFactory( "update" );
+		verifyDDLCreateCatalogOrSchema( script );
 		verifyDDLQualifiers( script );
 	}
 
 	@Test
 	public void dropSchema_fromSessionFactory() {
 		String script = generateScriptFromSessionFactory( "drop" );
+		verifyDDLDropCatalogOrSchema( script );
 		verifyDDLQualifiers( script );
 	}
 
 	@Test
 	public void createSchema_fromMetadata() {
 		String script = generateScriptFromMetadata( SchemaExport.Action.CREATE );
+		verifyDDLCreateCatalogOrSchema( script );
 		verifyDDLQualifiers( script );
 	}
 
 	@Test
 	public void dropSchema_fromMetadata() {
 		String script = generateScriptFromMetadata( SchemaExport.Action.DROP );
+		verifyDDLDropCatalogOrSchema( script );
 		verifyDDLQualifiers( script );
 	}
 
@@ -374,34 +410,52 @@ public class DefaultCatalogAndSchemaTest {
 
 		// This will include SQL generated by ID generators in some cases, which will be validated here
 		// because ID generators table/sequence names are prefixed with the owning entity name.
-		verifyOnlyQualifier( persister.getSQLInsertStrings(), SqlType.RUNTIME,
-				jpaEntityName, expectedQualifier );
-		if ( persister.isIdentifierAssignedByInsert() ) {
-			verifyOnlyQualifier( persister.getSQLIdentityInsertString(), SqlType.RUNTIME,
-					jpaEntityName, expectedQualifier );
-		}
-		try {
-			verifyOnlyQualifierOptional( persister.getIdentitySelectString(), SqlType.RUNTIME,
-					jpaEntityName, expectedQualifier );
-		}
-		catch (MappingException e) {
-			if ( e.getMessage().contains( "does not support identity key generation" ) ) {
-				// For some reason Oracle12cIdentityColumnSupport#supportsInsertSelectIdentity() returns true,
-				// but getIdentitySelectString is not implemented, resulting in runtime exceptions.
-				// Whatever, we'll just ignore this for now.
+
+		{
+			final MutationOperationGroup staticSqlInsertGroup = persister.getInsertCoordinator().getStaticMutationOperationGroup();
+			final String[] insertSqls = new String[staticSqlInsertGroup.getNumberOfOperations()];
+			for ( int tablePosition = 0;
+					tablePosition < staticSqlInsertGroup.getNumberOfOperations();
+					tablePosition++ ) {
+				final MutationOperation insertOperation = staticSqlInsertGroup.getOperation( tablePosition );
+				if ( insertOperation instanceof PreparableMutationOperation ) {
+					insertSqls[tablePosition] = ( (PreparableMutationOperation) insertOperation ).getSqlString();
+				}
 			}
-			else {
-				throw e;
-			}
+			verifyOnlyQualifier( insertSqls, SqlType.RUNTIME, jpaEntityName, expectedQualifier );
 		}
 
-		verifyOnlyQualifier( persister.getSQLUpdateStrings(), SqlType.RUNTIME,
-				jpaEntityName, expectedQualifier );
-		verifyOnlyQualifier( persister.getSQLLazyUpdateStrings(), SqlType.RUNTIME,
-				jpaEntityName, expectedQualifier );
+		String identitySelectString = persister.getIdentitySelectString();
+		if ( identitySelectString != null ) {
+			verifyOnlyQualifierOptional( identitySelectString, SqlType.RUNTIME, jpaEntityName, expectedQualifier );
+		}
 
-		verifyOnlyQualifier( persister.getSQLDeleteStrings(), SqlType.RUNTIME,
-				jpaEntityName, expectedQualifier );
+		{
+			final MutationOperationGroup staticSqlUpdateGroup = persister.getUpdateCoordinator().getStaticMutationOperationGroup();
+			final String[] sqlUpdateStrings = new String[staticSqlUpdateGroup.getNumberOfOperations()];
+			for ( int tablePosition = 0;
+					tablePosition < staticSqlUpdateGroup.getNumberOfOperations();
+					tablePosition++ ) {
+				final MutationOperation operation = staticSqlUpdateGroup.getOperation( tablePosition );
+				if ( operation instanceof PreparableMutationOperation ) {
+					sqlUpdateStrings[tablePosition] = ( (PreparableMutationOperation) operation ).getSqlString();
+				}
+			}
+			verifyOnlyQualifier( sqlUpdateStrings, SqlType.RUNTIME, jpaEntityName, expectedQualifier );
+		}
+
+
+		{
+			final MutationOperationGroup staticDeleteGroup = persister.getDeleteCoordinator().getStaticMutationOperationGroup();
+			final String[] sqlDeleteStrings = new String[staticDeleteGroup.getNumberOfOperations()];
+			for ( int tablePosition = 0; tablePosition < staticDeleteGroup.getNumberOfOperations(); tablePosition++ ) {
+				final MutationOperation operation = staticDeleteGroup.getOperation( tablePosition );
+				if ( operation instanceof PreparableMutationOperation ) {
+					sqlDeleteStrings[tablePosition] = ( (PreparableMutationOperation) operation ).getSqlString();
+				}
+			}
+			verifyOnlyQualifier( sqlDeleteStrings, SqlType.RUNTIME, jpaEntityName, expectedQualifier );
+		}
 
 		// This is used in the "select" id generator in particular.
 		verifyOnlyQualifierOptional( persister.getSelectByUniqueKeyString( "basic" ), SqlType.RUNTIME,
@@ -482,6 +536,46 @@ public class DefaultCatalogAndSchemaTest {
 				.getMappingMetamodel()
 				.getEntityDescriptor( entityClass );
 		return expectedType.cast( persister.getIdentifierGenerator() );
+	}
+
+	private void verifyDDLCreateCatalogOrSchema(String sql) {
+		Dialect dialect = sessionFactory.getJdbcServices().getDialect();
+
+		if ( sessionFactory.getJdbcServices().getDialect().canCreateCatalog() ) {
+			assertThat( sql ).contains( dialect.getCreateCatalogCommand( EXPLICIT_CATALOG ) );
+			assertThat( sql ).contains( dialect.getCreateCatalogCommand( IMPLICIT_FILE_LEVEL_CATALOG ) );
+			if ( expectedDefaultCatalog != null ) {
+				assertThat( sql ).contains( dialect.getCreateCatalogCommand( expectedDefaultCatalog ) );
+			}
+		}
+
+		if ( sessionFactory.getJdbcServices().getDialect().canCreateSchema() ) {
+			assertThat( sql ).contains( dialect.getCreateSchemaCommand( EXPLICIT_SCHEMA ) );
+			assertThat( sql ).contains( dialect.getCreateSchemaCommand( IMPLICIT_FILE_LEVEL_SCHEMA ) );
+			if ( expectedDefaultSchema != null ) {
+				assertThat( sql ).contains( dialect.getCreateSchemaCommand( expectedDefaultSchema ) );
+			}
+		}
+	}
+
+	private void verifyDDLDropCatalogOrSchema(String sql) {
+		Dialect dialect = sessionFactory.getJdbcServices().getDialect();
+
+		if ( sessionFactory.getJdbcServices().getDialect().canCreateCatalog() ) {
+			assertThat( sql ).contains( dialect.getDropCatalogCommand( EXPLICIT_CATALOG ) );
+			assertThat( sql ).contains( dialect.getDropCatalogCommand( IMPLICIT_FILE_LEVEL_CATALOG ) );
+			if ( expectedDefaultCatalog != null ) {
+				assertThat( sql ).contains( dialect.getDropCatalogCommand( expectedDefaultCatalog ) );
+			}
+		}
+
+		if ( sessionFactory.getJdbcServices().getDialect().canCreateSchema() ) {
+			assertThat( sql ).contains( dialect.getDropSchemaCommand( EXPLICIT_SCHEMA ) );
+			assertThat( sql ).contains( dialect.getDropSchemaCommand( IMPLICIT_FILE_LEVEL_SCHEMA ) );
+			if ( expectedDefaultSchema != null ) {
+				assertThat( sql ).contains( dialect.getDropSchemaCommand( expectedDefaultSchema ) );
+			}
+		}
 	}
 
 	private void verifyDDLQualifiers(String sql) {
@@ -593,7 +687,7 @@ public class DefaultCatalogAndSchemaTest {
 	}
 
 	private ExpectedQualifier expectedImplicitFileLevelQualifier() {
-		return expectedQualifier( "someImplicitFileLevelCatalog", "someImplicitFileLevelSchema" );
+		return expectedQualifier( IMPLICIT_FILE_LEVEL_CATALOG, IMPLICIT_FILE_LEVEL_SCHEMA );
 	}
 
 	private ExpectedQualifier expectedQualifier(String catalog, String schema) {
@@ -603,16 +697,15 @@ public class DefaultCatalogAndSchemaTest {
 		);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private String generateScriptFromSessionFactory(String action) {
 		ServiceRegistryImplementor serviceRegistry = sessionFactory.getServiceRegistry();
 		Map<String, Object> settings = new HashMap<>(
 				serviceRegistry.getService( ConfigurationService.class ).getSettings()
 		);
 		StringWriter writer = new StringWriter();
-		settings.put( AvailableSettings.HBM2DDL_SCRIPTS_ACTION, action );
-		settings.put( AvailableSettings.HBM2DDL_SCRIPTS_CREATE_TARGET, writer );
-		settings.put( AvailableSettings.HBM2DDL_SCRIPTS_DROP_TARGET, writer );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION, action );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET, writer );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_DROP_TARGET, writer );
 
 		SchemaManagementToolCoordinator.process(
 				metadata, serviceRegistry, settings, DelayedDropRegistryNotAvailableImpl.INSTANCE );
@@ -1035,7 +1128,7 @@ public class DefaultCatalogAndSchemaTest {
 	public static class EntityWithDefaultQualifiersWithTableGenerator {
 		public static final String NAME = "EntityWithDefaultQualifiersWithTableGenerator";
 		@Id
-		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = NAME + "_generator")
+		@GeneratedValue(strategy = GenerationType.TABLE, generator = NAME + "_generator")
 		@TableGenerator(name = NAME + "_generator", table = NAME + "_tableseq")
 		private Long id;
 		@Basic
@@ -1047,7 +1140,7 @@ public class DefaultCatalogAndSchemaTest {
 	public static class EntityWithExplicitQualifiersWithTableGenerator {
 		public static final String NAME = "EntityWithExplicitQualifiersWithTableGenerator";
 		@Id
-		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = NAME + "_generator")
+		@GeneratedValue(strategy = GenerationType.TABLE, generator = NAME + "_generator")
 		@TableGenerator(name = NAME + "_generator", table = NAME + "_tableseq",
 				catalog = EXPLICIT_CATALOG, schema = EXPLICIT_SCHEMA)
 		private Long id;
@@ -1060,7 +1153,7 @@ public class DefaultCatalogAndSchemaTest {
 	public static class EntityWithDefaultQualifiersWithIncrementGenerator {
 		public static final String NAME = "EntityWithDefaultQualifiersWithIncrementGenerator";
 		@Id
-		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = NAME + "_generator")
+		@GeneratedValue(generator = NAME + "_generator")
 		@GenericGenerator(name = NAME + "_generator", strategy = "increment")
 		private Long id;
 		@Basic
@@ -1072,7 +1165,7 @@ public class DefaultCatalogAndSchemaTest {
 	public static class EntityWithExplicitQualifiersWithIncrementGenerator {
 		public static final String NAME = "EntityWithExplicitQualifiersWithIncrementGenerator";
 		@Id
-		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = NAME + "_generator")
+		@GeneratedValue(generator = NAME + "_generator")
 		@GenericGenerator(name = NAME + "_generator", strategy = "increment", parameters = {
 				@Parameter(name = "catalog", value = EXPLICIT_CATALOG),
 				@Parameter(name = "schema", value = EXPLICIT_SCHEMA)
@@ -1086,7 +1179,7 @@ public class DefaultCatalogAndSchemaTest {
 	public static class EntityWithDefaultQualifiersWithEnhancedSequenceGenerator {
 		public static final String NAME = "EntityWithDefaultQualifiersWithEnhancedSequenceGenerator";
 		@Id
-		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = NAME + "_generator")
+		@GeneratedValue(generator = NAME + "_generator")
 		@GenericGenerator(name = NAME + "_generator", strategy = "enhanced-sequence", parameters = {
 				@Parameter(name = "sequence_name", value = NAME + "_seq")
 		})
@@ -1100,7 +1193,7 @@ public class DefaultCatalogAndSchemaTest {
 	public static class EntityWithExplicitQualifiersWithEnhancedSequenceGenerator {
 		public static final String NAME = "EntityWithExplicitQualifiersWithEnhancedSequenceGenerator";
 		@Id
-		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = NAME + "_generator")
+		@GeneratedValue(generator = NAME + "_generator")
 		@GenericGenerator(name = NAME + "_generator", strategy = "enhanced-sequence", parameters = {
 				@Parameter(name = "sequence_name", value = NAME + "_seq"),
 				@Parameter(name = "catalog", value = EXPLICIT_CATALOG),

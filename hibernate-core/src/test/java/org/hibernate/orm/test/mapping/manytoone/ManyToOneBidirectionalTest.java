@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.manytoone;
 
@@ -25,7 +23,7 @@ import static org.hibernate.orm.test.mapping.manytoone.ManyToOneBidirectionalTes
  * @author Andrea Boriero
  */
 @DomainModel( annotatedClasses = { EntityTest.class, EntityTest2.class } )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 public class ManyToOneBidirectionalTest {
 
 	@BeforeEach
@@ -37,16 +35,16 @@ public class ManyToOneBidirectionalTest {
 					EntityTest entity3 = new EntityTest( 3, "e3" );
 					entity.setEntity2( entity2 );
 					entity2.setEntity( entity3 );
-					session.save( entity3 );
-					session.save( entity2 );
-					session.save( entity );
+					session.persist( entity3 );
+					session.persist( entity2 );
+					session.persist( entity );
 				}
 		);
 	}
 
 	@Test
 	public void testGet(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cfg;
 
@@ -10,15 +8,18 @@ import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.hibernate.EmptyInterceptor;
+import jakarta.persistence.PersistenceUnitTransactionType;
+import org.hibernate.CustomEntityDirtinessStrategy;
+import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
+import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
@@ -26,17 +27,18 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.internal.ClassmateContext;
+import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.jaxb.spi.Binding;
+import org.hibernate.boot.model.FunctionContributor;
+import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.internal.InstanceBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
-import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
-import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
@@ -46,13 +48,15 @@ import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.XmlMappingBinderAccess;
-import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.EmptyInterceptor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.tool.schema.Action;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SerializationException;
 import org.hibernate.usertype.UserType;
@@ -60,31 +64,45 @@ import org.hibernate.usertype.UserType;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.SharedCacheMode;
 
+
 /**
- * A convenience API making it easier to bootstrap an instance of Hibernate
- * using {@link MetadataBuilder} and {@link StandardServiceRegistryBuilder}
- * under the covers.
+ * A convenience API making it easier to bootstrap an instance of Hibernate.
  * <p>
  * An instance of {@code Configuration} may be obtained simply by
- * {@linkplain #Configuration() instantiation}.
- * <p>
- * A {@code Configuration} may be used to aggregate:
+ * {@linkplain #Configuration() instantiation}, and may be used to aggregate:
  * <ul>
  * <li>{@linkplain #setProperty(String, String) configuration properties}
  *     from various sources, and
  * <li>entity O/R mappings, defined in either {@linkplain #addAnnotatedClass
  *    annotated classes}, or {@linkplain #addFile XML mapping documents}.
  * </ul>
+ * <p>
  * Note that XML mappings may be expressed using the JPA {@code orm.xml}
  * format, or in Hibernate's legacy {@code .hbm.xml} format.
  * <p>
+ * Configuration properties are enumerated by {@link AvailableSettings}.
+ * <pre>
+ *  SessionFactory factory = new Configuration()
+ *     // scan classes for mapping annotations
+ *     .addAnnotatedClass(Item.class)
+ *     .addAnnotatedClass(Bid.class)
+ *     .addAnnotatedClass(User.class)
+ *     // read package-level annotations of the named package
+ *     .addPackage("org.hibernate.auction")
+ *     // set a configuration property
+ *     .setProperty(AvailableSettings.DATASOURCE,
+ *                  "java:comp/env/jdbc/test")
+ *     .buildSessionFactory();
+ * </pre>
+ * <p>
  * In addition, there are convenience methods for adding
- * {@link #addAttributeConverter attribute converters},
- * {@link #registerTypeContributor type contributors},
- * {@link #addSqlFunction SQL function descriptors}, and
- * {@link #addAuxiliaryDatabaseObject auxiliary database objects}, for
- * setting {@link #setImplicitNamingStrategy naming strategies} and a
- * {@link #setCurrentTenantIdentifierResolver tenant id resolver},
+ * {@linkplain #addAttributeConverter attribute converters},
+ * {@linkplain #registerTypeContributor type contributors},
+ * {@linkplain #addEntityNameResolver entity name resolvers},
+ * {@linkplain #addSqlFunction SQL function descriptors}, and
+ * {@linkplain #addAuxiliaryDatabaseObject auxiliary database objects}, for
+ * setting {@linkplain #setImplicitNamingStrategy naming strategies} and a
+ * {@linkplain #setCurrentTenantIdentifierResolver tenant id resolver},
  * and more.
  * <p>
  * Finally, an instance of {@link SessionFactoryBuilder} is obtained by
@@ -93,23 +111,28 @@ import jakarta.persistence.SharedCacheMode;
  * Ultimately, this class simply delegates to {@link MetadataBuilder} and
  * {@link StandardServiceRegistryBuilder} to actually do the hard work of
  * {@linkplain #buildSessionFactory() building} the {@code SessionFactory}.
- * <p>
- * Configuration properties are enumerated by {@link AvailableSettings}.
+ * Programs may directly use the APIs defined under {@link org.hibernate.boot},
+ * as an alternative to using an instance of this class.
+ *
+ * @apiNote The {@link org.hibernate.jpa.HibernatePersistenceConfiguration}
+ * is a new alternative to this venerable API, and extends the JPA-standard
+ * {@link jakarta.persistence.PersistenceConfiguration}.
  *
  * @author Gavin King
  * @author Steve Ebersole
  *
  * @see SessionFactory
  * @see AvailableSettings
+ * @see org.hibernate.boot
+ * @see org.hibernate.jpa.HibernatePersistenceConfiguration
  */
 public class Configuration {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( Configuration.class );
 
-	public static final String ARTEFACT_PROCESSING_ORDER = AvailableSettings.ARTIFACT_PROCESSING_ORDER;
-
 	private final BootstrapServiceRegistry bootstrapServiceRegistry;
 	private final MetadataSources metadataSources;
-	private final ClassmateContext classmateContext;
+	final private StandardServiceRegistryBuilder standardServiceRegistryBuilder;
+	private final ClassmateContext classmateContext = new ClassmateContext();
 
 	// used during processing mappings
 	private ImplicitNamingStrategy implicitNamingStrategy;
@@ -117,23 +140,27 @@ public class Configuration {
 	private final List<BasicType<?>> basicTypes = new ArrayList<>();
 	private List<UserTypeRegistration> userTypeRegistrations;
 	private final List<TypeContributor> typeContributorRegistrations = new ArrayList<>();
-	private Map<String, NamedHqlQueryDefinition> namedQueries;
-	private Map<String, NamedNativeQueryDefinition> namedSqlQueries;
-	private Map<String, NamedProcedureCallDefinition> namedProcedureCallMap;
-	private Map<String, NamedResultSetMappingDescriptor> sqlResultSetMappings;
-	private Map<String, NamedEntityGraphDefinition> namedEntityGraphMap;
+	private final List<FunctionContributor> functionContributorRegistrations = new ArrayList<>();
+	private final Map<String, NamedHqlQueryDefinition<?>> namedQueries = new HashMap<>();
+	private final Map<String, NamedNativeQueryDefinition<?>> namedSqlQueries = new HashMap<>();
+	private final Map<String, NamedProcedureCallDefinition> namedProcedureCallMap = new HashMap<>();
+	private final Map<String, NamedResultSetMappingDescriptor> sqlResultSetMappings = new HashMap<>();
+	private final Map<String, NamedEntityGraphDefinition> namedEntityGraphMap = new HashMap<>();
 
 	private Map<String, SqmFunctionDescriptor> customFunctionDescriptors;
 	private List<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
 	private HashMap<Class<?>, ConverterDescriptor> attributeConverterDescriptorsByClass;
+	private List<EntityNameResolver> entityNameResolvers = new ArrayList<>();
 
 	// used to build SF
-	private StandardServiceRegistryBuilder standardServiceRegistryBuilder;
+	private Properties properties = new Properties();
+	private Interceptor interceptor = EmptyInterceptor.INSTANCE;
 	private EntityNotFoundDelegate entityNotFoundDelegate;
-	private Interceptor interceptor;
 	private SessionFactoryObserver sessionFactoryObserver;
-	private CurrentTenantIdentifierResolver currentTenantIdentifierResolver;
-	private Properties properties;
+	private StatementInspector statementInspector;
+	private CurrentTenantIdentifierResolver<Object> currentTenantIdentifierResolver;
+	private CustomEntityDirtinessStrategy customEntityDirtinessStrategy;
+	private ColumnOrderingStrategy columnOrderingStrategy;
 	private SharedCacheMode sharedCacheMode;
 
 	/**
@@ -151,10 +178,10 @@ public class Configuration {
 	 * and a newly instantiated {@link MetadataSources}.
 	 */
 	public Configuration(BootstrapServiceRegistry serviceRegistry) {
-		this.bootstrapServiceRegistry = serviceRegistry;
-		this.metadataSources = new MetadataSources( serviceRegistry, createMappingBinderAccess( serviceRegistry ) );
-		this.classmateContext = new ClassmateContext();
-		reset();
+		bootstrapServiceRegistry = serviceRegistry;
+		metadataSources = new MetadataSources( serviceRegistry, createMappingBinderAccess( serviceRegistry ) );
+		standardServiceRegistryBuilder = new StandardServiceRegistryBuilder( bootstrapServiceRegistry );
+		properties.putAll( standardServiceRegistryBuilder.getSettings() );
 	}
 
 	private XmlMappingBinderAccess createMappingBinderAccess(BootstrapServiceRegistry serviceRegistry) {
@@ -169,18 +196,17 @@ public class Configuration {
 	 * {@link BootstrapServiceRegistry} obtained from the {@link MetadataSources}.
 	 */
 	public Configuration(MetadataSources metadataSources) {
-		this.bootstrapServiceRegistry = getBootstrapRegistry( metadataSources.getServiceRegistry() );
 		this.metadataSources = metadataSources;
-		this.classmateContext = new ClassmateContext();
-		reset();
+		bootstrapServiceRegistry = getBootstrapRegistry( metadataSources.getServiceRegistry() );
+		standardServiceRegistryBuilder = new StandardServiceRegistryBuilder( bootstrapServiceRegistry );
+		properties.putAll( standardServiceRegistryBuilder.getSettings() );
 	}
 
 	private static BootstrapServiceRegistry getBootstrapRegistry(ServiceRegistry serviceRegistry) {
-		if ( serviceRegistry instanceof BootstrapServiceRegistry ) {
-			return (BootstrapServiceRegistry) serviceRegistry;
+		if ( serviceRegistry instanceof BootstrapServiceRegistry bootstrapServiceRegistry ) {
+			return bootstrapServiceRegistry;
 		}
-		else if ( serviceRegistry instanceof StandardServiceRegistry ) {
-			final StandardServiceRegistry ssr = (StandardServiceRegistry) serviceRegistry;
+		else if ( serviceRegistry instanceof StandardServiceRegistry ssr ) {
 			return (BootstrapServiceRegistry) ssr.getParentServiceRegistry();
 		}
 
@@ -189,21 +215,6 @@ public class Configuration {
 						"and could not determine how to locate BootstrapServiceRegistry " +
 						"from Configuration instantiation"
 		);
-	}
-
-	protected void reset() {
-		implicitNamingStrategy = ImplicitNamingStrategyJpaCompliantImpl.INSTANCE;
-		physicalNamingStrategy = PhysicalNamingStrategyStandardImpl.INSTANCE;
-		namedQueries = new HashMap<>();
-		namedSqlQueries = new HashMap<>();
-		sqlResultSetMappings = new HashMap<>();
-		namedEntityGraphMap = new HashMap<>();
-		namedProcedureCallMap = new HashMap<>();
-
-		standardServiceRegistryBuilder = new StandardServiceRegistryBuilder( bootstrapServiceRegistry );
-		interceptor = EmptyInterceptor.INSTANCE;
-		properties = new Properties(  );
-		properties.putAll( standardServiceRegistryBuilder.getSettings() );
 	}
 
 
@@ -223,7 +234,7 @@ public class Configuration {
 	 *
 	 * @param properties The new set of properties
 	 *
-	 * @return this for method chaining
+	 * @return {@code this} for method chaining
 	 */
 	public Configuration setProperties(Properties properties) {
 		this.properties = properties;
@@ -248,7 +259,7 @@ public class Configuration {
 	 * @param propertyName The name of the property to set
 	 * @param value The new property value
 	 *
-	 * @return this for method chaining
+	 * @return {@code this} for method chaining
 	 */
 	public Configuration setProperty(String propertyName, String value) {
 		properties.setProperty( propertyName, value );
@@ -256,30 +267,112 @@ public class Configuration {
 	}
 
 	/**
+	 * Set a property to a boolean value by name
+	 *
+	 * @param propertyName The name of the property to set
+	 * @param value The new boolean property value
+	 *
+	 * @return {@code this} for method chaining
+	 *
+	 * @since 6.5
+	 */
+	public Configuration setProperty(String propertyName, boolean value) {
+		return setProperty( propertyName, Boolean.toString(value) );
+	}
+
+	/**
+	 * Set a property to a Java class name
+	 *
+	 * @param propertyName The name of the property to set
+	 * @param value The Java class
+	 *
+	 * @return {@code this} for method chaining
+	 *
+	 * @since 6.5
+	 */
+	public Configuration setProperty(String propertyName, Class<?> value) {
+		return setProperty( propertyName, value.getName() );
+	}
+
+	/**
+	 * Set a property to the name of a value of an enumerated type
+	 *
+	 * @param propertyName The name of the property to set
+	 * @param value A value of an enumerated type
+	 *
+	 * @return {@code this} for method chaining
+	 *
+	 * @since 6.5
+	 */
+	public Configuration setProperty(String propertyName, Enum<?> value) {
+		return setProperty( propertyName, value.name() );
+	}
+
+	/**
+	 * Set a property to an integer value by name
+	 *
+	 * @param propertyName The name of the property to set
+	 * @param value The new integer property value
+	 *
+	 * @return {@code this} for method chaining
+	 *
+	 * @since 6.5
+	 */
+	public Configuration setProperty(String propertyName, int value) {
+		return setProperty( propertyName, Integer.toString(value) );
+	}
+
+	/**
 	 * Add the given properties to ours.
 	 *
 	 * @param properties The properties to add.
 	 *
-	 * @return this for method chaining
+	 * @return {@code this} for method chaining
 	 */
 	public Configuration addProperties(Properties properties) {
 		this.properties.putAll( properties );
 		return this;
 	}
 
-	public void setImplicitNamingStrategy(ImplicitNamingStrategy implicitNamingStrategy) {
-		this.implicitNamingStrategy = implicitNamingStrategy;
+	/**
+	 * The {@link ImplicitNamingStrategy}, if any, to use in this configuration.
+	 */
+	public ImplicitNamingStrategy getImplicitNamingStrategy() {
+		return implicitNamingStrategy;
 	}
 
-	public void setPhysicalNamingStrategy(PhysicalNamingStrategy physicalNamingStrategy) {
+	/**
+	 * Set an {@link ImplicitNamingStrategy} to use in this configuration.
+	 *
+	 * @return {@code this} for method chaining
+	 */
+	public Configuration setImplicitNamingStrategy(ImplicitNamingStrategy implicitNamingStrategy) {
+		this.implicitNamingStrategy = implicitNamingStrategy;
+		return this;
+	}
+
+	/**
+	 * The {@link PhysicalNamingStrategy}, if any, to use in this configuration.
+	 */
+	public PhysicalNamingStrategy getPhysicalNamingStrategy() {
+		return physicalNamingStrategy;
+	}
+
+	/**
+	 * Set a {@link PhysicalNamingStrategy} to use in this configuration.
+	 *
+	 * @return {@code this} for method chaining
+	 */
+	public Configuration setPhysicalNamingStrategy(PhysicalNamingStrategy physicalNamingStrategy) {
 		this.physicalNamingStrategy = physicalNamingStrategy;
+		return this;
 	}
 
 	/**
 	 * Use the mappings and properties specified in an application resource named
 	 * {@code hibernate.cfg.xml}.
 	 *
-	 * @return this for method chaining
+	 * @return {@code this} for method chaining
 	 *
 	 * @throws HibernateException Generally indicates we cannot find {@code hibernate.cfg.xml}
 	 *
@@ -296,7 +389,7 @@ public class Configuration {
 	 *
 	 * @param resource The resource to use
 	 *
-	 * @return this for method chaining
+	 * @return {@code this} for method chaining
 	 *
 	 * @throws HibernateException Generally indicates we cannot find the named resource
 	 */
@@ -311,6 +404,7 @@ public class Configuration {
 	/**
 	 * Intended for internal testing use only!!!
 	 */
+	@Internal
 	public StandardServiceRegistryBuilder getStandardServiceRegistryBuilder() {
 		return standardServiceRegistryBuilder;
 	}
@@ -322,7 +416,7 @@ public class Configuration {
 	 *
 	 * @param url URL from which you wish to load the configuration
 	 *
-	 * @return this for method chaining
+	 * @return {@code this} for method chaining
 	 *
 	 * @throws HibernateException Generally indicates a problem access the url
 	 */
@@ -339,7 +433,7 @@ public class Configuration {
 	 *
 	 * @param configFile File from which you wish to load the configuration
 	 *
-	 * @return this for method chaining
+	 * @return {@code this} for method chaining
 	 *
 	 * @throws HibernateException Generally indicates a problem access the file
 	 */
@@ -349,10 +443,94 @@ public class Configuration {
 		return this;
 	}
 
+	// New typed property setters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	/**
+	 * Set {@value AvailableSettings#SHOW_SQL}, {@value AvailableSettings#FORMAT_SQL},
+	 * and {@value AvailableSettings#HIGHLIGHT_SQL}.
+	 *
+	 * @param showSql should SQL be logged to console?
+	 * @param formatSql should logged SQL be formatted
+	 * @param highlightSql should logged SQL be highlighted with pretty colors
+	 */
+	public Configuration showSql(boolean showSql, boolean formatSql, boolean highlightSql) {
+		setProperty( AvailableSettings.SHOW_SQL, Boolean.toString(showSql) );
+		setProperty( AvailableSettings.FORMAT_SQL, Boolean.toString(formatSql) );
+		setProperty( AvailableSettings.HIGHLIGHT_SQL, Boolean.toString(highlightSql) );
+		return this;
+	}
+
+	/**
+	 * Set {@value AvailableSettings#HBM2DDL_AUTO}.
+	 *
+	 * @param action the {@link Action}
+	 */
+	public Configuration setSchemaExportAction(Action action) {
+		setProperty( AvailableSettings.HBM2DDL_AUTO, action.getExternalHbm2ddlName() );
+		return this;
+	}
+
+	/**
+	 * Set {@value AvailableSettings#USER} and {@value AvailableSettings#PASS}.
+	 *
+	 * @param user the user id
+	 * @param pass the password
+	 */
+	public Configuration setCredentials(String user, String pass) {
+		setProperty( AvailableSettings.USER, user );
+		setProperty( AvailableSettings.PASS, pass );
+		return this;
+	}
+
+	/**
+	 * Set {@value AvailableSettings#URL}.
+	 *
+	 * @param url the JDBC URL
+	 */
+	public Configuration setJdbcUrl(String url) {
+		setProperty( AvailableSettings.URL, url );
+		return this;
+	}
+
+	/**
+	 * Set {@value AvailableSettings#DATASOURCE}.
+	 *
+	 * @param jndiName the JNDI name of the datasource
+	 */
+	public Configuration setDatasource(String jndiName) {
+		setProperty( AvailableSettings.DATASOURCE, jndiName );
+		return this;
+	}
+
+	/**
+	 * Set {@value AvailableSettings#JAKARTA_TRANSACTION_TYPE}.
+	 *
+	 * @param transactionType the {@link PersistenceUnitTransactionType}
+	 */
+	public Configuration setTransactionType(PersistenceUnitTransactionType transactionType) {
+		setProperty( AvailableSettings.JAKARTA_TRANSACTION_TYPE, transactionType.toString() );
+		return this;
+	}
+
 	// MetadataSources ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	/**
+	 * Add a {@link TypeContributor} to this configuration.
+	 *
+	 * @return {@code this} for method chaining
+	 */
 	public Configuration registerTypeContributor(TypeContributor typeContributor) {
 		typeContributorRegistrations.add( typeContributor );
+		return this;
+	}
+
+	/**
+	 * Add a {@link FunctionContributor} to this configuration.
+	 *
+	 * @return {@code this} for method chaining
+	 */
+	public Configuration registerFunctionContributor(FunctionContributor functionContributor) {
+		functionContributorRegistrations.add( functionContributor );
 		return this;
 	}
 
@@ -361,6 +539,8 @@ public class Configuration {
 	 * potentially replacing a previously registered type.
 	 *
 	 * @param type The type to register.
+	 *
+	 * @return {@code this} for method chaining
 	 */
 	public Configuration registerTypeOverride(BasicType<?> type) {
 		basicTypes.add( type );
@@ -371,6 +551,15 @@ public class Configuration {
 		void registerType(MetadataBuilder metadataBuilder);
 	}
 
+	/**
+	 * Register a {@linkplain UserType type} into the type registry,
+	 * potentially replacing a previously registered type.
+	 *
+	 * @param type The type to register.
+	 * @param keys The keys under which to register the type.
+	 *
+	 * @return {@code this} for method chaining
+	 */
 	public Configuration registerTypeOverride(UserType<?> type, String[] keys) {
 		if ( userTypeRegistrations == null ) {
 			userTypeRegistrations = new ArrayList<>();
@@ -385,21 +574,25 @@ public class Configuration {
 	 * Read mappings from a particular XML file
 	 *
 	 * @param xmlFile a path to a file
-	 * @return this (for method chaining purposes)
+	 *
+	 * @return {@code this} for method chaining
+	 *
 	 * @throws MappingException Indicates inability to locate or parse
 	 * the specified mapping file.
+	 *
 	 * @see #addFile(File)
 	 */
 	public Configuration addFile(String xmlFile) throws MappingException {
 		metadataSources.addFile( xmlFile );
 		return this;
 	}
+
 	/**
 	 * Read mappings from a particular XML file.
 	 *
 	 * @param xmlFile a path to a file
 	 *
-	 * @return this (for method chaining purposes)
+	 * @return {@code this} for method chaining
 	 *
 	 * @throws MappingException Indicates inability to locate the specified mapping file
 	 */
@@ -421,7 +614,7 @@ public class Configuration {
 	 *
 	 * @param binding the parsed mapping
 	 *
-	 * @return this (for method chaining purposes)
+	 * @return {@code this} for method chaining
 	 */
 	public Configuration addXmlMapping(Binding<?> binding) {
 		metadataSources.addXmlBinding( binding );
@@ -442,7 +635,7 @@ public class Configuration {
 	 *
 	 * @param xmlFile The cacheable mapping file to be added.
 	 *
-	 * @return this (for method chaining purposes)
+	 * @return {@code this} for method chaining
 	 *
 	 * @throws MappingException Indicates problems reading the cached file or
 	 * processing the non-cached file.
@@ -454,14 +647,14 @@ public class Configuration {
 
 	/**
 	 * <b>INTENDED FOR TESTSUITE USE ONLY!</b>
-	 * <p/>
+	 * <p>
 	 * Much like {@link #addCacheableFile(File)} except that here we will fail
 	 * immediately if the cache version cannot be found or used for whatever
 	 * reason.
 	 *
 	 * @param xmlFile The xml file, not the bin!
 	 *
-	 * @return The dom "deserialized" from the cached file.
+	 * @return {@code this} for method chaining
 	 *
 	 * @throws SerializationException Indicates a problem deserializing the cached dom tree
 	 */
@@ -476,7 +669,7 @@ public class Configuration {
 	 * @param xmlFile The name of the file to be added, in a form usable to
 	 *                simply construct a {@link File} instance
 	 *
-	 * @return this (for method chaining purposes)
+	 * @return {@code this} for method chaining
 	 *
 	 * @throws MappingException Indicates problems reading the cached file or
 	 * processing the non-cached file
@@ -492,7 +685,9 @@ public class Configuration {
 	 * Read mappings from a {@code URL}.
 	 *
 	 * @param url The url for the mapping document to be read.
-	 * @return this (for method chaining purposes)
+	 *
+	 * @return {@code this} for method chaining
+	 *
 	 * @throws MappingException Indicates problems reading the URL or processing
 	 * the mapping document.
 	 */
@@ -505,7 +700,9 @@ public class Configuration {
 	 * Read mappings from an {@link InputStream}.
 	 *
 	 * @param xmlInputStream The input stream containing a DOM.
-	 * @return this (for method chaining purposes)
+	 *
+	 * @return {@code this} for method chaining
+	 *
 	 * @throws MappingException Indicates problems reading the stream, or
 	 * processing the contained mapping document.
 	 */
@@ -520,7 +717,9 @@ public class Configuration {
 	 * different class loaders in turn.
 	 *
 	 * @param resourceName The resource name
-	 * @return this (for method chaining purposes)
+	 *
+	 * @return {@code this} for method chaining
+	 *
 	 * @throws MappingException Indicates problems locating the resource or
 	 * processing the contained mapping document.
 	 */
@@ -536,11 +735,13 @@ public class Configuration {
 	 * classpath resource}.
 	 *
 	 * @param entityClass The mapped class
-	 * @return this (for method chaining purposes)
+	 *
+	 * @return {@code this} for method chaining
+	 *
 	 * @throws MappingException Indicates problems locating the resource or
 	 * processing the contained mapping document.
 	 */
-	public Configuration addClass(Class entityClass) throws MappingException {
+	public Configuration addClass(Class<?> entityClass) throws MappingException {
 		if ( entityClass == null ) {
 			throw new IllegalArgumentException( "The specified class cannot be null" );
 		}
@@ -557,10 +758,24 @@ public class Configuration {
 	 *
 	 * @param annotatedClass The class containing annotations
 	 *
+	 * @return {@code this} for method chaining
+	 */
+	public Configuration addAnnotatedClass(Class<?> annotatedClass) {
+		metadataSources.addAnnotatedClass( annotatedClass );
+		return this;
+	}
+
+	/**
+	 * Read metadata from the annotations associated with the given classes.
+	 *
+	 * @param annotatedClasses The classes containing annotations
+	 *
 	 * @return this (for method chaining)
 	 */
-	public Configuration addAnnotatedClass(Class annotatedClass) {
-		metadataSources.addAnnotatedClass( annotatedClass );
+	public Configuration addAnnotatedClasses(Class... annotatedClasses) {
+		for (Class annotatedClass : annotatedClasses) {
+			addAnnotatedClass( annotatedClass );
+		}
 		return this;
 	}
 
@@ -569,7 +784,7 @@ public class Configuration {
 	 *
 	 * @param packageName java package name
 	 *
-	 * @return this (for method chaining)
+	 * @return {@code this} for method chaining
 	 *
 	 * @throws MappingException in case there is an error in the mapping data
 	 */
@@ -579,13 +794,31 @@ public class Configuration {
 	}
 
 	/**
+	 * Read package-level metadata.
+	 *
+	 * @param packageNames java package names
+	 *
+	 * @return this (for method chaining)
+	 *
+	 * @throws MappingException in case there is an error in the mapping data
+	 */
+	public Configuration addPackages(String... packageNames) throws MappingException {
+		for (String packageName : packageNames) {
+			addPackage( packageName );
+		}
+		return this;
+	}
+
+	/**
 	 * Read all {@code .hbm.xml} mappings from a {@code .jar} file.
-	 * <p/>
+	 * <p>
 	 * Assumes that any file named {@code *.hbm.xml} is a mapping document.
 	 * This method does not support {@code orm.xml} files!
 	 *
 	 * @param jar a jar file
-	 * @return this (for method chaining purposes)
+	 *
+	 * @return {@code this} for method chaining
+	 *
 	 * @throws MappingException Indicates problems reading the jar file or
 	 * processing the contained mapping documents.
 	 */
@@ -596,12 +829,14 @@ public class Configuration {
 
 	/**
 	 * Read all {@code .hbm.xml} mapping documents from a directory tree.
-	 * <p/>
+	 * <p>
 	 * Assumes that any file named {@code *.hbm.xml} is a mapping document.
 	 * This method does not support {@code orm.xml} files!
 	 *
 	 * @param dir The directory
-	 * @return this (for method chaining purposes)
+	 *
+	 * @return {@code this} for method chaining
+	 *
 	 * @throws MappingException Indicates problems reading the jar file or
 	 * processing the contained mapping documents.
 	 */
@@ -627,7 +862,7 @@ public class Configuration {
 	 *
 	 * @param interceptor The {@link Interceptor} to use
 	 *
-	 * @return this for method chaining
+	 * @return {@code this} for method chaining
 	 */
 	public Configuration setInterceptor(Interceptor interceptor) {
 		this.interceptor = interceptor;
@@ -650,25 +885,99 @@ public class Configuration {
 	 * by specified id.
 	 *
 	 * @param entityNotFoundDelegate The delegate to use
+	 *
+	 * @return {@code this} for method chaining
 	 */
-	public void setEntityNotFoundDelegate(EntityNotFoundDelegate entityNotFoundDelegate) {
+	public Configuration setEntityNotFoundDelegate(EntityNotFoundDelegate entityNotFoundDelegate) {
 		this.entityNotFoundDelegate = entityNotFoundDelegate;
+		return this;
 	}
 
+	/**
+	 * The {@link SessionFactoryObserver}, if any, that was added to this configuration.
+	 */
 	public SessionFactoryObserver getSessionFactoryObserver() {
 		return sessionFactoryObserver;
 	}
 
-	public void setSessionFactoryObserver(SessionFactoryObserver sessionFactoryObserver) {
+	/**
+	 * Specify a {@link SessionFactoryObserver} to be added to this configuration.
+	 *
+	 * @return {@code this} for method chaining
+	 */
+	public Configuration setSessionFactoryObserver(SessionFactoryObserver sessionFactoryObserver) {
 		this.sessionFactoryObserver = sessionFactoryObserver;
+		return this;
 	}
 
-	public CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver() {
+	/**
+	 * The {@link StatementInspector}, if any, that was added to this configuration.
+	 */
+	public StatementInspector getStatementInspector() {
+		return statementInspector;
+	}
+
+	/**
+	 * Specify a {@link StatementInspector} to be added to this configuration.
+	 *
+	 * @return {@code this} for method chaining
+	 */
+	public Configuration setStatementInspector(StatementInspector statementInspector) {
+		this.statementInspector = statementInspector;
+		return this;
+	}
+
+	/**
+	 * The {@link CurrentTenantIdentifierResolver}, if any, that was added to this configuration.
+	 */
+	public CurrentTenantIdentifierResolver<Object> getCurrentTenantIdentifierResolver() {
 		return currentTenantIdentifierResolver;
 	}
 
-	public void setCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver currentTenantIdentifierResolver) {
+	/**
+	 * Specify a {@link CurrentTenantIdentifierResolver} to be added to this configuration.
+	 *
+	 * @return {@code this} for method chaining
+	 */
+	public Configuration setCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver<Object> currentTenantIdentifierResolver) {
 		this.currentTenantIdentifierResolver = currentTenantIdentifierResolver;
+		return this;
+	}
+
+	/**
+	 * The {@link CustomEntityDirtinessStrategy}, if any, that was added to this configuration.
+	 */
+	public CustomEntityDirtinessStrategy getCustomEntityDirtinessStrategy() {
+		return customEntityDirtinessStrategy;
+	}
+
+	/**
+	 * Specify a {@link CustomEntityDirtinessStrategy} to be added to this configuration.
+	 *
+	 * @return {@code this} for method chaining
+	 */
+	public Configuration setCustomEntityDirtinessStrategy(CustomEntityDirtinessStrategy customEntityDirtinessStrategy) {
+		this.customEntityDirtinessStrategy = customEntityDirtinessStrategy;
+		return this;
+	}
+
+	/**
+	 * The {@link CustomEntityDirtinessStrategy}, if any, that was added to this configuration.
+	 */
+	@Incubating
+	public ColumnOrderingStrategy getColumnOrderingStrategy() {
+		return columnOrderingStrategy;
+	}
+
+	/**
+	 * Specify a {@link CustomEntityDirtinessStrategy} to be added to this configuration.
+	 *
+	 * @return {@code this} for method chaining
+	 */
+	@Incubating
+	public Configuration setColumnOrderingStrategy(ColumnOrderingStrategy columnOrderingStrategy) {
+		this.columnOrderingStrategy = columnOrderingStrategy;
+		return this;
 	}
 
 	/**
@@ -696,24 +1005,28 @@ public class Configuration {
 			metadataBuilder.applyPhysicalNamingStrategy( physicalNamingStrategy );
 		}
 
+		if ( columnOrderingStrategy != null ) {
+			metadataBuilder.applyColumnOrderingStrategy( columnOrderingStrategy );
+		}
+
 		if ( sharedCacheMode != null ) {
 			metadataBuilder.applySharedCacheMode( sharedCacheMode );
 		}
 
-		if ( !typeContributorRegistrations.isEmpty() ) {
-			for ( TypeContributor typeContributor : typeContributorRegistrations ) {
-				metadataBuilder.applyTypes( typeContributor );
-			}
+		for ( TypeContributor typeContributor : typeContributorRegistrations ) {
+			metadataBuilder.applyTypes( typeContributor );
+		}
+
+		for ( FunctionContributor functionContributor : functionContributorRegistrations ) {
+			metadataBuilder.applyFunctions( functionContributor );
 		}
 
 		if ( userTypeRegistrations != null ) {
 			userTypeRegistrations.forEach( registration ->  registration.registerType( metadataBuilder ) );
 		}
 
-		if ( !basicTypes.isEmpty() ) {
-			for ( BasicType<?> basicType : basicTypes ) {
-				metadataBuilder.applyBasicType( basicType );
-			}
+		for ( BasicType<?> basicType : basicTypes ) {
+			metadataBuilder.applyBasicType( basicType );
 		}
 
 		if ( customFunctionDescriptors != null ) {
@@ -739,16 +1052,28 @@ public class Configuration {
 			sessionFactoryBuilder.applyInterceptor( interceptor );
 		}
 
-		if ( getSessionFactoryObserver() != null ) {
-			sessionFactoryBuilder.addSessionFactoryObservers( getSessionFactoryObserver() );
+		if ( entityNameResolvers != null ) {
+			sessionFactoryBuilder.addEntityNameResolver( entityNameResolvers.toArray(new EntityNameResolver[0]) );
 		}
 
-		if ( getEntityNotFoundDelegate() != null ) {
-			sessionFactoryBuilder.applyEntityNotFoundDelegate( getEntityNotFoundDelegate() );
+		if ( sessionFactoryObserver != null ) {
+			sessionFactoryBuilder.addSessionFactoryObservers( sessionFactoryObserver );
 		}
 
-		if ( getCurrentTenantIdentifierResolver() != null ) {
-			sessionFactoryBuilder.applyCurrentTenantIdentifierResolver( getCurrentTenantIdentifierResolver() );
+		if ( statementInspector != null ) {
+			sessionFactoryBuilder.applyStatementInspector( statementInspector );
+		}
+
+		if ( entityNotFoundDelegate != null ) {
+			sessionFactoryBuilder.applyEntityNotFoundDelegate( entityNotFoundDelegate );
+		}
+
+		if ( currentTenantIdentifierResolver != null ) {
+			sessionFactoryBuilder.applyCurrentTenantIdentifierResolver( currentTenantIdentifierResolver );
+		}
+
+		if ( customEntityDirtinessStrategy != null ) {
+			sessionFactoryBuilder.applyCustomEntityDirtinessStrategy( customEntityDirtinessStrategy );
 		}
 
 		return sessionFactoryBuilder.build();
@@ -778,43 +1103,65 @@ public class Configuration {
 		}
 	}
 
-	public Map<String,SqmFunctionDescriptor> getSqlFunctions() {
-		return customFunctionDescriptors;
-	}
-
-	public void addSqlFunction(String functionName, SqmFunctionDescriptor function) {
+	/**
+	 * Adds a {@linkplain SqmFunctionDescriptor function descriptor} to
+	 * this configuration.
+	 *
+	 * @apiNote For historical reasons, this method is misnamed.
+	 *          The function descriptor actually describes a function
+	 *          available in HQL, and it may or may not map directly
+	 *          to a function defined in SQL.
+	 *
+	 * @return {@code this} for method chaining
+	 *
+	 * @see SqmFunctionDescriptor
+	 */
+	public Configuration addSqlFunction(String functionName, SqmFunctionDescriptor function) {
 		if ( customFunctionDescriptors == null ) {
 			customFunctionDescriptors = new HashMap<>();
 		}
 		customFunctionDescriptors.put( functionName, function );
+		return this;
 	}
 
-	public void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject object) {
+	/**
+	 * Adds an {@link AuxiliaryDatabaseObject} to this configuration.
+	 *
+	 * @return {@code this} for method chaining
+	 */
+	public Configuration addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject object) {
 		if ( auxiliaryDatabaseObjectList == null ) {
 			auxiliaryDatabaseObjectList = new ArrayList<>();
 		}
 		auxiliaryDatabaseObjectList.add( object );
+		return this;
 	}
 
 	/**
 	 * Adds an {@link AttributeConverter} to this configuration.
 	 *
 	 * @param attributeConverterClass The {@code AttributeConverter} class.
-	 * @param autoApply Should the AttributeConverter be auto applied to
+	 * @param autoApply Should the {@code AttributeConverter} be auto applied to
 	 *                  property types as specified by its "entity attribute"
 	 *                  parameterized type?
+	 *
+	 * @return {@code this} for method chaining
 	 */
-	public void addAttributeConverter(Class<? extends AttributeConverter<?,?>> attributeConverterClass, boolean autoApply) {
+	public Configuration addAttributeConverter(Class<? extends AttributeConverter<?,?>> attributeConverterClass, boolean autoApply) {
 		addAttributeConverter( new ClassBasedConverterDescriptor( attributeConverterClass, autoApply, classmateContext ) );
+		return this;
 	}
 
 	/**
 	 * Adds an {@link AttributeConverter} to this configuration.
 	 *
 	 * @param attributeConverterClass The {@code AttributeConverter} class.
+	 *
+	 * @return {@code this} for method chaining
 	 */
-	public void addAttributeConverter(Class<? extends AttributeConverter<?,?>> attributeConverterClass) {
+	public Configuration addAttributeConverter(Class<? extends AttributeConverter<?,?>> attributeConverterClass) {
 		addAttributeConverter( new ClassBasedConverterDescriptor( attributeConverterClass, classmateContext ) );
+		return this;
 	}
 
 	/**
@@ -823,9 +1170,12 @@ public class Configuration {
 	 * their own {@code AttributeConverter} instance.
 	 *
 	 * @param attributeConverter The {@code AttributeConverter} instance.
+	 *
+	 * @return {@code this} for method chaining
 	 */
-	public void addAttributeConverter(AttributeConverter<?,?> attributeConverter) {
+	public Configuration addAttributeConverter(AttributeConverter<?,?> attributeConverter) {
 		addAttributeConverter( new InstanceBasedConverterDescriptor( attributeConverter, classmateContext ) );
+		return this;
 	}
 
 	/**
@@ -837,35 +1187,66 @@ public class Configuration {
 	 * @param autoApply Should the {@code AttributeConverter} be auto applied
 	 *                  to property types as specified by its "entity attribute"
 	 *                  parameterized type?
+	 *
+	 * @return {@code this} for method chaining
 	 */
-	public void addAttributeConverter(AttributeConverter<?,?> attributeConverter, boolean autoApply) {
+	public Configuration addAttributeConverter(AttributeConverter<?,?> attributeConverter, boolean autoApply) {
 		addAttributeConverter( new InstanceBasedConverterDescriptor( attributeConverter, autoApply, classmateContext ) );
+		return this;
 	}
 
-	public void addAttributeConverter(ConverterDescriptor converterDescriptor) {
+	/**
+	 * Adds an {@link ConverterDescriptor} instance to this configuration.
+	 *
+	 * @param converterDescriptor The {@code ConverterDescriptor} instance.
+	 *
+	 * @return {@code this} for method chaining
+	 */
+	public Configuration addAttributeConverter(ConverterDescriptor converterDescriptor) {
 		if ( attributeConverterDescriptorsByClass == null ) {
 			attributeConverterDescriptorsByClass = new HashMap<>();
 		}
 		attributeConverterDescriptorsByClass.put( converterDescriptor.getAttributeConverterClass(), converterDescriptor );
+		return this;
+	}
+
+	/**
+	 * Add an {@link EntityNameResolver} to this configuration.
+	 *
+	 * @param entityNameResolver The {@code EntityNameResolver} instance.
+	 *
+	 * @return {@code this} for method chaining
+	 *
+	 * @since 6.2
+	 */
+	public Configuration addEntityNameResolver(EntityNameResolver entityNameResolver) {
+		if ( entityNameResolvers == null ) {
+			entityNameResolvers = new ArrayList<>();
+		}
+		entityNameResolvers.add( entityNameResolver );
+		return this;
 	}
 
 	/**
 	 * Sets the {@link SharedCacheMode} to use.
 	 * <p>
 	 * Note that currently only {@link jakarta.persistence.SharedCacheMode#ALL}
-	 * has any effect in terms of {@code hbm.xml} binding.
+	 * has any effect on {@code hbm.xml} binding.
 	 *
 	 * @param sharedCacheMode The SharedCacheMode to use
+	 *
+	 * @return {@code this} for method chaining
 	 */
-	public void setSharedCacheMode(SharedCacheMode sharedCacheMode) {
+	public Configuration setSharedCacheMode(SharedCacheMode sharedCacheMode) {
 		this.sharedCacheMode = sharedCacheMode;
+		return this;
 	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// todo : decide about these
 
-	public Map<String, NamedNativeQueryDefinition> getNamedSQLQueries() {
+	public Map<String, NamedNativeQueryDefinition<?>> getNamedSQLQueries() {
 		return namedSqlQueries;
 	}
 
@@ -874,13 +1255,11 @@ public class Configuration {
 	}
 
 	public java.util.Collection<NamedEntityGraphDefinition> getNamedEntityGraphs() {
-		return namedEntityGraphMap == null
-				? Collections.emptyList()
-				: namedEntityGraphMap.values();
+		return namedEntityGraphMap.values();
 	}
 
 
-	public Map<String, NamedHqlQueryDefinition> getNamedQueries() {
+	public Map<String, NamedHqlQueryDefinition<?>> getNamedQueries() {
 		return namedQueries;
 	}
 
@@ -889,18 +1268,22 @@ public class Configuration {
 	}
 
 	/**
-	 * Adds the incoming properties to the internal properties structure, as
-	 * long as the internal structure does not already contain an entry for
-	 * the given key.
+	 * Adds the incoming properties to the internal properties structure,
+	 * as long as the internal structure does <em>not</em> already contain
+	 * an entry for the given key. If a given property is already set in
+	 * this {@code Configuration}, ignore the setting specified in the
+	 * argument {@link Properties} object.
+	 *
+	 * @apiNote You're probably looking for {@link #addProperties(Properties)}.
 	 *
 	 * @param properties The properties to merge
 	 *
-	 * @return this for method chaining
+	 * @return {@code this} for method chaining
 	 */
 	public Configuration mergeProperties(Properties properties) {
-		for ( Map.Entry<Object,Object> entry : properties.entrySet() ) {
-			if ( !properties.containsKey( entry.getKey() ) ) {
-				properties.setProperty( (String) entry.getKey(), (String) entry.getValue() );
+		for ( String property : properties.stringPropertyNames() ) {
+			if ( !this.properties.containsKey( property ) ) {
+				this.properties.setProperty( property, properties.getProperty( property ) );
 			}
 		}
 		return this;

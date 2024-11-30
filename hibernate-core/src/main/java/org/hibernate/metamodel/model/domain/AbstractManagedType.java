@@ -1,21 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain;
 
 import java.io.ObjectStreamException;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -28,21 +26,16 @@ import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.persistence.metamodel.SetAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
 
-import org.hibernate.graph.internal.SubGraphImpl;
-import org.hibernate.graph.spi.SubGraphImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.RepresentationMode;
-import org.hibernate.metamodel.RuntimeMetamodels;
-import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.MappingModelHelper;
 import org.hibernate.metamodel.model.domain.internal.AttributeContainer;
-import org.hibernate.metamodel.model.domain.internal.DomainModelHelper;
-import org.hibernate.query.SemanticException;
+import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import static java.util.Collections.emptySet;
+import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
+
 /**
- * Commonality for Hibernate's implementations of the JPA {@link ManagedType}
- * contract.
+ * Functionality common to all implementations of {@link ManagedType}.
  *
  * @author Steve Ebersole
  */
@@ -52,20 +45,23 @@ public abstract class AbstractManagedType<J>
 	private final String hibernateTypeName;
 	private final ManagedDomainType<? super J> superType;
 	private final RepresentationMode representationMode;
+	private final JpaMetamodelImplementor metamodel;
 
 	private final Map<String, SingularPersistentAttribute<J, ?>> declaredSingularAttributes = new LinkedHashMap<>();
 	private volatile Map<String, PluralPersistentAttribute<J, ?, ?>> declaredPluralAttributes ;
+	private volatile Map<String, PersistentAttribute<J, ?>> declaredConcreteGenericAttributes;
 
-	private final List<ManagedDomainType> subTypes = new ArrayList<>();
+	private final List<ManagedDomainType<? extends J>> subTypes = new ArrayList<>();
 
 	protected AbstractManagedType(
 			String hibernateTypeName,
 			JavaType<J> javaType,
 			ManagedDomainType<? super J> superType,
-			JpaMetamodel domainMetamodel) {
-		super( javaType, domainMetamodel );
+			JpaMetamodelImplementor metamodel) {
+		super( javaType );
 		this.hibernateTypeName = hibernateTypeName;
 		this.superType = superType;
+		this.metamodel = metamodel;
 		if ( superType != null ) {
 			superType.addSubType( this );
 		}
@@ -86,7 +82,12 @@ public abstract class AbstractManagedType<J>
 	}
 
 	@Override
-	public void addSubType(ManagedDomainType subType){
+	public Collection<? extends ManagedDomainType<? extends J>> getSubTypes() {
+		return subTypes;
+	}
+
+	@Override
+	public void addSubType(ManagedDomainType<? extends J> subType){
 		subTypes.add( subType );
 	}
 
@@ -96,11 +97,10 @@ public abstract class AbstractManagedType<J>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public void visitAttributes(Consumer<? super PersistentAttribute<J, ?>> action) {
+	public void visitAttributes(Consumer<? super PersistentAttribute<? super J, ?>> action) {
 		visitDeclaredAttributes( action );
 		if ( getSuperType() != null ) {
-			getSuperType().visitAttributes( (Consumer) action );
+			getSuperType().visitAttributes( action );
 		}
 	}
 
@@ -113,104 +113,54 @@ public abstract class AbstractManagedType<J>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Set<Attribute<? super J, ?>> getAttributes() {
-		final HashSet attributes = new LinkedHashSet( getDeclaredAttributes() );
-
+		final HashSet<Attribute<? super J, ?>> attributes = new LinkedHashSet<>( getDeclaredAttributes() );
 		if ( getSuperType() != null ) {
 			attributes.addAll( getSuperType().getAttributes() );
 		}
-
 		return attributes;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Set<Attribute<J, ?>> getDeclaredAttributes() {
-		final boolean isDeclaredSingularAttributesEmpty = CollectionHelper.isEmpty( declaredSingularAttributes );
-		final boolean isDeclaredPluralAttributes = CollectionHelper.isEmpty( declaredPluralAttributes );
+		final boolean isDeclaredSingularAttributesEmpty = isEmpty( declaredSingularAttributes );
+		final boolean isDeclaredPluralAttributes = isEmpty( declaredPluralAttributes );
 		if ( isDeclaredSingularAttributesEmpty && isDeclaredPluralAttributes ) {
-			return Collections.emptySet();
+			return emptySet();
 		}
-		final HashSet attributes;
-		if ( !isDeclaredSingularAttributesEmpty ) {
-			attributes = new LinkedHashSet( declaredSingularAttributes.values() );
+		else if ( !isDeclaredSingularAttributesEmpty ) {
+			final HashSet<Attribute<J, ?>> attributes =
+					new LinkedHashSet<>( declaredSingularAttributes.values() );
 			if ( !isDeclaredPluralAttributes ) {
 				attributes.addAll( declaredPluralAttributes.values() );
 			}
+			return attributes;
 		}
 		else {
-			attributes = new LinkedHashSet( declaredPluralAttributes.values() );
+			return new LinkedHashSet<>( declaredPluralAttributes.values() );
 		}
-		return attributes;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public PersistentAttribute<? super J,?> getAttribute(String name) {
-		final PersistentAttribute attribute = findAttribute( name );
+		final PersistentAttribute<? super J,?> attribute = findAttribute( name );
 		checkNotNull( "Attribute", attribute, name );
 		return attribute;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public PersistentAttribute<? super J,?> findAttribute(String name) {
 		// first look at declared attributes
-		PersistentAttribute attribute = findDeclaredAttribute( name );
+		final PersistentAttribute<J,?> attribute = findDeclaredAttribute( name );
 		if ( attribute != null ) {
 			return attribute;
 		}
 
 		if ( getSuperType() != null ) {
-			attribute = getSuperType().findAttributeInSuperTypes( name );
-			if ( attribute != null ) {
-				return attribute;
-			}
+			return getSuperType().findAttributeInSuperTypes( name );
 		}
 
-		for ( ManagedDomainType subType : subTypes ) {
-			PersistentAttribute subTypeAttribute = subType.findSubTypesAttribute( name );
-			if ( subTypeAttribute != null ) {
-				if ( attribute != null && !isCompatible( attribute, subTypeAttribute ) ) {
-					throw new IllegalArgumentException(
-							new SemanticException(
-									String.format(
-											Locale.ROOT,
-											"Could not resolve attribute '%s' of '%s' due to the attribute being declared in multiple sub types: ['%s', '%s']",
-											name,
-											getExpressibleJavaType().getJavaType().getTypeName(),
-											attribute.getDeclaringType().getExpressibleJavaType().getJavaType().getTypeName(),
-											subTypeAttribute.getDeclaringType().getExpressibleJavaType().getJavaType().getTypeName()
-									)
-							)
-					);
-				}
-				attribute = subTypeAttribute;
-			}
-		}
-
-		return attribute;
-	}
-
-	private boolean isCompatible(PersistentAttribute<?, ?> attribute1, PersistentAttribute<?, ?> attribute2) {
-		if ( attribute1 == attribute2 ) {
-			return true;
-		}
-		final RuntimeMetamodels runtimeMetamodels = jpaMetamodel().getTypeConfiguration()
-				.getSessionFactory()
-				.getRuntimeMetamodels();
-		final EntityMappingType entity1 = runtimeMetamodels.getEntityMappingType(
-				attribute1.getDeclaringType().getTypeName()
-		);
-		final EntityMappingType entity2 = runtimeMetamodels.getEntityMappingType(
-				attribute2.getDeclaringType().getTypeName()
-		);
-
-		return entity1 != null && entity2 != null && MappingModelHelper.isCompatibleModelPart(
-				entity1.findSubPart( attribute1.getName() ),
-				entity2.findSubPart( attribute2.getName() )
-		);
+		return null;
 	}
 
 	@Override
@@ -228,15 +178,15 @@ public abstract class AbstractManagedType<J>
 	}
 
 	@Override
-	public PersistentAttribute<? super J, ?> findSubTypesAttribute(String name) {
+	public PersistentAttribute<?, ?> findSubTypesAttribute(String name) {
 		// first look at declared attributes
-		PersistentAttribute attribute = findDeclaredAttribute( name );
+		final PersistentAttribute<J,?> attribute = findDeclaredAttribute( name );
 		if ( attribute != null ) {
 			return attribute;
 		}
 
-		for ( ManagedDomainType subType : subTypes ) {
-			PersistentAttribute subTypeAttribute = subType.findAttribute( name );
+		for ( ManagedDomainType<? extends J> subType : subTypes ) {
+			final PersistentAttribute<?,?> subTypeAttribute = subType.findSubTypesAttribute( name );
 			if ( subTypeAttribute != null ) {
 				return subTypeAttribute;
 			}
@@ -246,31 +196,24 @@ public abstract class AbstractManagedType<J>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public PersistentAttribute<J,?> findDeclaredAttribute(String name) {
 		// try singular attribute
-		PersistentAttribute attribute = declaredSingularAttributes.get( name );
+		final PersistentAttribute<J,?> attribute = declaredSingularAttributes.get( name );
 		if ( attribute != null ) {
 			return attribute;
 		}
 
 		// next plural
-		if ( declaredPluralAttributes == null ) {
-			return null;
-		}
-		attribute = declaredPluralAttributes.get( name );
-		//noinspection RedundantIfStatement
-		if ( attribute != null ) {
-			return attribute;
+		if ( declaredPluralAttributes != null ) {
+			return declaredPluralAttributes.get( name );
 		}
 
 		return null;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public PersistentAttribute<J,?> getDeclaredAttribute(String name) {
-		PersistentAttribute attr = findDeclaredAttribute( name );
+		PersistentAttribute<J,?> attr = findDeclaredAttribute( name );
 		checkNotNull( "Attribute", attr, name );
 		return attr;
 	}
@@ -298,9 +241,8 @@ public abstract class AbstractManagedType<J>
 	// Singular attributes
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Set<SingularAttribute<? super J, ?>> getSingularAttributes() {
-		HashSet attributes = new HashSet<>( declaredSingularAttributes.values() );
+		HashSet<SingularAttribute<? super J, ?>> attributes = new HashSet<>( declaredSingularAttributes.values() );
 		if ( getSuperType() != null ) {
 			attributes.addAll( getSuperType().getSingularAttributes() );
 		}
@@ -313,17 +255,15 @@ public abstract class AbstractManagedType<J>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public SingularPersistentAttribute<? super J, ?> getSingularAttribute(String name) {
-		SingularPersistentAttribute attribute = findSingularAttribute( name );
+		SingularPersistentAttribute<? super J, ?> attribute = findSingularAttribute( name );
 		checkNotNull( "SingularAttribute", attribute, name );
 		return attribute;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public SingularPersistentAttribute<? super J, ?> findSingularAttribute(String name) {
-		SingularPersistentAttribute attribute = findDeclaredSingularAttribute( name );
+		SingularPersistentAttribute<? super J, ?> attribute = findDeclaredSingularAttribute( name );
 		if ( attribute == null && getSuperType() != null ) {
 			attribute = getSuperType().findSingularAttribute( name );
 		}
@@ -331,48 +271,49 @@ public abstract class AbstractManagedType<J>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <Y> SingularPersistentAttribute<? super J, Y> getSingularAttribute(String name, Class<Y> type) {
-		SingularAttribute attribute = findSingularAttribute( name );
-		checkTypeForSingleAttribute( attribute, name, type );
-		return (SingularPersistentAttribute) attribute;
+		return checkTypeForSingleAttribute( findSingularAttribute( name ), name, type );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public SingularAttribute<J, ?> getDeclaredSingularAttribute(String name) {
-		final SingularAttribute attr = findDeclaredSingularAttribute( name );
+		final SingularAttribute<J, ?> attr = findDeclaredSingularAttribute( name );
 		checkNotNull( "SingularAttribute", attr, name );
 		return attr;
 	}
 
 	@Override
-	public SingularPersistentAttribute<? super J, ?> findDeclaredSingularAttribute(String name) {
+	public SingularPersistentAttribute<J, ?> findDeclaredSingularAttribute(String name) {
 		return declaredSingularAttributes.get( name );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <Y> SingularPersistentAttribute<J, Y> getDeclaredSingularAttribute(String name, Class<Y> javaType) {
-		final SingularAttribute attr = findDeclaredSingularAttribute( name );
-		checkTypeForSingleAttribute( attr, name, javaType );
-		return (SingularPersistentAttribute) attr;
+		return checkTypeForSingleAttribute( findDeclaredSingularAttribute( name ), name, javaType );
 	}
 
-	private <Y> void checkTypeForSingleAttribute(
-			SingularAttribute<?,?> attribute,
+	private <K,Y> SingularPersistentAttribute<K,Y> checkTypeForSingleAttribute(
+			SingularPersistentAttribute<K,?> attribute,
 			String name,
 			Class<Y> javaType) {
-		if ( attribute == null || ( javaType != null && !attribute.getBindableJavaType().equals( javaType ) ) ) {
-			if ( isPrimitiveVariant( attribute, javaType ) ) {
-				return;
-			}
+		if ( attribute == null || !hasMatchingReturnType( attribute, javaType ) ) {
 			throw new IllegalArgumentException(
 					"SingularAttribute named " + name
 							+ ( javaType != null ? " and of type " + javaType.getName() : "" )
 							+ " is not present"
 			);
 		}
+		else {
+			@SuppressWarnings("unchecked")
+			SingularPersistentAttribute<K, Y> narrowed = (SingularPersistentAttribute<K, Y>) attribute;
+			return narrowed;
+		}
+	}
+
+	private <T, Y> boolean hasMatchingReturnType(SingularAttribute<T, ?> attribute, Class<Y> javaType) {
+		return javaType == null
+			|| attribute.getBindableJavaType().equals( javaType )
+			|| isPrimitiveVariant( attribute, javaType );
 	}
 
 	protected <Y> boolean isPrimitiveVariant(SingularAttribute<?,?> attribute, Class<Y> javaType) {
@@ -383,24 +324,24 @@ public abstract class AbstractManagedType<J>
 
 		if ( declaredType.isPrimitive() ) {
 			return ( Boolean.class.equals( javaType ) && Boolean.TYPE.equals( declaredType ) )
-					|| ( Character.class.equals( javaType ) && Character.TYPE.equals( declaredType ) )
-					|| ( Byte.class.equals( javaType ) && Byte.TYPE.equals( declaredType ) )
-					|| ( Short.class.equals( javaType ) && Short.TYPE.equals( declaredType ) )
-					|| ( Integer.class.equals( javaType ) && Integer.TYPE.equals( declaredType ) )
-					|| ( Long.class.equals( javaType ) && Long.TYPE.equals( declaredType ) )
-					|| ( Float.class.equals( javaType ) && Float.TYPE.equals( declaredType ) )
-					|| ( Double.class.equals( javaType ) && Double.TYPE.equals( declaredType ) );
+				|| ( Character.class.equals( javaType ) && Character.TYPE.equals( declaredType ) )
+				|| ( Byte.class.equals( javaType ) && Byte.TYPE.equals( declaredType ) )
+				|| ( Short.class.equals( javaType ) && Short.TYPE.equals( declaredType ) )
+				|| ( Integer.class.equals( javaType ) && Integer.TYPE.equals( declaredType ) )
+				|| ( Long.class.equals( javaType ) && Long.TYPE.equals( declaredType ) )
+				|| ( Float.class.equals( javaType ) && Float.TYPE.equals( declaredType ) )
+				|| ( Double.class.equals( javaType ) && Double.TYPE.equals( declaredType ) );
 		}
 
 		if ( javaType.isPrimitive() ) {
 			return ( Boolean.class.equals( declaredType ) && Boolean.TYPE.equals( javaType ) )
-					|| ( Character.class.equals( declaredType ) && Character.TYPE.equals( javaType ) )
-					|| ( Byte.class.equals( declaredType ) && Byte.TYPE.equals( javaType ) )
-					|| ( Short.class.equals( declaredType ) && Short.TYPE.equals( javaType ) )
-					|| ( Integer.class.equals( declaredType ) && Integer.TYPE.equals( javaType ) )
-					|| ( Long.class.equals( declaredType ) && Long.TYPE.equals( javaType ) )
-					|| ( Float.class.equals( declaredType ) && Float.TYPE.equals( javaType ) )
-					|| ( Double.class.equals( declaredType ) && Double.TYPE.equals( javaType ) );
+				|| ( Character.class.equals( declaredType ) && Character.TYPE.equals( javaType ) )
+				|| ( Byte.class.equals( declaredType ) && Byte.TYPE.equals( javaType ) )
+				|| ( Short.class.equals( declaredType ) && Short.TYPE.equals( javaType ) )
+				|| ( Integer.class.equals( declaredType ) && Integer.TYPE.equals( javaType ) )
+				|| ( Long.class.equals( declaredType ) && Long.TYPE.equals( javaType ) )
+				|| ( Float.class.equals( declaredType ) && Float.TYPE.equals( javaType ) )
+				|| ( Double.class.equals( declaredType ) && Double.TYPE.equals( javaType ) );
 		}
 
 		return false;
@@ -411,9 +352,10 @@ public abstract class AbstractManagedType<J>
 	// Plural attributes
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Set<PluralAttribute<? super J, ?, ?>> getPluralAttributes() {
-		HashSet attributes = declaredPluralAttributes == null ? new HashSet<PluralAttribute<? super J, ?, ?>>() : new HashSet<PluralAttribute<? super J, ?, ?>>( declaredPluralAttributes.values() );
+		Set<PluralAttribute<? super J, ?, ?>> attributes = declaredPluralAttributes == null
+				? new HashSet<>()
+				: new HashSet<>( declaredPluralAttributes.values() );
 		if ( getSuperType() != null ) {
 			attributes.addAll( getSuperType().getPluralAttributes() );
 		}
@@ -422,31 +364,27 @@ public abstract class AbstractManagedType<J>
 
 	@Override
 	public Set<PluralAttribute<J, ?, ?>> getDeclaredPluralAttributes() {
-		return declaredPluralAttributes == null ?
-				Collections.EMPTY_SET : new HashSet<>( declaredPluralAttributes.values() );
+		return declaredPluralAttributes == null
+				? emptySet()
+				: new HashSet<>( declaredPluralAttributes.values() );
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked", "RedundantIfStatement"})
-	public PluralPersistentAttribute findPluralAttribute(String name) {
+	public PluralPersistentAttribute<? super J, ?, ?> findPluralAttribute(String name) {
 		PluralPersistentAttribute<? super J, ?, ?> attribute = findDeclaredPluralAttribute( name );
 		if ( attribute != null ) {
 			return attribute;
 		}
-
-		if ( getSuperType() != null ) {
-			attribute = getSuperType().findDeclaredPluralAttribute( name );
-			if ( attribute != null ) {
-				return attribute;
-			}
+		else if ( getSuperType() != null ) {
+			return getSuperType().findPluralAttribute( name );
 		}
-
-		return null;
+		else {
+			return null;
+		}
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public PluralPersistentAttribute<? super J, ?, ?> findDeclaredPluralAttribute(String name) {
+	public PluralPersistentAttribute<J, ?, ?> findDeclaredPluralAttribute(String name) {
 		return declaredPluralAttributes == null ? null : declaredPluralAttributes.get( name );
 	}
 
@@ -469,12 +407,30 @@ public abstract class AbstractManagedType<J>
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Generic attributes
+
+	@Override
+	public PersistentAttribute<? super J, ?> findConcreteGenericAttribute(String name) {
+		PersistentAttribute<? super J, ?> attribute = findDeclaredConcreteGenericAttribute( name );
+		if ( attribute == null && getSuperType() != null ) {
+			attribute = getSuperType().findDeclaredConcreteGenericAttribute( name );
+		}
+		return attribute;
+	}
+
+	@Override
+	public PersistentAttribute<J, ?> findDeclaredConcreteGenericAttribute(String name) {
+		return declaredConcreteGenericAttributes == null ? null : declaredConcreteGenericAttributes.get( name );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Bags
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public BagPersistentAttribute<? super J, ?> getCollection(String name) {
-		PluralPersistentAttribute attribute = findPluralAttribute( name );
+		PluralPersistentAttribute<? super J, ?, ?> attribute = findPluralAttribute( name );
 
 		if ( attribute == null && getSuperType() != null ) {
 			attribute = getSuperType().findPluralAttribute( name );
@@ -505,7 +461,7 @@ public abstract class AbstractManagedType<J>
 	public <E> BagPersistentAttribute<? super J, E> getCollection(String name, Class<E> elementType) {
 		PluralAttribute<? super J, ?, ?> attribute = findPluralAttribute( name );
 		checkCollectionElementType( attribute, name, elementType );
-		return (BagPersistentAttribute) attribute;
+		return (BagPersistentAttribute<? super J, E>) attribute;
 	}
 
 	private <E> void checkCollectionElementType(PluralAttribute<?,?,?> attribute, String name, Class<E> elementType) {
@@ -515,9 +471,9 @@ public abstract class AbstractManagedType<J>
 	@Override
 	@SuppressWarnings("unchecked")
 	public <E> CollectionAttribute<J, E> getDeclaredCollection(String name, Class<E> elementType) {
-		final PluralAttribute attribute = findDeclaredPluralAttribute( name );
+		final PluralAttribute<? super J, ?, ?> attribute = findDeclaredPluralAttribute( name );
 		checkCollectionElementType( attribute, name, elementType );
-		return (CollectionAttribute) attribute;
+		return (CollectionAttribute<J, E>) attribute;
 	}
 
 
@@ -527,9 +483,9 @@ public abstract class AbstractManagedType<J>
 	@Override
 	@SuppressWarnings("unchecked")
 	public SetPersistentAttribute<? super J, ?> getSet(String name) {
-		final PluralAttribute attribute = findPluralAttribute( name );
+		final PluralAttribute<? super J, ?, ?> attribute = findPluralAttribute( name );
 		basicSetCheck( attribute, name );
-		return (SetPersistentAttribute) attribute;
+		return (SetPersistentAttribute<? super J, ?>) attribute;
 	}
 
 	private void basicSetCheck(PluralAttribute<? super J, ?, ?> attribute, String name) {
@@ -544,7 +500,7 @@ public abstract class AbstractManagedType<J>
 	public SetPersistentAttribute<J, ?> getDeclaredSet(String name) {
 		final PluralPersistentAttribute<? super J, ?, ?> attribute = findDeclaredPluralAttribute( name );
 		basicSetCheck( attribute, name );
-		return (SetPersistentAttribute) attribute;
+		return (SetPersistentAttribute<J, ?>) attribute;
 	}
 
 	@Override
@@ -562,7 +518,7 @@ public abstract class AbstractManagedType<J>
 	@Override
 	@SuppressWarnings("unchecked")
 	public <E> SetAttribute<J, E> getDeclaredSet(String name, Class<E> elementType) {
-		final PluralAttribute attribute = findDeclaredPluralAttribute( name );
+		final PluralAttribute<? super J, ?, ?> attribute = findDeclaredPluralAttribute( name );
 		checkSetElementType( attribute, name, elementType );
 		return ( SetAttribute<J, E> ) attribute;
 	}
@@ -576,7 +532,7 @@ public abstract class AbstractManagedType<J>
 	public ListPersistentAttribute<? super J, ?> getList(String name) {
 		PluralAttribute<? super J, ?, ?> attribute = findPluralAttribute( name );
 		basicListCheck( attribute, name );
-		return (ListPersistentAttribute) attribute;
+		return (ListPersistentAttribute<? super J, ?>) attribute;
 	}
 
 	private void basicListCheck(PluralAttribute<? super J, ?, ?> attribute, String name) {
@@ -591,7 +547,7 @@ public abstract class AbstractManagedType<J>
 	public ListPersistentAttribute<J, ?> getDeclaredList(String name) {
 		final PluralPersistentAttribute<? super J, ?, ?> attribute = findDeclaredPluralAttribute( name );
 		basicListCheck( attribute, name );
-		return (ListPersistentAttribute) attribute;
+		return (ListPersistentAttribute<J, ?>) attribute;
 	}
 
 	@Override
@@ -609,7 +565,7 @@ public abstract class AbstractManagedType<J>
 	@Override
 	@SuppressWarnings("unchecked")
 	public <E> ListAttribute<J, E> getDeclaredList(String name, Class<E> elementType) {
-		final PluralAttribute attribute = findDeclaredPluralAttribute( name );
+		final PluralAttribute<? super J, ?, ?> attribute = findDeclaredPluralAttribute( name );
 		checkListElementType( attribute, name, elementType );
 		return ( ListAttribute<J, E> ) attribute;
 	}
@@ -623,7 +579,7 @@ public abstract class AbstractManagedType<J>
 	public MapPersistentAttribute<? super J, ?, ?> getMap(String name) {
 		PluralAttribute<? super J, ?, ?> attribute = findPluralAttribute( name );
 		basicMapCheck( attribute, name );
-		return (MapPersistentAttribute) attribute;
+		return (MapPersistentAttribute<? super J, ?, ?>) attribute;
 	}
 
 	private void basicMapCheck(PluralAttribute<? super J, ?, ?> attribute, String name) {
@@ -638,7 +594,7 @@ public abstract class AbstractManagedType<J>
 	public MapPersistentAttribute<J, ?, ?> getDeclaredMap(String name) {
 		final PluralPersistentAttribute<? super J, ?, ?> attribute = findDeclaredPluralAttribute( name );
 		basicMapCheck( attribute, name );
-		return (MapPersistentAttribute) attribute;
+		return (MapPersistentAttribute<J, ?, ?>) attribute;
 	}
 
 	@Override
@@ -672,27 +628,12 @@ public abstract class AbstractManagedType<J>
 	}
 
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public SubGraphImplementor<J> makeSubGraph() {
-		return new SubGraphImpl( this, true, jpaMetamodel() );
-	}
-
-	@Override
-	public <S extends J> ManagedDomainType<S> findSubType(String subTypeName) {
-		return DomainModelHelper.resolveSubType( this, subTypeName, jpaMetamodel() );
-	}
-
-	@Override
-	public <S extends J> ManagedDomainType<S> findSubType(Class<S> subType) {
-		return DomainModelHelper.resolveSubType( this, subType, jpaMetamodel() );
-	}
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Serialization
 
+	@Serial
 	protected Object writeReplace() throws ObjectStreamException {
-		return new SerialForm( jpaMetamodel(), getJavaType() );
+		return new SerialForm( metamodel, getJavaType() );
 	}
 
 	private static class SerialForm implements Serializable {
@@ -704,6 +645,7 @@ public abstract class AbstractManagedType<J>
 			this.typeClass = typeClass;
 		}
 
+		@Serial
 		private Object readResolve() {
 			return jpaMetamodel.managedType( typeClass );
 		}
@@ -727,7 +669,6 @@ public abstract class AbstractManagedType<J>
 
 	protected class InFlightAccessImpl implements InFlightAccess<J> {
 		@Override
-		@SuppressWarnings("unchecked")
 		public void addAttribute(PersistentAttribute<J,?> attribute) {
 			if ( attribute instanceof SingularPersistentAttribute ) {
 				declaredSingularAttributes.put( attribute.getName(), (SingularPersistentAttribute<J, ?>) attribute );
@@ -746,8 +687,21 @@ public abstract class AbstractManagedType<J>
 		}
 
 		@Override
+		public void addConcreteGenericAttribute(PersistentAttribute<J, ?> attribute) {
+			if ( declaredConcreteGenericAttributes == null ) {
+				declaredConcreteGenericAttributes = new HashMap<>();
+			}
+			declaredConcreteGenericAttributes.put( attribute.getName(), attribute );
+		}
+
+		@Override
 		public void finishUp() {
 			inFlightAccess = null;
 		}
+	}
+
+	@Override
+	public String toString() {
+		return getClass().getSimpleName() + "[" + hibernateTypeName + "]";
 	}
 }

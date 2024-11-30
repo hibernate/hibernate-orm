@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.tool.schema.scripts;
 
@@ -12,7 +10,7 @@ import java.util.List;
 
 import org.hibernate.tool.schema.internal.script.MultiLineSqlScriptExtractor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectContext;
 import org.junit.Test;
 
@@ -23,7 +21,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-14249")
+@JiraKey(value = "HHH-14249")
 public class MultiLineImportWithSpacesAfterTheLastStatementTest {
 	public static final String IMPORT_FILE = "org/hibernate/orm/test/tool/schema/scripts/multi-line-statements-with-spaces-after-last-delimiter.sql";
 

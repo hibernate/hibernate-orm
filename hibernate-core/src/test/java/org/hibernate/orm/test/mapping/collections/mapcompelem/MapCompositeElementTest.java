@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.collections.mapcompelem;
 
@@ -54,7 +52,7 @@ public class MapCompositeElementTest {
 			final Product prod = s.get(Product.class, "Some Thing");
 			assertEquals( prod.getParts().size(), 1 );
 			assertEquals( ( (Part) prod.getParts().get("Top") ).getDescription(), "The brand new top part" );
-			s.delete(prod);
+			s.remove(prod);
 		} );
 	}
 
@@ -99,10 +97,9 @@ public class MapCompositeElementTest {
 			assertEquals( list.size(), 1 );
 			assertSame( list.get(0), item );
 
-			s.delete(item);
-			s.delete(prod);
+			s.remove(item);
+			s.remove(prod);
 		} );
 	}
 
 }
-

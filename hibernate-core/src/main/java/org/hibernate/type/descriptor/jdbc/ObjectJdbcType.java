@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
 
@@ -19,18 +17,23 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
- * Descriptor for binding objects
+ * Descriptor for binding objects using any {@linkplain Types JDBC type code}.
  *
  * @author Steve Ebersole
  */
 public class ObjectJdbcType implements JdbcType {
 	/**
-	 * Singleton access
+	 * An instance for the JDBC type code {@link Types#JAVA_OBJECT JAVA_OBJECT}.
 	 */
 	public static final ObjectJdbcType INSTANCE = new ObjectJdbcType( Types.JAVA_OBJECT );
 
 	private final int jdbcTypeCode;
 
+	/**
+	 * Construct an instance for handling the given {@linkplain Types JDBC type code}.
+	 *
+	 * @param jdbcTypeCode any type code defined by {@link Types}.
+	 */
 	public ObjectJdbcType(int jdbcTypeCode) {
 		this.jdbcTypeCode = jdbcTypeCode;
 	}
@@ -42,7 +45,7 @@ public class ObjectJdbcType implements JdbcType {
 
 	@Override
 	public String toString() {
-		return "ObjectSqlTypeDescriptor(" + jdbcTypeCode + ")";
+		return "ObjectTypeDescriptor(" + jdbcTypeCode + ")";
 	}
 
 	@Override

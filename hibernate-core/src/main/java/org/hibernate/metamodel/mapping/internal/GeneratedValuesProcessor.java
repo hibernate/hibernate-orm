@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
@@ -11,186 +9,215 @@ import java.util.List;
 
 import org.hibernate.Incubating;
 import org.hibernate.LockOptions;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.EventType;
+import org.hibernate.generator.Generator;
+import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.generator.values.GeneratedValues;
+import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.loader.ast.internal.LoaderSelectBuilder;
-import org.hibernate.metamodel.UnsupportedMappingException;
+import org.hibernate.loader.ast.internal.NoCallbackExecutionContext;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.GeneratedValueResolver;
-import org.hibernate.metamodel.mapping.InDatabaseGeneratedValueResolver;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.spi.Callback;
-import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.exec.spi.JdbcSelect;
-import org.hibernate.sql.results.spi.ListResultsConsumer;
-import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
+import org.hibernate.sql.results.internal.RowTransformerArrayImpl;
+
+import static org.hibernate.sql.results.spi.ListResultsConsumer.UniqueSemantic.FILTER;
 
 /**
+ * Responsible for retrieving {@linkplain OnExecutionGenerator database-generated}
+ * attribute values after an {@code insert} or {@code update} statement is executed.
+ * <p>
+ * The values might have been retrieved early by an instance of {@link GeneratedValuesMutationDelegate},
+ * which case the {@link GeneratedValues generatedValues} parameter of {@link #processGeneratedValues}
+ * will already contain the values we need and this processor handles only the
+ * {@link #setEntityAttributes setting of entity attributes}.
+ * <p>
+ * Note that the primary key / id attribute is always handled by the delegate.
+ *
+ * @see OnExecutionGenerator
+ *
  * @author Steve Ebersole
+ * @author Marco Belladelli
  */
 @Incubating
 public class GeneratedValuesProcessor {
 	private final SelectStatement selectStatement;
-	private final List<GeneratedValueDescriptor> valueDescriptors = new ArrayList<>();
-	private final List<JdbcParameter> jdbcParameters = new ArrayList<>();
+	private final JdbcOperationQuerySelect jdbcSelect;
+	private final List<AttributeMapping> generatedValuesToSelect;
+	private final JdbcParametersList jdbcParameters;
 
-	private final EntityMappingType entityDescriptor;
-	private final SessionFactoryImplementor sessionFactory;
+	private final EntityPersister entityDescriptor;
 
 	public GeneratedValuesProcessor(
-			EntityMappingType entityDescriptor,
-			GenerationTiming timing,
+			EntityPersister entityDescriptor,
+			List<AttributeMapping> generatedAttributes,
+			EventType timing,
 			SessionFactoryImplementor sessionFactory) {
 		this.entityDescriptor = entityDescriptor;
-		this.sessionFactory = sessionFactory;
 
-		// NOTE: we only care about db-generated values here. in-memory generation
-		// is applied before the insert/update happens.
-
-		final List<AttributeMapping> generatedValuesToSelect = new ArrayList<>();
-		// todo (6.0): for now, we rely on the entity metamodel as composite attributes report GenerationTiming.NEVER
-		//  even if they have attributes that would need generation
-		final InDatabaseValueGenerationStrategy[] inDatabaseValueGenerationStrategies = entityDescriptor.getEntityPersister()
-				.getEntityMetamodel()
-				.getInDatabaseValueGenerationStrategies();
-		entityDescriptor.visitAttributeMappings( mapping -> {
-			final InDatabaseValueGenerationStrategy inDatabaseValueGenerationStrategy = inDatabaseValueGenerationStrategies[mapping.getStateArrayPosition()];
-			if ( inDatabaseValueGenerationStrategy.getGenerationTiming() == GenerationTiming.NEVER ) {
-				return;
-			}
-			final GeneratedValueResolver generatedValueResolver = new InDatabaseGeneratedValueResolver(
-					timing,
-					generatedValuesToSelect.size()
-			);
-//			if ( attr.getValueGeneration().getGenerationTiming() == GenerationTiming.NEVER ) {
-//				return;
-//			}
-//
-//			final GeneratedValueResolver generatedValueResolver = GeneratedValueResolver.from(
-//					attr.getValueGeneration(),
-//					timing,
-//					generatedValuesToSelect.size()
-//			);
-//
-//			//noinspection RedundantClassCall
-//			if ( ! InDatabaseGeneratedValueResolver.class.isInstance( generatedValueResolver ) ) {
-//				// again, we only care about in in-db generations here
-//				return;
-//			}
-
-			// this attribute is generated for the timing we are processing...
-			valueDescriptors.add( new GeneratedValueDescriptor( generatedValueResolver, mapping ) );
-			generatedValuesToSelect.add( mapping );
-		});
-
-		if ( generatedValuesToSelect.isEmpty() ) {
+		generatedValuesToSelect = generatedAttributes;
+		if ( generatedValuesToSelect.isEmpty() || !needsSubsequentSelect( timing, generatedAttributes ) ) {
 			selectStatement = null;
+			jdbcSelect = null;
+			jdbcParameters = null;
 		}
 		else {
+			final JdbcParametersList.Builder builder = JdbcParametersList.newBuilder();
+
 			selectStatement = LoaderSelectBuilder.createSelect(
 					entityDescriptor,
 					generatedValuesToSelect,
 					entityDescriptor.getIdentifierMapping(),
 					null,
 					1,
-					LoadQueryInfluencers.NONE,
+					new LoadQueryInfluencers( sessionFactory ),
 					LockOptions.READ,
-					jdbcParameters::add,
+					builder::add,
 					sessionFactory
 			);
+			jdbcSelect = sessionFactory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
+							.buildSelectTranslator( sessionFactory, selectStatement )
+							.translate( JdbcParameterBindings.NO_BINDINGS, QueryOptions.NONE );
+			jdbcParameters = builder.build();
 		}
 	}
 
-	public void processGeneratedValues(Object entity, Object id, Object[] state, SharedSessionContractImplementor session) {
-		if ( selectStatement == null ) {
-			return;
+	private boolean needsSubsequentSelect(EventType timing, List<AttributeMapping> generatedAttributes) {
+		if ( timing == EventType.INSERT ) {
+			return entityDescriptor.getInsertDelegate() == null
+					|| !entityDescriptor.getInsertDelegate().supportsArbitraryValues()
+					// Check if we need to select more properties than what is processed by the identity delegate.
+					// This can happen for on-execution generated values on non-identifier tables
+					|| generatedAttributes.size() > numberOfGeneratedNonIdentifierProperties( timing );
 		}
+		else {
+			return entityDescriptor.getUpdateDelegate() == null;
+		}
+	}
 
-		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
-		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
+	private int numberOfGeneratedNonIdentifierProperties(EventType timing) {
+		if ( timing == EventType.INSERT) {
+			return entityDescriptor.getInsertGeneratedProperties().size()
+					- ( entityDescriptor.isIdentifierAssignedByInsert() ? 1 : 0 );
+		}
+		else {
+			return 0;
+		}
+	}
 
+	/**
+	 * Find attributes generated by an {@link OnExecutionGenerator}.
+	 *
+	 * @return a list of {@link AttributeMapping}s.
+	 */
+	public static List<AttributeMapping> getGeneratedAttributes(EntityMappingType entityDescriptor, EventType timing) {
+		// todo (6.0): For now, we rely on the entity metamodel as composite attributes report
+		//             GenerationTiming.NEVER even if they have attributes that would need generation
+		final Generator[] generators = entityDescriptor.getEntityPersister().getEntityMetamodel().getGenerators();
+		final List<AttributeMapping> generatedValuesToSelect = new ArrayList<>();
+		entityDescriptor.forEachAttributeMapping( mapping -> {
+			final Generator generator = generators[ mapping.getStateArrayPosition() ];
+			if ( generator != null
+					&& generator.generatedOnExecution()
+					&& generator.getEventTypes().contains(timing) ) {
+				generatedValuesToSelect.add( mapping );
+			}
+		} );
+		return generatedValuesToSelect;
+	}
+
+	/**
+	 * Obtain the generated values, and populate the snapshot and the fields of the entity instance.
+	 */
+	public void processGeneratedValues(
+			Object entity,
+			Object id,
+			Object[] state,
+			GeneratedValues generatedValues,
+			SharedSessionContractImplementor session) {
+		if ( hasActualGeneratedValuesToSelect( session, entity ) ) {
+			if ( selectStatement != null ) {
+				final List<Object[]> results = executeSelect( id, session );
+				assert results.size() == 1;
+				setEntityAttributes( entity, state, results.get( 0 ) );
+			}
+			else if ( generatedValues != null ) {
+				// can be null when an update action resulted in a no-op (e.g. only changes to unowned association)
+				final List<Object> results = generatedValues.getGeneratedValues( generatedValuesToSelect );
+				setEntityAttributes( entity, state, results.toArray( new Object[0] ) );
+			}
+		}
+	}
+
+	private boolean hasActualGeneratedValuesToSelect(SharedSessionContractImplementor session, Object entity) {
+		for ( AttributeMapping attributeMapping : generatedValuesToSelect ) {
+			if ( attributeMapping.getGenerator().generatedOnExecution( entity, session ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private List<Object[]> executeSelect(Object id, SharedSessionContractImplementor session) {
+		final JdbcParameterBindings jdbcParamBindings = getJdbcParameterBindings( id, session );
+		return session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
+				jdbcSelect,
+				jdbcParamBindings,
+				new NoCallbackExecutionContext( session ),
+				RowTransformerArrayImpl.instance(),
+				null,
+				FILTER,
+				1
+		);
+	}
+
+	private JdbcParameterBindings getJdbcParameterBindings(Object id, SharedSessionContractImplementor session) {
 		final JdbcParameterBindings jdbcParamBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
 		int offset = jdbcParamBindings.registerParametersForEachJdbcValue(
 				id,
-				Clause.WHERE,
 				entityDescriptor.getIdentifierMapping(),
 				jdbcParameters,
 				session
 		);
 		assert offset == jdbcParameters.size();
-		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory
-				.buildSelectTranslator( sessionFactory, selectStatement )
-				.translate( jdbcParamBindings, QueryOptions.NONE );
+		return jdbcParamBindings;
+	}
 
-		final List<Object[]> results = session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
-				jdbcSelect,
-				jdbcParamBindings,
-				new ExecutionContext() {
-					@Override
-					public SharedSessionContractImplementor getSession() {
-						return session;
-					}
-
-					@Override
-					public QueryOptions getQueryOptions() {
-						return QueryOptions.NONE;
-					}
-
-					@Override
-					public String getQueryIdentifier(String sql) {
-						return sql;
-					}
-
-					@Override
-					public QueryParameterBindings getQueryParameterBindings() {
-						return QueryParameterBindings.NO_PARAM_BINDINGS;
-					}
-
-					@Override
-					public Callback getCallback() {
-						throw new UnsupportedMappingException( "Follow-on locking not supported yet" );
-					}
-
-				},
-				(row) -> row,
-				ListResultsConsumer.UniqueSemantic.FILTER
-		);
-
-		assert results.size() == 1;
-		final Object[] dbSelectionResults = results.get( 0 );
-
-		for ( int i = 0; i < valueDescriptors.size(); i++ ) {
-			final GeneratedValueDescriptor descriptor = valueDescriptors.get( i );
-			final Object generatedValue = descriptor.resolver.resolveGeneratedValue( dbSelectionResults, entity, session );
-			state[ descriptor.attribute.getStateArrayPosition() ] = generatedValue;
-			descriptor.attribute.getAttributeMetadataAccess()
-					.resolveAttributeMetadata( entityDescriptor )
-					.getPropertyAccess()
-					.getSetter()
-					.set( entity, generatedValue );
+	private void setEntityAttributes(Object entity, Object[] state, Object[] selectionResults) {
+		for ( int i = 0; i < generatedValuesToSelect.size(); i++ ) {
+			final AttributeMapping attribute = generatedValuesToSelect.get( i );
+			final Object generatedValue = selectionResults[i];
+			state[ attribute.getStateArrayPosition() ] = generatedValue;
+			attribute.getAttributeMetadata().getPropertyAccess().getSetter().set( entity, generatedValue );
 		}
 	}
 
-	private static class GeneratedValueDescriptor {
-		public final GeneratedValueResolver resolver;
-		public final AttributeMapping attribute;
+	public SelectStatement getSelectStatement() {
+		return selectStatement;
+	}
 
-		public GeneratedValueDescriptor(GeneratedValueResolver resolver, AttributeMapping attribute) {
-			this.resolver = resolver;
-			this.attribute = attribute;
-		}
+	public List<AttributeMapping> getGeneratedValuesToSelect() {
+		return generatedValuesToSelect;
+	}
+
+	public JdbcParametersList getJdbcParameters() {
+		return jdbcParameters;
+	}
+
+	public EntityMappingType getEntityDescriptor() {
+		return entityDescriptor;
+	}
+
+	public JdbcOperationQuerySelect getJdbcSelect() {
+		return jdbcSelect;
 	}
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy;
 
@@ -11,42 +9,66 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hibernate.Hibernate;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Steve Ebersole
  */
 
-@TestForIssue(jiraKey = "HHH-11147")
-@RunWith(BytecodeEnhancerRunner.class)
+@JiraKey("HHH-11147")
+@DomainModel(
+		annotatedClasses = {
+				Customer.class,
+				ForeignCustomer.class,
+				DomesticCustomer.class,
+				Payment.class,
+				CreditCardPayment.class,
+				DebitCardPayment.class,
+				Address.class,
+				Order.class,
+				OrderSupplemental.class,
+				OrderSupplemental2.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+				@Setting( name = AvailableSettings.USE_QUERY_CACHE, value = "false" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @EnhancementOptions( lazyLoading = true )
-public class LazyGroupWithInheritanceTest extends BaseNonConfigCoreFunctionalTestCase {
+public class LazyGroupWithInheritanceTest {
+
 	@Test
-	public void loadEntityWithAssociationToAbstract() {
-		final Statistics stats = sessionFactory().getStatistics();
+	public void loadEntityWithAssociationToAbstract(SessionFactoryScope scope) {
+		final Statistics stats = scope.getSessionFactory().getStatistics();
 		stats.clear();
 
-		inTransaction(
+		scope.inTransaction(
 				(session) -> {
 					final Order loaded = session.byId( Order.class ).load( 1 );
 					assert Hibernate.isPropertyInitialized( loaded, "customer" );
@@ -61,13 +83,13 @@ public class LazyGroupWithInheritanceTest extends BaseNonConfigCoreFunctionalTes
 	}
 
 	@Test
-	public void queryEntityWithAssociationToAbstract() {
-		final Statistics stats = sessionFactory().getStatistics();
+	public void queryEntityWithAssociationToAbstract(SessionFactoryScope scope) {
+		final Statistics stats = scope.getSessionFactory().getStatistics();
 		stats.clear();
 
 		final AtomicInteger expectedQueryCount = new AtomicInteger( 0 );
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					final List<Order> orders = session.createQuery( "select o from Order o", Order.class ).list();
 
@@ -121,17 +143,17 @@ public class LazyGroupWithInheritanceTest extends BaseNonConfigCoreFunctionalTes
 	}
 
 	/**
-	 * Same test as {@link #queryEntityWithAssociationToAbstract()}, but using runtime
+	 * Same test as {@link #queryEntityWithAssociationToAbstract(SessionFactoryScope)}, but using runtime
 	 * fetching to issues just a single select
 	 */
 	@Test
-	public void queryEntityWithAssociationToAbstractRuntimeFetch() {
-		final Statistics stats = sessionFactory().getStatistics();
+	public void queryEntityWithAssociationToAbstractRuntimeFetch(SessionFactoryScope scope) {
+		final Statistics stats = scope.getSessionFactory().getStatistics();
 		stats.clear();
 
 		final AtomicInteger expectedQueryCount = new AtomicInteger( 0 );
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					final String qry = "select o from Order o join fetch o.customer c join fetch o.payments join fetch o.supplemental join fetch o.supplemental2";
 
@@ -182,62 +204,52 @@ public class LazyGroupWithInheritanceTest extends BaseNonConfigCoreFunctionalTes
 		);
 	}
 
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-
-		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
-		ssrb.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
-		ssrb.applySetting( AvailableSettings.USE_QUERY_CACHE, "false" );
-	}
-
-
-	@Before
-	public void prepareTestData() {
-		inTransaction(
+	@BeforeEach
+	public void prepareTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					final Address austin = new Address( 1, "Austin" );
 					final Address london = new Address( 2, "London" );
 
-					session.save( austin );
-					session.save( london );
+					session.persist( austin );
+					session.persist( london );
 
 					final ForeignCustomer acme = new ForeignCustomer( 1, "Acme", london, "1234" );
 					final ForeignCustomer acmeBrick = new ForeignCustomer( 2, "Acme Brick", london, "9876", acme );
 
 					final ForeignCustomer freeBirds = new ForeignCustomer( 3, "Free Birds", austin, "13579" );
 
-					session.save( acme );
-					session.save( acmeBrick );
-					session.save( freeBirds );
+					session.persist( acme );
+					session.persist( acmeBrick );
+					session.persist( freeBirds );
 
 					final Order order1 = new Order( 1, "some text", freeBirds );
 					freeBirds.getOrders().add( order1 );
-					session.save( order1 );
+					session.persist( order1 );
 
 					final OrderSupplemental orderSupplemental = new OrderSupplemental( 1, 1 );
 					order1.setSupplemental( orderSupplemental );
 					final OrderSupplemental2 orderSupplemental2_1 = new OrderSupplemental2( 2, 2 );
 					order1.setSupplemental2( orderSupplemental2_1 );
 					orderSupplemental2_1.setOrder( order1 );
-					session.save( orderSupplemental );
-					session.save( orderSupplemental2_1 );
+					session.persist( orderSupplemental );
+					session.persist( orderSupplemental2_1 );
 
 					final Order order2 = new Order( 2, "some text", acme );
 					acme.getOrders().add( order2 );
-					session.save( order2 );
+					session.persist( order2 );
 
 					final OrderSupplemental2 orderSupplemental2_2 = new OrderSupplemental2( 3, 3 );
 					order2.setSupplemental2( orderSupplemental2_2 );
 					orderSupplemental2_2.setOrder( order2 );
-					session.save( orderSupplemental2_2 );
+					session.persist( orderSupplemental2_2 );
 
 					final CreditCardPayment payment1 = new CreditCardPayment( 1, 1F, "1" );
-					session.save( payment1 );
+					session.persist( payment1 );
 					order1.getPayments().add( payment1 );
 
 					final DebitCardPayment payment2 = new DebitCardPayment( 2, 2F, "2" );
-					session.save( payment2 );
+					session.persist( payment2 );
 					order1.getPayments().add( payment2 );
 
 
@@ -246,9 +258,9 @@ public class LazyGroupWithInheritanceTest extends BaseNonConfigCoreFunctionalTes
 		);
 	}
 
-	@After
-	public void cleanUpTestData() {
-		inTransaction(
+	@AfterEach
+	public void cleanUpTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "delete from CreditCardPayment" ).executeUpdate();
 					session.createQuery( "delete from DebitCardPayment" ).executeUpdate();
@@ -266,25 +278,4 @@ public class LazyGroupWithInheritanceTest extends BaseNonConfigCoreFunctionalTes
 				}
 		);
 	}
-
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-
-		sources.addAnnotatedClass( Customer.class );
-		sources.addAnnotatedClass( ForeignCustomer.class );
-		sources.addAnnotatedClass( DomesticCustomer.class );
-
-		sources.addAnnotatedClass( Payment.class );
-		sources.addAnnotatedClass( CreditCardPayment.class );
-		sources.addAnnotatedClass( DebitCardPayment.class );
-
-		sources.addAnnotatedClass( Address.class );
-
-		sources.addAnnotatedClass( Order.class );
-		sources.addAnnotatedClass( OrderSupplemental.class );
-		sources.addAnnotatedClass( OrderSupplemental2.class );
-	}
-
-
 }

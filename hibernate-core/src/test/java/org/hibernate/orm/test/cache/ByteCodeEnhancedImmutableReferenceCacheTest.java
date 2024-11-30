@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cache;
 
@@ -10,7 +8,6 @@ import org.hibernate.Session;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Immutable;
-import org.hibernate.annotations.Proxy;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.EntityEntry;
@@ -18,7 +15,8 @@ import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.testing.TestForIssue;
+
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -41,8 +39,8 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 	@Override
 	protected void configure(Configuration configuration) {
 		super.configure( configuration );
-		configuration.setProperty( AvailableSettings.USE_DIRECT_REFERENCE_CACHE_ENTRIES, "true" );
-		configuration.setProperty( AvailableSettings.USE_QUERY_CACHE, "true" );
+		configuration.setProperty( AvailableSettings.USE_DIRECT_REFERENCE_CACHE_ENTRIES, true );
+		configuration.setProperty( AvailableSettings.USE_QUERY_CACHE, true );
 	}
 
 	@Override
@@ -62,7 +60,7 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 		// save a reference in one session
 		Session s = openSession();
 		s.beginTransaction();
-		s.save( myReferenceData );
+		s.persist( myReferenceData );
 		s.getTransaction().commit();
 		s.close();
 
@@ -72,7 +70,7 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 		s = openSession();
 		s.beginTransaction();
 		//		MyEnhancedReferenceData loaded = (MyEnhancedReferenceData) s.get( MyEnhancedReferenceData.class, 1 );
-		MyEnhancedReferenceData loaded = (MyEnhancedReferenceData) s.load( MyEnhancedReferenceData.class, 1 );
+		MyEnhancedReferenceData loaded = s.getReference( MyEnhancedReferenceData.class, 1 );
 		s.getTransaction().commit();
 		s.close();
 
@@ -92,13 +90,13 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 		// cleanup
 		s = openSession();
 		s.beginTransaction();
-		s.delete( myReferenceData );
+		s.remove( myReferenceData );
 		s.getTransaction().commit();
 		s.close();
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10795")
+	@JiraKey( value = "HHH-10795")
 	public void testAssociatedWithMultiplePersistenceContexts() {
 		MyEnhancedReferenceData myReferenceData = new MyEnhancedReferenceData( 1, "first item", "abc" );
 		MyEnhancedReferenceData myOtherReferenceData = new MyEnhancedReferenceData( 2, "second item", "def" );
@@ -106,8 +104,8 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 		// save a reference in one session
 		Session s1 = openSession();
 		s1.beginTransaction();
-		s1.save( myReferenceData );
-		s1.save( myOtherReferenceData );
+		s1.persist( myReferenceData );
+		s1.persist( myOtherReferenceData );
 		s1.getTransaction().commit();
 		s1.close();
 
@@ -118,7 +116,7 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 		s1 = openSession();
 		s1.beginTransaction();
 		myReferenceData = s1.get( MyEnhancedReferenceData.class, myReferenceData.getId() );
-	    myOtherReferenceData = s1.get( MyEnhancedReferenceData.class, myOtherReferenceData.getId() );
+		myOtherReferenceData = s1.get( MyEnhancedReferenceData.class, myOtherReferenceData.getId() );
 		assertTrue( s1.contains( myReferenceData ) );
 		assertTrue( s1.contains( myOtherReferenceData ) );
 		// prev/next references should be null; entityEntry should be non-null;
@@ -199,13 +197,13 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 		assertEquals( Status.READ_ONLY, myOtherReferenceData.$$_hibernate_getEntityEntry().getStatus() );
 
 		// delete myReferenceData from s1
-		s1.delete( myReferenceData );
+		s1.remove( myReferenceData );
 
 		assertEquals( Status.DELETED, myReferenceData.$$_hibernate_getEntityEntry().getStatus() );
 		assertEquals( Status.READ_ONLY, myOtherReferenceData.$$_hibernate_getEntityEntry().getStatus() );
 
 		// delete myOtherReferenceData from s2
-		s2.delete( myOtherReferenceData );
+		s2.remove( myOtherReferenceData );
 
 		assertEquals( Status.DELETED, myReferenceData.$$_hibernate_getEntityEntry().getStatus() );
 		assertEquals( Status.DELETED, myOtherReferenceData.$$_hibernate_getEntityEntry().getStatus() );
@@ -227,8 +225,7 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 	@Immutable
 	@Cacheable
 	@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
-	@Proxy(lazy = false)
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public static class MyEnhancedReferenceData implements ManagedEntity {
 		@Id
 		private Integer id;
@@ -310,5 +307,14 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 			this.previous = previous;
 		}
 
+		@Override
+		public void $$_hibernate_setUseTracker(boolean useTracker) {
+
+		}
+
+		@Override
+		public boolean $$_hibernate_useTracker() {
+			return false;
+		}
 	}
 }

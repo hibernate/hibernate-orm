@@ -1,26 +1,23 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.cte.CteStatement;
-import org.hibernate.sql.ast.tree.expression.CastTarget;
+import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
+import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.FunctionExpression;
 import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
@@ -31,6 +28,7 @@ import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
+import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.predicate.SelfRenderingPredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
@@ -65,6 +63,58 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		}
 		else {
 			super.visitBooleanExpressionPredicate( booleanExpressionPredicate );
+		}
+	}
+
+	// Firebird does not allow CASE expressions where all result arms contain plain parameters.
+	// At least one result arm must provide some type context for inference,
+	// so we cast the first result arm if we encounter this condition
+
+	@Override
+	protected void visitAnsiCaseSearchedExpression(
+			CaseSearchedExpression caseSearchedExpression,
+			Consumer<Expression> resultRenderer) {
+		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( caseSearchedExpression ) ) {
+			final List<CaseSearchedExpression.WhenFragment> whenFragments = caseSearchedExpression.getWhenFragments();
+			final Expression firstResult = whenFragments.get( 0 ).getResult();
+			super.visitAnsiCaseSearchedExpression(
+					caseSearchedExpression,
+					e -> {
+						if ( e == firstResult ) {
+							renderCasted( e );
+						}
+						else {
+							resultRenderer.accept( e );
+						}
+					}
+			);
+		}
+		else {
+			super.visitAnsiCaseSearchedExpression( caseSearchedExpression, resultRenderer );
+		}
+	}
+
+	@Override
+	protected void visitAnsiCaseSimpleExpression(
+			CaseSimpleExpression caseSimpleExpression,
+			Consumer<Expression> resultRenderer) {
+		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( caseSimpleExpression ) ) {
+			final List<CaseSimpleExpression.WhenFragment> whenFragments = caseSimpleExpression.getWhenFragments();
+			final Expression firstResult = whenFragments.get( 0 ).getResult();
+			super.visitAnsiCaseSimpleExpression(
+					caseSimpleExpression,
+					e -> {
+						if ( e == firstResult ) {
+							renderCasted( e );
+						}
+						else {
+							resultRenderer.accept( e );
+						}
+					}
+			);
+		}
+		else {
+			super.visitAnsiCaseSimpleExpression( caseSimpleExpression, resultRenderer );
 		}
 	}
 
@@ -109,6 +159,7 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		try {
 			appendSql( "select " );
 			visitSqlSelections( selectClause );
+			renderVirtualSelections( selectClause );
 		}
 		finally {
 			clauseStack.pop();
@@ -137,20 +188,10 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	protected void renderSearchClause(CteStatement cte) {
-		// Firebird does not support this, but it's just a hint anyway
-	}
-
-	@Override
-	protected void renderCycleClause(CteStatement cte) {
-		// Firebird does not support this, but it can be emulated
-	}
-
-	@Override
 	protected boolean supportsSimpleQueryGrouping() {
-		// Firebird is quite strict i.e. it requires `select .. union all select * from (select ...)`
+		// Firebird 4 and earlier are quite strict i.e. it requires `select .. union all select * from (select ...)`
 		// rather than `select .. union all (select ...)`
-		return false;
+		return getDialect().getVersion().isSameOrAfter( 5 );
 	}
 
 	@Override
@@ -183,6 +224,28 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
+	public void visitInListPredicate(InListPredicate inListPredicate) {
+		final List<Expression> listExpressions = inListPredicate.getListExpressions();
+		if ( listExpressions.isEmpty() ) {
+			appendSql( "1=" + ( inListPredicate.isNegated() ? "1" : "0" ) );
+			return;
+		}
+		final Expression testExpression = inListPredicate.getTestExpression();
+		if ( isParameter( testExpression ) ) {
+			renderCasted( testExpression );
+			if ( inListPredicate.isNegated() ) {
+				appendSql( " not" );
+			}
+			appendSql( " in (" );
+			renderCommaSeparated( listExpressions );
+			appendSql( CLOSE_PARENTHESIS );
+		}
+		else {
+			super.visitInListPredicate( inListPredicate );
+		}
+	}
+
+	@Override
 	protected boolean supportsRowValueConstructorSyntax() {
 		return false;
 	}
@@ -197,18 +260,18 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		return false;
 	}
 
-	@Override
-	protected String getFromDual() {
-		return " from rdb$database";
-	}
-
-	@Override
-	protected String getFromDualForSelectOnly() {
-		return getFromDual();
-	}
-
 	private boolean supportsOffsetFetchClause() {
 		return getDialect().getVersion().isSameOrAfter( 3 );
+	}
+
+	@Override
+	protected boolean supportsIntersect() {
+		return false;
+	}
+
+	@Override
+	protected boolean supportsNestedWithClause() {
+		return false;
 	}
 
 	@Override
@@ -228,9 +291,9 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	public void visitSelfRenderingExpression(SelfRenderingExpression expression) {
 		// see comments in visitParameter
 		boolean inFunction = this.inFunction;
-		this.inFunction = !( expression instanceof FunctionExpression ) || !"cast".equals( ( (FunctionExpression) expression).getFunctionName() );
+		this.inFunction = !( expression instanceof FunctionExpression ) || !"cast".equals( ( (FunctionExpression) expression ).getFunctionName() );
 		try {
-			super.visitSelfRenderingExpression( expression);
+			super.visitSelfRenderingExpression( expression );
 		}
 		finally {
 			this.inFunction = inFunction;

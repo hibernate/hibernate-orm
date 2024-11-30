@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.embeddables;
 
@@ -42,7 +40,8 @@ public class DollarValueUserType implements UserType<DollarValue> {
 	}
 
 	@Override
-	public DollarValue nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public DollarValue nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+			throws SQLException {
 		return new DollarValue( rs.getBigDecimal( position ) );
 	}
 
@@ -51,7 +50,7 @@ public class DollarValueUserType implements UserType<DollarValue> {
 			PreparedStatement st,
 			DollarValue value,
 			int index,
-			SharedSessionContractImplementor session) throws HibernateException, SQLException {
+			SharedSessionContractImplementor session) throws SQLException {
 		st.setBigDecimal(index, value.getAmount());
 	}
 

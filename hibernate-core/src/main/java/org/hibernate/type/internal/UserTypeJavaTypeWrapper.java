@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.internal;
 
@@ -12,7 +10,7 @@ import java.util.Comparator;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
@@ -24,6 +22,7 @@ import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.UserType;
 
 /**
+ * Adaptor between {@link UserType} and {@link org.hibernate.type.descriptor.java.JavaType}.
  *
  * @author Steve Ebersole
  */
@@ -81,7 +80,7 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( userType.getSqlType() );
+		return context.getJdbcType( userType.getSqlType() );
 	}
 
 	@Override
@@ -176,12 +175,43 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 
 		@Override
 		public Serializable disassemble(J value, SharedSessionContract session) {
-			return userType.disassemble( value );
+			final Serializable disassembled = userType.disassemble( value );
+			// Since UserType#disassemble is an optional operation,
+			// we have to handle the fact that it could produce a null value,
+			// in which case we will try to use a converter for disassembling,
+			// or if that doesn't exist, simply use the domain value as is
+			if ( disassembled == null && value != null ) {
+				final BasicValueConverter<J, Object> valueConverter = userType.getValueConverter();
+				if ( valueConverter == null ) {
+					return (Serializable) value;
+				}
+				else {
+					return valueConverter.getRelationalJavaType().getMutabilityPlan().disassemble(
+							valueConverter.toRelationalValue( value ),
+							session
+					);
+				}
+			}
+			return disassembled;
 		}
 
 		@Override
 		public J assemble(Serializable cached, SharedSessionContract session) {
-			return userType.assemble( cached , session);
+			final J assembled = userType.assemble( cached, null );
+			// Since UserType#assemble is an optional operation,
+			// we have to handle the fact that it could produce a null value,
+			// in which case we will try to use a converter for assembling,
+			// or if that doesn't exist, simply use the relational value as is
+			if ( assembled == null && cached != null ) {
+				final BasicValueConverter<J, Object> valueConverter = userType.getValueConverter();
+				if ( valueConverter == null ) {
+					return (J) cached;
+				}
+				else {
+					return valueConverter.toDomainValue( cached );
+				}
+			}
+			return assembled;
 		}
 	}
 }

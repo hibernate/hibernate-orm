@@ -1,36 +1,58 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
 
+import org.hibernate.jdbc.Expectation;
+
 /**
- * Possible styles of checking return codes on SQL INSERT, UPDATE and DELETE queries.
+ * Enumerates strategies for checking JDBC return codes for custom SQL DML queries.
+ * <p>
+ * Return code checking is used to verify that a SQL statement actually had the
+ * intended effect, for example, that an {@code UPDATE} statement actually changed
+ * the expected number of rows.
  *
- * @author L�szl� Benke
+ * @author László Benke
+ *
+ * @see SQLInsert#check()
+ * @see SQLUpdate#check()
+ * @see SQLDelete#check()
+ * @see SQLDeleteAll#check()
+ *
+ * @see Expectation
+ *
+ * @deprecated Use an {@link Expectation} class instead.
  */
+@Deprecated(since = "6.5")
 public enum ResultCheckStyle {
 	/**
-	 * Do not perform checking.  Might mean that the user really just does not want any checking.  Might
-	 * also mean that the user is expecting a failure to be indicated by a {@link java.sql.SQLException} being
-	 * thrown (presumably from a {@link java.sql.CallableStatement} which is performing explicit checks and
-	 * propagating failures back through the driver).
+	 * No return code checking. Might mean that no checks are required, or that
+	 * failure is indicated by a {@link java.sql.SQLException} being thrown, for
+	 * example, by a {@link java.sql.CallableStatement stored procedure} which
+	 * performs explicit checks.
+	 *
+	 * @see org.hibernate.jdbc.Expectation.None
 	 */
 	NONE,
 	/**
-	 * Perform row-count checking.  Row counts are the int values returned by both
-	 * {@link java.sql.PreparedStatement#executeUpdate()} and
-	 * {@link java.sql.Statement#executeBatch()}.  These values are checked
-	 * against some expected count.
+	 * Row count checking. A row count is an integer value returned by
+	 * {@link java.sql.PreparedStatement#executeUpdate()} or
+	 * {@link java.sql.Statement#executeBatch()}. The row count is checked
+	 * against an expected value. For example, the expected row count for
+	 * an {@code INSERT} statement is always 1.
+	 *
+	 * @see org.hibernate.jdbc.Expectation.RowCount
 	 */
 	COUNT,
 	/**
-	 * Essentially the same as {@link #COUNT} except that the row count actually
-	 * comes from an output parameter registered as part of a
-	 * {@link java.sql.CallableStatement}.  This style explicitly prohibits
-	 * statement batching from being used...
+	 * Essentially identical to {@link #COUNT} except that the row count is
+	 * obtained via an output parameter of a {@link java.sql.CallableStatement
+	 * stored procedure}.
+	 * <p>
+	 * Statement batching is disabled when {@code PARAM} is selected.
+	 *
+	 * @see org.hibernate.jdbc.Expectation.OutParameter
 	 */
 	PARAM
 }

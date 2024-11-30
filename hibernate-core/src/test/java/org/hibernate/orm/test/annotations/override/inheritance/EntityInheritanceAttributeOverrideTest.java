@@ -1,45 +1,48 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.override.inheritance;
 
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-
-import org.hibernate.cfg.AnnotationBinder;
+import org.hibernate.AnnotationException;
+import org.hibernate.boot.model.internal.EntityBinder;
 import org.hibernate.internal.CoreMessageLogger;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.logger.LoggerInspectionRule;
-import org.hibernate.testing.logger.Triggerable;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
+import org.hibernate.testing.orm.junit.JiraKeyGroup;
+
+import org.jboss.logging.Logger;
 import org.junit.Rule;
 import org.junit.jupiter.api.Test;
 
-import org.jboss.logging.Logger;
+import java.lang.invoke.MethodHandles;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-12609, HHH-12654, HHH-13172")
+@JiraKeyGroup( value = {
+		@JiraKey(value = "HHH-12609"),
+		@JiraKey(value = "HHH-12654"),
+		@JiraKey(value = "HHH-13172")
+} )
+@JiraKey(value = "HHH-12609, HHH-12654, HHH-13172")
 public class EntityInheritanceAttributeOverrideTest extends EntityManagerFactoryBasedFunctionalTest {
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( CoreMessageLogger.class, AnnotationBinder.class.getName() ) );
+			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, EntityBinder.class.getName() ) );
 
 	@Override
 	public Class<?>[] getAnnotatedClasses() {
@@ -50,19 +53,15 @@ public class EntityInheritanceAttributeOverrideTest extends EntityManagerFactory
 		};
 	}
 
-	@Override
-	public EntityManagerFactory produceEntityManagerFactory() {
-		Triggerable warningLogged = logInspection.watchForLogMessages( "HHH000499:" );
-
-		EntityManagerFactory entityManagerFactory = super.produceEntityManagerFactory();
-
-		assertTrue( warningLogged.wasTriggered(), "A warning should have been logged for this unsupported configuration");
-		return entityManagerFactory;
-	}
-
 	@Test
 	public void test() {
-		produceEntityManagerFactory().close();
+		try {
+			produceEntityManagerFactory().close();
+			fail();
+		}
+		catch (AnnotationException ae) {
+			//expected
+		}
 	}
 
 	@Entity(name = "AbstractEntity")

@@ -1,13 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm;
 
 /**
  * The SQL set operators.
+ *
+ * @apiNote This is an SPI type. It should never occur
+ * in APIs visible to the application program.
  *
  * @author Christian Beikov
  */
@@ -15,35 +16,36 @@ public enum SetOperator {
 	/**
 	 * Union of sets that removes duplicate rows.
 	 */
-	UNION("union"),
+	UNION,
 	/**
 	 * Union of bags that retains all elements.
 	 */
-	UNION_ALL("union all"),
+	UNION_ALL,
 	/**
 	 * Intersection of sets that removes duplicate rows.
 	 */
-	INTERSECT("intersect"),
+	INTERSECT,
 	/**
 	 * Intersection of bags that retains duplicate matches.
 	 */
-	INTERSECT_ALL("intersect all"),
+	INTERSECT_ALL,
 	/**
 	 * Exclusion of set elements of the set on the right-hand side.
 	 */
-	EXCEPT("except"),
+	EXCEPT,
 	/**
 	 * Exclusion of bag elements of the bag on the right-hand side that retains duplicates.
 	 */
-	EXCEPT_ALL("except all");
-
-	private final String sqlString;
-
-	private SetOperator(String sqlString) {
-		this.sqlString = sqlString;
-	}
+	EXCEPT_ALL;
 
 	public String sqlString() {
-		return sqlString;
+		return switch (this) {
+			case UNION -> "union";
+			case UNION_ALL -> "union all";
+			case INTERSECT -> "intersect";
+			case INTERSECT_ALL -> "intersect all";
+			case EXCEPT -> "except";
+			case EXCEPT_ALL -> "except all";
+		};
 	}
 }

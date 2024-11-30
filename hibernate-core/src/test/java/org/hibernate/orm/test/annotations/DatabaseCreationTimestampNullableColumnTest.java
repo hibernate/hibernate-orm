@@ -1,134 +1,116 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Date;
+import java.util.EnumSet;
+
+import org.hibernate.annotations.NaturalId;
+import org.hibernate.annotations.ValueGenerationType;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.generator.EventType;
+import org.hibernate.generator.EventTypeSets;
+import org.hibernate.generator.OnExecutionGenerator;
+
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
-import org.hibernate.annotations.NaturalId;
-import org.hibernate.annotations.ValueGenerationType;
-import org.hibernate.dialect.SybaseASEDialect;
-import org.hibernate.tuple.AnnotationValueGeneration;
-import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.ValueGenerator;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
-import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue( jiraKey = "HHH-11096" )
+@SuppressWarnings("JUnitMalformedDeclaration")
+@JiraKey( "HHH-11096" )
 @RequiresDialectFeature( feature = DialectFeatureChecks.UsesStandardCurrentTimestampFunction.class )
 @Jpa(
-        annotatedClasses = {
-                DatabaseCreationTimestampNullableColumnTest.Person.class
-        }
+		annotatedClasses = {
+				DatabaseCreationTimestampNullableColumnTest.Person.class
+		}
 )
 public class DatabaseCreationTimestampNullableColumnTest {
 
-    @Entity(name = "Person")
-    public class Person {
+	@Entity(name = "Person")
+	public static class Person {
 
-        @Id
-        @GeneratedValue
-        private Long id;
+		@Id
+		@GeneratedValue
+		private Long id;
 
-        @NaturalId
-        private String name;
+		@NaturalId
+		private String name;
 
-        @Column(nullable = false)
-        @FunctionCreationTimestamp
-        private Date creationDate;
+		@Column(nullable = false)
+		@FunctionCreationTimestamp
+		private Date creationDate;
 
-        public String getName() {
-            return name;
-        }
+		public String getName() {
+			return name;
+		}
 
-        public void setName(String name) {
-            this.name = name;
-        }
+		public void setName(String name) {
+			this.name = name;
+		}
 
-        public Date getCreationDate() {
-            return creationDate;
-        }
+		public Date getCreationDate() {
+			return creationDate;
+		}
 
-        public void setCreationDate(Date creationDate) {
-            this.creationDate = creationDate;
-        }
+		public void setCreationDate(Date creationDate) {
+			this.creationDate = creationDate;
+		}
 
-    }
+	}
 
-    @ValueGenerationType(generatedBy = FunctionCreationValueGeneration.class)
-    @Retention(RetentionPolicy.RUNTIME)
-    public @interface FunctionCreationTimestamp {}
+	@ValueGenerationType(generatedBy = FunctionCreationValueGeneration.class)
+	@Retention(RetentionPolicy.RUNTIME)
+	public @interface FunctionCreationTimestamp {}
 
-    public static class FunctionCreationValueGeneration
-            implements AnnotationValueGeneration<FunctionCreationTimestamp> {
+	public static class FunctionCreationValueGeneration implements OnExecutionGenerator {
+		@Override
+		public EnumSet<EventType> getEventTypes() {
+			return EventTypeSets.INSERT_ONLY;
+		}
 
-        @Override
-        public void initialize(FunctionCreationTimestamp annotation, Class<?> propertyType) {
-        }
+		@Override
+		public boolean referenceColumnsInSql(Dialect dialect) {
+			return true;
+		}
 
-        /**
-         * Generate value on INSERT
-         * @return when to generate the value
-         */
-        public GenerationTiming getGenerationTiming() {
-            return GenerationTiming.INSERT;
-        }
+		@Override
+		public boolean writePropertyValue() {
+			return false;
+		}
 
-        /**
-         * Returns null because the value is generated by the database.
-         * @return null
-         */
-        public ValueGenerator<?> getValueGenerator() {
-            return null;
-        }
+		@Override
+		public String[] getReferencedColumnValues(Dialect dialect) {
+			return new String[] { dialect.currentTimestamp() };
+		}
+	}
 
-        /**
-         * Returns true because the value is generated by the database.
-         * @return true
-         */
-        public boolean referenceColumnInSql() {
-            return true;
-        }
+	@Test
+	public void generatesCurrentTimestamp(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					Person person = new Person();
+					person.setName("John Doe");
+					entityManager.persist(person);
 
-        /**
-         * Returns the database-generated value
-         * @return database-generated value
-         */
-        public String getDatabaseGeneratedReferencedColumnValue() {
-            return "current_timestamp";
-        }
-    }
-
-    @Test
-    public void generatesCurrentTimestamp(EntityManagerFactoryScope scope) {
-        scope.inTransaction(
-                entityManager -> {
-                    Person person = new Person();
-                    person.setName("John Doe");
-                    entityManager.persist(person);
-
-                    entityManager.flush();
-                    Assertions.assertNotNull(person.getCreationDate());
-                }
-        );
-    }
+					entityManager.flush();
+					Assertions.assertNotNull(person.getCreationDate());
+				}
+		);
+	}
 }

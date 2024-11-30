@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.service.internal;
 
@@ -10,11 +8,11 @@ import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.internal.BootstrapServiceRegistryImpl;
 import org.hibernate.cfg.Configuration;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
@@ -27,7 +25,7 @@ public class ServiceRegistryClosingCascadeTest extends BaseUnitTestCase {
 	@Test
 	public void testSessionFactoryClosing() {
 		BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
-		StandardServiceRegistry sr = new StandardServiceRegistryBuilder(bsr).build();
+		StandardServiceRegistry sr = ServiceRegistryUtil.serviceRegistryBuilder( bsr ).build();
 		assertTrue( ( (BootstrapServiceRegistryImpl) bsr ).isActive() );
 		Configuration config = new Configuration();
 		try (SessionFactory sf = config.buildSessionFactory( sr )) {

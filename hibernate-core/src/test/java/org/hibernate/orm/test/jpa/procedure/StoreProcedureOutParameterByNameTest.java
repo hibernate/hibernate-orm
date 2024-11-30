@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.procedure;
 
@@ -24,7 +22,6 @@ import jakarta.persistence.Table;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -32,7 +29,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -41,7 +38,7 @@ import static org.junit.Assert.fail;
  * @author Andrea Boriero
  * @author Gail Badner
  */
-@TestForIssue(jiraKey = "HHH-10756")
+@JiraKey(value = "HHH-10756")
 @RequiresDialect(OracleDialect.class)
 public class StoreProcedureOutParameterByNameTest extends BaseEntityManagerFunctionalTestCase {
 	EntityManagerFactory entityManagerFactory;

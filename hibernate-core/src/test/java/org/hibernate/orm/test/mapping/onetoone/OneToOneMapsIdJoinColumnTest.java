@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.onetoone;
 
@@ -13,13 +11,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 
-import org.hibernate.cfg.AvailableSettings;
-
-import org.hibernate.testing.orm.jdbc.DefaultSQLStatementInspectorSettingProvider;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.SettingProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -33,12 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 				OneToOneMapsIdJoinColumnTest.Person.class,
 				OneToOneMapsIdJoinColumnTest.PersonDetails.class
 		},
-		settingProviders = {
-				@SettingProvider(
-						settingName = AvailableSettings.STATEMENT_INSPECTOR,
-						provider = DefaultSQLStatementInspectorSettingProvider.class
-				)
-		}
+		useCollectingStatementInspector = true
 )
 public class OneToOneMapsIdJoinColumnTest {
 
@@ -59,7 +48,7 @@ public class OneToOneMapsIdJoinColumnTest {
 
 	@Test
 	public void testLifecycle(EntityManagerFactoryScope scope) {
-		SQLStatementInspector statementInspector = scope.getStatementInspector( SQLStatementInspector.class );
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 
 		statementInspector.clear();
 		scope.inTransaction( entityManager -> {

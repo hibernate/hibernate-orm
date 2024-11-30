@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.idbag;
 
@@ -56,18 +54,18 @@ public class IdBagTest {
 					criteria.from( User.class );
 					User gavin = s.createQuery( criteria ).uniqueResult();
 //					User gavin = (User) s.createCriteria( User.class ).uniqueResult();
-					Group admins = s.load( Group.class, "admins" );
-					Group plebs = s.load( Group.class, "plebs" );
-					Group banned = s.load( Group.class, "banned" );
+					Group admins = s.getReference( Group.class, "admins" );
+					Group plebs = s.getReference( Group.class, "plebs" );
+					Group banned = s.getReference( Group.class, "banned" );
 					gavin.getGroups().add( admins );
 					gavin.getGroups().remove( plebs );
 					//gavin.getGroups().add(banned);
 
-					s.delete( plebs );
-					s.delete( banned );
-					s.delete( s.load( Group.class, "moderators" ) );
-					s.delete( admins );
-					s.delete( gavin );
+					s.remove( plebs );
+					s.remove( banned );
+					s.remove( s.getReference( Group.class, "moderators" ) );
+					s.remove( admins );
+					s.remove( gavin );
 				}
 		);
 	}
@@ -85,7 +83,7 @@ public class IdBagTest {
 					session.persist( plebs );
 					session.persist( admins );
 
-					List l = session.createQuery( "from User u join u.groups g" ).list();
+					List l = session.createQuery( "from User u join u.groups g", User.class ).list();
 					assertEquals( 1, l.size() );
 
 					session.clear();
@@ -95,12 +93,11 @@ public class IdBagTest {
 					assertEquals( 2, gavin.getGroups().size() );
 					assertEquals( "admins", ( (Group) gavin.getGroups().get( 0 ) ).getName() );
 
-					session.delete( gavin.getGroups().get( 0 ) );
-					session.delete( gavin.getGroups().get( 1 ) );
-					session.delete( gavin );
+					session.remove( gavin.getGroups().get( 0 ) );
+					session.remove( gavin.getGroups().get( 1 ) );
+					session.remove( gavin );
 				}
 		);
 	}
 
 }
-

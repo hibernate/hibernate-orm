@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.hbm2ddl;
 
@@ -73,7 +71,7 @@ public class SchemaExportTask extends MatchingTask {
 	private String implicitNamingStrategy;
 	private String physicalNamingStrategy;
 
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public void addFileset(FileSet set) {
 		fileSets.add(set);
 	}
@@ -92,7 +90,7 @@ public class SchemaExportTask extends MatchingTask {
 	}
 
 	/**
-	 * Set a <literal>.cfg.xml</literal> file, which will be
+	 * Set a {@code .cfg.xml} file, which will be
 	 * loaded as a resource, from the classpath
 	 * @param configurationFile the path to the resource
 	 */
@@ -105,7 +103,7 @@ public class SchemaExportTask extends MatchingTask {
 	 * written to standard out.
 	 * @param quiet true to enable quiet mode
 	 */
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public void setQuiet(boolean quiet) {
 		this.quiet = quiet;
 	}
@@ -141,7 +139,7 @@ public class SchemaExportTask extends MatchingTask {
 	 * Set the end of statement delimiter for the generated script
 	 * @param delimiter the delimiter
 	 */
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public void setDelimiter(String delimiter) {
 		this.delimiter = delimiter;
 	}
@@ -163,17 +161,17 @@ public class SchemaExportTask extends MatchingTask {
 		DeprecationLogger.DEPRECATION_LOGGER.logDeprecatedNamingStrategyAntArgument();
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public void setImplicitNamingStrategy(String implicitNamingStrategy) {
 		this.implicitNamingStrategy = implicitNamingStrategy;
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public void setPhysicalNamingStrategy(String physicalNamingStrategy) {
 		this.physicalNamingStrategy = physicalNamingStrategy;
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public void setHaltonerror(boolean haltOnError) {
 		this.haltOnError = haltOnError;
 	}
@@ -235,15 +233,15 @@ public class SchemaExportTask extends MatchingTask {
 			}
 
 			if ( exportType.doCreate() ) {
-				ssrBuilder.applySetting( AvailableSettings.HBM2DDL_SCRIPTS_CREATE_TARGET, scriptTarget );
+				ssrBuilder.applySetting( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET, scriptTarget );
 			}
 			if ( exportType.doDrop() ) {
-				ssrBuilder.applySetting( AvailableSettings.HBM2DDL_SCRIPTS_DROP_TARGET, scriptTarget );
+				ssrBuilder.applySetting( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_DROP_TARGET, scriptTarget );
 			}
 		}
 
 		if ( output.doExport() ) {
-			ssrBuilder.applySetting( AvailableSettings.HBM2DDL_DATABASE_ACTION, exportType.getAction() );
+			ssrBuilder.applySetting( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, exportType.getAction() );
 		}
 
 
@@ -252,7 +250,7 @@ public class SchemaExportTask extends MatchingTask {
 
 		final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder( ssr );
 
-		ClassLoaderService classLoaderService = bsr.getService( ClassLoaderService.class );
+		ClassLoaderService classLoaderService = bsr.requireService( ClassLoaderService.class );
 		if ( implicitNamingStrategy != null ) {
 			metadataBuilder.applyImplicitNamingStrategy(
 					(ImplicitNamingStrategy) classLoaderService.classForName( implicitNamingStrategy ).newInstance()
@@ -265,12 +263,13 @@ public class SchemaExportTask extends MatchingTask {
 		}
 
 		final MetadataImplementor metadata = (MetadataImplementor) metadataBuilder.build();
+		metadata.orderColumns( false );
 		metadata.validate();
 
 		SchemaManagementToolCoordinator.process(
 				metadata,
 				ssr,
-				ssr.getService( ConfigurationService.class ).getSettings(),
+				ssr.requireService( ConfigurationService.class ).getSettings(),
 				DelayedDropRegistryNotAvailableImpl.INSTANCE
 		);
 	}

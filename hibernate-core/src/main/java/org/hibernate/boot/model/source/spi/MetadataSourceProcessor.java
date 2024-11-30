@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.spi;
 
@@ -39,7 +37,7 @@ public interface MetadataSourceProcessor {
 	 * Process all "root" named queries.  These are named queries not defined on
 	 * a specific entity (which will be handled later during
 	 * {@link #processEntityHierarchies}).
-	 * <p/>
+	 * <p>
 	 * This step has no prerequisites.  The returns associated with named native
 	 * queries can depend on entity binding being complete, but those are handled
 	 * later during {@link #processResultSetMappings()}.
@@ -48,28 +46,28 @@ public interface MetadataSourceProcessor {
 
 	/**
 	 * Process all {@link org.hibernate.boot.model.relational.AuxiliaryDatabaseObject} definitions.
-	 * <p/>
+	 * <p>
 	 * This step has no prerequisites.
 	 */
 	void processAuxiliaryDatabaseObjectDefinitions();
 
 	/**
 	 * Process all custom identifier generator declarations,
-	 * <p/>
+	 * <p>
 	 * Depends on {@link #processTypeDefinitions()}
 	 */
 	void processIdentifierGenerators();
 
 	/**
 	 * Process all filter definitions.
-	 * <p/>
+	 * <p>
 	 * This step depends on {@link #processTypeDefinitions()}
 	 */
 	void processFilterDefinitions();
 
 	/**
 	 * Process all fetch profiles.
-	 * <p/>
+	 * <p>
 	 * todo : does this step depend on any others??
 	 */
 	void processFetchProfiles();

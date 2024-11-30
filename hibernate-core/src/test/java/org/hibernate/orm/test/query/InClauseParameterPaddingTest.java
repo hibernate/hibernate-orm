@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query;
 
@@ -10,13 +8,11 @@ import java.util.Arrays;
 
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
-import org.hibernate.testing.orm.jdbc.DefaultSQLStatementInspectorSettingProvider;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
-import org.hibernate.testing.orm.junit.SettingProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -29,19 +25,15 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-12469")
+@JiraKey(value = "HHH-12469")
 @Jpa(
 		annotatedClasses = { InClauseParameterPaddingTest.Person.class },
 		integrationSettings = {
 				@Setting(name = AvailableSettings.USE_SQL_COMMENTS, value = "true"),
-				@Setting(name = AvailableSettings.IN_CLAUSE_PARAMETER_PADDING, value = "true")
+				@Setting(name = AvailableSettings.IN_CLAUSE_PARAMETER_PADDING, value = "true"),
+				@Setting(name = AvailableSettings.DIALECT_NATIVE_PARAM_MARKERS, value = "false")
 		},
-		settingProviders = {
-				@SettingProvider(
-						settingName = AvailableSettings.STATEMENT_INSPECTOR,
-						provider = DefaultSQLStatementInspectorSettingProvider.class
-				)
-		}
+		useCollectingStatementInspector = true
 )
 public class InClauseParameterPaddingTest {
 
@@ -60,23 +52,23 @@ public class InClauseParameterPaddingTest {
 
 	@Test
 	public void testInClauseParameterPadding(EntityManagerFactoryScope scope) {
-		validateInClauseParameterPadding( scope, "in(?)", 1 );
-		validateInClauseParameterPadding( scope, "in(?,?)", 1, 2 );
-		validateInClauseParameterPadding( scope, "in(?,?,?,?)", 1, 2, 3 );
-		validateInClauseParameterPadding( scope, "in(?,?,?,?)", 1, 2, 3, 4 );
-		validateInClauseParameterPadding( scope, "in(?,?,?,?,?,?,?,?)", 1, 2, 3, 4, 5 );
-		validateInClauseParameterPadding( scope, "in(?,?,?,?,?,?,?,?)", 1, 2, 3, 4, 5, 6 );
-		validateInClauseParameterPadding( scope, "in(?,?,?,?,?,?,?,?)", 1, 2, 3, 4, 5, 6, 7 );
-		validateInClauseParameterPadding( scope, "in(?,?,?,?,?,?,?,?)", 1, 2, 3, 4, 5, 6, 7, 8 );
-		validateInClauseParameterPadding( scope, "in(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", 1, 2, 3, 4, 5, 6, 7, 8, 9 );
-		validateInClauseParameterPadding( scope, "in(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 );
+		validateInClauseParameterPadding( scope, "in (?)", 1 );
+		validateInClauseParameterPadding( scope, "in (?,?)", 1, 2 );
+		validateInClauseParameterPadding( scope, "in (?,?,?,?)", 1, 2, 3 );
+		validateInClauseParameterPadding( scope, "in (?,?,?,?)", 1, 2, 3, 4 );
+		validateInClauseParameterPadding( scope, "in (?,?,?,?,?,?,?,?)", 1, 2, 3, 4, 5 );
+		validateInClauseParameterPadding( scope, "in (?,?,?,?,?,?,?,?)", 1, 2, 3, 4, 5, 6 );
+		validateInClauseParameterPadding( scope, "in (?,?,?,?,?,?,?,?)", 1, 2, 3, 4, 5, 6, 7 );
+		validateInClauseParameterPadding( scope, "in (?,?,?,?,?,?,?,?)", 1, 2, 3, 4, 5, 6, 7, 8 );
+		validateInClauseParameterPadding( scope, "in (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", 1, 2, 3, 4, 5, 6, 7, 8, 9 );
+		validateInClauseParameterPadding( scope, "in (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 );
 	}
 
 	private void validateInClauseParameterPadding(
 			EntityManagerFactoryScope scope,
 			String expectedInClause,
 			Integer... ids) {
-		final SQLStatementInspector sqlStatementInterceptor = scope.getStatementInspector( SQLStatementInspector.class );
+		final SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		sqlStatementInterceptor.clear();
 
 		scope.inTransaction( entityManager -> {

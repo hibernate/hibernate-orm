@@ -1,15 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
 
 import java.util.Map;
 
+import org.hibernate.Length;
 import org.hibernate.LockOptions;
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.community.dialect.identity.SybaseAnywhereIdentityColumnSupport;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.RowLockStrategy;
@@ -21,7 +21,6 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -29,7 +28,15 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
-import static org.hibernate.type.SqlTypes.*;
+import static org.hibernate.type.SqlTypes.DATE;
+import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
+import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
+import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
+import static org.hibernate.type.SqlTypes.NCLOB;
+import static org.hibernate.type.SqlTypes.TIME;
+import static org.hibernate.type.SqlTypes.TIMESTAMP;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 
 /**
  * SQL Dialect for Sybase/SQL Anywhere
@@ -58,6 +65,7 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 				return "time";
 			case TIMESTAMP:
 				return "timestamp";
+			case TIME_WITH_TIMEZONE:
 			case TIMESTAMP_WITH_TIMEZONE:
 				return "timestamp with time zone";
 
@@ -71,14 +79,21 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 
 			case NCLOB:
 				return "ntext";
+
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
-		final CommonFunctionFactory functionFactory = new CommonFunctionFactory( queryEngine );
+	public boolean useMaterializedLobWhenCapacityExceeded() {
+		return false;
+	}
+
+	@Override
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry(functionContributions);
+		final CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 		functionFactory.listagg_list( "varchar" );
 		if ( getVersion().isSameOrAfter( 12 ) ) {
 			functionFactory.windowFunctions();
@@ -87,7 +102,7 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 
 	@Override
 	public int getMaxVarcharLength() {
-		return 32_767;
+		return Length.LONG16;
 	}
 
 	@Override
@@ -124,7 +139,7 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 	/**
 	 * Sybase Anywhere syntax would require a "DEFAULT" for each column specified,
 	 * but I suppose Hibernate use this syntax only with tables with just 1 column
-	 * <p/>
+	 * <p>
 	 * {@inheritDoc}
 	 */
 	@Override
@@ -134,10 +149,10 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 
 	/**
 	 * ASA does not require to drop constraint before dropping tables, so disable it.
-	 * <p/>
+	 * <p>
 	 * NOTE : Also, the DROP statement syntax used by Hibernate to drop constraints is
 	 * not compatible with ASA.
-	 * <p/>
+	 * <p>
 	 * {@inheritDoc}
 	 */
 	@Override
@@ -157,7 +172,7 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return new SybaseAnywhereIdentityColumnSupport();
+		return SybaseAnywhereIdentityColumnSupport.INSTANCE;
 	}
 
 	@Override
@@ -196,6 +211,16 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 		//      but it looks like this syntax is not enabled
 		//      by default
 		return TopLimitHandler.INSTANCE;
+	}
+
+	@Override
+	public String getDual() {
+		return "sys.dummy";
+	}
+
+	@Override
+	public String getFromDualForSelectOnly() {
+		return " from " + getDual();
 	}
 
 }

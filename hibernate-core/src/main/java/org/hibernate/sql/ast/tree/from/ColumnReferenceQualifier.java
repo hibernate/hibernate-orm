@@ -1,46 +1,92 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.from;
 
+import java.util.Locale;
+
+import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.spi.NavigablePath;
 
 /**
  * @author Steve Ebersole
  */
 public interface ColumnReferenceQualifier {
-	default TableReference resolveTableReference(NavigablePath navigablePath, String tableExpression) {
-		return resolveTableReference( navigablePath, tableExpression, true );
-	}
 
 	default TableReference resolveTableReference(String tableExpression) {
-		return resolveTableReference( null, tableExpression, true );
+		return resolveTableReference( null, tableExpression );
 	}
 
 	/**
-	 * Like {@link #getTableReference(NavigablePath, String, boolean, boolean)}, but will throw an exception if no
+	 * Like {@link #getTableReference(NavigablePath, String, boolean)}, but will throw an exception if no
 	 * table reference can be found, even after resolving possible table reference joins.
 	 *
 	 * @param navigablePath The path for which to look up the table reference, may be null
 	 * @param tableExpression The table expression for which to look up the table reference
-	 * @param allowFkOptimization Whether a foreign key optimization is allowed i.e. use the FK column on the key-side
 	 *
 	 * @throws UnknownTableReferenceException to indicate that the given tableExpression could not be resolved
 	 */
-	TableReference resolveTableReference(
+	default TableReference resolveTableReference(
 			NavigablePath navigablePath,
-			String tableExpression,
-			boolean allowFkOptimization);
+			String tableExpression) {
+		assert tableExpression != null;
+
+		final TableReference tableReference = getTableReference(
+				navigablePath,
+				tableExpression,
+				true
+		);
+
+		if ( tableReference == null ) {
+			throw new UnknownTableReferenceException(
+					tableExpression,
+					String.format(
+							Locale.ROOT,
+							"Unable to determine TableReference (`%s`) for `%s`",
+							tableExpression,
+							navigablePath
+					)
+			);
+		}
+
+		return tableReference;
+	}
+
+	default TableReference resolveTableReference(
+			NavigablePath navigablePath,
+			ValuedModelPart modelPart,
+			String tableExpression) {
+		assert modelPart != null;
+
+		final TableReference tableReference = getTableReference(
+				navigablePath,
+				modelPart,
+				tableExpression,
+				true
+		);
+
+		if ( tableReference == null ) {
+			throw new UnknownTableReferenceException(
+					tableExpression,
+					String.format(
+							Locale.ROOT,
+							"Unable to determine TableReference (`%s`) for `%s`",
+							tableExpression,
+							navigablePath
+					)
+			);
+		}
+
+		return tableReference;
+	}
 
 	default TableReference getTableReference(NavigablePath navigablePath, String tableExpression) {
-		return getTableReference( navigablePath, tableExpression, true, false );
+		return getTableReference( navigablePath, tableExpression, false );
 	}
 
 	default TableReference getTableReference(String tableExpression) {
-		return getTableReference( null, tableExpression, true, false );
+		return getTableReference( null, tableExpression, false );
 	}
 
 	/**
@@ -48,12 +94,17 @@ public interface ColumnReferenceQualifier {
 	 *
 	 * @param navigablePath The path for which to look up the table reference, may be null
 	 * @param tableExpression The table expression for which to look up the table reference
-	 * @param allowFkOptimization Whether a foreign key optimization is allowed i.e. use the FK column on the key-side
 	 * @param resolve Whether to potentially create table reference joins for this table group
 	 */
 	TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization,
 			boolean resolve);
+	default TableReference getTableReference(
+			NavigablePath navigablePath,
+			ValuedModelPart modelPart,
+			String tableExpression,
+			boolean resolve) {
+		return getTableReference( navigablePath, tableExpression, resolve );
+	}
 }

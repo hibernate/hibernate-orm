@@ -1,13 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.resultmapping;
 
 import java.sql.Timestamp;
-import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -17,11 +14,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import jakarta.persistence.LockModeType;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
@@ -115,6 +115,33 @@ public class EntityResultTests extends AbstractUsageTest {
 
 					// todo (6.0) : should also try executing the ProcedureCall once that functionality is implemented
 					session.createStoredProcedureCall( "abc", "entity-none" );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialect(
+			value = H2Dialect.class,
+			comment = "We don't really care about the execution on the database, just how the result-set is handled.  Some databases (mssql) don't like this query"
+	)
+	public void testImplicitAttributeMappingWithLockMode(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					// make sure it is in the repository
+					final NamedResultSetMappingMemento mappingMemento = session.getSessionFactory()
+							.getQueryEngine()
+							.getNamedObjectRepository()
+							.getResultSetMappingMemento(
+									"entity-lockmode" );
+					assertThat( mappingMemento, notNullValue() );
+
+					// apply it to a native-query
+					final String qryString = "select id, name, notes from SimpleEntityWithNamedMappings for update";
+					final List<SimpleEntityWithNamedMappings> results = session
+							.createNativeQuery( qryString, "entity-lockmode" )
+							.list();
+					assertThat( results.size(), is( 1 ) );
+					assertThat( session.getLockMode(results.get(0)), is(LockModeType.PESSIMISTIC_WRITE));
 				}
 		);
 	}
@@ -382,7 +409,7 @@ public class EntityResultTests extends AbstractUsageTest {
 					entityOfBasics.setTheTimestamp( THEN_TIMESTAMP );
 					entityOfBasics.setTheInstant( THEN );
 
-					session.save( entityOfBasics );
+					session.persist( entityOfBasics );
 
 					// embedded values
 					final EntityWithEmbedded entityWithEmbedded = new EntityWithEmbedded(

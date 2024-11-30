@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.onetomany;
 
@@ -14,6 +12,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
+import org.hibernate.query.NullPrecedence;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -22,19 +21,19 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.H2Dialect;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
-@TestForIssue(jiraKey = "HHH-465")
+@JiraKey(value = "HHH-465")
 @RequiresDialect(value = H2Dialect.class,
 		comment = "By default H2 places NULL values first, so testing 'NULLS LAST' expression.")
 public class DefaultNullOrderingTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void configure(Configuration configuration) {
-		configuration.setProperty( AvailableSettings.DEFAULT_NULL_ORDERING, "last" );
+		configuration.setProperty( AvailableSettings.DEFAULT_NULL_ORDERING, NullPrecedence.LAST );
 	}
 
 	@Override
@@ -66,8 +65,8 @@ public class DefaultNullOrderingTest extends BaseCoreFunctionalTestCase {
 
 				// Cleanup data.
 				session.getTransaction().begin();
-				session.delete( monkey1 );
-				session.delete( monkey2 );
+				session.remove( monkey1 );
+				session.remove( monkey2 );
 				session.getTransaction().commit();
 			}
 			catch (Exception e) {
@@ -110,7 +109,7 @@ public class DefaultNullOrderingTest extends BaseCoreFunctionalTestCase {
 
 						// Cleanup data.
 						session.getTransaction().begin();
-						session.delete( troop );
+						session.remove( troop );
 						session.getTransaction().commit();
 					}
 					catch (Exception e) {
@@ -155,8 +154,8 @@ public class DefaultNullOrderingTest extends BaseCoreFunctionalTestCase {
 
 						// Cleanup data.
 						session.getTransaction().begin();
-						session.delete( monkey1 );
-						session.delete( monkey2 );
+						session.remove( monkey1 );
+						session.remove( monkey2 );
 						session.getTransaction().commit();
 					}
 					catch (Exception e) {

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.tm;
 
@@ -13,6 +11,7 @@ import java.util.Map;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
@@ -58,6 +57,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 				@Setting(name = AvailableSettings.FLUSH_BEFORE_COMPLETION, value = "true"),
 				@Setting(name = AvailableSettings.USE_QUERY_CACHE, value = "true"),
 				@Setting(name = AvailableSettings.CACHE_REGION_PREFIX, value = ""),
+				@Setting(name = AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT, value = "true"),
 				@Setting(name = "javax.persistence.transactionType", value = "JTA"),
 
 		},
@@ -278,14 +278,15 @@ public class CMTTest {
 
 	@Test
 	@RequiresDialectFeature(
-			feature = DialectFeatureChecks.DoesReadCommittedNotCauseWritersToBlockReadersCheck.class,
+			feature = DialectFeatureChecks.DoesReadCommittedCauseWritersToBlockReadersCheck.class, reverse = true,
 			comment = "write locks block readers"
 	)
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "Cockroach uses SERIALIZABLE by default and seems to fail reading a row that is exclusively locked by a different TX")
 	public void testConcurrentCachedDirtyQueries(SessionFactoryScope scope) throws Exception {
 		final TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
 		try {
-			transactionManager.begin();
 			final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
+			transactionManager.begin();
 			Session s = sessionFactory.openSession();
 			Map foo = new HashMap();
 			foo.put( "name", "Foo" );
@@ -433,7 +434,7 @@ public class CMTTest {
 			s = sessionFactory.openSession();
 			item = (Map) s.createQuery( "from Item" ).uniqueResult();
 			assertNotNull( item );
-			s.delete( item );
+			s.remove( item );
 			transactionManager.commit();
 			assertFalse( s.isOpen() );
 
@@ -568,4 +569,3 @@ public class CMTTest {
 	}
 
 }
-

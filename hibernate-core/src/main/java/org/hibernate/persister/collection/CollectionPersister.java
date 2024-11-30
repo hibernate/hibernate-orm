@@ -1,12 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.collection;
 
-import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
@@ -14,6 +11,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.Filter;
 import org.hibernate.HibernateException;
+import org.hibernate.Incubating;
 import org.hibernate.MappingException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
@@ -23,17 +21,17 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.Restrictable;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
 
@@ -45,8 +43,8 @@ import org.hibernate.type.Type;
  * JDBC.
  * <p>
  * Concrete implementations of this interface handle
- * {@linkplain OneToManyPersister one-to-many},
- * {@linkplain BasicCollectionPersister many-to-many}, association
+ * {@linkplain OneToManyPersister one-to-many} and
+ * {@linkplain BasicCollectionPersister many-to-many} association
  * cardinalities, and to a certain extent abstract the details of those
  * mappings from collaborators.
  * <p>
@@ -80,13 +78,33 @@ import org.hibernate.type.Type;
  *     </li>
  * </ol>
  *
- * @see QueryableCollection
  * @see PersistentCollection
+ * @see PluralAttributeMapping
  *
  * @author Gavin King
  */
 public interface CollectionPersister extends Restrictable {
+	/**
+	 * The NavigableRole for this collection.
+	 */
 	NavigableRole getNavigableRole();
+
+	/**
+	 * Get the name of this collection role (the fully qualified class name,
+	 * extended by a "property path")
+	 */
+	default String getRole() {
+		return getNavigableRole().getFullPath();
+	}
+
+	default PluralAttributeMapping getAttributeMapping() {
+		throw new UnsupportedOperationException( "CollectionPersister used for [" + getRole() + "] does not support SQL AST" );
+	}
+
+	/**
+	 * Get the persister of the entity that "owns" this collection
+	 */
+	EntityPersister getOwnerEntityPersister();
 
 	/**
 	 * Initialize the given collection with the given key
@@ -107,51 +125,25 @@ public interface CollectionPersister extends Restrictable {
 	}
 
 	/**
-	 * Get the cache
+	 * Access to the collection's cache region
 	 */
 	CollectionDataAccess getCacheAccessStrategy();
 
 	/**
-	 * Get the cache structure
+	 * Get the structure used to store data into the collection's {@linkplain #getCacheAccessStrategy() cache region}
 	 */
 	CacheEntryStructure getCacheEntryStructure();
-	/**
-	 * Get the associated {@code Type}
-	 */
-	CollectionType getCollectionType();
-	/**
-	 * Get the "key" type (the type of the foreign key)
-	 */
-	Type getKeyType();
-	/**
-	 * Get the "index" type for a list or map (optional operation)
-	 */
-	Type getIndexType();
-	/**
-	 * Get the "element" type
-	 */
-	Type getElementType();
+
+	@Incubating
+	boolean useShallowQueryCacheLayout();
+
 	/**
 	 * Return the element class of an array, or null otherwise
 	 */
 	Class<?> getElementClass();
 
 	/**
-	 * The value converter for the element values of this collection
-	 */
-	default BasicValueConverter getElementConverter() {
-		return null;
-	}
-
-	/**
-	 * The value converter for index values of this collection (effectively map keys only)
-	 */
-	default BasicValueConverter getIndexConverter() {
-		return null;
-	}
-
-	/**
-	 * Is this an array or primitive values?
+	 * Is this an array of primitive values?
 	 */
 	boolean isPrimitiveArray();
 	/**
@@ -222,7 +214,7 @@ public interface CollectionPersister extends Restrictable {
 			PersistentCollection<?> collection,
 			Object key,
 			SharedSessionContractImplementor session);
-	
+
 	/**
 	 * Process queued operations within the PersistentCollection.
 	 */
@@ -230,27 +222,21 @@ public interface CollectionPersister extends Restrictable {
 			PersistentCollection<?> collection,
 			Object key,
 			SharedSessionContractImplementor session);
-	
-	/**
-	 * Get the name of this collection role (the fully qualified class name,
-	 * extended by a "property path")
-	 */
-	String getRole();
 
 	/**
-	 * Get the persister of the entity that "owns" this collection
+	 * Get the surrogate key generation strategy (optional operation)
+	 *
+	 * @deprecated use {@link #getGenerator()}
 	 */
-	EntityPersister getOwnerEntityPersister();
+	@Deprecated
+	IdentifierGenerator getIdentifierGenerator();
 
 	/**
 	 * Get the surrogate key generation strategy (optional operation)
 	 */
-	IdentifierGenerator getIdentifierGenerator();
-
-	/**
-	 * Get the type of the surrogate key
-	 */
-	Type getIdentifierType();
+	default BeforeExecutionGenerator getGenerator() {
+		return getIdentifierGenerator();
+	}
 
 	/**
 	 * Does this collection implement "orphan delete"?
@@ -269,15 +255,7 @@ public interface CollectionPersister extends Restrictable {
 	/**
 	 * Get the "space" that holds the persistent state
 	 */
-	Serializable[] getCollectionSpaces();
-
-	/**
-	 * Get the user-visible metadata for the collection (optional operation)
-	 *
-	 * @deprecated This operation is no longer called by Hibernate.
-	 */
-	@Deprecated(since = "6.0")
-	CollectionMetadata getCollectionMetadata();
+	String[] getCollectionSpaces();
 
 	/**
 	 * Is cascade delete handled by the database-level
@@ -304,11 +282,18 @@ public interface CollectionPersister extends Restrictable {
 
 	boolean isAffectedByEnabledFilters(SharedSessionContractImplementor session);
 
-	default PluralAttributeMapping getAttributeMapping() {
+	default boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers) {
 		throw new UnsupportedOperationException( "CollectionPersister used for [" + getRole() + "] does not support SQL AST" );
 	}
 
-	default boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers) {
+	default boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
+		throw new UnsupportedOperationException( "CollectionPersister used for [" + getRole() + "] does not support SQL AST" );
+	}
+
+	default boolean isAffectedByEnabledFilters(
+			Set<ManagedMappingType> visitedTypes,
+			LoadQueryInfluencers influencers,
+			boolean onlyApplyForLoadByKey) {
 		throw new UnsupportedOperationException( "CollectionPersister used for [" + getRole() + "] does not support SQL AST" );
 	}
 
@@ -320,48 +305,22 @@ public interface CollectionPersister extends Restrictable {
 		throw new UnsupportedOperationException( "CollectionPersister used for [" + getRole() + "] does not support SQL AST" );
 	}
 
-	/**
-	 * Generates the collection's key column aliases, based on the given
-	 * suffix.
-	 *
-	 * @param suffix The suffix to use in the key column alias generation.
-	 * @return The key column aliases.
-	 */
-	String[] getKeyColumnAliases(String suffix);
-
-	/**
-	 * Generates the collection's index column aliases, based on the given
-	 * suffix.
-	 *
-	 * @param suffix The suffix to use in the index column alias generation.
-	 * @return The key column aliases, or null if not indexed.
-	 */
-	String[] getIndexColumnAliases(String suffix);
-
-	/**
-	 * Generates the collection's element column aliases, based on the given
-	 * suffix.
-	 *
-	 * @param suffix The suffix to use in the element column alias generation.
-	 * @return The key column aliases.
-	 */
-	String[] getElementColumnAliases(String suffix);
-
-	/**
-	 * Generates the collection's identifier column aliases, based on the given
-	 * suffix.
-	 *
-	 * @param suffix The suffix to use in the key column alias generation.
-	 * @return The key column aliases.
-	 */
-	String getIdentifierColumnAlias(String suffix);
-
-	boolean isExtraLazy();
+	default boolean isExtraLazy() {
+		return false;
+	}
 	int getSize(Object key, SharedSessionContractImplementor session);
 	boolean indexExists(Object key, Object index, SharedSessionContractImplementor session);
 	boolean elementExists(Object key, Object element, SharedSessionContractImplementor session);
 	Object getElementByIndex(Object key, Object index, SharedSessionContractImplementor session, Object owner);
-	int getBatchSize();
+	default int getBatchSize() {
+		return -1;
+	}
+	default boolean isBatchLoadable() {
+		return getBatchSize() > 1;
+	}
+	default boolean isSubselectLoadable() {
+		return false;
+	}
 
 	/**
 	 * @return the name of the property this collection is mapped by
@@ -392,4 +351,127 @@ public interface CollectionPersister extends Restrictable {
 			Map<String, Filter> enabledFilters,
 			Set<String> treatAsDeclarations,
 			SqlAstCreationState creationState);
+
+
+
+	/**
+	 * Generates the collection's key column aliases, based on the given
+	 * suffix.
+	 *
+	 * @param suffix The suffix to use in the key column alias generation.
+	 * @return The key column aliases.
+	 *
+	 * @deprecated Read-by-position makes this irrelevant.  Currently still used
+	 * by {@link org.hibernate.query.sql.internal.SQLQueryParser}
+	 */
+	@Deprecated( since = "6", forRemoval = true )
+	String[] getKeyColumnAliases(String suffix);
+
+	/**
+	 * Generates the collection's index column aliases, based on the given
+	 * suffix.
+	 *
+	 * @param suffix The suffix to use in the index column alias generation.
+	 * @return The key column aliases, or null if not indexed.
+	 *
+	 * @deprecated Read-by-position makes this irrelevant.  Currently still used
+	 * by {@link org.hibernate.query.sql.internal.SQLQueryParser}
+	 */
+	@Deprecated( since = "6", forRemoval = true )
+	String[] getIndexColumnAliases(String suffix);
+
+	/**
+	 * Generates the collection's element column aliases, based on the given
+	 * suffix.
+	 *
+	 * @param suffix The suffix to use in the element column alias generation.
+	 * @return The key column aliases.
+	 *
+	 * @deprecated Read-by-position makes this irrelevant.  Currently still used
+	 * by {@link org.hibernate.query.sql.internal.SQLQueryParser}
+	 */
+	@Deprecated( since = "6", forRemoval = true )
+	String[] getElementColumnAliases(String suffix);
+
+	/**
+	 * Generates the collection's identifier column aliases, based on the given
+	 * suffix.
+	 *
+	 * @param suffix The suffix to use in the key column alias generation.
+	 * @return The key column aliases.
+	 *
+	 * @deprecated Read-by-position makes this irrelevant.  Currently still used
+	 * by {@link org.hibernate.query.sql.internal.SQLQueryParser}
+	 */
+	@Deprecated( since = "6", forRemoval = true )
+	String getIdentifierColumnAlias(String suffix);
+
+	/**
+	 * Get the associated {@code Type}
+	 *
+	 * @deprecated Hibernate is moving away from {@link Type}.  Corresponding
+	 * {@linkplain org.hibernate.metamodel.mapping mapping metamodel} calls should
+	 * be used instead - here (generally), {@link PluralAttributeMapping}
+	 */
+	@Deprecated( forRemoval = true )
+	CollectionType getCollectionType();
+
+	/**
+	 * Get the "key" type (the type of the foreign key)
+	 *
+	 * @deprecated Hibernate is moving away from {@link Type}.  Corresponding
+	 * {@linkplain org.hibernate.metamodel.mapping mapping metamodel} calls should
+	 * be used instead - here, {@link PluralAttributeMapping#getKeyDescriptor()}
+	 */
+	@Deprecated( forRemoval = true )
+	Type getKeyType();
+
+	/**
+	 * Get the "index" type for a list or map (optional operation)
+	 *
+	 * @deprecated Hibernate is moving away from {@link Type}.  Corresponding
+	 * {@linkplain org.hibernate.metamodel.mapping mapping metamodel} calls should
+	 * be used instead - here, {@link PluralAttributeMapping#getIndexDescriptor()}
+	 */
+	@Deprecated( forRemoval = true )
+	Type getIndexType();
+
+	/**
+	 * Get the "element" type
+	 *
+	 * @deprecated Hibernate is moving away from {@link Type}.  Corresponding
+	 * {@linkplain org.hibernate.metamodel.mapping mapping metamodel} calls should
+	 * be used instead - here, {@link PluralAttributeMapping#getElementDescriptor()}
+	 */
+	@Deprecated( forRemoval = true )
+	Type getElementType();
+
+	/**
+	 * Get the type of the surrogate key
+	 *
+	 * @deprecated Hibernate is moving away from {@link Type}.  Corresponding
+	 * {@linkplain org.hibernate.metamodel.mapping mapping metamodel} calls should
+	 * be used instead - here, {@link PluralAttributeMapping#getIdentifierDescriptor()}
+	 */
+	@Deprecated( forRemoval = true )
+	Type getIdentifierType();
+
+	String getIdentifierColumnName();
+
+	String getTableName();
+
+	/**
+	 * Generate a list of collection index and element columns
+	 */
+	String selectFragment(String alias, String columnSuffix);
+
+	String[] getCollectionPropertyColumnAliases(String propertyName, String string);
+
+	/**
+	 * Get the persister of the element class, if this is a
+	 * collection of entities (optional operation).  Note that
+	 * for a one-to-many association, the returned persister
+	 * must be {@code OuterJoinLoadable}.
+	 */
+	EntityPersister getElementPersister();
 }

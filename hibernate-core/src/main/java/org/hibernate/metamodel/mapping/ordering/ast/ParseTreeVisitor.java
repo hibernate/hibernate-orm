@@ -1,18 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.ordering.ast;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 import org.hibernate.internal.util.QuotingHelper;
-import org.hibernate.query.sqm.NullPrecedence;
-import org.hibernate.query.sqm.SortOrder;
+import org.hibernate.query.NullPrecedence;
+import org.hibernate.query.SortDirection;
 import org.hibernate.grammars.ordering.OrderingParser;
 import org.hibernate.grammars.ordering.OrderingParserBaseVisitor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -68,9 +67,12 @@ public class ParseTreeVisitor extends OrderingParserBaseVisitor<Object> {
 			}
 			else {
 				throw new OrderByComplianceViolation(
-						"`@OrderBy` expression (" + parsedSpec.expression().getText()
-								+ ") resolved to `" + orderingExpression
-								+ "` which is not a domain-model reference which violates the JPA specification"
+						String.format(
+								Locale.ROOT,
+								"@OrderBy expression (%s) is not a domain-model reference, which violates the Jakarta Persistence specification - %s",
+								parsedSpec.expression().getText(),
+								orderingExpression.toDescriptiveText()
+						)
 				);
 			}
 		}
@@ -90,10 +92,10 @@ public class ParseTreeVisitor extends OrderingParserBaseVisitor<Object> {
 			if ( parseTree instanceof OrderingParser.DirectionContext ) {
 				final OrderingParser.DirectionContext directionCtx = (OrderingParser.DirectionContext) parseTree;
 				if ( ( (TerminalNode) directionCtx.getChild( 0 ) ).getSymbol().getType() == OrderingParser.ASC ) {
-					result.setSortOrder( SortOrder.ASCENDING );
+					result.setSortOrder( SortDirection.ASCENDING );
 				}
 				else {
-					result.setSortOrder( SortOrder.DESCENDING );
+					result.setSortOrder( SortDirection.DESCENDING );
 				}
 				i++;
 			}

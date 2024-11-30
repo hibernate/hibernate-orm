@@ -1,15 +1,24 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.collection;
 
+import java.sql.Types;
 import java.util.Arrays;
 import java.util.List;
-import jakarta.persistence.EntityManager;
+import java.util.Map;
 
+import jakarta.persistence.EntityManager;
+import org.assertj.core.api.Assertions;
+
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.collection.EnumSetEntity;
@@ -17,9 +26,11 @@ import org.hibernate.orm.test.envers.entities.collection.EnumSetEntity.E1;
 import org.hibernate.orm.test.envers.entities.collection.EnumSetEntity.E2;
 import org.hibernate.orm.test.envers.tools.TestTools;
 
-import org.hibernate.testing.TestForIssue;
-import org.junit.Assert;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.type.SqlTypes;
 import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -30,6 +41,12 @@ public class EnumSet extends BaseEnversJPAFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] {EnumSetEntity.class};
+	}
+
+	@Override
+	protected void addConfigOptions(Map options) {
+		super.addConfigOptions( options );
+		options.put( AvailableSettings.PREFER_NATIVE_ENUM_TYPES, "false" );
 	}
 
 	@Test
@@ -95,22 +112,49 @@ public class EnumSet extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7780")
+	@JiraKey(value = "HHH-7780")
 	public void testEnumRepresentation() {
 		EntityManager entityManager = getEntityManager();
-		List<Object> enums1 = entityManager.createNativeQuery(
-				"SELECT enums1 FROM EnumSetEntity_enums1_AUD ORDER BY REV ASC"
-		).getResultList();
-		List<Object> enums2 = entityManager.createNativeQuery(
-				"SELECT enums2 FROM EnumSetEntity_enums2_AUD ORDER BY REV ASC"
-		).getResultList();
+
+		verifyModel( entityManager );
+
+		{
+			final String qry = "SELECT enums1 FROM EnumSetEntity_enums1_AUD ORDER BY REV ASC";
+			List<String> enums1 = entityManager.createNativeQuery( qry, String.class ).getResultList();
+			Assertions.assertThat( enums1 ).isEqualTo( List.of( "X", "Y", "X" ) );
+		}
+
+		{
+			final String qry = "SELECT enums2 FROM EnumSetEntity_enums2_AUD ORDER BY REV ASC";
+			String enum2 = (String) entityManager.createNativeQuery( qry, String.class ).getSingleResult();
+			// Compare the String value to account for, as an example, Oracle returning a BigDecimal instead of an int.
+			Assertions.assertThat( enum2 ).isEqualTo( "0" );
+		}
+
 		entityManager.close();
+	}
 
-		Assert.assertEquals( Arrays.asList( "X", "Y", "X" ), enums1 );
+	private void verifyModel(EntityManager entityManager) {
+		final MappingMetamodelImplementor mappingMetamodel = entityManager.unwrap( SessionImplementor.class )
+				.getFactory()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel();
 
-		Assert.assertEquals( 1, enums2.size() );
-		Object enum2 = enums2.get( 0 );
-		// Compare the Strings to account for, as an example, Oracle returning a BigDecimal instead of an int.
-		Assert.assertEquals( "0", enum2.toString() );
+		{
+			final EntityMappingType entityMapping = mappingMetamodel.getEntityDescriptor( EnumSetEntity.class );
+			final PluralAttributeMapping attributeMapping = (PluralAttributeMapping) entityMapping.findDeclaredAttributeMapping( "enums1" );
+			verifyMapping( attributeMapping.getElementDescriptor().getJdbcMapping( 0 ) );
+		}
+
+		{
+			final EntityMappingType entityMapping = mappingMetamodel.getEntityDescriptor( "EnumSetEntity_enums1_AUD" );
+			final CompositeIdentifierMapping cidMapping = (CompositeIdentifierMapping) entityMapping.getIdentifierMapping();
+			verifyMapping( cidMapping.getEmbeddableTypeDescriptor().findAttributeMapping( "element" ).getJdbcMapping( 0 ) );
+		}
+
+	}
+
+	private void verifyMapping(JdbcMapping jdbcMapping) {
+		assertThat( jdbcMapping.getJdbcType().getJdbcTypeCode() ).isIn( Types.VARCHAR, Types.NVARCHAR, SqlTypes.ENUM );
 	}
 }

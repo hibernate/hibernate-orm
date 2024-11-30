@@ -1,13 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.enumerated.mappedSuperclass;
 
 import java.io.Serializable;
-import java.sql.Types;
 import jakarta.persistence.Column;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
@@ -21,22 +18,24 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.type.CustomType;
-import org.hibernate.type.EnumType;
+import org.hibernate.type.BasicType;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+
+import org.hibernate.type.SqlTypes;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import static jakarta.persistence.EnumType.STRING;
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.isOneOf;
 
 /**
  * Originally developed to verify/diagnose HHH-10128
@@ -48,8 +47,10 @@ public class EnumeratedWithMappedSuperclassTest extends BaseUnitTestCase {
 
 	@Before
 	public void before() {
-		ssr = new StandardServiceRegistryBuilder()
-				.applySetting( AvailableSettings.DIALECT, PostgreSQL81Dialect.class )
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
+				.applySetting( AvailableSettings.DIALECT, PostgreSQLDialect.class.getName() )
+				.applySetting( AvailableSettings.JAKARTA_HBM2DDL_DB_MAJOR_VERSION, "8" )
+				.applySetting( AvailableSettings.JAKARTA_HBM2DDL_DB_MINOR_VERSION, "1" )
 				.build();
 	}
 
@@ -71,19 +72,23 @@ public class EnumeratedWithMappedSuperclassTest extends BaseUnitTestCase {
 		final PersistentClass addressLevelBinding = metadata.getEntityBinding( AddressLevel.class.getName() );
 
 		final Property natureProperty = addressLevelBinding.getProperty( "nature" );
-		CustomType<Object> customType = assertTyping( CustomType.class, natureProperty.getType() );
-		EnumType enumType = assertTyping( EnumType.class, customType.getUserType() );
-		assertEquals( Types.VARCHAR, enumType.getSqlType() );
+		//noinspection unchecked
+		BasicType<Nature> natureMapping = (BasicType<Nature>) natureProperty.getType();
+		assertThat(
+				natureMapping.getJdbcType().getJdbcTypeCode(),
+				isOneOf( SqlTypes.VARCHAR, SqlTypes.ENUM, SqlTypes.NAMED_ENUM )
+		);
 
-		SessionFactoryImplementor sf = (SessionFactoryImplementor) metadata.buildSessionFactory();
-		try {
-            EntityPersister p = sf.getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor(AddressLevel.class.getName());
-			CustomType<Object> runtimeType = assertTyping( CustomType.class, p.getPropertyType( "nature" ) );
-			EnumType runtimeEnumType = assertTyping( EnumType.class, runtimeType.getUserType() );
-			assertEquals( Types.VARCHAR, runtimeEnumType.getSqlType() );
-		}
-		finally {
-			sf.close();
+		try ( SessionFactoryImplementor sf = (SessionFactoryImplementor) metadata.buildSessionFactory() ) {
+			EntityPersister p = sf.getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( AddressLevel.class.getName() );
+			//noinspection unchecked
+			BasicType<Nature> runtimeType = (BasicType<Nature>) p.getPropertyType( "nature" );
+			assertThat(
+					runtimeType.getJdbcType().getJdbcTypeCode(),
+					isOneOf( SqlTypes.VARCHAR, SqlTypes.ENUM, SqlTypes.NAMED_ENUM )
+			);
 		}
 	}
 

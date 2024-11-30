@@ -1,19 +1,20 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode;
 
+import static org.hibernate.bytecode.internal.BytecodeProviderInitiator.buildDefaultBytecodeProvider;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
-import org.hibernate.cfg.Environment;
-import org.hibernate.testing.TestForIssue;
+
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -21,14 +22,28 @@ import org.junit.Test;
  */
 public class ReflectionOptimizerTest extends BaseUnitTestCase {
 
+	private static BytecodeProvider provider;
+
+	@BeforeClass
+	public static void initBytecodeProvider() {
+		provider = buildDefaultBytecodeProvider();
+	}
+
+	@AfterClass
+	public static void clearBytecodeProvider() {
+		if ( provider != null ) {
+			provider.resetCaches();
+			provider = null;
+		}
+	}
+
 	@Test
 	public void testReflectionOptimization() {
-		BytecodeProvider provider = Environment.getBytecodeProvider();
 		ReflectionOptimizer optimizer = provider.getReflectionOptimizer(
 				Bean.class,
-		        BeanReflectionHelper.getGetterNames(),
-		        BeanReflectionHelper.getSetterNames(),
-		        BeanReflectionHelper.getTypes()
+				BeanReflectionHelper.getGetterNames(),
+				BeanReflectionHelper.getSetterNames(),
+				BeanReflectionHelper.getTypes()
 		);
 		assertNotNull( optimizer );
 		assertNotNull( optimizer.getInstantiationOptimizer() );
@@ -45,20 +60,18 @@ public class ReflectionOptimizerTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12584")
+	@JiraKey(value = "HHH-12584")
 	public void testAbstractClass() {
-		BytecodeProvider provider = Environment.getBytecodeProvider();
 		ReflectionOptimizer reflectionOptimizer = provider.getReflectionOptimizer( AbstractClass.class, new String[]{ "getProperty" },
-				new String[]{ "setProperty" }, new Class[]{ String.class } );
+			new String[]{ "setProperty" }, new Class[]{ String.class } );
 		assertNotNull( reflectionOptimizer );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12584")
+	@JiraKey(value = "HHH-12584")
 	public void testInterface() {
-		BytecodeProvider provider = Environment.getBytecodeProvider();
 		ReflectionOptimizer reflectionOptimizer = provider.getReflectionOptimizer( Interface.class, new String[]{ "getProperty" },
-				new String[]{ "setProperty" }, new Class[]{ String.class } );
+			new String[]{ "setProperty" }, new Class[]{ String.class } );
 		assertNotNull( reflectionOptimizer );
 	}
 
@@ -88,4 +101,5 @@ public class ReflectionOptimizerTest extends BaseUnitTestCase {
 
 		void setProperty(String property);
 	}
+
 }

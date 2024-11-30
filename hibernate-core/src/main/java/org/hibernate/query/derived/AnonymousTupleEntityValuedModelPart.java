@@ -1,27 +1,27 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.derived;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.Incubating;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.cache.MutableCacheKeyBuilder;
+import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
-import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.AttributeMappingsList;
+import org.hibernate.metamodel.mapping.AttributeMappingsMap;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
@@ -35,8 +35,13 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SoftDeleteMapping;
+import org.hibernate.metamodel.mapping.TableDetails;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
+import org.hibernate.metamodel.mapping.internal.OneToManyCollectionPart;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -44,12 +49,9 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
-import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -58,6 +60,7 @@ import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
+import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -65,47 +68,56 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import static java.util.Objects.requireNonNullElse;
+import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /**
  * @author Christian Beikov
  */
 @Incubating
-public class AnonymousTupleEntityValuedModelPart implements EntityValuedModelPart, EntityMappingType,
-		TableGroupJoinProducer {
+public class AnonymousTupleEntityValuedModelPart
+		implements EntityValuedModelPart, EntityMappingType, TableGroupJoinProducer, ValuedModelPart,
+		LazyTableGroup.ParentTableGroupUseChecker {
 
 	private final EntityIdentifierMapping identifierMapping;
 	private final DomainType<?> domainType;
-	private final String componentName;
 	private final EntityValuedModelPart delegate;
-	private final Set<String> targetKeyPropertyNames;
+//	private final Set<String> targetKeyPropertyNames;
+//	private final int fetchableIndex;
 
 	public AnonymousTupleEntityValuedModelPart(
 			EntityIdentifierMapping identifierMapping,
 			DomainType<?> domainType,
-			String componentName,
-			EntityValuedModelPart delegate) {
+			EntityValuedModelPart delegate,
+			int fetchableIndex) {
 		this.identifierMapping = identifierMapping;
 		this.domainType = domainType;
-		this.componentName = componentName;
 		this.delegate = delegate;
 		final EntityPersister persister = ((EntityMappingType) delegate.getPartMappingType())
 				.getEntityPersister();
 		final Set<String> targetKeyPropertyNames = new HashSet<>();
-		targetKeyPropertyNames.add( EntityIdentifierMapping.ROLE_LOCAL_NAME );
+		targetKeyPropertyNames.add( EntityIdentifierMapping.ID_ROLE_NAME );
 		ToOneAttributeMapping.addPrefixedPropertyNames(
 				targetKeyPropertyNames,
 				persister.getIdentifierPropertyName(),
 				persister.getIdentifierType(),
 				persister.getFactory()
 		);
-		this.targetKeyPropertyNames = targetKeyPropertyNames;
+//		this.targetKeyPropertyNames = targetKeyPropertyNames;
+//		this.fetchableIndex = fetchableIndex;
+	}
+
+	public ModelPart getForeignKeyPart() {
+		// todo: naming?
+		return identifierMapping;
 	}
 
 	@Override
 	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
 		if ( identifierMapping instanceof SingleAttributeIdentifierMapping ) {
-			if ( ( (SingleAttributeIdentifierMapping) identifierMapping ).getAttributeName().equals( name ) ) {
+			if ( identifierMapping.getAttributeName().equals( name ) ) {
 				return identifierMapping;
 			}
 		}
@@ -132,13 +144,23 @@ public class AnonymousTupleEntityValuedModelPart implements EntityValuedModelPar
 	}
 
 	@Override
+	public MappingType getMappedType() {
+		return getPartMappingType();
+	}
+
+	@Override
 	public JavaType<?> getJavaType() {
 		return domainType.getExpressibleJavaType();
 	}
 
 	@Override
 	public String getPartName() {
-		return componentName;
+		return delegate.getPartName();
+	}
+
+	@Override
+	public String getContainingTableExpression() {
+		return "";
 	}
 
 	@Override
@@ -157,13 +179,13 @@ public class AnonymousTupleEntityValuedModelPart implements EntityValuedModelPar
 	}
 
 	@Override
-	public List<AttributeMapping> getAttributeMappings() {
+	public AttributeMappingsList getAttributeMappings() {
 		return delegate.getEntityMappingType().getAttributeMappings();
 	}
 
 	@Override
-	public void visitAttributeMappings(Consumer<? super AttributeMapping> action) {
-		delegate.getEntityMappingType().visitAttributeMappings( action );
+	public void forEachAttributeMapping(Consumer<? super AttributeMapping> action) {
+		delegate.getEntityMappingType().forEachAttributeMapping( action );
 	}
 
 	@Override
@@ -173,9 +195,7 @@ public class AnonymousTupleEntityValuedModelPart implements EntityValuedModelPar
 
 	@Override
 	public Object getValue(Object instance, int position) {
-		return delegate.getEntityMappingType()
-				.getAttributeMapping( position )
-				.getValue( instance );
+		return delegate.getEntityMappingType().getValue( instance, position );
 	}
 
 	@Override
@@ -185,16 +205,17 @@ public class AnonymousTupleEntityValuedModelPart implements EntityValuedModelPar
 
 	@Override
 	public void setValue(Object instance, int position, Object value) {
-		delegate.getEntityMappingType()
-				.getAttributeMapping( position )
-				.setValue( instance, value );
+		delegate.getEntityMappingType().setValue( instance, position, value );
 	}
 
 	@Override
-	public List<JdbcMapping> getJdbcMappings() {
-		final List<JdbcMapping> results = new ArrayList<>();
-		forEachSelectable( (index, selection) -> results.add( selection.getJdbcMapping() ) );
-		return results;
+	public JdbcMapping getJdbcMapping(int index) {
+		return identifierMapping.getJdbcMapping( index );
+	}
+
+	@Override
+	public JdbcMapping getSingleJdbcMapping() {
+		return identifierMapping.getSingleJdbcMapping();
 	}
 
 	@Override
@@ -208,6 +229,11 @@ public class AnonymousTupleEntityValuedModelPart implements EntityValuedModelPar
 	}
 
 	@Override
+	public SelectableMapping getSelectable(int columnIndex) {
+		return identifierMapping.getSelectable( columnIndex );
+	}
+
+	@Override
 	public JavaType<?> getMappedJavaType() {
 		return delegate.getJavaType();
 	}
@@ -216,96 +242,96 @@ public class AnonymousTupleEntityValuedModelPart implements EntityValuedModelPar
 	public TableGroupJoin createTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAstJoinType requestedJoinType,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase explicitSqlAliasBase,
+			@Nullable SqlAstJoinType requestedJoinType,
 			boolean fetched,
 			boolean addsPredicate,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
-			FromClauseAccess fromClauseAccess,
-			SqlAstCreationContext creationContext) {
-		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
+			SqlAstCreationState creationState) {
 		final SqlAstJoinType joinType = requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
-
-		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() );
-		final boolean canUseInnerJoin = joinType == SqlAstJoinType.INNER || lhs.canUseInnerJoins();
-		final EntityPersister entityPersister = delegate.getEntityMappingType().getEntityPersister();
-		final LazyTableGroup lazyTableGroup = new LazyTableGroup(
-				canUseInnerJoin,
+		final LazyTableGroup lazyTableGroup = createRootTableGroupJoin(
 				navigablePath,
-				fetched,
-				() -> createTableGroupInternal(
-						canUseInnerJoin,
-						navigablePath,
-						fetched,
-						null,
-						sqlAliasBase,
-						sqlExpressionResolver,
-						creationContext
-				),
-				(np, tableExpression) -> {
-					if ( !tableExpression.isEmpty() && !entityPersister.containsTableReference( tableExpression ) ) {
-						return false;
-					}
-					if ( navigablePath.equals( np.getParent() ) ) {
-						return targetKeyPropertyNames.contains( np.getLocalName() );
-					}
-
-					final String relativePath = np.relativize( navigablePath );
-					if ( relativePath == null ) {
-						return false;
-					}
-
-					// Empty relative path means the navigable paths are equal,
-					// in which case we allow resolving the parent table group
-					return relativePath.isEmpty() || targetKeyPropertyNames.contains( relativePath );
-				},
-				this,
+				lhs,
 				explicitSourceAlias,
-				sqlAliasBase,
-				creationContext.getSessionFactory(),
-				lhs
+				explicitSqlAliasBase,
+				requestedJoinType,
+				fetched,
+				null,
+				creationState
 		);
 		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
-				lazyTableGroup.getNavigablePath(),
+				navigablePath,
 				joinType,
 				lazyTableGroup,
 				null
 		);
+		lazyTableGroup.setTableGroupInitializerCallback(
+				createTableGroupInitializerCallback(
+						lhs,
+						tableGroupJoin::applyPredicate,
+						creationState
+				)
+		);
+		return tableGroupJoin;
+	}
 
+	private Consumer<TableGroup> createTableGroupInitializerCallback(
+			TableGroup lhs,
+			Consumer<Predicate> predicateConsumer,
+			SqlAstCreationState creationState) {
 		// -----------------
 		// Collect the selectable mappings for the FK key side and target side
 		// As we will "resolve" the derived column references for these mappings
 		// --------------
 
-		final EntityAssociationMapping associationMapping = (EntityAssociationMapping) delegate;
 		final List<SelectableMapping> keyMappings;
 		final List<SelectableMapping> targetMappings;
-		if ( associationMapping.isReferenceToPrimaryKey() && associationMapping.getSideNature() == ForeignKeyDescriptor.Nature.KEY ) {
-			final ModelPart targetJoinModelPart = associationMapping.getForeignKeyDescriptor()
-					.getPart( associationMapping.getSideNature().inverse() );
-			targetMappings = new ArrayList<>( targetJoinModelPart.getJdbcTypeCount() );
-			targetJoinModelPart.forEachSelectable(
-					0,
-					(i, selectableMapping) -> targetMappings.add( selectableMapping )
-			);
-			keyMappings = new ArrayList<>( targetJoinModelPart.getJdbcTypeCount() );
-			associationMapping.getForeignKeyDescriptor()
-					.getPart( associationMapping.getSideNature() )
-					.forEachSelectable(
-							0,
-							(i, selectableMapping) -> keyMappings.add( selectableMapping )
-					);
+
+		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlExpressionResolver();
+
+		if ( delegate instanceof OneToManyCollectionPart ) {
+			final OneToManyCollectionPart oneToMany = (OneToManyCollectionPart) delegate;
+			final PluralAttributeMapping pluralAttribute = oneToMany.getCollectionDescriptor().getAttributeMapping();
+
+			final ModelPart keyPart = pluralAttribute.getKeyDescriptor().getKeyPart();
+			final ModelPart keyTargetPart = pluralAttribute.getKeyDescriptor().getTargetPart();
+
+			keyMappings = arrayList( keyPart.getJdbcTypeCount() );
+			keyPart.forEachSelectable( (selectionIndex, selectableMapping) -> keyMappings.add( selectableMapping ) );
+
+			targetMappings = arrayList( keyTargetPart.getJdbcTypeCount() );
+			keyTargetPart.forEachSelectable( (selectionIndex, selectableMapping) -> targetMappings.add( selectableMapping ) );
 		}
 		else {
-			final ModelPart targetJoinModelPart = delegate.getEntityMappingType().getIdentifierMapping();
-			targetMappings = new ArrayList<>( targetJoinModelPart.getJdbcTypeCount() );
-			targetJoinModelPart.forEachSelectable(
-					0,
-					(i, selectableMapping) -> targetMappings.add( selectableMapping )
-			);
-			keyMappings = targetMappings;
+			final EntityAssociationMapping associationMapping = (EntityAssociationMapping) delegate;
+
+			if ( associationMapping.isReferenceToPrimaryKey() && associationMapping.getSideNature() == ForeignKeyDescriptor.Nature.KEY ) {
+				final ModelPart targetJoinModelPart = associationMapping.getForeignKeyDescriptor()
+						.getPart( associationMapping.getSideNature().inverse() );
+				targetMappings = new ArrayList<>( targetJoinModelPart.getJdbcTypeCount() );
+				targetJoinModelPart.forEachSelectable(
+						0,
+						(i, selectableMapping) -> targetMappings.add( selectableMapping )
+				);
+				keyMappings = new ArrayList<>( targetJoinModelPart.getJdbcTypeCount() );
+				associationMapping.getForeignKeyDescriptor()
+						.getPart( associationMapping.getSideNature() )
+						.forEachSelectable(
+								0,
+								(i, selectableMapping) -> keyMappings.add( selectableMapping )
+						);
+			}
+			else {
+				final ModelPart targetJoinModelPart = delegate.getEntityMappingType().getIdentifierMapping();
+				targetMappings = new ArrayList<>( targetJoinModelPart.getJdbcTypeCount() );
+				targetJoinModelPart.forEachSelectable(
+						0,
+						(i, selectableMapping) -> targetMappings.add( selectableMapping )
+				);
+				keyMappings = targetMappings;
+			}
 		}
+
 		final TableReference tableReference = lhs.getPrimaryTableReference();
 		final List<ColumnReference> keyColumnReferences = new ArrayList<>( this.identifierMapping.getJdbcTypeCount() );
 		this.identifierMapping.forEachSelectable(
@@ -318,12 +344,12 @@ public class AnonymousTupleEntityValuedModelPart implements EntityValuedModelPar
 							(ColumnReference) sqlExpressionResolver.resolveSqlExpression(
 									SqlExpressionResolver.createColumnReferenceKey(
 											tableReference,
-											keyMappings.get( i ).getSelectionExpression()
+											keyMappings.get( i ).getSelectionExpression(),
+											keyMappings.get( i ).getJdbcMapping()
 									),
 									state -> new ColumnReference(
 											tableReference,
-											selectableMapping,
-											sessionFactory
+											selectableMapping
 									)
 							)
 					);
@@ -339,43 +365,38 @@ public class AnonymousTupleEntityValuedModelPart implements EntityValuedModelPar
 						sqlExpressionResolver.resolveSqlExpression(
 								SqlExpressionResolver.createColumnReferenceKey(
 										tableReference,
-										targetMappings.get( i ).getSelectionExpression()
+										targetMappings.get( i ).getSelectionExpression(),
+										targetMappings.get( i ).getJdbcMapping()
 								),
 								state -> new ColumnReference(
 										tableReference,
-										selectableMapping,
-										sessionFactory
+										selectableMapping
 								)
 						);
 					}
 			);
 		}
-		lazyTableGroup.setTableGroupInitializerCallback(
-				tg -> {
+		return tg -> {
 					this.identifierMapping.forEachSelectable(
 							(i, selectableMapping) -> {
 								final SelectableMapping targetMapping = targetMappings.get( i );
 								final TableReference targetTableReference = tg.resolveTableReference(
 										null,
-										targetMapping.getContainingTableExpression(),
-										false
+										targetMapping.getContainingTableExpression()
 								);
-								tableGroupJoin.applyPredicate(
+								predicateConsumer.accept(
 										new ComparisonPredicate(
 												keyColumnReferences.get( i ),
 												ComparisonOperator.EQUAL,
 												new ColumnReference(
 														targetTableReference,
-														targetMapping,
-														sessionFactory
+														targetMapping
 												)
 										)
 								);
 							}
 					);
-				}
-		);
-		return tableGroupJoin;
+				};
 	}
 
 	public TableGroup createTableGroupInternal(
@@ -384,13 +405,11 @@ public class AnonymousTupleEntityValuedModelPart implements EntityValuedModelPar
 			boolean fetched,
 			String sourceAlias,
 			final SqlAliasBase sqlAliasBase,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext) {
+			SqlAstCreationState creationState) {
 		final EntityMappingType entityMappingType = delegate.getEntityMappingType();
 		final TableReference primaryTableReference = entityMappingType.createPrimaryTableReference(
 				sqlAliasBase,
-				sqlExpressionResolver,
-				creationContext
+				creationState
 		);
 
 		return new StandardTableGroup(
@@ -402,47 +421,83 @@ public class AnonymousTupleEntityValuedModelPart implements EntityValuedModelPar
 				primaryTableReference,
 				true,
 				sqlAliasBase,
-				entityMappingType::containsTableReference,
+				entityMappingType.getRootEntityDescriptor()::containsTableReference,
 				(tableExpression, tg) -> entityMappingType.createTableReferenceJoin(
 						tableExpression,
 						sqlAliasBase,
 						primaryTableReference,
-						sqlExpressionResolver,
-						creationContext
+						creationState
 				),
-				creationContext.getSessionFactory()
+				creationState.getCreationContext().getSessionFactory()
 		);
 	}
 
 	@Override
-	public TableGroup createRootTableGroupJoin(
+	public LazyTableGroup createRootTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAstJoinType sqlAstJoinType,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase explicitSqlAliasBase,
+			@Nullable SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
-			Consumer<Predicate> predicateConsumer,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
-			FromClauseAccess fromClauseAccess,
-			SqlAstCreationContext creationContext) {
-		return ( (TableGroupJoinProducer) delegate ).createRootTableGroupJoin(
-				navigablePath,
-				lhs,
+			@Nullable Consumer<Predicate> predicateConsumer,
+			SqlAstCreationState creationState) {
+		final SqlAliasBase sqlAliasBase = SqlAliasBase.from(
+				explicitSqlAliasBase,
 				explicitSourceAlias,
-				sqlAstJoinType,
-				fetched,
-				predicateConsumer,
-				aliasBaseGenerator,
-				sqlExpressionResolver,
-				fromClauseAccess,
-				creationContext
+				this,
+				creationState.getSqlAliasBaseGenerator()
 		);
+		final boolean canUseInnerJoin = sqlAstJoinType == SqlAstJoinType.INNER || lhs.canUseInnerJoins();
+		final LazyTableGroup lazyTableGroup = new LazyTableGroup(
+				canUseInnerJoin,
+				navigablePath,
+				fetched,
+				() -> createTableGroupInternal(
+						canUseInnerJoin,
+						navigablePath,
+						fetched,
+						null,
+						sqlAliasBase,
+						creationState
+				),
+				this,
+				this,
+				explicitSourceAlias,
+				sqlAliasBase,
+				creationState.getCreationContext().getSessionFactory(),
+				lhs
+		);
+
+		if ( predicateConsumer != null ) {
+			lazyTableGroup.setTableGroupInitializerCallback(
+					createTableGroupInitializerCallback( lhs, predicateConsumer, creationState )
+			);
+		}
+
+		return lazyTableGroup;
+	}
+
+	@Override
+	public boolean canUseParentTableGroup(TableGroupProducer producer, NavigablePath navigablePath, ValuedModelPart valuedModelPart) {
+		final ModelPart foreignKeyPart = getForeignKeyPart();
+		if ( foreignKeyPart instanceof AnonymousTupleNonAggregatedEntityIdentifierMapping ) {
+			final AnonymousTupleNonAggregatedEntityIdentifierMapping identifierMapping =
+					(AnonymousTupleNonAggregatedEntityIdentifierMapping) foreignKeyPart;
+			final int numberOfFetchables = identifierMapping.getNumberOfFetchables();
+			for ( int i = 0; i< numberOfFetchables; i++ ) {
+				if ( valuedModelPart == identifierMapping.getFetchable( i ) ) {
+					return true;
+				}
+			}
+			return false;
+		}
+		return foreignKeyPart == valuedModelPart;
 	}
 
 	@Override
 	public String getSqlAliasStem() {
-		return getPartName();
+		return ((TableGroupJoinProducer) delegate).getSqlAliasStem();
 	}
 
 	@Override
@@ -487,11 +542,14 @@ public class AnonymousTupleEntityValuedModelPart implements EntityValuedModelPar
 	}
 
 	@Override
-	public void breakDownJdbcValues(
+	public <X, Y> int breakDownJdbcValues(
 			Object domainValue,
-			JdbcValueConsumer valueConsumer,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
 			SharedSessionContractImplementor session) {
-		delegate.breakDownJdbcValues( domainValue, valueConsumer, session );
+		return delegate.breakDownJdbcValues( domainValue, offset, x, y, valueConsumer, session );
 	}
 
 	@Override
@@ -500,23 +558,35 @@ public class AnonymousTupleEntityValuedModelPart implements EntityValuedModelPar
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
-			Object value,
-			Clause clause,
-			int offset,
-			JdbcValuesConsumer valuesConsumer,
-			SharedSessionContractImplementor session) {
-		return delegate.forEachDisassembledJdbcValue( value, clause, offset, valuesConsumer, session );
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		delegate.addToCacheKey( cacheKey, value, session );
 	}
 
 	@Override
-	public int forEachJdbcValue(
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
-			JdbcValuesConsumer consumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return delegate.forEachJdbcValue( value, clause, offset, consumer, session );
+		return delegate.forEachDisassembledJdbcValue( value, offset, x, y, valuesConsumer, session );
+	}
+
+	@Override
+	public <X, Y> int forEachJdbcValue(
+			Object value,
+			int offset,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> consumer,
+			SharedSessionContractImplementor session) {
+		return delegate.forEachJdbcValue( value, offset, x, y, consumer, session );
+	}
+
+	@Override
+	public boolean isExplicitPolymorphism() {
+		return false;
 	}
 
 	@Override
@@ -535,6 +605,16 @@ public class AnonymousTupleEntityValuedModelPart implements EntityValuedModelPar
 	}
 
 	@Override
+	public TableDetails getMappedTableDetails() {
+		return delegate.getEntityMappingType().getMappedTableDetails();
+	}
+
+	@Override
+	public TableDetails getIdentifierTableDetails() {
+		return delegate.getEntityMappingType().getIdentifierTableDetails();
+	}
+
+	@Override
 	public void visitQuerySpaces(Consumer<String> querySpaceConsumer) {
 		delegate.getEntityMappingType().visitQuerySpaces( querySpaceConsumer );
 	}
@@ -545,7 +625,7 @@ public class AnonymousTupleEntityValuedModelPart implements EntityValuedModelPar
 	}
 
 	@Override
-	public Collection<AttributeMapping> getDeclaredAttributeMappings() {
+	public AttributeMappingsMap getDeclaredAttributeMappings() {
 		return delegate.getEntityMappingType().getDeclaredAttributeMappings();
 	}
 
@@ -570,13 +650,18 @@ public class AnonymousTupleEntityValuedModelPart implements EntityValuedModelPar
 	}
 
 	@Override
-	public String getSubclassForDiscriminatorValue(Object value) {
-		return delegate.getEntityMappingType().getSubclassForDiscriminatorValue( value );
+	public String getDiscriminatorSQLValue() {
+		return delegate.getEntityMappingType().getDiscriminatorSQLValue();
 	}
 
 	@Override
 	public EntityVersionMapping getVersionMapping() {
 		return delegate.getEntityMappingType().getVersionMapping();
+	}
+
+	@Override
+	public OptimisticLockStyle optimisticLockStyle() {
+		return delegate.getEntityMappingType().optimisticLockStyle();
 	}
 
 	@Override
@@ -590,8 +675,23 @@ public class AnonymousTupleEntityValuedModelPart implements EntityValuedModelPar
 	}
 
 	@Override
+	public SoftDeleteMapping getSoftDeleteMapping() {
+		return delegate.getEntityMappingType().getSoftDeleteMapping();
+	}
+
+	@Override
+	public TableDetails getSoftDeleteTableDetails() {
+		return delegate.getEntityMappingType().getSoftDeleteTableDetails();
+	}
+
+	@Override
 	public void visitConstraintOrderedTables(ConstraintOrderedTableConsumer consumer) {
 		delegate.getEntityMappingType().visitConstraintOrderedTables( consumer );
+	}
+
+	@Override
+	public Object loadByUniqueKey(String propertyName, Object uniqueKey, SharedSessionContractImplementor session) {
+		return delegate.getEntityMappingType().loadByUniqueKey( propertyName, uniqueKey, session );
 	}
 
 	@Override
@@ -619,7 +719,31 @@ public class AnonymousTupleEntityValuedModelPart implements EntityValuedModelPar
 	@Override
 	public boolean isSimpleJoinPredicate(Predicate predicate) {
 		return delegate instanceof TableGroupJoinProducer
-				? ( (TableGroupJoinProducer) delegate ).isSimpleJoinPredicate( predicate )
-				: false;
+			&& ( (TableGroupJoinProducer) delegate ).isSimpleJoinPredicate(predicate);
+	}
+
+	@Override
+	public boolean containsTableReference(String tableExpression) {
+		return ( (TableGroupProducer) delegate ).containsTableReference( tableExpression );
+	}
+
+	@Override
+	public int getBatchSize() {
+		return -1;
+	}
+
+	@Override
+	public boolean isAffectedByInfluencers(LoadQueryInfluencers influencers) {
+		return false;
+	}
+
+	@Override
+	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
+		return false;
+	}
+
+	@Override
+	public boolean isNotAffectedByInfluencers(LoadQueryInfluencers influencers) {
+		return true;
 	}
 }

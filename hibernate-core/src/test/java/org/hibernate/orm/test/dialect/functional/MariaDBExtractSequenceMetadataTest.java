@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.dialect.functional;
 
 import java.sql.Connection;
@@ -12,7 +16,7 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -21,7 +25,7 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Nathan Xu
  */
-@RequiresDialect(value = MariaDBDialect.class, majorVersion = 10, minorVersion = 3)
+@RequiresDialect(value = MariaDBDialect.class)
 public class MariaDBExtractSequenceMetadataTest {
 
 	private static String primaryDbName;
@@ -49,7 +53,7 @@ public class MariaDBExtractSequenceMetadataTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13373")
+	@JiraKey(value = "HHH-13373")
 	public void testHibernateLaunchedSuccessfully() {
 		JdbcEnvironment jdbcEnvironment = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() )
 				.getService( JdbcEnvironment.class );

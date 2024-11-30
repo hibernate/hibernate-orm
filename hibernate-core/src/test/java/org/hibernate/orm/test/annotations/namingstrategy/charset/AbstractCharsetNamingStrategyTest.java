@@ -1,14 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-// $Id$
 package org.hibernate.orm.test.annotations.namingstrategy.charset;
 
-import java.util.HashMap;
 import java.util.Map;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -26,7 +21,7 @@ import org.hibernate.mapping.UniqueKey;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.orm.test.annotations.namingstrategy.LongIdentifierNamingStrategy;
 import org.junit.After;
@@ -38,13 +33,13 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue( jiraKey = "HHH-12357" )
+@JiraKey( value = "HHH-12357" )
 public abstract class AbstractCharsetNamingStrategyTest extends BaseUnitTestCase {
 
 	protected ServiceRegistry serviceRegistry;
 
 	@Before
-    public void setUp() {
+	public void setUp() {
 		Map<String, Object> properties = PropertiesHelper.map( Environment.getProperties() );
 		properties.put( AvailableSettings.HBM2DDL_CHARSET_NAME, charsetName() );
 		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( properties );
@@ -53,12 +48,12 @@ public abstract class AbstractCharsetNamingStrategyTest extends BaseUnitTestCase
 	protected abstract String charsetName();
 
 	@After
-    public void tearDown() {
-        if ( serviceRegistry != null ) {
+	public void tearDown() {
+		if ( serviceRegistry != null ) {
 			ServiceRegistryBuilder.destroy( serviceRegistry );
 		}
 	}
-    @Test
+	@Test
 	public void testWithCustomNamingStrategy() throws Exception {
 		Metadata metadata = new MetadataSources( serviceRegistry )
 				.addAnnotatedClass(Address.class)
@@ -67,14 +62,14 @@ public abstract class AbstractCharsetNamingStrategyTest extends BaseUnitTestCase
 				.applyImplicitNamingStrategy( new LongIdentifierNamingStrategy() )
 				.build();
 
-		UniqueKey uniqueKey = metadata.getEntityBinding( Address.class.getName()).getTable().getUniqueKeyIterator().next();
+		UniqueKey uniqueKey = metadata.getEntityBinding(Address.class.getName()).getTable().getUniqueKeys().values().iterator().next();
 		assertEquals( expectedUniqueKeyName(), uniqueKey.getName() );
 
 		org.hibernate.mapping.ForeignKey foreignKey =
-				(org.hibernate.mapping.ForeignKey) metadata.getEntityBinding( Address.class.getName()).getTable().getForeignKeyIterator().next();
+				(org.hibernate.mapping.ForeignKey) metadata.getEntityBinding(Address.class.getName()).getTable().getForeignKeys().values().iterator().next();
 		assertEquals( expectedForeignKeyName(), foreignKey.getName() );
 
-		org.hibernate.mapping.Index index = metadata.getEntityBinding( Address.class.getName()).getTable().getIndexIterator().next();
+		org.hibernate.mapping.Index index = metadata.getEntityBinding(Address.class.getName()).getTable().getIndexes().values().iterator().next();
 		assertEquals( expectedIndexName(), index.getName() );
 	}
 

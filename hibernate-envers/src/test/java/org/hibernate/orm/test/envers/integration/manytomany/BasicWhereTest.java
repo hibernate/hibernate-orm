@@ -1,12 +1,23 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.manytomany;
 
 import java.util.Set;
+
+import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.envers.AuditJoinTable;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.RelationTargetAuditMode;
+import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.orm.test.envers.Priority;
+
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.testing.transaction.TransactionUtil;
+import org.junit.Test;
 
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
@@ -15,32 +26,19 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
-
-import org.hibernate.annotations.Where;
-import org.hibernate.envers.AuditJoinTable;
-import org.hibernate.envers.Audited;
-import org.hibernate.envers.RelationTargetAuditMode;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.transaction.TransactionUtil;
-import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
 /**
- * Provides test cases for the following {@link ManyToMany} mapping:
- *
- * <ul>
- *     <li>An {@link AuditJoinTable} with a {@link Where} clause.</li>
- *     <li>A non join-table mapping with a {@link Where} clause.</li>
- * </ul>
+ * Provides test cases for the following {@link ManyToMany} mapping with {@linkplain SQLRestriction}
  *
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-9432")
+@JiraKey("HHH-9432")
+@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "'TYPE' is not escaped even though autoQuoteKeywords is enabled")
 public class BasicWhereTest extends BaseEnversJPAFunctionalTestCase {
 	private Integer aId;
 	private Integer xId;
@@ -115,8 +113,8 @@ public class BasicWhereTest extends BaseEnversJPAFunctionalTestCase {
 		private String name;
 
 		@ManyToMany
-		@JoinColumn(name = "allC")
-		@Where(clause = "type = 'C'")
+		@JoinTable(joinColumns = @JoinColumn(name = "allC"))
+		@SQLRestriction("type = 'C'")
 		@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 		@AuditJoinTable(name = "A_C_AUD")
 		private Set<EntityC> allMyC;
@@ -190,7 +188,7 @@ public class BasicWhereTest extends BaseEnversJPAFunctionalTestCase {
 		private String name;
 
 		@ManyToMany
-		@Where(clause = "type = 'Z'")
+		@SQLRestriction("type = 'Z'")
 		@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 		private Set<EntityZ> allMyZ;
 

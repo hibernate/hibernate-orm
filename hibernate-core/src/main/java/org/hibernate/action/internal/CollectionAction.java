@@ -1,20 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.action.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
-import org.hibernate.action.spi.Executable;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.ComparableExecutable;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.FastSessionServices;
@@ -27,9 +23,10 @@ import org.hibernate.pretty.MessageHelper;
  *
  * @author Gavin King
  */
-public abstract class CollectionAction implements Executable, Serializable, Comparable<CollectionAction> {
+public abstract class CollectionAction implements ComparableExecutable {
+
 	private transient CollectionPersister persister;
-	private transient SharedSessionContractImplementor session;
+	private transient EventSource session;
 	private final PersistentCollection<?> collection;
 
 	private final Object key;
@@ -39,7 +36,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 			final CollectionPersister persister,
 			final PersistentCollection<?> collection,
 			final Object key,
-			final SharedSessionContractImplementor session) {
+			final EventSource session) {
 		this.persister = persister;
 		this.session = session;
 		this.key = key;
@@ -56,7 +53,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 	 *
 	 * @param session The session being deserialized
 	 */
-	public void afterDeserialize(SharedSessionContractImplementor session) {
+	public void afterDeserialize(EventSource session) {
 		if ( this.session != null || this.persister != null ) {
 			throw new IllegalStateException( "already attached to a session." );
 		}
@@ -100,7 +97,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 	}
 
 	@Override
-	public Serializable[] getPropertySpaces() {
+	public String[] getPropertySpaces() {
 		return persister.getCollectionSpaces();
 	}
 
@@ -121,7 +118,17 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 		return finalKey;
 	}
 
-	protected final SharedSessionContractImplementor getSession() {
+	@Override
+	public String getPrimarySortClassifier() {
+		return collectionRole;
+	}
+
+	@Override
+	public Object getSecondarySortIndex() {
+		return key;
+	}
+
+	protected final EventSource getSession() {
 		return session;
 	}
 
@@ -129,7 +136,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 		if ( persister.hasCache() ) {
 			final CollectionDataAccess cache = persister.getCacheAccessStrategy();
 			final Object ck = cache.generateCacheKey(
-					key, 
+					key,
 					persister,
 					session.getFactory(),
 					session.getTenantIdentifier()
@@ -144,15 +151,18 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 	}
 
 	@Override
-	public int compareTo(CollectionAction action) {
+	public int compareTo(ComparableExecutable o) {
 		// sort first by role name
-		final int roleComparison = collectionRole.compareTo( action.collectionRole );
+		final int roleComparison = collectionRole.compareTo( o.getPrimarySortClassifier() );
 		if ( roleComparison != 0 ) {
 			return roleComparison;
 		}
 		else {
 			//then by fk
-			return persister.getKeyType().compare( key, action.key );
+			return persister.getAttributeMapping().getKeyDescriptor().compare( key, o.getSecondarySortIndex() );
+//			//noinspection unchecked
+//			final JavaType<Object> javaType = (JavaType<Object>) persister.getAttributeMapping().getKeyDescriptor().getJavaType();
+//			return javaType.getComparator().compare( key, action.key );
 		}
 	}
 
@@ -181,7 +191,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 	}
 
 	protected EventSource eventSource() {
-		return (EventSource) getSession();
+		return getSession();
 	}
 
 	/**

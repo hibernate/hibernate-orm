@@ -1,14 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.ops;
 
 import org.hibernate.dialect.OracleDialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -18,8 +16,8 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(value = OracleDialect.class, majorVersion = 9)
-@TestForIssue(jiraKey = "HHH-13104")
+@RequiresDialect(value = OracleDialect.class)
+@JiraKey(value = "HHH-13104")
 @DomainModel(
 		xmlMappings = "org/hibernate/orm/test/ops/Competition.hbm.xml"
 )
@@ -35,4 +33,3 @@ public class OracleNoColumnInsertTest {
 		} );
 	}
 }
-

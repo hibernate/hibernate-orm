@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.converted.enums;
 
@@ -14,7 +12,7 @@ import jakarta.persistence.Id;
 
 import org.hibernate.type.descriptor.JdbcBindingLogging;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Logger;
 import org.hibernate.testing.orm.junit.MessageKeyInspection;
@@ -32,7 +30,7 @@ import static org.junit.Assert.assertTrue;
  */
 @MessageKeyInspection(
 		logger = @Logger( loggerName = JdbcBindingLogging.NAME ),
-		messageKey = "binding parameter ["
+		messageKey = "binding parameter"
 )
 @DomainModel( annotatedClasses = OrdinalEnumTypeTest.Person.class )
 @SessionFactory
@@ -58,7 +56,7 @@ public class OrdinalEnumTypeTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12978")
+	@JiraKey(value = "HHH-12978")
 	public void testEnumAsBindParameterAndExtract(SessionFactoryScope scope, MessageKeyWatcher loggingWatcher) {
 		scope.inTransaction(
 				(session) -> {
@@ -86,7 +84,7 @@ public class OrdinalEnumTypeTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10282")
+	@JiraKey(value = "HHH-10282")
 	public void hqlTestEnumShortHandSyntax(SessionFactoryScope scope, MessageKeyWatcher loggingWatcher) {
 		scope.inTransaction(
 				(session) -> {
@@ -100,7 +98,7 @@ public class OrdinalEnumTypeTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10282")
+	@JiraKey(value = "HHH-10282")
 	public void hqlTestEnumQualifiedShortHandSyntax(SessionFactoryScope scope, MessageKeyWatcher loggingWatcher) {
 		final String qry = "select id from Person where originalHairColor = HairColor.BLONDE";
 		scope.inTransaction(
@@ -113,7 +111,7 @@ public class OrdinalEnumTypeTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10282")
+	@JiraKey(value = "HHH-10282")
 	public void hqlTestEnumShortHandSyntaxInPredicate(SessionFactoryScope scope, MessageKeyWatcher loggingWatcher) {
 		scope.inTransaction(
 				(session) -> {
@@ -126,7 +124,7 @@ public class OrdinalEnumTypeTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10282")
+	@JiraKey(value = "HHH-10282")
 	public void hqlTestEnumQualifiedShortHandSyntaxInPredicate(SessionFactoryScope scope, MessageKeyWatcher loggingWatcher) {
 		scope.inTransaction(
 				(session) -> {

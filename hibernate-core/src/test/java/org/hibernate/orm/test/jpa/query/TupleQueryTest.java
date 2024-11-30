@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.query;
 
@@ -16,6 +14,7 @@ import jakarta.persistence.TypedQuery;
 import java.util.List;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
 
 import org.junit.jupiter.api.AfterEach;
@@ -25,6 +24,8 @@ import org.junit.jupiter.api.Test;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Andrea Boriero
@@ -81,6 +82,23 @@ public class TupleQueryTest {
 					assertThat( elements.size(), is( 1 ) );
 					final String alias = elements.get( 0 ).getAlias();
 					assertThat( alias, is( "fn" ) );
+				}
+		);
+	}
+
+	@Test
+	@JiraKey( "HHH-16742" )
+	public void testTwoDifferentAliasesToSameColumn(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					TypedQuery<Tuple> query = entityManager.createQuery( "SELECT u.firstName as fn, u.firstName as fn_2 from User u", Tuple.class );
+
+					Tuple result = query.getResultList().get(0);
+					assertNotNull( result );
+					assertEquals( 2, result.getElements().size() );
+					// Should not throw IllegalArgumentException
+					result.get("fn", String.class);
+					result.get("fn_2", String.class);
 				}
 		);
 	}

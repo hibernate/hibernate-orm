@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.sequence;
 
@@ -41,6 +39,12 @@ public class NoSequenceSupport implements SequenceSupport {
 	@Override
 	public String getSelectSequenceNextValString(String sequenceName) throws MappingException {
 		throw new MappingException("dialect does not support sequences");
+	}
+
+	@Override
+	public String[] getCreateSequenceStrings(String sequenceName, int initialValue, int incrementSize, String options)
+			throws MappingException {
+		throw new MappingException( "dialect does not support sequences" );
 	}
 
 	@Override

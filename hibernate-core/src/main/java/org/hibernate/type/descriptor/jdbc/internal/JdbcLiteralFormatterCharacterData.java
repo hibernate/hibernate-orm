@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc.internal;
 
@@ -19,7 +17,7 @@ import org.hibernate.type.descriptor.jdbc.spi.BasicJdbcLiteralFormatter;
  * @author Steve Ebersole
  */
 public class JdbcLiteralFormatterCharacterData<T> extends BasicJdbcLiteralFormatter<T> {
-	public static final String NATIONALIZED_PREFIX = "n";
+	public static final String NATIONALIZED_PREFIX = "N";
 
 	private final boolean isNationalized;
 

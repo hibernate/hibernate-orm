@@ -1,12 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.spi;
 
-import org.hibernate.boot.model.Caching;
 import org.hibernate.engine.OptimisticLockStyle;
 
 /**
@@ -24,8 +21,8 @@ public interface EntityHierarchySource {
 
 	/**
 	 * The inheritance type/strategy for the hierarchy.
-	 * <p/>
-	 * NOTE : The entire hierarchy must comply with the same inheritance strategy.
+	 * <p>
+	 * The entire hierarchy must have with the same inheritance strategy.
 	 *
 	 * @return The inheritance type.
 	 */

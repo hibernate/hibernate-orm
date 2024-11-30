@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.onetomany;
 
@@ -43,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 				Key.class
 		}
 )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 public class OneToManyTest {
 	public static final String CARD_ID = "cardId";
 	public static final String CARD_FIELD_ID = "cardFieldId";
@@ -70,18 +68,18 @@ public class OneToManyTest {
 					card.getFields().forEach(
 							cardField -> {
 								Key key = cardField.key;
-								session.delete( cardField );
-								session.delete( key );
+								session.remove( cardField );
+								session.remove( key );
 							}
 					);
-					session.delete( card );
+					session.remove( card );
 				}
 		);
 	}
 
 	@Test
 	public void testGet(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {

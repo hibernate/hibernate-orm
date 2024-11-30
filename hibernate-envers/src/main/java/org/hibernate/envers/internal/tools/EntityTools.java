@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.tools;
 
@@ -14,6 +12,8 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
+
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
@@ -31,27 +31,27 @@ public abstract class EntityTools {
 			return null;
 		}
 
-		if ( obj instanceof HibernateProxy ) {
-			final HibernateProxy hibernateProxy = (HibernateProxy) obj;
-			return hibernateProxy.getHibernateLazyInitializer().getInternalIdentifier();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( obj );
+		if ( lazyInitializer != null ) {
+			return lazyInitializer.getInternalIdentifier();
 		}
 
 		return session.getEntityPersister( entityName, obj ).getIdentifier( obj, session );
 	}
 
-	public static Object getTargetFromProxy(SessionFactoryImplementor sessionFactoryImplementor, HibernateProxy proxy) {
-		if ( !proxy.getHibernateLazyInitializer().isUninitialized() || activeProxySession( proxy ) ) {
-			return proxy.getHibernateLazyInitializer().getImplementation();
+	public static Object getTargetFromProxy(final SessionFactoryImplementor sessionFactoryImplementor, final LazyInitializer lazyInitializer) {
+		if ( !lazyInitializer.isUninitialized() || activeProxySession( lazyInitializer ) ) {
+			return lazyInitializer.getImplementation();
 		}
 
-		final SharedSessionContractImplementor sessionImplementor = proxy.getHibernateLazyInitializer().getSession();
+		final SharedSessionContractImplementor sessionImplementor = lazyInitializer.getSession();
 		final Session tempSession = sessionImplementor == null
 				? sessionFactoryImplementor.openTemporarySession()
 				: sessionImplementor.getFactory().openTemporarySession();
 		try {
 			return tempSession.get(
-					proxy.getHibernateLazyInitializer().getEntityName(),
-					proxy.getHibernateLazyInitializer().getInternalIdentifier()
+					lazyInitializer.getEntityName(),
+					lazyInitializer.getInternalIdentifier()
 			);
 		}
 		finally {
@@ -59,8 +59,8 @@ public abstract class EntityTools {
 		}
 	}
 
-	private static boolean activeProxySession(HibernateProxy proxy) {
-		final Session session = (Session) proxy.getHibernateLazyInitializer().getSession();
+	private static boolean activeProxySession(final LazyInitializer lazyInitializer) {
+		final Session session = (Session) lazyInitializer.getSession();
 		return session != null && session.isOpen() && session.isConnected();
 	}
 

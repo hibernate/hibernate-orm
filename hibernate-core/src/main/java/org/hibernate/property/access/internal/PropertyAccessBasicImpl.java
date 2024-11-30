@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.property.access.internal;
 
@@ -18,8 +16,10 @@ import org.hibernate.property.access.spi.SetterMethodImpl;
 
 import org.jboss.logging.Logger;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
- * PropertyAccessor for accessing the wrapped property via get/set pair, which may be nonpublic.
+ * {@link PropertyAccess} for accessing the wrapped property via get/set pair, which may be nonpublic.
  *
  * @author Steve Ebersole
  *
@@ -30,7 +30,7 @@ public class PropertyAccessBasicImpl implements PropertyAccess {
 
 	private final PropertyAccessStrategyBasicImpl strategy;
 	private final GetterMethodImpl getter;
-	private final SetterMethodImpl setter;
+	private final @Nullable SetterMethodImpl setter;
 
 	public PropertyAccessBasicImpl(
 			PropertyAccessStrategyBasicImpl strategy,
@@ -65,7 +65,7 @@ public class PropertyAccessBasicImpl implements PropertyAccess {
 	}
 
 	@Override
-	public Setter getSetter() {
+	public @Nullable Setter getSetter() {
 		return setter;
 	}
 }

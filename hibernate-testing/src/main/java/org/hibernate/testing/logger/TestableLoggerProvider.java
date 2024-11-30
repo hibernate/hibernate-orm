@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.logger;
 
@@ -19,7 +17,7 @@ import org.apache.logging.log4j.ThreadContext;
  * A {@code LoggerProvider} for JBoss Logger.
  * See also META-INF/services/org.jboss.logging.LoggerProvider
  *
- * @author <a href="mailto:sanne@hibernate.org">Sanne Grinovero</a> (C) 2015 Red Hat Inc.
+ * @author Sanne Grinovero (C) 2015 Red Hat Inc.
  */
 public class TestableLoggerProvider implements org.jboss.logging.LoggerProvider {
 

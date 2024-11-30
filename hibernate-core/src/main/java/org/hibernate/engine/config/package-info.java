@@ -6,7 +6,7 @@
  */
 
 /**
- * Package for the configuration service, which provides access to configuration settings as part of a
- * ServiceRegistry
+ * Contains the configuration service, which provides access to
+ * settings via a {@link org.hibernate.service.ServiceRegistry}.
  */
 package org.hibernate.engine.config;

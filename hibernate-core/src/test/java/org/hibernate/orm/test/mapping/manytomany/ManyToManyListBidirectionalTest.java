@@ -1,15 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.manytomany;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import org.hibernate.internal.util.collections.ArrayHelper;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -22,6 +20,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @DomainModel(
 		annotatedClasses = {
@@ -39,29 +39,31 @@ public class ManyToManyListBidirectionalTest {
 		scope.inTransaction( session -> {
 			final Author author1 = new Author( 1 );
 			final Author author2 = new Author( 2 );
-
-			final Book bookByAuthor1 = new Book( 1 );
-			bookByAuthor1.addAuthor( author1 );
-
-			final Book bookByAuthor2 = new Book( 2 );
-			bookByAuthor2.addAuthor( author2 );
-
-			final Book bookByAuthor1AndAuthor2 = new Book( 3 );
-			bookByAuthor1AndAuthor2.addAuthor( author1 );
-			bookByAuthor1AndAuthor2.addAuthor( author2 );
-
 			session.persist( author1 );
 			session.persist( author2 );
+
+			final Book bookByAuthor1 = new Book( 1, author1 );
+			final Book bookByAuthor2 = new Book( 2, author2 );
+			final Book bookByAuthors1And2 = new Book( 3, author1, author2 );
 			session.persist( bookByAuthor1 );
 			session.persist( bookByAuthor2 );
-			session.persist( bookByAuthor1AndAuthor2 );
+			session.persist( bookByAuthors1And2 );
 		} );
 
 		scope.inTransaction( session -> {
-			assertThat( session.createQuery( "from Book b", Book.class ).list() )
-					.hasSize( 3 )
-					.allSatisfy( book -> assertThat( book.authors )
-							.allSatisfy( author -> assertThat( author.books ).contains( book ) ) );
+			final List<Book> books = session.createQuery( "from Book b", Book.class ).list();
+
+			assertThat( books ).hasSize( 3 );
+			books.forEach( (book) -> {
+				book.authors.forEach( (author) -> {
+					assertThat( author.books ).contains( book );
+				} );
+			} );
+
+//			assertThat( books )
+//					.hasSize( 3 )
+//					.allSatisfy( book -> assertThat( book.authors )
+//							.allSatisfy( author -> assertThat( author.books ).contains( book ) ) );
 		} );
 
 		scope.inTransaction( session -> {
@@ -88,6 +90,21 @@ public class ManyToManyListBidirectionalTest {
 			this.id = id;
 		}
 
+		public Book(int id, Author author) {
+			this.id = id;
+			link( author );
+		}
+
+		private void link(Author author) {
+			authors.add( author );
+			author.books.add( this );
+		}
+
+		public Book(int id, Author... authors) {
+			this.id = id;
+			ArrayHelper.forEach( authors, this::link );
+		}
+
 		@ManyToMany
 		@JoinTable(name = "book_author",
 				joinColumns = { @JoinColumn(name = "fk_book") },
@@ -95,8 +112,12 @@ public class ManyToManyListBidirectionalTest {
 		private List<Author> authors = new ArrayList<>();
 
 		public void addAuthor(Author author) {
-			authors.add( author );
-			author.books.add( this );
+			link( author );
+		}
+
+		@Override
+		public String toString() {
+			return "Book(" + id + ")@" + Integer.toHexString( hashCode() );
 		}
 	}
 
@@ -119,6 +140,11 @@ public class ManyToManyListBidirectionalTest {
 		public void addBook(Book book) {
 			books.add( book );
 			book.authors.add( this );
+		}
+
+		@Override
+		public String toString() {
+			return "Author(" + id + ")@" + Integer.toHexString( hashCode() );
 		}
 	}
 

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hql;
 
@@ -109,7 +107,7 @@ public class FromClauseTests extends BaseSqmUnitTest {
 		final SqmRoot<?> sqmRoot = fromClause.getRoots().get( 0 );
 		assertThat( sqmRoot, notNullValue() );
 		assertThat( sqmRoot.getExplicitAlias(), is( "p" )  );
-		assertThat( sqmRoot.getJoins(), hasSize( 1 ) );
+		assertThat( sqmRoot.getSqmJoins(), hasSize( 1 ) );
 		assertThat( sqmRoot.getSqmJoins().get( 0 ).getExplicitAlias(), is( "p2" )  );
 	}
 

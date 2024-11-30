@@ -1,15 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.mutation.internal.cte;
 
 import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -18,9 +15,9 @@ import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
-import org.hibernate.query.sqm.tree.cte.SqmCteTable;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.sql.ast.tree.cte.CteTable;
 
 /**
  * @asciidoc
@@ -56,7 +53,7 @@ public class CteMutationStrategy implements SqmMultiTableMutationStrategy {
 
 	private final EntityPersister rootDescriptor;
 	private final SessionFactoryImplementor sessionFactory;
-	private final SqmCteTable idCteTable;
+	private final CteTable idCteTable;
 
 	public CteMutationStrategy(
 			EntityMappingType rootEntityType,
@@ -70,10 +67,7 @@ public class CteMutationStrategy implements SqmMultiTableMutationStrategy {
 		this.rootDescriptor = rootDescriptor;
 		this.sessionFactory = runtimeModelCreationContext.getSessionFactory();
 
-		final Dialect dialect = sessionFactory.getServiceRegistry()
-				.getService( JdbcServices.class )
-				.getJdbcEnvironment()
-				.getDialect();
+		final Dialect dialect = runtimeModelCreationContext.getDialect();
 
 		if ( !dialect.supportsNonQueryWithCTE() ) {
 			throw new UnsupportedOperationException(
@@ -89,7 +83,7 @@ public class CteMutationStrategy implements SqmMultiTableMutationStrategy {
 			);
 		}
 
-		this.idCteTable = SqmCteTable.createIdTable( ID_TABLE_NAME, rootDescriptor );
+		this.idCteTable = CteTable.createIdTable( ID_TABLE_NAME, rootDescriptor );
 	}
 
 	@Override
@@ -98,7 +92,27 @@ public class CteMutationStrategy implements SqmMultiTableMutationStrategy {
 			DomainParameterXref domainParameterXref,
 			DomainQueryExecutionContext context) {
 		checkMatch( sqmDelete );
-		return new CteDeleteHandler( idCteTable, sqmDelete, domainParameterXref, this, sessionFactory ).execute( context );
+
+		final CteDeleteHandler deleteHandler;
+		if ( rootDescriptor.getSoftDeleteMapping() != null ) {
+			deleteHandler = new CteSoftDeleteHandler(
+					idCteTable,
+					sqmDelete,
+					domainParameterXref,
+					this,
+					sessionFactory
+			);
+		}
+		else {
+			deleteHandler = new CteDeleteHandler(
+					idCteTable,
+					sqmDelete,
+					domainParameterXref,
+					this,
+					sessionFactory
+			);
+		}
+		return deleteHandler.execute( context );
 	}
 
 	@Override
@@ -110,7 +124,7 @@ public class CteMutationStrategy implements SqmMultiTableMutationStrategy {
 		return new CteUpdateHandler( idCteTable, sqmUpdate, domainParameterXref, this, sessionFactory ).execute( context );
 	}
 
-	private void checkMatch(SqmDeleteOrUpdateStatement<?> sqmStatement) {
+	protected void checkMatch(SqmDeleteOrUpdateStatement<?> sqmStatement) {
 		final String targetEntityName = sqmStatement.getTarget().getEntityName();
 		final EntityPersister targetEntityDescriptor = sessionFactory.getRuntimeMetamodels()
 				.getMappingMetamodel()
@@ -127,5 +141,17 @@ public class CteMutationStrategy implements SqmMultiTableMutationStrategy {
 			);
 		}
 
+	}
+
+	protected EntityPersister getRootDescriptor() {
+		return rootDescriptor;
+	}
+
+	protected SessionFactoryImplementor getSessionFactory() {
+		return sessionFactory;
+	}
+
+	protected CteTable getIdCteTable() {
+		return idCteTable;
 	}
 }

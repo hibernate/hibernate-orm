@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.insertordering;
 
@@ -18,13 +16,13 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.jupiter.api.Test;
 
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-12380")
+@JiraKey(value = "HHH-12380")
 public class InsertOrderingHasParentTest extends BaseInsertOrderingTest {
 
 	@Override
@@ -49,10 +47,10 @@ public class InsertOrderingHasParentTest extends BaseInsertOrderingTest {
 		} );
 
 		verifyContainsBatches(
-				new Batch( "insert into book_comment (book_comment, id) values (?, ?)", 2 ),
-				new Batch( "insert into Book (comment_id, title, id) values (?, ?, ?)" ),
-				new Batch( "insert into Author (book_id, name, id) values (?, ?, ?)" ),
-				new Batch( "insert into Book_book_comment (Book_id, comments_id) values (?, ?)" )
+				new Batch( "insert into book_comment (book_comment,id) values (?,?)", 2 ),
+				new Batch( "insert into Book (comment_id,title,id) values (?,?,?)" ),
+				new Batch( "insert into Author (book_id,name,id) values (?,?,?)" ),
+				new Batch( "insert into Book_book_comment (Book_id,comments_id) values (?,?)" )
 		);
 	}
 

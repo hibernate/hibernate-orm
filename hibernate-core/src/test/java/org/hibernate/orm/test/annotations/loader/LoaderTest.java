@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.loader;
 
@@ -24,12 +22,6 @@ import org.junit.Test;
  * @author Emmanuel Bernard
  */
 public class LoaderTest extends BaseCoreFunctionalTestCase {
-	@Override
-	protected String[] getOrmXmlFiles() {
-		return new String[] {
-				"org/hibernate/orm/test/annotations/loader/Loader.hbm.xml"
-		};
-	}
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
@@ -56,7 +48,7 @@ public class LoaderTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		Team t2 = s.load( Team.class, t.getId() );
+		Team t2 = s.getReference( Team.class, t.getId() );
 		Set<Player> players = t2.getPlayers();
 		Iterator<Player> iterator = players.iterator();
 		assertEquals( "me", iterator.next().getName() );
@@ -68,8 +60,8 @@ public class LoaderTest extends BaseCoreFunctionalTestCase {
 		tx = s.beginTransaction();
 		t = s.get( Team.class, t2.getId() );
 		p = s.get( Player.class, p.getId() );
-		s.delete( p );
-		s.delete( t );
+		s.remove( p );
+		s.remove( t );
 		tx.commit();
 		s.close();
 	}
@@ -81,7 +73,7 @@ public class LoaderTest extends BaseCoreFunctionalTestCase {
 
 		try {
 			long notExistingId = 1l;
-			s.load( Team.class, notExistingId );
+			s.getReference( Team.class, notExistingId );
 			s.get( Team.class, notExistingId );
 			s.getTransaction().commit();
 		}
@@ -96,4 +88,3 @@ public class LoaderTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 }
-

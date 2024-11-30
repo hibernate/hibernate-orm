@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mixed;
 
@@ -39,12 +37,12 @@ public class MixedTest {
 			try {
 				Folder f = new Folder();
 				f.setName( "/" );
-				session.save( f );
+				session.persist( f );
 
 				doc.setName( "Hibernate in Action" );
 				doc.setContent( session.getLobHelper().createBlob( "blah blah blah".getBytes() ) );
 				doc.setParent( f );
-				session.save( doc );
+				session.persist( doc );
 
 				doc2.setName( "Secret" );
 				doc2.setContent( session.getLobHelper().createBlob( "wxyz wxyz".getBytes() ) );
@@ -53,7 +51,7 @@ public class MixedTest {
 				doc2.setPermissionBits( (byte) 127 );
 				doc2.setOwner( "gavin" );
 				doc2.setParent( f );
-				session.save( doc2 );
+				session.persist( doc2 );
 				session.getTransaction().commit();
 			}
 			finally {
@@ -66,7 +64,7 @@ public class MixedTest {
 		Long did = doc.getId();
 		Long d2id = doc2.getId();
 
-        if ( !scope.getSessionFactory().getJdbcServices().getDialect().supportsExpectedLobUsagePattern() ) {
+		if ( !scope.getSessionFactory().getJdbcServices().getDialect().supportsExpectedLobUsagePattern() ) {
 			SkipLog.reportSkip( "database/driver does not support expected LOB usage pattern", "LOB support" );
 			return;
 		}
@@ -77,26 +75,26 @@ public class MixedTest {
 				.openSession()) {
 			session.beginTransaction();
 			try {
-				Item id = session.load( Item.class, did );
+				Item id = session.getReference( Item.class, did );
 				assertEquals( did, id.getId() );
 				assertEquals( "Hibernate in Action", id.getName() );
 				assertEquals( "/", id.getParent().getName() );
 
-				Item id2 = session.load( Item.class, d2id );
+				Item id2 = session.getReference( Item.class, d2id );
 				assertEquals( d2id, id2.getId() );
 				assertEquals( "Secret", id2.getName() );
 				assertEquals( "/", id2.getParent().getName() );
 
 				id.setName( "HiA" );
 
-				SecureDocument d2 = session.load( SecureDocument.class, d2id );
+				SecureDocument d2 = session.getReference( SecureDocument.class, d2id );
 				d2.setOwner( "max" );
 
 				session.flush();
 
 				session.clear();
 
-				Document d = session.load( Document.class, did );
+				Document d = session.getReference( Document.class, did );
 				assertEquals( did, d.getId() );
 				assertEquals( "HiA", d.getName() );
 				assertNotNull( d.getContent() );
@@ -104,7 +102,7 @@ public class MixedTest {
 				assertNotNull( d.getCreated() );
 				assertNotNull( d.getModified() );
 
-				d2 = session.load( SecureDocument.class, d2id );
+				d2 = session.getReference( SecureDocument.class, d2id );
 				assertEquals( d2id, d2.getId() );
 				assertEquals( "Secret", d2.getName() );
 				assertNotNull( d2.getContent() );
@@ -116,9 +114,9 @@ public class MixedTest {
 				assertNotNull( d2.getCreated() );
 				assertNotNull( d2.getModified() );
 
-				session.delete( d.getParent() );
-				session.delete( d );
-				session.delete( d2 );
+				session.remove( d.getParent() );
+				session.remove( d );
+				session.remove( d2 );
 			}
 			finally {
 				if ( session.getTransaction().isActive() ) {
@@ -128,4 +126,3 @@ public class MixedTest {
 		}
 	}
 }
-

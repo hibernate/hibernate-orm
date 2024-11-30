@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.pagination;
 
@@ -15,6 +13,12 @@ package org.hibernate.dialect.pagination;
 public class LimitOffsetLimitHandler extends AbstractSimpleLimitHandler {
 
 	public static LimitOffsetLimitHandler INSTANCE = new LimitOffsetLimitHandler();
+	public static LimitOffsetLimitHandler OFFSET_ONLY_INSTANCE = new LimitOffsetLimitHandler() {
+		@Override
+		protected String offsetOnlyClause() {
+			return " offset ?";
+		}
+	};
 
 	@Override
 	protected String limitClause(boolean hasFirstRow) {
@@ -22,7 +26,17 @@ public class LimitOffsetLimitHandler extends AbstractSimpleLimitHandler {
 	}
 
 	@Override
+	protected String offsetOnlyClause() {
+		return " limit " + Integer.MAX_VALUE + " offset ?";
+	}
+
+	@Override
 	public final boolean bindLimitParametersInReverseOrder() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsOffset() {
 		return true;
 	}
 }

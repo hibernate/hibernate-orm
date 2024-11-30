@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.metamodel;
 
@@ -23,7 +21,7 @@ public class Person implements Serializable {
 	private String name;
 
 	@Embedded
-	private Address address = new Address();
+	private Height height;
 
 	public long getId() {
 		return id;
@@ -41,11 +39,11 @@ public class Person implements Serializable {
 		this.name = name;
 	}
 
-	public Address getAddress() {
-		return address;
+	public Height getHeight() {
+		return height;
 	}
 
-	public void setAddress(Address address) {
-		this.address = address;
+	public void setHeight(Height height) {
+		this.height = height;
 	}
 }

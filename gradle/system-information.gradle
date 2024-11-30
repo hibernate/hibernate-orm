@@ -1,6 +1,6 @@
 ext {
     isCiEnvironment = isJenkins() || isGitHubActions() || isGenericCi()
-    populateRemoteBuildCache = getSetting( "POPULATE_REMOTE" ).isPresent()
+    populateRemoteBuildCache = getSetting( "POPULATE_REMOTE_GRADLE_CACHE" ).isPresent()
 }
 
 private static boolean isJenkins() {

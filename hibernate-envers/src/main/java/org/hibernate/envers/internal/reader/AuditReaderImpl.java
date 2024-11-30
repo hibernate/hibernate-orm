@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.reader;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashMap;
@@ -145,6 +144,12 @@ public class AuditReaderImpl implements AuditReaderImplementor {
 	}
 
 	@Override
+	public <T> T find(Class<T> cls, Object primaryKey, LocalDateTime datetime)
+			throws IllegalArgumentException, NotAuditedException, RevisionDoesNotExistException, IllegalStateException {
+		return find( cls, primaryKey, getRevisionNumberForDate( datetime ) );
+	}
+
+	@Override
 	@SuppressWarnings("unchecked")
 	public List<Number> getRevisions(Class<?> cls, String entityName, Object primaryKey)
 			throws IllegalArgumentException, NotAuditedException, IllegalStateException {
@@ -177,8 +182,16 @@ public class AuditReaderImpl implements AuditReaderImplementor {
 				throw new RevisionDoesNotExistException( revision );
 			}
 
-			// The timestamp object is either a date or a long
-			return timestampObject instanceof Date ? (Date) timestampObject : new Date( (Long) timestampObject );
+			// The timestamp object is either a date, instant, or a long
+			if ( timestampObject instanceof Date ) {
+				return (Date) timestampObject;
+			}
+			else if ( timestampObject instanceof Instant ) {
+				return Date.from( (Instant) timestampObject );
+			}
+			else {
+				return new Date( (Long) timestampObject );
+			}
 		}
 		catch (NonUniqueResultException e) {
 			throw new AuditException( e );
@@ -207,6 +220,26 @@ public class AuditReaderImpl implements AuditReaderImplementor {
 
 	@Override
 	public Number getRevisionNumberForDate(LocalDateTime date) {
+		checkNotNull( date, "Date of revision" );
+		checkSession();
+
+		final Query<?> query = enversService.getRevisionInfoQueryCreator().getRevisionNumberForDateQuery( session, date );
+
+		try {
+			final Number res = (Number) query.uniqueResult();
+			if ( res == null ) {
+				throw new RevisionDoesNotExistException( date );
+			}
+
+			return res;
+		}
+		catch (NonUniqueResultException e) {
+			throw new AuditException( e );
+		}
+	}
+
+	@Override
+	public Number getRevisionNumberForDate(Instant date) {
 		checkNotNull( date, "Date of revision" );
 		checkSession();
 

@@ -1,15 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
+import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
+import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.results.graph.FetchOptions;
 
 /**
@@ -19,50 +18,50 @@ public abstract class AbstractStateArrayContributorMapping
 		extends AbstractAttributeMapping
 		implements FetchOptions {
 
-	private final AttributeMetadataAccess attributeMetadataAccess;
 	private final FetchTiming fetchTiming;
 	private final FetchStyle fetchStyle;
-	private final int stateArrayPosition;
-
 
 	public AbstractStateArrayContributorMapping(
 			String name,
-			AttributeMetadataAccess attributeMetadataAccess,
+			AttributeMetadata attributeMetadata,
 			FetchTiming fetchTiming,
 			FetchStyle fetchStyle,
 			int stateArrayPosition,
-			ManagedMappingType declaringType) {
-		super( name, declaringType );
-		this.attributeMetadataAccess = attributeMetadataAccess;
+			int fetchableIndex,
+			ManagedMappingType declaringType,
+			PropertyAccess propertyAccess) {
+		super( name, fetchableIndex, declaringType, attributeMetadata, stateArrayPosition, propertyAccess );
 		this.fetchTiming = fetchTiming;
 		this.fetchStyle = fetchStyle;
-		this.stateArrayPosition = stateArrayPosition;
 	}
 
 	public AbstractStateArrayContributorMapping(
 			String name,
-			AttributeMetadataAccess attributeMetadataAccess,
+			AttributeMetadata attributeMetadata,
 			FetchOptions mappedFetchOptions,
 			int stateArrayPosition,
-			ManagedMappingType declaringType) {
+			int fetchableIndex,
+			ManagedMappingType declaringType,
+			PropertyAccess propertyAccess) {
 		this(
 				name,
-				attributeMetadataAccess,
+				attributeMetadata,
 				mappedFetchOptions.getTiming(),
 				mappedFetchOptions.getStyle(),
 				stateArrayPosition,
-				declaringType
+				fetchableIndex,
+				declaringType,
+				propertyAccess
 		);
 	}
 
-	@Override
-	public int getStateArrayPosition() {
-		return stateArrayPosition;
-	}
-
-	@Override
-	public AttributeMetadataAccess getAttributeMetadataAccess() {
-		return attributeMetadataAccess;
+	/**
+	 * For Hibernate Reactive
+	 */
+	protected AbstractStateArrayContributorMapping(AbstractStateArrayContributorMapping original) {
+		super( original );
+		this.fetchTiming = original.fetchTiming;
+		this.fetchStyle = original.fetchStyle;
 	}
 
 	@Override

@@ -1,53 +1,51 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.hql.internal;
 
-import java.lang.reflect.Field;
-
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.DotIdentifierConsumer;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralEmbeddableType;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 
 /**
- * @asciidoc
- *
- * DotIdentifierHandler used to interpret paths outside of any specific
- * context.  This is the handler used at the root of the handler stack.
- *
- * It can recognize any number of types of paths -
- *
- * 		* fully-qualified class names (entity or otherwise)
- * 		* static field references, e.g. `MyClass.SOME_FIELD`
- * 		* enum value references, e.g. `Sex.MALE`
- * 		* navigable-path
- * 		* others?
+ * A {@link DotIdentifierConsumer} used to interpret paths outside any
+ * specific context. This is the handler used at the root of the handler
+ * stack.
+ * <p>
+ * It can recognize any number of types of paths:
+ * <ul>
+ * <li>fully-qualified class names (entity or otherwise)
+ * <li>static field references, e.g. {@code MyClass.SOME_FIELD}
+ * <li>enum value references, e.g. {@code Sex.MALE}
+ * <li>navigable-path
+ * </ul>
  *
  * @author Steve Ebersole
  */
 public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 	private final SqmCreationState creationState;
 
-	private StringBuilder pathSoFar = new StringBuilder();
+	private final StringBuilder pathSoFar = new StringBuilder();
 	private SemanticPathPart currentPart;
 
 	public BasicDotIdentifierConsumer(SqmCreationState creationState) {
@@ -75,7 +73,7 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 			reset();
 		}
 
-		if ( pathSoFar.length() != 0 ) {
+		if ( !pathSoFar.isEmpty() ) {
 			pathSoFar.append( '.' );
 		}
 		pathSoFar.append( identifier );
@@ -92,10 +90,16 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 	}
 
 	@Override
-	public void consumeTreat(String entityName, boolean isTerminal) {
-		final EntityDomainType<?> entityDomainType = creationState.getCreationContext().getJpaMetamodel()
-				.entity( entityName );
-		currentPart = ( (SqmPath) currentPart ).treatAs( entityDomainType );
+	public void consumeTreat(String importableName, boolean isTerminal) {
+		final SqmPath<?> sqmPath = (SqmPath<?>) currentPart;
+		currentPart = sqmPath.treatAs( treatTarget( importableName ) );
+	}
+
+	private <T> Class<T> treatTarget(String typeName) {
+		final ManagedDomainType<T> managedType =
+				creationState.getCreationContext().getJpaMetamodel()
+						.managedType( typeName );
+		return managedType.getJavaType();
 	}
 
 	protected void reset() {
@@ -126,35 +130,23 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 			if ( isBase ) {
 				isBase = false;
 
-				final SqmPathRegistry sqmPathRegistry = creationState.getProcessingStateStack()
-						.getCurrent()
-						.getPathRegistry();
+				final SqmPathRegistry sqmPathRegistry =
+						creationState.getProcessingStateStack().getCurrent()
+								.getPathRegistry();
 
 				final SqmFrom<?,?> pathRootByAlias = sqmPathRegistry.findFromByAlias( identifier, true );
 				if ( pathRootByAlias != null ) {
 					// identifier is an alias (identification variable)
 					validateAsRoot( pathRootByAlias );
-
-					if ( isTerminal ) {
-						return pathRootByAlias;
-					}
-					else {
-						return new DomainPathPart( pathRootByAlias );
-					}
+					return isTerminal ? pathRootByAlias : new DomainPathPart( pathRootByAlias );
 				}
 
 				final SqmFrom<?, ?> pathRootByExposedNavigable = sqmPathRegistry.findFromExposing( identifier );
 				if ( pathRootByExposedNavigable != null ) {
 					// identifier is an "unqualified attribute reference"
 					validateAsRoot( pathRootByExposedNavigable );
-
-					final SqmPath<?> sqmPath = pathRootByExposedNavigable.get( identifier );
-					if ( isTerminal ) {
-						return sqmPath;
-					}
-					else {
-						return new DomainPathPart( sqmPath );
-					}
+					final SqmPath<?> sqmPath = pathRootByExposedNavigable.get( identifier, true );
+					return isTerminal ? sqmPath : new DomainPathPart( sqmPath );
 				}
 			}
 
@@ -170,98 +162,84 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 			//
 			// todo (6.0) : finish this logic.  and see above note in `! isTerminal` block
 
-			final SqmCreationContext creationContext = creationState.getCreationContext();
 
 			if ( ! isTerminal ) {
 				return this;
 			}
 
+			final SqmCreationContext creationContext = creationState.getCreationContext();
+			final JpaMetamodel jpaMetamodel = creationContext.getJpaMetamodel();
 			final String path = pathSoFar.toString();
-			final String importableName = creationContext.getJpaMetamodel().qualifyImportableName( path );
+			final String importableName = jpaMetamodel.qualifyImportableName( path );
+			final NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
 			if ( importableName != null ) {
-				final EntityDomainType<?> entityDomainType = creationContext.getJpaMetamodel().entity( importableName );
-				if ( entityDomainType != null ) {
-					return new SqmLiteralEntityType( entityDomainType, creationContext.getNodeBuilder() );
+				final ManagedDomainType<?> managedType = jpaMetamodel.managedType( importableName );
+				if ( managedType instanceof EntityDomainType<?> entityDomainType ) {
+					return new SqmLiteralEntityType<>( entityDomainType, nodeBuilder );
+				}
+				else if ( managedType instanceof EmbeddableDomainType<?> embeddableDomainType ) {
+					return new SqmLiteralEmbeddableType<>( embeddableDomainType, nodeBuilder );
 				}
 			}
 
-			final SqmFunctionDescriptor functionDescriptor = creationContext.getQueryEngine()
-					.getSqmFunctionRegistry()
-					.findFunctionDescriptor( path );
+			final SqmFunctionDescriptor functionDescriptor =
+					creationContext.getQueryEngine().getSqmFunctionRegistry()
+							.findFunctionDescriptor( path );
 			if ( functionDescriptor != null ) {
-				return functionDescriptor.generateSqmExpression(
-						null,
-						creationContext.getQueryEngine(),
-						creationContext.getNodeBuilder().getTypeConfiguration()
-				);
+				return functionDescriptor.generateSqmExpression( null, creationContext.getQueryEngine() );
 			}
-
-//			// see if it is a Class name...
-//			try {
-//				final Class<?> namedClass = creationState.getCreationContext()
-//						.getServiceRegistry()
-//						.getService( ClassLoaderService.class )
-//						.classForName( pathSoFar );
-//				if ( namedClass != null ) {
-//					return new
-//				}
-//			}
-//			catch (Exception ignore) {
-//			}
 
 			// see if it is a named field/enum reference
 			final int splitPosition = path.lastIndexOf( '.' );
 			if ( splitPosition > 0 ) {
 				final String prefix = path.substring( 0, splitPosition );
 				final String terminal = path.substring( splitPosition + 1 );
-				//TODO: try interpreting paths of form foo.bar.Foo.Bar as foo.bar.Foo$Bar
-
 				try {
-					final Class<?> namedClass = creationContext
-							.getServiceRegistry()
-							.getService( ClassLoaderService.class )
-							.classForName( prefix );
-					if ( namedClass != null ) {
-						final JavaTypeRegistry javaTypeRegistry = creationContext.getJpaMetamodel()
-								.getTypeConfiguration()
-								.getJavaTypeRegistry();
+					final EnumJavaType<?> enumType = jpaMetamodel.getEnumType( prefix );
+					if ( enumType != null ) {
+						return sqmEnumLiteral( jpaMetamodel, enumType, terminal, nodeBuilder );
+					}
 
-						if ( namedClass.isEnum() ) {
-							return new SqmEnumLiteral(
-									Enum.valueOf( (Class) namedClass, terminal ),
-									(EnumJavaType) javaTypeRegistry.resolveDescriptor( namedClass ),
-									terminal,
-									creationContext.getNodeBuilder()
-							);
-						}
-
-						try {
-							final Field referencedField = namedClass.getDeclaredField( terminal );
-							if ( referencedField != null ) {
-								final JavaType<?> fieldJtd = javaTypeRegistry
-										.getDescriptor( referencedField.getType() );
-								//noinspection unchecked
-								return new SqmFieldLiteral( referencedField, fieldJtd, creationContext.getNodeBuilder() );
-							}
-						}
-						catch (Exception ignore) {
-						}
+					final JavaType<?> fieldJtdTest = jpaMetamodel.getJavaConstantType( prefix, terminal );
+					if ( fieldJtdTest != null ) {
+						return sqmFieldLiteral( jpaMetamodel, prefix, terminal, fieldJtdTest, nodeBuilder );
 					}
 				}
 				catch (Exception ignore) {
 				}
 			}
 
-			throw new SemanticException(
-					String.format(
-						"Could not interpret path expression '%s'",
-						path
-					)
+			throw new SemanticException( "Could not interpret path expression '" + path + "'" );
+		}
+
+		private static <E> SqmFieldLiteral<E> sqmFieldLiteral(
+				JpaMetamodel jpaMetamodel,
+				String prefix,
+				String terminal,
+				JavaType<E> fieldJtdTest,
+				NodeBuilder nodeBuilder) {
+			return new SqmFieldLiteral<>(
+					jpaMetamodel.getJavaConstant( prefix, terminal ),
+					fieldJtdTest,
+					terminal,
+					nodeBuilder
+			);
+		}
+
+		private static <E extends Enum<E>> SqmEnumLiteral<E> sqmEnumLiteral(
+				JpaMetamodel jpaMetamodel,
+				EnumJavaType<E> enumType,
+				String terminal,
+				NodeBuilder nodeBuilder) {
+			return new SqmEnumLiteral<>(
+					jpaMetamodel.enumValue( enumType, terminal ),
+					enumType,
+					terminal,
+					nodeBuilder
 			);
 		}
 
 		protected void validateAsRoot(SqmFrom<?, ?> pathRoot) {
-
 		}
 
 		@Override

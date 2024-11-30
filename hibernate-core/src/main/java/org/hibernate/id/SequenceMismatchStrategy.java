@@ -1,12 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id;
 
 import org.hibernate.HibernateException;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Describes the strategy for handling the mismatch between a database sequence configuration and
@@ -53,7 +53,7 @@ public enum SequenceMismatchStrategy {
 	 *
 	 * @return associated {@link SequenceMismatchStrategy} object
 	 */
-	public static SequenceMismatchStrategy interpret(Object sequenceMismatchStrategy) {
+	public static SequenceMismatchStrategy interpret(@Nullable Object sequenceMismatchStrategy) {
 		if ( sequenceMismatchStrategy == null ) {
 			return EXCEPTION;
 		}

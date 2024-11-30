@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.boot.internal;
 
@@ -10,6 +8,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -87,13 +86,17 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 	}
 
 	@Override
-	public void initialize(MetadataImplementor metadata, MappingCollector mappingCollector) {
+	public void initialize(
+			MetadataImplementor metadata,
+			MappingCollector mappingCollector,
+			EffectiveMappingDefaults effectiveMappingDefaults) {
 		if ( initialized ) {
 			throw new UnsupportedOperationException( "EnversService#initialize should be called only once" );
 		}
 
 		initialized = true;
 
+		final InFlightMetadataCollector metadataCollector = (InFlightMetadataCollector) metadata;
 		this.serviceRegistry = metadata.getMetadataBuildingOptions().getServiceRegistry();
 		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 
@@ -101,12 +104,13 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 		final Properties properties = new Properties();
 		properties.putAll( cfgService.getSettings() );
 
-		this.configuration = new Configuration( properties, this, metadata );
+		this.configuration = new Configuration( properties, this, metadataCollector );
 		this.auditProcessManager = new AuditProcessManager( configuration.getRevisionInfo().getRevisionInfoGenerator() );
 
 		final EnversMetadataBuildingContext metadataBuildingContext = new EnversMetadataBuildingContextImpl(
 				configuration,
-				(InFlightMetadataCollector) metadata,
+				metadataCollector,
+				effectiveMappingDefaults,
 				mappingCollector
 		);
 
@@ -125,7 +129,7 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 					}
 				}
 		);
-		
+
 		this.entitiesConfigurations = new EntitiesConfigurator().configure( metadataBuildingContext );
 	}
 

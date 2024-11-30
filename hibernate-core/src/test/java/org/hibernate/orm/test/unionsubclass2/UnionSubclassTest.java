@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.unionsubclass2;
 
@@ -30,9 +28,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Gavin King
  */
-@DomainModel(
-		xmlMappings = "org/hibernate/orm/test/unionsubclass2/Person.hbm.xml"
-)
+@DomainModel(xmlMappings = "org/hibernate/orm/test/unionsubclass2/Person.hbm.xml")
 @SessionFactory
 public class UnionSubclassTest {
 	protected String[] getMappings() {
@@ -64,9 +60,9 @@ public class UnionSubclassTest {
 					yomomma.setName( "mum" );
 					yomomma.setSex( 'F' );
 
-					s.save( yomomma );
-					s.save( mark );
-					s.save( joe );
+					s.persist( yomomma );
+					s.persist( mark );
+					s.persist( joe );
 
 					try {
 						assertEquals( s.createQuery( "from java.io.Serializable" ).list().size(), 0 );
@@ -130,9 +126,9 @@ public class UnionSubclassTest {
 //					s.createCriteria( Person.class ).add(
 //							Restrictions.in( "address", new Address[] {	mark.getAddress(),	joe.getAddress()} ) ).list();
 
-					s.delete( mark );
-					s.delete( joe );
-					s.delete( yomomma );
+					s.remove( mark );
+					s.remove( joe );
+					s.remove( yomomma );
 					assertTrue( s.createQuery( "from Person" ).list().isEmpty() );
 
 				}
@@ -164,7 +160,7 @@ public class UnionSubclassTest {
 					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 					CriteriaQuery<Person> criteria = criteriaBuilder.createQuery( Person.class );
 					Root<Person> root = criteria.from( Person.class );
-					criteria.where( criteriaBuilder.gt( root.get( "salary" ), new BigDecimal( 100 ) ) );
+					criteria.where( criteriaBuilder.gt( criteriaBuilder.treat( root, Employee.class ).get( "salary" ), new BigDecimal( 100 ) ) );
 
 					result = s.createQuery( criteria ).list();
 
@@ -178,8 +174,8 @@ public class UnionSubclassTest {
 					assertEquals( result.size(), 1 );
 					assertEquals( ( (BigDecimal) result.get( 0 ) ).intValue(), 1000 );
 
-					s.delete( p );
-					s.delete( q );
+					s.remove( p );
+					s.remove( q );
 				}
 		);
 	}
@@ -292,8 +288,8 @@ public class UnionSubclassTest {
 									.uniqueResult()
 							).doubleValue();
 					assertEquals( 1d, expiryViaSql, 0.01d );
-					s.delete( p );
-					s.delete( e );
+					s.remove( p );
+					s.remove( e );
 				}
 		);
 	}

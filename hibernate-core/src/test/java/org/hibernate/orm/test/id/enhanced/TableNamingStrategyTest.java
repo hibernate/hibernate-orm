@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id.enhanced;
 
@@ -18,15 +16,19 @@ import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.generator.Generator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.enhanced.LegacyNamingStrategy;
 import org.hibernate.id.enhanced.SingleNamingStrategy;
 import org.hibernate.id.enhanced.StandardNamingStrategy;
+import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
+import org.hibernate.orm.test.idgen.n_ative.GeneratorSettingsImpl;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import static jakarta.persistence.GenerationType.TABLE;
@@ -111,7 +113,7 @@ public class TableNamingStrategyTest {
 			assertThat( table ).isNotNull();
 
 			final PersistentClass entityBinding = metadata.getEntityBinding( entityType.getName() );
-			final IdentifierGenerator generator = extractGenerator( entityBinding );
+			final IdentifierGenerator generator = extractGenerator( entityBinding, metadata );
 			assertThat( generator ).isInstanceOf( org.hibernate.id.enhanced.TableGenerator.class );
 			final org.hibernate.id.enhanced.TableGenerator tableGenerator = (org.hibernate.id.enhanced.TableGenerator) generator;
 			assertThat( tableGenerator.getTableName() ).isEqualTo( expectedName );
@@ -119,7 +121,7 @@ public class TableNamingStrategyTest {
 	}
 
 	private static void withMetadata(Class<?> entityClass, String namingStrategy, Consumer<MetadataImplementor> consumer) {
-		final StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder();
+		final StandardServiceRegistryBuilder ssrb = ServiceRegistryUtil.serviceRegistryBuilder();
 		ssrb.applySetting( AvailableSettings.FORMAT_SQL, "false" );
 
 		if ( namingStrategy != null ) {
@@ -131,14 +133,22 @@ public class TableNamingStrategyTest {
 			metadataSources.addAnnotatedClass( entityClass );
 
 			final MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
+			metadata.orderColumns( false );
 			metadata.validate();
 
 			consumer.accept( metadata );
 		}
 	}
 
-	private IdentifierGenerator extractGenerator(PersistentClass entityBinding) {
-		return entityBinding.getIdentifier().createIdentifierGenerator( null, null, null );
+	private IdentifierGenerator extractGenerator(PersistentClass entityBinding, MetadataImplementor metadata) {
+		KeyValue keyValue = entityBinding.getIdentifier();
+		final Generator generator = keyValue.createGenerator(
+				metadata.getDatabase().getDialect(),
+				entityBinding.getRootClass(),
+				entityBinding.getIdentifierProperty(),
+				new GeneratorSettingsImpl( metadata )
+		);
+		return generator instanceof IdentifierGenerator ? (IdentifierGenerator) generator : null;
 	}
 
 

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.naturalid.inheritance;
 
@@ -14,7 +12,7 @@ import org.hibernate.metamodel.mapping.internal.SimpleNaturalIdMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -39,14 +37,14 @@ import static org.junit.Assert.assertThat;
 @SessionFactory
 public class InheritedNaturalIdTest {
 	@Test
-	@TestForIssue( jiraKey = "HHH-10360")
+	@JiraKey( value = "HHH-10360")
 	public void verifyMappingModel(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
 		final EntityMappingType userMapping = sessionFactory.getRuntimeMetamodels().getEntityMappingType( User.class );
 
 		final SingularAttributeMapping uidMapping = ((SimpleNaturalIdMapping) userMapping.getNaturalIdMapping()).getAttribute();
 		assertThat( uidMapping.getAttributeName(), is ("uid" ) );
-		final AttributeMetadata uidMetadata = uidMapping.getAttributeMetadataAccess().resolveAttributeMetadata( null );
+		final AttributeMetadata uidMetadata = uidMapping.getAttributeMetadata();
 		assertThat( uidMetadata.isNullable(), is( true ) );
 
 		final EntityPersister rootEntityPersister = userMapping.getEntityPersister();
@@ -58,7 +56,7 @@ public class InheritedNaturalIdTest {
 	@BeforeEach
 	public void prepareTestData(SessionFactoryScope scope) {
 		scope.inTransaction(
-				(session) -> session.save( new User( ORIGINAL ) )
+				(session) -> session.persist( new User( ORIGINAL ) )
 		);
 	}
 
@@ -102,7 +100,7 @@ public class InheritedNaturalIdTest {
 					final Principal p = session.bySimpleNaturalId( Principal.class ).load( ORIGINAL );
 					assertNotNull( p );
 
-					session.delete( p );
+					session.remove( p );
 					session.flush();
 				}
 		);

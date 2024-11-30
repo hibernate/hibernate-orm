@@ -1,12 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.extract.internal;
 
-import org.hibernate.boot.model.TruthValue;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
@@ -25,7 +22,7 @@ public class ColumnInformationImpl implements ColumnInformation {
 	private final String typeName;
 	private final int columnSize;
 	private final int decimalDigits;
-	private final TruthValue nullable;
+	private final Boolean nullable;
 
 	public ColumnInformationImpl(
 			TableInformation containingTableInformation,
@@ -34,7 +31,7 @@ public class ColumnInformationImpl implements ColumnInformation {
 			String typeName,
 			int columnSize,
 			int decimalDigits,
-			TruthValue nullable) {
+			Boolean nullable) {
 		this.containingTableInformation = containingTableInformation;
 		this.columnIdentifier = columnIdentifier;
 		this.typeCode = typeCode;
@@ -75,7 +72,7 @@ public class ColumnInformationImpl implements ColumnInformation {
 	}
 
 	@Override
-	public TruthValue getNullable() {
+	public Boolean getNullable() {
 		return nullable;
 	}
 

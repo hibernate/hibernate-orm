@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.pagination;
 
@@ -18,9 +16,9 @@ import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static java.util.regex.Pattern.compile;
 
 /**
- * Default implementation of {@link LimitHandler} interface. 
+ * Default implementation of {@link LimitHandler} interface.
  *
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 public abstract class AbstractLimitHandler implements LimitHandler {
 
@@ -33,10 +31,10 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 			compile( "^\\s*select(\\s+(distinct|all))?\\b", CASE_INSENSITIVE );
 
 	private static final Pattern END_PATTERN =
-			compile("\\s*(;|$)", CASE_INSENSITIVE);
+			compile("\\s*;?\\s*$", CASE_INSENSITIVE);
 
 	private static final Pattern FOR_UPDATE_PATTERN =
-			compile("\\s+for\\s+update\\b|\\s*(;|$)", CASE_INSENSITIVE);
+			compile("\\s+for\\s+update\\b|\\s*;?\\s*$", CASE_INSENSITIVE);
 
 
 	@Override
@@ -116,15 +114,13 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 	}
 
 	/**
-	 * Hibernate {@link Query#setFirstResult(int)} accepts
-	 * a zero-based offset. Does this dialect require a one-based offset to be
-	 * specified in the offset clause?
-	 * <p/>
-	 * NOTE: what gets passed into
-	 * {@link AbstractLimitHandler#processSql(String, Limit)}
-     * is the zero-based offset. Handlers which do not {@link #supportsVariableLimit}
-	 * should take care to perform any needed first-row-conversion calls prior
-	 * to injecting the limit values into the SQL string.
+	 * The API method {@link Query#setFirstResult(int)} accepts a zero-based offset.
+	 * Does this dialect require a one-based offset to be specified in the offset clause?
+	 *
+	 * @implNote The value passed into {@link AbstractLimitHandler#processSql(String, Limit)}
+	 *           has a zero-based offset. Handlers which do not {@link #supportsVariableLimit}
+	 *           should take care to perform any needed first-row-conversion calls prior to
+	 *           injecting the limit values into the SQL string.
 	 *
 	 * @param zeroBasedFirstResult The user-supplied, zero-based first row offset.
 	 *
@@ -196,7 +192,7 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 
 		if ( bindOffset ) {
 			statement.setInt(
-					index + ( reverse || !bindLimit ? 1 : 0 ),
+					index + ( reverse && bindLimit ? 1 : 0 ),
 					getFirstRow( limit )
 			);
 		}

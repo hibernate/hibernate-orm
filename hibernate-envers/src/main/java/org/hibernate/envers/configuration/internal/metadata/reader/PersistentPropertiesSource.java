@@ -1,21 +1,18 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.configuration.internal.metadata.reader;
 
 import java.util.Iterator;
 
-import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.envers.boot.EnversMappingException;
-import org.hibernate.envers.boot.registry.classloading.ClassLoaderAccessHelper;
 import org.hibernate.envers.boot.spi.EnversMetadataBuildingContext;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.models.spi.ClassDetails;
 
 /**
  * A source of data on persistent properties of a class or component.
@@ -28,7 +25,7 @@ public interface PersistentPropertiesSource {
 
 	Property getProperty(String propertyName);
 
-	XClass getXClass();
+	ClassDetails getClassDetails();
 
 	boolean isDynamicComponent();
 
@@ -38,14 +35,14 @@ public interface PersistentPropertiesSource {
 	 * Get a persistent properties source for a persistent class.
 	 *
 	 * @param persistentClass the persistent class
-	 * @param clazz the class
+	 * @param classDetails the class details
 	 * @return the properties source
 	 */
-	static PersistentPropertiesSource forClass(PersistentClass persistentClass, XClass clazz) {
+	static PersistentPropertiesSource forClass(PersistentClass persistentClass, ClassDetails classDetails) {
 		return new PersistentPropertiesSource() {
 			@Override
 			public Iterator<Property> getPropertyIterator() {
-				return persistentClass.getPropertyIterator();
+				return persistentClass.getProperties().iterator();
 			}
 
 			@Override
@@ -54,8 +51,8 @@ public interface PersistentPropertiesSource {
 			}
 
 			@Override
-			public XClass getXClass() {
-				return clazz;
+			public ClassDetails getClassDetails() {
+				return classDetails;
 			}
 
 			@Override
@@ -80,9 +77,9 @@ public interface PersistentPropertiesSource {
 	 */
 	static PersistentPropertiesSource forComponent(EnversMetadataBuildingContext context, Component component, boolean dynamic) {
 		try {
-			Class<?> componentClass = ClassLoaderAccessHelper.loadClass( context, component.getComponentClassName() );
-			XClass clazz = context.getReflectionManager().toXClass( componentClass );
-			return forComponent( component, clazz, dynamic );
+			final ClassDetails classDetails = context.getClassDetailsRegistry()
+					.resolveClassDetails( component.getComponentClassName() );
+			return forComponent( component, classDetails, dynamic );
 		}
 		catch (ClassLoadingException e) {
 			throw new EnversMappingException( e );
@@ -97,15 +94,15 @@ public interface PersistentPropertiesSource {
 	 * Get a persistent properties source for a component with its class already resolved.
 	 *
 	 * @param component the component
-	 * @param clazz the class
+	 * @param classDetails the class details
 	 * @param dynamic whether the component is dynamic or not
 	 * @return the properties source
 	 */
-	static PersistentPropertiesSource forComponent(Component component, XClass clazz, boolean dynamic) {
+	static PersistentPropertiesSource forComponent(Component component, ClassDetails classDetails, boolean dynamic) {
 		return new PersistentPropertiesSource() {
 			@Override
 			public Iterator<Property> getPropertyIterator() {
-				return component.getPropertyIterator();
+				return component.getProperties().iterator();
 			}
 
 			@Override
@@ -114,8 +111,8 @@ public interface PersistentPropertiesSource {
 			}
 
 			@Override
-			public XClass getXClass() {
-				return clazz;
+			public ClassDetails getClassDetails() {
+				return classDetails;
 			}
 
 			@Override

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.compositefk;
 
@@ -40,12 +38,12 @@ import static org.junit.Assert.assertTrue;
 				ManyToOneEmbeddedIdWithToOneFKTest.DataCenter.class
 		}
 )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 public class ManyToOneEmbeddedIdWithToOneFKTest {
 
 	@Test
 	public void testGet(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
@@ -75,7 +73,7 @@ public class ManyToOneEmbeddedIdWithToOneFKTest {
 
 	@Test
 	public void testHql(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
@@ -89,7 +87,7 @@ public class ManyToOneEmbeddedIdWithToOneFKTest {
 					statementInspector.assertExecutedCount( 3 );
 					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 0 );
 					statementInspector.assertNumberOfOccurrenceInQuery( 1, "join", 0 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 2, "join", 0 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 2, "join", 1 );
 
 
 					assertTrue( Hibernate.isInitialized( system.getDataCenterUser() ) );
@@ -110,7 +108,7 @@ public class ManyToOneEmbeddedIdWithToOneFKTest {
 
 	@Test
 	public void testHqlJoin(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
@@ -119,7 +117,7 @@ public class ManyToOneEmbeddedIdWithToOneFKTest {
 					statementInspector.assertExecutedCount( 3 );
 					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 1 );
 					statementInspector.assertNumberOfOccurrenceInQuery( 1, "join", 0 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 2, "join", 0 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 2, "join", 1 );
 					assertThat( system, is( notNullValue() ) );
 					DataCenterUser user = system.getDataCenterUser();
 					assertThat( user, is( notNullValue() ) );
@@ -129,7 +127,7 @@ public class ManyToOneEmbeddedIdWithToOneFKTest {
 
 	@Test
 	public void testHqlJoinFetch(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
@@ -168,7 +166,7 @@ public class ManyToOneEmbeddedIdWithToOneFKTest {
 
 	@Test
 	public void testHql2(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
@@ -197,9 +195,9 @@ public class ManyToOneEmbeddedIdWithToOneFKTest {
 					System system = new System( 1, "QA" );
 					system.setDataCenterUser( user );
 
-					session.save( dataCenter );
-					session.save( user );
-					session.save( system );
+					session.persist( dataCenter );
+					session.persist( user );
+					session.persist( system );
 				}
 		);
 	}

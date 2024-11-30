@@ -1,13 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -23,10 +23,13 @@ import jakarta.persistence.TemporalType;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.internal.util.CharSequenceHelper.subSequence;
 
 /**
  * Descriptor for {@link Timestamp} handling.
@@ -39,15 +42,17 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implements VersionJavaType<Date> {
 	public static final JdbcTimestampJavaType INSTANCE = new JdbcTimestampJavaType();
 
-	public static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
+	public static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSSSSSSSS";
 
 	/**
 	 * Intended for use in reading HQL literals and writing SQL literals
 	 *
 	 * @see #TIMESTAMP_FORMAT
 	 */
-	@SuppressWarnings("unused")
 	public static final DateTimeFormatter LITERAL_FORMATTER = DateTimeFormatter.ofPattern( TIMESTAMP_FORMAT )
+			.withZone( ZoneId.from( ZoneOffset.UTC ) );
+
+	private static final DateTimeFormatter ENCODED_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME
 			.withZone( ZoneId.from( ZoneOffset.UTC ) );
 
 	public JdbcTimestampJavaType() {
@@ -126,6 +131,11 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 			return value;
 		}
 
+		if ( LocalDateTime.class.isAssignableFrom( type ) ) {
+			final Instant instant = value.toInstant();
+			return LocalDateTime.ofInstant( instant, ZoneId.systemDefault() );
+		}
+
 		if ( Calendar.class.isAssignableFrom( type ) ) {
 			final GregorianCalendar cal = new GregorianCalendar();
 			cal.setTimeInMillis( value.getTime() );
@@ -145,7 +155,7 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
 			return value instanceof java.sql.Time
 					? ( java.sql.Time ) value
-					: new java.sql.Time( value.getTime() );
+					: new java.sql.Time( value.getTime() % 86_400_000 );
 		}
 
 		throw unknownUnwrap( type );
@@ -156,20 +166,24 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 		if ( value == null ) {
 			return null;
 		}
-		if ( value instanceof Timestamp ) {
-			return (Timestamp) value;
+		if ( value instanceof Timestamp timestamp ) {
+			return timestamp;
 		}
 
-		if ( value instanceof Date ) {
-			return new Timestamp( ( (Date) value ).getTime() );
+		if ( value instanceof Date date ) {
+			return new Timestamp( date.getTime() );
 		}
 
-		if ( value instanceof Long ) {
-			return new Timestamp( (Long) value );
+		if ( value instanceof LocalDateTime localDateTime ) {
+			return Timestamp.valueOf( localDateTime );
 		}
 
-		if ( value instanceof Calendar ) {
-			return new Timestamp( ( (Calendar) value ).getTimeInMillis() );
+		if ( value instanceof Long longValue ) {
+			return new Timestamp( longValue );
+		}
+
+		if ( value instanceof Calendar calendar ) {
+			return new Timestamp( calendar.getTimeInMillis() );
 		}
 
 		throw unknownWrap( value.getClass() );
@@ -177,15 +191,10 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 
 	@Override
 	public boolean isWider(JavaType<?> javaType) {
-		switch ( javaType.getJavaType().getTypeName() ) {
-			case "java.sql.Date":
-			case "java.sql.Timestamp":
-			case "java.util.Date":
-			case "java.util.Calendar":
-				return true;
-			default:
-				return false;
-		}
+		return switch ( javaType.getTypeName() ) {
+			case "java.sql.Date", "java.sql.Timestamp", "java.util.Date", "java.util.Calendar" -> true;
+			default -> false;
+		};
 	}
 
 	@Override
@@ -197,28 +206,50 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 	public Date fromString(CharSequence string) {
 		try {
 			final TemporalAccessor accessor = LITERAL_FORMATTER.parse( string );
-			return new Timestamp(
-					accessor.getLong( ChronoField.INSTANT_SECONDS ) * 1000L
-							+ accessor.get( ChronoField.NANO_OF_SECOND ) / 1_000_000
-			);
+			final Timestamp timestamp = new Timestamp( accessor.getLong( ChronoField.INSTANT_SECONDS ) * 1000L );
+			timestamp.setNanos( accessor.get( ChronoField.NANO_OF_SECOND ) );
+			return timestamp;
 		}
 		catch ( DateTimeParseException pe) {
-			throw new HibernateException( "could not parse timestamp string" + string, pe );
+			throw new HibernateException( "could not parse timestamp string " + string, pe );
+		}
+	}
+
+	@Override
+	public void appendEncodedString(SqlAppender sb, Date value) {
+		ENCODED_FORMATTER.formatTo( value.toInstant(), sb );
+	}
+
+	@Override
+	public Date fromEncodedString(CharSequence charSequence, int start, int end) {
+		try {
+			final TemporalAccessor accessor = ENCODED_FORMATTER.parse( subSequence( charSequence, start, end ) );
+			final Timestamp timestamp;
+			if ( accessor.isSupported( ChronoField.INSTANT_SECONDS ) ) {
+				timestamp = new Timestamp( accessor.getLong( ChronoField.INSTANT_SECONDS ) * 1000L );
+				timestamp.setNanos( accessor.get( ChronoField.NANO_OF_SECOND ) );
+			}
+			else {
+				timestamp = Timestamp.valueOf( LocalDateTime.from( accessor ) );
+			}
+			return timestamp;
+		}
+		catch ( DateTimeParseException pe) {
+			throw new HibernateException( "could not parse timestamp string " + subSequence( charSequence, start, end ), pe );
 		}
 	}
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( Types.TIMESTAMP );
+		return context.getJdbcType( Types.TIMESTAMP );
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	protected <X> TemporalJavaType<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
 		return (TemporalJavaType<X>) this;
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	protected <X> TemporalJavaType<X> forDatePrecision(TypeConfiguration typeConfiguration) {
 		return (TemporalJavaType<X>) JdbcDateJavaType.INSTANCE;
 	}
@@ -252,11 +283,10 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 		public static final TimestampMutabilityPlan INSTANCE = new TimestampMutabilityPlan();
 		@Override
 		public Date deepCopyNotNull(Date value) {
-			if ( value instanceof Timestamp ) {
+			if ( value instanceof Timestamp timestamp ) {
 				// make sure to get the nanos
-				final Timestamp orig = (Timestamp) value;
-				final Timestamp copy = new Timestamp( orig.getTime() );
-				copy.setNanos( orig.getNanos() );
+				final Timestamp copy = new Timestamp( timestamp.getTime() );
+				copy.setNanos( timestamp.getNanos() );
 				return copy;
 			}
 			else {

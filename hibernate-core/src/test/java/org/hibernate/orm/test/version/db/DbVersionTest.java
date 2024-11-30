@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.version.db;
 
@@ -14,6 +12,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.type.descriptor.java.JdbcTimestampJavaType;
 
 import static org.junit.Assert.assertFalse;
@@ -75,8 +74,8 @@ public class DbVersionTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.delete( s.load( User.class, steve.getId() ) );
-		s.delete( s.load( Group.class, admin.getId() ) );
+		s.remove( s.getReference( User.class, steve.getId() ) );
+		s.remove( s.getReference( Group.class, admin.getId() ) );
 		t.commit();
 		s.close();
 	}
@@ -93,6 +92,10 @@ public class DbVersionTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		Timestamp steveTimestamp = steve.getTimestamp();
+		if ( getDialect() instanceof SybaseDialect ) {
+			// Sybase has 1/300th sec precision, but not for the `getdate()` function which we use for DB generation
+			steveTimestamp = new Timestamp( steveTimestamp.getTime() );
+		}
 
 		s = openSession();
 		t = s.beginTransaction();
@@ -115,8 +118,8 @@ public class DbVersionTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.delete( s.load( User.class, steve.getId() ) );
-		s.delete( s.load( Permission.class, perm.getId() ) );
+		s.remove( s.getReference( User.class, steve.getId() ) );
+		s.remove( s.getReference( Permission.class, perm.getId() ) );
 		t.commit();
 		s.close();
 	}

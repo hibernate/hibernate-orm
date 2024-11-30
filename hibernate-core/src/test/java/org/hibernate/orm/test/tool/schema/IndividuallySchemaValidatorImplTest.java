@@ -1,20 +1,18 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.tool.schema;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
 
 import org.hibernate.boot.MetadataSources;
@@ -37,15 +35,16 @@ import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
 import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
-import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.boot.JdbcConnectionAccessImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.logger.LoggerInspectionRule;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+
 import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
 import org.junit.After;
 import org.junit.Assert;
@@ -60,29 +59,29 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Dominique Toupin
  */
-@TestForIssue(jiraKey = "HHH-10332")
+@JiraKey(value = "HHH-10332")
 @RequiresDialect(H2Dialect.class)
 public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( CoreMessageLogger.class, IndividuallySchemaValidatorImplTest.class.getName() ) );
+			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, IndividuallySchemaValidatorImplTest.class.getName() ) );
 
 	private StandardServiceRegistry ssr;
 
 	protected HibernateSchemaManagementTool tool;
 
-	private Map configurationValues;
+	private Map<String,Object> configurationValues;
 
 	protected ExecutionOptions executionOptions;
 
 	@Before
 	public void setUp() throws IOException {
-		ssr = new StandardServiceRegistryBuilder().build();
+		ssr = ServiceRegistryUtil.serviceRegistry();
 
 		tool = (HibernateSchemaManagementTool) ssr.getService( SchemaManagementTool.class );
 
-		configurationValues = ssr.getService( ConfigurationService.class ).getSettings();
+		configurationValues = ssr.requireService( ConfigurationService.class ).getSettings();
 
 		executionOptions = new ExecutionOptions() {
 			@Override
@@ -91,18 +90,13 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 			}
 
 			@Override
-			public Map getConfigurationValues() {
+			public Map<String,Object> getConfigurationValues() {
 				return configurationValues;
 			}
 
 			@Override
 			public ExceptionHandler getExceptionHandler() {
 				return ExceptionHandlerLoggedImpl.INSTANCE;
-			}
-
-			@Override
-			public SchemaFilter getSchemaFilter() {
-				return SchemaFilter.ALL;
 			}
 		};
 	}
@@ -118,6 +112,7 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 		metadataSources.addAnnotatedClass( MissingEntity.class );
 
 		final MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 
 		try {
@@ -135,6 +130,7 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 		metadataSources.addAnnotatedClass( UnqualifiedMissingEntity.class );
 
 		final MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 
 		try {
@@ -152,11 +148,12 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 		metadataSources.addAnnotatedClass( NoNameColumn.class );
 
 		MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 
 		Map<String, Object> settings = new HashMap<>(  );
 
-		ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
+		ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySettings( settings )
 				.build();
 
@@ -184,6 +181,7 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 			metadataSources.addAnnotatedClass( NameColumn.class );
 
 			metadata = (MetadataImplementor) metadataSources.buildMetadata();
+			metadata.orderColumns( false );
 			metadata.validate();
 
 			try {
@@ -207,11 +205,12 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 		metadataSources.addAnnotatedClass( NameColumn.class );
 
 		MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 
 		Map<String, Object> settings = new HashMap<>(  );
 
-		ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
+		ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySettings( settings )
 				.build();
 
@@ -239,6 +238,7 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 			metadataSources.addAnnotatedClass( IntegerNameColumn.class );
 
 			metadata = (MetadataImplementor) metadataSources.buildMetadata();
+			metadata.orderColumns( false );
 			metadata.validate();
 
 			try {
@@ -249,7 +249,7 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 				if ( metadata.getDatabase().getDialect().getVersion().isSameOrAfter( 2 ) ) {
 					// Reports "character varying" since 2.0
 					assertEquals(
-							"Schema-validation: wrong column type encountered in column [name] in table [SomeSchema.ColumnEntity]; found [character (Types#VARCHAR)], but expecting [integer (Types#INTEGER)]",
+							"Schema-validation: wrong column type encountered in column [name] in table [SomeSchema.ColumnEntity]; found [character varying (Types#VARCHAR)], but expecting [integer (Types#INTEGER)]",
 							e.getMessage()
 					);
 				}
@@ -286,7 +286,6 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 	}
 
 	@Entity
-	@PrimaryKeyJoinColumn
 	@Table(name = "UnqualifiedMissingEntity")
 	public static class UnqualifiedMissingEntity {
 
@@ -303,7 +302,6 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 	}
 
 	@Entity
-	@PrimaryKeyJoinColumn
 	@Table(name = "MissingEntity", catalog = "SomeCatalog", schema = "SomeSchema")
 	public static class MissingEntity {
 
@@ -320,7 +318,6 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 	}
 
 	@Entity
-	@PrimaryKeyJoinColumn
 	@Table(name = "ColumnEntity", schema = "SomeSchema")
 	public static class NoNameColumn {
 
@@ -337,7 +334,6 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 	}
 
 	@Entity
-	@PrimaryKeyJoinColumn
 	@Table(name = "ColumnEntity", schema = "SomeSchema")
 	public static class NameColumn {
 
@@ -364,7 +360,6 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 	}
 
 	@Entity
-	@PrimaryKeyJoinColumn
 	@Table(name = "ColumnEntity", schema = "SomeSchema")
 	public static class IntegerNameColumn {
 

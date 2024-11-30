@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain;
 
@@ -12,12 +10,12 @@ import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.SqmPathSource;
 
 /**
- * Hibernate extension to the JPA {@link SingularAttribute} descriptor
+ * Extension of the JPA-defined {@link SingularAttribute} interface.
  *
  * @author Steve Ebersole
  */
 public interface SingularPersistentAttribute<D,J>
-		extends SingularAttribute<D,J>, PersistentAttribute<D,J>, SqmPathSource<J>, SqmJoinable {
+		extends SingularAttribute<D,J>, PersistentAttribute<D,J>, SqmPathSource<J>, SqmJoinable<D,J> {
 	@Override
 	SimpleDomainType<J> getType();
 
@@ -26,6 +24,8 @@ public interface SingularPersistentAttribute<D,J>
 
 	@Override
 	DomainType<J> getSqmPathType();
+
+	SqmPathSource<J> getPathSource();
 
 	/**
 	 * For a singular attribute, the value type is defined as the

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.type;
 
@@ -18,10 +16,6 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.Oracle10gDialect;
-import org.hibernate.dialect.Oracle12cDialect;
-import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.dialect.Oracle9iDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.type.BasicType;
@@ -29,8 +23,9 @@ import org.hibernate.type.BasicTypeReference;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import org.junit.Test;
 
@@ -42,41 +37,21 @@ import static org.junit.Assert.assertSame;
  * @author Steve Ebersole
  */
 public class OracleLongLobTypeTest extends BaseUnitTestCase {
-	@Test
-	public void testOracle8() {
-		check( Oracle8iDialect.class, Primitives.class, StandardBasicTypes.BINARY, StandardBasicTypes.CHAR_ARRAY );
-		check( Oracle8iDialect.class, LobPrimitives.class, StandardBasicTypes.MATERIALIZED_BLOB, StandardBasicTypes.MATERIALIZED_CLOB_CHAR_ARRAY );
-		check( Oracle8iDialect.class, LobLocators.class, StandardBasicTypes.BLOB, StandardBasicTypes.CLOB );
-	}
 
 	@Test
-	public void testOracle9() {
-		check( Oracle9iDialect.class, Primitives.class, StandardBasicTypes.BINARY, StandardBasicTypes.CHAR_ARRAY );
-		check( Oracle9iDialect.class, LobPrimitives.class, StandardBasicTypes.MATERIALIZED_BLOB, StandardBasicTypes.MATERIALIZED_CLOB_CHAR_ARRAY );
-		check( Oracle9iDialect.class, LobLocators.class, StandardBasicTypes.BLOB, StandardBasicTypes.CLOB );
-	}
-
-	@Test
-	public void testOracle10() {
-		check( Oracle10gDialect.class, Primitives.class, StandardBasicTypes.BINARY, StandardBasicTypes.CHAR_ARRAY );
-		check( Oracle10gDialect.class, LobPrimitives.class, StandardBasicTypes.MATERIALIZED_BLOB, StandardBasicTypes.MATERIALIZED_CLOB_CHAR_ARRAY );
-		check( Oracle10gDialect.class, LobLocators.class, StandardBasicTypes.BLOB, StandardBasicTypes.CLOB );
-	}
-
-	@Test
-	@TestForIssue( jiraKey = "HHH-10345" )
+	@JiraKey( value = "HHH-10345" )
 	public void testOracle12() {
-		check( Oracle12cDialect.class, Primitives.class, StandardBasicTypes.BINARY, StandardBasicTypes.CHAR_ARRAY );
-		check( Oracle12cDialect.class, LobPrimitives.class, StandardBasicTypes.MATERIALIZED_BLOB, StandardBasicTypes.MATERIALIZED_CLOB_CHAR_ARRAY );
-		check( Oracle12cDialect.class, LobLocators.class, StandardBasicTypes.BLOB, StandardBasicTypes.CLOB );
+		check( OracleDialect.class, Primitives.class, StandardBasicTypes.BINARY, StandardBasicTypes.CHAR_ARRAY );
+		check( OracleDialect.class, LobPrimitives.class, StandardBasicTypes.MATERIALIZED_BLOB, StandardBasicTypes.MATERIALIZED_CLOB_CHAR_ARRAY );
+		check( OracleDialect.class, LobLocators.class, StandardBasicTypes.BLOB, StandardBasicTypes.CLOB );
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10345" )
+	@JiraKey( value = "HHH-10345" )
 	public void testOracle12PreferLongRaw() {
-		check( Oracle12cDialect.class, Primitives.class, StandardBasicTypes.BINARY, StandardBasicTypes.CHAR_ARRAY, true );
-		check( Oracle12cDialect.class, LobPrimitives.class, StandardBasicTypes.MATERIALIZED_BLOB, StandardBasicTypes.MATERIALIZED_CLOB_CHAR_ARRAY, true );
-		check( Oracle12cDialect.class, LobLocators.class, StandardBasicTypes.BLOB, StandardBasicTypes.CLOB, true );
+		check( OracleDialect.class, Primitives.class, StandardBasicTypes.BINARY, StandardBasicTypes.CHAR_ARRAY, true );
+		check( OracleDialect.class, LobPrimitives.class, StandardBasicTypes.MATERIALIZED_BLOB, StandardBasicTypes.MATERIALIZED_CLOB_CHAR_ARRAY, true );
+		check( OracleDialect.class, LobLocators.class, StandardBasicTypes.BLOB, StandardBasicTypes.CLOB, true );
 	}
 
 	private void check(
@@ -93,7 +68,7 @@ public class OracleLongLobTypeTest extends BaseUnitTestCase {
 			BasicTypeReference<?> binaryTypeClass,
 			BasicTypeReference<?> charTypeClass,
 			boolean preferLongRaw) {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, dialectClass.getName() )
 				.applySetting( OracleDialect.PREFER_LONG_RAW, Boolean.toString( preferLongRaw ) )
 				.applySetting( "hibernate.temp.use_jdbc_metadata_defaults", false )
@@ -103,6 +78,7 @@ public class OracleLongLobTypeTest extends BaseUnitTestCase {
 			final MetadataImplementor mappings = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( entityClass )
 					.buildMetadata();
+			mappings.orderColumns( false );
 			mappings.validate();
 
 			final PersistentClass entityBinding = mappings.getEntityBinding( entityClass.getName() );

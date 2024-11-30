@@ -1,21 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
 /**
- * Annotation related exception.
- *
- * The EJB3 EG will probably set a generic exception.  I'll then use this one.
+ * An exception that occurs while reading mapping annotations.
  *
  * @author Emmanuel Bernard
  */
 public class AnnotationException extends MappingException {
 	/**
-	 * Constructs an AnnotationException using the given message and cause.
+	 * Constructs an {@code AnnotationException} using the given message and cause.
 	 *
 	 * @param msg The message explaining the reason for the exception.
 	 * @param cause The underlying cause.
@@ -25,7 +21,7 @@ public class AnnotationException extends MappingException {
 	}
 
 	/**
-	 * Constructs an AnnotationException using the given message.
+	 * Constructs an {@code AnnotationException} using the given message.
 	 *
 	 * @param msg The message explaining the reason for the exception.
 	 */

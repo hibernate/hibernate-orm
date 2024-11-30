@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
@@ -279,7 +277,7 @@ public abstract class AbstractCollectionMetadataGenerator extends AbstractMetada
 				columnNameIterator = joinTableData.getInverseJoinColumnNamesIterator();
 			}
 			else {
-				columnNameIterator = ColumnNameIterator.from( value.getColumnIterator() );
+				columnNameIterator = ColumnNameIterator.from( value.getSelectables().iterator() );
 			}
 
 			addAttributesToEntity(
@@ -528,7 +526,7 @@ public abstract class AbstractCollectionMetadataGenerator extends AbstractMetada
 
 		// this is never reached, but java requires it
 		throw new AssertionError();
-	}    
+	}
 
 	/**
 	 * Returns whether the collection is a map-type and that the map element is defined as a Clob/NClob type.
@@ -543,8 +541,8 @@ public abstract class AbstractCollectionMetadataGenerator extends AbstractMetada
 			if ( !type.isComponentType() && !type.isAssociationType() && type instanceof BasicType<?> ) {
 				final BasicType<?> basicType = (BasicType<?>) type;
 				return basicType.getJavaType() == String.class && (
-						basicType.getJdbcType().getJdbcTypeCode() == Types.CLOB
-								|| basicType.getJdbcType().getJdbcTypeCode() == Types.NCLOB
+						basicType.getJdbcType().getDdlTypeCode() == Types.CLOB
+								|| basicType.getJdbcType().getDdlTypeCode() == Types.NCLOB
 				);
 			}
 		}

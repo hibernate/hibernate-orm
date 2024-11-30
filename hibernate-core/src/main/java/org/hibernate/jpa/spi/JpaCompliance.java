@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.spi;
 
@@ -22,8 +20,8 @@ public interface JpaCompliance {
 	 * translating a query as JPQL instead of HQL, as well as whether calls
 	 * to the {@link jakarta.persistence.Query} methods always throw the
 	 * exceptions defined by the specification.
-	 *
-	 * Deviations result in an exception if enabled
+	 * <p>
+	 * Deviations result in an exception, if enabled.
 	 *
 	 * @return {@code true} indicates to behave in the spec-defined way
 	 *
@@ -43,28 +41,6 @@ public interface JpaCompliance {
 	boolean isJpaTransactionComplianceEnabled();
 
 	/**
-	 * Controls how Hibernate interprets a mapped {@link java.util.List}
-	 * without no {@linkplain jakarta.persistence.OrderColumn order column}
-	 * specified. Historically Hibernate treats this as a "bag", which is a
-	 * concept JPA does not have.
-	 * <ul>
-	 * <li>If enabled, Hibernate will recognize this case as a
-	 *     {@linkplain org.hibernate.collection.spi.PersistentList list}.
-	 * <li>Otherwise, if disabled, Hibernate will treat it as a
-	 *     {@linkplain org.hibernate.collection.spi.PersistentBag "bag"}.
-	 * </ul>
-	 *
-	 * @return {@code true} indicates to behave in the spec-defined way,
-	 * interpreting the mapping as a "list", rather than a "bag"
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#JPA_LIST_COMPLIANCE
-	 *
-	 * @deprecated Use {@link org.hibernate.cfg.AvailableSettings#DEFAULT_LIST_SEMANTICS} instead
-	 */
-	@Deprecated( since = "6.0" )
-	boolean isJpaListComplianceEnabled();
-
-	/**
 	 * JPA defines specific exceptions on specific methods when called on
 	 * {@link jakarta.persistence.EntityManager} and
 	 * {@link jakarta.persistence.EntityManagerFactory} when those objects
@@ -79,6 +55,12 @@ public interface JpaCompliance {
 	 * @see org.hibernate.cfg.AvailableSettings#JPA_CLOSED_COMPLIANCE
 	 */
 	boolean isJpaClosedComplianceEnabled();
+
+	/**
+	 * @deprecated No longer has any effect.
+	 */
+	@Deprecated(since = "7.0")
+	boolean isJpaCascadeComplianceEnabled();
 
 	/**
 	 * JPA spec says that an {@link jakarta.persistence.EntityNotFoundException}

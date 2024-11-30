@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.constraint;
 
@@ -19,7 +17,7 @@ import java.util.stream.Collectors;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.mapping.Column;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -64,7 +62,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Christian Beikov
  */
-@TestForIssue( jiraKey = "HHH-11180" )
+@JiraKey( value = "HHH-11180" )
 @DomainModel(
 		annotatedClasses = {
 				ForeignKeyConstraintTest.CreditCard.class,
@@ -180,7 +178,7 @@ public class ForeignKeyConstraintTest {
 		Set<String> columnSet = new LinkedHashSet<>( Arrays.asList( columns ) );
 		for ( Namespace namespace : scope.getDomainModel().getDatabase().getNamespaces() ) {
 			for ( org.hibernate.mapping.Table table : namespace.getTables() ) {
-				Iterator<org.hibernate.mapping.ForeignKey> fkItr = table.getForeignKeyIterator();
+				Iterator<org.hibernate.mapping.ForeignKey> fkItr = table.getForeignKeys().values().iterator();
 				while ( fkItr.hasNext() ) {
 					org.hibernate.mapping.ForeignKey fk = fkItr.next();
 
@@ -202,7 +200,7 @@ public class ForeignKeyConstraintTest {
 	private void assertNoForeignKey(DomainModelScope scope, String foreignKeyName, String... columns) {
 		for ( Namespace namespace : scope.getDomainModel().getDatabase().getNamespaces() ) {
 			for ( org.hibernate.mapping.Table table : namespace.getTables() ) {
-				Iterator<org.hibernate.mapping.ForeignKey> fkItr = table.getForeignKeyIterator();
+				Iterator<org.hibernate.mapping.ForeignKey> fkItr = table.getForeignKeys().values().iterator();
 				while ( fkItr.hasNext() ) {
 					org.hibernate.mapping.ForeignKey fk = fkItr.next();
 					assertFalse(
@@ -219,7 +217,7 @@ public class ForeignKeyConstraintTest {
 		@Id
 		public String number;
 	}
-	
+
 	@Entity(name = "Person")
 	@Inheritance( strategy = InheritanceType.JOINED )
 	public static class Person {
@@ -529,7 +527,7 @@ public class ForeignKeyConstraintTest {
 		public CompanyInfo info;
 	}
 
-	@Entity
+	@Entity(name = "PlanItem")
 	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 	public abstract class PlanItem {
 
@@ -546,7 +544,7 @@ public class ForeignKeyConstraintTest {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Task")
 	@SecondaryTable( name = "Task" )
 	public class Task extends PlanItem {
 		@Id

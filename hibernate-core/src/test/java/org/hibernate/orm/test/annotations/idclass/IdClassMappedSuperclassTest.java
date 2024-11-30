@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.idclass;
 
@@ -12,7 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.MappedSuperclass;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -25,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-9114")
+@JiraKey(value = "HHH-9114")
 @DomainModel(annotatedClasses = IdClassMappedSuperclassTest.Simple.class)
 @SessionFactory
 public class IdClassMappedSuperclassTest {
@@ -38,7 +36,7 @@ public class IdClassMappedSuperclassTest {
 					Simple simple = new Simple();
 					simple.setSimpleId( "1" );
 					simple.setCategoryId( "2" );
-					session.save( simple );
+					session.persist( simple );
 
 					session.getTransaction().commit();
 

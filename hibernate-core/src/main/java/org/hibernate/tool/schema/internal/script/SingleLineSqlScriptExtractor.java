@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal.script;
 
@@ -20,7 +18,7 @@ import org.hibernate.tool.schema.spi.SqlScriptException;
  * Class responsible for extracting SQL statements from import script. Treats each line as a complete SQL statement.
  * Comment lines shall start with {@code --}, {@code //} or {@code /*} character sequence.
  *
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  * @author Steve Ebersole
  */
 public class SingleLineSqlScriptExtractor implements SqlScriptCommandExtractor {

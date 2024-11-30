@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.collection.spi;
 
@@ -20,10 +18,12 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 
 /**
- * Describes the semantics of a persistent collection such that Hibernate
- * understands how to use it - create one, handle elements, etc.
- *
- * @apiNote The described collection need not be part of the "Java Collection Framework"
+ * Each instance of this interface describes the semantics of some sort of
+ * persistent collection so that Hibernate understands how to manage the
+ * lifecycle of instances of that sort of collection.
+ * <p>
+ * A collection type with semantics described by a {@code CollectionSemantics}
+ * object need not be part of the Java Collections Framework.
  *
  * @param <E> the collection element or map key type
  * @param <CE> the type of the collection

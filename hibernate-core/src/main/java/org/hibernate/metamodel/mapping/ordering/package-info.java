@@ -9,6 +9,6 @@
  * Support for set and map ordering
  *
  * @see jakarta.persistence.OrderBy
- * @see org.hibernate.annotations.OrderBy
+ * @see org.hibernate.annotations.SQLOrder
  */
 package org.hibernate.metamodel.mapping.ordering;

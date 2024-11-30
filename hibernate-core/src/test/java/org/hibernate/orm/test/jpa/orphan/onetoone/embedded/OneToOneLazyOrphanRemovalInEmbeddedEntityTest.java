@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.orphan.onetoone.embedded;
 
@@ -27,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  * shows that orphanRemoval = true is not removing the orphan of OneToOne relations in Embedded objects
  * for unidirectional relationship.
  *
- * @TestForIssue( jiraKey = "HHH-9663" )
+ * @JiraKey( value = "HHH-9663" )
  */
 @Jpa(
 		annotatedClasses = {
@@ -115,7 +113,7 @@ public class OneToOneLazyOrphanRemovalInEmbeddedEntityTest {
 	@Embeddable
 	public static class Car {
 
-		@Id
+		@Column(insertable = false, updatable = false)
 		private Integer id;
 
 		// represents a unidirectional one-to-one

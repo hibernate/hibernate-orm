@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.configuration;
 
@@ -11,11 +9,9 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Callable;
 
-import org.hibernate.annotations.common.reflection.ReflectionManager;
-import org.hibernate.boot.internal.MetadataImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
-import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.envers.RevisionListener;
@@ -91,12 +87,13 @@ public class Configuration {
 	private final boolean revisionEndTimestampEnabled;
 	private final boolean revisionEndTimestampNumeric;
 	private final boolean revisionEndTimestampUseLegacyPlacement;
+	private final boolean revisionSequenceNoCache;
 
 	private final Map<String, String> customAuditTableNames = new HashMap<>();
 
 	private final RevisionInfoConfiguration revisionInfo;
 
-	public Configuration(Properties properties, EnversService enversService, MetadataImplementor metadata) {
+	public Configuration(Properties properties, EnversService enversService, InFlightMetadataCollector metadata) {
 		this.enversService = enversService;
 
 		final ConfigurationProperties configProps = new ConfigurationProperties( properties );
@@ -175,14 +172,15 @@ public class Configuration {
 				EnversSettings.EMBEDDABLE_SET_ORDINAL_FIELD_NAME,
 				DEFAULT_SETORDINAL_FIELD
 		);
+		revisionSequenceNoCache = configProps.getBoolean(
+				EnversSettings.REVISION_SEQUENCE_NOCACHE,
+				false
+		);
 
 		revisionPropertyBasePath = originalIdPropertyName + "." + revisionFieldName + ".";
 		revisionNumberPath = revisionPropertyBasePath + "id";
 
-		// todo: there are places that need bits built from the revinfo entity configuration
-		//          this exists here as a way to pass it down in an immutable way to any consumer of this class
-		final ReflectionManager reflectionManager = metadata.getMetadataBuildingOptions().getTypeConfiguration().getMetadataBuildingContext().getBootstrapContext().getReflectionManager();
-		this.revisionInfo = new RevisionInfoConfiguration( this, metadata, reflectionManager );
+		this.revisionInfo = new RevisionInfoConfiguration( this, metadata );
 	}
 
 	public boolean isGenerateRevisionsForCollections() {
@@ -243,6 +241,10 @@ public class Configuration {
 
 	public boolean isRevisionEndTimestampUseLegacyPlacement() {
 		return revisionEndTimestampUseLegacyPlacement;
+	}
+
+	public boolean isRevisionSequenceNoCache() {
+		return revisionSequenceNoCache;
 	}
 
 	public String getDefaultCatalogName() {

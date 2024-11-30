@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.ops.genericApi;
 
@@ -52,7 +50,7 @@ public class BasicGetLoadAccessTest {
 		// create a row
 		scope.inTransaction(
 				session ->
-						session.save( new User( "steve" ) )
+						session.persist( new User( "steve" ) )
 		);
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -87,17 +85,17 @@ public class BasicGetLoadAccessTest {
 		// test `load` access
 		scope.inTransaction(
 				session ->
-						session.load( User.class, 1 )
+						session.getReference( User.class, 1 )
 		);
 
 		scope.inTransaction(
 				session ->
-						session.load( User.class, 1, LockMode.PESSIMISTIC_WRITE )
+						session.get( User.class, 1, LockMode.PESSIMISTIC_WRITE )
 		);
 
 		scope.inTransaction(
 				session ->
-						session.load( User.class, 1, LockOptions.UPGRADE )
+						session.get( User.class, 1, LockOptions.UPGRADE )
 		);
 
 		scope.inTransaction(

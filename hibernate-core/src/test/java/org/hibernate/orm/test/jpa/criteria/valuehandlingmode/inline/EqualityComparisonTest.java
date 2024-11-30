@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.criteria.valuehandlingmode.inline;
 
@@ -15,7 +13,6 @@ import java.util.Set;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
-import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;

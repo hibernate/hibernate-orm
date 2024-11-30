@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
 
@@ -65,8 +63,8 @@ public class InsertSubstringOverlayEmulation
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
+		TypeConfiguration typeConfiguration = queryEngine.getTypeConfiguration();
 		final BasicType<Integer> intType = typeConfiguration.getBasicTypeForJavaType( Integer.class );
 		final BasicType<String> stringType = typeConfiguration.getBasicTypeForJavaType( String.class );
 
@@ -76,15 +74,14 @@ public class InsertSubstringOverlayEmulation
 		SqmTypedNode<?> length = arguments.size() > 3
 				? arguments.get(3)
 				: queryEngine.getSqmFunctionRegistry().findFunctionDescriptor("length")
-						.generateSqmExpression( replacement, intType, queryEngine, typeConfiguration );
+						.generateSqmExpression( replacement, intType, queryEngine);
 
 		SqmFunctionDescriptor insert = queryEngine.getSqmFunctionRegistry().findFunctionDescriptor("insert");
 		if ( insert != null ) {
 			return insert.generateSqmExpression(
 					asList( string, start, length, replacement ),
 					impliedResultType,
-					queryEngine,
-					typeConfiguration
+					queryEngine
 			);
 		}
 		else {
@@ -109,8 +106,7 @@ public class InsertSubstringOverlayEmulation
 			SqmTypedNode<?> restString = substring.generateSqmExpression(
 					asList( string, startPlusLength ),
 					impliedResultType,
-					queryEngine,
-					typeConfiguration
+					queryEngine
 			);
 			if ( strictSubstring ) {
 				restString = new SqmCaseSearched<>( stringType, start.nodeBuilder() )
@@ -121,8 +117,7 @@ public class InsertSubstringOverlayEmulation
 										lengthFunction.generateSqmExpression(
 												asList( string ),
 												intType,
-												queryEngine,
-												typeConfiguration
+												queryEngine
 										),
 										string.nodeBuilder()
 								),
@@ -134,15 +129,13 @@ public class InsertSubstringOverlayEmulation
 							substring.generateSqmExpression(
 									asList( string, one, startMinusOne ),
 									impliedResultType,
-									queryEngine,
-									typeConfiguration
+									queryEngine
 							),
 							replacement,
 							restString
 					),
 					impliedResultType,
-					queryEngine,
-					typeConfiguration
+					queryEngine
 			);
 		}
 	}

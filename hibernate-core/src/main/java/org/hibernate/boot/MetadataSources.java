@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot;
 
@@ -17,14 +15,16 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.boot.archive.spi.InputStreamAccess;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.internal.XmlSources;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
+import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.boot.jaxb.spi.XmlSource;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
@@ -36,6 +36,8 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.SerializationException;
+
+import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /**
  * Entry point for working with sources of O/R mapping metadata, either
@@ -65,7 +67,9 @@ public class MetadataSources implements Serializable {
 
 	private XmlMappingBinderAccess xmlMappingBinderAccess;
 
-	private List<Binding<?>> xmlBindings;
+	private List<Binding<JaxbEntityMappingsImpl>> mappingXmlBindings;
+	private List<Binding<JaxbHbmHibernateMapping>> hbmXmlBindings;
+
 	private LinkedHashSet<Class<?>> annotatedClasses;
 	private LinkedHashSet<String> annotatedClassNames;
 	private LinkedHashSet<String> annotatedPackages;
@@ -121,8 +125,36 @@ public class MetadataSources implements Serializable {
 		return xmlMappingBinderAccess;
 	}
 
-	public List<Binding<?>> getXmlBindings() {
-		return xmlBindings == null ? Collections.emptyList() : xmlBindings;
+	/**
+	 * @deprecated Prefer {@linkplain #getMappingXmlBindings()} and/or {@linkplain #getHbmXmlBindings()}
+	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Deprecated(since = "7.0")
+	public List<Binding<JaxbBindableMappingDescriptor>> getXmlBindings() {
+		if ( mappingXmlBindings == null && hbmXmlBindings == null ) {
+			return Collections.emptyList();
+		}
+
+		if ( hbmXmlBindings == null ) {
+			return (List) mappingXmlBindings;
+		}
+
+		if ( mappingXmlBindings == null ) {
+			return (List) hbmXmlBindings;
+		}
+
+		final ArrayList<Binding<JaxbBindableMappingDescriptor>> combined = arrayList( mappingXmlBindings.size() + hbmXmlBindings.size() );
+		combined.addAll( (List) mappingXmlBindings );
+		combined.addAll( (List) hbmXmlBindings );
+		return combined;
+	}
+
+	public List<Binding<JaxbEntityMappingsImpl>> getMappingXmlBindings() {
+		return mappingXmlBindings == null ? Collections.emptyList() : mappingXmlBindings;
+	}
+
+	public List<Binding<JaxbHbmHibernateMapping>> getHbmXmlBindings() {
+		return hbmXmlBindings == null ? Collections.emptyList() : hbmXmlBindings;
 	}
 
 	public Collection<String> getAnnotatedPackages() {
@@ -171,7 +203,7 @@ public class MetadataSources implements Serializable {
 	private MetadataBuilder getCustomBuilderOrDefault(MetadataBuilderImpl defaultBuilder) {
 
 		Collection<MetadataBuilderFactory> discoveredBuilderFactories =
-				serviceRegistry.getService( ClassLoaderService.class )
+				serviceRegistry.requireService( ClassLoaderService.class )
 						.loadJavaServices( MetadataBuilderFactory.class );
 
 		MetadataBuilder builder = null;
@@ -329,7 +361,7 @@ public class MetadataSources implements Serializable {
 	public MetadataSources addResource(String name) {
 		final XmlSource xmlSource = XmlSources.fromResource( name, classLoaderService );
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
-		getXmlBindingsForWrite().add( xmlSource.doBind( binderAccess.getMappingBinder()  ) );
+		addXmlBinding( xmlSource.doBind( binderAccess.getMappingBinder() ) );
 		return this;
 	}
 
@@ -359,7 +391,7 @@ public class MetadataSources implements Serializable {
 	public MetadataSources addFile(File file) {
 		final XmlSource xmlSource = XmlSources.fromFile( file );
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
-		getXmlBindingsForWrite().add( xmlSource.doBind( binderAccess.getMappingBinder()  ) );
+		addXmlBinding( xmlSource.doBind( binderAccess.getMappingBinder()  ) );
 		return this;
 	}
 
@@ -372,7 +404,45 @@ public class MetadataSources implements Serializable {
 	 * @return this (for method chaining purposes)
 	 */
 	public MetadataSources addXmlBinding(Binding<?> binding) {
-		getXmlBindingsForWrite().add( binding );
+		if ( binding.getRoot() instanceof JaxbEntityMappingsImpl ) {
+			//noinspection unchecked
+			return addMappingXmlBinding( (Binding<JaxbEntityMappingsImpl>) binding );
+		}
+		else if ( binding.getRoot() instanceof JaxbHbmHibernateMapping ) {
+			//noinspection unchecked
+			return addHbmXmlBinding( (Binding<JaxbHbmHibernateMapping>) binding );
+		}
+
+		throw new UnsupportedOperationException( "Unknown type of binding : " + binding.getRoot() );
+	}
+
+	/**
+	 * Add a {@linkplain Binding binding} for {@linkplain JaxbEntityMappingsImpl mapping.xsd} document
+	 *
+	 * @param binding The binding
+	 *
+	 * @return this (for method chaining purposes)
+	 */
+	public MetadataSources addMappingXmlBinding(Binding<JaxbEntityMappingsImpl> binding) {
+		if ( mappingXmlBindings == null ) {
+			mappingXmlBindings = new ArrayList<>();
+		}
+		mappingXmlBindings.add( binding );
+		return this;
+	}
+
+	/**
+	 * Add a {@linkplain Binding binding} for {@linkplain JaxbHbmHibernateMapping hbm.xsd} document
+	 *
+	 * @param binding The binding
+	 *
+	 * @return this (for method chaining purposes)
+	 */
+	public MetadataSources addHbmXmlBinding(Binding<JaxbHbmHibernateMapping> binding) {
+		if ( hbmXmlBindings == null ) {
+			hbmXmlBindings = new ArrayList<>();
+		}
+		hbmXmlBindings.add( binding );
 		return this;
 	}
 
@@ -413,7 +483,7 @@ public class MetadataSources implements Serializable {
 	 * the DOM structure of a particular mapping. It is saved from a previous call
 	 * as a file with the name {@code {xmlFile}.bin} where {@code {xmlFile}} is the
 	 * name of the original mapping file.
-	 * </p>
+	 * <p>
 	 * If a cached {@code {xmlFile}.bin} exists and is newer than {@code {xmlFile}},
 	 * the {@code {xmlFile}.bin} file will be read directly. Otherwise {@code {xmlFile}}
 	 * is read and then serialized to {@code {xmlFile}.bin} for use the next time.
@@ -431,7 +501,7 @@ public class MetadataSources implements Serializable {
 	 * the DOM structure of a particular mapping. It is saved from a previous call
 	 * as a file with the name {@code {xmlFile}.bin} where {@code {xmlFile}} is the
 	 * name of the original mapping file.
-	 * </p>
+	 * <p>
 	 * If a cached {@code {xmlFile}.bin} exists and is newer than {@code {xmlFile}},
 	 * the {@code {xmlFile}.bin} file will be read directly. Otherwise {@code {xmlFile}}
 	 * is read and then serialized to {@code {xmlFile}.bin} for use the next time.
@@ -443,13 +513,13 @@ public class MetadataSources implements Serializable {
 	public MetadataSources addCacheableFile(File file, File cacheDirectory) {
 		final XmlSource xmlSource = XmlSources.fromCacheableFile( file, cacheDirectory );
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
-		getXmlBindingsForWrite().add( xmlSource.doBind( binderAccess.getMappingBinder()  ) );
+		addXmlBinding( xmlSource.doBind( binderAccess.getMappingBinder()  ) );
 		return this;
 	}
 
 	/**
 	 * <b>INTENDED FOR TESTSUITE USE ONLY!</b>
-	 * <p/>
+	 * <p>
 	 * Much like {@link #addCacheableFile(File)} except that here we will fail
 	 * immediately if the cache version cannot be found or used for whatever reason.
 	 *
@@ -463,13 +533,13 @@ public class MetadataSources implements Serializable {
 	public MetadataSources addCacheableFileStrictly(File file) throws SerializationException {
 		final XmlSource xmlSource = XmlSources.fromCacheableFile( file, true );
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
-		getXmlBindingsForWrite().add( xmlSource.doBind( binderAccess.getMappingBinder()  ) );
+		addXmlBinding( xmlSource.doBind( binderAccess.getMappingBinder()  ) );
 		return this;
 	}
 
 	/**
 	 * <b>INTENDED FOR TESTSUITE USE ONLY!</b>
-	 * <p/>
+	 * <p>
 	 * Much like {@link #addCacheableFile(File)} except that here we will fail
 	 * immediately if the cache version cannot be found or used for whatever reason.
 	 *
@@ -483,7 +553,7 @@ public class MetadataSources implements Serializable {
 	public MetadataSources addCacheableFileStrictly(File file, File cacheDir) throws SerializationException {
 		final XmlSource xmlSource = XmlSources.fromCacheableFile( file, cacheDir, true );
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
-		getXmlBindingsForWrite().add( xmlSource.doBind( binderAccess.getMappingBinder()  ) );
+		addXmlBinding( xmlSource.doBind( binderAccess.getMappingBinder()  ) );
 		return this;
 	}
 
@@ -497,7 +567,7 @@ public class MetadataSources implements Serializable {
 	public MetadataSources addInputStream(InputStreamAccess xmlInputStreamAccess) {
 		final XmlSource xmlSource = XmlSources.fromStream( xmlInputStreamAccess );
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
-		getXmlBindingsForWrite().add( xmlSource.doBind( binderAccess.getMappingBinder()  ) );
+		addXmlBinding( xmlSource.doBind( binderAccess.getMappingBinder()  ) );
 		return this;
 	}
 
@@ -511,7 +581,7 @@ public class MetadataSources implements Serializable {
 	public MetadataSources addInputStream(InputStream xmlInputStream) {
 		final XmlSource xmlSource = XmlSources.fromStream( xmlInputStream );
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
-		getXmlBindingsForWrite().add( xmlSource.doBind( binderAccess.getMappingBinder()  ) );
+		addXmlBinding( xmlSource.doBind( binderAccess.getMappingBinder()  ) );
 		return this;
 	}
 
@@ -525,13 +595,13 @@ public class MetadataSources implements Serializable {
 	public MetadataSources addURL(URL url) {
 		final XmlSource xmlSource = XmlSources.fromUrl( url );
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
-		getXmlBindingsForWrite().add( xmlSource.doBind( binderAccess.getMappingBinder()  ) );
+		addXmlBinding( xmlSource.doBind( binderAccess.getMappingBinder()  ) );
 		return this;
 	}
 
 	/**
 	 * Read all {@code .hbm.xml} mappings from a jar file.
-	 * <p/>
+	 * <p>
 	 * Assumes that any file named {@code *.hbm.xml} is a mapping document.
 	 * This method does not support {@code orm.xml} files!
 	 *
@@ -543,21 +613,14 @@ public class MetadataSources implements Serializable {
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
 		XmlSources.fromJar(
 				jar,
-				xmlSource -> getXmlBindingsForWrite().add( xmlSource.doBind( binderAccess.getMappingBinder() ) )
+				xmlSource -> addXmlBinding( xmlSource.doBind( binderAccess.getMappingBinder() ) )
 		);
 		return this;
 	}
 
-	private List<Binding<?>> getXmlBindingsForWrite() {
-		if ( xmlBindings == null ) {
-			xmlBindings = new ArrayList<>();
-		}
-		return xmlBindings;
-	}
-
 	/**
 	 * Read all {@code .hbm.xml} mapping documents from a directory tree.
-	 * <p/>
+	 * <p>
 	 * Assumes that any file named {@code *.hbm.xml} is a mapping document.
 	 * This method does not support {@code orm.xml} files!
 	 *

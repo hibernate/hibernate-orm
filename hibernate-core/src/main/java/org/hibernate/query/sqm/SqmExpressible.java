@@ -1,13 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.BindableType;
+import org.hibernate.query.BindingContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -25,13 +24,32 @@ public interface SqmExpressible<J> extends BindableType<J> {
 	 */
 	JavaType<J> getExpressibleJavaType();
 
+	default JavaType<?> getRelationalJavaType() {
+		return getExpressibleJavaType();
+	}
+
 	@Override
 	default boolean isInstance(J value) {
 		return getExpressibleJavaType().isInstance( value );
 	}
 
 	@Override
-	default SqmExpressible<J> resolveExpressible(SessionFactoryImplementor sessionFactory) {
+	default SqmExpressible<J> resolveExpressible(BindingContext bindingContext) {
 		return this;
 	}
+
+	/**
+	 * The name of the type.
+	 *
+	 * @apiNote This is the Hibernate notion of the type name.  For most types
+	 * this will simply be the Java type (i.e. {@link Class}) name.  However
+	 * using the String allows for Hibernate's dynamic model feature.
+	 */
+	default String getTypeName() {
+		// default impl to handle the general case returning the Java type name
+		JavaType<J> expressibleJavaType = getExpressibleJavaType();
+		return expressibleJavaType == null ? "unknown" : expressibleJavaType.getTypeName();
+	}
+
+	DomainType<J> getSqmType();
 }

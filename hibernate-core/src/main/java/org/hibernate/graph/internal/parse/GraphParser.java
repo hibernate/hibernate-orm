@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.graph.internal.parse;
 
@@ -17,8 +15,6 @@ import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
-
-import org.jboss.logging.Logger;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -68,8 +64,8 @@ public class GraphParser extends GraphLanguageParserBaseVisitor {
 
 	private final SessionFactoryImplementor sessionFactory;
 
-	private final Stack<GraphImplementor<?>> graphStack = new StandardStack<>();
-	private final Stack<AttributeNodeImplementor<?>> attributeNodeStack = new StandardStack<>();
+	private final Stack<GraphImplementor> graphStack = new StandardStack<>();
+	private final Stack<AttributeNodeImplementor> attributeNodeStack = new StandardStack<>();
 	private final Stack<SubGraphGenerator> graphSourceStack = new StandardStack<>();
 
 	public GraphParser(SessionFactoryImplementor sessionFactory) {
@@ -141,7 +137,7 @@ public class GraphParser extends GraphLanguageParserBaseVisitor {
 		final GraphImplementor<?> currentGraph = graphStack.getCurrent();
 		assert currentGraph != null;
 
-		final AttributeNodeImplementor attributeNode = currentGraph.addAttributeNode( attributeName );
+		final AttributeNodeImplementor attributeNode = currentGraph.findOrCreateAttributeNode( attributeName );
 		assert attributeNode != null;
 
 		return attributeNode;

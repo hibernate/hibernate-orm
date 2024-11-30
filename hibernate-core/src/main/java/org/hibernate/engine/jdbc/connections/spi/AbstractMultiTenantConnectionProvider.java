@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.connections.spi;
 
@@ -13,13 +11,16 @@ import org.hibernate.service.UnknownUnwrapTypeException;
 
 /**
  * Basic support for {@link MultiTenantConnectionProvider} implementations using
- * individual {@link ConnectionProvider} instances per tenant behind the scenes.
+ * an individual {@link ConnectionProvider} instance per tenant behind the scenes.
+ * <p>
+ * This class is meant to be subclassed to implement application-specific
+ * requirements.
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractMultiTenantConnectionProvider implements MultiTenantConnectionProvider {
+public abstract class AbstractMultiTenantConnectionProvider<T> implements MultiTenantConnectionProvider<T> {
 	protected abstract ConnectionProvider getAnyConnectionProvider();
-	protected abstract ConnectionProvider selectConnectionProvider(String tenantIdentifier);
+	protected abstract ConnectionProvider selectConnectionProvider(T tenantIdentifier);
 
 	@Override
 	public Connection getAnyConnection() throws SQLException {
@@ -32,12 +33,12 @@ public abstract class AbstractMultiTenantConnectionProvider implements MultiTena
 	}
 
 	@Override
-	public Connection getConnection(String tenantIdentifier) throws SQLException {
+	public Connection getConnection(T tenantIdentifier) throws SQLException {
 		return selectConnectionProvider( tenantIdentifier ).getConnection();
 	}
 
 	@Override
-	public void releaseConnection(String tenantIdentifier, Connection connection) throws SQLException {
+	public void releaseConnection(T tenantIdentifier, Connection connection) throws SQLException {
 		selectConnectionProvider( tenantIdentifier ).closeConnection( connection );
 	}
 

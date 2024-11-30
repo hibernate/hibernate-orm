@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.spi;
 
@@ -13,6 +11,8 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Encapsulates bytecode enhancement information about a particular entity.
@@ -80,9 +80,9 @@ public interface BytecodeEnhancementMetadata {
 	 *
 	 * @throws NotInstrumentedException Thrown if {@link #isEnhancedForLazyLoading()} returns {@code false}
 	 */
-	LazyAttributeLoadingInterceptor extractInterceptor(Object entity) throws NotInstrumentedException;
+	@Nullable LazyAttributeLoadingInterceptor extractInterceptor(Object entity) throws NotInstrumentedException;
 
-	BytecodeLazyAttributeInterceptor extractLazyInterceptor(Object entity) throws NotInstrumentedException;
+	@Nullable BytecodeLazyAttributeInterceptor extractLazyInterceptor(Object entity) throws NotInstrumentedException;
 
 	boolean hasUnFetchedAttributes(Object entity);
 

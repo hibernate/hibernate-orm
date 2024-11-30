@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.secondarytable;
 
@@ -11,7 +9,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.SecondaryTable;
 
-import org.hibernate.annotations.Table;
+import org.hibernate.annotations.SecondaryRow;
 
 import org.hibernate.testing.junit4.CustomParameterized;
 import org.junit.After;
@@ -142,7 +140,7 @@ public class SingleTableNullNonOptionalSecondaryTableTest extends AbstractNonOpt
 
 	@Entity(name = "AnEntity")
 	@SecondaryTable(name = "Details")
-	@Table(appliesTo = "Details", optional = false)
+	@SecondaryRow(table = "Details", optional = false)
 	public static class AnEntity {
 		@Id
 		private int id;
@@ -160,7 +158,7 @@ public class SingleTableNullNonOptionalSecondaryTableTest extends AbstractNonOpt
 
 	@Entity(name = "AnEntitySubclass")
 	@SecondaryTable( name = "MoreDetails" )
-	@Table(appliesTo = "MoreDetails", optional = false)
+	@SecondaryRow(table = "MoreDetails", optional = false)
 	public static class AnEntitySubclass extends AnEntity {
 		@Column(name = "anotherDetail", table="MoreDetails")
 		private String anotherDetail;

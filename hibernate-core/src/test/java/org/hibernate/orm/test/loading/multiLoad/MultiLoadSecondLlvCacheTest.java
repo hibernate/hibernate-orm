@@ -1,8 +1,6 @@
 /*
- * Hibernate Search, full-text search for your domain model
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.loading.multiLoad;
 
@@ -36,9 +34,9 @@ public class MultiLoadSecondLlvCacheTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void configure(Configuration configuration) {
 		configuration
-				.setProperty( AvailableSettings.JAKARTA_SHARED_CACHE_MODE, SharedCacheMode.ALL.name() )
-				.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" )
-				.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "true" );
+				.setProperty( AvailableSettings.JAKARTA_SHARED_CACHE_MODE, SharedCacheMode.ALL )
+				.setProperty( AvailableSettings.GENERATE_STATISTICS, true )
+				.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, true );
 	}
 
 	@Test

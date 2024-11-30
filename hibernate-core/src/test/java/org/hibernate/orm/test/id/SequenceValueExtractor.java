@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id;
 
@@ -10,7 +8,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.exception.GenericJDBCException;
@@ -32,7 +30,7 @@ public class SequenceValueExtractor {
 		final PreparedStatement query = sessionImpl.getJdbcCoordinator()
 				.getStatementPreparer()
 				.prepareStatement( queryString );
-		try ( final ResultSet resultSet = sessionImpl.getJdbcCoordinator().getResultSetReturn().extract( query ) ) {
+		try ( final ResultSet resultSet = sessionImpl.getJdbcCoordinator().getResultSetReturn().extract( query, queryString ) ) {
 			resultSet.next();
 			long value = resultSet.getLong( 1 );
 			if ( dialect instanceof DerbyDialect ) {

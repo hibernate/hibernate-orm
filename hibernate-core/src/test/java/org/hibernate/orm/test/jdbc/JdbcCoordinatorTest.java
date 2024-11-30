@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jdbc;
 
@@ -18,7 +16,7 @@ import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
-import org.hibernate.resource.jdbc.spi.JdbcObserver;
+import org.hibernate.resource.jdbc.spi.JdbcEventHandler;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
@@ -61,12 +59,11 @@ public class JdbcCoordinatorTest {
 				jdbcConnectionAccess );
 
 		ServiceRegistry serviceRegistry = Mockito.mock( ServiceRegistry.class );
-		when( sessionContext.getServiceRegistry() ).thenReturn( serviceRegistry );
 		when( sessionContext.getPhysicalConnectionHandlingMode() ).thenReturn(
 				PhysicalConnectionHandlingMode.IMMEDIATE_ACQUISITION_AND_HOLD );
 
-		JdbcObserver jdbcObserver = Mockito.mock( JdbcObserver.class );
-		when( sessionContext.getObserver() ).thenReturn( jdbcObserver );
+		JdbcEventHandler jdbcEventHandler = Mockito.mock( JdbcEventHandler.class );
+		when( sessionContext.getEventHandler() ).thenReturn( jdbcEventHandler );
 
 		JdbcServices jdbcServices = Mockito.mock( JdbcServices.class );
 
@@ -79,7 +76,7 @@ public class JdbcCoordinatorTest {
 		SqlExceptionHelper sqlExceptionHelper = Mockito.mock( SqlExceptionHelper.class );
 		when( jdbcServices.getSqlExceptionHelper() ).thenReturn(
 				sqlExceptionHelper );
-
+		when(sessionOwner.getSqlExceptionHelper()).thenReturn( sqlExceptionHelper );
 		JdbcCoordinatorImpl jdbcCoordinator = new JdbcCoordinatorImpl(
 				null,
 				sessionOwner,

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query;
 
@@ -21,57 +19,116 @@ import jakarta.persistence.TemporalType;
 
 /**
  * Defines the aspects of query execution and parameter binding that apply to all
- * forms of querying - HQL, {@linkplain jakarta.persistence.criteria.CriteriaBuilder
- * criteria queries}, and {@link org.hibernate.procedure.ProcedureCall stored
- * procedure calls}.
+ * forms of querying: HQL/JPQL queries, native SQL queries,
+ * {@linkplain jakarta.persistence.criteria.CriteriaBuilder criteria queries}, and
+ * {@linkplain org.hibernate.procedure.ProcedureCall stored procedure calls}.
+ * <p>
+ * Queries may have <em>parameters</em>, either ordinal or named, and the various
+ * {@code setParameter()} operations of this interface allow an argument to be
+ * bound to a parameter. It's not usually necessary to explicitly specify the type
+ * of an argument, but in rare cases where this is needed, {@link TypedParameterValue}
+ * may be used.
+ * <p>
+ * The operation {@link #setFlushMode(FlushModeType)} allows a temporary flush
+ * mode to be specified, which is in effect only during the execution of this query.
+ * Setting the {@linkplain FlushMode flush mode} at the query level does not affect
+ * the flush mode of other operations performed via the parent {@linkplain Session
+ * session}. This operation is usually used as follows:
+ * <p>
+ * <pre>query.setFlushMode(COMMIT).getResultList()</pre>
+ * <p>
+ * The call to {@code setFlushMode(COMMIT)} disables the usual automatic flush
+ * operation that occurs before query execution.
  *
  * @author Steve Ebersole
  * @author Gavin King
+ *
+ * @see jakarta.persistence.Query
+ * @see SelectionQuery
+ * @see MutationQuery
  */
 public interface CommonQueryContract {
+
+	/**
+	 * The {@link QueryFlushMode} in effect for this query.
+	 * <p>
+	 * By default, this is {@link QueryFlushMode#DEFAULT}, and the
+	 * {@link FlushMode} of the owning {@link Session} determines whether
+	 * it is flushed.
+	 *
+	 * @see Session#getHibernateFlushMode()
+	 *
+	 * @since 7.0
+	 */
+	QueryFlushMode getQueryFlushMode();
+
+	/**
+	 * Set the {@link QueryFlushMode} to use for this query.
+	 *
+	 * @see Session#getHibernateFlushMode()
+	 *
+	 * @since 7.0
+	 */
+	CommonQueryContract setQueryFlushMode(QueryFlushMode queryFlushMode);
 
 	/**
 	 * The JPA {@link FlushModeType} in effect for this query.  By default, the
 	 * query inherits the {@link FlushMode} of the {@link Session} from which
 	 * it originates.
 	 *
-	 * @see #getHibernateFlushMode
-	 * @see Session#getHibernateFlushMode
+	 * @see #getQueryFlushMode()
+	 * @see #getHibernateFlushMode()
+	 * @see Session#getHibernateFlushMode()
+	 *
+	 * @deprecated use {@link #getQueryFlushMode()}
 	 */
+	@Deprecated(since = "7")
 	FlushModeType getFlushMode();
 
 	/**
-	 * Set the {@link FlushMode} in to use for this query.
+	 * Set the {@link FlushMode} to use for this query.
+	 * <p>
+	 * Setting this to {@code null} ultimately indicates to use the
+	 * {@link FlushMode} of the session. Use {@link #setHibernateFlushMode}
+	 * passing {@link FlushMode#MANUAL} instead to indicate that no automatic
+	 * flushing should occur.
 	 *
-	 * @implNote Setting to {@code null} ultimately indicates to use the
-	 * FlushMode of the Session.  Use {@link #setHibernateFlushMode} passing
-	 * {@link FlushMode#MANUAL} instead to indicate that no automatic flushing
-	 * should occur
-	 *
+	 * @see #getQueryFlushMode()
 	 * @see #getHibernateFlushMode()
 	 * @see Session#getHibernateFlushMode()
+	 *
+	 * @deprecated use {@link #setQueryFlushMode(QueryFlushMode)}
 	 */
+	@Deprecated(since = "7")
 	CommonQueryContract setFlushMode(FlushModeType flushMode);
 
 	/**
-	 * The {@link FlushMode} in effect for this query.  By default, the query
+	 * The {@link FlushMode} in effect for this query. By default, the query
 	 * inherits the {@code FlushMode} of the {@link Session} from which it
 	 * originates.
 	 *
-	 * @see Session#getHibernateFlushMode
+	 * @see #getQueryFlushMode()
+	 * @see Session#getHibernateFlushMode()
+	 *
+	 * @deprecated use {@link #getQueryFlushMode()}
 	 */
+	@Deprecated(since = "7")
 	FlushMode getHibernateFlushMode();
 
 	/**
 	 * Set the current {@link FlushMode} in effect for this query.
 	 *
 	 * @implNote Setting to {@code null} ultimately indicates to use the
-	 * {@link FlushMode} of the Session.  Use {@link FlushMode#MANUAL}
+	 * {@link FlushMode} of the session. Use {@link FlushMode#MANUAL}
 	 * instead to indicate that no automatic flushing should occur.
 	 *
+	 * @see #getQueryFlushMode()
 	 * @see #getHibernateFlushMode()
 	 * @see Session#getHibernateFlushMode()
+	 *
+	 * @deprecated use {@link #setQueryFlushMode(QueryFlushMode)}
 	 */
+	@Deprecated(since = "7")
 	CommonQueryContract setHibernateFlushMode(FlushMode flushMode);
 
 	/**
@@ -118,7 +175,11 @@ public interface CommonQueryContract {
 	CommonQueryContract setComment(String comment);
 
 	/**
-	 * Apply hints to the query.
+	 * Set a hint. The hints understood by Hibernate are enumerated by
+	 * {@link org.hibernate.jpa.AvailableHints}.
+	 *
+	 * @see org.hibernate.jpa.HibernateHints
+	 * @see org.hibernate.jpa.SpecHints
 	 */
 	CommonQueryContract setHint(String hintName, Object value);
 
@@ -139,7 +200,6 @@ public interface CommonQueryContract {
 	 * If unable to infer an appropriate {@link BindableType}, fall back to
 	 * {@link #setParameter(String, Object)}.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameter(String, Object, BindableType)
 	 */
 	<P> CommonQueryContract setParameter(String parameter, P value, Class<P> type);
@@ -147,8 +207,6 @@ public interface CommonQueryContract {
 	/**
 	 * Bind the given argument to a named query parameter using the given
 	 * {@link BindableType}.
-	 *
-	 * @see BindableType#parameterType
 	 */
 	<P> CommonQueryContract setParameter(String parameter, P value, BindableType<P> type);
 
@@ -185,7 +243,6 @@ public interface CommonQueryContract {
 	 * If unable to infer an appropriate {@link BindableType}, fall back to
 	 * {@link #setParameter(int, Object)}.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameter(int, Object, BindableType)
 	 */
 	<P> CommonQueryContract setParameter(int parameter, P value, Class<P> type);
@@ -193,8 +250,6 @@ public interface CommonQueryContract {
 	/**
 	 * Bind the given argument to an ordinal query parameter using the given
 	 * {@link BindableType}.
-	 *
-	 * @see BindableType#parameterType
 	 */
 	<P> CommonQueryContract setParameter(int parameter, P value, BindableType<P> type);
 
@@ -242,7 +297,6 @@ public interface CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameter(QueryParameter, Object, BindableType)
 	 */
 	<P> CommonQueryContract setParameter(QueryParameter<P> parameter, P value, Class<P> type);
@@ -276,7 +330,7 @@ public interface CommonQueryContract {
 
 	/**
 	 * Bind multiple arguments to a named query parameter.
-	 * <p/>
+	 * <p>
 	 * The "type mapping" for the binding is inferred from the type of
 	 * the first collection element.
 	 *
@@ -295,7 +349,6 @@ public interface CommonQueryContract {
 	 * If unable to infer an appropriate {@link BindableType}, fall back to
 	 * {@link #setParameterList(String, Collection)}.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameterList(java.lang.String, java.util.Collection, BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
@@ -319,7 +372,7 @@ public interface CommonQueryContract {
 
 	/**
 	 * Bind multiple arguments to a named query parameter.
-	 * <p/>
+	 * <p>
 	 * The "type mapping" for the binding is inferred from the type of
 	 * the first collection element
 	 *
@@ -336,7 +389,6 @@ public interface CommonQueryContract {
 	 * to use.  If unable to determine an appropriate {@link BindableType},
 	 * {@link #setParameterList(String, Collection)} is used
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameterList(java.lang.String, Object[], BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
@@ -360,7 +412,7 @@ public interface CommonQueryContract {
 
 	/**
 	 * Bind multiple arguments to an ordinal query parameter.
-	 * <p/>
+	 * <p>
 	 * The "type mapping" for the binding is inferred from the type of
 	 * the first collection element
 	 *
@@ -377,7 +429,6 @@ public interface CommonQueryContract {
 	 * If unable to infer an appropriate {@link BindableType}, fall back to
 	 * {@link #setParameterList(String, Collection)}.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameterList(int, Collection, BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
@@ -400,7 +451,7 @@ public interface CommonQueryContract {
 
 	/**
 	 * Bind multiple arguments to an ordinal query parameter.
-	 * <p/>
+	 * <p>
 	 * The "type mapping" for the binding is inferred from the type of
 	 * the first collection element
 	 *
@@ -417,7 +468,6 @@ public interface CommonQueryContract {
 	 * If unable to infer an appropriate {@link BindableType}, fall back to
 	 * {@link #setParameterList(String, Collection)}.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameterList(int, Object[], BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
@@ -459,7 +509,6 @@ public interface CommonQueryContract {
 	 * infer an appropriate {@link BindableType}, fall back to using
 	 * {@link #setParameterList(String, Collection)}.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameterList(QueryParameter, java.util.Collection, BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
@@ -502,7 +551,6 @@ public interface CommonQueryContract {
 	 * infer an appropriate {@link BindableType}, fall back to using
 	 * {@link #setParameterList(String, Collection)}.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameterList(QueryParameter, Object[], BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression

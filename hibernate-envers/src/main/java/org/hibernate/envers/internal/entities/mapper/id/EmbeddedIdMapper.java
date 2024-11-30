@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper.id;
 
@@ -58,26 +56,24 @@ public class EmbeddedIdMapper extends AbstractCompositeIdMapper implements Simpl
 			return false;
 		}
 
-		return doPrivileged( () -> {
-			final Setter setter = ReflectionTools.getSetter( obj.getClass(), idPropertyData, getServiceRegistry() );
-			try {
-				final Object subObj = instantiateCompositeId();
+		final Setter setter = ReflectionTools.getSetter( obj.getClass(), idPropertyData, getServiceRegistry() );
+		try {
+			final Object subObj = instantiateCompositeId();
 
-				boolean ret = true;
-				for ( IdMapper idMapper : ids.values() ) {
-					ret &= idMapper.mapToEntityFromMap( subObj, data );
-				}
-
-				if ( ret ) {
-					setter.set( obj, subObj );
-				}
-
-				return ret;
+			boolean ret = true;
+			for ( IdMapper idMapper : ids.values() ) {
+				ret &= idMapper.mapToEntityFromMap( subObj, data );
 			}
-			catch (Exception e) {
-				throw new AuditException( e );
+
+			if ( ret ) {
+				setter.set( obj, subObj );
 			}
-		} );
+
+			return ret;
+		}
+		catch (Exception e) {
+			throw new AuditException( e );
+		}
 	}
 
 	@Override

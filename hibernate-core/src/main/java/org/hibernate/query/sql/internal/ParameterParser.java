@@ -1,15 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sql.internal;
 
 import java.util.BitSet;
-
 import org.hibernate.QueryException;
+import org.hibernate.QueryParameterException;
+import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.query.ParameterLabelException;
 import org.hibernate.query.sql.spi.ParameterRecognizer;
 
 /**
@@ -20,7 +20,7 @@ import org.hibernate.query.sql.spi.ParameterRecognizer;
  * @author Steve Ebersole
  */
 public class ParameterParser {
-	private static final String HQL_SEPARATORS = " \n\r\f\t,()=<>&|+-=/*'^![]#~\\";
+	private static final String HQL_SEPARATORS = " \n\r\f\t,;()=<>&|+-=/*'^![]#~\\";
 	private static final BitSet HQL_SEPARATORS_BITSET = new BitSet();
 
 	static {
@@ -38,16 +38,17 @@ public class ParameterParser {
 	/**
 	 * Performs the actual parsing and tokenizing of the query string making appropriate
 	 * callbacks to the given recognizer upon recognition of the various tokens.
-	 * <p/>
+	 * <p>
 	 * Note that currently, this only knows how to deal with a single output
 	 * parameter (for callable statements).  If we later add support for
 	 * multiple output params, this, obviously, needs to change.
 	 *
 	 * @param sqlString The string to be parsed/tokenized.
 	 * @param recognizer The thing which handles recognition events.
+	 * @param nativeJdbcParametersIgnored Whether to ignore ordinal parameters in native queries or not.
 	 * @throws QueryException Indicates unexpected parameter conditions.
 	 */
-	public static void parse(String sqlString, ParameterRecognizer recognizer) throws QueryException {
+	public static void parse(String sqlString, ParameterRecognizer recognizer, boolean nativeJdbcParametersIgnored) throws QueryException {
 		checkIsNotAFunctionCall( sqlString );
 		final int stringLength = sqlString.length();
 
@@ -125,23 +126,52 @@ public class ParameterParser {
 			}
 			// otherwise
 			else {
-				if ( c == ':' && indx < stringLength - 1 && sqlString.charAt( indx + 1 ) == ':') {
-					// colon character has been escaped
-					recognizer.other( c );
-					indx++;
-				}
-				else if ( c == ':' ) {
-					// named parameter
-					final int right = StringHelper.firstIndexOfChar( sqlString, HQL_SEPARATORS_BITSET, indx + 1 );
-					final int chopLocation = right < 0 ? sqlString.length() : right;
-					final String param = sqlString.substring( indx + 1, chopLocation );
-					if ( param.isEmpty() ) {
-						throw new QueryException(
-								"Space is not allowed after parameter prefix ':' [" + sqlString + "]"
-						);
+				if ( c == ':' ) {
+					if ( indx < stringLength - 1 && Character.isJavaIdentifierStart( sqlString.charAt( indx + 1 ) ) ) {
+						// named parameter
+						final int right = StringHelper.firstIndexOfChar( sqlString, HQL_SEPARATORS_BITSET, indx + 1 );
+						final int chopLocation = right < 0 ? sqlString.length() : right;
+						final String param = sqlString.substring( indx + 1, chopLocation );
+						if ( param.isEmpty() ) {
+							throw new QueryParameterException(
+									"Space is not allowed after parameter prefix ':'",
+									sqlString
+							);
+						}
+						recognizer.namedParameter( param, indx );
+						indx = chopLocation - 1;
 					}
-					recognizer.namedParameter( param, indx );
-					indx = chopLocation - 1;
+					else {
+						// For backwards compatibility, allow some known operators in the escaped form
+						if ( indx < stringLength - 3
+								&& sqlString.charAt( indx + 1 ) == ':'
+								&& sqlString.charAt( indx + 2 ) == ':'
+								&& sqlString.charAt( indx + 3 ) == ':' ) {
+							// Detect the :: operator, escaped as ::::
+							DeprecationLogger.DEPRECATION_LOGGER.deprecatedNativeQueryColonEscaping( "::::", "::" );
+							recognizer.other( ':' );
+							recognizer.other( ':' );
+							indx += 3;
+						}
+						else if ( indx < stringLength - 2
+								&& sqlString.charAt( indx + 1 ) == ':'
+								&& sqlString.charAt( indx + 2 ) == '=' ) {
+							// Detect the := operator, escaped as ::=
+							DeprecationLogger.DEPRECATION_LOGGER.deprecatedNativeQueryColonEscaping( "::=", ":=" );
+							recognizer.other( ':' );
+							recognizer.other( '=' );
+							indx += 2;
+						}
+						else {
+							recognizer.other( ':' );
+							// Consume all following colons as they are eagerly to not confuse named parameter detection
+							while ( indx < stringLength - 1
+									&& sqlString.charAt( indx + 1 ) == ':' ) {
+								indx++;
+								recognizer.other( ':' );
+							}
+						}
+					}
 				}
 				else if ( c == '?' ) {
 					// could be either a positional or JPA-style ordinal parameter
@@ -156,11 +186,13 @@ public class ParameterParser {
 							indx = chopLocation - 1;
 						}
 						catch( NumberFormatException e ) {
-							throw new QueryException( "Ordinal parameter label was not an integer" );
+							throw new ParameterLabelException( "Ordinal parameter label was not an integer" );
 						}
 					}
 					else {
-						recognizer.ordinalParameter( indx );
+						if ( !nativeJdbcParametersIgnored ) {
+							recognizer.ordinalParameter( indx );
+						}
 					}
 				}
 				else {
@@ -170,6 +202,10 @@ public class ParameterParser {
 		}
 
 		recognizer.complete();
+	}
+
+	public static void parse(String sqlString, ParameterRecognizer recognizer) throws QueryException {
+		parse( sqlString, recognizer, false );
 	}
 
 	private static void checkIsNotAFunctionCall(String sqlString) {

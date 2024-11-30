@@ -1,32 +1,30 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
 import java.util.function.BiConsumer;
 
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -66,6 +64,11 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 	}
 
 	@Override
+	public PluralAttributeMapping getCollectionAttribute() {
+		return collectionDescriptor.getAttributeMapping();
+	}
+
+	@Override
 	public String getContainingTableExpression() {
 		return containingTableName;
 	}
@@ -77,6 +80,31 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 
 	@Override
 	public boolean isFormula() {
+		return false;
+	}
+
+	@Override
+	public boolean isInsertable() {
+		return true;
+	}
+
+	@Override
+	public boolean isUpdateable() {
+		return false;
+	}
+
+	@Override
+	public boolean isPartitioned() {
+		return false;
+	}
+
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return false;
+	}
+
+	@Override
+	public boolean isNullable() {
 		return false;
 	}
 
@@ -107,6 +135,11 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 
 	@Override
 	public Integer getScale() {
+		return null;
+	}
+
+	@Override
+	public Integer getTemporalPrecision() {
 		return null;
 	}
 
@@ -172,8 +205,15 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 	}
 
 	@Override
-	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		valueConsumer.consume( domainValue, this );
+	public <X, Y> int breakDownJdbcValues(
+			Object domainValue,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
+			SharedSessionContractImplementor session) {
+		valueConsumer.consume( offset, x, y, domainValue, this );
+		return getJdbcTypeCount();
 	}
 
 	@Override
@@ -184,6 +224,11 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 	@Override
 	public String getFetchableName() {
 		return null;
+	}
+
+	@Override
+	public int getFetchableKey() {
+		return -1;
 	}
 
 	@Override
@@ -216,19 +261,8 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				sqlExpressionResolver.resolveSqlExpression(
-						SqlExpressionResolver.createColumnReferenceKey(
-								tableGroup.getPrimaryTableReference(),
-								columnName
-						),
-						p -> new ColumnReference(
-								tableGroup.getPrimaryTableReference().getIdentificationVariable(),
-								columnName,
-								false,
-								null,
-								null,
-								type,
-								sessionFactory
-						)
+						tableGroup.getPrimaryTableReference(),
+						this
 				),
 				type.getJdbcJavaType(),
 				fetchParent,
@@ -241,7 +275,8 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 				fetchablePath,
 				this,
 				FetchTiming.IMMEDIATE,
-				creationState
+				creationState,
+				!sqlSelection.isVirtual()
 		);
 	}
 
@@ -256,19 +291,8 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				sqlExpressionResolver.resolveSqlExpression(
-						SqlExpressionResolver.createColumnReferenceKey(
-								tableGroup.getPrimaryTableReference(),
-								columnName
-						),
-						p -> new ColumnReference(
-								tableGroup.getPrimaryTableReference().getIdentificationVariable(),
-								columnName,
-								false,
-								null,
-								null,
-								type,
-								sessionFactory
-						)
+						tableGroup.getPrimaryTableReference(),
+						this
 				),
 				type.getJdbcJavaType(),
 				null,
@@ -279,7 +303,9 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 				sqlSelection.getValuesArrayPosition(),
 				null,
 				type,
-				collectionPath
+				collectionPath,
+				false,
+				!sqlSelection.isVirtual()
 		);
 	}
 
@@ -304,12 +330,18 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		type.addToCacheKey( cacheKey, value, session );
+	}
+
+	@Override
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return type.forEachDisassembledJdbcValue( value, clause, offset, valuesConsumer, session );
+		return type.forEachDisassembledJdbcValue( value, offset, x, y, valuesConsumer, session );
 	}
 }

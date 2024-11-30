@@ -1,23 +1,20 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
 
 /**
- * A one-to-one association mapping
+ * A mapping model object representing a {@linkplain jakarta.persistence.OneToOne many-to-one association}.
+ *
  * @author Gavin King
  */
 public class OneToOne extends ToOne {
@@ -57,11 +54,11 @@ public class OneToOne extends ToOne {
 	public void setPropertyName(String propertyName) {
 		this.propertyName = propertyName==null ? null : propertyName.intern();
 	}
-	
+
 	public String getEntityName() {
 		return entityName;
 	}
-	
+
 	public Type getType() throws MappingException {
 		if ( getColumnSpan()>0 ) {
 			return MappingHelper.specialOneToOne(
@@ -94,19 +91,9 @@ public class OneToOne extends ToOne {
 	}
 
 	@Override
-	public void createForeignKey() throws MappingException {
-		// Ensure properties are sorted before we create a foreign key
-		sortProperties();
-		if ( isForeignKeyEnabled() && constrained && referencedPropertyName==null) {
-			//TODO: handle the case of a foreign key to something other than the pk
-			createForeignKeyOfEntity( ( (EntityType) getType() ).getAssociatedEntityName() );
-		}
-	}
-
-	@Override
-	public void createUniqueKey() {
+	public void createUniqueKey(MetadataBuildingContext context) {
 		if ( !hasFormula() && getColumnSpan()>0  ) {
-			getTable().createUniqueKey( getConstraintColumns() );
+			getTable().createUniqueKey( getConstraintColumns(), context );
 		}
 	}
 
@@ -125,11 +112,6 @@ public class OneToOne extends ToOne {
 			columns = identifier.getColumns();
 		}
 		return columns;
-	}
-
-	@Override
-	public Iterator<Selectable> getConstraintColumnIterator() {
-		return identifier.getColumnIterator();
 	}
 
 	/**

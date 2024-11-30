@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.cid.query;
 
@@ -25,7 +23,6 @@ public class IdClassQueryRefTests {
 	public void testHqlVirtualIdReferences(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			session.createQuery( "from Order o where o.orderNumber = 123" ).list();
-			session.createQuery( "from Order o where o.customer = 1" ).list();
 			session.createQuery( "from Order o where o.customer.id = 1" ).list();
 		} );
 	}

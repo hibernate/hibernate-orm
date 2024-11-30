@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.converted.converter.elementCollection;
 
@@ -11,6 +9,22 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import org.hibernate.boot.model.internal.CollectionPropertyHolder;
+import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.IndexedCollection;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
+import org.hibernate.type.internal.ConvertedBasicTypeImpl;
+
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
@@ -24,33 +38,19 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.Table;
 
-import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.IndexedCollection;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
-import org.hibernate.type.internal.ConvertedBasicTypeImpl;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.DomainModelScope;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
-
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 /**
- * Test for {@link org.hibernate.cfg.CollectionPropertyHolder}.
+ * Test for {@link CollectionPropertyHolder}.
  *
  * Tests that {@link jakarta.persistence.AttributeConverter}s are considered correctly for {@link jakarta.persistence.ElementCollection}.
  *
  * @author Markus Heiden
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-9495" )
+@JiraKey( value = "HHH-9495" )
 @DomainModel(
 		annotatedClasses = ElementCollectionTests.TheEntity.class
 )
@@ -77,13 +77,13 @@ public class ElementCollectionTests {
 
 		sfScope.inTransaction(
 				(session) -> {
-					session.save( entity );
+					session.persist( entity );
 				}
 		);
 
 		sfScope.inTransaction(
 				(session) -> {
-					TheEntity retrieved = (TheEntity) session.load( TheEntity.class, 1 );
+					TheEntity retrieved = (TheEntity) session.getReference( TheEntity.class, 1 );
 					assertEquals( 1, retrieved.getSet().size() );
 					assertEquals( new ValueType( "set_value" ), retrieved.getSet().iterator().next() );
 					assertEquals( 1, retrieved.getMap().size() );

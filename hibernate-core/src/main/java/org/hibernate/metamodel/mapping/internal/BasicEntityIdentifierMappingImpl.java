@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
@@ -10,31 +8,30 @@ import java.util.Locale;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.internal.UnsavedValueFactory;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -49,6 +46,10 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
+ * Mapping of a simple identifier
+ *
+ * @see jakarta.persistence.Id
+ *
  * @author Andrea Boriero
  */
 public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMapping, FetchOptions {
@@ -67,6 +68,8 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	private final Long length;
 	private final Integer precision;
 	private final Integer scale;
+	private final boolean insertable;
+	private final boolean updateable;
 
 	private final BasicType<Object> idType;
 
@@ -82,16 +85,21 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 			Long length,
 			Integer precision,
 			Integer scale,
+			boolean insertable,
+			boolean updateable,
 			BasicType<?> idType,
 			MappingModelCreationProcess creationProcess) {
 		this.columnDefinition = columnDefinition;
 		this.length = length;
 		this.precision = precision;
 		this.scale = scale;
+		this.insertable = insertable;
+		this.updateable = updateable;
 		assert attributeName != null;
 		this.attributeName = attributeName;
 		this.rootTable = rootTable;
 		this.pkColumnName = pkColumnName;
+		//noinspection unchecked
 		this.idType = (BasicType<Object>) idType;
 		this.entityPersister = entityPersister;
 
@@ -102,7 +110,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 		propertyAccess = entityPersister.getRepresentationStrategy()
 				.resolvePropertyAccess( bootEntityDescriptor.getIdentifierProperty() );
 
-		idRole = entityPersister.getNavigableRole().append( EntityIdentifierMapping.ROLE_LOCAL_NAME );
+		idRole = entityPersister.getNavigableRole().append( EntityIdentifierMapping.ID_ROLE_NAME );
 		sessionFactory = creationProcess.getCreationContext().getSessionFactory();
 
 		unsavedStrategy = UnsavedValueFactory.getUnsavedIdentifierValue(
@@ -111,6 +119,11 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 				propertyAccess.getGetter(),
 				instanceCreator
 		);
+	}
+
+	@Override
+	public String toString() {
+		return "EntityIdentifierMapping(" + idRole.getFullPath() + ")";
 	}
 
 	@Override
@@ -124,22 +137,20 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	}
 
 	@Override
+	public Nature getNature() {
+		return Nature.SIMPLE;
+	}
+
+	@Override
 	public IdentifierValue getUnsavedStrategy() {
 		return unsavedStrategy;
 	}
 
 	@Override
-	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
-		if ( entity instanceof HibernateProxy ) {
-			return ( (HibernateProxy) entity ).getHibernateLazyInitializer().getIdentifier();
-		}
-		return propertyAccess.getGetter().get( entity );
-	}
-
-	@Override
 	public Object getIdentifier(Object entity) {
-		if ( entity instanceof HibernateProxy ) {
-			return ( (HibernateProxy) entity ).getHibernateLazyInitializer().getIdentifier();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entity );
+		if ( lazyInitializer != null ) {
+			return lazyInitializer.getIdentifier();
 		}
 		return propertyAccess.getGetter().get( entity );
 	}
@@ -167,14 +178,15 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	}
 
 	@Override
-	public int forEachSelectable(int offset, SelectableConsumer consumer) {
-		consumer.accept( offset, this );
+	public <X, Y> int breakDownJdbcValues(
+			Object domainValue,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
+			SharedSessionContractImplementor session) {
+		valueConsumer.consume( offset, x, y, domainValue, this );
 		return getJdbcTypeCount();
-	}
-
-	@Override
-	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		valueConsumer.consume( domainValue, this );
 	}
 
 	@Override
@@ -204,13 +216,15 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final SqlSelection sqlSelection = resolveSqlSelection( navigablePath, tableGroup, true, null, creationState );
+		final SqlSelection sqlSelection = resolveSqlSelection( navigablePath, tableGroup, null, creationState );
 
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				entityPersister.getIdentifierMapping().getJdbcMappings().get( 0 ),
-				navigablePath
+				entityPersister.getIdentifierMapping().getSingleJdbcMapping(),
+				navigablePath,
+				false,
+				!sqlSelection.isVirtual()
 		);
 	}
 
@@ -219,7 +233,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		resolveSqlSelection( navigablePath, tableGroup, true, null, creationState );
+		resolveSqlSelection( navigablePath, tableGroup, null, creationState );
 	}
 
 	@Override
@@ -229,7 +243,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 			DomainResultCreationState creationState,
 			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 		selectionConsumer.accept(
-				resolveSqlSelection( navigablePath, tableGroup, true, null, creationState ),
+				resolveSqlSelection( navigablePath, tableGroup, null, creationState ),
 				getJdbcMapping()
 		);
 	}
@@ -237,14 +251,13 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	private SqlSelection resolveSqlSelection(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
-			boolean allowFkOptimization,
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
 		final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState()
 				.getSqlExpressionResolver();
 		final TableReference rootTableReference;
 		try {
-			rootTableReference = tableGroup.resolveTableReference( navigablePath, rootTable, allowFkOptimization );
+			rootTableReference = tableGroup.resolveTableReference( navigablePath, rootTable );
 		}
 		catch (Exception e) {
 			throw new IllegalStateException(
@@ -260,16 +273,8 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 		}
 
 		final Expression expression = expressionResolver.resolveSqlExpression(
-				SqlExpressionResolver.createColumnReferenceKey( rootTableReference, pkColumnName ),
-				sqlAstProcessingState -> new ColumnReference(
-						rootTableReference,
-						pkColumnName,
-						false,
-						null,
-						null,
-						( (BasicValuedMapping) entityPersister.getIdentifierType() ).getJdbcMapping(),
-						sessionFactory
-				)
+				rootTableReference,
+				this
 		);
 
 		return expressionResolver.resolveSqlSelection(
@@ -292,6 +297,31 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 	@Override
 	public boolean isFormula() {
+		return false;
+	}
+
+	@Override
+	public boolean isNullable() {
+		return false;
+	}
+
+	@Override
+	public boolean isInsertable() {
+		return insertable;
+	}
+
+	@Override
+	public boolean isUpdateable() {
+		return updateable;
+	}
+
+	@Override
+	public boolean isPartitioned() {
+		return false;
+	}
+
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
 		return false;
 	}
 
@@ -321,6 +351,11 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	}
 
 	@Override
+	public Integer getTemporalPrecision() {
+		return null;
+	}
+
+	@Override
 	public Integer getScale() {
 		return scale;
 	}
@@ -346,13 +381,19 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		idType.addToCacheKey( cacheKey, value, session );
+	}
+
+	@Override
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return idType.forEachDisassembledJdbcValue( value, clause, offset, valuesConsumer, session );
+		return idType.forEachDisassembledJdbcValue( value, offset, x, y, valuesConsumer, session );
 	}
 
 	@Override
@@ -370,14 +411,20 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 		assert tableGroup != null;
 
-		final SqlSelection sqlSelection = resolveSqlSelection( fetchablePath, tableGroup, false, fetchParent, creationState );
+		final SqlSelection sqlSelection = resolveSqlSelection( fetchablePath, tableGroup, fetchParent, creationState );
+		final JdbcMappingContainer selectionType = sqlSelection.getExpressionType();
 		return new BasicFetch<>(
 				sqlSelection.getValuesArrayPosition(),
 				fetchParent,
 				fetchablePath,
 				this,
+				getJdbcMapping().getValueConverter(),
 				FetchTiming.IMMEDIATE,
-				creationState
+				true,
+				creationState,
+				// if the expression type is different that the expected type coerce the value
+				selectionType != null && selectionType.getSingleJdbcMapping().getJdbcJavaType() != getJdbcMapping().getJdbcJavaType(),
+				!sqlSelection.isVirtual()
 		);
 	}
 

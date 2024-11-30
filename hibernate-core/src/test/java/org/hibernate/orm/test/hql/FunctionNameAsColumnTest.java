@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.hql;
 
@@ -52,7 +50,7 @@ public class FunctionNameAsColumnTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
-		cfg.setProperty( Environment.USE_QUERY_CACHE, "false" );
+		cfg.setProperty( Environment.USE_QUERY_CACHE, false );
 	}
 
 	@Test
@@ -118,7 +116,7 @@ public class FunctionNameAsColumnTest extends BaseCoreFunctionalTestCase {
 					EntityWithFunctionAsColumnHolder holder2 = new EntityWithFunctionAsColumnHolder();
 					holder2.getEntityWithArgFunctionAsColumns().add( e2 );
 					holder1.setNextHolder( holder2 );
-					s.save( holder1 );
+					s.persist( holder1 );
 				}
 		);
 
@@ -161,7 +159,7 @@ public class FunctionNameAsColumnTest extends BaseCoreFunctionalTestCase {
 					EntityWithFunctionAsColumnHolder holder2 = new EntityWithFunctionAsColumnHolder();
 					holder2.getEntityWithArgFunctionAsColumns().add( e2 );
 					holder1.setNextHolder( holder2 );
-					s.save( holder1 );
+					s.persist( holder1 );
 				}
 		);
 
@@ -219,7 +217,7 @@ public class FunctionNameAsColumnTest extends BaseCoreFunctionalTestCase {
 					EntityWithFunctionAsColumnHolder holder2 = new EntityWithFunctionAsColumnHolder();
 					holder2.getEntityWithNoArgFunctionAsColumns().add( e2 );
 					holder1.setNextHolder( holder2 );
-					s.save( holder1 );
+					s.persist( holder1 );
 				}
 		);
 
@@ -274,7 +272,7 @@ public class FunctionNameAsColumnTest extends BaseCoreFunctionalTestCase {
 					holder1.getEntityWithNoArgFunctionAsColumns().add( e1 );
 					holder2.getEntityWithNoArgFunctionAsColumns().add( e2 );
 					holder1.setNextHolder( holder2 );
-					s.save( holder1 );
+					s.persist( holder1 );
 				}
 		);
 
@@ -298,7 +296,7 @@ public class FunctionNameAsColumnTest extends BaseCoreFunctionalTestCase {
 					assertTrue( Hibernate.isInitialized( holder.getEntityWithNoArgFunctionAsColumns() ) );
 					assertTrue( Hibernate.isInitialized( holder.getNextHolder() ) );
 					assertTrue( Hibernate.isInitialized( holder.getNextHolder()
-																 .getEntityWithNoArgFunctionAsColumns() ) );
+																.getEntityWithNoArgFunctionAsColumns() ) );
 					assertEquals( 1, holder.getEntityWithNoArgFunctionAsColumns().size() );
 					EntityWithNoArgFunctionAsColumn e1 = (EntityWithNoArgFunctionAsColumn) holder.getEntityWithNoArgFunctionAsColumns()
 							.iterator()
@@ -333,7 +331,7 @@ public class FunctionNameAsColumnTest extends BaseCoreFunctionalTestCase {
 					EntityWithFunctionAsColumnHolder holder2 = new EntityWithFunctionAsColumnHolder();
 					holder2.getEntityWithNoArgFunctionAsColumns().add( e2 );
 					holder1.setNextHolder( holder2 );
-					s.save( holder1 );
+					s.persist( holder1 );
 				}
 		);
 

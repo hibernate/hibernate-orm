@@ -1,13 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.AvailableSettings;
+
+import java.util.Locale;
 
 /**
  * Defines the possible values for {@value AvailableSettings#HBM2DDL_AUTO}.
@@ -16,39 +16,37 @@ import org.hibernate.cfg.AvailableSettings;
  */
 public enum SchemaAutoTooling {
 	/**
-	 * Drop the schema and recreate it on SessionFactory startup.
+	 * Drop the schema and recreate it on {@code SessionFactory} startup.
 	 */
-	CREATE( "create" ),
+	CREATE,
 	/**
-	 * Drop the schema and recreate it on SessionFactory startup.  Additionally, drop the
-	 * schema on SessionFactory shutdown.
+	 * Drop the schema and recreate it on {@code SessionFactory} startup.
+	 * Additionally, drop the schema on {@code SessionFactory} shutdown.
 	 */
-	CREATE_DROP( "create-drop" ),
+	CREATE_DROP,
 	/**
-	 * Create the schema on SessionFactory startup.
+	 * Create the schema on {@code SessionFactory} startup.
 	 */
-	CREATE_ONLY( "create-only" ),
+	CREATE_ONLY,
 	/**
 	 * Drop the schema and don't recreate it.
 	 */
-	DROP( "drop" ),
+	DROP,
 	/**
-	 * Update (alter) the schema on SessionFactory startup.
+	 * Update (alter) the schema on {@code SessionFactory} startup.
 	 */
-	UPDATE( "update" ),
+	UPDATE,
 	/**
-	 * Validate the schema on SessionFactory startup.
+	 * Validate the schema on {@code SessionFactory} startup.
 	 */
-	VALIDATE( "validate" ),
+	VALIDATE,
 	/**
 	 * Do not attempt to update nor validate the schema.
 	 */
-	NONE( "none" );
+	NONE;
 
-	private final String externalForm;
-
-	SchemaAutoTooling(String externalForm) {
-		this.externalForm = externalForm;
+	public String externalForm() {
+		return toString().toLowerCase(Locale.ROOT).replace('_','-');
 	}
 
 	public static SchemaAutoTooling interpret(String configurationValue) {
@@ -57,13 +55,13 @@ public enum SchemaAutoTooling {
 		}
 		configurationValue = configurationValue.trim();
 		if ( configurationValue.isEmpty()
-				|| NONE.externalForm.equals( configurationValue ) ) {
+				|| NONE.externalForm().equals( configurationValue ) ) {
 			return null;
 		}
 		else {
-			for ( SchemaAutoTooling sat : values() ) {
-				if ( sat.externalForm.equals( configurationValue ) ) {
-					return sat;
+			for ( SchemaAutoTooling value : values() ) {
+				if ( value.externalForm().equals( configurationValue ) ) {
+					return value;
 				}
 			}
 			throw new HibernateException(

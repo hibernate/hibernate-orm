@@ -1,16 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.stats;
 
 import org.hibernate.cache.internal.NoCachingRegionFactory;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -24,11 +21,11 @@ import org.junit.jupiter.api.Test;
 @DomainModel
 @SessionFactory
 @ServiceRegistry(
-		settingProviders = @SettingProvider(provider = StatisticsWithNoCachingTest.RegionFacrotySettingProvider.class, settingName = AvailableSettings.CACHE_REGION_FACTORY)
+		settingProviders = @SettingProvider(provider = StatisticsWithNoCachingTest.RegionFactorySettingProvider.class, settingName = AvailableSettings.CACHE_REGION_FACTORY)
 )
 public class StatisticsWithNoCachingTest {
 
-	public static class RegionFacrotySettingProvider implements SettingProvider.Provider<String> {
+	public static class RegionFactorySettingProvider implements SettingProvider.Provider<String> {
 
 		@Override
 		public String getSetting() {
@@ -37,7 +34,7 @@ public class StatisticsWithNoCachingTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12508")
+	@JiraKey(value = "HHH-12508")
 	public void testUncachedRegion(SessionFactoryScope scope) {
 		scope.getSessionFactory().getStatistics().getCacheRegionStatistics( "hibernate.test.unknown" );
 	}

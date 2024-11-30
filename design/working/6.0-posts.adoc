@@ -37,7 +37,7 @@ from the removal of deprecated stuff.  There are a few one-off changes that brea
 source compatibility; these are covered in the link:{migration-guide-url}[migration guide].
 
 One specific change to note is that many of these contracts have been better defined with type
-parameters.  Theses were inconsistently and sometimes poorly defined in previous versions.
+parameters.  Theses were inconsistently (and sometimes poorly) defined in previous versions.
 
 Quite a few SPI contracts have changed to support many of the topics discussed here as well as in
 the link:{migration-guide-url}[migration guide].  Many will also be the subject of the mentioned

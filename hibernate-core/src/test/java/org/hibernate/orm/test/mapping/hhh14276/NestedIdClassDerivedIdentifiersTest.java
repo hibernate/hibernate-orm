@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.hhh14276;
 
@@ -16,11 +14,11 @@ import org.hibernate.query.sqm.mutation.internal.inline.InlineMutationStrategy;
 
 import org.hibernate.orm.test.mapping.hhh14276.entity.PlayerStat;
 import org.hibernate.orm.test.mapping.hhh14276.entity.Score;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Before;
 import org.junit.Test;
 
-@TestForIssue(jiraKey = "HHH-14276")
+@JiraKey(value = "HHH-14276")
 public class NestedIdClassDerivedIdentifiersTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

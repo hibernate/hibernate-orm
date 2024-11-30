@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.from;
 
@@ -67,27 +65,43 @@ public class CollectionTableGroup extends StandardTableGroup implements PluralTa
 	}
 
 	public void registerIndexTableGroup(TableGroupJoin indexTableGroupJoin) {
+		registerIndexTableGroup( indexTableGroupJoin, true );
+	}
+
+	public void registerIndexTableGroup(TableGroupJoin indexTableGroupJoin, boolean nested) {
 		assert this.indexTableGroup == null;
 		this.indexTableGroup = indexTableGroupJoin.getJoinedGroup();
-		addNestedTableGroupJoin( indexTableGroupJoin );
+		if ( nested ) {
+			addNestedTableGroupJoin( indexTableGroupJoin );
+		}
+		else {
+			addTableGroupJoin( indexTableGroupJoin );
+		}
 	}
 
 	public void registerElementTableGroup(TableGroupJoin elementTableGroupJoin) {
+		registerElementTableGroup( elementTableGroupJoin, true );
+	}
+
+	public void registerElementTableGroup(TableGroupJoin elementTableGroupJoin, boolean nested) {
 		assert this.elementTableGroup == null;
 		this.elementTableGroup = elementTableGroupJoin.getJoinedGroup();
-		addNestedTableGroupJoin( elementTableGroupJoin );
+		if ( nested ) {
+			addNestedTableGroupJoin( elementTableGroupJoin );
+		}
+		else {
+			addTableGroupJoin( elementTableGroupJoin );
+		}
 	}
 
 	@Override
-	protected TableReference getTableReferenceInternal(
+	public TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization,
 			boolean resolve) {
-		final TableReference tableReference = super.getTableReferenceInternal(
+		final TableReference tableReference = super.getTableReference(
 				navigablePath,
 				tableExpression,
-				allowFkOptimization,
 				resolve
 		);
 		if ( tableReference != null ) {
@@ -97,7 +111,6 @@ public class CollectionTableGroup extends StandardTableGroup implements PluralTa
 			final TableReference indexTableReference = indexTableGroup.getTableReference(
 					navigablePath,
 					tableExpression,
-					allowFkOptimization,
 					resolve
 			);
 			if ( indexTableReference != null ) {
@@ -108,12 +121,9 @@ public class CollectionTableGroup extends StandardTableGroup implements PluralTa
 			final TableReference elementTableReference = elementTableGroup.getTableReference(
 					navigablePath,
 					tableExpression,
-					allowFkOptimization,
 					resolve
 			);
-			if ( elementTableReference != null ) {
-				return elementTableReference;
-			}
+			return elementTableReference;
 		}
 		return null;
 	}

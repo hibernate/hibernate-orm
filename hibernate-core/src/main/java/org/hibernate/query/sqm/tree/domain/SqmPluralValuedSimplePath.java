@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
@@ -11,9 +9,8 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
 import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
-import org.hibernate.spi.NavigablePath;
+import org.hibernate.query.NotIndexedCollectionException;
 import org.hibernate.query.PathException;
-import org.hibernate.query.SemanticException;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -22,7 +19,8 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
+import org.hibernate.query.sqm.tree.from.SqmJoin;
+import org.hibernate.spi.NavigablePath;
 
 /**
  * An SqmPath for plural attribute paths
@@ -56,12 +54,13 @@ public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
 			return existing;
 		}
 
+		final SqmPath<?> lhsCopy = getLhs().copy( context );
 		final SqmPluralValuedSimplePath<E> path = context.registerCopy(
 				this,
 				new SqmPluralValuedSimplePath<>(
-						getNavigablePath(),
-						getReferencedPathSource(),
-						getLhs().copy( context ),
+						getNavigablePathCopy( lhsCopy ),
+						getModel(),
+						lhsCopy,
 						getExplicitAlias(),
 						nodeBuilder()
 				)
@@ -73,6 +72,11 @@ public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
 	@Override
 	public PluralPersistentAttribute<?, ?, E> getReferencedPathSource() {
 		return (PluralPersistentAttribute<?, ?, E>) super.getReferencedPathSource();
+	}
+
+	@Override
+	public PluralPersistentAttribute<?, ?, E> getModel() {
+		return (PluralPersistentAttribute<?, ?, E>) super.getModel();
 	}
 
 	@Override
@@ -90,12 +94,14 @@ public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		// this is a reference to a collection outside of the from-clause...
+		// this is a reference to a collection outside the from clause
 		final CollectionPart.Nature nature = CollectionPart.Nature.fromNameExact( name );
 		if ( nature == null ) {
-			throw new SemanticException( "illegal attempt to dereference collection [" + getNavigablePath() + "] with element property reference [" + name + "]" );
+			throw new PathException( "Plural path '" + getNavigablePath()
+					+ "' refers to a collection and so element attribute '" + name
+					+ "' may not be referenced directly (use element() function)" );
 		}
-		final SqmPath<?> sqmPath = get( name );
+		final SqmPath<?> sqmPath = get( name, true );
 		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
 		return sqmPath;
 	}
@@ -119,7 +125,7 @@ public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
 		if ( path == null ) {
 			final PluralPersistentAttribute<?, ?, E> referencedPathSource = getReferencedPathSource();
 			final SqmFrom<?, Object> parent = pathRegistry.resolveFrom( getLhs() );
-			final SqmQualifiedJoin<Object, ?> join;
+			final SqmJoin<Object, ?> join;
 			final SqmExpression<?> index;
 			if ( referencedPathSource instanceof ListPersistentAttribute<?, ?> ) {
 				//noinspection unchecked
@@ -146,7 +152,8 @@ public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
 				index = ( (SqmMapJoin<?, ?, ?>) join ).key();
 			}
 			else {
-				throw new SemanticException( "Index access is only supported on list or map attributes: " + getNavigablePath() );
+				throw new NotIndexedCollectionException( "Index operator applied to path '" + getNavigablePath()
+						+ "' which is not a list or map" );
 			}
 			join.setJoinPredicate( creationState.getCreationContext().getNodeBuilder().equal( index, selector ) );
 			parent.addSqmJoin( join );
@@ -162,17 +169,18 @@ public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
 	}
 
 	@Override
-	public <S extends E> SqmTreatedSimplePath<E,S> treatAs(Class<S> treatJavaType) throws PathException {
-		return (SqmTreatedSimplePath<E, S>) treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
+	public SqmExpression<Class<? extends E>> type() {
+		throw new UnsupportedOperationException( "Cannot access the type of plural valued simple paths" );
 	}
 
 	@Override
-	public <S extends E> SqmTreatedPath<E, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
-		return new SqmTreatedSimplePath<>(
-				this,
-				treatTarget,
-				nodeBuilder()
-		);
+	public <S extends E> SqmTreatedPath<E, S> treatAs(Class<S> treatJavaType) throws PathException {
+		throw new UnsupportedOperationException( "Cannot treat plural valued simple paths" );
+	}
+
+	@Override
+	public <S extends E> SqmTreatedEntityValuedSimplePath<E, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
+		throw new UnsupportedOperationException( "Cannot treat plural valued simple paths" );
 	}
 
 //	@Override

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.predicate;
 
@@ -12,6 +10,8 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+
+import static org.hibernate.query.sqm.internal.TypecheckUtil.assertString;
 
 /**
  * @author Steve Ebersole
@@ -52,11 +52,16 @@ public class SqmLikePredicate extends AbstractNegatableSqmPredicate {
 		this.escapeCharacter = escapeCharacter;
 		this.isCaseSensitive = isCaseSensitive;
 		final SqmExpressible<?> expressibleType = QueryHelper.highestPrecedenceType(
-				matchExpression.getNodeType(),
-				pattern.getNodeType()
+				matchExpression.getExpressible(),
+				pattern.getExpressible()
 		);
+
+		assertString( matchExpression );
+		assertString( pattern );
+
 		matchExpression.applyInferableType( expressibleType );
 		pattern.applyInferableType( expressibleType );
+
 		if ( escapeCharacter != null ) {
 			escapeCharacter.applyInferableType( nodeBuilder.getCharacterType() );
 		}
@@ -136,6 +141,13 @@ public class SqmLikePredicate extends AbstractNegatableSqmPredicate {
 
 	@Override
 	protected SqmNegatablePredicate createNegatedNode() {
-		return new SqmLikePredicate( matchExpression, pattern, escapeCharacter, !isNegated(), nodeBuilder() );
+		return new SqmLikePredicate(
+				matchExpression,
+				pattern,
+				escapeCharacter,
+				!isNegated(),
+				isCaseSensitive,
+				nodeBuilder()
+		);
 	}
 }

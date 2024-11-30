@@ -1,12 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bidi;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Date;
 
 import org.hibernate.Hibernate;
@@ -41,7 +40,7 @@ public class AuctionTest2 {
 		auction.setDescription( "an auction for something" );
 		auction.setEnd( new Date() );
 		Bid bid = new Bid();
-		bid.setAmount( new BigDecimal( 123.34 ).setScale( 19, BigDecimal.ROUND_DOWN ) );
+		bid.setAmount( new BigDecimal( "123.34" ).setScale( 19, RoundingMode.DOWN ) );
 		bid.setSuccessful( true );
 		bid.setDatetime( new Date() );
 		bid.setItem( auction );
@@ -57,7 +56,7 @@ public class AuctionTest2 {
 
 		scope.inTransaction(
 				session -> {
-					Bid b = session.load( Bid.class, bidId );
+					Bid b = session.getReference( Bid.class, bidId );
 					assertFalse( Hibernate.isInitialized( b ) );
 					Auction a = session.get( Auction.class, aid );
 					assertFalse( Hibernate.isInitialized( a.getBids() ) );
@@ -71,9 +70,9 @@ public class AuctionTest2 {
 
 		scope.inTransaction(
 				session -> {
-					Bid b = session.load( Bid.class, bidId );
+					Bid b = session.getReference( Bid.class, bidId );
 					assertFalse( Hibernate.isInitialized( b ) );
-					Auction a = (Auction) session.createQuery( "from Auction a left join fetch a.bids" ).uniqueResult();
+					Auction a = session.createQuery( "from Auction a left join fetch a.bids", Auction.class ).uniqueResult();
 					assertTrue( Hibernate.isInitialized( b ) );
 					assertTrue( Hibernate.isInitialized( a.getBids() ) );
 					assertSame( b, a.getSuccessfulBid() );
@@ -84,11 +83,11 @@ public class AuctionTest2 {
 
 		scope.inTransaction(
 				session -> {
-					Bid b = session.load( Bid.class, bidId );
-					Auction a = session.load( Auction.class, aid );
+					Bid b = session.getReference( Bid.class, bidId );
+					Auction a = session.getReference( Auction.class, aid );
 					assertFalse( Hibernate.isInitialized( b ) );
 					assertFalse( Hibernate.isInitialized( a ) );
-					session.createQuery( "from Auction a left join fetch a.successfulBid" ).list();
+					session.createQuery( "from Auction a left join fetch a.successfulBid", Auction.class ).list();
 					assertTrue( Hibernate.isInitialized( b ) );
 					assertTrue( Hibernate.isInitialized( a ) );
 					assertSame( b, a.getSuccessfulBid() );
@@ -100,8 +99,8 @@ public class AuctionTest2 {
 
 		scope.inTransaction(
 				session -> {
-					Bid b = session.load( Bid.class, bidId );
-					Auction a = session.load( Auction.class, aid );
+					Bid b = session.getReference( Bid.class, bidId );
+					Auction a = session.getReference( Auction.class, aid );
 					assertFalse( Hibernate.isInitialized( b ) );
 					assertFalse( Hibernate.isInitialized( a ) );
 					assertSame( session.get( Bid.class, bidId ), b );

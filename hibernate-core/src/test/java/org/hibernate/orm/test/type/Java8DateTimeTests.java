@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.type;
 
@@ -15,7 +13,6 @@ import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Iterator;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -46,9 +43,7 @@ public class Java8DateTimeTests extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	public void basicTests() {
 		final PersistentClass entityBinding = metadata().getEntityBinding( TheEntity.class.getName() );
-		final Iterator propertyBindingIterator = entityBinding.getPropertyClosureIterator();
-		while ( propertyBindingIterator.hasNext() ) {
-			final Property propertyBinding = (Property) propertyBindingIterator.next();
+		for ( Property propertyBinding : entityBinding.getPropertyClosure() ) {
 			assertFalse(
 					"Found property bound as Serializable : " + propertyBinding.getName(),
 					propertyBinding.getType() instanceof SerializableType
@@ -59,32 +54,29 @@ public class Java8DateTimeTests extends BaseNonConfigCoreFunctionalTestCase {
 
 		Session s = openSession();
 		s.beginTransaction();
-		s.save( theEntity );
+		s.persist( theEntity );
 		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
 		s.beginTransaction();
-		theEntity = (TheEntity) s.get( TheEntity.class, 1 );
+		theEntity = s.get( TheEntity.class, 1 );
 		dump( entityBinding, theEntity );
 		assertNotNull( theEntity );
-		s.delete( theEntity );
+		s.remove( theEntity );
 		s.getTransaction().commit();
 		s.close();
 	}
 
 	private void dump(PersistentClass entityBinding, TheEntity theEntity) {
-		final Iterator propertyBindingIterator = entityBinding.getPropertyClosureIterator();
-		while ( propertyBindingIterator.hasNext() ) {
-			final Property propertyBinding = (Property) propertyBindingIterator.next();
+		for ( Property propertyBinding : entityBinding.getPropertyClosure() ) {
 			final JavaType javaType = ( (AbstractStandardBasicType) propertyBinding.getType() ).getJavaTypeDescriptor();
-
 			System.out.println(
 					String.format(
 							"%s (%s) -> %s",
 							propertyBinding.getName(),
 							javaType.getJavaTypeClass().getSimpleName(),
-							javaType.toString( propertyBinding.getGetter( TheEntity.class ).get( theEntity ) )
+							javaType.toString(propertyBinding.getGetter(TheEntity.class).get(theEntity))
 					)
 			);
 		}

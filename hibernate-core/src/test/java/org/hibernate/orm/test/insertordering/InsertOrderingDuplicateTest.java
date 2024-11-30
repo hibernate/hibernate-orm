@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.insertordering;
 
@@ -18,13 +16,13 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.jupiter.api.Test;
 
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-11634")
+@JiraKey(value = "HHH-11634")
 public class InsertOrderingDuplicateTest extends BaseInsertOrderingTest {
 
 	@Override
@@ -66,14 +64,14 @@ public class InsertOrderingDuplicateTest extends BaseInsertOrderingTest {
 		} );
 
 		verifyContainsBatches(
-				new Batch( "insert into SaleDocumentSummary (sale_number, totalPrice, id) values (?, ?, ?)" ),
-				new Batch( "insert into Product (description, name, price, quantity, id) values (?, ?, ?, ?, ?)" ),
+				new Batch( "insert into SaleDocumentSummary (sale_number,totalPrice,id) values (?,?,?)" ),
+				new Batch( "insert into Product (description,name,price,quantity,id) values (?,?,?,?,?)" ),
 				new Batch(
-						"insert into SaleDocument (ID_SALE_DOCUMENT_CORRECTION, sale_number, totalPrice, id) values (?, ?, ?, ?)",
+						"insert into SaleDocument (ID_SALE_DOCUMENT_CORRECTION,sale_number,totalPrice,id) values (?,?,?,?)",
 						2
 				),
 				new Batch(
-						"insert into SaleDocumentItem (lp, product_id, quantity, ID_SALE_DOCUMENT, ID_SALE_DOCUMENT_SUMAMRY, id) values (?, ?, ?, ?, ?, ?)" )
+						"insert into SaleDocumentItem (lp,product_id,quantity,ID_SALE_DOCUMENT,ID_SALE_DOCUMENT_SUMAMRY,id) values (?,?,?,?,?,?)" )
 		);
 	}
 

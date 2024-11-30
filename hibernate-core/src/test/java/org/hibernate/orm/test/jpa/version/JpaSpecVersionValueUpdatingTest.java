@@ -1,15 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.version;
 
 import org.junit.Test;
 
 import org.hibernate.Session;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -17,7 +15,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-7138" )
+@JiraKey( value = "HHH-7138" )
 public class JpaSpecVersionValueUpdatingTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -30,7 +28,7 @@ public class JpaSpecVersionValueUpdatingTest extends BaseCoreFunctionalTestCase 
 		session.beginTransaction();
 		Customer customer = new Customer();
 		customer.id = 1L;
-		session.save( customer );
+		session.persist( customer );
 		session.getTransaction().commit();
 		session.close();
 
@@ -38,13 +36,13 @@ public class JpaSpecVersionValueUpdatingTest extends BaseCoreFunctionalTestCase 
 
 		session = openSession();
 		session.beginTransaction();
-		customer = (Customer) session.get( Customer.class, 1L );
+		customer = session.get( Customer.class, 1L );
 		assertEquals( initial, customer.version );
 		Order order = new Order();
 		order.id = 1L;
 		order.customer = customer;
 		customer.orders.add( order );
-		session.save( order );
+		session.persist( order );
 		session.getTransaction().commit();
 		session.close();
 
@@ -52,13 +50,13 @@ public class JpaSpecVersionValueUpdatingTest extends BaseCoreFunctionalTestCase 
 
 		session = openSession();
 		session.beginTransaction();
-		customer = (Customer) session.get( Customer.class, 1L );
+		customer = session.get( Customer.class, 1L );
 		assertEquals( initial, customer.version );
 		Order order2 = new Order();
 		order2.id = 2L;
 		order2.customer = customer;
 		customer.orders.add( order2 );
-		session.save( order2 );
+		session.persist( order2 );
 		session.getTransaction().commit();
 		session.close();
 
@@ -66,9 +64,9 @@ public class JpaSpecVersionValueUpdatingTest extends BaseCoreFunctionalTestCase 
 
 		session = openSession();
 		session.beginTransaction();
-		customer = (Customer) session.load( Customer.class, 1L );
+		customer = session.getReference( Customer.class, 1L );
 		assertEquals( initial, customer.version );
-		session.delete( customer );
+		session.remove( customer );
 		session.getTransaction().commit();
 		session.close();
 	}
@@ -80,7 +78,7 @@ public class JpaSpecVersionValueUpdatingTest extends BaseCoreFunctionalTestCase 
 
 		Session session = openSession();
 		session.beginTransaction();
-		session.save( customer );
+		session.persist( customer );
 		session.getTransaction().commit();
 		session.close();
 
@@ -113,9 +111,9 @@ public class JpaSpecVersionValueUpdatingTest extends BaseCoreFunctionalTestCase 
 
 		session = openSession();
 		session.beginTransaction();
-		customer = (Customer) session.load( Customer.class, 1L );
+		customer = session.getReference( Customer.class, 1L );
 		assertEquals( initial, customer.version );
-		session.delete( customer );
+		session.remove( customer );
 		session.getTransaction().commit();
 		session.close();
 	}

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.select;
 
@@ -10,13 +8,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /**
  * The semantic select clause.  Defined as a list of individual selections.
@@ -40,7 +39,7 @@ public class SqmSelectClause extends AbstractSqmNode implements SqmAliasedExpres
 			NodeBuilder nodeBuilder) {
 		super( nodeBuilder );
 		this.distinct = distinct;
-		this.selections = CollectionHelper.arrayList( expectedNumberOfSelections );
+		this.selections = arrayList( expectedNumberOfSelections );
 	}
 
 	@Override

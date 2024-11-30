@@ -1,3 +1,6 @@
+:shared-attributes-dir: ../shared/
+include::{shared-attributes-dir}/url-attributes.adoc[]
+
 [[preface]]
 == Preface
 
@@ -14,32 +17,31 @@ However, unlike many other persistence solutions, Hibernate does not hide the po
 Hibernate may not be the best solution for data-centric applications that only use stored-procedures to implement the business logic in the database, it is most useful with object-oriented domain models and business logic in the Java-based middle-tier.
 However, Hibernate can certainly help you to remove or encapsulate vendor-specific SQL code and will help with the common task of result set translation from a tabular representation to a graph of objects.
 
+[[system-requirements]]
+=== System Requirements
+
+Hibernate {majorMinorVersion} requires at least Java 11 and JDBC 4.2.
+
+[[getting-started]]
+=== Getting Started
+
+include::{shared-attributes-dir}/background.adoc[]
+
+[TIP]
+====
+New users may want to first look at the tutorial-style link:{doc-quick-start-url}[Quick Start] guide.
+
+This User Guide is really more of a reference guide.
+For a more high-level discussion of the most used features of Hibernate, see the link:{doc-introduction-url}[Introduction to Hibernate] guide.
+
+There is also a series of link:{doc-topical-url}[topical guides] providing deep dives into various topics such as logging, compatibility and support, etc.
+====
+
+
 === Get Involved
 
 * Use Hibernate and report any bugs or issues you find. See https://hibernate.org/issuetracker[Issue Tracker] for details.
 * Try your hand at fixing some bugs or implementing enhancements. Again, see https://hibernate.org/issuetracker[Issue Tracker].
-* Engage with the community using mailing lists, forums, IRC, or other ways listed in the https://hibernate.org/community[Community section].
-* Help improve or translate this documentation. Contact us on the developer mailing list if you have interest.
+* Engage with the community using the methods listed in the https://hibernate.org/community[Community section].
+* Help improve this documentation. Contact us on the developer mailing list or Zulip if you have interest.
 * Spread the word. Let the rest of your organization know about the benefits of Hibernate.
-
-== System Requirements
-
-Hibernate 6.0 and later versions require at least Java 11 and JDBC 4.2.
-
-=== Getting Started Guide
-
-New users may want to first look through the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/quickstart/html_single/[Hibernate Getting Started Guide] for basic information as well as tutorials.
-There is also a series of https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/topical/html_single/[topical guides] providing deep dives into various topics.
-
-[NOTE]
-====
-While having a strong background in SQL is not required to use Hibernate, it certainly helps a lot because it all boils down to SQL statements.
-Probably even more important is an understanding of data modeling principles.
-You might want to consider these resources as a good starting point:
-
-* https://en.wikipedia.org/wiki/Data_modeling[Data modeling Wikipedia definition]
-* https://www.agiledata.org/essays/dataModeling101.html[Data Modeling 101]
-
-Understanding the basics of transactions and design patterns such as _Unit of Work_ (<<Bibliography.adoc#PoEAA,PoEAA>>) or _Application Transaction_ are important as well.
-These topics will be discussed in the documentation, but a prior understanding will certainly help.
-====

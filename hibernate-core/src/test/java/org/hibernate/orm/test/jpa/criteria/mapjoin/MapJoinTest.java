@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.criteria.mapjoin;
 
@@ -31,22 +29,22 @@ public class MapJoinTest extends AbstractMetamodelSpecificTest {
 	public void allEntities() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
-		
+
 		CriteriaBuilder cb = em.getCriteriaBuilder();
 		CriteriaQuery<MapEntity> query = cb.createQuery(MapEntity.class);
 
 		Root<MapEntity> entity = query.from(MapEntity.class);
 		MapJoin<MapEntity, String, MapEntityLocal> cname = entity.join(MapEntity_.localized);
-		
+
 		query = query
 			.select(entity)
-			.where( 
-				cb.equal( cname.key(), "en" ) 
+			.where(
+				cb.equal( cname.key(), "en" )
 			)
 			.orderBy( cb.asc( cb.upper( cname.value().get(MapEntityLocal_.shortName) ) ) );
-		
+
 		em.createQuery(query).getResultList();
-		
+
 		em.getTransaction().commit();
 		em.close();
 	}

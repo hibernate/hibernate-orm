@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.naming;
 
@@ -11,10 +9,11 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 
 import org.hibernate.HibernateException;
+
+import static java.util.Comparator.comparing;
 
 /**
  * @author Steve Ebersole
@@ -26,7 +25,7 @@ public class NamingHelper {
 	public static final NamingHelper INSTANCE = new NamingHelper();
 
 	public static NamingHelper withCharset(String charset) {
-		return new NamingHelper(charset);
+		return new NamingHelper( charset );
 	}
 
 	private final String charset;
@@ -48,19 +47,13 @@ public class NamingHelper {
 			Identifier tableName,
 			Identifier referencedTableName,
 			List<Identifier> columnNames) {
-		final Identifier[] columnNamesArray;
-		if ( columnNames == null || columnNames.isEmpty() ) {
-			columnNamesArray = new Identifier[0];
-		}
-		else {
-			columnNamesArray = columnNames.toArray( new Identifier[ columnNames.size() ] );
-		}
-
 		return generateHashedFkName(
 				prefix,
 				tableName,
 				referencedTableName,
-				columnNamesArray
+				columnNames == null || columnNames.isEmpty()
+						? new Identifier[0]
+						: columnNames.toArray( new Identifier[0] )
 		);
 	}
 
@@ -73,28 +66,17 @@ public class NamingHelper {
 			Identifier tableName,
 			Identifier referencedTableName,
 			Identifier... columnNames) {
-		// Use a concatenation that guarantees uniqueness, even if identical names
-		// exist between all table and column identifiers.
-
-		StringBuilder sb = new StringBuilder()
+		// Use a concatenation that guarantees uniqueness, even if identical
+		// names exist between all table and column identifiers.
+		final StringBuilder sb = new StringBuilder()
 				.append( "table`" ).append( tableName ).append( "`" )
 				.append( "references`" ).append( referencedTableName ).append( "`" );
-
 		// Ensure a consistent ordering of columns, regardless of the order
 		// they were bound.
 		// Clone the list, as sometimes a set of order-dependent Column
 		// bindings are given.
-		Identifier[] alphabeticalColumns = columnNames.clone();
-		Arrays.sort(
-				alphabeticalColumns,
-				new Comparator<Identifier>() {
-					@Override
-					public int compare(Identifier o1, Identifier o2) {
-						return o1.getCanonicalName().compareTo( o2.getCanonicalName() );
-					}
-				}
-		);
-
+		final Identifier[] alphabeticalColumns = columnNames.clone();
+		Arrays.sort( alphabeticalColumns, comparing( Identifier::getCanonicalName ) );
 		for ( Identifier columnName : alphabeticalColumns ) {
 			sb.append( "column`" ).append( columnName ).append( "`" );
 		}
@@ -107,26 +89,17 @@ public class NamingHelper {
 	 *
 	 * @return String The generated name
 	 */
-	public String generateHashedConstraintName(String prefix, Identifier tableName, Identifier... columnNames ) {
-		// Use a concatenation that guarantees uniqueness, even if identical names
-		// exist between all table and column identifiers.
-
-		StringBuilder sb = new StringBuilder( "table`" + tableName + "`" );
-
+	public String generateHashedConstraintName(
+			String prefix, Identifier tableName, Identifier... columnNames ) {
+		// Use a concatenation that guarantees uniqueness, even if identical
+		// names exist between all table and column identifiers.
+		final StringBuilder sb = new StringBuilder( "table`" + tableName + "`" );
 		// Ensure a consistent ordering of columns, regardless of the order
 		// they were bound.
 		// Clone the list, as sometimes a set of order-dependent Column
 		// bindings are given.
-		Identifier[] alphabeticalColumns = columnNames.clone();
-		Arrays.sort(
-				alphabeticalColumns,
-				new Comparator<Identifier>() {
-					@Override
-					public int compare(Identifier o1, Identifier o2) {
-						return o1.getCanonicalName().compareTo( o2.getCanonicalName() );
-					}
-				}
-		);
+		final Identifier[] alphabeticalColumns = columnNames.clone();
+		Arrays.sort( alphabeticalColumns, comparing(Identifier::getCanonicalName) );
 		for ( Identifier columnName : alphabeticalColumns ) {
 			sb.append( "column`" ).append( columnName ).append( "`" );
 		}
@@ -139,8 +112,9 @@ public class NamingHelper {
 	 *
 	 * @return String The generated name
 	 */
-	public String generateHashedConstraintName(String prefix, Identifier tableName, List<Identifier> columnNames) {
-		Identifier[] columnNamesArray = new Identifier[columnNames.size()];
+	public String generateHashedConstraintName(
+			String prefix, Identifier tableName, List<Identifier> columnNames) {
+		final Identifier[] columnNamesArray = new Identifier[columnNames.size()];
 		for ( int i = 0; i < columnNames.size(); i++ ) {
 			columnNamesArray[i] = columnNames.get( i );
 		}
@@ -153,23 +127,22 @@ public class NamingHelper {
 	 * that the length of the name will always be smaller than the 30
 	 * character identifier restriction enforced by a few dialects.
 	 *
-	 * @param s The name to be hashed.
+	 * @param name The name to be hashed.
 	 *
 	 * @return String The hashed name.
 	 */
-	public String hashedName(String s) {
+	public String hashedName(String name) {
 		try {
-			MessageDigest md = MessageDigest.getInstance( "MD5" );
-			md.reset();
-			md.update( charset != null ? s.getBytes( charset ) : s.getBytes() );
-			byte[] digest = md.digest();
-			BigInteger bigInt = new BigInteger( 1, digest );
+			final MessageDigest md5 = MessageDigest.getInstance( "MD5" );
+			md5.reset();
+			md5.update( charset != null ? name.getBytes( charset ) : name.getBytes() );
+			final BigInteger bigInt = new BigInteger( 1, md5.digest() );
 			// By converting to base 35 (full alphanumeric), we guarantee
 			// that the length of the name will always be smaller than the 30
 			// character identifier restriction enforced by a few dialects.
 			return bigInt.toString( 35 );
 		}
-		catch ( NoSuchAlgorithmException|UnsupportedEncodingException e ) {
+		catch ( NoSuchAlgorithmException | UnsupportedEncodingException e ) {
 			throw new HibernateException( "Unable to generate a hashed name", e );
 		}
 	}

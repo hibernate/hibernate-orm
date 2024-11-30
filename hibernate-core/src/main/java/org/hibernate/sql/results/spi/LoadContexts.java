@@ -1,22 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.spi;
 
 import org.hibernate.engine.spi.CollectionKey;
-import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.StandardStack;
-import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
-import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 
 /**
@@ -48,28 +41,12 @@ public class LoadContexts {
 		}
 	}
 
-	public LoadingEntityEntry findLoadingEntityEntry(EntityKey entityKey) {
-		return jdbcValuesSourceProcessingStateStack.findCurrentFirst(
-				state -> state.findLoadingEntityLocally( entityKey )
-		);
+	public boolean isLoadingFinished() {
+		return jdbcValuesSourceProcessingStateStack.getRoot() == null;
 	}
 
-	public LoadingCollectionEntry findLoadingCollectionEntry(CollectionKey collectionKey) {
-		return jdbcValuesSourceProcessingStateStack.findCurrentFirst(
-				state -> state.findLoadingCollectionLocally( collectionKey )
-		);
-	}
-
-	public Initializer findInitializer(EntityKey key){
-		return jdbcValuesSourceProcessingStateStack.findCurrentFirst(
-				state -> state.findInitializer( key )
-		);
-	}
-
-	public Initializer findInitializer(EntityUniqueKey key){
-		return jdbcValuesSourceProcessingStateStack.findCurrentFirst(
-				state -> state.findInitializer( key )
-		);
+	public LoadingCollectionEntry findLoadingCollectionEntry(final CollectionKey collectionKey) {
+		return jdbcValuesSourceProcessingStateStack.findCurrentFirstWithParameter( collectionKey, JdbcValuesSourceProcessingState::findLoadingCollectionLocally );
 	}
 
 	/**
@@ -81,14 +58,9 @@ public class LoadContexts {
 		return persistenceContext;
 	}
 
-	private SharedSessionContractImplementor getSession() {
-		return getPersistenceContext().getSession();
-	}
-
-
 	/**
 	 * Release internal state associated with *all* result sets.
-	 * <p/>
+	 * <p>
 	 * This is intended as a "failsafe" process to make sure we get everything
 	 * cleaned up and released.
 	 */

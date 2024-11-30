@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java.spi;
 
@@ -10,19 +8,19 @@ import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.lang.reflect.ParameterizedType;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
+import org.hibernate.MappingException;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.BinaryStream;
-import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.jdbc.internal.ArrayBackedBinaryStream;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.CollectionClassification;
@@ -30,18 +28,20 @@ import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.BasicCollectionType;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.converter.internal.CollectionConverter;
+import org.hibernate.type.ConvertedBasicCollectionType;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.AbstractJavaType;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Descriptor for {@code Collection<T>} handling.
+ * Descriptor for handling persistent collections.
  *
  * @author Christian Beikov
  */
@@ -65,22 +65,21 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators indicators) {
-		final int preferredSqlTypeCodeForArray = indicators.getPreferredSqlTypeCodeForArray();
-		// Always determine the recommended type to make sure this is a valid basic java type
-		final JdbcType recommendedComponentJdbcType = componentJavaType.getRecommendedJdbcType( indicators );
-		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
-		final JdbcType jdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( preferredSqlTypeCodeForArray );
-		if ( jdbcType instanceof ArrayJdbcType ) {
-			return ( (ArrayJdbcType) jdbcType ).resolveType(
-					typeConfiguration,
-					typeConfiguration.getServiceRegistry()
-							.getService( JdbcServices.class )
-							.getDialect(),
-					recommendedComponentJdbcType,
-					ColumnTypeInformation.EMPTY
-			);
+		if ( componentJavaType instanceof UnknownBasicJavaType ) {
+			throw new MappingException("Basic collection has element type '"
+					+ componentJavaType.getTypeName()
+					+ "' which is not a known basic type"
+					+ " (attribute is not annotated '@ElementCollection', '@OneToMany', or '@ManyToMany')");
 		}
-		return indicators.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( preferredSqlTypeCodeForArray );
+		// Always determine the recommended type to make sure this is a valid basic java type
+		// (even though we only use this inside the if block, we want it to throw here if something wrong)
+		final JdbcType recommendedComponentJdbcType = componentJavaType.getRecommendedJdbcType( indicators );
+		return indicators.getTypeConfiguration().getJdbcTypeRegistry().resolveTypeConstructorDescriptor(
+				indicators.getPreferredSqlTypeCodeForArray( recommendedComponentJdbcType.getDefaultSqlTypeCode() ),
+				indicators.getTypeConfiguration().getBasicTypeRegistry().resolve(
+						componentJavaType, recommendedComponentJdbcType ),
+				ColumnTypeInformation.EMPTY
+		);
 	}
 
 	public CollectionSemantics<C, E> getSemantics() {
@@ -88,44 +87,63 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 	}
 
 	@Override
+	public boolean isWider(JavaType<?> javaType) {
+		// Support binding single element value
+		return this == javaType || componentJavaType == javaType;
+	}
+
+	@Override
 	public BasicType<?> resolveType(
 			TypeConfiguration typeConfiguration,
 			Dialect dialect,
 			BasicType<E> elementType,
-			ColumnTypeInformation columnTypeInformation) {
-		final Class<?> elementJavaTypeClass = elementType.getJavaTypeDescriptor().getJavaTypeClass();
-		if ( elementType instanceof BasicPluralType<?, ?> || elementJavaTypeClass != null && elementJavaTypeClass.isArray() ) {
+			ColumnTypeInformation columnTypeInformation,
+			JdbcTypeIndicators stdIndicators) {
+		final JavaType<E> elementJavaType = elementType.getJavaTypeDescriptor();
+		final Class<?> elementJavaTypeClass = elementJavaType.getJavaTypeClass();
+		if ( elementType instanceof BasicPluralType<?, ?>
+				|| elementJavaTypeClass != null && elementJavaTypeClass.isArray() ) {
 			return null;
 		}
 		final BasicCollectionJavaType<C, E> collectionJavaType;
-		if ( componentJavaType == elementType.getJavaTypeDescriptor() ) {
+		if ( componentJavaType == elementJavaType) {
 			collectionJavaType = this;
 		}
 		else {
 			collectionJavaType = new BasicCollectionJavaType<>(
 					(ParameterizedType) getJavaType(),
-					elementType.getJavaTypeDescriptor(),
+					elementJavaType,
 					semantics
 			);
 			// Register the collection type as that will be resolved in the next step
 			typeConfiguration.getJavaTypeRegistry().addDescriptor( collectionJavaType );
 		}
-		return typeConfiguration.standardBasicTypeForJavaType(
-				collectionJavaType.getJavaType(),
-				javaType -> {
-					JdbcType arrayJdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( Types.ARRAY );
-					if ( arrayJdbcType instanceof ArrayJdbcType ) {
-						arrayJdbcType = ( (ArrayJdbcType) arrayJdbcType ).resolveType(
-								typeConfiguration,
-								dialect,
-								elementType,
-								columnTypeInformation
-						);
-					}
-					//noinspection unchecked,rawtypes
-					return new BasicCollectionType( elementType, arrayJdbcType, collectionJavaType );
-				}
-		);
+		final BasicValueConverter<E, ?> valueConverter = elementType.getValueConverter();
+		final int arrayTypeCode = stdIndicators.getPreferredSqlTypeCodeForArray( elementType.getJdbcType().getDefaultSqlTypeCode() );
+		final JdbcType arrayJdbcType =
+				typeConfiguration.getJdbcTypeRegistry()
+						.resolveTypeConstructorDescriptor( arrayTypeCode, elementType, columnTypeInformation );
+		if ( valueConverter == null ) {
+			return typeConfiguration.getBasicTypeRegistry().resolve(
+					collectionJavaType,
+					arrayJdbcType,
+					() -> new BasicCollectionType<>( elementType, arrayJdbcType, collectionJavaType )
+			);
+		}
+		else {
+			final Class<?> arrayClass =
+					Array.newInstance( valueConverter.getRelationalJavaType().getJavaTypeClass(), 0 )
+							.getClass();
+			final JavaType<Object> relationalJavaType =
+					typeConfiguration.getJavaTypeRegistry().resolveDescriptor( arrayClass );
+			//noinspection unchecked,rawtypes
+			return new ConvertedBasicCollectionType(
+					elementType,
+					arrayJdbcType,
+					collectionJavaType,
+					new CollectionConverter( valueConverter, collectionJavaType, relationalJavaType )
+			);
+		}
 	}
 
 	@Override
@@ -141,7 +159,7 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 		sb.append( '[' );
 		do {
 			final E element = iterator.next();
-			sb.append( componentJavaType.toString( element ) );
+			sb.append( componentJavaType.extractLoggableRepresentation( element ) );
 			if ( !iterator.hasNext() ) {
 				return sb.append( ']' ).toString();
 			}
@@ -229,8 +247,7 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 			glue = ",";
 		}
 		sb.append( '}' );
-		final String result = sb.toString();
-		return result;
+		return sb.toString();
 	}
 
 	@Override
@@ -238,7 +255,7 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 		if ( charSequence == null ) {
 			return null;
 		}
-		java.util.ArrayList<String> lst = new java.util.ArrayList<>();
+		java.util.ArrayList<String> list = new java.util.ArrayList<>();
 		StringBuilder sb = null;
 		char lastChar = charSequence.charAt( charSequence.length() - 1 );
 		char firstChar = charSequence.charAt( 0 );
@@ -251,7 +268,7 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 			char c = charSequence.charAt( i );
 			if ( c == '"' ) {
 				if (inquote) {
-					lst.add( sb.toString() );
+					list.add( sb.toString() );
 				}
 				else {
 					sb = new StringBuilder();
@@ -266,7 +283,7 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 				else if ( c == ',' ) {
 					// treat no-value between commas to mean null
 					if ( sb == null ) {
-						lst.add( null );
+						list.add( null );
 					}
 					else {
 						sb = null;
@@ -280,7 +297,7 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 							&& charSequence.charAt( i + 1 ) == 'u'
 							&& charSequence.charAt( i + 2 ) == 'l'
 							&& charSequence.charAt( i + 3 ) == 'l') {
-						lst.add( null );
+						list.add( null );
 						i += 4;
 						continue;
 					}
@@ -288,19 +305,20 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 						break;
 					}
 					throw new IllegalArgumentException( "Cannot parse given string into array of strings."
-																+ " Outside of quote, but neither whitespace, comma, array end, nor null found." );
+							+ " Outside of quote, but neither whitespace, comma, array end, nor null found." );
 				}
 			}
-			else if ( c == '\\' && i + 2 < len && (charSequence.charAt( i + 1 ) == '\\' || charSequence.charAt( i + 1 ) == '"')) {
+			else if ( c == '\\' && i + 2 < len && (charSequence.charAt( i + 1 ) == '\\'
+					|| charSequence.charAt( i + 1 ) == '"') ) {
 				c = charSequence.charAt( ++i );
 			}
 			// If there is ever a null-pointer here, the if-else logic before is incomplete
 			sb.append( c );
 		}
-		final C result = semantics.instantiateRaw( lst.size(), null );
-		for ( int i = 0; i < lst.size(); i ++ ) {
-			if ( lst.get( i ) != null ) {
-				result.add( componentJavaType.fromString( lst.get( i ) ) );
+		final C result = semantics.instantiateRaw( list.size(), null );
+		for ( int i = 0; i < list.size(); i ++ ) {
+			if ( list.get( i ) != null ) {
+				result.add( componentJavaType.fromString( list.get( i ) ) );
 			}
 		}
 		return result;
@@ -323,7 +341,11 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 		else if ( type == BinaryStream.class ) {
 			// BinaryStream can only be requested if the value should be serialized
 			//noinspection unchecked
-			return (X) new BinaryStreamImpl( SerializationHelper.serialize( asArrayList( value ) ) );
+			return (X) new ArrayBackedBinaryStream( SerializationHelper.serialize( asArrayList( value ) ) );
+		}
+		else if ( type == Object[].class ) {
+			//noinspection unchecked
+			return (X) value.toArray();
 		}
 		else if ( Object[].class.isAssignableFrom( type ) ) {
 			final Class<?> preferredJavaTypeClass = type.getComponentType();
@@ -357,10 +379,10 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 			return null;
 		}
 
-		if ( value instanceof java.sql.Array ) {
+		if ( value instanceof java.sql.Array array ) {
 			try {
 				//noinspection unchecked
-				value = (X) ( (java.sql.Array) value ).getArray();
+				value = (X) array.getArray();
 			}
 			catch ( SQLException ex ) {
 				// This basically shouldn't happen unless you've lost connection to the database.
@@ -368,8 +390,7 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 			}
 		}
 
-		if ( value instanceof Object[] ) {
-			final Object[] raw = (Object[]) value;
+		if ( value instanceof Object[] raw ) {
 			final C wrapped = semantics.instantiateRaw( raw.length, null );
 			if ( componentJavaType.getJavaTypeClass().isAssignableFrom( value.getClass().getComponentType() ) ) {
 				for ( Object o : raw ) {
@@ -387,16 +408,17 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 		else if ( value instanceof byte[] ) {
 			// When the value is a byte[], this is a deserialization request
 			//noinspection unchecked
-			return fromCollection( (ArrayList<E>) SerializationHelper.deserialize( (byte[]) value ) );
+			return fromCollection( (ArrayList<E>) SerializationHelper.deserialize( (byte[]) value ), options );
 		}
 		else if ( value instanceof BinaryStream ) {
 			// When the value is a BinaryStream, this is a deserialization request
 			//noinspection unchecked
-			return fromCollection( (ArrayList<E>) SerializationHelper.deserialize( ( (BinaryStream) value ).getBytes() ) );
+			return fromCollection( (ArrayList<E>) SerializationHelper.deserialize( ( (BinaryStream) value ).getBytes() ),
+					options );
 		}
 		else if ( value instanceof Collection<?> ) {
 			//noinspection unchecked
-			return fromCollection( (Collection<E>) value );
+			return fromCollection( (Collection<E>) value, options );
 		}
 		else if ( value.getClass().isArray() ) {
 			final int length = Array.getLength( value );
@@ -404,6 +426,13 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 			for ( int i = 0; i < length; i++ ) {
 				wrapped.add( componentJavaType.wrap( Array.get( value, i ), options ) );
 			}
+			return wrapped;
+		}
+		else if ( getElementJavaType().isInstance( value ) ) {
+			// Support binding a single element as parameter value
+			final C wrapped = semantics.instantiateRaw( 1, null );
+			//noinspection unchecked
+			wrapped.add( (E) value );
 			return wrapped;
 		}
 
@@ -418,19 +447,29 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 		return new ArrayList<>( value );
 	}
 
-	private C fromCollection(Collection<E> value) {
+	private C fromCollection(Collection<E> value, WrapperOptions options) {
+		final C collection;
 		switch ( semantics.getCollectionClassification() ) {
+			case SET:
+				// Keep consistent with CollectionMutabilityPlan::deepCopy
+				//noinspection unchecked
+				collection = (C) new LinkedHashSet<>( value.size() );
+				break;
 			case LIST:
 			case BAG:
-				if ( value instanceof ArrayList<?> ) {
+				if ( value instanceof ArrayList<E> arrayList ) {
+					arrayList.replaceAll( e -> componentJavaType.wrap( e, options ) );
 					//noinspection unchecked
 					return (C) value;
 				}
 			default:
-				final C collection = semantics.instantiateRaw( value.size(), null );
-				collection.addAll( value );
-				return collection;
+				collection = semantics.instantiateRaw( value.size(), null );
+				break;
 		}
+		for ( E e : value ) {
+			collection.add( componentJavaType.wrap( e, options ) );
+		}
+		return collection;
 	}
 
 	private static class CollectionMutabilityPlan<C extends Collection<E>, E> implements MutabilityPlan<C> {

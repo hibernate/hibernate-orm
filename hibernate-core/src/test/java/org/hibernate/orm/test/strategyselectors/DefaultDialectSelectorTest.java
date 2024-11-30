@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.strategyselectors;
 
@@ -21,45 +19,21 @@ public class DefaultDialectSelectorTest {
 	@Test
 	public void verifyAllDialectNamingResolve() {
 		testDialectNamingResolution( DB2Dialect.class );
-		testDialectNamingResolution( DB2390Dialect.class );
-		testDialectNamingResolution( DB2390V8Dialect.class );
-		testDialectNamingResolution( DB2400Dialect.class );
-		testDialectNamingResolution( DB2400V7R3Dialect.class );
-
-		testDialectNamingResolution( DerbyDialect.class );
-		testDialectNamingResolution( DerbyTenFiveDialect.class );
-		testDialectNamingResolution( DerbyTenSixDialect.class );
-		testDialectNamingResolution( DerbyTenSevenDialect.class );
 
 		testDialectNamingResolution( H2Dialect.class );
-		testDialectNamingResolution( HANAColumnStoreDialect.class );
-		testDialectNamingResolution( HANARowStoreDialect.class );
+		testDialectNamingResolution( HANADialect.class );
 		testDialectNamingResolution( HSQLDialect.class );
 
 		testDialectNamingResolution( MySQLDialect.class );
-		testDialectNamingResolution( MySQL5Dialect.class );
-		testDialectNamingResolution( MySQL57Dialect.class );
-		testDialectNamingResolution( MySQL8Dialect.class );
 
 		testDialectNamingResolution( OracleDialect.class );
-		testDialectNamingResolution( Oracle8iDialect.class );
-		testDialectNamingResolution( Oracle9iDialect.class );
-		testDialectNamingResolution( Oracle10gDialect.class );
 
 		testDialectNamingResolution( PostgreSQLDialect.class );
 		testDialectNamingResolution( PostgresPlusDialect.class );
-		testDialectNamingResolution( PostgreSQL81Dialect.class );
-		testDialectNamingResolution( PostgreSQL82Dialect.class );
-		testDialectNamingResolution( PostgreSQL9Dialect.class );
 
 		testDialectNamingResolution( SQLServerDialect.class );
-		testDialectNamingResolution( SQLServer2005Dialect.class );
-		testDialectNamingResolution( SQLServer2008Dialect.class );
 
 		testDialectNamingResolution( SybaseDialect.class );
-		testDialectNamingResolution( Sybase11Dialect.class );
-		testDialectNamingResolution( SybaseASE15Dialect.class );
-		testDialectNamingResolution( SybaseASE157Dialect.class );
 	}
 
 	private void testDialectNamingResolution(final Class<?> dialectClass) {

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal.exec;
 
@@ -11,6 +9,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.net.URL;
 
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 
@@ -39,7 +38,7 @@ public class ScriptSourceInputFromFile extends AbstractScriptSourceInput {
 	}
 
 	@Override
-	protected String getScriptDescription() {
+	public String getScriptDescription() {
 		return file.getAbsolutePath();
 	}
 
@@ -84,6 +83,11 @@ public class ScriptSourceInputFromFile extends AbstractScriptSourceInput {
 		catch (IOException e) {
 			log.warn( "Unable to close file reader for generation script source" );
 		}
+	}
+
+	@Override
+	public boolean containsScript(URL url) {
+		return file.getAbsolutePath().equals( url.getPath() );
 	}
 
 	@Override

@@ -1,28 +1,26 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.lock;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.action.internal.EntityVerifyVersionProcess;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.persister.entity.Lockable;
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * An optimistic locking strategy that verifies that the version hasn't changed (prior to transaction commit).
- * <p/>
- * This strategy is valid for LockMode.OPTIMISTIC
+ * An optimistic locking strategy that simply verifies that the
+ * version has not changed, just before committing the transaction.
+ * <p>
+ * This strategy is valid for {@link LockMode#OPTIMISTIC}.
  *
  * @author Scott Marlow
  * @since 3.5
  */
 public class OptimisticLockingStrategy implements LockingStrategy {
-	private final Lockable lockable;
+	private final EntityPersister lockable;
 	private final LockMode lockMode;
 
 	/**
@@ -31,7 +29,7 @@ public class OptimisticLockingStrategy implements LockingStrategy {
 	 * @param lockable The metadata for the entity to be locked.
 	 * @param lockMode Indicates the type of lock to be acquired.
 	 */
-	public OptimisticLockingStrategy(Lockable lockable, LockMode lockMode) {
+	public OptimisticLockingStrategy(EntityPersister lockable, LockMode lockMode) {
 		this.lockable = lockable;
 		this.lockMode = lockMode;
 		if ( lockMode.lessThan( LockMode.OPTIMISTIC ) ) {
@@ -40,12 +38,12 @@ public class OptimisticLockingStrategy implements LockingStrategy {
 	}
 
 	@Override
-	public void lock(Object id, Object version, Object object, int timeout, SharedSessionContractImplementor session) {
+	public void lock(Object id, Object version, Object object, int timeout, EventSource session) {
 		if ( !lockable.isVersioned() ) {
-			throw new OptimisticEntityLockException( object, "[" + lockMode + "] not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
+			throw new HibernateException( "[" + lockMode + "] not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
 		}
 		// Register the EntityVerifyVersionProcess action to run just prior to transaction commit.
-		( (EventSource) session ).getActionQueue().registerProcess( new EntityVerifyVersionProcess( object ) );
+		session.getActionQueue().registerProcess( new EntityVerifyVersionProcess( object ) );
 	}
 
 	protected LockMode getLockMode() {

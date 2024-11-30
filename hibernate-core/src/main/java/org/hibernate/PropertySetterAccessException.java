@@ -1,19 +1,21 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
 import java.util.Collection;
+
+import org.hibernate.proxy.HibernateProxy;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Steve Ebersole
  */
 public class PropertySetterAccessException extends PropertyAccessException {
 	/**
-	 * Constructs a PropertyAccessException using the specified information.
+	 * Constructs a {@code PropertyAccessException} using the specified information.
 	 *
 	 * @param cause The underlying cause
 	 * @param persistentClass The class which is supposed to contain the property in question
@@ -28,7 +30,7 @@ public class PropertySetterAccessException extends PropertyAccessException {
 			String propertyName,
 			Class<?> expectedType,
 			Object target,
-			Object value) {
+			@Nullable Object value) {
 		super(
 				cause,
 				String.format(
@@ -47,7 +49,7 @@ public class PropertySetterAccessException extends PropertyAccessException {
 	}
 
 	public static String loggablePropertyValueString(Object value) {
-		if ( value instanceof Collection ) {
+		if ( value instanceof Collection || value instanceof HibernateProxy ) {
 			return value.getClass().getSimpleName();
 		}
 		return value.toString();

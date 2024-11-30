@@ -1,19 +1,20 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.spi;
 
 /**
- * Optional contract for Types that would like to be part of the scoping process of the
- * TypeConfiguration, specifically to receive access to the TypeConfiguration it is scoped
- * to.  For additional information on TypeConfiguration scoping, see {@link TypeConfiguration}
- * <p/>
- * Note that it is illegal for a Type to implement TypeConfigurationAware and at the same time
- * be scoped to more than one TypeConfiguration.  Hibernate will enforce this internally
- * which is why {@link #getTypeConfiguration()} is exposed here.
+ * Optional contract for a {@link org.hibernate.type.Type} which is aware
+ * of its scoping to a {@link TypeConfiguration} and which receives access
+ * to the {@code TypeConfiguration} to which it is scoped.
+ * <p>
+ * For additional information about scoping, see {@link TypeConfiguration}.
+ *
+ * @apiNote A {@code Type} which implements {@code TypeConfigurationAware}
+ *          may not be scoped to more than one {@code TypeConfiguration}.
+ *          The method {@link #getTypeConfiguration()} allows this rule
+ *          to be enforced.
  *
  * @author Steve Ebersole
  */

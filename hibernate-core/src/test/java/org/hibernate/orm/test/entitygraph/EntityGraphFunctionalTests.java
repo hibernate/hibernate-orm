@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.entitygraph;
 
@@ -26,7 +24,7 @@ import org.hibernate.graph.GraphParser;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -52,7 +50,7 @@ import static org.hibernate.testing.hamcrest.InitializationCheckMatcher.isNotIni
 public class EntityGraphFunctionalTests {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-13175")
+	@JiraKey( value = "HHH-13175")
 	void testSubsequentSelectFromFind(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -82,9 +80,9 @@ public class EntityGraphFunctionalTests {
 					final User buttercup = new User( "Buttercup", "wishee" );
 					final User humperdink = new User( "Humperdink", "buffoon" );
 
-					session.save( wesley );
-					session.save( buttercup );
-					session.save( humperdink );
+					session.persist( wesley );
+					session.persist( buttercup );
+					session.persist( humperdink );
 
 					final Issue flameSpurt = new Issue( 1, "Flame Spurt", wesley );
 					final Issue lightningSand = new Issue( 2, "Lightning Sand", buttercup );
@@ -94,9 +92,9 @@ public class EntityGraphFunctionalTests {
 					lightningSand.setAssignee( wesley );
 					rous.setAssignee( wesley );
 
-					session.save( flameSpurt );
-					session.save( lightningSand );
-					session.save( rous );
+					session.persist( flameSpurt );
+					session.persist( lightningSand );
+					session.persist( rous );
 
 					flameSpurt.addComment( "There is a popping sound preceding each", wesley );
 					rous.addComment( "I don't think they exist", wesley );

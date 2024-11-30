@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping;
 
@@ -11,8 +9,7 @@ import java.util.function.IntFunction;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -24,46 +21,28 @@ import org.hibernate.sql.results.graph.FetchParent;
 /**
  * Descriptor for foreign-keys
  */
-public interface ForeignKeyDescriptor extends VirtualModelPart, ValueMapping {
-
-	enum Nature {
-		KEY,
-		TARGET;
-
-		public Nature inverse() {
-			return this == KEY ? TARGET : KEY;
-		}
-	}
-
-	interface Side {
-
-		Nature getNature();
-
-		ModelPart getModelPart();
-
-	}
+public interface ForeignKeyDescriptor extends VirtualModelPart, ValuedModelPart {
 
 	String PART_NAME = "{fk}";
 	String TARGET_PART_NAME = "{fk-target}";
+
+	@Override
+	default String getPartName() {
+		return PART_NAME;
+	}
 
 	String getKeyTable();
 
 	String getTargetTable();
 
-	default String getTable(Nature nature) {
-		if ( nature == Nature.KEY ) {
-			return getKeyTable();
-		}
-		else {
-			return getTargetTable();
-		}
-	}
 
-	ModelPart getKeyPart();
+	ValuedModelPart getKeyPart();
 
-	ModelPart getTargetPart();
+	ValuedModelPart getTargetPart();
 
-	default ModelPart getPart(Nature nature) {
+	boolean isKeyPart(ValuedModelPart modelPart);
+
+	default ValuedModelPart getPart(Nature nature) {
 		if ( nature == Nature.KEY ) {
 			return getKeyPart();
 		}
@@ -85,46 +64,73 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValueMapping {
 		}
 	}
 
+	@Override
+	default String getContainingTableExpression() {
+		return getKeyTable();
+	}
+
+	/**
+	 * Compare the 2 values
+	 */
+	int compare(Object key1, Object key2);
+
 	/**
 	 * Create a DomainResult for the referring-side of the fk
+	 * The table group must be the one containing the target.
 	 */
 	DomainResult<?> createKeyDomainResult(
 			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			FetchParent fetchParent, DomainResultCreationState creationState);
+			TableGroup targetTableGroup,
+			FetchParent fetchParent,
+			DomainResultCreationState creationState);
+
+	/**
+	 * Create a DomainResult for the referring-side of the fk
+	 * The table group must be the one containing the target.
+	 * The {@link Nature} is the association side of the foreign key i.e. {@link Association#getSideNature()}.
+	 */
+	DomainResult<?> createKeyDomainResult(
+			NavigablePath navigablePath,
+			TableGroup targetTableGroup,
+			Nature fromSide,
+			FetchParent fetchParent,
+			DomainResultCreationState creationState);
 
 	/**
 	 * Create a DomainResult for the target-side of the fk
+	 * The table group must be the one containing the target
 	 */
 	DomainResult<?> createTargetDomainResult(
 			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			FetchParent fetchParent, DomainResultCreationState creationState);
+			TableGroup targetTableGroup,
+			FetchParent fetchParent,
+			DomainResultCreationState creationState);
 
-	DomainResult<?> createDomainResult(
+	/**
+	 * Create a DomainResult for the referring-side of the fk
+	 * The table group must be the one containing the target.
+	 */
+	@Override
+	<T> DomainResult<T> createDomainResult(
 			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			Nature side,
-			FetchParent fetchParent, DomainResultCreationState creationState);
+			TableGroup targetTableGroup,
+			String resultVariable,
+			DomainResultCreationState creationState);
 
 	Predicate generateJoinPredicate(
 			TableGroup targetSideTableGroup,
 			TableGroup keySideTableGroup,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext);
+			SqlAstCreationState creationState);
 
 	Predicate generateJoinPredicate(
 			TableReference targetSideReference,
 			TableReference keySideReference,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext);
+			SqlAstCreationState creationState);
 
 	boolean isSimpleJoinPredicate(Predicate predicate);
 
 	@Override
-	default String getPartName() {
-		return PART_NAME;
-	}
+	SelectableMapping getSelectable(int columnIndex);
 
 	/**
 	 * Visits the FK "referring" columns
@@ -134,9 +140,16 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValueMapping {
 		return visitKeySelectables( offset, consumer );
 	}
 
-	Object getAssociationKeyFromSide(
+	default Object getAssociationKeyFromSide(
 			Object targetObject,
 			Nature nature,
+			SharedSessionContractImplementor session) {
+		return getAssociationKeyFromSide( targetObject, getSide( nature ), session );
+	}
+
+	Object getAssociationKeyFromSide(
+			Object targetObject,
+			ForeignKeyDescriptor.Side side,
 			SharedSessionContractImplementor session);
 
 	int visitKeySelectables(int offset, SelectableConsumer consumer);
@@ -160,7 +173,30 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValueMapping {
 			IntFunction<SelectableMapping> selectableMappingAccess,
 			MappingModelCreationProcess creationProcess);
 
+	/**
+	 * Return a copy of this foreign key descriptor with the target part as given by the argument.
+	 */
+	ForeignKeyDescriptor withTargetPart(ValuedModelPart targetPart);
+
 	AssociationKey getAssociationKey();
 
 	boolean hasConstraint();
+
+	enum Nature {
+		KEY,
+		TARGET;
+
+		public Nature inverse() {
+			return this == KEY ? TARGET : KEY;
+		}
+	}
+
+	interface Side {
+		Nature getNature();
+		ValuedModelPart getModelPart();
+
+	}
+
+	boolean isEmbedded();
+
 }

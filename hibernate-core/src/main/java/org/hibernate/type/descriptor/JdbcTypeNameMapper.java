@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor;
 
@@ -28,7 +26,6 @@ public final class JdbcTypeNameMapper {
 
 	private static final Map<Integer, String> JDBC_TYPE_MAP = buildJdbcTypeMap( Types.class );
 	private static final Map<Integer, String> SQL_TYPE_MAP = buildJdbcTypeMap( SqlTypes.class );
-	private static final Map<String, Integer> JDBC_TYPE_NAME_MAP = buildJdbcTypeNameMap( Types.class );
 	private static final Map<String, Integer> SQL_TYPE_NAME_MAP = buildJdbcTypeNameMap( SqlTypes.class );
 
 	private static Map<Integer, String> buildJdbcTypeMap(Class<?> typesClass) {
@@ -63,10 +60,10 @@ public final class JdbcTypeNameMapper {
 	}
 
 	/**
-	 * Determine whether the given JDBC type code represents a standard JDBC type ("standard" being those defined on
-	 * {@link java.sql.Types}).
+	 * Determine whether the given JDBC type code represents a standard JDBC type
+	 * ("standard" being those defined on {@link java.sql.Types}).
 	 *
-	 * NOTE : {@link java.sql.Types#OTHER} is also "filtered out" as being non-standard.
+	 * @implNote {@link java.sql.Types#OTHER} is also "filtered out" as being non-standard.
 	 *
 	 * @param typeCode The JDBC type code to check
 	 *
@@ -86,10 +83,11 @@ public final class JdbcTypeNameMapper {
 	}
 
 	/**
-	 * Get the type name as in the static field names defined on {@link java.sql.Types}.  If a type code is not
-	 * recognized, it is reported as {@code UNKNOWN(?)} where '?' is replace with the given type code.
+	 * Get the type name as in the static field names defined on {@link java.sql.Types}.
+	 * If a type code is not recognized, it is reported as {@code UNKNOWN(?)} where '?'
+	 * is replaced with the given type code.
 	 *
-	 * Intended as useful for logging purposes...
+	 * @apiNote Useful for logging.
 	 *
 	 * @param typeCode The type code to find the name for.
 	 *
@@ -104,8 +102,8 @@ public final class JdbcTypeNameMapper {
 	}
 
 	/**
-	 * Get the type code as in the static field names defined on {@link java.sql.Types}.  If a type name is not
-	 * recognized, <code>null</code> is returned.
+	 * Get the type code as in the static field names defined on {@link java.sql.Types}.
+	 * If a type name is not recognized, <code>null</code> is returned.
 	 *
 	 * @param typeName The type name to find the code for.
 	 *

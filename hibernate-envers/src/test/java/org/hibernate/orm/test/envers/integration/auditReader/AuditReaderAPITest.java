@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.auditReader;
 
@@ -16,7 +14,7 @@ import org.hibernate.envers.exception.NotAuditedException;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
@@ -82,7 +80,7 @@ public class AuditReaderAPITest extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-7555" )
+	@JiraKey( value = "HHH-7555" )
 	public void testFindRevisionEntitiesWithoutDeletions() {
 		List<?> revisionInfos = getAuditReader().createQuery()
 				.forRevisionsOfEntity( AuditedTestEntity.class, false )
@@ -92,7 +90,7 @@ public class AuditReaderAPITest extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-7555" )
+	@JiraKey( value = "HHH-7555" )
 	public void testFindRevisionEntitiesWithDeletions() {
 		List<?> revisionInfos = getAuditReader().createQuery()
 				.forRevisionsOfEntity( AuditedTestEntity.class, true )
@@ -102,7 +100,7 @@ public class AuditReaderAPITest extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-7555" )
+	@JiraKey( value = "HHH-7555" )
 	public void testFindRevisionEntitiesNonAuditedEntity() {
 		try {
 			List<?> revisionInfos = getAuditReader().createQuery()

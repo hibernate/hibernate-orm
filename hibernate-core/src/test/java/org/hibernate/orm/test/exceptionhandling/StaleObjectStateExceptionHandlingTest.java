@@ -1,25 +1,24 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.exceptionhandling;
 
-import static org.junit.Assert.fail;
+import org.hibernate.Session;
+import org.hibernate.dialect.H2Dialect;
+
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.junit.Test;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Version;
 
-import org.hibernate.Session;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import static org.junit.Assert.fail;
 
-@TestForIssue(jiraKey = "HHH-12666")
+@JiraKey("HHH-12666")
 @RequiresDialect(H2Dialect.class)
 public class StaleObjectStateExceptionHandlingTest extends BaseExceptionHandlingTest {
 
@@ -92,7 +91,7 @@ public class StaleObjectStateExceptionHandlingTest extends BaseExceptionHandling
 		s = openSession();
 		s.beginTransaction();
 		try {
-			s.update( a );
+			s.merge( a );
 			s.flush();
 			fail( "should have thrown an exception" );
 		}

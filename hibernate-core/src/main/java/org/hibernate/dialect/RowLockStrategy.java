@@ -1,13 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
 /**
- * The strategy for rendering which row to lock with the FOR UPDATE OF clause.
+ * The strategy for rendering which row to lock with the {@code FOR UPDATE OF} clause.
  *
  * @author Christian Beikov
  */

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.query;
 
@@ -11,18 +9,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import jakarta.persistence.ColumnResult;
-import jakarta.persistence.ConstructorResult;
-import jakarta.persistence.EntityResult;
-import jakarta.persistence.FieldResult;
-import jakarta.persistence.SqlResultSetMapping;
 
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
@@ -30,7 +22,6 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.internal.FetchMementoBasicStandard;
 import org.hibernate.query.internal.FetchMementoEntityStandard;
 import org.hibernate.query.internal.ModelPartResultMementoBasicImpl;
@@ -44,8 +35,21 @@ import org.hibernate.query.named.FetchMementoBasic;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.named.ResultMemento;
 import org.hibernate.query.named.ResultMementoInstantiation.ArgumentMemento;
+import org.hibernate.spi.EntityIdentifierNavigablePath;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import jakarta.persistence.ColumnResult;
+import jakarta.persistence.ConstructorResult;
+import jakarta.persistence.EntityResult;
+import jakarta.persistence.FieldResult;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.SqlResultSetMapping;
+
+import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
+import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
+import static org.hibernate.metamodel.mapping.EntityIdentifierMapping.ID_ROLE_NAME;
 
 /**
  * @author Steve Ebersole
@@ -66,54 +70,40 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 	//			(`org.hibernate.query.results.ResultBuilder`) as part of the
 	//			memento for its resolution
 
-	@SuppressWarnings("ForLoopReplaceableByForEach")
-	public static SqlResultSetMappingDescriptor from(
-			SqlResultSetMapping mappingAnnotation,
-			MetadataBuildingContext context) {
-
+	public static SqlResultSetMappingDescriptor from(SqlResultSetMapping mappingAnnotation, String name) {
 		final EntityResult[] entityResults = mappingAnnotation.entities();
 		final ConstructorResult[] constructorResults = mappingAnnotation.classes();
 		final ColumnResult[] columnResults = mappingAnnotation.columns();
 
-		final List<ResultDescriptor> resultDescriptors = CollectionHelper.arrayList(
+		final List<ResultDescriptor> resultDescriptors = arrayList(
 				entityResults.length + columnResults.length + columnResults.length
 		);
 
-		for ( int i = 0; i < entityResults.length; i++ ) {
-			final EntityResult entityResult = entityResults[i];
-			resultDescriptors.add(
-					new EntityResultDescriptor( entityResult, mappingAnnotation, context )
-			);
+		for ( final EntityResult entityResult : entityResults ) {
+			resultDescriptors.add( new EntityResultDescriptor( entityResult ) );
 		}
 
-		for ( int i = 0; i < constructorResults.length; i++ ) {
-			final ConstructorResult constructorResult = constructorResults[i];
-			resultDescriptors.add(
-					new ConstructorResultDescriptor( constructorResult, mappingAnnotation )
-			);
+		for ( final ConstructorResult constructorResult : constructorResults ) {
+			resultDescriptors.add( new ConstructorResultDescriptor( constructorResult, mappingAnnotation ) );
 		}
 
-		for ( int i = 0; i < columnResults.length; i++ ) {
-			final ColumnResult columnResult = columnResults[i];
+		for ( final ColumnResult columnResult : columnResults ) {
 			resultDescriptors.add(
 					new JpaColumnResultDescriptor( columnResult, mappingAnnotation )
 			);
 		}
 
-		return new SqlResultSetMappingDescriptor(
-				mappingAnnotation.name(),
-				resultDescriptors,
-				context
-		);
+		return new SqlResultSetMappingDescriptor( name, resultDescriptors );
+	}
+
+	public static SqlResultSetMappingDescriptor from(SqlResultSetMapping mappingAnnotation) {
+		return from( mappingAnnotation, mappingAnnotation.name() );
 	}
 
 	private final String mappingName;
 	private final List<ResultDescriptor> resultDescriptors;
 
-	private SqlResultSetMappingDescriptor(
-			String mappingName,
-			List<ResultDescriptor> resultDescriptors,
-			MetadataBuildingContext context) {
+	private SqlResultSetMappingDescriptor(String mappingName, List<ResultDescriptor> resultDescriptors) {
 		this.mappingName = mappingName;
 		this.resultDescriptors = resultDescriptors;
 	}
@@ -125,7 +115,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 	@Override
 	public NamedResultSetMappingMemento resolve(ResultSetMappingResolutionContext resolutionContext) {
-		final List<ResultMemento> resultMementos = CollectionHelper.arrayList( resultDescriptors.size() );
+		final List<ResultMemento> resultMementos = arrayList( resultDescriptors.size() );
 
 		resultDescriptors.forEach(
 				resultDescriptor -> resultMementos.add( resultDescriptor.resolve( resolutionContext ) )
@@ -188,21 +178,26 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			this.mappingName = mappingAnnotation.name();
 			this.targetJavaType = constructorResult.targetClass();
 
+			argumentResultDescriptors = interpretArguments( constructorResult, mappingAnnotation );
+		}
+
+		private static List<ArgumentDescriptor> interpretArguments(
+				ConstructorResult constructorResult,
+				SqlResultSetMapping mappingAnnotation) {
 			final ColumnResult[] columnResults = constructorResult.columns();
-			if ( columnResults.length == 0 ) {
+			if ( ArrayHelper.isEmpty( columnResults ) ) {
 				throw new IllegalArgumentException( "ConstructorResult did not define any ColumnResults" );
 			}
 
-			this.argumentResultDescriptors = CollectionHelper.arrayList( columnResults.length );
-			//noinspection ForLoopReplaceableByForEach
-			for ( int i = 0; i < columnResults.length; i++ ) {
-				final ColumnResult columnResult = columnResults[i];
+			final List<ArgumentDescriptor> argumentResultDescriptors = arrayList( columnResults.length );
+			for ( ColumnResult columnResult : columnResults ) {
 				final JpaColumnResultDescriptor argumentResultDescriptor = new JpaColumnResultDescriptor(
 						columnResult,
 						mappingAnnotation
 				);
-				argumentResultDescriptors.add( new ArgumentDescriptor( argumentResultDescriptor ) );
+				argumentResultDescriptors.add(new ArgumentDescriptor(argumentResultDescriptor));
 			}
+			return argumentResultDescriptors;
 		}
 
 		@Override
@@ -232,39 +227,45 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 	 * @see jakarta.persistence.EntityResult
 	 */
 	public static class EntityResultDescriptor implements ResultDescriptor {
-		@SuppressWarnings( { "FieldCanBeLocal", "FieldMayBeFinal", "unused" } )
-		private String resultSetMappingName;
-
 		private final NavigablePath navigablePath;
 		private final String entityName;
 		private final String discriminatorColumn;
+		private final LockModeType lockMode;
 
 		private final Map<String, AttributeFetchDescriptor> explicitFetchMappings;
 
-		public EntityResultDescriptor(
-				EntityResult entityResult,
-				SqlResultSetMapping mappingAnnotation,
-				MetadataBuildingContext context) {
-			this.resultSetMappingName = mappingAnnotation.name();
+		public EntityResultDescriptor(EntityResult entityResult) {
 			this.entityName = entityResult.entityClass().getName();
-			this.discriminatorColumn = entityResult.discriminatorColumn();
-
 			this.navigablePath = new NavigablePath( entityName );
 
-			this.explicitFetchMappings = new HashMap<>();
-			for ( int i = 0; i < entityResult.fields().length; i++ ) {
-				final FieldResult fieldResult = entityResult.fields()[ i ];
-				final AttributeFetchDescriptor existing = explicitFetchMappings.get( fieldResult.name() );
+			this.discriminatorColumn = entityResult.discriminatorColumn();
+			this.lockMode = entityResult.lockMode();
+
+			this.explicitFetchMappings = extractFetchMappings( navigablePath, entityResult );
+		}
+
+		private static Map<String, AttributeFetchDescriptor> extractFetchMappings(
+				NavigablePath navigablePath,
+				EntityResult entityResult) {
+			final FieldResult[] fields = entityResult.fields();
+			final Map<String, AttributeFetchDescriptor> explicitFetchMappings = mapOfSize( fields.length );
+
+			for ( int i = 0; i < fields.length; i++ ) {
+				final FieldResult fieldResult = fields[i];
+				final String fieldName = fieldResult.name();
+				final AttributeFetchDescriptor existing = explicitFetchMappings.get( fieldName );
 				if ( existing != null ) {
 					existing.addColumn( fieldResult );
 				}
 				else {
 					explicitFetchMappings.put(
-							fieldResult.name(),
-							AttributeFetchDescriptor.from( navigablePath, entityName, fieldResult, context )
+							fieldName,
+							AttributeFetchDescriptor.from( navigablePath, navigablePath.getFullPath(), fieldResult )
 					);
 				}
 			}
+
+			return explicitFetchMappings;
 		}
 
 		@Override
@@ -288,7 +289,9 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 			return new ResultMementoEntityJpa(
 					entityDescriptor,
-					LockMode.READ,
+					lockMode == LockModeType.OPTIMISTIC
+							? LockMode.NONE
+							: LockMode.fromJpaLockMode( lockMode ),
 					discriminatorMemento,
 					fetchMementos
 			);
@@ -299,16 +302,12 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 				String discriminatorColumn,
 				NavigablePath entityPath) {
 			final EntityDiscriminatorMapping discriminatorMapping = entityMapping.getDiscriminatorMapping();
-			if ( discriminatorMapping == null ) {
-				return null;
-			}
-
-			if ( discriminatorColumn == null ) {
+			if ( discriminatorMapping == null || discriminatorColumn == null || !entityMapping.hasSubclasses() ) {
 				return null;
 			}
 
 			return new FetchMementoBasicStandard(
-					entityPath.append( EntityDiscriminatorMapping.ROLE_NAME ),
+					entityPath.append( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME ),
 					discriminatorMapping,
 					discriminatorColumn
 			);
@@ -320,8 +319,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		private static AttributeFetchDescriptor from(
 				NavigablePath entityPath,
 				String entityName,
-				FieldResult fieldResult,
-				MetadataBuildingContext context) {
+				FieldResult fieldResult) {
 			return new AttributeFetchDescriptor(
 					entityPath,
 					entityName,
@@ -344,7 +342,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 				String columnName) {
 			this.entityName = entityName;
 			this.propertyPath = propertyPath;
-			this.propertyPathParts = propertyPath.split( "\\." );
+			this.propertyPathParts = StringHelper.split( ".", propertyPath );
 			this.navigablePath = entityPath;
 			this.columnNames = new ArrayList<>();
 			columnNames.add( columnName );
@@ -367,27 +365,20 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		}
 
 		@Override
-		public ResultMemento asResultMemento(
-				NavigablePath path,
-				ResultSetMappingResolutionContext resolutionContext) {
+		public ResultMemento asResultMemento(NavigablePath path, ResultSetMappingResolutionContext resolutionContext) {
 			final RuntimeMetamodels runtimeMetamodels = resolutionContext.getSessionFactory().getRuntimeMetamodels();
 			final EntityMappingType entityMapping = runtimeMetamodels.getEntityMappingType( entityName );
 
 			final ModelPart subPart = entityMapping.findSubPart( propertyPath, null );
 
-			//noinspection StatementWithEmptyBody
-			if ( subPart == null ) {
-				// throw an exception
-			}
-
-			if ( subPart instanceof BasicValuedModelPart ) {
+			final BasicValuedModelPart basicPart = subPart != null ? subPart.asBasicValuedModelPart() : null;
+			if ( basicPart != null ) {
 				assert columnNames.size() == 1;
-				final BasicValuedModelPart basicPart = (BasicValuedModelPart) subPart;
 
 				return new ModelPartResultMementoBasicImpl( path, basicPart, columnNames.get( 0 ) );
 			}
 
-			throw new NotYetImplementedFor6Exception(
+			throw new UnsupportedOperationException(
 					"Only support for basic-valued model-parts have been implemented : " + propertyPath
 					+ " [" + subPart + "]"
 			);
@@ -398,14 +389,25 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			final RuntimeMetamodels runtimeMetamodels = resolutionContext.getSessionFactory().getRuntimeMetamodels();
 			final EntityMappingType entityMapping = runtimeMetamodels.getEntityMappingType( entityName );
 
-			NavigablePath navigablePath = this.navigablePath.append( propertyPathParts[ 0 ] );
 			ModelPart subPart = entityMapping.findSubPart(
-					propertyPathParts[ 0 ],
+					propertyPathParts[0],
 					null
 			);
+			final NavigablePath parentNavigablePath;
+			if ( !subPart.getNavigableRole().getParent().equals( entityMapping.getNavigableRole() )
+					&& subPart.getNavigableRole().getParent().getLocalName().equals( ID_ROLE_NAME ) ) {
+				// The attribute is defined in an ID class, append {id} to navigable path
+				parentNavigablePath = new EntityIdentifierNavigablePath( this.navigablePath, null );
+			}
+			else {
+				parentNavigablePath = this.navigablePath;
+			}
 
+			NavigablePath navigablePath = subPart.isEntityIdentifierMapping() ?
+					new EntityIdentifierNavigablePath( parentNavigablePath, propertyPathParts[0] ) :
+					parentNavigablePath.append( propertyPathParts[0] );
 			for ( int i = 1; i < propertyPathParts.length; i++ ) {
-				if ( ! ( subPart instanceof ModelPartContainer ) ) {
+				if ( !( subPart instanceof ModelPartContainer ) ) {
 					throw new MappingException(
 							String.format(
 									Locale.ROOT,
@@ -414,7 +416,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 							)
 					);
 				}
-				navigablePath = navigablePath.append( propertyPathParts[ i ] );
+				navigablePath = navigablePath.append( propertyPathParts[i] );
 				subPart = ( (ModelPartContainer) subPart ).findSubPart( propertyPathParts[i], null );
 			}
 
@@ -422,10 +424,9 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		}
 
 		private FetchMemento getFetchMemento(NavigablePath navigablePath, ModelPart subPart) {
-			if ( subPart instanceof BasicValuedModelPart ) {
+			final BasicValuedModelPart basicPart = subPart.asBasicValuedModelPart();
+			if ( basicPart != null ) {
 				assert columnNames.size() == 1;
-				final BasicValuedModelPart basicPart = (BasicValuedModelPart) subPart;
-
 				return new FetchMementoBasicStandard( navigablePath, basicPart, columnNames.get( 0 ) );
 			}
 			else if ( subPart instanceof EntityValuedFetchable ) {
@@ -433,10 +434,10 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			}
 			else if( subPart instanceof EmbeddedAttributeMapping ){
 				final ModelPart subPart1 = ( (EmbeddedAttributeMapping) subPart ).findSubPart( propertyPath.substring(
-						propertyPath.indexOf( "." ) + 1), null );
+						propertyPath.indexOf( '.' ) + 1), null );
 				return getFetchMemento( navigablePath,subPart1 );
 			}
-			throw new NotYetImplementedFor6Exception(
+			throw new UnsupportedOperationException(
 					"Only support for basic-valued, entity-valued and embedded model-parts have been implemented : " + propertyPath
 							+ " [" + subPart + "]"
 			);

@@ -12,10 +12,15 @@ import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import org.gradle.api.GradleException;
+import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.tasks.SourceSet;
 
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 
@@ -24,57 +29,34 @@ import org.hibernate.bytecode.enhance.spi.Enhancer;
  */
 public class Helper {
 
-	public static String determineCompileSourceSetName(String name) {
-		return determineCompileNameParts( name )[0];
+	public static ClassLoader toClassLoader(SourceSet sourceSet, Project project) {
+		final List<URL> urls = new ArrayList<>();
+
+		final FileCollection classesDirs = sourceSet.getOutput().getClassesDirs();
+		for ( File classesDir : classesDirs ) {
+			urls.add( toUrl( classesDir ) );
+		}
+
+		final Configuration compileConfig = project
+				.getConfigurations()
+				.getByName( sourceSet.getCompileClasspathConfigurationName() );
+		final Set<File> dependencyFiles = compileConfig.getResolvedConfiguration().getFiles();
+		for ( File dependencyFile : dependencyFiles ) {
+			urls.add( toUrl( dependencyFile ) );
+		}
+
+		return new URLClassLoader( urls.toArray(new URL[0]), Enhancer.class.getClassLoader() );
 	}
 
-	public static String[] determineCompileNameParts(String name) {
-		StringBuilder firstPart = null;
-		StringBuilder secondPart = null;
-
-		boolean processingFirstPart = false;
-		boolean processingSecondPart = false;
-		final char[] nameChars = name.toCharArray();
-		for ( int i = 0; i < nameChars.length; i++ ) {
-			final char nameChar = nameChars[ i ];
-			if ( processingFirstPart ) {
-				if ( Character.isUpperCase( nameChar ) ) {
-					// this is the start of the second-part
-					processingFirstPart = false;
-					processingSecondPart = true;
-					secondPart = new StringBuilder( String.valueOf( Character.toLowerCase( nameChar ) ) );
-				}
-				else {
-					firstPart.append( nameChar );
-				}
-			}
-			else if ( processingSecondPart ) {
-				if ( Character.isUpperCase( nameChar ) ) {
-					throw new RuntimeException( "Unexpected compilation task name : " + name );
-				}
-				else {
-					secondPart.append( nameChar );
-				}
-			}
-			else {
-				if ( Character.isUpperCase( nameChar ) ) {
-					processingFirstPart = true;
-					firstPart = new StringBuilder( String.valueOf( Character.toLowerCase( nameChar ) ) );
-				}
-			}
+	private static URL toUrl(File file) {
+		final URI classesDirUri = file.toURI();
+		try {
+			return classesDirUri.toURL();
 		}
-
-		if ( firstPart == null ) {
-			throw new RuntimeException( "Unexpected compilation task name : " + name );
+		catch (MalformedURLException e) {
+			throw new GradleException( "Unable to resolve classpath entry to URL : " + file.getAbsolutePath(), e );
 		}
-
-		if ( secondPart == null ) {
-			return new String[] { "main", firstPart.toString() };
-		}
-
-		return new String[] { firstPart.toString(), secondPart.toString() };
 	}
-
 
 	public static ClassLoader toClassLoader(FileCollection directories) {
 		final Set<File> files = directories.getFiles();

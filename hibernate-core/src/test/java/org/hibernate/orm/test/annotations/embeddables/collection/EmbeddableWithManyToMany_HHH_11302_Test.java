@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.embeddables.collection;
 
@@ -28,12 +26,12 @@ import jakarta.persistence.Version;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.internal.util.StringHelper;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-11302")
+@JiraKey(value = "HHH-11302")
 public class EmbeddableWithManyToMany_HHH_11302_Test
 		extends AbstractEmbeddableWithManyToManyTest {
 

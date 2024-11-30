@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.where.annotations;
 
@@ -22,12 +20,12 @@ import jakarta.persistence.Table;
 
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Immutable;
-import org.hibernate.annotations.Where;
-import org.hibernate.annotations.WhereJoinTable;
+import org.hibernate.annotations.SQLJoinTableRestriction;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.metamodel.CollectionClassification;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -54,7 +52,7 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 	@Override
 	protected void configure(Configuration configuration) {
 		super.configure( configuration );
-		configuration.setProperty( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG.name() );
+		configuration.setProperty( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG );
 	}
 
 	@Before
@@ -78,6 +76,30 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 									"primary key (ID, CODE) )"
 					).executeUpdate();
 
+					session.createNativeQuery(
+							"create table ASSOCIATION_TABLE( " +
+									"MAIN_ID integer not null, MAIN_CODE varchar(10) not null, " +
+									"ASSOCIATION_ID int not null, ASSOCIATION_CODE varchar(10) not null, " +
+									"primary key (MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE))"
+					).executeUpdate();
+
+					session.createNativeQuery(
+							"create table MATERIAL_RATINGS( " +
+									"MATERIAL_ID integer not null, RATING_ID integer not null," +
+									" primary key (MATERIAL_ID, RATING_ID))"
+					).executeUpdate();
+
+					session.createNativeQuery(
+							"create table BUILDING_RATINGS( " +
+									"BUILDING_ID integer not null, RATING_ID integer not null," +
+									" primary key (BUILDING_ID, RATING_ID))"
+					).executeUpdate();
+				}
+		);
+
+		doInHibernate(
+				this::sessionFactory, session -> {
+
 					session.createNativeQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'plastic', 'MATERIAL' )" )
 							.executeUpdate();
 					session.createNativeQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'house', 'BUILDING' )" )
@@ -92,13 +114,6 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 							.executeUpdate();
 					session.createNativeQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 2, 'medium', 'SIZE' )" )
 							.executeUpdate();
-
-					session.createNativeQuery(
-							"create table ASSOCIATION_TABLE( " +
-									"MAIN_ID integer not null, MAIN_CODE varchar(10) not null, " +
-									"ASSOCIATION_ID int not null, ASSOCIATION_CODE varchar(10) not null, " +
-									"primary key (MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE))"
-					).executeUpdate();
 
 					session.createNativeQuery(
 							"insert into ASSOCIATION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
@@ -128,21 +143,8 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 									"VALUES( 1, 'BUILDING', 1, 'SIZE' )"
 					).executeUpdate();
 
-
-					session.createNativeQuery(
-							"create table MATERIAL_RATINGS( " +
-									"MATERIAL_ID integer not null, RATING_ID integer not null," +
-									" primary key (MATERIAL_ID, RATING_ID))"
-					).executeUpdate();
-
 					session.createNativeQuery(
 							"insert into MATERIAL_RATINGS(MATERIAL_ID, RATING_ID) VALUES( 1, 1 )"
-					).executeUpdate();
-
-					session.createNativeQuery(
-							"create table BUILDING_RATINGS( " +
-									"BUILDING_ID integer not null, RATING_ID integer not null," +
-									" primary key (BUILDING_ID, RATING_ID))"
 					).executeUpdate();
 
 					session.createNativeQuery(
@@ -171,7 +173,7 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12875")
+	@JiraKey( value = "HHH-12875")
 	public void testInitializeFromUniqueAssociationTable() {
 		doInHibernate(
 				this::sessionFactory, session -> {
@@ -198,7 +200,7 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12875")
+	@JiraKey( value = "HHH-12875")
 	public void testInitializeFromNonUniqueAssociationTable() {
 		doInHibernate(
 				this::sessionFactory, session -> {
@@ -261,7 +263,7 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 
 	@Entity( name = "Material" )
 	@Table( name = "MAIN_TABLE" )
-	@Where( clause = "CODE = 'MATERIAL'" )
+	@SQLRestriction( "CODE = 'MATERIAL'" )
 	public static class Material {
 		private int id;
 
@@ -293,7 +295,7 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 				joinColumns = { @JoinColumn( name = "MAIN_ID" ) },
 				inverseJoinColumns = { @JoinColumn( name = "ASSOCIATION_ID" ) }
 		)
-		@WhereJoinTable( clause = "MAIN_CODE='MATERIAL' AND ASSOCIATION_CODE='SIZE'")
+		@SQLJoinTableRestriction("MAIN_CODE='MATERIAL' AND ASSOCIATION_CODE='SIZE'")
 		@Immutable
 		public Set<Size> getSizesFromCombined() {
 			return sizesFromCombined;
@@ -308,8 +310,8 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 				joinColumns = { @JoinColumn( name = "MAIN_ID" ) },
 				inverseJoinColumns = { @JoinColumn( name = "ASSOCIATION_ID" ) }
 		)
-		@WhereJoinTable( clause = "MAIN_CODE='MATERIAL' AND ASSOCIATION_CODE='RATING'" )
-		@Where( clause = "NAME = 'high' or NAME = 'medium'" )
+		@SQLJoinTableRestriction( "MAIN_CODE='MATERIAL' AND ASSOCIATION_CODE='RATING'" )
+		@SQLRestriction( "NAME = 'high' or NAME = 'medium'" )
 		@Immutable
 		public List<Rating> getMediumOrHighRatingsFromCombined() {
 			return mediumOrHighRatingsFromCombined;
@@ -335,7 +337,7 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 
 	@Entity( name = "Building" )
 	@Table( name = "MAIN_TABLE" )
-	@Where( clause = "CODE = 'BUILDING'" )
+	@SQLRestriction( "CODE = 'BUILDING'" )
 	public static class Building {
 		private int id;
 		private String name;
@@ -366,7 +368,7 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 				joinColumns = { @JoinColumn( name = "MAIN_ID" ) },
 				inverseJoinColumns = { @JoinColumn( name = "ASSOCIATION_ID" ) }
 		)
-		@WhereJoinTable( clause = "MAIN_CODE='BUILDING' AND ASSOCIATION_CODE='SIZE'")
+		@SQLJoinTableRestriction("MAIN_CODE='BUILDING' AND ASSOCIATION_CODE='SIZE'")
 		@Immutable
 		public Set<Size> getSizesFromCombined() {
 			return sizesFromCombined;
@@ -381,7 +383,7 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 				joinColumns = { @JoinColumn( name = "MAIN_ID" ) },
 				inverseJoinColumns = { @JoinColumn( name = "ASSOCIATION_ID" ) }
 		)
-		@WhereJoinTable( clause = "MAIN_CODE='BUILDING' AND ASSOCIATION_CODE='RATING'" )
+		@SQLJoinTableRestriction("MAIN_CODE='BUILDING' AND ASSOCIATION_CODE='RATING'" )
 		@Immutable
 		public Set<Rating> getRatingsFromCombined() {
 			return ratingsFromCombined;
@@ -396,7 +398,7 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 				joinColumns = { @JoinColumn( name = "BUILDING_ID") },
 				inverseJoinColumns = { @JoinColumn( name = "RATING_ID" ) }
 		)
-		@Where( clause = "NAME = 'high' or NAME = 'medium'" )
+		@SQLRestriction( "NAME = 'high' or NAME = 'medium'" )
 		@Immutable
 		public List<Rating> getMediumOrHighRatings() {
 			return mediumOrHighRatings;
@@ -408,7 +410,7 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 
 	@Entity( name = "Size" )
 	@Table( name = "MAIN_TABLE" )
-	@Where( clause = "CODE = 'SIZE'" )
+	@SQLRestriction( "CODE = 'SIZE'" )
 	public static class Size {
 		private int id;
 		private String name;
@@ -433,7 +435,7 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 
 	@Entity( name = "Rating" )
 	@Table( name = "MAIN_TABLE" )
-	@Where( clause = "CODE = 'RATING'" )
+	@SQLRestriction( "CODE = 'RATING'" )
 	public static class Rating {
 		private int id;
 		private String name;

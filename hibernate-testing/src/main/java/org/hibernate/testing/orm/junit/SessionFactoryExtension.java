@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.orm.junit;
 
@@ -147,6 +145,7 @@ public class SessionFactoryExtension
 						else if ( ! explicitInspectorClass.equals( StatementInspector.class ) ) {
 							sessionFactoryBuilder.applyStatementInspector( explicitInspectorClass.getConstructor().newInstance() );
 						}
+						sessionFactoryBuilder.applyCollectionsInDefaultFetchGroup( sessionFactoryConfig.applyCollectionsInDefaultFetchGroup() );
 
 						final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) sessionFactoryBuilder.build();
 
@@ -157,7 +156,7 @@ public class SessionFactoryExtension
 						return sessionFactory;
 					}
 					catch (Exception e) {
-						throw new RuntimeException( "Could not build SessionFactory", e );
+						throw new RuntimeException( "Could not build SessionFactory: " + e.getMessage(), e );
 					}
 				};
 			}
@@ -167,10 +166,7 @@ public class SessionFactoryExtension
 			throw new IllegalStateException( "Could not determine SessionFactory producer" );
 		}
 
-		final SessionFactoryScopeImpl sfScope = new SessionFactoryScopeImpl(
-				domainModelScope,
-				producer
-		);
+		final SessionFactoryScopeImpl sfScope = new SessionFactoryScopeImpl( domainModelScope, producer );
 
 		if ( testInstance instanceof SessionFactoryScopeAware ) {
 			( (SessionFactoryScopeAware) testInstance ).injectSessionFactoryScope( sfScope );
@@ -321,7 +317,7 @@ public class SessionFactoryExtension
 		public void inSession(Consumer<SessionImplementor> action) {
 			log.trace( "#inSession(Consumer)" );
 
-			try (SessionImplementor session = (SessionImplementor) getSessionFactory().openSession()) {
+			try (SessionImplementor session = getSessionFactory().openSession()) {
 				log.trace( "Session opened, calling action" );
 				action.accept( session );
 			}
@@ -334,7 +330,7 @@ public class SessionFactoryExtension
 		public <T> T fromSession(Function<SessionImplementor, T> action) {
 			log.trace( "#fromSession(Function)" );
 
-			try (SessionImplementor session = (SessionImplementor) getSessionFactory().openSession()) {
+			try (SessionImplementor session = getSessionFactory().openSession()) {
 				log.trace( "Session opened, calling action" );
 				return action.apply( session );
 			}
@@ -347,7 +343,7 @@ public class SessionFactoryExtension
 		public void inTransaction(Consumer<SessionImplementor> action) {
 			log.trace( "#inTransaction(Consumer)" );
 
-			try (SessionImplementor session = (SessionImplementor) getSessionFactory().openSession()) {
+			try (SessionImplementor session = getSessionFactory().openSession()) {
 				log.trace( "Session opened, calling action" );
 				inTransaction( session, action );
 			}
@@ -360,7 +356,7 @@ public class SessionFactoryExtension
 		public <T> T fromTransaction(Function<SessionImplementor, T> action) {
 			log.trace( "#fromTransaction(Function)" );
 
-			try (SessionImplementor session = (SessionImplementor) getSessionFactory().openSession()) {
+			try (SessionImplementor session = getSessionFactory().openSession()) {
 				log.trace( "Session opened, calling action" );
 				return fromTransaction( session, action );
 			}

@@ -1,14 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
 
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
@@ -42,8 +41,9 @@ public class HypotheticalSetFunction extends AbstractSqmSelfRenderingFunctionDes
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
-		render( sqlAppender, sqlAstArguments, null, Collections.emptyList(), walker );
+		render( sqlAppender, sqlAstArguments, null, Collections.emptyList(), returnType, walker );
 	}
 
 	@Override
@@ -51,8 +51,9 @@ public class HypotheticalSetFunction extends AbstractSqmSelfRenderingFunctionDes
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
 			Predicate filter,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
-		render( sqlAppender, sqlAstArguments, filter, Collections.emptyList(), walker );
+		render( sqlAppender, sqlAstArguments, filter, Collections.emptyList(), returnType, walker );
 	}
 
 	@Override
@@ -61,6 +62,7 @@ public class HypotheticalSetFunction extends AbstractSqmSelfRenderingFunctionDes
 			List<? extends SqlAstNode> sqlAstArguments,
 			Predicate filter,
 			List<SortSpecification> withinGroup,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
 		if ( filter != null && !translator.supportsFilterClause() ) {
 			throw new IllegalArgumentException( "Can't emulate filter clause for inverse distribution function [" + getName() + "]" );

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cascade;
 
@@ -29,7 +27,7 @@ import jakarta.persistence.Version;
 
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -39,11 +37,10 @@ import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@TestForIssue(jiraKey = "HHH-13590")
+@JiraKey(value = "HHH-13590")
 @DomainModel(
 		annotatedClasses = {
 				CascadeMergeToProxyEntityCopyAllowedTest.AbstractEntity.class,
@@ -52,7 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 				CascadeMergeToProxyEntityCopyAllowedTest.Speaker.class
 		}
 )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 @ServiceRegistry(
 		settings = {
 				@Setting(
@@ -67,7 +64,7 @@ public class CascadeMergeToProxyEntityCopyAllowedTest {
 	public void test(SessionFactoryScope scope) {
 		final Event root = (Event) persistEntity( scope, new Event( null, defaultProject ) );
 
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		Event rootFromDB = scope.fromTransaction(
 				session -> {

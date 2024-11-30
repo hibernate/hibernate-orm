@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.from;
 
@@ -63,9 +61,18 @@ public class OneToManyTableGroup extends AbstractColumnReferenceQualifier implem
 	}
 
 	public void registerIndexTableGroup(TableGroupJoin indexTableGroupJoin) {
+		registerIndexTableGroup( indexTableGroupJoin, true );
+	}
+
+	public void registerIndexTableGroup(TableGroupJoin indexTableGroupJoin, boolean nested) {
 		assert this.indexTableGroup == null;
 		this.indexTableGroup = indexTableGroupJoin.getJoinedGroup();
-		addNestedTableGroupJoin( indexTableGroupJoin );
+		if ( nested ) {
+			addNestedTableGroupJoin( indexTableGroupJoin );
+		}
+		else {
+			addTableGroupJoin( indexTableGroupJoin );
+		}
 	}
 
 	@Override
@@ -165,15 +172,13 @@ public class OneToManyTableGroup extends AbstractColumnReferenceQualifier implem
 	}
 
 	@Override
-	protected TableReference getTableReferenceInternal(
+	public TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization,
 			boolean resolve) {
 		final TableReference tableReference = elementTableGroup.getTableReference(
 				navigablePath,
 				tableExpression,
-				allowFkOptimization,
 				resolve
 		);
 		if ( tableReference != null || indexTableGroup == null
@@ -184,7 +189,6 @@ public class OneToManyTableGroup extends AbstractColumnReferenceQualifier implem
 		return indexTableGroup.getTableReference(
 				navigablePath,
 				tableExpression,
-				allowFkOptimization,
 				resolve
 		);
 	}

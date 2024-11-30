@@ -1,14 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.basic;
 
+import java.util.BitSet;
+
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.sql.results.graph.InitializerParent;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.UnfetchedBasicPartResultAssembler;
@@ -17,7 +18,6 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -41,7 +41,8 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 			NavigablePath fetchablePath,
 			BasicValuedModelPart valuedMapping,
 			FetchTiming fetchTiming,
-			DomainResultCreationState creationState) {
+			DomainResultCreationState creationState,
+			boolean unwrapRowProcessingState) {
 		//noinspection unchecked
 		this(
 				valuesArrayPosition,
@@ -51,27 +52,9 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 				(BasicValueConverter<T, ?>) valuedMapping.getJdbcMapping().getValueConverter(),
 				fetchTiming,
 				true,
-				creationState
-		);
-	}
-
-	public BasicFetch(
-			int valuesArrayPosition,
-			FetchParent fetchParent,
-			NavigablePath fetchablePath,
-			BasicValuedModelPart valuedMapping,
-			BasicValueConverter<T, ?> valueConverter,
-			FetchTiming fetchTiming,
-			DomainResultCreationState creationState) {
-		this(
-				valuesArrayPosition,
-				fetchParent,
-				fetchablePath,
-				valuedMapping,
-				valueConverter,
-				fetchTiming,
-				true,
-				creationState
+				creationState,
+				false,
+				unwrapRowProcessingState
 		);
 	}
 
@@ -83,7 +66,9 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 			BasicValueConverter<T, ?> valueConverter,
 			FetchTiming fetchTiming,
 			boolean canBasicPartFetchBeDelayed,
-			DomainResultCreationState creationState) {
+			DomainResultCreationState creationState,
+			boolean coerceResultType,
+			boolean unwrapRowProcessingState) {
 		this.navigablePath = fetchablePath;
 
 		this.fetchParent = fetchParent;
@@ -100,11 +85,12 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 			}
 		}
 		else {
-			this.assembler = new BasicResultAssembler<>(
-					valuesArrayPosition,
-					javaType,
-					valueConverter
-			);
+			if (coerceResultType) {
+				this.assembler = new CoercingResultAssembler<>( valuesArrayPosition, javaType, valueConverter, unwrapRowProcessingState );
+			}
+			else {
+				this.assembler = new BasicResultAssembler<>( valuesArrayPosition, javaType, valueConverter, unwrapRowProcessingState );
+			}
 		}
 	}
 
@@ -139,15 +125,15 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 	}
 
 	@Override
-	public DomainResultAssembler createAssembler(
-			FetchParentAccess parentAccess,
+	public DomainResultAssembler<T> createAssembler(
+			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
 		return assembler;
 	}
 
 	@Override
 	public DomainResultAssembler<T> createResultAssembler(
-			FetchParentAccess parentAccess,
+			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
 		return assembler;
 	}
@@ -156,5 +142,12 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 	public String getResultVariable() {
 		// a basic value used as a fetch will never have a result variable in the domain result
 		return null;
+	}
+
+	@Override
+	public void collectValueIndexesToCache(BitSet valueIndexes) {
+		if ( assembler instanceof BasicResultAssembler ) {
+			valueIndexes.set( ( (BasicResultAssembler<T>) assembler ).valuesArrayPosition );
+		}
 	}
 }

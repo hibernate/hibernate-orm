@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.enhanced;
 
@@ -16,7 +14,7 @@ import org.hibernate.type.Type;
 
 /**
  * Revision number generator has to produce values in ascending order (gaps may occur).
- * <p/>
+ * <p>
  * This generator is only applicable when {@code USE_REVISION_ENTITY_WITH_NATIVE_ID} is {@code false} in the
  * bootstrapping configuration properties.
  *
@@ -32,6 +30,16 @@ public class OrderedSequenceGenerator extends SequenceStyleGenerator {
 			QualifiedName sequenceName,
 			int initialValue,
 			int incrementSize) {
-		return new OrderedSequenceStructure( jdbcEnvironment, sequenceName, initialValue, incrementSize, type.getReturnedClass() );
+		final Object noCacheValue = params.get( "nocache" );
+		final boolean noCache = Boolean.TRUE.equals( noCacheValue )
+				|| noCacheValue instanceof String && Boolean.parseBoolean( noCacheValue.toString() );
+		return new OrderedSequenceStructure(
+				jdbcEnvironment,
+				sequenceName,
+				initialValue,
+				incrementSize,
+				noCache,
+				type.getReturnedClass()
+		);
 	}
 }

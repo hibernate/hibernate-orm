@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.manytomany.defaults;
 
@@ -14,7 +12,7 @@ import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.type.EntityType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -23,12 +21,12 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Tests names generated for @JoinTable and @JoinColumn for unidirectional and bidirectional
- * many-to-many associations using the "legacy JPA" naming strategy, which does not comply
- * with JPA spec in all cases.  See HHH-9390 for more information.
- *
- * NOTE: expected primary table names and join columns are explicit here to ensure that
- * entity names/tables and PK columns are not changed (which would invalidate these test cases).
+ * Tests names generated for {@code @JoinTable} and {@code @JoinColumn} for unidirectional
+ * and bidirectional many-to-many associations using the "legacy JPA" naming strategy, which
+ * does not comply with JPA spec in all cases.  See HHH-9390 for more information.
+ * <p>
+ * Expected primary table names and join columns are explicit here to ensure that entity
+ * names/tables and PK columns are not changed (which would invalidate these test cases).
  *
  * @author Gail Badner
  */
@@ -149,7 +147,7 @@ public class ManyToManyImplicitNamingTest extends BaseNonConfigCoreFunctionalTes
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9390")
+	@JiraKey( value = "HHH-9390")
 	public void testUnidirOwnerEntityNamePrimaryTableOverride() {
 		// Category.clients: associated entity: KnownClient
 		// Category has @Entity(name="CATEGORY") @Table(name="CATEGORY_TAB")
@@ -185,7 +183,7 @@ public class ManyToManyImplicitNamingTest extends BaseNonConfigCoreFunctionalTes
 		);
 		// The default owner and inverse join columns can only be computed if they have PK with 1 column.
 		assertEquals ( 1, ownerCollection.getOwner().getKey().getColumnSpan() );
-		assertEquals( ownerForeignKeyNameExpected, ownerCollection.getKey().getColumnIterator().next().getText() );
+		assertEquals( ownerForeignKeyNameExpected, ownerCollection.getKey().getColumns().get(0).getText() );
 
 		final EntityType associatedEntityType =  (EntityType) ownerCollection.getElement().getType();
 		final PersistentClass associatedPersistentClass =
@@ -197,12 +195,12 @@ public class ManyToManyImplicitNamingTest extends BaseNonConfigCoreFunctionalTes
 			);
 			assertEquals(
 					inverseForeignKeyNameExpected,
-					inverseCollection.getKey().getColumnIterator().next().getText()
+					inverseCollection.getKey().getSelectables().get( 0 ).getText()
 			);
 		}
 		boolean hasOwnerFK = false;
 		boolean hasInverseFK = false;
-		for ( Iterator it=ownerCollection.getCollectionTable().getForeignKeyIterator(); it.hasNext(); ) {
+		for (Iterator it = ownerCollection.getCollectionTable().getForeignKeys().values().iterator(); it.hasNext(); ) {
 			final ForeignKey fk = (ForeignKey) it.next();
 			assertSame( ownerCollection.getCollectionTable(), fk.getTable() );
 			if ( fk.getColumnSpan() > 1 ) {

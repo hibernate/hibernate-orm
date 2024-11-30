@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.spi;
 
@@ -11,7 +9,7 @@ import org.hibernate.boot.Metadata;
 
 /**
  * Service delegate for handling schema creation.
- * <p/>
+ * <p>
  * The actual contract here is kind of convoluted with the design
  * idea of allowing this to work in ORM (JDBC) as well as in non-JDBC
  * environments (OGM, e.g.) simultaneously.

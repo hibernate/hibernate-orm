@@ -1,12 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.stat;
 
 import java.io.Serializable;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Steve Ebersole
@@ -17,7 +17,7 @@ public interface CacheableDataStatistics extends Serializable {
 	/**
 	 * The name of the region where this data is cached.
 	 */
-	String getCacheRegionName();
+	@Nullable String getCacheRegionName();
 
 	/**
 	 * The number of times this data has been into its configured cache region

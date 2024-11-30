@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql.exec.manytoone;
 
@@ -63,8 +61,8 @@ public class EntityWithManyToOneJoinTableTest {
 		entity.setOther( other );
 
 		scope.inTransaction( session -> {
-			session.save( entity );
-			session.save( other );
+			session.persist( entity );
+			session.persist( other );
 		} );
 	}
 
@@ -95,11 +93,11 @@ public class EntityWithManyToOneJoinTableTest {
 		entity.setOther( other );
 
 		scope.inTransaction( session -> {
-			session.save( other );
+			session.persist( other );
 		} );
 
 		scope.inTransaction( session -> {
-			session.save( entity );
+			session.persist( entity );
 		} );
 
 		scope.inTransaction(
@@ -153,7 +151,7 @@ public class EntityWithManyToOneJoinTableTest {
 
 					result.setLazyOther( basicEntity );
 
-					session.save( basicEntity );
+					session.persist( basicEntity );
 				}
 		);
 
@@ -284,7 +282,7 @@ public class EntityWithManyToOneJoinTableTest {
 
 					result.setLazyOther( basicEntity );
 
-					session.save( basicEntity );
+					session.persist( basicEntity );
 				}
 		);
 
@@ -334,8 +332,8 @@ public class EntityWithManyToOneJoinTableTest {
 		entity.setOther( other );
 
 		scope.inTransaction( session -> {
-			session.save( other );
-			session.save( entity );
+			session.persist( other );
+			session.persist( entity );
 		} );
 
 		SimpleEntity anOther = new SimpleEntity(
@@ -351,7 +349,7 @@ public class EntityWithManyToOneJoinTableTest {
 				session -> {
 					final EntityWithManyToOneJoinTable loaded = session.get( EntityWithManyToOneJoinTable.class, 2 );
 					assert loaded != null;
-					session.save( anOther );
+					session.persist( anOther );
 					loaded.setOther( anOther );
 				}
 		);

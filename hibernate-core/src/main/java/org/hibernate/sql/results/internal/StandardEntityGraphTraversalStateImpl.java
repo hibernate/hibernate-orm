@@ -1,16 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.internal;
 
 import java.util.Map;
 import java.util.Objects;
-import jakarta.persistence.metamodel.PluralAttribute;
 
-import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
@@ -18,14 +14,13 @@ import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.sql.results.graph.EntityGraphTraversalState;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
-import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
 
 /**
  * @author Nathan Xu
@@ -33,13 +28,18 @@ import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
 public class StandardEntityGraphTraversalStateImpl implements EntityGraphTraversalState {
 
 	private final GraphSemantic graphSemantic;
-	private GraphImplementor currentGraphContext;
+	private final JpaMetamodel metamodel;
+	private GraphImplementor<?> currentGraphContext;
 
-	public StandardEntityGraphTraversalStateImpl(GraphSemantic graphSemantic, RootGraphImplementor rootGraphImplementor) {
-		Objects.requireNonNull(graphSemantic, "graphSemantic cannot be null");
+	public StandardEntityGraphTraversalStateImpl(
+			GraphSemantic graphSemantic,
+			RootGraphImplementor<?> rootGraphImplementor,
+			JpaMetamodel metamodel) {
+		Objects.requireNonNull( graphSemantic, "graphSemantic cannot be null" );
 		Objects.requireNonNull( rootGraphImplementor, "rootGraphImplementor cannot be null" );
 		this.graphSemantic = graphSemantic;
 		this.currentGraphContext = rootGraphImplementor;
+		this.metamodel = metamodel;
 	}
 
 	@Override
@@ -50,30 +50,23 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 	@Override
 	public TraversalResult traverse(FetchParent fetchParent, Fetchable fetchable, boolean exploreKeySubgraph) {
 		assert !(fetchable instanceof CollectionPart);
-
-		final GraphImplementor previousContextRoot = currentGraphContext;
-		AttributeNodeImplementor attributeNode = null;
-		if ( appliesTo( fetchParent ) ) {
-			attributeNode = currentGraphContext.findAttributeNode( fetchable.getFetchableName() );
+		if ( fetchable instanceof NonAggregatedIdentifierMapping ) {
+			return new TraversalResult( currentGraphContext, new FetchStrategy( FetchTiming.IMMEDIATE, true ) );
 		}
 
+		final GraphImplementor<?> previousContextRoot = currentGraphContext;
+		final AttributeNodeImplementor<?> attributeNode = appliesTo( fetchParent )
+				? currentGraphContext.findAttributeNode( fetchable.getFetchableName() )
+				: null;
+
 		currentGraphContext = null;
-		FetchTiming fetchTiming = null;
-		boolean joined = false;
-
+		final FetchStrategy fetchStrategy;
 		if ( attributeNode != null ) {
-			fetchTiming = FetchTiming.IMMEDIATE;
-			joined = true;
-
-			final Map<Class<?>, SubGraphImplementor> subgraphMap;
+			fetchStrategy = new FetchStrategy( FetchTiming.IMMEDIATE, true );
+			final Map<? extends Class<?>, ? extends SubGraphImplementor<?>> subgraphMap;
 			final Class<?> subgraphMapKey;
-
 			if ( fetchable instanceof PluralAttributeMapping ) {
-				PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
-
-				assert exploreKeySubgraph && isJpaMapCollectionType( pluralAttributeMapping )
-						|| !exploreKeySubgraph && !isJpaMapCollectionType( pluralAttributeMapping );
-
+				final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
 				if ( exploreKeySubgraph ) {
 					subgraphMap = attributeNode.getKeySubGraphMap();
 					subgraphMapKey = getEntityCollectionPartJavaClass( pluralAttributeMapping.getIndexDescriptor() );
@@ -92,17 +85,13 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 				currentGraphContext = subgraphMap.get( subgraphMapKey );
 			}
 		}
-		if ( fetchTiming == null ) {
-			if ( graphSemantic == GraphSemantic.FETCH ) {
-				fetchTiming = FetchTiming.DELAYED;
-				joined = false;
-			}
-			else {
-				fetchTiming = fetchable.getMappedFetchOptions().getTiming();
-				joined = fetchable.getMappedFetchOptions().getStyle() == FetchStyle.JOIN;
-			}
+		else if ( graphSemantic == GraphSemantic.FETCH ) {
+			fetchStrategy = new FetchStrategy( FetchTiming.DELAYED, false );
 		}
-		return new TraversalResult( previousContextRoot, fetchTiming, joined );
+		else {
+			fetchStrategy = null;
+		}
+		return new TraversalResult( previousContextRoot, fetchStrategy );
 	}
 
 	private Class<?> getEntityCollectionPartJavaClass(CollectionPart collectionPart) {
@@ -116,21 +105,7 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 	}
 
 	private boolean appliesTo(FetchParent fetchParent) {
-		if ( currentGraphContext == null || !( fetchParent instanceof EntityResultGraphNode ) ) {
-			return false;
-		}
-
-		final EntityResultGraphNode entityFetchParent = (EntityResultGraphNode) fetchParent;
-		final EntityMappingType entityFetchParentMappingType = entityFetchParent.getEntityValuedModelPart().getEntityMappingType();
-
-		assert currentGraphContext.getGraphedType() instanceof EntityDomainType;
-		final EntityDomainType entityDomainType = (EntityDomainType) currentGraphContext.getGraphedType();
-
-		return entityDomainType.getHibernateEntityName().equals( entityFetchParentMappingType.getEntityName() );
-	}
-
-	private static boolean isJpaMapCollectionType(PluralAttributeMapping pluralAttributeMapping) {
-		return pluralAttributeMapping.getCollectionDescriptor().getCollectionSemantics().getCollectionClassification().toJpaClassification() == PluralAttribute.CollectionType.MAP;
+		return currentGraphContext != null && fetchParent.appliesTo( currentGraphContext, metamodel );
 	}
 
 }

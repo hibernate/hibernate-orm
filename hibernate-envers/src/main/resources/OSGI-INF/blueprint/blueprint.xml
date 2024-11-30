@@ -22,8 +22,8 @@
   <bean id="serviceContributor" class="org.hibernate.envers.boot.internal.EnversServiceContributor"/>
   <service ref="serviceContributor" interface="org.hibernate.service.spi.ServiceContributor"/>
 
-  <bean id="additionalJaxbMappingProducer" class="org.hibernate.envers.boot.internal.AdditionalJaxbMappingProducerImpl"/>
-  <service ref="additionalJaxbMappingProducer" interface="org.hibernate.boot.spi.AdditionalJaxbMappingProducer"/>
+  <bean id="additionalMappingContributor" class="org.hibernate.envers.boot.internal.AdditionalMappingContributorImpl"/>
+  <service ref="additionalMappingContributor" interface="org.hibernate.boot.spi.AdditionalMappingContributor"/>
 
   <bean id="modifiedColumnNamingStrategyRegistrationProducer" class="org.hibernate.envers.boot.internal.ModifiedColumnNamingStrategyRegistrationProvider"/>
   <service ref="modifiedColumnNamingStrategyRegistrationProducer" interface="org.hibernate.boot.registry.selector.StrategyRegistrationProvider"/>

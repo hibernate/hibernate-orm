@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.where.hbm;
 
@@ -14,7 +12,7 @@ import java.util.Set;
 
 import org.hibernate.Hibernate;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -63,6 +61,30 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 									"primary key (ID, CODE) )"
 					).executeUpdate();
 
+					session.createNativeQuery(
+							"create table ASSOCIATION_TABLE( " +
+									"MAIN_ID integer not null, MAIN_CODE varchar(10) not null, " +
+									"ASSOCIATION_ID int not null, ASSOCIATION_CODE varchar(10) not null, " +
+									"primary key (MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE))"
+					).executeUpdate();
+
+					session.createNativeQuery(
+							"create table MATERIAL_RATINGS( " +
+									"MATERIAL_ID integer not null, RATING_ID integer not null," +
+									" primary key (MATERIAL_ID, RATING_ID))"
+					).executeUpdate();
+
+					session.createNativeQuery(
+							"create table BUILDING_RATINGS( " +
+									"BUILDING_ID integer not null, RATING_ID integer not null," +
+									" primary key (BUILDING_ID, RATING_ID))"
+					).executeUpdate();
+				}
+		);
+
+		doInHibernate(
+				this::sessionFactory, session -> {
+
 					session.createNativeQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'plastic', 'MATERIAL' )" )
 							.executeUpdate();
 					session.createNativeQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'house', 'BUILDING' )" )
@@ -77,13 +99,6 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 							.executeUpdate();
 					session.createNativeQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 2, 'medium', 'SIZE' )" )
 							.executeUpdate();
-
-					session.createNativeQuery(
-							"create table ASSOCIATION_TABLE( " +
-									"MAIN_ID integer not null, MAIN_CODE varchar(10) not null, " +
-									"ASSOCIATION_ID int not null, ASSOCIATION_CODE varchar(10) not null, " +
-									"primary key (MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE))"
-					).executeUpdate();
 
 					session.createNativeQuery(
 							"insert into ASSOCIATION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
@@ -113,21 +128,8 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 									"VALUES( 1, 'BUILDING', 1, 'SIZE' )"
 					).executeUpdate();
 
-
-					session.createNativeQuery(
-							"create table MATERIAL_RATINGS( " +
-									"MATERIAL_ID integer not null, RATING_ID integer not null," +
-									" primary key (MATERIAL_ID, RATING_ID))"
-					).executeUpdate();
-
 					session.createNativeQuery(
 							"insert into MATERIAL_RATINGS(MATERIAL_ID, RATING_ID) VALUES( 1, 1 )"
-					).executeUpdate();
-
-					session.createNativeQuery(
-							"create table BUILDING_RATINGS( " +
-									"BUILDING_ID integer not null, RATING_ID integer not null," +
-									" primary key (BUILDING_ID, RATING_ID))"
 					).executeUpdate();
 
 					session.createNativeQuery(
@@ -156,7 +158,7 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12875")
+	@JiraKey( value = "HHH-12875")
 	public void testInitializeFromUniqueAssociationTable() {
 		doInHibernate(
 				this::sessionFactory, session -> {
@@ -183,7 +185,7 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12875")
+	@JiraKey( value = "HHH-12875")
 	public void testInitializeFromNonUniqueAssociationTable() {
 		doInHibernate(
 				this::sessionFactory, session -> {

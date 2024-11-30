@@ -1,32 +1,31 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.spi;
+
+import java.util.concurrent.TimeUnit;
 
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.build.AllowSysOut;
+import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
+import org.hibernate.service.Service;
+import org.hibernate.stat.spi.StatisticsImplementor;
 import org.jboss.logging.Logger;
-
-import java.sql.Statement;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 
 /**
  * Centralize logging for SQL statements.
  *
  * @author Steve Ebersole
  */
-public class SqlStatementLogger {
+public class SqlStatementLogger implements Service {
 	private static final Logger LOG = CoreLogging.logger( "org.hibernate.SQL" );
 	private static final Logger LOG_SLOW = CoreLogging.logger( "org.hibernate.SQL_SLOW" );
 
-	private boolean logToStdout;
-	private boolean format;
+	private final boolean logToStdout;
+	private final boolean format;
 	private final boolean highlight;
 
 	/**
@@ -44,7 +43,7 @@ public class SqlStatementLogger {
 	/**
 	 * Constructs a new {@code SqlStatementLogger} instance.
 	 *
-	 * @param logToStdout Should we log to STDOUT in addition to our internal logger.
+	 * @param logToStdout Should we log to STDOUT in addition to our internal logger?
 	 * @param format Should we format the statements in the console and log
 	 */
 	public SqlStatementLogger(boolean logToStdout, boolean format) {
@@ -54,7 +53,7 @@ public class SqlStatementLogger {
 	/**
 	 * Constructs a new {@code SqlStatementLogger} instance.
 	 *
-	 * @param logToStdout Should we log to STDOUT in addition to our internal logger.
+	 * @param logToStdout Should we log to STDOUT in addition to our internal logger?
 	 * @param format Should we format the statements in the console and log
 	 * @param highlight Should we highlight the statements in the console
 	 */
@@ -65,7 +64,7 @@ public class SqlStatementLogger {
 	/**
 	 * Constructs a new {@code SqlStatementLogger} instance.
 	 *
-	 * @param logToStdout Should we log to STDOUT in addition to our internal logger.
+	 * @param logToStdout Should we log to STDOUT in addition to our internal logger?
 	 * @param format Should we format the statements in the console and log
 	 * @param highlight Should we highlight the statements in the console
 	 * @param logSlowQuery Should we logs query which executed slower than specified milliseconds. 0 - disabled.
@@ -112,19 +111,22 @@ public class SqlStatementLogger {
 	 */
 	@AllowSysOut
 	public void logStatement(String statement, Formatter formatter) {
-		if ( logToStdout || LOG.isDebugEnabled() ) {
-			try {
-				if ( format ) {
-					statement = formatter.format( statement );
-				}
-				if ( highlight ) {
-					statement = FormatStyle.HIGHLIGHT.getFormatter().format( statement );
-				}
+		if ( !logToStdout && !LOG.isDebugEnabled() ) {
+			return;
+		}
+
+		try {
+			if ( format ) {
+				statement = formatter.format( statement );
 			}
-			catch (RuntimeException ex) {
-				LOG.warn( "Couldn't format statement", ex );
+			if ( highlight ) {
+				statement = FormatStyle.HIGHLIGHT.getFormatter().format( statement );
 			}
 		}
+		catch (RuntimeException ex) {
+			LOG.warn( "Couldn't format statement", ex );
+		}
+
 		LOG.debug( statement );
 		if ( logToStdout ) {
 			String prefix = highlight ? "\u001b[35m[Hibernate]\u001b[0m " : "Hibernate: ";
@@ -135,30 +137,10 @@ public class SqlStatementLogger {
 	/**
 	 * Log a slow SQL query
 	 *
-	 * @param statement SQL statement.
-	 * @param startTimeNanos Start time in nanoseconds.
-	 */
-	public void logSlowQuery(Statement statement, long startTimeNanos) {
-		logSlowQuery( statement::toString, startTimeNanos );
-	}
-
-	/**
-	 * Log a slow SQL query
-	 *
 	 * @param sql The SQL query.
 	 * @param startTimeNanos Start time in nanoseconds.
 	 */
-	@AllowSysOut
-	public void logSlowQuery(String sql, long startTimeNanos) {
-		logSlowQuery( () -> sql, startTimeNanos );
-	}
-
-	/**
-	 * @param sqlSupplier Supplier to generate The SQL query.
-	 * @param startTimeNanos Start time in nanoseconds.
-	 */
-	@AllowSysOut
-	private void logSlowQuery(Supplier<String> sqlSupplier, long startTimeNanos) {
+	public void logSlowQuery(final String sql, final long startTimeNanos, final JdbcSessionContext context) {
 		if ( logSlowQuery < 1 ) {
 			return;
 		}
@@ -166,14 +148,30 @@ public class SqlStatementLogger {
 			throw new IllegalArgumentException( "startTimeNanos [" + startTimeNanos + "] should be greater than 0" );
 		}
 
-		long queryExecutionMillis = TimeUnit.NANOSECONDS.toMillis( System.nanoTime() - startTimeNanos );
+		final long queryExecutionMillis = elapsedFrom( startTimeNanos );
 
 		if ( queryExecutionMillis > logSlowQuery ) {
-			String logData = "SlowQuery: " + queryExecutionMillis + " milliseconds. SQL: '" + sqlSupplier.get() + "'";
-			LOG_SLOW.info( logData );
-			if ( logToStdout ) {
-				System.out.println( logData );
+			logSlowQueryInternal( context, queryExecutionMillis, sql );
+		}
+	}
+
+	private static long elapsedFrom(final long startTimeNanos) {
+		return TimeUnit.NANOSECONDS.toMillis( System.nanoTime() - startTimeNanos );
+	}
+
+	@AllowSysOut
+	private void logSlowQueryInternal(final JdbcSessionContext context, final long queryExecutionMillis, final String sql) {
+		final String logData = "Slow query took " + queryExecutionMillis + " milliseconds [" + sql + "]";
+		LOG_SLOW.info( logData );
+		if ( logToStdout ) {
+			System.out.println( logData );
+		}
+		if ( context != null ) {
+			final StatisticsImplementor statisticsImplementor = context.getStatistics();
+			if ( statisticsImplementor != null && statisticsImplementor.isStatisticsEnabled() ) {
+				statisticsImplementor.slowQuery( sql, queryExecutionMillis );
 			}
 		}
 	}
+
 }

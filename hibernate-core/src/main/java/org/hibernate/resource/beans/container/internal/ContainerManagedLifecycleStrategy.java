@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.beans.container.internal;
 
@@ -20,10 +18,10 @@ import org.jboss.logging.Logger;
 /**
  * A {@link BeanLifecycleStrategy} to use when CDI compliance is required
  * (i.e. when the bean lifecycle is to be managed by the CDI runtime, not the JPA runtime).
- *
+ * <p>
  * The main characteristic of this strategy is that every create/destroy operation is delegated
  * to the CDI runtime.
- *
+ * <p>
  * In particular, @Singleton-scoped or @ApplicationScoped beans are retrieved from the CDI context,
  * and are not duplicated, in contrast to {@link JpaCompliantLifecycleStrategy}.
  */
@@ -89,16 +87,16 @@ public class ContainerManagedLifecycleStrategy implements BeanLifecycleStrategy 
 			}
 
 			try {
-				this.instance = resolveContainerInstance();
-				this.beanInstance = this.instance.get();
+				instance = resolveContainerInstance();
+				beanInstance = instance.get();
 			}
 			catch (NotYetReadyException e) {
 				throw e;
 			}
 			catch (Exception e) {
 				log.debug( "Error resolving CDI bean - using fallback" );
-				this.beanInstance = produceFallbackInstance();
-				this.instance = null;
+				beanInstance = produceFallbackInstance();
+				instance = null;
 			}
 
 			this.beanManager = null;
@@ -154,8 +152,8 @@ public class ContainerManagedLifecycleStrategy implements BeanLifecycleStrategy 
 				root = beanManager.createInstance();
 			}
 			catch (Exception e) {
-				// this indicates that the BeanManager is not yet ready to use, which
-				// should be consider an error
+				// this indicates that the BeanManager is not yet ready to use,
+				// which should be considered an error
 				throw new NotYetReadyException( e );
 			}
 
@@ -186,15 +184,14 @@ public class ContainerManagedLifecycleStrategy implements BeanLifecycleStrategy 
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		protected Instance<B> resolveContainerInstance() {
-			final Instance root;
+			final Instance<Object> root;
 			try {
 				root = beanManager.createInstance();
 			}
 			catch (Exception e) {
-				// this indicates that the BeanManager is not yet ready to use, which
-				// should be consider an error
+				// this indicates that the BeanManager is not yet ready to use,
+				// which should be considered an error
 				throw new NotYetReadyException( e );
 			}
 

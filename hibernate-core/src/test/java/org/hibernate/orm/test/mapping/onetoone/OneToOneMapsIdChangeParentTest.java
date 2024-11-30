@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.onetoone;
 
@@ -12,9 +10,9 @@ import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.persister.entity.AbstractEntityPersister;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.persister.entity.mutation.UpdateCoordinatorStandard;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -24,13 +22,15 @@ import org.junit.jupiter.api.Test;
 
 import org.jboss.logging.Logger;
 
+import java.lang.invoke.MethodHandles;
+
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-13228")
+@JiraKey(value = "HHH-13228")
 @Jpa(
 		annotatedClasses = {
 				OneToOneMapsIdChangeParentTest.Parent.class,
@@ -42,8 +42,9 @@ public class OneToOneMapsIdChangeParentTest {
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
 			Logger.getMessageLogger(
+					MethodHandles.lookup(),
 					CoreMessageLogger.class,
-					AbstractEntityPersister.class.getName()
+					UpdateCoordinatorStandard.class.getName()
 			)
 	);
 

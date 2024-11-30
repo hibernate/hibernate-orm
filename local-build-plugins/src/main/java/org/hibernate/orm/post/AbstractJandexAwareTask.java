@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.List;
 import java.util.TreeSet;
-import javax.inject.Inject;
+import java.util.function.Consumer;
 
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.RegularFile;
@@ -34,34 +34,36 @@ import static org.hibernate.orm.post.ReportGenerationPlugin.TASK_GROUP_NAME;
 /**
  * @author Steve Ebersole
  */
-public class AbstractJandexAwareTask extends DefaultTask {
-	private final IndexManager indexManager;
-	private final Provider<RegularFile> reportFileReferenceAccess;
+public abstract class AbstractJandexAwareTask extends DefaultTask {
+	private final Provider<IndexManager> indexManager;
 
-	@Inject
-	public AbstractJandexAwareTask(IndexManager indexManager, Provider<RegularFile> reportFileReferenceAccess) {
-		this.indexManager = indexManager;
-		this.reportFileReferenceAccess = reportFileReferenceAccess;
+	public AbstractJandexAwareTask() {
 		setGroup( TASK_GROUP_NAME );
+
+		this.indexManager = getProject().provider( () -> getProject().getExtensions().getByType( IndexManager.class ) );
+		getInputs().property( "version", getProject().getExtensions().getByName( "ormVersion" ) );
 	}
 
 	@Internal
+	protected abstract Provider<RegularFile> getTaskReportFileReference();
+
+	@Internal
 	protected IndexManager getIndexManager() {
-		return indexManager;
+		return indexManager.get();
 	}
 
 	@InputFile
 	public Provider<RegularFile> getIndexFileReference() {
-		return indexManager.getIndexFileReferenceAccess();
+		return indexManager.get().getIndexFileReferenceAccess();
 	}
 
 	@OutputFile
-	public Provider<RegularFile> getReportFileReferenceAccess() {
-		return reportFileReferenceAccess;
+	public Provider<RegularFile> getReportFileReference() {
+		return getTaskReportFileReference();
 	}
 
 	protected File prepareReportFile() {
-		final File reportFile = getReportFileReferenceAccess().get().getAsFile();
+		final File reportFile = getReportFileReference().get().getAsFile();
 
 		if ( reportFile.getParentFile().exists() ) {
 			if ( reportFile.exists() ) {
@@ -89,16 +91,24 @@ public class AbstractJandexAwareTask extends DefaultTask {
 	}
 
 	protected void processAnnotations(DotName annotationName, TreeSet<Inclusion> inclusions) {
-		final Index index = getIndexManager().getIndex();
-		final List<AnnotationInstance> usages = index.getAnnotations( annotationName );
+		processAnnotations( inclusions::add, annotationName );
+	}
 
-		usages.forEach( (usage) -> {
-			final AnnotationTarget usageLocation = usage.target();
-			final Inclusion inclusion = determinePath( usageLocation );
-			if ( inclusion != null ) {
-				inclusions.add( inclusion );
-			}
-		} );
+	protected void processAnnotations(Consumer<Inclusion> inclusions, DotName... annotationNames) {
+		final Index index = getIndexManager().getIndex();
+
+		for ( int i = 0; i < annotationNames.length; i++ ) {
+			final DotName annotationName = annotationNames[ i ];
+			final List<AnnotationInstance> usages = index.getAnnotations( annotationName );
+
+			usages.forEach( (usage) -> {
+				final AnnotationTarget usageLocation = usage.target();
+				final Inclusion inclusion = determinePath( usageLocation );
+				if ( inclusion != null ) {
+					inclusions.accept( inclusion );
+				}
+			} );
+		}
 	}
 
 	protected void writeReport(TreeSet<Inclusion> inclusions) {
@@ -116,7 +126,13 @@ public class AbstractJandexAwareTask extends DefaultTask {
 		}
 	}
 
+	protected void writeReportHeader(OutputStreamWriter fileWriter) {
+		// by default, nothing to do
+	}
+
 	private void writeReport(TreeSet<Inclusion> inclusions, OutputStreamWriter fileWriter) {
+		writeReportHeader( fileWriter );
+
 		String previousPath = null;
 		for ( Inclusion inclusion : inclusions ) {
 			if ( previousPath != null && inclusion.getPath().startsWith( previousPath ) ) {

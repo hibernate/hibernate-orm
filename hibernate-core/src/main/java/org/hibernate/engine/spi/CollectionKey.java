@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
@@ -11,9 +9,12 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Uniquely identifies a collection instance in a particular session.
@@ -23,7 +24,7 @@ import org.hibernate.type.Type;
 public final class CollectionKey implements Serializable {
 	private final String role;
 	private final Object key;
-	private final Type keyType;
+	private final @Nullable Type keyType;
 	private final SessionFactoryImplementor factory;
 	private final int hashCode;
 
@@ -31,17 +32,20 @@ public final class CollectionKey implements Serializable {
 		this(
 				persister.getRole(),
 				key,
-				persister.getKeyType(),
+				persister.getKeyType().getTypeForEqualsHashCode(),
 				persister.getFactory()
 		);
 	}
 
 	private CollectionKey(
 			String role,
-			Object key,
-			Type keyType,
+			@Nullable Object key,
+			@Nullable Type keyType,
 			SessionFactoryImplementor factory) {
 		this.role = role;
+		if ( key == null ) {
+			throw new AssertionFailure( "null identifier for collection of role (" + role + ")" );
+		}
 		this.key = key;
 		this.keyType = keyType;
 		this.factory = factory;
@@ -52,7 +56,7 @@ public final class CollectionKey implements Serializable {
 	private int generateHashCode() {
 		int result = 17;
 		result = 37 * result + role.hashCode();
-		result = 37 * result + keyType.getHashCode( key, factory );
+		result = 37 * result + ( keyType == null ? key.hashCode() : keyType.getHashCode( key, factory ) );
 		return result;
 	}
 
@@ -73,17 +77,18 @@ public final class CollectionKey implements Serializable {
 	}
 
 	@Override
-	public boolean equals(Object other) {
+	public boolean equals(final @Nullable Object other) {
 		if ( this == other ) {
 			return true;
 		}
-		if ( other == null || getClass() != other.getClass() ) {
+		if ( other == null || CollectionKey.class != other.getClass() ) {
 			return false;
 		}
 
 		final CollectionKey that = (CollectionKey) other;
 		return that.role.equals( role )
-				&& keyType.isEqual( that.key, key, factory );
+				&& ( this.key == that.key ||
+					keyType == null ? this.key.equals( that.key ) : keyType.isEqual( this.key, that.key, factory ) );
 	}
 
 	@Override
@@ -122,7 +127,8 @@ public final class CollectionKey implements Serializable {
 				(String) ois.readObject(),
 				ois.readObject(),
 				(Type) ois.readObject(),
-				(session == null ? null : session.getFactory())
+				// Should never be able to be null
+				session.getFactory()
 		);
 	}
 }

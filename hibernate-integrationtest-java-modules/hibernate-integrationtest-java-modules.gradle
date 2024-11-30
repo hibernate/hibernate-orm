@@ -14,15 +14,17 @@ apply from: rootProject.file( 'gradle/java-module.gradle' )
 java.modularity.inferModulePath = true
 
 
-// Checkstyle fails for module-info
-checkstyleMain.exclude '**/module-info.java'
-
 dependencies {
 	api project( ':hibernate-core' )
 	api project( ':hibernate-envers' )
+	implementation project( ':hibernate-scan-jandex' )
+	//Provide the jakarta.cdi module, as it's required by module jakarta.transaction
+	//but not provided as transitive dependency of Narayana.
+	testRuntimeOnly( jakartaLibs.cdi )
+	testRuntimeOnly( jakartaLibs.interceptors )
 }
 
 test {
-	useJUnit()
+	useJUnitPlatform()
 }
 

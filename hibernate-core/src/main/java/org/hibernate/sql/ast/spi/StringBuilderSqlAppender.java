@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.spi;
 
@@ -11,7 +9,7 @@ package org.hibernate.sql.ast.spi;
  */
 public class StringBuilderSqlAppender implements SqlAppender {
 
-	private final StringBuilder sb;
+	protected final StringBuilder sb;
 
 	public StringBuilderSqlAppender() {
 		this(new StringBuilder());
@@ -21,14 +19,18 @@ public class StringBuilderSqlAppender implements SqlAppender {
 		this.sb = sb;
 	}
 
+	public StringBuilder getStringBuilder() {
+		return sb;
+	}
+
 	@Override
 	public void appendSql(String fragment) {
-		sb.append( fragment );
+		append( fragment );
 	}
 
 	@Override
 	public void appendSql(char fragment) {
-		sb.append( fragment );
+		append( fragment );
 	}
 
 	@Override
@@ -48,17 +50,20 @@ public class StringBuilderSqlAppender implements SqlAppender {
 
 	@Override
 	public Appendable append(CharSequence csq) {
-		return sb.append( csq );
+		sb.append( csq );
+		return this;
 	}
 
 	@Override
 	public Appendable append(CharSequence csq, int start, int end) {
-		return sb.append( csq, start, end );
+		sb.append( csq, start, end );
+		return this;
 	}
 
 	@Override
 	public Appendable append(char c) {
-		return sb.append( c );
+		sb.append( c );
+		return this;
 	}
 
 	@Override

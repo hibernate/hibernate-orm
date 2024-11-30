@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.collection.spi;
 
@@ -25,7 +23,6 @@ import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.engine.spi.TypedValue;
@@ -36,11 +33,14 @@ import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.pretty.MessageHelper;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 
 /**
  * Base class implementing {@link PersistentCollection}
@@ -58,16 +58,16 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 
 	private transient List<DelayedOperation<E>> operationQueue;
 	private transient boolean directlyAccessible;
-	private Object owner;
+	private @Nullable Object owner;
 	private int cachedSize = -1;
 
-	private String role;
-	private Object key;
+	private @Nullable String role;
+	private @Nullable Object key;
 	// collections detect changes made via their public interface and mark
 	// themselves as dirty as a performance optimization
 	private boolean dirty;
 	protected boolean elementRemoved;
-	private Serializable storedSnapshot;
+	private @Nullable Serializable storedSnapshot;
 
 	private String sessionFactoryUuid;
 	private boolean allowLoadOutsideTransaction;
@@ -84,12 +84,12 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	}
 
 	@Override
-	public final String getRole() {
+	public final @Nullable String getRole() {
 		return role;
 	}
 
 	@Override
-	public final Object getKey() {
+	public final @Nullable Object getKey() {
 		return key;
 	}
 
@@ -120,7 +120,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	}
 
 	@Override
-	public final Serializable getStoredSnapshot() {
+	public final @Nullable Serializable getStoredSnapshot() {
 		return storedSnapshot;
 	}
 
@@ -147,9 +147,8 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 			else {
 				return withTemporarySessionIfNeeded(
 						() -> {
-							final CollectionEntry entry = session.getPersistenceContextInternal()
-									.getCollectionEntry(this);
-
+							final CollectionEntry entry =
+									session.getPersistenceContextInternal().getCollectionEntry( this );
 							if ( entry != null ) {
 								final CollectionPersister persister = entry.getLoadedPersister();
 								if ( persister.isExtraLazy() ) {
@@ -174,22 +173,24 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		return false;
 	}
 
-	public int  getSize() {
+	public int getSize() {
 		if ( cachedSize>=0 ) {
 			return cachedSize;
 		}
-		CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry(this);
-		if ( entry == null ) {
-			throwLazyInitializationExceptionIfNotConnected();
-			throwLazyInitializationException("collection not associated with session");
-			throw new AssertionFailure("impossible");
-		}
 		else {
-			if ( hasQueuedOperations() ) {
-				session.flush();
+			final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( this );
+			if ( entry == null ) {
+				throwLazyInitializationExceptionIfNotConnected();
+				throwLazyInitializationException("collection not associated with session");
+				throw new AssertionFailure("impossible");
 			}
-			cachedSize = entry.getLoadedPersister().getSize( entry.getLoadedKey(), session );
-			return cachedSize;
+			else {
+				if ( hasQueuedOperations() ) {
+					session.flush();
+				}
+				cachedSize = entry.getLoadedPersister().getSize( entry.getLoadedKey(), session );
+				return cachedSize;
+			}
 		}
 	}
 
@@ -254,10 +255,10 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 				session.beginTransaction();
 			}
 
-			final CollectionPersister collectionDescriptor = session.getSessionFactory()
-					.getRuntimeMetamodels()
-					.getMappingMetamodel()
-					.getCollectionDescriptor( getRole() );
+			final CollectionPersister collectionDescriptor =
+					session.getSessionFactory()
+							.getMappingMetamodel()
+							.getCollectionDescriptor( getRole() );
 			session.getPersistenceContextInternal().addUninitializedDetachedCollection( collectionDescriptor, this );
 		}
 
@@ -282,11 +283,13 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 				}
 			}
 			else {
-				/*
-				 Whenever the collection lazy loading is triggered during the loading process,
-				 closing the connection will cause an error when RowProcessingStateStandardImpl#next() will be called.
-				 */
-				if ( !session.isTransactionInProgress() && session.getPersistenceContext().isLoadFinished() ) {
+				// Whenever the collection lazy loading is triggered during the loading process,
+				// closing the connection will cause an error when RowProcessingStateStandardImpl#next() will be called.
+				final PersistenceContext persistenceContext = session.getPersistenceContext();
+				if ( !session.isTransactionInProgress()
+						&& ( !persistenceContext.hasLoadContext()
+							|| persistenceContext.hasLoadContext()
+								&& persistenceContext.getLoadContexts().isLoadingFinished() ) ) {
 					session.getJdbcCoordinator().afterTransaction();
 				}
 			}
@@ -298,8 +301,8 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 			throwLazyInitializationException( "SessionFactory UUID not known to create temporary Session for loading" );
 		}
 
-		final SessionFactoryImplementor sf = SessionFactoryRegistry.INSTANCE.getSessionFactory( sessionFactoryUuid );
-		final SharedSessionContractImplementor session = (SharedSessionContractImplementor) sf.openSession();
+		final SharedSessionContractImplementor session =
+				SessionFactoryRegistry.INSTANCE.getSessionFactory( sessionFactoryUuid ).openSession();
 		session.getPersistenceContextInternal().setDefaultReadOnly( true );
 		session.setHibernateFlushMode( FlushMode.MANUAL );
 		return session;
@@ -309,7 +312,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		if ( !initialized ) {
 			return withTemporarySessionIfNeeded(
 					() -> {
-						final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry(this);
+						final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( this );
 						final CollectionPersister persister = entry.getLoadedPersister();
 						if ( persister.isExtraLazy() ) {
 							if ( hasQueuedOperations() ) {
@@ -331,7 +334,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		if ( !initialized ) {
 			return withTemporarySessionIfNeeded(
 					() -> {
-						final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry(this);
+						final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( this );
 						final CollectionPersister persister = entry.getLoadedPersister();
 						if ( persister.isExtraLazy() ) {
 							if ( hasQueuedOperations() ) {
@@ -351,7 +354,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 
 	@Override
 	public boolean elementExists(Object element) {
-		final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( AbstractPersistentCollection.this );
+		final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( this );
 		if ( entry == null ) {
 			throwLazyInitializationExceptionIfNotConnected();
 			throwLazyInitializationException("collection not associated with session");
@@ -375,7 +378,9 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 
 				@Override
 				public Object doWork() {
-					final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( AbstractPersistentCollection.this );
+					final CollectionEntry entry =
+							session.getPersistenceContextInternal()
+									.getCollectionEntry( AbstractPersistentCollection.this );
 					final CollectionPersister persister = entry.getLoadedPersister();
 					isExtraLazy = persister.isExtraLazy();
 					if ( isExtraLazy ) {
@@ -403,7 +408,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 
 	@Override
 	public Object elementByIndex(Object index) {
-		final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( AbstractPersistentCollection.this );
+		final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( this );
 		if ( entry == null ) {
 			throwLazyInitializationExceptionIfNotConnected();
 			throwLazyInitializationException("collection not associated with session");
@@ -423,8 +428,8 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 
 	protected boolean isConnectedToSession() {
 		return session != null
-				&& session.isOpen()
-				&& session.getPersistenceContextInternal().containsCollection( this );
+			&& session.isOpen()
+			&& session.getPersistenceContextInternal().containsCollection( this );
 	}
 
 	protected boolean isInitialized() {
@@ -445,8 +450,8 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	 */
 	protected boolean isOperationQueueEnabled() {
 		return !initialized
-				&& isConnectedToSession()
-				&& isInverseCollection();
+			&& isConnectedToSession()
+			&& isInverseCollection();
 	}
 
 	/**
@@ -456,8 +461,8 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	 */
 	protected boolean isPutQueueEnabled() {
 		return !initialized
-				&& isConnectedToSession()
-				&& isInverseOneToManyOrNoOrphanDelete();
+			&& isConnectedToSession()
+			&& isInverseOneToManyOrNoOrphanDelete();
 	}
 
 	/**
@@ -467,8 +472,8 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	 */
 	protected boolean isClearQueueEnabled() {
 		return !initialized
-				&& isConnectedToSession()
-				&& isInverseCollectionNoOrphanDelete();
+			&& isConnectedToSession()
+			&& isInverseCollectionNoOrphanDelete();
 	}
 
 	/**
@@ -518,7 +523,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	}
 
 	/**
-	 * Replace entity instances with copy in {@code copyCache}/.
+	 * Replace entity instances with copy in {@code copyCache}.
 	 *
 	 * @param copyCache - mapping from entity in the process of being
 	 *					merged to managed copy.
@@ -604,16 +609,14 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	 * @throws LazyInitializationException if we cannot initialize
 	 */
 	protected final void initialize(final boolean writing) {
-		if ( initialized ) {
-			return;
+		if ( !initialized ) {
+			withTemporarySessionIfNeeded(
+					() -> {
+						session.initializeCollection( this, writing );
+						return null;
+					}
+			);
 		}
-
-		withTemporarySessionIfNeeded(
-				() -> {
-					session.initializeCollection( AbstractPersistentCollection.this, writing );
-					return null;
-				}
-		);
 	}
 
 	private void throwLazyInitializationExceptionIfNotConnected() {
@@ -658,7 +661,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		if ( currentSession == this.session ) {
 			if ( !isTempSession ) {
 				if ( hasQueuedOperations() ) {
-					final String collectionInfoString = MessageHelper.collectionInfoString( getRole(), getKey() );
+					final String collectionInfoString = collectionInfoString( getRole(), getKey() );
 					try {
 						final TransactionStatus transactionStatus =
 								session.getTransactionCoordinator().getTransactionDriverControl().getStatus();
@@ -684,8 +687,10 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 						LOG.queuedOperationWhenDetachFromSession( collectionInfoString );
 					}
 				}
-				if ( allowLoadOutsideTransaction && !initialized && session.getLoadQueryInfluencers().hasEnabledFilters() ) {
-					final String collectionInfoString = MessageHelper.collectionInfoString( getRole(), getKey() );
+				if ( allowLoadOutsideTransaction
+						&& !initialized
+						&& session.getLoadQueryInfluencers().hasEnabledFilters() ) {
+					final String collectionInfoString = collectionInfoString( getRole(), getKey() );
 					LOG.enabledFiltersWhenDetachFromSession( collectionInfoString );
 				}
 				this.session = null;
@@ -702,7 +707,9 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 
 	protected void prepareForPossibleLoadingOutsideTransaction() {
 		if ( session != null ) {
-			allowLoadOutsideTransaction = session.getFactory().getSessionFactoryOptions().isInitializeLazyStateOutsideTransactionsEnabled();
+			allowLoadOutsideTransaction =
+					session.getFactory().getSessionFactoryOptions()
+							.isInitializeLazyStateOutsideTransactionsEnabled();
 
 			if ( allowLoadOutsideTransaction && sessionFactoryUuid == null ) {
 				sessionFactoryUuid = session.getFactory().getUuid();
@@ -727,7 +734,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 			}
 		}
 		if ( hasQueuedOperations() ) {
-			LOG.queuedOperationWhenAttachToSession( MessageHelper.collectionInfoString( getRole(), getKey() ) );
+			LOG.queuedOperationWhenAttachToSession( collectionInfoString( getRole(), getKey() ) );
 		}
 		this.session = session;
 		return true;
@@ -747,13 +754,13 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 
 		final StringBuilder sb = new StringBuilder( "Collection : " );
 		if ( roleCurrent != null ) {
-			sb.append( MessageHelper.collectionInfoString( roleCurrent, keyCurrent ) );
+			sb.append( collectionInfoString( roleCurrent, keyCurrent ) );
 		}
 		else {
 			final CollectionEntry ce = session.getPersistenceContextInternal().getCollectionEntry( this );
 			if ( ce != null ) {
 				sb.append(
-						MessageHelper.collectionInfoString(
+						collectionInfoString(
 								ce.getLoadedPersister(),
 								this,
 								ce.getLoadedKey(),
@@ -775,8 +782,8 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 
 	@Override
 	public boolean needsRecreate(CollectionPersister persister) {
-		// Workaround for situations like HHH-7072.  If the collection element is a component that consists entirely
-		// of nullable properties, we currently have to forcefully recreate the entire collection.  See the use
+		// Workaround for situations like HHH-7072.  If the collection element is a component that consists
+		// nullable properties, we currently have to forcefully recreate the entire collection.  See the use
 		// of hasNotNullableColumns in the AbstractCollectionPersister constructor for more info.  In order to delete
 		// row-by-row, that would require SQL like "WHERE ( COL = ? OR ( COL is null AND ? is null ) )", rather than
 		// the current "WHERE COL = ?" (fails for null for most DBs).  Note that
@@ -786,7 +793,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		// Selecting a type used in where part of update statement
 		// (must match condition in org.hibernate.persister.collection.BasicCollectionPersister#doUpdateRows).
 		// See HHH-9474
-		Type whereType;
+		final Type whereType;
 		if ( persister.hasIndex() ) {
 			whereType = persister.getIndexType();
 		}
@@ -794,8 +801,8 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 			whereType = persister.getElementType();
 		}
 		if ( whereType instanceof CompositeType ) {
-			CompositeType componentIndexType = (CompositeType) whereType;
-			return !componentIndexType.hasNotNullProperty();
+			final CompositeType componentIndexType = (CompositeType) whereType;
+			return componentIndexType.hasNullProperty();
 		}
 		return false;
 	}
@@ -1246,11 +1253,11 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 			SharedSessionContractImplementor session) throws HibernateException {
 
 		// short-circuit(s)
-		if ( currentElements.size() == 0 ) {
+		if ( currentElements.isEmpty() ) {
 			// no new elements, the old list contains only Orphans
 			return oldElements;
 		}
-		if ( oldElements.size() == 0 ) {
+		if ( oldElements.isEmpty() ) {
 			// no old elements, so no Orphans neither
 			return oldElements;
 		}
@@ -1347,7 +1354,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	}
 
 	@Override
-	public Object getOwner() {
+	public @Nullable Object getOwner() {
 		return owner;
 	}
 

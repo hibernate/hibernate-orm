@@ -1,47 +1,74 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
+
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Custom SQL expression used to read the value from and write a value to a column.
- * Use for direct object loading/saving as well as queries.
- * The write expression must contain exactly one '?' placeholder for the value. 
- *
- * For example: <code>read="decrypt(credit_card_num)" write="encrypt(?)"</code>
+ * Specifies custom SQL expressions used to read and write to the column mapped by
+ * the annotated persistent attribute in all generated SQL involving the annotated
+ * persistent attribute.
+ * <ul>
+ * <li>A {@link #write} expression must contain exactly one JDBC-style '?' placeholder.
+ * <li>A {@link #read} expression may not contain JDBC-style placeholders.
+ * </ul>
+ * <p>
+ * For example:
+ * <pre>
+ * &#64;Column(name="credit_card_num")
+ * &#64;ColumnTransformer(read="decrypt(credit_card_num)"
+ *                    write="encrypt(?)")
+ * String creditCardNumber;
+ * </pre>
+ * <p>
+ * A column transformer {@link #write} expression transforms the value of a persistent
+ * attribute of an entity as it is being written to the database.
+ * <ul>
+ * <li>If there is a matching {@link #read} expression to undo the effect of this
+ *     transformation, then we're entitled to consider the in-memory state of the Java
+ *     entity instance as synchronized with the database after a SQL {@code insert} or
+ *     {@code update} is executed.
+ * <li>On the other hand, if there's no matching {@link #read} expression, or if the
+ *     read expression does not exactly undo the effect of the transformation, the
+ *     in-memory state of the Java entity instance should be considered unsynchronized
+ *     with the database after every SQL {@code insert} or {@code update} is executed.
+ * </ul>
+ * <p>
+ * In the second scenario, we may ask Hibernate to resynchronize the in-memory state
+ * with the database after each {@code insert} or {@code update} by annotating the
+ * persistent attribute {@link Generated @Generated(event={INSERT,UPDATE}, writable=true)}.
+ * This results in a SQL {@code select} after every {@code insert} or {@code update}.
  *
  * @see ColumnTransformers
  *
  * @author Emmanuel Bernard
  */
-@java.lang.annotation.Target({FIELD,METHOD})
+@Target({FIELD,METHOD})
 @Retention(RUNTIME)
 @Repeatable(ColumnTransformers.class)
 public @interface ColumnTransformer {
 	/**
-	 * (Logical) column name for which the expression is used.
-	 *
-	 * This can be left out if the property is bound to a single column
+	 * The name of the mapped column, if a persistent attribute maps to multiple columns.
+	 * Optional if a persistent attribute is mapped to a single column
 	 */
 	String forColumn() default "";
 
 	/**
-	 * Custom SQL expression used to read from the column.
+	 * A custom SQL expression used to read from the column.
 	 */
 	String read() default "";
 
 	/**
-	 * Custom SQL expression used to write to the column. The write expression must contain exactly
-	 * one '?' placeholder for the value.
+	 * A custom SQL expression used to write to the column. The expression must contain
+	 * exactly one JDBC-style '?' placeholder.
 	 */
 	String write() default "";
 }

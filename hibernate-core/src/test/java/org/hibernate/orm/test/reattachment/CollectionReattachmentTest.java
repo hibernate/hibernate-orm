@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.reattachment;
 
@@ -40,7 +38,7 @@ public class CollectionReattachmentTest {
 				session -> {
 					Parent p = new Parent( "p" );
 					p.getChildren().add( new Child( "c" ) );
-					session.save( p );
+					session.persist( p );
 				}
 		);
 
@@ -50,14 +48,13 @@ public class CollectionReattachmentTest {
 					// clear...
 					session.clear();
 					// now try to reattach...
-					session.update( p );
-					return p;
+					return session.merge( p );
 				}
 		);
 
 		scope.inTransaction(
 				session ->
-						session.delete( parent )
+						session.remove( parent )
 		);
 	}
 
@@ -67,7 +64,7 @@ public class CollectionReattachmentTest {
 				session -> {
 					Parent p = new Parent( "p" );
 					p.getChildren().add( new Child( "c" ) );
-					session.save( p );
+					session.persist( p );
 				}
 		);
 
@@ -77,14 +74,13 @@ public class CollectionReattachmentTest {
 					// evict...
 					session.evict( p );
 					// now try to reattach...
-					session.update( p );
-					return p;
+					return session.merge( p );
 				}
 		);
 
 		scope.inTransaction(
 				session ->
-						session.delete( parent )
+						session.remove( parent )
 		);
 	}
 }

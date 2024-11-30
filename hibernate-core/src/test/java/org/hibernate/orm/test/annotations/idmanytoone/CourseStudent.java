@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.idmanytoone;
 
@@ -22,43 +20,43 @@ import jakarta.persistence.Table;
 @Table(name = "idmanytoone_course_student")
 public class CourseStudent implements Serializable {
 
-    @Id
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "course_id")
-    private Course course;
+	@Id
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "course_id")
+	private Course course;
 
-    @Id
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "student_id")
-    private Student student;
+	@Id
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "student_id")
+	private Student student;
 
 	@Column(name = "`value`")
-    private String value;
+	private String value;
 
-    public CourseStudent() {
-    }
+	public CourseStudent() {
+	}
 
-    public Course getCourse() {
-        return course;
-    }
+	public Course getCourse() {
+		return course;
+	}
 
-    public void setCourse(Course course) {
-        this.course = course;
-    }
+	public void setCourse(Course course) {
+		this.course = course;
+	}
 
-    public Student getStudent() {
-        return student;
-    }
+	public Student getStudent() {
+		return student;
+	}
 
-    public void setStudent(Student student) {
-        this.student = student;
-    }
+	public void setStudent(Student student) {
+		this.student = student;
+	}
 
-    public String getValue() {
-        return value;
-    }
+	public String getValue() {
+		return value;
+	}
 
-    public void setValue(String value) {
-        this.value = value;
-    }
+	public void setValue(String value) {
+		this.value = value;
+	}
 }

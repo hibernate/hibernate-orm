@@ -1,13 +1,29 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.group;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.hibernate.Hibernate;
+import org.hibernate.annotations.LazyGroup;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.proxy.HibernateProxy;
+
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.Basic;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -19,269 +35,249 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
-import org.hibernate.Hibernate;
-import org.hibernate.annotations.LazyGroup;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.proxy.HibernateProxy;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.jdbc.SQLStatementInterceptor;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-11155" )
-@RunWith( BytecodeEnhancerRunner.class )
-public class LazyGroupTest extends BaseCoreFunctionalTestCase {
-    private SQLStatementInterceptor sqlInterceptor;
+@SuppressWarnings("JUnitMalformedDeclaration")
+@JiraKey( "HHH-11155" )
+@DomainModel(
+		annotatedClasses = {
+				LazyGroupTest.Child.class, LazyGroupTest.Parent.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+				@Setting( name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "true" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class LazyGroupTest {
 
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class[]{Child.class, Parent.class};
-    }
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			Child c1 = new Child( "steve", "Hibernater" );
+			Child c2 = new Child( "sally", "Joe Mama" );
 
-    @Override
-    protected void configure(Configuration configuration) {
-        configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
-        configuration.setProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
-        sqlInterceptor = new SQLStatementInterceptor( configuration );
-    }
+			Parent p1 = new Parent( "Hibernate" );
+			Parent p2 = new Parent( "Swimming" );
 
-    @Before
-    public void prepare() {
-        doInHibernate( this::sessionFactory, s -> {
-            Child c1 = new Child( "steve", "Hibernater" );
-            Child c2 = new Child( "sally", "Joe Mama" );
+			c1.parent = p1;
+			p1.children.add( c1 );
 
-            Parent p1 = new Parent( "Hibernate" );
-            Parent p2 = new Parent( "Swimming" );
+			c1.alternateParent = p2;
+			p2.alternateChildren.add( c1 );
 
-            c1.parent = p1;
-            p1.children.add( c1 );
+			c2.parent = p2;
+			p2.children.add( c2 );
 
-            c1.alternateParent = p2;
-            p2.alternateChildren.add( c1 );
+			c2.alternateParent = p1;
+			p1.alternateChildren.add( c2 );
 
-            c2.parent = p2;
-            p2.children.add( c2 );
+			s.persist( p1 );
+			s.persist( p2 );
+		} );
+	}
 
-            c2.alternateParent = p1;
-            p1.alternateChildren.add( c2 );
+	@Test
+	@JiraKey( "HHH-10267" )
+	public void testAccess(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(s) -> {
+					SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getSessionFactory()
+							.getSessionFactoryOptions()
+							.getStatementInspector();
+					statementInspector.clear();
 
-            s.save( p1 );
-            s.save( p2 );
-        } );
-    }
+					final Child c1 = s.createQuery( "from Child c where c.name = :name", Child.class )
+							.setParameter( "name", "steve" )
+							.uniqueResult();
 
-    @Test
-    @TestForIssue( jiraKey = "HHH-10267" )
-    public void testAccess() {
-        sqlInterceptor.clear();
+					statementInspector.assertExecutedCount( 1 );
 
-        inTransaction(
-                (s) -> {
-                    final Child c1 = s.createQuery( "from Child c where c.name = :name", Child.class )
-                            .setParameter( "name", "steve" )
-                            .uniqueResult();
+					assertTrue( Hibernate.isPropertyInitialized( c1, "name" ) );
 
-                    assertThat( sqlInterceptor.getQueryCount(), is( 1 ) );
+					assertFalse( Hibernate.isPropertyInitialized( c1, "nickName" ) );
 
-                    assertTrue( Hibernate.isPropertyInitialized( c1, "name" ) );
+					// parent should be an uninitialized enhanced-proxy
+					assertTrue( Hibernate.isPropertyInitialized( c1, "parent" ) );
+					assertThat( c1.getParent() ).isNotInstanceOf( HibernateProxy.class );
+					assertFalse( Hibernate.isInitialized( c1.getParent() ) );
 
-                    assertFalse( Hibernate.isPropertyInitialized( c1, "nickName" ) );
+					// alternateParent should be an uninitialized enhanced-proxy
+					assertTrue( Hibernate.isPropertyInitialized( c1, "alternateParent" ) );
+					assertThat( c1.getAlternateParent() ).isNotInstanceOf( HibernateProxy.class );
+					assertFalse( Hibernate.isInitialized( c1.getAlternateParent() ) );
 
-                    // parent should be an uninitialized enhanced-proxy
-                    assertTrue( Hibernate.isPropertyInitialized( c1, "parent" ) );
-                    assertThat( c1.getParent(), not( instanceOf( HibernateProxy.class ) ) );
-                    assertFalse( Hibernate.isInitialized( c1.getParent() ) );
+					// Now lets access nickName which ought to initialize nickName
+					c1.getNickName();
+					statementInspector.assertExecutedCount( 2 );
 
-                    // alternateParent should be an uninitialized enhanced-proxy
-                    assertTrue( Hibernate.isPropertyInitialized( c1, "alternateParent" ) );
-                    assertThat( c1.getAlternateParent(), not( instanceOf( HibernateProxy.class ) ) );
-                    assertFalse( Hibernate.isInitialized( c1.getAlternateParent() ) );
+					assertTrue( Hibernate.isPropertyInitialized( c1, "nickName" ) );
 
-                    // Now lets access nickName which ought to initialize nickName
-                    c1.getNickName();
-                    assertThat( sqlInterceptor.getQueryCount(), is( 2 ) );
+					// parent should be an uninitialized enhanced-proxy
+					assertTrue( Hibernate.isPropertyInitialized( c1, "parent" ) );
+					assertThat( c1.getParent() ).isNotInstanceOf( HibernateProxy.class );
+					assertFalse( Hibernate.isInitialized( c1.getParent() ) );
 
-                    assertTrue( Hibernate.isPropertyInitialized( c1, "nickName" ) );
+					// alternateParent should be an uninitialized enhanced-proxy
+					assertTrue( Hibernate.isPropertyInitialized( c1, "alternateParent" ) );
+					assertThat( c1.getAlternateParent() ).isNotInstanceOf( HibernateProxy.class );
+					assertFalse( Hibernate.isInitialized( c1.getAlternateParent() ) );
+				}
+		);
+	}
 
-                    // parent should be an uninitialized enhanced-proxy
-                    assertTrue( Hibernate.isPropertyInitialized( c1, "parent" ) );
-                    assertThat( c1.getParent(), not( instanceOf( HibernateProxy.class ) ) );
-                    assertFalse( Hibernate.isInitialized( c1.getParent() ) );
+	@Test
+	@JiraKey( "HHH-11155" )
+	public void testUpdate(SessionFactoryScope scope) {
+		Parent p1New = new Parent();
+		p1New.nombre = "p1New";
 
-                    // alternateParent should be an uninitialized enhanced-proxy
-                    assertTrue( Hibernate.isPropertyInitialized( c1, "alternateParent" ) );
-                    assertThat( c1.getAlternateParent(), not( instanceOf( HibernateProxy.class ) ) );
-                    assertFalse( Hibernate.isInitialized( c1.getAlternateParent() ) );
+		scope.inTransaction(
+				(s) -> {
+					SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getSessionFactory()
+							.getSessionFactoryOptions()
+							.getStatementInspector();
+					statementInspector.clear();
 
+					final Child c1 = s.createQuery( "from Child c where c.name = :name", Child.class )
+							.setParameter( "name", "steve" )
+							.uniqueResult();
+					statementInspector.assertExecutedCount( 1 );
 
-                    sqlInterceptor.clear();
-                }
-        );
-    }
+					assertTrue( Hibernate.isPropertyInitialized( c1, "name" ) );
 
-    @Test
-    @TestForIssue( jiraKey = "HHH-11155" )
-    public void testUpdate() {
-        Parent p1New = new Parent();
-        p1New.nombre = "p1New";
+					assertFalse( Hibernate.isPropertyInitialized( c1, "nickName" ) );
 
-        inTransaction(
-                (s) -> {
-                    sqlInterceptor.clear();
+					// parent should be an uninitialized enhanced-proxy
+					assertTrue( Hibernate.isPropertyInitialized( c1, "parent" ) );
+					assertThat( c1.getParent() ).isNotInstanceOf( HibernateProxy.class );
+					assertFalse( Hibernate.isInitialized( c1.getParent() ) );
 
-                    final Child c1 = s.createQuery( "from Child c where c.name = :name", Child.class )
-                            .setParameter( "name", "steve" )
-                            .uniqueResult();
-                    assertThat( sqlInterceptor.getQueryCount(), is( 1 ) );
+					// alternateParent should be an uninitialized enhanced-proxy
+					assertTrue( Hibernate.isPropertyInitialized( c1, "alternateParent" ) );
+					assertThat( c1.getAlternateParent() ).isNotInstanceOf( HibernateProxy.class );
+					assertFalse( Hibernate.isInitialized( c1.getAlternateParent() ) );
 
-                    assertTrue( Hibernate.isPropertyInitialized( c1, "name" ) );
+					// Now lets update nickName
+					c1.nickName = "new nickName";
 
-                    assertFalse( Hibernate.isPropertyInitialized( c1, "nickName" ) );
+					statementInspector.assertExecutedCount( 1 );
 
-                    // parent should be an uninitialized enhanced-proxy
-                    assertTrue( Hibernate.isPropertyInitialized( c1, "parent" ) );
-                    assertThat( c1.getParent(), not( instanceOf( HibernateProxy.class ) ) );
-                    assertFalse( Hibernate.isInitialized( c1.getParent() ) );
+					assertTrue( Hibernate.isPropertyInitialized( c1, "name" ) );
 
-                    // alternateParent should be an uninitialized enhanced-proxy
-                    assertTrue( Hibernate.isPropertyInitialized( c1, "alternateParent" ) );
-                    assertThat( c1.getAlternateParent(), not( instanceOf( HibernateProxy.class ) ) );
-                    assertFalse( Hibernate.isInitialized( c1.getAlternateParent() ) );
+					assertTrue( Hibernate.isPropertyInitialized( c1, "nickName" ) );
 
-                    // Now lets update nickName
-                    c1.nickName = "new nickName";
+					// parent should be an uninitialized enhanced-proxy
+					assertTrue( Hibernate.isPropertyInitialized( c1, "parent" ) );
+					assertThat( c1.getParent() ).isNotInstanceOf( HibernateProxy.class );
+					assertFalse( Hibernate.isInitialized( c1.getParent() ) );
 
-                    assertThat( sqlInterceptor.getQueryCount(), is( 1 ) );
+					// alternateParent should be an uninitialized enhanced-proxy
+					assertTrue( Hibernate.isPropertyInitialized( c1, "alternateParent" ) );
+					assertThat( c1.getAlternateParent() ).isNotInstanceOf( HibernateProxy.class );
+					assertFalse( Hibernate.isInitialized( c1.getAlternateParent() ) );
 
-                    assertTrue( Hibernate.isPropertyInitialized( c1, "name" ) );
+					// Now update c1.parent
+					c1.parent.children.remove( c1 );
+					c1.parent = p1New;
+					p1New.children.add( c1 );
+				}
+		);
 
-                    assertTrue( Hibernate.isPropertyInitialized( c1, "nickName" ) );
+		// verify updates
+		scope.inTransaction(
+				(s) -> {
+					final Child c1 = s.createQuery( "from Child c where c.name = :name", Child.class )
+							.setParameter( "name", "steve" )
+							.uniqueResult();
 
-                    // parent should be an uninitialized enhanced-proxy
-                    assertTrue( Hibernate.isPropertyInitialized( c1, "parent" ) );
-                    assertThat( c1.getParent(), not( instanceOf( HibernateProxy.class ) ) );
-                    assertFalse( Hibernate.isInitialized( c1.getParent() ) );
+					assertThat( c1.getNickName() ).isEqualTo( "new nickName" );
+					assertThat( c1.parent.nombre ).isEqualTo( "p1New" );
+				}
+		);
+	}
 
-                    // alternateParent should be an uninitialized enhanced-proxy
-                    assertTrue( Hibernate.isPropertyInitialized( c1, "alternateParent" ) );
-                    assertThat( c1.getAlternateParent(), not( instanceOf( HibernateProxy.class ) ) );
-                    assertFalse( Hibernate.isInitialized( c1.getAlternateParent() ) );
+	@AfterEach
+	public void cleanup(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			s.createQuery( "delete Child" ).executeUpdate();
+			s.createQuery( "delete Parent" ).executeUpdate();
+		} );
+	}
 
-                    // Now update c1.parent
-                    c1.parent.children.remove( c1 );
-                    c1.parent = p1New;
-                    p1New.children.add( c1 );
-                }
-        );
+	// --- //
 
-        // verify updates
-        inTransaction(
-                (s) -> {
-                    final Child c1 = s.createQuery( "from Child c where c.name = :name", Child.class )
-                            .setParameter( "name", "steve" )
-                            .uniqueResult();
+	// --- //
 
-                    assertThat( c1.getNickName(), is( "new nickName" ) );
-                    assertThat( c1.parent.nombre, is( "p1New" ) );
-                }
-        );
-    }
+	@Entity( name = "Parent" )
+	@Table( name = "PARENT" )
+	static class Parent {
+		@Id
+		@GeneratedValue( strategy = GenerationType.AUTO )
+		Long id;
 
-    @After
-    public void cleanup() {
-        doInHibernate( this::sessionFactory, s -> {
-            s.createQuery( "delete Child" ).executeUpdate();
-            s.createQuery( "delete Parent" ).executeUpdate();
-        } );
-    }
+		String nombre;
 
-    // --- //
+		@OneToMany( mappedBy = "parent", cascade = CascadeType.ALL, fetch = FetchType.LAZY )
+		List<Child> children = new ArrayList<>();
 
-    // --- //
+		@OneToMany( mappedBy = "alternateParent", cascade = CascadeType.ALL, fetch = FetchType.LAZY )
+		List<Child> alternateChildren = new ArrayList<>();
 
-    @Entity( name = "Parent" )
-    @Table( name = "PARENT" )
-    private static class Parent {
-        @Id
-        @GeneratedValue( strategy = GenerationType.AUTO )
-        Long id;
+		Parent() {
+		}
 
-        String nombre;
+		Parent(String nombre) {
+			this.nombre = nombre;
+		}
+	}
 
-        @OneToMany( mappedBy = "parent", cascade = CascadeType.ALL, fetch = FetchType.LAZY )
-        List<Child> children = new ArrayList<>();
+	@Entity( name = "Child" )
+	@Table( name = "CHILD" )
+	static class Child {
 
-        @OneToMany( mappedBy = "alternateParent", cascade = CascadeType.ALL, fetch = FetchType.LAZY )
-        List<Child> alternateChildren = new ArrayList<>();
+		@Id
+		@GeneratedValue( strategy = GenerationType.AUTO )
+		Long id;
 
-        Parent() {
-        }
+		String name;
 
-        Parent(String nombre) {
-            this.nombre = nombre;
-        }
-    }
+		@Basic( fetch = FetchType.LAZY )
+		String nickName;
 
-    @Entity( name = "Child" )
-    @Table( name = "CHILD" )
-    private static class Child {
+		@ManyToOne( cascade = CascadeType.ALL, fetch = FetchType.LAZY )
+		Parent parent;
 
-        @Id
-        @GeneratedValue( strategy = GenerationType.AUTO )
-        Long id;
+		@ManyToOne( cascade = CascadeType.ALL, fetch = FetchType.LAZY )
+		@LazyGroup( "SECONDARY" )
+		Parent alternateParent;
 
-        String name;
+		Child() {
+		}
 
-        @Basic( fetch = FetchType.LAZY )
-        String nickName;
+		Child(String name, String nickName) {
+			this.name = name;
+			this.nickName = nickName;
+		}
 
-        @ManyToOne( cascade = CascadeType.ALL, fetch = FetchType.LAZY )
-        @LazyToOne( LazyToOneOption.NO_PROXY )
-        Parent parent;
+		public Parent getParent() {
+			return parent;
+		}
 
-        @ManyToOne( cascade = CascadeType.ALL, fetch = FetchType.LAZY )
-        @LazyToOne( LazyToOneOption.NO_PROXY )
-        @LazyGroup( "SECONDARY" )
-        Parent alternateParent;
+		Parent getAlternateParent() {
+			return alternateParent;
+		}
 
-        Child() {
-        }
-
-        Child(String name, String nickName) {
-            this.name = name;
-            this.nickName = nickName;
-        }
-
-        public Parent getParent() {
-            return parent;
-        }
-
-        Parent getAlternateParent() {
-            return alternateParent;
-        }
-
-        String getNickName() {
-            return nickName;
-        }
-    }
+		String getNickName() {
+			return nickName;
+		}
+	}
 }

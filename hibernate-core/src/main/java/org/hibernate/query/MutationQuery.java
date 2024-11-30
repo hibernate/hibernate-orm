@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query;
 
@@ -15,13 +13,44 @@ import java.util.Map;
 import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
 
+import jakarta.persistence.FlushModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
 
 /**
- * Models a mutation (insert, update, or delete) query.  It is a slimmed
- * down version of {@link Query}, but providing only methods relevant to
- * mutation queries.
+ * Within the context of an active {@linkplain org.hibernate.Session session},
+ * an instance of this type represents an executable mutation query, that is,
+ * an {@code insert}, {@code update}, or {@code delete}. It is a slimmed-down
+ * version of {@link Query}, providing only methods relevant to mutation queries.
+ * <p>
+ * A {@code MutationQuery} may be obtained from the {@link org.hibernate.Session}
+ * by calling:
+ * <ul>
+ * <li>{@link QueryProducer#createMutationQuery(String)}, passing the HQL as a
+ *     string,
+ * <li>{@link QueryProducer#createNativeMutationQuery(String)}, passing native
+ *     SQL as a string,
+ * <li>{@link QueryProducer#createMutationQuery(jakarta.persistence.criteria.CriteriaUpdate)} or
+ *     {@link QueryProducer#createMutationQuery(jakarta.persistence.criteria.CriteriaDelete)},
+ *     passing a criteria update or delete object, or
+ * <li>{@link QueryProducer#createNamedMutationQuery(String)}, passing the
+ *     name of a query defined using {@link jakarta.persistence.NamedQuery} or
+ *     {@link jakarta.persistence.NamedNativeQuery}.
+ * </ul>
+ * <p>
+ * A {@code MutationQuery} controls how the mutation query is executed, and
+ * allows arguments to be bound to its parameters.
+ * <ul>
+ * <li>Mutation queries must be executed using {@link #executeUpdate()}.
+ * <li>The various overloads of {@link #setParameter(String, Object)} and
+ *     {@link #setParameter(int, Object)} allow arguments to be bound to named
+ *     and ordinal parameters defined by the query.
+ * </ul>
+ * <pre>
+ * session.createMutationQuery("delete Draft where lastUpdated < local date - ?1 year")
+ *         .setParameter(1, years)
+ *         .executeUpdate();
+ * </pre>
  *
  * @author Steve Ebersole
  */
@@ -53,6 +82,21 @@ public interface MutationQuery extends CommonQueryContract {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant returns
+
+	@Override @Deprecated(since = "7")
+	MutationQuery setFlushMode(FlushModeType flushMode);
+
+	@Override @Deprecated(since = "7")
+	MutationQuery setHibernateFlushMode(FlushMode flushMode);
+
+	@Override
+	MutationQuery setTimeout(int timeout);
+
+	@Override
+	MutationQuery setComment(String comment);
+
+	@Override
+	MutationQuery setHint(String hintName, Object value);
 
 	@Override
 	MutationQuery setParameter(String name, Object value);
@@ -109,7 +153,7 @@ public interface MutationQuery extends CommonQueryContract {
 	MutationQuery setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
 
 	@Override
-	MutationQuery setParameterList(String name, Collection values);
+	MutationQuery setParameterList(String name, @SuppressWarnings("rawtypes") Collection values);
 
 	@Override
 	<P> MutationQuery setParameterList(String name, Collection<? extends P> values, Class<P> javaType);
@@ -127,7 +171,7 @@ public interface MutationQuery extends CommonQueryContract {
 	<P> MutationQuery setParameterList(String name, P[] values, BindableType<P> type);
 
 	@Override
-	MutationQuery setParameterList(int position, Collection values);
+	MutationQuery setParameterList(int position, @SuppressWarnings("rawtypes") Collection values);
 
 	@Override
 	<P> MutationQuery setParameterList(int position, Collection<? extends P> values, Class<P> javaType);
@@ -169,5 +213,5 @@ public interface MutationQuery extends CommonQueryContract {
 	MutationQuery setProperties(@SuppressWarnings("rawtypes") Map bean);
 
 	@Override
-	MutationQuery setHibernateFlushMode(FlushMode flushMode);
+	MutationQuery setQueryFlushMode(QueryFlushMode queryFlushMode);
 }

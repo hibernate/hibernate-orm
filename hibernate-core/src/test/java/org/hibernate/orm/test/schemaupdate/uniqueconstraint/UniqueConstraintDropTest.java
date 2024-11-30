@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemaupdate.uniqueconstraint;
 
@@ -20,9 +18,10 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.unique.AlterTableUniqueDelegate;
+import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
+import org.hibernate.dialect.unique.SkipNullableUniqueDelegate;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.tool.schema.TargetType;
@@ -34,12 +33,12 @@ import org.hibernate.tool.schema.internal.exec.ScriptTargetOutputToFile;
 import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
-import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -61,7 +60,7 @@ public class UniqueConstraintDropTest {
 	public void setUp() throws Exception {
 		output = File.createTempFile( "update_script", ".sql" );
 		output.deleteOnExit();
-		ssr = new StandardServiceRegistryBuilder()
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( Environment.HBM2DDL_AUTO, "none" )
 				.applySetting( Environment.FORMAT_SQL, "false" )
 				.applySetting( Environment.SHOW_SQL, "true" )
@@ -69,10 +68,11 @@ public class UniqueConstraintDropTest {
 		metadata = (MetadataImplementor) new MetadataSources( ssr )
 				.addResource( "org/hibernate/orm/test/schemaupdate/uniqueconstraint/TestEntity.hbm.xml" )
 				.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 		tool = (HibernateSchemaManagementTool) ssr.getService( SchemaManagementTool.class );
 
-		final Map configurationValues = ssr.getService( ConfigurationService.class ).getSettings();
+		final Map<String,Object> configurationValues = ssr.requireService( ConfigurationService.class ).getSettings();
 		options = new ExecutionOptions() {
 			@Override
 			public boolean shouldManageNamespaces() {
@@ -80,18 +80,13 @@ public class UniqueConstraintDropTest {
 			}
 
 			@Override
-			public Map getConfigurationValues() {
+			public Map<String,Object> getConfigurationValues() {
 				return configurationValues;
 			}
 
 			@Override
 			public ExceptionHandler getExceptionHandler() {
 				return ExceptionHandlerLoggedImpl.INSTANCE;
-			}
-
-			@Override
-			public SchemaFilter getSchemaFilter() {
-				return SchemaFilter.ALL;
 			}
 		};
 	}
@@ -102,8 +97,8 @@ public class UniqueConstraintDropTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11236")
-	public void testUniqueConstraintIsGenerated() throws Exception {
+	@JiraKey(value = "HHH-11236")
+	public void testUniqueConstraintIsDropped() throws Exception {
 
 		new IndividuallySchemaMigratorImpl( tool, DefaultSchemaFilter.INSTANCE )
 				.doMigration(
@@ -113,23 +108,23 @@ public class UniqueConstraintDropTest {
 						new TargetDescriptorImpl()
 				);
 
-		if ( getDialect() instanceof MySQLDialect ) {
-			assertThat(
-					"The test_entity_item table unique constraint has not been dropped",
-					checkDropIndex( "test_entity_item", "item" ),
-					is( true )
-			);
+		if ( !(getDialect().getUniqueDelegate() instanceof SkipNullableUniqueDelegate) ) {
+			if ( getDialect().getUniqueDelegate() instanceof AlterTableUniqueIndexDelegate) {
+				checkDropIndex( "test_entity_item", "item" );
+			}
+			else if ( getDialect().getUniqueDelegate() instanceof AlterTableUniqueDelegate ) {
+				assertThat(
+						"The test_entity_item table unique constraint has not been dropped",
+						checkDropConstraint( "test_entity_item", "item" ),
+						is( true )
+				);
+			}
 		}
-		else if ( getDialect() instanceof DB2Dialect ) {
-			checkDB2DropIndex( "test_entity_item", "item" );
-		}
-		else {
-			assertThat(
-					"The test_entity_item table unique constraint has not been dropped",
-					checkDropConstraint( "test_entity_item", "item" ),
-					is( true )
-			);
-		}
+
+		assertThat(
+				checkDropConstraint( "test_entity_children", "child" ),
+				is( true )
+		);
 	}
 
 	protected Dialect getDialect() {
@@ -137,61 +132,57 @@ public class UniqueConstraintDropTest {
 	}
 
 	private boolean checkDropConstraint(String tableName, String columnName) throws IOException {
-		boolean matches = false;
-		String regex = getDialect().getAlterTableString( tableName ) + " drop constraint";
-
+		String regex = getDialect().getAlterTableString( tableName ) + ' ' + getDialect().getDropUniqueKeyString();
 		if ( getDialect().supportsIfExistsBeforeConstraintName() ) {
 			regex += " if exists";
 		}
-		regex += " uk_(.)*";
+		regex += " uk.*";
 		if ( getDialect().supportsIfExistsAfterConstraintName() ) {
 			regex += " if exists";
 		}
-
-		return isMatching( matches, regex );
+		regex += ";";
+		return isMatching( regex );
 	}
+
+//	private boolean checkAlterTableDropIndex(String tableName, String columnName) throws IOException {
+//		String regex = "alter table ";
+//
+//		if ( getDialect().supportsIfExistsAfterAlterTable() ) {
+//			regex += "if exists ";
+//		}
+//		regex += tableName;
+//		if ( getDialect().supportsIfExistsAfterTableName() ) {
+//			regex += " if exists";
+//		}
+//		regex += " drop index";
+//
+//		if ( getDialect().supportsIfExistsBeforeConstraintName() ) {
+//			regex += " if exists";
+//		}
+//		regex += " uk.*";
+//		if ( getDialect().supportsIfExistsAfterConstraintName() ) {
+//			regex += " if exists";
+//		}
+//
+//		return isMatching( regex );
+//	}
 
 	private boolean checkDropIndex(String tableName, String columnName) throws IOException {
-		boolean matches = false;
-		String regex = "alter table ";
-
-		if ( getDialect().supportsIfExistsAfterAlterTable() ) {
-			regex += "if exists ";
-		}
-		regex += tableName;
-		if ( getDialect().supportsIfExistsAfterTableName() ) {
-			regex += " if exists";
-		}
-		regex += " drop index";
-
-		if ( getDialect().supportsIfExistsBeforeConstraintName() ) {
-			regex += " if exists";
-		}
-		regex += " uk_(.)*";
-		if ( getDialect().supportsIfExistsAfterConstraintName() ) {
-			regex += " if exists";
-		}
-
-		return isMatching( matches, regex );
+		String regex = "drop index " + tableName + ".uk.*";
+		return isMatching( regex );
 	}
 
-	private boolean checkDB2DropIndex(String tableName, String columnName) throws IOException {
-		boolean matches = false;
-		String regex = "drop index " + tableName + ".uk_(.)*";
-		return isMatching( matches, regex );
-	}
-
-	private boolean isMatching(boolean matches, String regex) throws IOException {
+	private boolean isMatching(String regex) throws IOException {
 		final String fileContent = new String( Files.readAllBytes( output.toPath() ) ).toLowerCase();
 		final String[] split = fileContent.split( System.lineSeparator() );
 		Pattern p = Pattern.compile( regex );
 		for ( String line : split ) {
 			final Matcher matcher = p.matcher( line );
 			if ( matcher.matches() ) {
-				matches = true;
+				return true;
 			}
 		}
-		return matches;
+		return false;
 	}
 
 	private class TargetDescriptorImpl implements TargetDescriptor {

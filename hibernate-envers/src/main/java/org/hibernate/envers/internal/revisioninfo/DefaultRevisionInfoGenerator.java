@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.revisioninfo;
 
@@ -15,8 +13,11 @@ import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.synchronization.SessionCacheCleaner;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
+import org.hibernate.resource.beans.internal.Helper;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+import org.hibernate.resource.beans.spi.ProvidedInstanceManagedBeanImpl;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -56,7 +57,7 @@ public class DefaultRevisionInfoGenerator implements RevisionInfoGenerator {
 
 	@Override
 	public void saveRevisionData(Session session, Object revisionData) {
-		session.save( revisionInfoEntityName, revisionData );
+		session.persist( revisionInfoEntityName, revisionData );
 		if ( revisionInfoNumberReader != null && revisionInfoNumberReader.getRevisionNumber( revisionData ).longValue() < 0 ) {
 			throw new AuditException( "Negative revision numbers are not allowed" );
 		}
@@ -107,6 +108,11 @@ public class DefaultRevisionInfoGenerator implements RevisionInfoGenerator {
 			Class<? extends RevisionListener> listenerClass,
 			ServiceRegistry serviceRegistry) {
 		if ( !listenerClass.equals( RevisionListener.class ) ) {
+			if ( !Helper.allowExtensionsInCdi( serviceRegistry ) ) {
+				return new ProvidedInstanceManagedBeanImpl<>(
+						FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( listenerClass )
+				);
+			}
 			return serviceRegistry.getService( ManagedBeanRegistry.class ).getBean( listenerClass );
 		}
 		return null;

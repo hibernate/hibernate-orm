@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.criteria;
 
@@ -11,7 +9,7 @@ import java.util.Set;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.common.FetchClauseType;
 
 /**
  * Models a {@code SELECT} query.  Used as a delegate in
@@ -34,11 +32,11 @@ public interface JpaQueryStructure<T> extends JpaQueryPart<T> {
 
 	boolean isDistinct();
 
-	JpaQueryStructure setDistinct(boolean distinct);
+	JpaQueryStructure<T> setDistinct(boolean distinct);
 
 	JpaSelection<T> getSelection();
 
-	JpaQueryStructure setSelection(JpaSelection<T> selection);
+	JpaQueryStructure<T> setSelection(JpaSelection<T> selection);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -46,7 +44,9 @@ public interface JpaQueryStructure<T> extends JpaQueryPart<T> {
 
 	Set<? extends JpaRoot<?>> getRoots();
 
-	JpaQueryStructure addRoot(JpaRoot<?> root);
+	List<? extends JpaRoot<?>> getRootList();
+
+	JpaQueryStructure<T> addRoot(JpaRoot<?> root);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -64,7 +64,7 @@ public interface JpaQueryStructure<T> extends JpaQueryPart<T> {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Grouping (group-by / having) clause
 
-	List<? extends JpaExpression> getGroupingExpressions();
+	List<? extends JpaExpression<?>> getGroupingExpressions();
 
 	JpaQueryStructure<T> setGroupingExpressions(List<? extends JpaExpression<?>> grouping);
 
@@ -81,11 +81,15 @@ public interface JpaQueryStructure<T> extends JpaQueryPart<T> {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides
 
+	@Override
 	JpaQueryStructure<T> setSortSpecifications(List<? extends JpaOrder> sortSpecifications);
 
-	JpaQueryStructure<T> setOffset(JpaExpression<?> offset);
+	@Override
+	JpaQueryStructure<T> setOffset(JpaExpression<? extends Number> offset);
 
-	JpaQueryStructure<T> setFetch(JpaExpression<?> fetch);
+	@Override
+	JpaQueryStructure<T> setFetch(JpaExpression<? extends Number> fetch);
 
-	JpaQueryStructure<T> setFetch(JpaExpression<?> fetch, FetchClauseType fetchClauseType);
+	@Override
+	JpaQueryStructure<T> setFetch(JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType);
 }

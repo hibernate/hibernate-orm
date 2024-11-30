@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi.entry;
 
@@ -12,7 +10,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
@@ -144,13 +141,11 @@ public class StandardCacheEntryImpl implements CacheEntry {
 				.setId( id )
 				.setPersister( persister );
 
-		final EventListenerGroup<PreLoadEventListener> listenerGroup = session
+		session
 				.getFactory()
 				.getFastSessionServices()
-				.eventListenerGroup_PRE_LOAD;
-		for ( PreLoadEventListener listener : listenerGroup.listeners() ) {
-			listener.onPreLoad( preLoadEvent );
-		}
+				.eventListenerGroup_PRE_LOAD
+				.fireEventOnEachListener( preLoadEvent, PreLoadEventListener::onPreLoad );
 
 		persister.setPropertyValues( instance, state );
 

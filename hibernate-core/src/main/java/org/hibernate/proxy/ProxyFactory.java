@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.proxy;
 
@@ -14,7 +12,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.CompositeType;
 
 /**
- * Contract for run-time, proxy-based lazy initialization proxies.
+ * Contract for runtime, proxy-based lazy initialization proxies.
  *
  * @author Gavin King
  */
@@ -22,7 +20,7 @@ public interface ProxyFactory {
 
 	/**
 	 * Called immediately after instantiation of this factory.
-	 * <p/>
+	 * <p>
 	 * Essentially equivalent to constructor injection, but contracted
 	 * here via interface.
 	 *

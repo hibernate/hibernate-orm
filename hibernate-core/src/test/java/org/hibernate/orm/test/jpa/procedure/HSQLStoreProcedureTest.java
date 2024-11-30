@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.procedure;
 
@@ -30,12 +28,11 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -68,7 +65,7 @@ public class HSQLStoreProcedureTest extends BaseEntityManagerFunctionalTestCase 
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10515")
+	@JiraKey(value = "HHH-10515")
 	public void testNamedStoredProcedureExecution() {
 		EntityManager em = entityManagerFactory.createEntityManager();
 		try {
@@ -82,7 +79,7 @@ public class HSQLStoreProcedureTest extends BaseEntityManagerFunctionalTestCase 
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10915")
+	@JiraKey(value = "HHH-10915")
 	public void testGetNamedParameters() {
 		EntityManager em = entityManagerFactory.createEntityManager();
 		try {
@@ -114,7 +111,7 @@ public class HSQLStoreProcedureTest extends BaseEntityManagerFunctionalTestCase 
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10915")
+	@JiraKey(value = "HHH-10915")
 	public void testGetPositionalParameters() {
 		EntityManager em = entityManagerFactory.createEntityManager();
 		try {
@@ -142,7 +139,7 @@ public class HSQLStoreProcedureTest extends BaseEntityManagerFunctionalTestCase 
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10915")
+	@JiraKey(value = "HHH-10915")
 	public void testGetPositionalParameters2() {
 		EntityManager em = entityManagerFactory.createEntityManager();
 		try {

@@ -1,10 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.spatial.testing.dialects.oracle;
 
 
@@ -12,7 +9,7 @@ import org.hibernate.spatial.testing.datareader.TestDataElement;
 
 /**
  * A specialised subclass for SDOGeometry test objects
- * <p/>
+ * <p>
  * Oracle 10g WKT support is limited to 2D geometries, and there is
  * no method of specifying SRID. That is why we here add the equivalent SDO expression
  * that can be used by the TestData

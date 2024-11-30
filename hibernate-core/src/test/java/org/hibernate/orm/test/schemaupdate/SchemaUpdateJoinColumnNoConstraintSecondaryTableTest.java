@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemaupdate;
 
@@ -13,8 +11,6 @@ import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SecondaryTable;
 
 import org.hibernate.boot.MetadataSources;
@@ -27,18 +23,18 @@ import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 /**
  * @author Vlad Mihalcea
  */
 @RequiresDialect(H2Dialect.class)
-@TestForIssue(jiraKey = "HHH-8805")
+@JiraKey(value = "HHH-8805")
 public class SchemaUpdateJoinColumnNoConstraintSecondaryTableTest extends BaseUnitTestCase {
 
 	private static final String EXPECTED_SCRIPT =
@@ -56,7 +52,7 @@ public class SchemaUpdateJoinColumnNoConstraintSecondaryTableTest extends BaseUn
 
 	@Test
 	public void test() throws Exception {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( Environment.HBM2DDL_AUTO, "none" )
 				.build();
 		try {
@@ -66,6 +62,7 @@ public class SchemaUpdateJoinColumnNoConstraintSecondaryTableTest extends BaseUn
 			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( Parent.class )
 					.buildMetadata();
+			metadata.orderColumns( false );
 			metadata.validate();
 
 			new SchemaUpdate()

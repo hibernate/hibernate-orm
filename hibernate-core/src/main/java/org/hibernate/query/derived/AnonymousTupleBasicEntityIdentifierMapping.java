@@ -1,16 +1,18 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.derived;
 
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.MergeContext;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.ManagedMappingType;
+import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.sqm.SqmExpressible;
 
@@ -18,18 +20,34 @@ import org.hibernate.query.sqm.SqmExpressible;
  * @author Christian Beikov
  */
 @Incubating
-public class AnonymousTupleBasicEntityIdentifierMapping extends AnonymousTupleBasicValuedModelPart
+public class AnonymousTupleBasicEntityIdentifierMapping
+		extends AnonymousTupleBasicValuedModelPart
 		implements BasicEntityIdentifierMapping {
 
 	private final BasicEntityIdentifierMapping delegate;
 
 	public AnonymousTupleBasicEntityIdentifierMapping(
+			MappingType declaringType,
 			String selectionExpression,
 			SqmExpressible<?> expressible,
 			JdbcMapping jdbcMapping,
 			BasicEntityIdentifierMapping delegate) {
-		super( delegate.getAttributeName(), selectionExpression, expressible, jdbcMapping );
+		super( declaringType, delegate.getAttributeName(), selectionExpression, expressible, jdbcMapping, -1 );
 		this.delegate = delegate;
+	}
+
+	public AnonymousTupleBasicEntityIdentifierMapping(
+			MappingType declaringType,
+			SelectableMapping selectableMapping,
+			SqmExpressible<?> expressible,
+			BasicEntityIdentifierMapping delegate) {
+		super( declaringType, delegate.getAttributeName(), selectableMapping, expressible, -1 );
+		this.delegate = delegate;
+	}
+
+	@Override
+	public Nature getNature() {
+		return Nature.SIMPLE;
 	}
 
 	@Override
@@ -38,13 +56,13 @@ public class AnonymousTupleBasicEntityIdentifierMapping extends AnonymousTupleBa
 	}
 
 	@Override
-	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
-		return delegate.getIdentifier( entity, session );
+	public Object getIdentifier(Object entity) {
+		return delegate.getIdentifier( entity );
 	}
 
 	@Override
-	public Object getIdentifier(Object entity) {
-		return delegate.getIdentifier( entity );
+	public Object getIdentifier(Object entity, MergeContext mergeContext) {
+		return delegate.getIdentifier( entity, mergeContext );
 	}
 
 	@Override
@@ -65,5 +83,10 @@ public class AnonymousTupleBasicEntityIdentifierMapping extends AnonymousTupleBa
 	@Override
 	public String getAttributeName() {
 		return getPartName();
+	}
+
+	@Override
+	public ManagedMappingType getDeclaringType() {
+		return (ManagedMappingType) super.getDeclaringType();
 	}
 }

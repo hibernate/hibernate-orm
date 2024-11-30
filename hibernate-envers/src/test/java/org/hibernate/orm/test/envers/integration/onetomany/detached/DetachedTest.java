@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.onetomany.detached;
 
@@ -14,7 +12,7 @@ import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
 import org.hibernate.orm.test.envers.entities.onetomany.detached.ListRefCollEntity;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 import junit.framework.Assert;
 
@@ -32,7 +30,7 @@ public class DetachedTest extends BaseEnversFunctionalTestCase {
 
 	@Test
 	@Priority(10)
-	@TestForIssue(jiraKey = "HHH-7543")
+	@JiraKey(value = "HHH-7543")
 	public void testUpdatingDetachedEntityWithRelation() {
 		Session session = getSession();
 
@@ -40,9 +38,9 @@ public class DetachedTest extends BaseEnversFunctionalTestCase {
 		session.getTransaction().begin();
 		ListRefCollEntity parent = new ListRefCollEntity( 1, "initial data" );
 		StrTestEntity child = new StrTestEntity( "data" );
-		session.save( child );
+		session.persist( child );
 		parent.setCollection( Arrays.asList( child ) );
-		session.save( parent );
+		session.persist( parent );
 		session.getTransaction().commit();
 
 		session.close();
@@ -51,7 +49,7 @@ public class DetachedTest extends BaseEnversFunctionalTestCase {
 		// Revision 2 - updating detached entity
 		session.getTransaction().begin();
 		parent.setData( "modified data" );
-		session.update( parent );
+		session.merge( parent );
 		session.getTransaction().commit();
 
 		session.close();

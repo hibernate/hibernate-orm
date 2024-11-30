@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -17,18 +15,19 @@ public class CommunityDialectSelectorTest {
 
 	@Test
 	public void verifyAllDialectNamingResolve() {
-		testDialectNamingResolution( Cache71Dialect.class );
 		testDialectNamingResolution( CUBRIDDialect.class );
+		testDialectNamingResolution( AltibaseDialect.class );
+
 		testDialectNamingResolution( FirebirdDialect.class );
 		testDialectNamingResolution( InformixDialect.class );
 		testDialectNamingResolution( IngresDialect.class );
-		testDialectNamingResolution( Ingres9Dialect.class );
-		testDialectNamingResolution( Ingres10Dialect.class );
 		testDialectNamingResolution( MimerSQLDialect.class );
-		testDialectNamingResolution( SAPDBDialect.class );
+
 		testDialectNamingResolution( SybaseAnywhereDialect.class );
+
 		testDialectNamingResolution( TeradataDialect.class );
 		testDialectNamingResolution( TimesTenDialect.class );
+		testDialectNamingResolution( SingleStoreDialect.class );
 	}
 
 	private void testDialectNamingResolution(final Class<?> dialectClass) {

@@ -1,70 +1,76 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi.access;
 
 import java.util.Locale;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
- * The types of access strategies available.
+ * Enumerates the policies for managing concurrent access to the shared
+ * second-level cache.
+ *
+ * @apiNote This enumeration is isomorphic to
+ *          {@link org.hibernate.annotations.CacheConcurrencyStrategy}.
+ *          We don't really need both, but one is part of this SPI,
+ *          and one forms part of the API of the annotations package.
+ *          In the future, it would be nice to replace them both with
+ *          a new {@code org.hibernate.CacheConcurrencyPolicy} enum.
  *
  * @author Steve Ebersole
  */
 public enum AccessType {
 	/**
-	 * Read-only access.  Data may be added and removed, but not mutated.
+	 * Read-only access. Data may be added and removed, but not mutated.
 	 */
-	READ_ONLY( "read-only" ),
+	READ_ONLY,
 	/**
-	 * Read and write access (strict).  Data may be added, removed and mutated.
+	 * Read and write access. Data may be added, removed and mutated.
+	 * A "soft" lock on the cached item is used to manage concurrent
+	 * access during mutation.
 	 */
-	READ_WRITE( "read-write" ),
+	READ_WRITE,
 	/**
-	 * Read and write access (non-strict).  Data may be added, removed and mutated.  The non-strictness comes from
-	 * the fact that locks are not maintained as tightly as in {@link #READ_WRITE}, which leads to better throughput
-	 * but may also lead to inconsistencies.
+	 * Read and write access. Data may be added, removed and mutated.
+	 * The cached item is invalidated before and after transaction
+	 * completion to manage concurrent access during mutation. This
+	 * strategy is more vulnerable to inconsistencies than
+	 * {@link #READ_WRITE}, but may allow higher throughput.
 	 */
-	NONSTRICT_READ_WRITE( "nonstrict-read-write" ),
+	NONSTRICT_READ_WRITE,
 	/**
-	 * A read and write strategy where isolation/locking is maintained in conjunction with a JTA transaction.
+	 * Read and write access. Data may be added, removed and mutated.
+	 * Some sort of hard lock is maintained in conjunction with a
+	 * JTA transaction.
 	 */
-	TRANSACTIONAL( "transactional" );
+	TRANSACTIONAL;
 
-	private final String externalName;
-
-	private AccessType(String externalName) {
-		this.externalName = externalName;
-	}
-
 	/**
-	 * Get the corresponding externalized name for this value.
+	 * Get the external name of this value.
 	 *
 	 * @return The corresponding externalized name.
 	 */
 	public String getExternalName() {
-		return externalName;
+		return super.toString().toLowerCase(Locale.ROOT).replace('_','-');
 	}
 
 	@Override
 	public String toString() {
-		return "AccessType[" + externalName + "]";
+		return "AccessType[" + getExternalName() + "]";
 	}
 
 	/**
-	 * Resolve an AccessType from its external name.
+	 * Resolve an {@link AccessType} from its external name.
 	 *
 	 * @param externalName The external representation to resolve
-	 *
-	 * @return The access type.
-	 *
-	 * @throws UnknownAccessTypeException If the externalName was not recognized.
+	 * @return The {@link AccessType} represented by the given external name
+	 * @throws UnknownAccessTypeException if the external name was not recognized
 	 *
 	 * @see #getExternalName()
 	 */
-	public static AccessType fromExternalName(String externalName) {
+	public static AccessType fromExternalName(@Nullable String externalName) {
 		if ( externalName == null ) {
 			return null;
 		}

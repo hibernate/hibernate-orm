@@ -1,25 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * Copyright (c) 2015, Red Hat Inc. or third-party contributors as
- * indicated by the @author tags or express copyright attribution
- * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Inc.
- *
- * This copyrighted material is made available to anyone wishing to use, modify,
- * copy, or redistribute it subject to the terms and conditions of the GNU
- * Lesser General Public License, as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
- * for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this distribution; if not, write to:
- * Free Software Foundation, Inc.
- * 51 Franklin Street, Fifth Floor
- * Boston, MA  02110-1301  USA
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.namingstrategy.collectionJoinTableNaming;
 
@@ -50,8 +31,9 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -66,10 +48,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 public class CollectionJoinTableNamingTest {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9908" )
+	@JiraKey( value = "HHH-9908" )
 	public void testCollectionJoinTableNamingBase() {
 		// really the same as the JPA compliant tests; here we just pick up the default ImplicitNamingStrategy
-		final MetadataSources metadataSources = new MetadataSources();
+		final MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() );
 		try {
 			metadataSources.addAnnotatedClass( Input.class );
 			metadataSources.addAnnotatedClass( Ptx.class );
@@ -88,9 +70,9 @@ public class CollectionJoinTableNamingTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9908" )
+	@JiraKey( value = "HHH-9908" )
 	public void testCollectionJoinTableNamingLegacyJpaStrategy() {
-		final MetadataSources metadataSources = new MetadataSources();
+		final MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() );
 		try {
 			metadataSources.addAnnotatedClass( Input.class );
 			metadataSources.addAnnotatedClass( Ptx.class );
@@ -110,9 +92,9 @@ public class CollectionJoinTableNamingTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9908" )
+	@JiraKey( value = "HHH-9908" )
 	public void testCollectionJoinTableNamingLegacyHbmStrategy() {
-		final MetadataSources metadataSources = new MetadataSources();
+		final MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() );
 		try {
 			metadataSources.addAnnotatedClass( Input.class );
 			metadataSources.addAnnotatedClass( Ptx.class );
@@ -136,11 +118,11 @@ public class CollectionJoinTableNamingTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9908" )
+	@JiraKey( value = "HHH-9908" )
 	public void testCollectionJoinTableNamingJpaCompliantStrategy() {
 		// Even in 4.3, with JPA compliant naming, Hibernate creates an unusable table...
 
-		final MetadataSources metadataSources = new MetadataSources();
+		final MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() );
 		try {
 			metadataSources.addAnnotatedClass( Input.class );
 			metadataSources.addAnnotatedClass( Ptx.class );

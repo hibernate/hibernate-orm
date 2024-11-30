@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.spi;
 
@@ -11,6 +9,8 @@ import java.util.function.Function;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlTreeCreationException;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Access to TableGroup indexing.  The indexing is defined in terms
@@ -21,17 +21,26 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 public interface FromClauseAccess {
 
 	/**
+	 * Find a TableGroup in this from clause without consulting parents by the NavigablePath it is registered under.
+	 * Returns {@code null} if no TableGroup is registered under that NavigablePath
+	 */
+	TableGroup findTableGroupOnCurrentFromClause(NavigablePath navigablePath);
+
+	/**
 	 * Find a TableGroup by the NavigablePath it is registered under,
 	 * and if not found on the current from clause level, ask the parent.  Returns
 	 * {@code null} if no TableGroup is registered under that NavigablePath
 	 */
-	TableGroup findTableGroupOnParents(NavigablePath navigablePath);
+	TableGroup findTableGroup(NavigablePath navigablePath);
 
 	/**
-	 * Find a TableGroup by the NavigablePath it is registered under.  Returns
-	 * {@code null} if no TableGroup is registered under that NavigablePath
+	 * Find the TableGroup by the NavigablePath for the purpose of creating a
+	 * new TableGroup if none can be found. Returns {@code null} if no TableGroup
+	 * or parent table group is registered under that NavigablePath
 	 */
-	TableGroup findTableGroup(NavigablePath navigablePath);
+	default TableGroup findTableGroupForGetOrCreate(NavigablePath navigablePath) {
+		return findTableGroup( navigablePath );
+	}
 
 	/**
 	 * Get a  TableGroup by the NavigablePath it is registered under.  If there is
@@ -62,11 +71,13 @@ public interface FromClauseAccess {
 	 * @see #registerTableGroup
 	 */
 	default TableGroup resolveTableGroup(NavigablePath navigablePath, Function<NavigablePath, TableGroup> creator) {
-		TableGroup tableGroup = findTableGroup( navigablePath );
+		TableGroup tableGroup = findTableGroupForGetOrCreate( navigablePath );
 		if ( tableGroup == null ) {
 			tableGroup = creator.apply( navigablePath );
 			registerTableGroup( navigablePath, tableGroup );
 		}
 		return tableGroup;
 	}
+
+	@Nullable TableGroup findTableGroupByIdentificationVariable(String identificationVariable);
 }

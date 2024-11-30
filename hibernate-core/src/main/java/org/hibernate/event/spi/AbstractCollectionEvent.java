@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
 
@@ -48,7 +46,7 @@ public abstract class AbstractCollectionEvent extends AbstractEvent {
 
 	protected static CollectionPersister getLoadedCollectionPersister( PersistentCollection<?> collection, EventSource source ) {
 		CollectionEntry ce = source.getPersistenceContextInternal().getCollectionEntry( collection );
-		return ( ce == null ? null : ce.getLoadedPersister() );		
+		return ce == null ? null : ce.getLoadedPersister();
 	}
 
 	protected static Object getLoadedOwnerOrNull( PersistentCollection<?> collection, EventSource source ) {
@@ -68,19 +66,24 @@ public abstract class AbstractCollectionEvent extends AbstractEvent {
 			CollectionPersister collectionPersister,
 			Object affectedOwner,
 			EventSource source ) {
-
-		// collectionPersister should not be null, but we don't want to throw
-		// an exception if it is null
-		String entityName = collectionPersister == null
-				? null
-				: collectionPersister.getOwnerEntityPersister().getEntityName();
 		if ( affectedOwner != null ) {
-			EntityEntry ee = source.getPersistenceContextInternal().getEntry( affectedOwner );
-			if ( ee != null && ee.getEntityName() != null) {
-				entityName = ee.getEntityName();
+			final EntityEntry entry =
+					source.getPersistenceContextInternal()
+							.getEntry( affectedOwner );
+			if ( entry != null && entry.getEntityName() != null ) {
+				return entry.getEntityName();
 			}
-		}	
-		return entityName;
+		}
+
+		if ( collectionPersister != null ) {
+			return collectionPersister.getOwnerEntityPersister().getEntityName();
+		}
+		else {
+			// collectionPersister should not be null,
+			// but we don't want to throw an exception
+			// if it is null
+			return null;
+		}
 	}
 
 	public PersistentCollection<?> getCollection() {

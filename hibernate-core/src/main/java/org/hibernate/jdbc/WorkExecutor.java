@@ -1,17 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jdbc;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * A visitor used for executing a discrete piece of work encapsulated in a
- * {@link Work} or {@link ReturningWork} instance..
+ * {@link Work} or {@link ReturningWork} instance.
  *
  * @author Gail Badner
  */
@@ -20,12 +20,12 @@ public class WorkExecutor<T> {
 	/**
 	 * Execute the discrete work encapsulated by a {@link Work} instance
 	 * using the supplied connection.
+	 * <p>
+	 * Because {@link Work} does not return a value when executed via
+	 * {@link Work#execute(Connection)}, this method always returns null.
 	 *
-	 * Because {@link Work} does not return a value when executed
-	 * (via {@link Work#execute(Connection)}, this method
-	 * always returns null.
-	 *
-	 * @param work The @link ReturningWork} instance encapsulating the discrete work
+	 * @param work The {@link ReturningWork} instance encapsulating the
+	 *             discrete work
 	 * @param connection The connection on which to perform the work.
 	 *
 	 * @return null.
@@ -33,25 +33,26 @@ public class WorkExecutor<T> {
 	 * @throws SQLException Thrown during execution of the underlying JDBC interaction.
 	 * @throws org.hibernate.HibernateException Generally indicates a wrapped SQLException.
 	 */
-	public <T> T executeWork(Work work, Connection connection) throws SQLException {
+	public @Nullable T executeWork(Work work, Connection connection) throws SQLException {
 		work.execute( connection );
 		return null;
 	}
 
 	/**
-	 * Execute the discrete work encapsulated by a {@link ReturningWork} instance
-	 * using the supplied connection, returning the result of
-	 * {@link ReturningWork#execute(Connection)}
+	 * Execute the discrete work encapsulated by a {@link ReturningWork}
+	 * instance using the supplied connection, returning the result of
+	 * {@link ReturningWork#execute(Connection)}.
 	 *
-	 * @param work The @link ReturningWork} instance encapsulating the discrete work
+	 * @param work The {@link ReturningWork} instance encapsulating the
+	 *             discrete work
 	 * @param connection The connection on which to perform the work.
 	 *
-	 * @return the valued returned by <code>work.execute(connection)</code>.
+	 * @return the valued returned by {@code work.execute(connection)}.
 	 *
 	 * @throws SQLException Thrown during execution of the underlying JDBC interaction.
 	 * @throws org.hibernate.HibernateException Generally indicates a wrapped SQLException.
 	 */
-	public <T> T executeReturningWork(ReturningWork<T> work, Connection connection) throws SQLException {
+	public T executeReturningWork(ReturningWork<T> work, Connection connection) throws SQLException {
 		return work.execute( connection );
 	}
 }

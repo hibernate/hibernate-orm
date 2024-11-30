@@ -1,24 +1,31 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
+import java.sql.CallableStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.Map;
+
 import org.hibernate.LockOptions;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedNameImpl;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.community.dialect.identity.Teradata14IdentityColumnSupport;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.community.dialect.identity.Teradata14IdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
+import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
@@ -27,14 +34,11 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Index;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.TemporalUnit;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.sqm.IntervalType;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
-import org.hibernate.dialect.temptable.TemporaryTable;
-import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ForUpdateFragment;
@@ -51,13 +55,6 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
-
-import java.sql.CallableStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.Iterator;
-import java.util.Map;
 
 import jakarta.persistence.TemporalType;
 
@@ -76,15 +73,17 @@ import static org.hibernate.type.SqlTypes.VARBINARY;
  */
 public class TeradataDialect extends Dialect {
 
+	private static final DatabaseVersion DEFAULT_VERSION = DatabaseVersion.make( 12, 0 );
+
 	private static final int PARAM_LIST_SIZE_LIMIT = 1024;
 
 	public TeradataDialect(DialectResolutionInfo info) {
-		this( info.makeCopy() );
+		this( info.makeCopyOrDefault( DEFAULT_VERSION ) );
 		registerKeywords( info );
 	}
 
 	public TeradataDialect() {
-		this( DatabaseVersion.make( 12, 0 ) );
+		this( DEFAULT_VERSION );
 	}
 
 	public TeradataDialect(DatabaseVersion version) {
@@ -121,8 +120,9 @@ public class TeradataDialect extends Dialect {
 				return "byte($l)";
 			case VARBINARY:
 				return "varbyte($l)";
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override
@@ -134,6 +134,11 @@ public class TeradataDialect extends Dialect {
 	@Override
 	public boolean useInputStreamToInsertBlob() {
 		return getVersion().isSameOrAfter( 14 );
+	}
+
+	@Override
+	public boolean useConnectionToCreateLob() {
+		return false;
 	}
 
 	@Override
@@ -194,7 +199,7 @@ public class TeradataDialect extends Dialect {
 
 	@Override
 	public long getFractionalSecondPrecisionInNanos() {
-	 	// Do duration arithmetic in a seconds, but
+		// Do duration arithmetic in a seconds, but
 		// with the fractional part
 		return 1_000_000_000; //seconds!!
 	}
@@ -251,12 +256,12 @@ public class TeradataDialect extends Dialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
-		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry(functionContributions);
+		final BasicTypeRegistry basicTypeRegistry = functionContributions.getTypeConfiguration().getBasicTypeRegistry();
 		final BasicType<String> stringType = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 		functionFactory.concat_pipeOperator();
 		functionFactory.octetLength();
 		functionFactory.moreHyperbolic();
@@ -267,7 +272,7 @@ public class TeradataDialect extends Dialect {
 		functionFactory.position();
 		functionFactory.bitLength_pattern( "octet_length(cast(?1 as char))*4" );
 
-		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "mod", "(?1 mod ?2)" )
+		functionContributions.getFunctionRegistry().patternDescriptorBuilder( "mod", "(?1 mod ?2)" )
 				.setInvariantType( stringType )
 				.setExactArgumentCount( 2 )
 				.register();
@@ -595,16 +600,16 @@ public class TeradataDialect extends Dialect {
 				indexNameForCreation = index.getName();
 			}
 
-			StringBuilder columnList = new StringBuilder();
+			final StringBuilder columnList = new StringBuilder();
 			boolean first = true;
-			for (Iterator<Column> column = index.getColumnIterator(); column.hasNext(); ) {
+			for ( Column column : index.getColumns() ) {
 				if ( first ) {
 					first = false;
 				}
 				else {
 					columnList.append( ", " );
 				}
-				columnList.append( column.next().getName() );
+				columnList.append( column.getName() );
 			}
 
 			return new String[] {
@@ -618,7 +623,7 @@ public class TeradataDialect extends Dialect {
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return getVersion().isBefore( 14 )
 				? super.getIdentityColumnSupport()
-				: new Teradata14IdentityColumnSupport();
+				: Teradata14IdentityColumnSupport.INSTANCE;
 	}
 
 	@Override
@@ -630,7 +635,7 @@ public class TeradataDialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return TopLimitHandler.INSTANCE;
+		return new TopLimitHandler( false );
 	}
 
 }

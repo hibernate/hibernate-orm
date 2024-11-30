@@ -1,14 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.config.spi;
 
 import java.util.Map;
 
 import org.hibernate.service.Service;
+
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.PolyNull;
 
 /**
  * Provides access to the initial user-provided configuration values.  Generally speaking
@@ -38,7 +40,7 @@ public interface ConfigurationService extends Service {
 	 *
 	 * @return The converted (typed) setting.  May return {@code null} (see {@link #getSetting(String, Class, Object)})
 	 */
-	<T> T getSetting(String name, Converter<T> converter);
+	<T> @Nullable T getSetting(String name, Converter<T> converter);
 
 	/**
 	 * Get the named setting, using the specified converter and default value.
@@ -50,7 +52,7 @@ public interface ConfigurationService extends Service {
 	 *
 	 * @return The converted (typed) setting.  Will be the defaultValue if no such setting was defined.
 	 */
-	<T> T getSetting(String name, Converter<T> converter, T defaultValue);
+	<T> @PolyNull T getSetting(String name, Converter<T> converter, @PolyNull T defaultValue);
 
 	/**
 	 * Get the named setting.  Differs from the form taking a Converter in that here we expect to have a simple
@@ -63,7 +65,7 @@ public interface ConfigurationService extends Service {
 	 *
 	 * @return The converted (typed) setting.  Will be the defaultValue if no such setting was defined.
 	 */
-	<T> T getSetting(String name, Class<T> expected, T defaultValue);
+	<T> @PolyNull T getSetting(String name, Class<T> expected, @PolyNull T defaultValue);
 
 	/**
 	 * Simple conversion contract for converting an untyped object to a specified type.
@@ -78,6 +80,6 @@ public interface ConfigurationService extends Service {
 		 *
 		 * @return The converted (typed) value.
 		 */
-		T convert(Object value);
+		@NonNull T convert(Object value);
 	}
 }

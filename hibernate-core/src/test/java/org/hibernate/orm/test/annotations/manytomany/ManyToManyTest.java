@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.manytomany;
 
@@ -27,7 +25,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.metamodel.CollectionClassification;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -47,7 +45,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void configure(Configuration configuration) {
 		super.configure( configuration );
-		configuration.setProperty( AvailableSettings.DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG.name() );
+		configuration.setProperty( AvailableSettings.DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG );
 //		configuration.setImplicitNamingStrategy( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE );
 	}
 
@@ -245,7 +243,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		er = s.load( Employer.class, er.getId() );
+		er = s.getReference( Employer.class, er.getId() );
 		assertNotNull( er );
 		assertNotNull( er.getEmployees() );
 		assertEquals( 1, er.getEmployees().size() );
@@ -269,8 +267,8 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		assertNotNull( ee );
 		er = ee.getEmployers().iterator().next();
 		assertTrue( "second join non lazy", Hibernate.isInitialized( er ) );
-		s.delete( er );
-		s.delete( ee );
+		s.remove( er );
+		s.remove( ee );
 		tx.commit();
 		s.close();
 	}
@@ -311,7 +309,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		tx.rollback();
 		s.close();
 	}
-	
+
 	// HHH-4394
 	@Test
 	public void testOrderByContractor() {
@@ -359,7 +357,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		tx.rollback();
 		s.close();
 	}
-	
+
 	@Test
 	public void testRemoveInBetween() {
 		Session s;
@@ -384,7 +382,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		er = s.load( Employer.class, er.getId() );
+		er = s.getReference( Employer.class, er.getId() );
 		assertNotNull( er );
 		assertNotNull( er.getEmployees() );
 		assertEquals( 2, er.getEmployees().size() );
@@ -415,8 +413,8 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		er = ee.getEmployers().iterator().next();
 		assertTrue( "second join non lazy", Hibernate.isInitialized( er ) );
 		assertEquals( 1, er.getEmployees().size() );
-		s.delete( er );
-		s.delete( ee );
+		s.remove( er );
+		s.remove( ee );
 		tx.commit();
 		s.close();
 	}
@@ -441,7 +439,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		f = s.load( Friend.class, f.getId() );
+		f = s.getReference( Friend.class, f.getId() );
 		assertNotNull( f );
 		assertNotNull( f.getFriends() );
 		assertEquals( 1, f.getFriends().size() );
@@ -509,10 +507,10 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		m1 = s.load( Man.class, m1pk );
+		m1 = s.getReference( Man.class, m1pk );
 		assertFalse( m1.getWomens().isEmpty() );
 		assertEquals( 1, m1.getWomens().size() );
-		w1 = s.load( Woman.class, w1pk );
+		w1 = s.getReference( Woman.class, w1pk );
 		assertFalse( w1.getMens().isEmpty() );
 		assertEquals( 2, w1.getMens().size() );
 
@@ -582,15 +580,15 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		Permission readAccess = new Permission();
 		readAccess.setPermission( "read" );
 		readAccess.setExpirationDate( new Date() );
-		
+
 		Permission writeAccess = new Permission();
 		writeAccess.setPermission( "write" );
 		writeAccess.setExpirationDate( new Date( new Date().getTime() - 10*60*1000 ) );
-		
+
 		Permission executeAccess = new Permission();
 		executeAccess.setPermission( "execute" );
 		executeAccess.setExpirationDate( new Date( new Date().getTime() - 5*60*1000 ) );
-		
+
 		Set<Permission> coll = new HashSet<>( 3 );
 		coll.add( readAccess );
 		coll.add( writeAccess );
@@ -613,15 +611,15 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().rollback();
 		s.close();
 	}
-	
+
 	@Test
 	public void testJoinedSubclassManyToMany() {
 		Session s = openSession();
 		Zone a = new Zone();
 		InspectorPrefixes ip = new InspectorPrefixes( "dgi" );
 		Transaction tx = s.beginTransaction();
-		s.save( a );
-		s.save( ip );
+		s.persist( a );
+		s.persist( ip );
 		ip.getAreas().add( a );
 		tx.commit();
 		s.close();
@@ -631,8 +629,8 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		assertNotNull( ip );
 		assertEquals( 1, ip.getAreas().size() );
 		assertEquals( a.getId(), ip.getAreas().get( 0 ).getId() );
-		s.delete( ip );
-		s.delete( ip.getAreas().get( 0 ) );
+		s.remove( ip );
+		s.remove( ip.getAreas().get( 0 ) );
 		tx.commit();
 		s.close();
 	}
@@ -644,8 +642,8 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		InspectorPrefixes ip = new InspectorPrefixes( "dgi" );
 		ip.setName( "Inspector" );
 		Transaction tx = s.beginTransaction();
-		s.save( a );
-		s.save( ip );
+		s.persist( a );
+		s.persist( ip );
 		ip.getDesertedAreas().add( a );
 		tx.commit();
 		s.close();
@@ -655,8 +653,8 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		assertNotNull( ip );
 		assertEquals( 1, ip.getDesertedAreas().size() );
 		assertEquals( a.getId(), ip.getDesertedAreas().get( 0 ).getId() );
-		s.delete( ip );
-		s.delete( ip.getDesertedAreas().get( 0 ) );
+		s.remove( ip );
+		s.remove( ip.getDesertedAreas().get( 0 ) );
 		tx.commit();
 		s.close();
 	}
@@ -681,7 +679,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-4685" )
+	@JiraKey( value = "HHH-4685" )
 	public void testManyToManyEmbeddableBiDirectionalDotNotationInMappedBy() {
 		// Section 11.1.25
 		// The ManyToMany annotation may be used within an embeddable class contained within an entity class to specify a
@@ -712,7 +710,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.getTransaction().begin();
 		e = s.get( e.getClass(),e.getId() );
-		// follow both directions of many to many association 
+		// follow both directions of many to many association
 		assertEquals("same employee", e.getName(), e.getContactInfo().getPhoneNumbers().get(0).getEmployees().iterator().next().getName());
 		s.getTransaction().commit();
 
@@ -720,7 +718,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-4685" )
+	@JiraKey( value = "HHH-4685" )
 	public void testOneToManyEmbeddableBiDirectionalDotNotationInMappedBy() {
 		// Section 11.1.26
 		// The ManyToOne annotation may be used within an embeddable class to specify a relationship from the embeddable
@@ -748,7 +746,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.getTransaction().begin();
 		e = s.get( e.getClass(), e.getId() );
-		assertEquals( "same job in both directions", 
+		assertEquals( "same job in both directions",
 			e.getJobInfo().getJobDescription(),
 			e.getJobInfo().getPm().getManages().iterator().next().getJobInfo().getJobDescription()  );
 		s.getTransaction().commit();
@@ -756,7 +754,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-    protected Class[] getAnnotatedClasses() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Friend.class,
 				Employer.class,

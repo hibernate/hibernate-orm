@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.ops;
 
@@ -39,7 +37,7 @@ public class SimpleOpsTest extends AbstractOperationTestCase {
 					SimpleEntity entity = new SimpleEntity();
 					entity.setId( id );
 					entity.setName( "name" );
-					session.save( entity );
+					session.persist( entity );
 				}
 		);
 
@@ -66,7 +64,7 @@ public class SimpleOpsTest extends AbstractOperationTestCase {
 
 		SimpleEntity simpleEntity = scope.fromTransaction(
 				session -> {
-					SimpleEntity entity = session.load( SimpleEntity.class, id );
+					SimpleEntity entity = session.getReference( SimpleEntity.class, id );
 					assertFalse( Hibernate.isInitialized( entity ) );
 					assertThat( entity.getId(), is( 1L ) );
 					assertThat( entity.getName(), is( "new name" ) );
@@ -98,7 +96,7 @@ public class SimpleOpsTest extends AbstractOperationTestCase {
 					SimpleEntity entity = session.get( SimpleEntity.class, id );
 					assertThat( entity.getId(), is( 1L ) );
 					assertThat( entity.getName(), is( "another new name" ) );
-					session.delete( entity );
+					session.remove( entity );
 				}
 		);
 
@@ -107,4 +105,3 @@ public class SimpleOpsTest extends AbstractOperationTestCase {
 		assertDeleteCount( 1, scope );
 	}
 }
-

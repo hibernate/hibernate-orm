@@ -1,17 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.spi;
 
+import java.lang.invoke.MethodHandles;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.LinkedHashSet;
 
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 
 import org.jboss.logging.Logger;
@@ -23,6 +23,7 @@ import org.jboss.logging.Logger;
  */
 public class TypeInfo {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			TypeInfo.class.getName()
 	);
@@ -125,7 +126,7 @@ public class TypeInfo {
 		if ( value == null || value.length() == 0 ) {
 			return ArrayHelper.EMPTY_STRING_ARRAY;
 		}
-		return value.split( "," );
+		return StringHelper.split( ",", value );
 	}
 
 	public String getTypeName() {

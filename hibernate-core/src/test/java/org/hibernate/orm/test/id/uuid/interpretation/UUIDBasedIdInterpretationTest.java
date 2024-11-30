@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id.uuid.interpretation;
 
@@ -13,8 +11,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.VarcharUUIDJdbcType;
+import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.UUIDJavaType;
@@ -50,14 +51,21 @@ public class UUIDBasedIdInterpretationTest {
 
 	@Test
 	@JiraKey( "HHH-10564" )
-	@RequiresDialect( value = MySQLDialect.class, majorVersion = 5 )
+	@RequiresDialect(value = MySQLDialect.class, matchSubTypes = false)
 	public void testMySQL(DomainModelScope scope) {
 		checkUuidTypeUsed( scope, VarbinaryJdbcType.class );
 	}
 
 	@Test
 	@JiraKey( "HHH-10564" )
-	@RequiresDialect( value = PostgreSQLDialect.class, majorVersion = 9, minorVersion = 4 )
+	@RequiresDialect(value = MariaDBDialect.class, majorVersion = 10, minorVersion = 7)
+	public void testMariaDB(DomainModelScope scope) {
+		checkUuidTypeUsed( scope, VarcharUUIDJdbcType.class );
+	}
+
+	@Test
+	@JiraKey( "HHH-10564" )
+	@RequiresDialect( value = PostgreSQLDialect.class )
 	public void testPostgreSQL(DomainModelScope scope) {
 		checkUuidTypeUsed( scope, UUIDJdbcType.class );
 	}
@@ -67,7 +75,7 @@ public class UUIDBasedIdInterpretationTest {
 	@RequiresDialect(H2Dialect.class)
 	public void testBinaryRuntimeUsage(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			session.byId( UuidIdEntity.class ).load( UUID.randomUUID() );
+			session.byId( UuidIdEntity.class ).load( SafeRandomUUIDGenerator.safeRandomUUID() );
 		} );
 	}
 

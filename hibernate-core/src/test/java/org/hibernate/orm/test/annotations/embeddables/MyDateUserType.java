@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.embeddables;
 
@@ -42,7 +40,8 @@ public class MyDateUserType implements UserType<MyDate> {
 	}
 
 	@Override
-	public MyDate nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public MyDate nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+			throws SQLException {
 		return new MyDate( rs.getDate( position ) );
 	}
 
@@ -51,7 +50,7 @@ public class MyDateUserType implements UserType<MyDate> {
 			PreparedStatement st,
 			MyDate value,
 			int index,
-			SharedSessionContractImplementor session) throws HibernateException, SQLException {
+			SharedSessionContractImplementor session) throws SQLException {
 		st.setDate(index, new java.sql.Date(value.getDate().getTime()));
 	}
 

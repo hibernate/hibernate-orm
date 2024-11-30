@@ -1,18 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.hibernate.orm.test.bytecode.enhancement.lazy.proxy.BytecodeEnhancedLazyLoadingOnDeletedEntityTest.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -21,44 +18,48 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 
 import org.hibernate.LazyInitializationException;
-import org.hibernate.metamodel.CollectionClassification;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-@TestForIssue(jiraKey = "HHH-14811")
-@RunWith(BytecodeEnhancerRunner.class)
+@JiraKey("HHH-14811")
+@DomainModel(
+		annotatedClasses = {
+				AssociationOwner.class, AssociationNonOwner.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = DEFAULT_LIST_SEMANTICS, value = "BAG" ),
+		}
+)
+@SessionFactory(
+		// This test only makes sense if association properties *can* be uninitialized.
+		applyCollectionsInDefaultFetchGroup = false
+)
+@BytecodeEnhanced
 @EnhancementOptions(lazyLoading = true)
-public class BytecodeEnhancedLazyLoadingOnDeletedEntityTest
-		extends BaseNonConfigCoreFunctionalTestCase {
+public class BytecodeEnhancedLazyLoadingOnDeletedEntityTest {
 
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { AssociationOwner.class, AssociationNonOwner.class };
-	}
-
-	@Override
-	protected void addSettings(Map<String,Object> settings) {
-		super.addSettings( settings );
-		settings.put( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG.name() );
-	}
-
-	@After
-	public void tearDown() {
-		doInHibernate( this::sessionFactory, s -> {
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			s.createQuery( "delete from AOwner" ).executeUpdate();
 			s.createQuery( "delete from ANonOwner" ).executeUpdate();
 		} );
 	}
 
 	@Test
-	public void accessUnloadedLazyAssociationOnDeletedOwner() {
-		inTransaction( s -> {
+	public void accessUnloadedLazyAssociationOnDeletedOwner(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			AssociationOwner owner = new AssociationOwner();
 			owner.setId( 1 );
 			for ( int i = 0; i < 2; i++ ) {
@@ -70,9 +71,9 @@ public class BytecodeEnhancedLazyLoadingOnDeletedEntityTest
 			}
 			s.persist( owner );
 		} );
-		assertThatThrownBy( () -> inTransaction( session -> {
-			AssociationOwner owner = session.load( AssociationOwner.class, 1 );
-			session.delete( owner );
+		assertThatThrownBy( () -> scope.inTransaction( session -> {
+			AssociationOwner owner = session.getReference( AssociationOwner.class, 1 );
+			session.remove( owner );
 			session.flush();
 			owner.getNonOwners().size();
 		} ) )
@@ -82,15 +83,15 @@ public class BytecodeEnhancedLazyLoadingOnDeletedEntityTest
 	}
 
 	@Test
-	public void accessUnloadedLazyAssociationOnDeletedNonOwner() {
-		inTransaction( s -> {
+	public void accessUnloadedLazyAssociationOnDeletedNonOwner(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			AssociationNonOwner nonOwner = new AssociationNonOwner();
 			nonOwner.setId( 1 );
 			s.persist( nonOwner );
 		} );
-		assertThatThrownBy( () -> inTransaction( session -> {
-			AssociationNonOwner nonOwner = session.load( AssociationNonOwner.class, 1 );
-			session.delete( nonOwner );
+		assertThatThrownBy( () -> scope.inTransaction( session -> {
+			AssociationNonOwner nonOwner = session.getReference( AssociationNonOwner.class, 1 );
+			session.remove( nonOwner );
 			session.flush();
 			nonOwner.getOwners().size();
 		} ) )
@@ -101,7 +102,7 @@ public class BytecodeEnhancedLazyLoadingOnDeletedEntityTest
 
 	@Entity(name = "AOwner")
 	@Table
-	private static class AssociationOwner {
+	static class AssociationOwner {
 
 		@Id
 		Integer id;
@@ -129,7 +130,7 @@ public class BytecodeEnhancedLazyLoadingOnDeletedEntityTest
 
 	@Entity(name = "ANonOwner")
 	@Table
-	private static class AssociationNonOwner {
+	static class AssociationNonOwner {
 
 		@Id
 		Integer id;

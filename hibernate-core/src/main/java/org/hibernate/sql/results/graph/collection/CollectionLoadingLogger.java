@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.collection;
 
@@ -26,7 +24,4 @@ public interface CollectionLoadingLogger extends BasicLogger {
 	 * Static access to the logging instance
 	 */
 	Logger COLL_LOAD_LOGGER = LoadingLogger.subLogger( LOGGER_NAME );
-
-	boolean TRACE_ENABLED = COLL_LOAD_LOGGER.isTraceEnabled();
-	boolean DEBUG_ENABLED = COLL_LOAD_LOGGER.isDebugEnabled();
 }

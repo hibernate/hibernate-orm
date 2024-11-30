@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
+import java.lang.invoke.MethodHandles;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Locale;
@@ -30,12 +29,11 @@ import org.hibernate.envers.internal.entities.mapper.CompositeMapperBuilder;
 import org.hibernate.envers.internal.entities.mapper.ExtendedPropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.MultiPropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.SubclassPropertyMapper;
+import org.hibernate.mapping.GeneratorCreator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SyntheticProperty;
-import org.hibernate.tuple.GeneratedValueGeneration;
-import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.ValueGeneration;
+import org.hibernate.generator.internal.GeneratedGeneration;
 
 import org.jboss.logging.Logger;
 
@@ -52,6 +50,7 @@ import org.jboss.logging.Logger;
 public final class AuditMetadataGenerator extends AbstractMetadataGenerator {
 
 	private static final EnversMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			EnversMessageLogger.class,
 			AuditMetadataGenerator.class.getName()
 	);
@@ -120,11 +119,11 @@ public final class AuditMetadataGenerator extends AbstractMetadataGenerator {
 
 	private boolean isPropertyInsertable(Property property) {
 		if ( !property.isInsertable() ) {
-			final ValueGeneration generation = property.getValueGenerationStrategy();
-			if ( generation instanceof GeneratedValueGeneration ) {
-				final GeneratedValueGeneration valueGeneration = (GeneratedValueGeneration) generation;
-				if ( GenerationTiming.INSERT == valueGeneration.getGenerationTiming()
-					|| GenerationTiming.ALWAYS == valueGeneration.getGenerationTiming() ) {
+			// TODO: this is now broken by changes to generators
+			final GeneratorCreator generation = property.getValueGeneratorCreator();
+			if ( generation instanceof GeneratedGeneration) {
+				final GeneratedGeneration valueGeneration = (GeneratedGeneration) generation;
+				if ( valueGeneration.generatesOnInsert() ) {
 					return true;
 				}
 			}
@@ -144,9 +143,8 @@ public final class AuditMetadataGenerator extends AbstractMetadataGenerator {
 		return true;
 	}
 
-	@SuppressWarnings("unchecked")
 	private void createJoins(PersistentClass persistentClass, JoinAwarePersistentEntity entity, ClassAuditingData auditingData) {
-		final Iterator<org.hibernate.mapping.Join> joins = persistentClass.getJoinIterator();
+		final Iterator<org.hibernate.mapping.Join> joins = persistentClass.getJoins().iterator();
 		final Map<org.hibernate.mapping.Join, Join> joinElements = new HashMap<>();
 		entityJoins.put( persistentClass.getEntityName(), joinElements );
 
@@ -154,7 +152,7 @@ public final class AuditMetadataGenerator extends AbstractMetadataGenerator {
 			org.hibernate.mapping.Join join = joins.next();
 
 			// Checking if all of the join properties are audited
-			if ( !checkPropertiesAudited( join.getPropertyIterator(), auditingData ) ) {
+			if ( !checkPropertiesAudited( join.getProperties().iterator(), auditingData ) ) {
 				continue;
 			}
 
@@ -191,7 +189,6 @@ public final class AuditMetadataGenerator extends AbstractMetadataGenerator {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	private void addJoins(
 			PersistentClass persistentClass,
 			CompositeMapperBuilder currentMapper,
@@ -199,7 +196,7 @@ public final class AuditMetadataGenerator extends AbstractMetadataGenerator {
 			String entityName,
 			EntityMappingData mappingData,
 			boolean firstPass) {
-		final Iterator<org.hibernate.mapping.Join> joins = persistentClass.getJoinIterator();
+		final Iterator<org.hibernate.mapping.Join> joins = persistentClass.getJoins().iterator();
 
 		while ( joins.hasNext() ) {
 			final org.hibernate.mapping.Join join = joins.next();
@@ -208,7 +205,7 @@ public final class AuditMetadataGenerator extends AbstractMetadataGenerator {
 			if ( entityJoin != null ) {
 				addProperties(
 						entityJoin,
-						join.getPropertyIterator(),
+						join.getProperties().iterator(),
 						currentMapper,
 						auditingData,
 						entityName,
@@ -325,7 +322,7 @@ public final class AuditMetadataGenerator extends AbstractMetadataGenerator {
 		LOG.infof( "Adding properties for entity: %s", persistentClass.getEntityName() );
 		addProperties(
 				entity,
-				persistentClass.getUnjoinedPropertyIterator(),
+				persistentClass.getUnjoinedProperties().iterator(),
 				propertyMapper,
 				auditingData,
 				persistentClass.getEntityName(),
@@ -397,7 +394,7 @@ public final class AuditMetadataGenerator extends AbstractMetadataGenerator {
 		// Mapping unjoined properties
 		addProperties(
 				mappingData.getEntityDefinition(),
-				persistentClass.getUnjoinedPropertyIterator(),
+				persistentClass.getUnjoinedProperties().iterator(),
 				propertyMapper,
 				auditingData,
 				entityName,

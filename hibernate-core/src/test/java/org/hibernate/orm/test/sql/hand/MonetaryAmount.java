@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql.hand;
 import java.io.Serializable;
@@ -12,8 +10,8 @@ import java.util.Currency;
 /**
  * Represents a monetary amount as value and currency.
  *
- * @author <a href="mailto:gavin@hibernate.org">Gavin King</a>
- * @author <a href="mailto:christian@hibernate.org">Christian Bauer</a>
+ * @author Gavin King
+ * @author Christian Bauer
  */
 public class MonetaryAmount implements Serializable {
 
@@ -56,7 +54,7 @@ public class MonetaryAmount implements Serializable {
 
 	public String toString() {
 		return "Value: '" + getValue() + "', " +
-		        "Currency: '" + getCurrency() + "'";
+				"Currency: '" + getCurrency() + "'";
 	}
 
 	public int compareTo(Object o) {
@@ -71,11 +69,11 @@ public class MonetaryAmount implements Serializable {
 
 	public static MonetaryAmount fromString(String amount, String currencyCode) {
 		return new MonetaryAmount(new BigDecimal(amount),
-								  Currency.getInstance(currencyCode));
+								Currency.getInstance(currencyCode));
 	}
 
 	public static MonetaryAmount convert(MonetaryAmount amount,
-										 Currency toConcurrency) {
+										Currency toConcurrency) {
 		// TODO: This requires some conversion magic and is therefore broken
 		return new MonetaryAmount(amount.getValue(), toConcurrency);
 	}

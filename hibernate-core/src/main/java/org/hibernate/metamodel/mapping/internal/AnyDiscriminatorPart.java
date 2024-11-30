@@ -1,100 +1,136 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.io.Serializable;
-import java.util.function.BiConsumer;
-
-import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.mapping.IndexedConsumer;
-import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
+import org.hibernate.metamodel.mapping.DiscriminatorConverter;
+import org.hibernate.metamodel.mapping.DiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
-import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.spi.ImplicitDiscriminatorStrategy;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
-import org.hibernate.type.MetaType;
+import org.hibernate.sql.results.graph.basic.BasicResult;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.java.ClassJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
-import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
+import java.util.Map;
+import java.util.function.BiConsumer;
 
 /**
  * Acts as a ModelPart for the discriminator portion of an any-valued mapping
  *
  * @author Steve Ebersole
  */
-public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions, SelectableMapping {
-	public static final String ROLE_NAME = EntityDiscriminatorMapping.ROLE_NAME;
+public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions {
+	public static final String ROLE_NAME = EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME;
 
 	private final NavigableRole navigableRole;
 	private final DiscriminatedAssociationModelPart declaringType;
 
 	private final String table;
 	private final String column;
+	private final String customReadExpression;
+	private final String customWriteExpression;
 	private final String columnDefinition;
 	private final Long length;
 	private final Integer precision;
 	private final Integer scale;
-	private final boolean nullable;
 
-	private final MetaType metaType;
+	private final boolean insertable;
+	private final boolean updateable;
+	private final boolean partitioned;
+
+	private final BasicType<?> underlyingJdbcMapping;
+	private final DiscriminatorConverter<?,?> valueConverter;
 
 	public AnyDiscriminatorPart(
 			NavigableRole partRole,
 			DiscriminatedAssociationModelPart declaringType,
 			String table,
-			String column,
+			String column, String customReadExpression, String customWriteExpression,
 			String columnDefinition,
 			Long length,
 			Integer precision,
 			Integer scale,
-			boolean nullable,
-			MetaType metaType) {
+			boolean insertable,
+			boolean updateable,
+			boolean partitioned,
+			BasicType<?> underlyingJdbcMapping,
+			Map<Object,String> valueToEntityNameMap,
+			ImplicitDiscriminatorStrategy implicitValueStrategy,
+			MappingMetamodelImplementor mappingMetamodel) {
 		this.navigableRole = partRole;
 		this.declaringType = declaringType;
 		this.table = table;
 		this.column = column;
+		this.customReadExpression = customReadExpression;
+		this.customWriteExpression = customWriteExpression;
 		this.columnDefinition = columnDefinition;
 		this.length = length;
 		this.precision = precision;
 		this.scale = scale;
-		this.nullable = nullable;
-		this.metaType = metaType;
+		this.insertable = insertable;
+		this.updateable = updateable;
+		this.partitioned = partitioned;
+
+		this.underlyingJdbcMapping = underlyingJdbcMapping;
+		this.valueConverter = determineDiscriminatorConverter(
+				partRole,
+				underlyingJdbcMapping,
+				valueToEntityNameMap,
+				implicitValueStrategy,
+				mappingMetamodel
+		);
 	}
 
-	public MetaType getMetaType() {
-		return metaType;
+	public static DiscriminatorConverter<?, ?> determineDiscriminatorConverter(
+			NavigableRole partRole,
+			BasicType<?> underlyingJdbcMapping,
+			Map<Object, String> valueToEntityNameMap,
+			ImplicitDiscriminatorStrategy implicitValueStrategy,
+			MappingMetamodelImplementor mappingMetamodel) {
+		return new UnifiedAnyDiscriminatorConverter<>(
+				partRole,
+				ClassJavaType.INSTANCE,
+				underlyingJdbcMapping.getJavaTypeDescriptor(),
+				valueToEntityNameMap,
+				implicitValueStrategy,
+				mappingMetamodel
+		);
+	}
+
+	public DiscriminatorConverter<?,?> getValueConverter() {
+		return valueConverter;
 	}
 
 	public JdbcMapping jdbcMapping() {
-		return (JdbcMapping) metaType.getBaseType();
+		return underlyingJdbcMapping;
 	}
 
 	@Override
@@ -113,13 +149,33 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 	}
 
 	@Override
+	public boolean isNullable() {
+		return false;
+	}
+
+	@Override
+	public boolean isInsertable() {
+		return insertable;
+	}
+
+	@Override
+	public boolean isUpdateable() {
+		return updateable;
+	}
+
+	@Override
+	public boolean isPartitioned() {
+		return partitioned;
+	}
+
+	@Override
 	public String getCustomReadExpression() {
-		return null;
+		return customReadExpression;
 	}
 
 	@Override
 	public String getCustomWriteExpression() {
-		return null;
+		return customWriteExpression;
 	}
 
 	@Override
@@ -135,6 +191,11 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 	@Override
 	public Integer getPrecision() {
 		return precision;
+	}
+
+	@Override
+	public Integer getTemporalPrecision() {
+		return null;
 	}
 
 	@Override
@@ -163,48 +224,42 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 	}
 
 	@Override
-	public <T> DomainResult<T> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
-	@Override
-	public void applySqlSelections(
-			NavigablePath navigablePath, TableGroup tableGroup, DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
-	@Override
-	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState,
-			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+	public JdbcMapping getUnderlyingJdbcMapping() {
+		return underlyingJdbcMapping;
 	}
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		final Serializable discriminator = metaType.disassemble( value, session, value );
-		return discriminator;
+		return underlyingJdbcMapping.disassemble( value, session, value );
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		cacheKey.addValue( underlyingJdbcMapping.disassemble( value, session, value ) );
+		cacheKey.addHashCode( underlyingJdbcMapping.getHashCode( value ) );
+	}
+
+	@Override
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		valueConsumer.consume( domainValue, this );
+	public <X, Y> int breakDownJdbcValues(
+			Object domainValue,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
+			SharedSessionContractImplementor session) {
+		valueConsumer.consume( offset, x, y, domainValue, this );
+		return getJdbcTypeCount();
 	}
 
 	@Override
@@ -220,6 +275,11 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 	@Override
 	public String getFetchableName() {
 		return getPartName();
+	}
+
+	@Override
+	public int getFetchableKey() {
+		return 0;
 	}
 
 	@Override
@@ -245,7 +305,7 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 	}
 
 	@Override
-	public Fetch generateFetch(
+	public BasicFetch<?> generateFetch(
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,
 			FetchTiming fetchTiming,
@@ -260,16 +320,8 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 		final TableGroup tableGroup = fromClauseAccess.getTableGroup( fetchablePath.getParent().getParent() );
 		final TableReference tableReference = tableGroup.resolveTableReference( fetchablePath, table );
 		final Expression columnReference = sqlExpressionResolver.resolveSqlExpression(
-				createColumnReferenceKey( tableReference, column ),
-				processingState -> new ColumnReference(
-						tableReference,
-						column,
-						false,
-						null,
-						null,
-						jdbcMapping(),
-						sessionFactory
-				)
+				tableReference,
+				this
 		);
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				columnReference,
@@ -284,7 +336,8 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 				fetchablePath,
 				this,
 				fetchTiming,
-				creationState
+				creationState,
+				!sqlSelection.isVirtual()
 		);
 	}
 
@@ -296,5 +349,65 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 	@Override
 	public FetchTiming getTiming() {
 		return FetchTiming.IMMEDIATE;
+	}
+
+	@Override
+	public <T> DomainResult<T> createDomainResult(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		final SqlSelection sqlSelection = resolveSqlSelection( navigablePath, tableGroup, creationState );
+		return new BasicResult<>(
+				sqlSelection.getValuesArrayPosition(),
+				resultVariable,
+				jdbcMapping(),
+				navigablePath,
+				false,
+				!sqlSelection.isVirtual()
+		);
+	}
+
+	@Override
+	public Expression resolveSqlExpression(
+			NavigablePath navigablePath,
+			JdbcMapping jdbcMappingToUse,
+			TableGroup tableGroup,
+			SqlAstCreationState creationState) {
+		return creationState.getSqlExpressionResolver().resolveSqlExpression( tableGroup.resolveTableReference(
+				navigablePath,
+				this,
+				getContainingTableExpression()
+		), this );
+	}
+
+	@Override
+	public void applySqlSelections(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState) {
+		resolveSqlSelection( navigablePath, tableGroup, creationState );
+	}
+
+	@Override
+	public void applySqlSelections(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState,
+			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+		selectionConsumer.accept( resolveSqlSelection( navigablePath, tableGroup, creationState ), getJdbcMapping() );
+	}
+
+	private SqlSelection resolveSqlSelection(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState) {
+		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
+		return sqlAstCreationState.getSqlExpressionResolver().resolveSqlSelection(
+				resolveSqlExpression( navigablePath, null, tableGroup, sqlAstCreationState ),
+				jdbcMapping().getJdbcJavaType(),
+				null,
+				creationState.getSqlAstCreationState().getCreationContext().getSessionFactory().getTypeConfiguration()
+		);
 	}
 }

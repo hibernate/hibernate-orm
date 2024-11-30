@@ -1,12 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.enhanced;
 
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,8 +16,9 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.jboss.logging.Logger;
 
 /**
- * Variation of {@link PooledOptimizer} which interprets the incoming database value as the lo value, rather than
- * the hi value, as well as using thread local to cache the generation state.
+ * Variation of {@link PooledOptimizer} which interprets the incoming database
+ * value as the lo value, rather than the hi value, as well as using thread local
+ * to cache the generation state.
  *
  * @author Stuart Douglas
  * @author Scott Marlow
@@ -27,6 +27,7 @@ import org.jboss.logging.Logger;
  */
 public class PooledLoThreadLocalOptimizer extends AbstractOptimizer {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			PooledLoOptimizer.class.getName()
 	);
@@ -35,12 +36,12 @@ public class PooledLoThreadLocalOptimizer extends AbstractOptimizer {
 	private final ThreadLocal<Map<String, GenerationState>> multiTenantStates = ThreadLocal.withInitial( HashMap::new );
 
 	/**
-	 * Constructs a PooledLoThreadLocalOptimizer.
+	 * Constructs a {@code PooledLoThreadLocalOptimizer}.
 	 *
 	 * @param returnClass The Java type of the values to be generated
 	 * @param incrementSize The increment size.
 	 */
-	public PooledLoThreadLocalOptimizer(Class returnClass, int incrementSize) {
+	public PooledLoThreadLocalOptimizer(Class<?> returnClass, int incrementSize) {
 		super( returnClass, incrementSize );
 		if ( incrementSize < 1 ) {
 			throw new HibernateException( "increment size cannot be less than 1" );

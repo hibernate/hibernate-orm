@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.util;
 
 import java.sql.Connection;
@@ -28,6 +32,10 @@ public class DdlTransactionIsolatorTestingImpl extends DdlTransactionIsolatorNon
 
 	public DdlTransactionIsolatorTestingImpl(ServiceRegistry serviceRegistry, JdbcConnectionAccess jdbcConnectionAccess) {
 		super( createJdbcContext( jdbcConnectionAccess, serviceRegistry ) );
+	}
+
+	public DdlTransactionIsolatorTestingImpl(JdbcContext jdbcContext) {
+		super( jdbcContext );
 	}
 
 	public static JdbcContext createJdbcContext(

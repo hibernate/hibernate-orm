@@ -1,0 +1,115 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.orm.test.generatedkeys.select" default-access="field">
+
+    <class name="MyEntity" table="my_entity">
+
+    	<id name="id">
+    		<generator class="select"/>
+    	</id>
+        <natural-id>
+            <property name="name"/>
+        </natural-id>
+	</class>
+
+    <database-object>
+        <create>
+            <![CDATA[create or replace function gen_id_my_entity() returns trigger as
+            $$
+            begin
+                select coalesce(max(id), 0) + 1
+                into new.id
+                from my_entity;
+                return new;
+            end
+            $$
+            language plpgsql;
+
+            drop trigger if exists my_entity_trigger on my_entity;
+
+            create trigger my_entity_trigger
+            before insert on my_entity
+            for each row
+            execute procedure gen_id_my_entity();]]>
+        </create>
+        <drop>
+            <![CDATA[drop trigger if exists my_entity_trigger ON my_entity;
+            drop function if exists gen_id_my_entity;]]>
+        </drop>
+        <dialect-scope name="org.hibernate.dialect.PostgreSQLDialect"/>
+        <dialect-scope name="org.hibernate.dialect.PostgresPlusDialect"/>
+    </database-object>
+
+    <database-object>
+        <create>
+            <![CDATA[create trigger my_entity_trigger
+            before insert on my_entity
+            for each row
+            set new.id = (select coalesce(max(id), 0) + 1 from my_entity)]]>
+        </create>
+        <drop>
+            <![CDATA[drop trigger if exists my_entity_trigger]]>
+        </drop>
+        <dialect-scope name="org.hibernate.dialect.MySQLDialect"/>
+        <dialect-scope name="org.hibernate.dialect.MariaDBDialect"/>
+    </database-object>
+
+    <database-object>
+        <create>
+            <![CDATA[create or alter trigger my_entity_trigger
+            on my_entity
+            instead of insert
+            as
+            begin
+                insert into my_entity (id, name) values ( (select coalesce(max(id), 0) + 1 from my_entity), (select name from inserted) );
+            end]]>
+        </create>
+        <drop>
+            <![CDATA[drop trigger if exists my_entity_trigger]]>
+        </drop>
+        <dialect-scope name="org.hibernate.dialect.SQLServerDialect"/>
+    </database-object>
+
+    <database-object>
+        <create>
+            <![CDATA[create or replace trigger my_entity_trigger
+            before insert on my_entity
+            referencing new as new_entity
+            for each row
+            begin
+                set new_entity.id = (select coalesce(max(id), 0) + 1 from my_entity);
+            end]]>
+        </create>
+        <drop>
+            <![CDATA[drop trigger my_entity_trigger]]>
+        </drop>
+        <dialect-scope name="org.hibernate.dialect.DB2Dialect"/>
+    </database-object>
+
+    <database-object>
+        <create>
+            <![CDATA[create or replace trigger my_entity_trigger
+            before insert on my_entity
+            for each row
+            begin
+                select nvl(max(id), 0) + 1
+                into :new.id
+                from my_entity;
+            end;]]>
+        </create>
+        <drop>
+            <![CDATA[drop trigger my_entity_trigger]]>
+        </drop>
+        <dialect-scope name="org.hibernate.dialect.OracleDialect"/>
+    </database-object>
+
+</hibernate-mapping>

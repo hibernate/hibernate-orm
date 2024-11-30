@@ -1,12 +1,8 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.embeddables.nested.fieldaccess;
-
-import java.sql.Types;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
@@ -19,9 +15,10 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
-import org.hibernate.type.CustomType;
+import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
-import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertJdbcTypeCode;
@@ -33,14 +30,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class FieldAccessedNestedEmbeddableMetadataTest {
 
 	@Test
-	@FailureExpected(jiraKey = "HHH-9089")
 	public void testEnumTypeInterpretation() {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
 			final Metadata metadata = new MetadataSources( ssr )
 					.addAnnotatedClass( Customer.class )
 					.buildMetadata();
+			final JdbcTypeRegistry jdbcTypeRegistry = metadata.getDatabase()
+					.getTypeConfiguration()
+					.getJdbcTypeRegistry();
 
 			PersistentClass classMetadata = metadata.getEntityBinding( Customer.class.getName() );
 			Property investmentsProperty = classMetadata.getProperty( "investments" );
@@ -48,14 +47,16 @@ public class FieldAccessedNestedEmbeddableMetadataTest {
 			Component investmentMetadata = (Component) investmentsValue.getElement();
 			Value descriptionValue = investmentMetadata.getProperty( "description" ).getValue();
 			assertEquals( 1, descriptionValue.getColumnSpan() );
-			Column selectable = (Column) descriptionValue.getColumnIterator().next();
+			Column selectable = (Column) descriptionValue.getSelectables().get( 0 );
 			assertEquals( (Long) 500L, selectable.getLength() );
 			Component amountMetadata = (Component) investmentMetadata.getProperty( "amount" ).getValue();
 			SimpleValue currencyMetadata = (SimpleValue) amountMetadata.getProperty( "currency" ).getValue();
-			CustomType<Object> currencyType = (CustomType<Object>) currencyMetadata.getType();
-			int[] currencySqlTypes = currencyType.getSqlTypeCodes( metadata );
+			int[] currencySqlTypes = currencyMetadata.getType().getSqlTypeCodes( metadata );
 			assertEquals( 1, currencySqlTypes.length );
-			assertJdbcTypeCode( Types.VARCHAR, currencySqlTypes[0] );
+			assertJdbcTypeCode(
+					new int[] { jdbcTypeRegistry.getDescriptor( SqlTypes.VARCHAR ).getJdbcTypeCode(), SqlTypes.ENUM },
+					currencySqlTypes[0]
+			);
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );

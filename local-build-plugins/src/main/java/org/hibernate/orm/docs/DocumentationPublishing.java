@@ -23,11 +23,22 @@ import org.hibernate.orm.ReleaseFamilyIdentifier;
  * @author Steve Ebersole
  */
 public class DocumentationPublishing {
+	public static final String DSL_NAME = "documentationPublishing";
+
+	public static final String RSYNC_SERVER = "filemgmt-prod-sync.jboss.org";
+	public static final String SFTP_SERVER = "filemgmt-prod.jboss.org";
+
+	public static final String DOC_SERVER_BASE_DIR = "/docs_htdocs/hibernate";
+
+	public static final String DESCRIPTOR_FILE = "doc-pub/orm.json";
+
 	private final Project project;
 
 	private final DirectoryProperty stagingDirectory;
-	private final Property<String> docServerUrl;
-	private final Property<String> docDescriptorServerUrl;
+
+	private final Property<String> rsyncDocServer;
+	private final Property<String> sftpDocServer;
+	private final Property<String> serverBaseDir;
 
 	private final RegularFileProperty updatedJsonFile;
 
@@ -40,21 +51,24 @@ public class DocumentationPublishing {
 		stagingDirectory = project.getObjects()
 				.directoryProperty()
 				.convention( project.getLayout().getBuildDirectory().dir( "documentation" ) );
-		docServerUrl = project.getObjects()
-				.property( String.class )
-				.convention( "filemgmt-prod-sync.jboss.org:/docs_htdocs/hibernate/orm" );
 
-		docDescriptorServerUrl = project.getObjects()
-				.property( String.class )
-				.convention( "filemgmt-prod-sync.jboss.org:/docs_htdocs/hibernate" );
 
+		rsyncDocServer = project.getObjects()
+				.property( String.class )
+				.convention( RSYNC_SERVER );
+
+		sftpDocServer = project.getObjects()
+				.property( String.class )
+				.convention( SFTP_SERVER );
+
+		serverBaseDir = project.getObjects()
+				.property( String.class )
+				.convention( DOC_SERVER_BASE_DIR );
 
 		updatedJsonFile = project.getObjects()
 				.fileProperty()
-				.convention( project.getLayout().getBuildDirectory().file( "doc-pub/orm.json" ) );
+				.convention( project.getLayout().getBuildDirectory().file( DESCRIPTOR_FILE ) );
 
-		// todo : pull HibernateOrmVersion out of `gradle/basic-information.gradle` and use here
-		//		for now, just parse the project version
 		releaseFamilyIdentifier = ReleaseFamilyIdentifier.parse( project.getVersion().toString() );
 	}
 
@@ -62,20 +76,24 @@ public class DocumentationPublishing {
 		return releaseFamilyIdentifier;
 	}
 
-	public Provider<RegularFile> getUpdatedJsonFile() {
-		return updatedJsonFile;
+	public Property<String> getRsyncDocServer() {
+		return rsyncDocServer;
 	}
 
-	public Property<String> getDocServerUrl() {
-		return docServerUrl;
+	public Property<String> getSftpDocServer() {
+		return sftpDocServer;
 	}
 
-	public Property<String> getDocDescriptorServerUrl() {
-		return docDescriptorServerUrl;
+	public Property<String> getServerBaseDir() {
+		return serverBaseDir;
 	}
 
 	public DirectoryProperty getStagingDirectory() {
 		return stagingDirectory;
+	}
+
+	public Provider<RegularFile> getUpdatedJsonFile() {
+		return updatedJsonFile;
 	}
 
 	public void setUpdatedJsonFile(Object ref) {

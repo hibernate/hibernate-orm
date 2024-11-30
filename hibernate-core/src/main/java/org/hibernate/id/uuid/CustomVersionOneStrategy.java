@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.uuid;
 
@@ -17,13 +15,13 @@ import org.hibernate.internal.util.BytesHelper;
  * Applies a version 1 (time-based) generation strategy (using ip address rather than mac address) but applies them in a
  * different layout.  The strategy is very similar to the legacy {@link org.hibernate.id.UUIDHexGenerator} id generator
  * but uses a RFC 4122 compliant layout (variant 2).
- * <p/>
- * NOTE : Can be a bottle neck due to the need to synchronize in order to increment an
- * internal count as part of the algorithm.
+ *
+ * @implNote Can be a bottleneck due to the need to synchronize in order to increment an internal count as part of the
+ *           algorithm.
  *
  * @author Steve Ebersole
  */
-public class CustomVersionOneStrategy implements UUIDGenerationStrategy, UuidGenerator.ValueGenerator {
+public class CustomVersionOneStrategy implements UUIDGenerationStrategy, UuidValueGenerator {
 	@Override
 	public int getGeneratedVersion() {
 		return 1;

@@ -1,36 +1,33 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.exception;
+
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.TiDBDialect;
+import org.hibernate.exception.ConstraintViolationException;
+
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.PersistenceException;
 
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.TiDBDialect;
-import org.hibernate.exception.ConstraintViolationException;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.Setting;
-import org.hibernate.testing.orm.junit.SkipForDialect;
-
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Emmanuel Bernard
  */
-@SuppressWarnings("unchecked")
 @Jpa(
 		annotatedClasses = {
 				Music.class,
@@ -76,7 +73,7 @@ public class ExceptionTest {
 			}
 			catch (OptimisticLockException e) {
 				//success
-				assertEquals( music, e.getEntity() );
+				assertThat( e.getEntity() ).isEqualTo( music );
 			}
 			catch (Exception e) {
 				fail( "Should raise an optimistic lock exception" );
@@ -110,7 +107,7 @@ public class ExceptionTest {
 			fail( "Non existent entity should raise an exception when state is accessed" );
 		}
 		catch ( EntityNotFoundException e ) {
-            //"success"
+			//"success"
 		}
 		finally {
 			em.close();
@@ -140,8 +137,7 @@ public class ExceptionTest {
 							fail();
 						}
 						catch ( PersistenceException e ) {
-							Throwable t = e.getCause();
-							assertTrue( t instanceof ConstraintViolationException, "Should be a constraint violation" );
+							assertTrue( e instanceof ConstraintViolationException, "Should be a constraint violation" );
 							entityManager.getTransaction().rollback();
 						}
 					}
@@ -156,7 +152,7 @@ public class ExceptionTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-4676" )
+	@JiraKey( value = "HHH-4676" )
 	public void testInterceptor(EntityManagerFactoryScope scope) {
 		EntityManager em = scope.getEntityManagerFactory().createEntityManager();
 		em.getTransaction().begin();

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.spi;
 
@@ -55,6 +53,12 @@ public interface SqlSelection extends SqlAstNode {
 	 * Get the type of the expression
 	 */
 	JdbcMappingContainer getExpressionType();
+
+	/**
+	 * Whether this is a virtual or a real selection item.
+	 * Virtual selection items are not rendered into the SQL select clause.
+	 */
+	boolean isVirtual();
 
 	void accept(SqlAstWalker sqlAstWalker);
 

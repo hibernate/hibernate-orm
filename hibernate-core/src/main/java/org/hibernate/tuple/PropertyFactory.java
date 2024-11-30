@@ -1,43 +1,35 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tuple;
-
-import java.lang.reflect.Constructor;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.generator.Generator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.property.access.spi.Getter;
-import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.property.access.spi.PropertyAccessStrategy;
-import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.tuple.entity.EntityBasedAssociationAttribute;
 import org.hibernate.tuple.entity.EntityBasedBasicAttribute;
 import org.hibernate.tuple.entity.EntityBasedCompositionAttribute;
 import org.hibernate.tuple.entity.VersionProperty;
+import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
+import org.hibernate.type.CollectionType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
+import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
 /**
- * Responsible for generation of runtime metamodel {@link Property} representations.
- * Makes distinction between identifier, version, and other (standard) properties.
- *
- * @author Steve Ebersole
+ * @deprecated No direct replacement
  */
+@Deprecated(forRemoval = true)
 public final class PropertyFactory {
 	private PropertyFactory() {
 	}
@@ -52,7 +44,7 @@ public final class PropertyFactory {
 	 */
 	public static IdentifierProperty buildIdentifierAttribute(
 			PersistentClass mappedEntity,
-			IdentifierGenerator generator) {
+			Generator generator) {
 		Type type = mappedEntity.getIdentifier().getType();
 		Property property = mappedEntity.getIdentifierProperty();
 
@@ -103,7 +95,6 @@ public final class PropertyFactory {
 						.setLazy( lazy )
 						.setInsertable( property.isInsertable() )
 						.setUpdateable( property.isUpdateable() )
-						.setValueGenerationStrategy( property.getValueGenerationStrategy() )
 						.setNullable( property.isOptional() )
 						.setDirtyCheckable( property.isUpdateable() && !lazy )
 						.setVersionable( property.isOptimisticLocked() )
@@ -142,7 +133,7 @@ public final class PropertyFactory {
 		// we need to dirty check collections, since they can cause an owner
 		// version number increment
 
-		// we need to dirty check many-to-ones with not-found="ignore" in order 
+		// we need to dirty check many-to-ones with not-found="ignore" in order
 		// to update the cache (not the database), since in this case a null
 		// entity reference can lose information
 
@@ -174,7 +165,6 @@ public final class PropertyFactory {
 								.setLazy( lazy )
 								.setInsertable( property.isInsertable() )
 								.setUpdateable( property.isUpdateable() )
-								.setValueGenerationStrategy( property.getValueGenerationStrategy() )
 								.setNullable( property.isOptional() )
 								.setDirtyCheckable( alwaysDirtyCheck || property.isUpdateable() )
 								.setVersionable( property.isOptimisticLocked() )
@@ -194,7 +184,6 @@ public final class PropertyFactory {
 								.setLazy( lazy )
 								.setInsertable( property.isInsertable() )
 								.setUpdateable( property.isUpdateable() )
-								.setValueGenerationStrategy( property.getValueGenerationStrategy() )
 								.setNullable( property.isOptional() )
 								.setDirtyCheckable( alwaysDirtyCheck || property.isUpdateable() )
 								.setVersionable( property.isOptimisticLocked() )
@@ -216,7 +205,6 @@ public final class PropertyFactory {
 								.setLazy( lazy )
 								.setInsertable( property.isInsertable() )
 								.setUpdateable( property.isUpdateable() )
-								.setValueGenerationStrategy( property.getValueGenerationStrategy() )
 								.setNullable( property.isOptional() )
 								.setDirtyCheckable( alwaysDirtyCheck || property.isUpdateable() )
 								.setVersionable( property.isOptimisticLocked() )
@@ -232,58 +220,21 @@ public final class PropertyFactory {
 	}
 
 	private static NonIdentifierAttributeNature decode(Type type) {
-		if ( type.isAssociationType() ) {
-
-			if ( type.isComponentType() ) {
-				// an any type is both an association and a composite...
-				return NonIdentifierAttributeNature.ANY;
-			}
-
-			return type.isCollectionType()
-					? NonIdentifierAttributeNature.COLLECTION
-					: NonIdentifierAttributeNature.ENTITY;
+		if ( type instanceof CollectionType ) {
+			return NonIdentifierAttributeNature.COLLECTION;
+		}
+		else if ( type instanceof EntityType ) {
+			return NonIdentifierAttributeNature.ENTITY;
+		}
+		else if ( type instanceof AnyType ) {
+			return NonIdentifierAttributeNature.ANY;
+		}
+		else if ( type instanceof ComponentType ) {
+			return NonIdentifierAttributeNature.COMPOSITE;
 		}
 		else {
-			if ( type.isComponentType() ) {
-				return NonIdentifierAttributeNature.COMPOSITE;
-			}
-
 			return NonIdentifierAttributeNature.BASIC;
 		}
-	}
-
-	/**
-	 * @deprecated See mainly {@link #buildEntityBasedAttribute}
-	 */
-	@Deprecated
-	public static StandardProperty buildStandardProperty(Property property, boolean lazyAvailable) {
-		final Type type = property.getValue().getType();
-
-		// we need to dirty check collections, since they can cause an owner
-		// version number increment
-
-		// we need to dirty check many-to-ones with not-found="ignore" in order
-		// to update the cache (not the database), since in this case a null
-		// entity reference can lose information
-
-		boolean alwaysDirtyCheck = type.isAssociationType()
-				&& ( (AssociationType) type ).isAlwaysDirtyChecked();
-
-		return new StandardProperty(
-				property.getName(),
-				type,
-				// only called for embeddable sub-attributes which are never (yet) lazy
-				//lazyAvailable && property.isLazy(),
-				false,
-				property.isInsertable(),
-				property.isUpdateable(),
-				property.getValueGenerationStrategy(),
-				property.isOptional(),
-				alwaysDirtyCheck || property.isUpdateable(),
-				property.isOptimisticLocked(),
-				property.getCascadeStyle(),
-				property.getValue().getFetchMode()
-		);
 	}
 
 }

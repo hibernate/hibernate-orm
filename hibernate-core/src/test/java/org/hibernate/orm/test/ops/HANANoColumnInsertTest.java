@@ -1,29 +1,26 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.ops;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
 
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(value = AbstractHANADialect.class)
+@RequiresDialect( value = HANADialect.class )
 public class HANANoColumnInsertTest extends BaseSessionFactoryFunctionalTest {
 
 	@Override
@@ -43,13 +40,9 @@ public class HANANoColumnInsertTest extends BaseSessionFactoryFunctionalTest {
 			return sessionFactoryImplementor;
 		}
 		catch (MappingException e) {
-			assertThat(
-
-					e.getMessage(),
-					is( "The INSERT statement for table [Competition] contains no column, and this is not supported by [" + getDialect()
-							.getClass()
-							.getName() + "]" )
-			);
+			assertThat( e.getMessage() ).startsWith(
+					"The INSERT statement for table [Competition] contains no column, and this is not supported by [" + getDialect().getClass()
+							.getName() );
 		}
 		return sessionFactoryImplementor;
 	}

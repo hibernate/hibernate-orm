@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.tm;
 
@@ -20,10 +18,11 @@ import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.ActionQueue;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
@@ -52,8 +51,13 @@ public class JtaAfterCompletionTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12448")
+	@JiraKey(value = "HHH-12448")
 	public void testAfterCompletionCallbackExecutedAfterTransactionTimeout() throws Exception {
+		// This makes sure that hbm2ddl runs before we start a transaction for a test
+		// This is important for database that only support SNAPSHOT/SERIALIZABLE isolation,
+		// because a test transaction still sees the state before the DDL executed
+		final SessionFactoryImplementor sessionFactory = sessionFactory();
+
 		// Set timeout to 5 seconds
 		// Allows the reaper thread to abort our running thread for us
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().setTransactionTimeout( 5 );
@@ -63,10 +67,10 @@ public class JtaAfterCompletionTest extends BaseSessionFactoryFunctionalTest {
 
 		Session session = null;
 		try {
-			session = sessionFactory().openSession();
+			session = sessionFactory.openSession();
 
 			SimpleEntity entity = new SimpleEntity( "Hello World" );
-			session.save( entity );
+			session.persist( entity );
 
 			// Register before and after callback handlers
 			// The before causes the original thread to wait until Reaper aborts the transaction

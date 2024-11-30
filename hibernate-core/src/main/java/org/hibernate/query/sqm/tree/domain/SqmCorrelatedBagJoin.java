@@ -1,15 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.BagPersistentAttribute;
-import org.hibernate.query.hql.spi.SqmCreationProcessingState;
-import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -18,7 +15,7 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 /**
  * @author Christian Beikov
  */
-public class SqmCorrelatedBagJoin<O, T> extends SqmBagJoin<O, T> implements SqmCorrelation<O, T> {
+public class SqmCorrelatedBagJoin<O, T> extends SqmBagJoin<O, T> implements SqmCorrelatedJoin<O, T> {
 
 	private final SqmCorrelatedRootJoin<O> correlatedRootJoin;
 	private final SqmBagJoin<O, T> correlationParent;
@@ -46,7 +43,7 @@ public class SqmCorrelatedBagJoin<O, T> extends SqmBagJoin<O, T> implements SqmC
 			NodeBuilder nodeBuilder,
 			SqmCorrelatedRootJoin<O> correlatedRootJoin,
 			SqmBagJoin<O, T> correlationParent) {
-		super( lhs, attribute, alias, sqmJoinType, fetched, nodeBuilder );
+		super( lhs, correlationParent.getNavigablePath(), attribute, alias, sqmJoinType, fetched, nodeBuilder );
 		this.correlatedRootJoin = correlatedRootJoin;
 		this.correlationParent = correlationParent;
 	}
@@ -61,7 +58,7 @@ public class SqmCorrelatedBagJoin<O, T> extends SqmBagJoin<O, T> implements SqmC
 				this,
 				new SqmCorrelatedBagJoin<>(
 						getLhs().copy( context ),
-						getReferencedPathSource(),
+						getAttribute(),
 						getExplicitAlias(),
 						getSqmJoinType(),
 						isFetched(),
@@ -72,6 +69,11 @@ public class SqmCorrelatedBagJoin<O, T> extends SqmBagJoin<O, T> implements SqmC
 		);
 		copyTo( path, context );
 		return path;
+	}
+
+	@Override
+	public <X> X accept(SemanticQueryWalker<X> walker) {
+		return walker.visitCorrelatedBagJoin( this );
 	}
 
 	@Override
@@ -94,18 +96,4 @@ public class SqmCorrelatedBagJoin<O, T> extends SqmBagJoin<O, T> implements SqmC
 		return correlatedRootJoin;
 	}
 
-	@Override
-	public SqmCorrelatedBagJoin<O, T> makeCopy(SqmCreationProcessingState creationProcessingState) {
-		final SqmPathRegistry pathRegistry = creationProcessingState.getPathRegistry();
-		return new SqmCorrelatedBagJoin<>(
-				pathRegistry.findFromByPath( getLhs().getNavigablePath() ),
-				getReferencedPathSource(),
-				getExplicitAlias(),
-				getSqmJoinType(),
-				isFetched(),
-				nodeBuilder(),
-				pathRegistry.findFromByPath( correlatedRootJoin.getNavigablePath() ),
-				pathRegistry.findFromByPath( correlationParent.getNavigablePath() )
-		);
-	}
 }

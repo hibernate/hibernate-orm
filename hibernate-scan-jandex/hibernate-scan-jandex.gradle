@@ -1,0 +1,10 @@
+description = 'Integrate support for Jandex into Hibernate O/RM'
+
+apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+
+dependencies {
+	api project( ':hibernate-core' )
+	api jakartaLibs.jpa
+
+	implementation libs.jandex
+}

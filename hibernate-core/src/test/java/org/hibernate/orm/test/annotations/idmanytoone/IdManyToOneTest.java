@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.idmanytoone;
 
@@ -16,7 +14,7 @@ import org.hibernate.Session;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.cfg.Configuration;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -52,11 +50,11 @@ public class IdManyToOneTest extends BaseCoreFunctionalTestCase {
 		//TODO test Customers / ShoppingBaskets / BasketItems testIdClassManyToOneWithReferenceColumn
 	}
 
-    @Test
-	@TestForIssue( jiraKey = "HHH-7767" )
-    public void testCriteriaRestrictionOnIdManyToOne() {
+	@Test
+	@JiraKey( value = "HHH-7767" )
+	public void testCriteriaRestrictionOnIdManyToOne() {
 		inTransaction( s -> {
-			s.createQuery( "from Course c join c.students cs join cs.student s where s.name = 'Foo'" ).list();
+			s.createQuery( "from Course c join c.students cs join cs.student s where s.name = 'Foo'", Object[].class ).list();
 
 			CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 			CriteriaQuery<Course> criteria = criteriaBuilder.createQuery( Course.class );
@@ -78,7 +76,7 @@ public class IdManyToOneTest extends BaseCoreFunctionalTestCase {
 //        criteria2.add( Restrictions.eq( "s.name", "Foo" ) );
 //        criteria2.list();
 		} );
-    }
+	}
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
@@ -90,12 +88,12 @@ public class IdManyToOneTest extends BaseCoreFunctionalTestCase {
 				CardField.class,
 				Card.class,
 				Project.class,
-                Course.class,
-                Student.class,
-                CourseStudent.class,
+				Course.class,
+				Student.class,
+				CourseStudent.class,
 
 				//tested only through deployment
-				//ANN-590 testIdClassManyToOneWithReferenceColumn 
+				//ANN-590 testIdClassManyToOneWithReferenceColumn
 				Customers.class,
 				ShoppingBaskets.class,
 				ShoppingBasketsPK.class,

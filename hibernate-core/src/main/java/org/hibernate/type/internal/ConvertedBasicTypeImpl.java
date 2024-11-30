@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.internal;
 
@@ -19,11 +17,10 @@ import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.type.AdjustableBasicType;
 import org.hibernate.type.ConvertedBasicType;
@@ -34,11 +31,11 @@ import org.hibernate.type.TrueFalseConverter;
 import org.hibernate.type.YesNoConverter;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
-import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.MappingContext;
 
 /**
  * @author Christian Beikov
@@ -88,7 +85,8 @@ public class ConvertedBasicTypeImpl<J> implements ConvertedBasicType<J>,
 		this.description = description;
 		this.converter = converter;
 		this.jdbcType = jdbcType;
-		this.sqlTypes = new int[] { jdbcType.getDefaultSqlTypeCode() };
+		this.sqlTypes = new int[] { jdbcType.getDdlTypeCode() };
+		//TODO: these type casts look completely bogus
 		this.jdbcValueBinder = (ValueBinder<J>) jdbcType.getBinder( converter.getRelationalJavaType() );
 		this.jdbcValueExtractor = (ValueExtractor<J>) jdbcType.getExtractor( converter.getRelationalJavaType() );
 		this.jdbcLiteralFormatter = (JdbcLiteralFormatter<J>) jdbcType.getJdbcLiteralFormatter( converter.getRelationalJavaType() );
@@ -136,7 +134,7 @@ public class ConvertedBasicTypeImpl<J> implements ConvertedBasicType<J>,
 	}
 
 	@Override
-	public boolean[] toColumnNullness(Object value, Mapping mapping) {
+	public boolean[] toColumnNullness(Object value, MappingContext mapping) {
 		return value == null ? ArrayHelper.FALSE : ArrayHelper.TRUE;
 	}
 	public final JavaType<J> getJavaTypeDescriptor() {
@@ -148,17 +146,17 @@ public class ConvertedBasicTypeImpl<J> implements ConvertedBasicType<J>,
 	}
 
 	@Override
-	public final Class getReturnedClass() {
+	public final Class<?> getReturnedClass() {
 		return converter.getDomainJavaType().getJavaTypeClass();
 	}
 
 	@Override
-	public final int getColumnSpan(Mapping mapping) throws MappingException {
+	public final int getColumnSpan(MappingContext mapping) throws MappingException {
 		return 1;
 	}
 
 	@Override
-	public final int[] getSqlTypeCodes(Mapping mapping) throws MappingException {
+	public final int[] getSqlTypeCodes(MappingContext mappingContext) throws MappingException {
 		return sqlTypes;
 	}
 
@@ -378,7 +376,7 @@ public class ConvertedBasicTypeImpl<J> implements ConvertedBasicType<J>,
 	@Override
 	public CastType getCastType() {
 		final JdbcType jdbcType = getJdbcType();
-		final int jdbcTypeCode = jdbcType.getJdbcTypeCode();
+		final int jdbcTypeCode = jdbcType.getDefaultSqlTypeCode();
 		switch ( jdbcTypeCode ) {
 			case Types.BIT:
 			case Types.SMALLINT:
@@ -416,4 +414,5 @@ public class ConvertedBasicTypeImpl<J> implements ConvertedBasicType<J>,
 	public String toString() {
 		return description;
 	}
+
 }

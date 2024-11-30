@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id.uuid;
 
@@ -15,18 +13,22 @@ import jakarta.persistence.Table;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.internal.MetadataImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.UUIDGenerator;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.generator.Generator;
+import org.hibernate.id.uuid.UuidGenerator;
+import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
@@ -39,26 +41,24 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * @author Steve Ebersole
  */
 @BaseUnitTest
+@SkipForDialect( dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Skipped for Sybase to avoid problems with UUIDs potentially ending with a trailing 0 byte")
 public class GeneratedValueTest {
 	@Test
 	public void testGeneratedUuidId() throws Exception {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 				.build();
 		try {
-			MetadataImpl metadata = (MetadataImpl) new MetadataSources( ssr ).addAnnotatedClass( TheEntity.class ).buildMetadata();
+			MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr ).addAnnotatedClass( TheEntity.class ).buildMetadata();
+			metadata.orderColumns( false );
 			metadata.validate();
 
 			PersistentClass entityBinding = metadata.getEntityBinding( TheEntity.class.getName() );
 			assertEquals( UUID.class, entityBinding.getIdentifier().getType().getReturnedClass() );
-			IdentifierGenerator generator = entityBinding.getIdentifier().createIdentifierGenerator(
-					metadata.getMetadataBuildingOptions().getIdentifierGeneratorFactory(),
-					metadata.getDatabase().getDialect(),
-					null,
-					null,
-					(RootClass) entityBinding
-			);
-			assertTyping( UUIDGenerator.class, generator );
+			KeyValue keyValue = entityBinding.getIdentifier();
+			Dialect dialect = metadata.getDatabase().getDialect();
+			final Generator generator = keyValue.createGenerator( dialect, (RootClass) entityBinding);
+			assertTyping( UuidGenerator.class, generator );
 
 			// now a functional test
 			SessionFactory sf = metadata.buildSessionFactory();
@@ -68,7 +68,7 @@ public class GeneratedValueTest {
 				Session s = sf.openSession();
 				s.beginTransaction();
 				try {
-					s.save( theEntity );
+					s.persist( theEntity );
 					s.getTransaction().commit();
 					s.close();
 
@@ -77,7 +77,7 @@ public class GeneratedValueTest {
 					s = sf.openSession();
 					s.beginTransaction();
 
-					s.delete( theEntity );
+					s.remove( theEntity );
 					s.getTransaction().commit();
 				}
 				catch (Exception e) {

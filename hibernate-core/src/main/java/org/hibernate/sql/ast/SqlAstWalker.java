@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast;
 
@@ -18,9 +16,11 @@ import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.Collation;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.AggregateColumnWriteExpression;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
+import org.hibernate.sql.ast.tree.expression.EmbeddableTypeLiteral;
 import org.hibernate.sql.ast.tree.expression.EntityTypeLiteral;
 import org.hibernate.sql.ast.tree.expression.Every;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
@@ -28,6 +28,7 @@ import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.ModifiedSubQueryExpression;
+import org.hibernate.sql.ast.tree.expression.NestedColumnReference;
 import org.hibernate.sql.ast.tree.expression.Over;
 import org.hibernate.sql.ast.tree.expression.Overflow;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
@@ -38,6 +39,7 @@ import org.hibernate.sql.ast.tree.expression.Star;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.ast.tree.expression.UnaryOperation;
+import org.hibernate.sql.ast.tree.expression.UnparsedNumericLiteral;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.FunctionTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
@@ -46,13 +48,14 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.from.ValuesTableReference;
-import org.hibernate.sql.ast.tree.insert.InsertStatement;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.BetweenPredicate;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.ExistsPredicate;
 import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.sql.ast.tree.predicate.GroupedPredicate;
+import org.hibernate.sql.ast.tree.predicate.InArrayPredicate;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
@@ -60,6 +63,7 @@ import org.hibernate.sql.ast.tree.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.predicate.NegatedPredicate;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.SelfRenderingPredicate;
+import org.hibernate.sql.ast.tree.predicate.ThruthnessPredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -68,6 +72,14 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.model.ast.ColumnWriteFragment;
+import org.hibernate.sql.model.internal.OptionalTableUpdate;
+import org.hibernate.sql.model.internal.TableDeleteCustomSql;
+import org.hibernate.sql.model.internal.TableDeleteStandard;
+import org.hibernate.sql.model.internal.TableInsertCustomSql;
+import org.hibernate.sql.model.internal.TableInsertStandard;
+import org.hibernate.sql.model.internal.TableUpdateCustomSql;
+import org.hibernate.sql.model.internal.TableUpdateStandard;
 
 /**
  * @author Steve Ebersole
@@ -82,7 +94,7 @@ public interface SqlAstWalker {
 
 	void visitUpdateStatement(UpdateStatement statement);
 
-	void visitInsertStatement(InsertStatement statement);
+	void visitInsertStatement(InsertSelectStatement statement);
 
 	void visitAssignment(Assignment assignment);
 
@@ -115,6 +127,10 @@ public interface SqlAstWalker {
 	void visitTableReferenceJoin(TableReferenceJoin tableReferenceJoin);
 
 	void visitColumnReference(ColumnReference columnReference);
+
+	void visitNestedColumnReference(NestedColumnReference nestedColumnReference);
+
+	void visitAggregateColumnWriteExpression(AggregateColumnWriteExpression aggregateColumnWriteExpression);
 
 	void visitExtractUnit(ExtractUnit extractUnit);
 
@@ -150,6 +166,8 @@ public interface SqlAstWalker {
 
 	void visitEntityTypeLiteral(EntityTypeLiteral expression);
 
+	void visitEmbeddableTypeLiteral(EmbeddableTypeLiteral expression);
+
 	void visitTuple(SqlTuple tuple);
 
 	void visitCollation(Collation collation);
@@ -159,6 +177,8 @@ public interface SqlAstWalker {
 	void visitJdbcLiteral(JdbcLiteral<?> jdbcLiteral);
 
 	void visitQueryLiteral(QueryLiteral<?> queryLiteral);
+
+	<N extends Number> void visitUnparsedNumericLiteral(UnparsedNumericLiteral<N> literal);
 
 	void visitUnaryOperationExpression(UnaryOperation unaryOperationExpression);
 
@@ -178,6 +198,8 @@ public interface SqlAstWalker {
 
 	void visitInSubQueryPredicate(InSubQueryPredicate inSubQueryPredicate);
 
+	void visitInArrayPredicate(InArrayPredicate inArrayPredicate);
+
 	void visitExistsPredicate(ExistsPredicate existsPredicate);
 
 	void visitJunction(Junction junction);
@@ -188,6 +210,8 @@ public interface SqlAstWalker {
 
 	void visitNullnessPredicate(NullnessPredicate nullnessPredicate);
 
+	void visitThruthnessPredicate(ThruthnessPredicate predicate);
+
 	void visitRelationalPredicate(ComparisonPredicate comparisonPredicate);
 
 	void visitSelfRenderingPredicate(SelfRenderingPredicate selfRenderingPredicate);
@@ -197,4 +221,24 @@ public interface SqlAstWalker {
 	void visitDuration(Duration duration);
 
 	void visitConversion(Conversion conversion);
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Model mutations
+
+	void visitStandardTableInsert(TableInsertStandard tableInsert);
+
+	void visitCustomTableInsert(TableInsertCustomSql tableInsert);
+
+	void visitStandardTableDelete(TableDeleteStandard tableDelete);
+
+	void visitCustomTableDelete(TableDeleteCustomSql tableDelete);
+
+	void visitStandardTableUpdate(TableUpdateStandard tableUpdate);
+
+	void visitOptionalTableUpdate(OptionalTableUpdate tableUpdate);
+
+	void visitCustomTableUpdate(TableUpdateCustomSql tableUpdate);
+
+	void visitColumnWriteFragment(ColumnWriteFragment columnWriteFragment);
 }

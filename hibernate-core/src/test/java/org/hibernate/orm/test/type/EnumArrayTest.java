@@ -1,15 +1,30 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.type;
 
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.community.dialect.DerbyDialect;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.MariaDBDialect;
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
+
+import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
+import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.type.BasicType;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -24,29 +39,26 @@ import jakarta.persistence.Query;
 import jakarta.persistence.Table;
 import jakarta.persistence.TypedQuery;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
-
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
 /**
  * @author Christian Beikov
  */
-@SkipForDialect(value = SybaseASEDialect.class, comment = "Sybase or the driver are trimming trailing zeros in byte arrays")
-public class EnumArrayTest extends BaseNonConfigCoreFunctionalTestCase {
+@BootstrapServiceRegistry(
+		// Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
+		integrators = SharedDriverManagerTypeCacheClearingIntegrator.class
+)
+@DomainModel(annotatedClasses = EnumArrayTest.TableWithEnumArrays.class)
+@SessionFactory
+public class EnumArrayTest {
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[]{ TableWithEnumArrays.class };
-	}
+	private BasicType<MyEnum[]> arrayType;
 
-	public void startUp() {
-		super.startUp();
-		inTransaction( em -> {
+	@BeforeAll
+	public void startUp(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
+			arrayType = em.getTypeConfiguration().getBasicTypeForJavaType( MyEnum[].class );
 			em.persist( new TableWithEnumArrays( 1L, new MyEnum[]{} ) );
 			em.persist( new TableWithEnumArrays( 2L, new MyEnum[]{ MyEnum.FALSE, MyEnum.FALSE, null, MyEnum.TRUE } ) );
 			em.persist( new TableWithEnumArrays( 3L, null ) );
@@ -54,19 +66,20 @@ public class EnumArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 			Query q;
 			q = em.createNamedQuery( "TableWithEnumArrays.Native.insert" );
 			q.setParameter( "id", 4L );
-			q.setParameter( "data", new Short[]{ (short) MyEnum.TRUE.ordinal(), null, (short) MyEnum.FALSE.ordinal() } );
+			q.setParameter( "data", new MyEnum[]{ MyEnum.TRUE, null, MyEnum.FALSE } );
 			q.executeUpdate();
 
 			q = em.createNativeQuery( "INSERT INTO table_with_enum_arrays(id, the_array) VALUES ( :id , :data )" );
 			q.setParameter( "id", 5L );
-			q.setParameter( "data", new Short[]{ (short) MyEnum.TRUE.ordinal(), null, (short) MyEnum.FALSE.ordinal() } );
+			q.setParameter( "data", new MyEnum[] { MyEnum.TRUE, MyEnum.FALSE } );
 			q.executeUpdate();
 		} );
 	}
 
 	@Test
-	public void testById() {
-		inSession( em -> {
+	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "When length 0 byte array is inserted, Altibase returns with null")
+	public void testById(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			TableWithEnumArrays tableRecord;
 			tableRecord = em.find( TableWithEnumArrays.class, 1L );
 			assertThat( tableRecord.getTheArray(), is( new MyEnum[]{} ) );
@@ -80,8 +93,8 @@ public class EnumArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testQueryById() {
-		inSession( em -> {
+	public void testQueryById(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			TypedQuery<TableWithEnumArrays> tq = em.createNamedQuery( "TableWithEnumArrays.JPQL.getById", TableWithEnumArrays.class );
 			tq.setParameter( "id", 2L );
 			TableWithEnumArrays tableRecord = tq.getSingleResult();
@@ -90,9 +103,9 @@ public class EnumArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect( value = AbstractHANADialect.class, comment = "For some reason, HANA can't intersect VARBINARY values, but funnily can do a union...")
-	public void testQuery() {
-		inSession( em -> {
+	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "When length 0 byte array is inserted, Altibase returns with null")
+	public void testQuery(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			TypedQuery<TableWithEnumArrays> tq = em.createNamedQuery( "TableWithEnumArrays.JPQL.getByData", TableWithEnumArrays.class );
 			tq.setParameter( "data", new MyEnum[]{} );
 			TableWithEnumArrays tableRecord = tq.getSingleResult();
@@ -101,8 +114,8 @@ public class EnumArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testNativeQueryById() {
-		inSession( em -> {
+	public void testNativeQueryById(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			TypedQuery<TableWithEnumArrays> tq = em.createNamedQuery( "TableWithEnumArrays.Native.getById", TableWithEnumArrays.class );
 			tq.setParameter( "id", 2L );
 			TableWithEnumArrays tableRecord = tq.getSingleResult();
@@ -111,16 +124,26 @@ public class EnumArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect( value = HSQLDialect.class, comment = "HSQL does not like plain parameters in the distinct from predicate")
-	@SkipForDialect( value = OracleDialect.class, comment = "Oracle requires a special function to compare XML")
-	public void testNativeQuery() {
-		inSession( em -> {
-			final String op = em.getJdbcServices().getDialect().supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
+	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQL does not like plain parameters in the distinct from predicate")
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle requires a special function to compare XML")
+	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 requires a special function to compare XML")
+	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "SQL Server requires a special function to compare XML")
+	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase ASE requires a special function to compare XML")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA requires a special function to compare LOBs")
+	@SkipForDialect(dialectClass = MariaDBDialect.class, reason = "MariaDB requires a special function to compare LOBs")
+	@SkipForDialect(dialectClass = MySQLDialect.class )
+	@SkipForDialect(dialectClass = DerbyDialect.class )
+	@SkipForDialect(dialectClass = DB2Dialect.class )
+	public void testNativeQuery(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final Dialect dialect = em.getDialect();
+			final String op = dialect.supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
+			final String param = arrayType.getJdbcType().wrapWriteExpression( ":data", dialect );
 			TypedQuery<TableWithEnumArrays> tq = em.createNativeQuery(
-					"SELECT * FROM table_with_enum_arrays t WHERE the_array " + op + " :data",
+					"SELECT * FROM table_with_enum_arrays t WHERE the_array " + op + " " + param,
 					TableWithEnumArrays.class
 			);
-			tq.setParameter( "data", new Short[]{ (short) MyEnum.FALSE.ordinal(), (short) MyEnum.FALSE.ordinal(), null, (short) MyEnum.TRUE.ordinal() } );
+			tq.setParameter( "data", new MyEnum[] { MyEnum.FALSE, MyEnum.FALSE, null, MyEnum.TRUE } );
 			TableWithEnumArrays tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getId(), is( 2L ) );
 		} );

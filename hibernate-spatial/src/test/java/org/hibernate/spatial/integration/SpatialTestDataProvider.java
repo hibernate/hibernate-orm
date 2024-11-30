@@ -1,15 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.spatial.integration;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import org.geolatte.geom.GeometryEquality;
 
 import org.hibernate.spatial.CommonSpatialFunction;
 import org.hibernate.spatial.GeomCodec;
@@ -38,6 +37,8 @@ public class SpatialTestDataProvider {
 	private final TestData funcTestData;
 	protected TestData testData;
 	protected GeomCodec codec;
+
+	protected GeometryEquality geometryEquality;
 	protected List<CommonSpatialFunction> exludeFromTest;
 
 	public SpatialTestDataProvider() {
@@ -51,6 +52,7 @@ public class SpatialTestDataProvider {
 			exludeFromTest = support.getExcludeFromTests();
 			funcTestData = support.createTestData( SpatialFunctionsData );
 			filterGeometry = support.getFilterGeometry();
+			geometryEquality = support.getGeometryEquality();
 		}
 		catch (InstantiationException | IllegalAccessException e) {
 			throw new RuntimeException( e );

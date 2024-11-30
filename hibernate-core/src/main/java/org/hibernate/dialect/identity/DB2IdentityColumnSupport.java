@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.identity;
 
@@ -10,8 +8,16 @@ package org.hibernate.dialect.identity;
  * @author Andrea Boriero
  */
 public class DB2IdentityColumnSupport extends IdentityColumnSupportImpl {
+
+	public static final DB2IdentityColumnSupport INSTANCE = new DB2IdentityColumnSupport();
+
 	@Override
 	public boolean supportsIdentityColumns() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsInsertSelectIdentity() {
 		return true;
 	}
 
@@ -28,5 +34,10 @@ public class DB2IdentityColumnSupport extends IdentityColumnSupportImpl {
 	@Override
 	public String getIdentityInsertString() {
 		return "default";
+	}
+
+	@Override
+	public String appendIdentitySelectToInsert(String identityColumnName, String insertString) {
+		return "select " + identityColumnName + " from final table ( " + insertString + " )"; //TODO: should it be 'from new table'?
 	}
 }

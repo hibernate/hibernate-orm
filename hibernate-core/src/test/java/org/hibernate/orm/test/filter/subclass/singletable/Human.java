@@ -1,21 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.filter.subclass.singletable;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
 
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
 
 @Entity
-@Table(name="ZOOLOGY_HUMAN")
 @FilterDef(name="iqRange", parameters=
 {
 		@ParamDef(name="min", type=Integer.class),
@@ -25,7 +21,7 @@ import org.hibernate.annotations.ParamDef;
 public class Human extends Mammal {
 	@Column(name="HUMAN_IQ")
 	private int iq;
-	
+
 	public int getIq() {
 		return iq;
 	}

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
 
@@ -18,8 +16,6 @@ import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Descriptor for {@link Types#CLOB CLOB} handling.
@@ -47,11 +43,8 @@ public abstract class ClobJdbcType implements AdjustableJdbcType {
 	public JdbcType resolveIndicatedType(
 			JdbcTypeIndicators indicators,
 			JavaType<?> domainJtd) {
-		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
-		final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
-		return indicators.isNationalized()
-				? jdbcTypeRegistry.getDescriptor( Types.NCLOB )
-				: jdbcTypeRegistry.getDescriptor( Types.CLOB );
+		final int jdbcTypeCode = indicators.resolveJdbcTypeCode( indicators.isNationalized() ? Types.NCLOB : Types.CLOB );
+		return indicators.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( jdbcTypeCode );
 	}
 
 	@Override
@@ -92,9 +85,20 @@ public abstract class ClobJdbcType implements AdjustableJdbcType {
 
 		@Override
 		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
-			return options.useStreamForLobBinding() ?
-					STREAM_BINDING.getPreferredJavaTypeClass( options ) :
-					CLOB_BINDING.getPreferredJavaTypeClass( options );
+			return String.class;
+		}
+
+		private ClobJdbcType getDescriptor(Object value, WrapperOptions options) {
+			if ( value instanceof String ) {
+				// performance shortcut for binding CLOB data in String format
+				return STRING_BINDING;
+			}
+			else if ( options.useStreamForLobBinding() ) {
+				return STREAM_BINDING;
+			}
+			else {
+				return CLOB_BINDING;
+			}
 		}
 
 		@Override
@@ -103,23 +107,13 @@ public abstract class ClobJdbcType implements AdjustableJdbcType {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
-					if ( options.useStreamForLobBinding() ) {
-						STREAM_BINDING.getClobBinder( javaType ).doBind( st, value, index, options );
-					}
-					else {
-						CLOB_BINDING.getClobBinder( javaType ).doBind( st, value, index, options );
-					}
+					getDescriptor( value, options ).getClobBinder( javaType ).doBind( st, value, index, options );
 				}
 
 				@Override
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
-					if ( options.useStreamForLobBinding() ) {
-						STREAM_BINDING.getClobBinder( javaType ).doBind( st, value, name, options );
-					}
-					else {
-						CLOB_BINDING.getClobBinder( javaType ).doBind( st, value, name, options );
-					}
+					getDescriptor( value, options ).getClobBinder( javaType ).doBind( st, value, name, options );
 				}
 			};
 		}
@@ -222,11 +216,7 @@ public abstract class ClobJdbcType implements AdjustableJdbcType {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
-					final CharacterStream characterStream = javaType.unwrap(
-							value,
-							CharacterStream.class,
-							options
-					);
+					final CharacterStream characterStream = javaType.unwrap( value, CharacterStream.class, options );
 					st.setCharacterStream( index, characterStream.asReader(), characterStream.getLength() );
 				}
 
@@ -261,22 +251,14 @@ public abstract class ClobJdbcType implements AdjustableJdbcType {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
-					final CharacterStream characterStream = javaType.unwrap(
-							value,
-							CharacterStream.class,
-							options
-					);
+					final CharacterStream characterStream = javaType.unwrap( value, CharacterStream.class, options );
 					st.setCharacterStream( index, characterStream.asReader(), characterStream.getLength() );
 				}
 
 				@Override
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
-					final CharacterStream characterStream = javaType.unwrap(
-							value,
-							CharacterStream.class,
-							options
-					);
+					final CharacterStream characterStream = javaType.unwrap( value, CharacterStream.class, options );
 					st.setCharacterStream( name, characterStream.asReader(), characterStream.getLength() );
 				}
 			};
@@ -300,6 +282,57 @@ public abstract class ClobJdbcType implements AdjustableJdbcType {
 				protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 						throws SQLException {
 					return javaType.wrap( statement.getCharacterStream( name ), options );
+				}
+			};
+		}
+	};
+
+	public static final ClobJdbcType MATERIALIZED = new ClobJdbcType() {
+		@Override
+		public String toString() {
+			return "ClobTypeDescriptor(MATERIALIZED)";
+		}
+
+		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return String.class;
+		}
+
+		@Override
+		public <X> BasicBinder<X> getClobBinder(final JavaType<X> javaType) {
+			return new BasicBinder<>( javaType, this ) {
+				@Override
+				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
+						throws SQLException {
+					st.setString( index, javaType.unwrap( value, String.class, options ) );
+				}
+
+				@Override
+				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
+						throws SQLException {
+					st.setString( name, javaType.unwrap( value, String.class, options ) );
+				}
+			};
+		}
+
+		@Override
+		public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
+			return new BasicExtractor<>( javaType, this ) {
+				@Override
+				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
+					return javaType.wrap( rs.getString( paramIndex ), options );
+				}
+
+				@Override
+				protected X doExtract(CallableStatement statement, int index, WrapperOptions options)
+						throws SQLException {
+					return javaType.wrap( statement.getString( index ), options );
+				}
+
+				@Override
+				protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
+						throws SQLException {
+					return javaType.wrap( statement.getString( name ), options );
 				}
 			};
 		}

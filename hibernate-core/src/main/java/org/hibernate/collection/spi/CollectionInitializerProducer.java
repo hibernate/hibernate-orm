@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.collection.spi;
 
@@ -11,12 +9,12 @@ import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
-import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 
 /**
- * Functional contract to create a CollectionInitializer
+ * Functional contract to create a {@link CollectionInitializer}.
  *
  * @author Steve Ebersole
  *
@@ -25,23 +23,30 @@ import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 @Incubating
 @FunctionalInterface
 public interface CollectionInitializerProducer {
+
 	/**
-	 * Create an initializer for `attribute` relative to `navigablePath`.
+	 * Create an initializer for the given attribute relative to the given
+	 * navigable path.
 	 *
-	 * `parentAccess` may be null to indicate that the initializer is for
-	 * a {@link org.hibernate.sql.results.graph.DomainResult} rather than
-	 * a {@link org.hibernate.sql.results.graph.Fetch}
-	 *
-	 * `collectionKeyAssembler` and `collectionValueKeyAssembler` allow
-	 * creating {@link org.hibernate.sql.results.graph.DomainResult} for
-	 * either side of the collection foreign-key
+	 * @param navigablePath the navigable path
+	 * @param attribute the attribute
+	 * @param parent  may be null to indicate that the initializer is
+	 *        for a {@link org.hibernate.sql.results.graph.DomainResult}
+	 *        rather than a {@link org.hibernate.sql.results.graph.Fetch}
+	 * @param collectionKeyResult allows creation of a
+	 *        {@link org.hibernate.sql.results.graph.DomainResult} for
+	 *        either side of the collection foreign key
+	 * @param collectionValueKeyResult allows creation of a
+	 *        {@link org.hibernate.sql.results.graph.DomainResult} for
+	 *        either side of the collection foreign key
 	 */
-	CollectionInitializer produceInitializer(
+	CollectionInitializer<?> produceInitializer(
 			NavigablePath navigablePath,
 			PluralAttributeMapping attribute,
-			FetchParentAccess parentAccess,
+			InitializerParent<?> parent,
 			LockMode lockMode,
-			DomainResultAssembler<?> collectionKeyAssembler,
-			DomainResultAssembler<?> collectionValueKeyAssembler,
+			DomainResult<?> collectionKeyResult,
+			DomainResult<?> collectionValueKeyResult,
+			boolean isResultInitializer,
 			AssemblerCreationState creationState);
 }

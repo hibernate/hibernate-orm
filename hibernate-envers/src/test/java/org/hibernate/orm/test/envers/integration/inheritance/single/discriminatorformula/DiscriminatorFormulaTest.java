@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.inheritance.single.discriminatorformula;
 
@@ -11,11 +9,13 @@ import java.util.Iterator;
 import java.util.List;
 import jakarta.persistence.EntityManager;
 
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
 
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -94,7 +94,7 @@ public class DiscriminatorFormulaTest extends BaseEnversJPAFunctionalTestCase {
 	@Test
 	public void testDiscriminatorFormulaInAuditTable() {
 		assert parentAudit.getDiscriminator().hasFormula();
-		Iterator iterator = parentAudit.getDiscriminator().getColumnIterator();
+		Iterator iterator = parentAudit.getDiscriminator().getSelectables().iterator();
 		while ( iterator.hasNext() ) {
 			Object o = iterator.next();
 			if ( o instanceof Formula ) {
@@ -107,6 +107,7 @@ public class DiscriminatorFormulaTest extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "'TYPE' is not escaped even though autoQuoteKeywords is enabled")
 	public void testRevisionsCounts() {
 		Assert.assertEquals(
 				Arrays.asList( 1, 3 ), getAuditReader().getRevisions(
@@ -123,18 +124,21 @@ public class DiscriminatorFormulaTest extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "'TYPE' is not escaped even though autoQuoteKeywords is enabled")
 	public void testHistoryOfParent() {
 		Assert.assertEquals( parentVer1, getAuditReader().find( ParentEntity.class, parentVer1.getId(), 2 ) );
 		Assert.assertEquals( parentVer2, getAuditReader().find( ParentEntity.class, parentVer2.getId(), 4 ) );
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "'TYPE' is not escaped even though autoQuoteKeywords is enabled")
 	public void testHistoryOfChild() {
 		Assert.assertEquals( childVer1, getAuditReader().find( ChildEntity.class, childVer1.getId(), 1 ) );
 		Assert.assertEquals( childVer2, getAuditReader().find( ChildEntity.class, childVer2.getId(), 3 ) );
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "'TYPE' is not escaped even though autoQuoteKeywords is enabled")
 	public void testPolymorphicQuery() {
 		Assert.assertEquals(
 				childVer1, getAuditReader().createQuery()

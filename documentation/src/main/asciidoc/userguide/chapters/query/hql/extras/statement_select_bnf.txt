@@ -2,7 +2,7 @@ selectStatement
 	: queryExpression
 
 queryExpression
-	: orderedQuery (setOperator orderedQuery)*
+	: withClause? orderedQuery (setOperator orderedQuery)*
 
 orderedQuery
 	: (query | "(" queryExpression ")") queryOrder?
@@ -15,18 +15,46 @@ queryOrder
 	: orderByClause limitClause? offsetClause? fetchClause?
 
 fromClause
-	: FROM entityWithJoins (COMMA entityWithJoins)*
+	: FROM entityWithJoins ("," entityWithJoins)*
 
 entityWithJoins
 	: fromRoot (join | crossJoin | jpaCollectionJoin)*
 
 fromRoot
 	: entityName variable?
-	| LATERAL? LEFT_PAREN subquery RIGHT_PAREN variable?
+	| "LATERAL"? "(" subquery ")" variable?
 
 join
-	: joinType JOIN FETCH? joinTarget joinRestriction?
+	: joinType "JOIN" "FETCH"? joinTarget joinRestriction?
 
 joinTarget
 	: path variable?
-	| LATERAL? LEFT_PAREN subquery RIGHT_PAREN variable?
+	| "LATERAL"? "(" subquery ")" variable?
+
+withClause
+	: "WITH" cte ("," cte)*
+	;
+
+cte
+	: identifier AS ("NOT"? "MATERIALIZED")? "(" queryExpression ")" searchClause? cycleClause?
+	;
+
+cteAttributes
+	: identifier ("," identifier)*
+	;
+
+searchClause
+	: "SEARCH" ("BREADTH"|"DEPTH") "FIRST BY" searchSpecifications "SET" identifier
+	;
+
+searchSpecifications
+	: searchSpecification ("," searchSpecification)*
+	;
+
+searchSpecification
+	: identifier sortDirection? nullsPrecedence?
+	;
+
+cycleClause
+	: "CYCLE" cteAttributes "SET" identifier ("TO" literal "DEFAULT" literal)? ("USING" identifier)?
+	;

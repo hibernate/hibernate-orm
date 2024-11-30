@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper.id;
 
@@ -13,7 +11,9 @@ import java.util.Map;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.service.ServiceRegistry;
+
 
 /**
  * An implementation of an identifier mapper for a single basic attribute property.
@@ -77,9 +77,9 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
 			return null;
 		}
 
-		if ( data instanceof HibernateProxy ) {
-			final HibernateProxy hibernateProxy = (HibernateProxy) data;
-			return hibernateProxy.getHibernateLazyInitializer().getInternalIdentifier();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( data );
+		if ( lazyInitializer != null ) {
+			return lazyInitializer.getInternalIdentifier();
 		}
 		else {
 			return getValueFromObject( propertyData, data );
@@ -99,9 +99,9 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
 			data.put( propertyData.getName(), null );
 		}
 		else {
-			if ( obj instanceof HibernateProxy ) {
-				final HibernateProxy hibernateProxy = (HibernateProxy) obj;
-				data.put( propertyData.getName(), hibernateProxy.getHibernateLazyInitializer().getInternalIdentifier() );
+			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( obj );
+			if ( lazyInitializer != null ) {
+				data.put( propertyData.getName(), lazyInitializer.getInternalIdentifier() );
 			}
 			else {
 				final Object value = getValueFromObject( propertyData, obj );

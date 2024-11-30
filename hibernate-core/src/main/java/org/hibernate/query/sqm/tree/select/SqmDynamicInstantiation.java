@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.select;
 
@@ -11,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.sqm.DynamicInstantiationNature;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -21,11 +20,15 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.jpa.AbstractJpaSelection;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
 
+import static java.util.stream.Collectors.toList;
 import static org.hibernate.query.sqm.DynamicInstantiationNature.CLASS;
 import static org.hibernate.query.sqm.DynamicInstantiationNature.LIST;
 import static org.hibernate.query.sqm.DynamicInstantiationNature.MAP;
+import static org.hibernate.sql.results.graph.instantiation.internal.InstantiationHelper.isConstructorCompatible;
+import static org.hibernate.sql.results.graph.instantiation.internal.InstantiationHelper.isInjectionCompatible;
 
 /**
  * Represents a dynamic instantiation ({@code select new XYZ(...) ...}) as part of the SQM.
@@ -110,6 +113,46 @@ public class SqmDynamicInstantiation<T>
 		this.arguments = arguments;
 	}
 
+	public boolean checkInstantiation(TypeConfiguration typeConfiguration) {
+		if ( getInstantiationTarget().getNature() == CLASS ) {
+			if ( getJavaType().isArray() ) {
+				// hack to accommodate the needs of jpamodelgen
+				// where Class objects not available during build
+				return true;
+			}
+			final List<Class<?>> argTypes = argumentTypes();
+			if ( isFullyAliased() ) {
+				final List<String> aliases =
+						getArguments().stream()
+								.map(SqmDynamicInstantiationArgument::getAlias)
+								.collect(toList());
+				return isInjectionCompatible( getJavaType(), aliases, argTypes )
+					|| isConstructorCompatible( getJavaType(), argTypes, typeConfiguration );
+			}
+			else {
+				return isConstructorCompatible( getJavaType(), argTypes, typeConfiguration );
+			}
+		}
+		else {
+			// TODO: is there anything we need to check for list/map instantiation?
+			return true;
+		}
+	}
+
+	private List<Class<?>> argumentTypes() {
+		return getArguments().stream()
+				.map( arg -> {
+					final SqmExpressible<?> expressible = arg.getExpressible();
+					return expressible != null && expressible.getExpressibleJavaType() != null ?
+							expressible.getExpressibleJavaType().getJavaTypeClass() :
+							Void.class;
+				} ).collect( toList() );
+	}
+
+	public boolean isFullyAliased() {
+		return getArguments().stream().allMatch( arg -> arg.getAlias() != null );
+	}
+
 	@Override
 	public SqmDynamicInstantiation<T> copy(SqmCopyContext context) {
 		final SqmDynamicInstantiation<T> existing = context.getCopy( this );
@@ -171,13 +214,15 @@ public class SqmDynamicInstantiation<T>
 		}
 		else if ( instantiationTarget.getNature() == MAP ) {
 			// must(?) have an alias...
-			log.warnf(
-					"Argument [%s] for dynamic Map instantiation did not declare an 'injection alias' [%s] " +
-							"but such aliases are needed for dynamic Map instantiations; " +
-							"will likely cause problems later translating sqm",
-					argument.getSelectableNode().asLoggableText(),
-					argument.getAlias()
-			);
+			if ( argument.getAlias() == null ) {
+				log.warnf(
+						"Argument [%s] for dynamic Map instantiation did not declare an 'injection alias' [%s] " +
+								"but such aliases are needed for dynamic Map instantiations; " +
+								"will likely cause problems later translating sqm",
+						argument.getSelectableNode().asLoggableText(),
+						argument.getAlias()
+				);
+			}
 		}
 
 		if ( arguments == null ) {
@@ -263,6 +308,11 @@ public class SqmDynamicInstantiation<T>
 		public Class<T> getBindableJavaType() {
 			return getTargetTypeDescriptor().getJavaTypeClass();
 		}
+
+		@Override
+		public DomainType<T> getSqmType() {
+			return null;
+		}
 	}
 
 
@@ -281,10 +331,5 @@ public class SqmDynamicInstantiation<T>
 		final List<SqmSelectableNode<?>> list = new ArrayList<>();
 		visitSubSelectableNodes( list::add );
 		return list;
-	}
-
-	@Override
-	public boolean isCompoundSelection() {
-		return false;
 	}
 }

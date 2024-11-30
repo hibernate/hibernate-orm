@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.test.integration.dynamic;
 
@@ -26,7 +24,7 @@ import org.hibernate.orm.test.envers.integration.components.dynamic.ManyToManyEn
 import org.hibernate.orm.test.envers.integration.components.dynamic.ManyToOneEntity;
 import org.hibernate.orm.test.envers.integration.components.dynamic.OneToOneEntity;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 import junit.framework.Assert;
 
@@ -36,7 +34,7 @@ import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
  * @author Lukasz Zuchowski (author at zuchos dot com)
  *         More advanced tests for dynamic component.
  */
-@TestForIssue(jiraKey = "HHH-8049")
+@JiraKey(value = "HHH-8049")
 public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctionalTestCase {
 
 	public static final String PROP_BOOLEAN = "propBoolean";
@@ -130,10 +128,10 @@ public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctio
 		//rev 1
 		Session session = openSession();
 		session.getTransaction().begin();
-		session.save( manyToOne );
-		session.save( oneToOne );
-		session.save( manyToManyEntity );
-		session.save( advancedEntity );
+		session.persist( manyToOne );
+		session.persist( oneToOne );
+		session.persist( manyToManyEntity );
+		session.persist( advancedEntity );
 		session.getTransaction().commit();
 
 		//rev 2
@@ -141,21 +139,21 @@ public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctio
 		InternalComponent internalComponent = (InternalComponent) advancedEntity.getDynamicConfiguration()
 				.get( INTERNAL_COMPONENT );
 		internalComponent.setProperty( "new value" );
-		session.save( advancedEntity );
+		session.persist( advancedEntity );
 		session.getTransaction().commit();
 
 		//rev 3
 		session.getTransaction().begin();
 		List<String> internalList = (List) advancedEntity.getDynamicConfiguration().get( INTERNAL_LIST );
 		internalList.add( "four" );
-		session.save( advancedEntity );
+		session.persist( advancedEntity );
 		session.getTransaction().commit();
 
 		//rev 4
 		session.getTransaction().begin();
 		Map<String, String> map = (Map) advancedEntity.getDynamicConfiguration().get( INTERNAL_MAP );
 		map.put( "three", "3" );
-		session.save( advancedEntity );
+		session.persist( advancedEntity );
 		session.getTransaction().commit();
 
 		//rev 5
@@ -164,15 +162,15 @@ public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctio
 				.get( INTERNAL_MAP_WITH_MANY_TO_MANY );
 		ManyToManyEntity manyToManyEntity2 = new ManyToManyEntity( 2L, "new value" );
 		mapWithManyToMany.put( "entity2", manyToManyEntity2 );
-		session.save( manyToManyEntity2 );
-		session.save( advancedEntity );
+		session.persist( manyToManyEntity2 );
+		session.persist( advancedEntity );
 		session.getTransaction().commit();
 
 		//rev 6
 		session.getTransaction().begin();
 		mapWithManyToMany = (Map) advancedEntity.getDynamicConfiguration().get( INTERNAL_MAP_WITH_MANY_TO_MANY );
 		mapWithManyToMany.clear();
-		session.save( advancedEntity );
+		session.persist( advancedEntity );
 		session.getTransaction().commit();
 
 		//rev 7
@@ -180,20 +178,20 @@ public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctio
 		Set<InternalComponent> internalComponentSet = (Set) advancedEntity.getDynamicConfiguration()
 				.get( INTERNAL_SET_OF_COMPONENTS );
 		internalComponentSet.add( new InternalComponent( "drei" ) );
-		session.save( advancedEntity );
+		session.persist( advancedEntity );
 		session.getTransaction().commit();
 
 		//rev 8
 		session.getTransaction().begin();
 		advancedEntity.getDynamicConfiguration().put( AGE_USER_TYPE, new Age( 19 ) );
-		session.save( advancedEntity );
+		session.persist( advancedEntity );
 		session.getTransaction().commit();
 
 		//rev 9
 		session.getTransaction().begin();
 		List<Age> ages = (List<Age>) advancedEntity.getDynamicConfiguration().get( INTERNAL_LIST_OF_USER_TYPES );
 		ages.add( new Age( 4 ) );
-		session.save( advancedEntity );
+		session.persist( advancedEntity );
 		session.getTransaction().commit();
 
 		//rev this, should not create revision
@@ -201,7 +199,7 @@ public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctio
 		session.getTransaction().commit();
 
 		//sanity check. Loaded entity should be equal to one that we created.
-		AdvancedEntity advancedEntityActual = (AdvancedEntity) session.load( AdvancedEntity.class, 1L );
+		AdvancedEntity advancedEntityActual = (AdvancedEntity) session.getReference( AdvancedEntity.class, 1L );
 
 		Assert.assertEquals( advancedEntity, advancedEntityActual );
 	}

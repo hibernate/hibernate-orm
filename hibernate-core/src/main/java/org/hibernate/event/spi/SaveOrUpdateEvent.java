@@ -1,14 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
 
 import org.hibernate.engine.spi.EntityEntry;
 
-/** 
+/**
  * An event class for saveOrUpdate()
  *
  * @author Steve Ebersole
@@ -74,15 +72,15 @@ public class SaveOrUpdateEvent extends AbstractEvent {
 	public Object getEntity() {
 		return entity;
 	}
-	
+
 	public void setEntity(Object entity) {
 		this.entity = entity;
 	}
-	
+
 	public EntityEntry getEntry() {
 		return entry;
 	}
-	
+
 	public void setEntry(EntityEntry entry) {
 		this.entry = entry;
 	}

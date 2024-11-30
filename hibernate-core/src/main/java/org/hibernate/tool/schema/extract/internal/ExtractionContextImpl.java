@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.extract.internal;
 
@@ -23,7 +21,7 @@ import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 public class ExtractionContextImpl implements ExtractionContext {
 	private final ServiceRegistry serviceRegistry;
 	private final JdbcEnvironment jdbcEnvironment;
-	private final SqlStringGenerationContext sqlStringGenerationContext;
+	private final SqlStringGenerationContext context;
 	private final JdbcConnectionAccess jdbcConnectionAccess;
 	private final DatabaseObjectAccess registeredTableAccess;
 
@@ -33,12 +31,12 @@ public class ExtractionContextImpl implements ExtractionContext {
 	public ExtractionContextImpl(
 			ServiceRegistry serviceRegistry,
 			JdbcEnvironment jdbcEnvironment,
-			SqlStringGenerationContext sqlStringGenerationContext,
+			SqlStringGenerationContext context,
 			JdbcConnectionAccess jdbcConnectionAccess,
 			DatabaseObjectAccess registeredTableAccess) {
 		this.serviceRegistry = serviceRegistry;
 		this.jdbcEnvironment = jdbcEnvironment;
-		this.sqlStringGenerationContext = sqlStringGenerationContext;
+		this.context = context;
 		this.jdbcConnectionAccess = jdbcConnectionAccess;
 		this.registeredTableAccess = registeredTableAccess;
 	}
@@ -55,7 +53,7 @@ public class ExtractionContextImpl implements ExtractionContext {
 
 	@Override
 	public SqlStringGenerationContext getSqlStringGenerationContext() {
-		return sqlStringGenerationContext;
+		return context;
 	}
 
 	@Override
@@ -86,12 +84,12 @@ public class ExtractionContextImpl implements ExtractionContext {
 
 	@Override
 	public Identifier getDefaultCatalog() {
-		return sqlStringGenerationContext.getDefaultCatalog();
+		return context.getDefaultCatalog();
 	}
 
 	@Override
 	public Identifier getDefaultSchema() {
-		return sqlStringGenerationContext.getDefaultSchema();
+		return context.getDefaultSchema();
 	}
 
 	@Override

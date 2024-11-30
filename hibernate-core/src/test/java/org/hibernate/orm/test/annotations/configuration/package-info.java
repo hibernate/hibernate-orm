@@ -7,4 +7,3 @@
 @GenericGenerator(name = "myGenerator", strategy = "sequence")
 package org.hibernate.orm.test.annotations.configuration;
 import org.hibernate.annotations.GenericGenerator;
-

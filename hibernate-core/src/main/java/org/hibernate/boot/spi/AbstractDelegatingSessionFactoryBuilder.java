@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.spi;
 
@@ -13,16 +11,18 @@ import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
+import org.hibernate.type.format.FormatMapper;
+
+import jakarta.persistence.criteria.Nulls;
 
 /**
  * Convenience base class for custom implementors of SessionFactoryBuilder, using delegation
@@ -30,8 +30,9 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
  * @author Steve Ebersole
  * @author Gunnar Morling
  * @author Guillaume Smet
- * @param <T> The type of a specific sub-class; Allows sub-classes to narrow down the return-type of the contract methods
- * to a specialization of {@link SessionFactoryBuilder}
+ *
+ * @param <T> The specific subclass; Allows subclasses to narrow the return type of the contract methods
+ *            to a specialization of {@link MetadataBuilderImplementor}.
  */
 public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionFactoryBuilder> implements SessionFactoryBuilder {
 	private final SessionFactoryBuilder delegate;
@@ -154,13 +155,7 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public T applyBatchFetchStyle(BatchFetchStyle style) {
-		delegate.applyBatchFetchStyle( style );
-		return getThis();
-	}
-
-	@Override
-	public SessionFactoryBuilder applyDelayedEntityLoaderCreations(boolean delay) {
+	public T applyDelayedEntityLoaderCreations(boolean delay) {
 		delegate.applyDelayedEntityLoaderCreations( delay );
 		return getThis();
 	}
@@ -178,7 +173,13 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public T applyDefaultNullPrecedence(NullPrecedence nullPrecedence) {
+	public T applySubselectFetchEnabled(boolean enabled) {
+		delegate.applySubselectFetchEnabled( enabled );
+		return getThis();
+	}
+
+	@Override
+	public T applyDefaultNullPrecedence(Nulls nullPrecedence) {
 		delegate.applyDefaultNullPrecedence( nullPrecedence );
 		return getThis();
 	}
@@ -202,7 +203,7 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public T applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver resolver) {
+	public T applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver<?> resolver) {
 		delegate.applyCurrentTenantIdentifierResolver( resolver );
 		return getThis();
 	}
@@ -238,7 +239,13 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public SessionFactoryBuilder applyTimestampsCacheFactory(TimestampsCacheFactory factory) {
+	public T applyQueryCacheLayout(CacheLayout cacheLayout) {
+		delegate.applyQueryCacheLayout( cacheLayout );
+		return getThis();
+	}
+
+	@Override
+	public T applyTimestampsCacheFactory(TimestampsCacheFactory factory) {
 		delegate.applyTimestampsCacheFactory( factory );
 		return getThis();
 	}
@@ -304,7 +311,7 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public SessionFactoryBuilder applyConnectionProviderDisablesAutoCommit(boolean providerDisablesAutoCommit) {
+	public T applyConnectionProviderDisablesAutoCommit(boolean providerDisablesAutoCommit) {
 		delegate.applyConnectionProviderDisablesAutoCommit( providerDisablesAutoCommit );
 		return getThis();
 	}
@@ -324,7 +331,7 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public SessionFactoryBuilder applyCollectionsInDefaultFetchGroup(boolean enabled) {
+	public T applyCollectionsInDefaultFetchGroup(boolean enabled) {
 		delegate.applyCollectionsInDefaultFetchGroup( enabled );
 		return getThis();
 	}
@@ -342,31 +349,31 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public SessionFactoryBuilder enableJpaQueryCompliance(boolean enabled) {
+	public T enableJpaQueryCompliance(boolean enabled) {
 		delegate.enableJpaQueryCompliance( enabled );
 		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder enableJpaOrderByMappingCompliance(boolean enabled) {
+	public T enableJpaOrderByMappingCompliance(boolean enabled) {
 		delegate.enableJpaOrderByMappingCompliance( enabled );
 		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder enableJpaTransactionCompliance(boolean enabled) {
+	public T enableJpaTransactionCompliance(boolean enabled) {
 		delegate.enableJpaTransactionCompliance( enabled );
 		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder enableJpaListCompliance(boolean enabled) {
-		delegate.enableJpaListCompliance( enabled );
+	public T enableJpaCascadeCompliance(boolean enabled) {
+		delegate.enableJpaCascadeCompliance( enabled );
 		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder enableJpaClosedCompliance(boolean enabled) {
+	public T enableJpaClosedCompliance(boolean enabled) {
 		delegate.enableJpaClosedCompliance( enabled );
 		return getThis();
 	}
@@ -386,6 +393,18 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	@Override
 	public T applyConnectionHandlingMode(PhysicalConnectionHandlingMode connectionHandlingMode) {
 		delegate.applyConnectionHandlingMode( connectionHandlingMode );
+		return getThis();
+	}
+
+	@Override
+	public T applyJsonFormatMapper(FormatMapper jsonFormatMapper) {
+		delegate.applyJsonFormatMapper( jsonFormatMapper );
+		return getThis();
+	}
+
+	@Override
+	public T applyXmlFormatMapper(FormatMapper xmlFormatMapper) {
+		delegate.applyXmlFormatMapper( xmlFormatMapper );
 		return getThis();
 	}
 

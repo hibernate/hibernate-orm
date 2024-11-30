@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query;
 
@@ -108,7 +106,7 @@ public class AddNamedQueryTest {
 					// first, lets check the underlying stored query def
 					SessionFactoryImplementor sfi = scope.getEntityManagerFactory()
 							.unwrap( SessionFactoryImplementor.class );
-					NamedSqmQueryMemento def = sfi.getQueryEngine()
+					NamedSqmQueryMemento<?> def = sfi.getQueryEngine()
 							.getNamedObjectRepository()
 							.getSqmQueryMemento( name );
 					assertEquals( LockMode.OPTIMISTIC, def.getLockOptions().getLockMode() );
@@ -139,7 +137,7 @@ public class AddNamedQueryTest {
 					// first, lets check the underlying stored query def
 					SessionFactoryImplementor sfi = scope.getEntityManagerFactory()
 							.unwrap( SessionFactoryImplementor.class );
-					NamedSqmQueryMemento def = sfi.getQueryEngine()
+					NamedSqmQueryMemento<?> def = sfi.getQueryEngine()
 							.getNamedObjectRepository()
 							.getSqmQueryMemento( name );
 					assertEquals( FlushMode.COMMIT, def.getFlushMode() );
@@ -171,6 +169,7 @@ public class AddNamedQueryTest {
 					assertEquals( FlushModeType.COMMIT, hibernateQuery.getFlushMode() );
 					assertEquals( CacheMode.IGNORE, hibernateQuery.getCacheMode() );
 					assertEquals( LockMode.PESSIMISTIC_WRITE, hibernateQuery.getLockOptions().getLockMode() );
+					assertEquals( LockMode.PESSIMISTIC_WRITE, hibernateQuery.getHibernateLockMode() );
 					// jpa timeout is in milliseconds, whereas Hibernate's is in seconds
 					assertEquals( (Integer) 3, hibernateQuery.getTimeout() );
 
@@ -188,6 +187,7 @@ public class AddNamedQueryTest {
 					assertEquals( FlushModeType.COMMIT, hibernateQuery.getFlushMode() );
 					assertEquals( CacheMode.IGNORE, hibernateQuery.getCacheMode() );
 					assertEquals( LockMode.PESSIMISTIC_WRITE, hibernateQuery.getLockOptions().getLockMode() );
+					assertEquals( LockMode.PESSIMISTIC_WRITE, hibernateQuery.getHibernateLockMode() );
 					assertEquals( (Integer) 10, hibernateQuery.getTimeout() );
 
 					query.setHint( HINT_SPEC_QUERY_TIMEOUT, 10000 );
@@ -202,6 +202,7 @@ public class AddNamedQueryTest {
 					assertEquals( FlushModeType.COMMIT, hibernateQuery.getFlushMode() );
 					assertEquals( CacheMode.IGNORE, hibernateQuery.getCacheMode() );
 					assertEquals( LockMode.PESSIMISTIC_WRITE, hibernateQuery.getLockOptions().getLockMode() );
+					assertEquals( LockMode.PESSIMISTIC_WRITE, hibernateQuery.getHibernateLockMode() );
 					assertEquals( (Integer) 10, hibernateQuery.getTimeout() );
 
 					query.setFirstResult( 51 );
@@ -216,6 +217,7 @@ public class AddNamedQueryTest {
 					assertEquals( FlushModeType.COMMIT, hibernateQuery.getFlushMode() );
 					assertEquals( CacheMode.IGNORE, hibernateQuery.getCacheMode() );
 					assertEquals( LockMode.PESSIMISTIC_WRITE, hibernateQuery.getLockOptions().getLockMode() );
+					assertEquals( LockMode.PESSIMISTIC_WRITE, hibernateQuery.getHibernateLockMode() );
 					assertEquals( (Integer) 10, hibernateQuery.getTimeout() );
 				}
 		);

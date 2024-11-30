@@ -1,36 +1,31 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.SingletonIterator;
-import org.hibernate.persister.entity.EntityPersister;
+
+import static org.hibernate.internal.util.ReflectHelper.overridesEquals;
+import static org.hibernate.internal.util.ReflectHelper.overridesHashCode;
+import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 
 /**
- * The root class of an inheritance hierarchy
+ * A mapping model object that represents the root class in an entity class
+ * {@linkplain jakarta.persistence.Inheritance inheritance} hierarchy.
  *
  * @author Gavin King
  */
-public class RootClass extends PersistentClass implements TableOwner {
+public class RootClass extends PersistentClass implements TableOwner, SoftDeletable {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( RootClass.class );
-
-	public static final String DEFAULT_IDENTIFIER_COLUMN_NAME = "id";
-	public static final String DEFAULT_DISCRIMINATOR_COLUMN_NAME = "class";
 
 	private Property identifierProperty;
 	private KeyValue identifier;
@@ -45,18 +40,18 @@ public class RootClass extends PersistentClass implements TableOwner {
 	private Value discriminator;
 	private boolean mutable = true;
 	private boolean embeddedIdentifier;
-	private boolean explicitPolymorphism;
-	private Class<? extends EntityPersister> entityPersisterClass;
 	private boolean forceDiscriminator;
+	private boolean concreteProxy;
 	private String where;
 	private Table table;
 	private boolean discriminatorInsertable = true;
 	private int nextSubclassId;
 	private Property declaredIdentifierProperty;
 	private Property declaredVersion;
+	private Column softDeleteColumn;
 
-	public RootClass(MetadataBuildingContext metadataBuildingContext) {
-		super( metadataBuildingContext );
+	public RootClass(MetadataBuildingContext buildingContext) {
+		super( buildingContext );
 	}
 
 	@Override
@@ -102,6 +97,10 @@ public class RootClass extends PersistentClass implements TableOwner {
 		return identifierProperty != null;
 	}
 
+	public boolean hasDiscriminator() {
+		return discriminator != null;
+	}
+
 	@Override
 	public Value getDiscriminator() {
 		return discriminator;
@@ -117,6 +116,10 @@ public class RootClass extends PersistentClass implements TableOwner {
 		return polymorphic;
 	}
 
+	/**
+	 * @deprecated No longer supported
+	 */
+	@Deprecated
 	public void setPolymorphic(boolean polymorphic) {
 		this.polymorphic = polymorphic;
 	}
@@ -126,29 +129,14 @@ public class RootClass extends PersistentClass implements TableOwner {
 		return this;
 	}
 
-	@Override @Deprecated
-	public Iterator<Property> getPropertyClosureIterator() {
-		return getPropertyIterator();
-	}
-
 	@Override
 	public List<Property> getPropertyClosure() {
 		return getProperties();
 	}
 
-	@Override @Deprecated
-	public Iterator<Table> getTableClosureIterator() {
-		return new SingletonIterator<>( getTable() );
-	}
-
 	@Override
 	public List<Table> getTableClosure() {
 		return List.of( getTable() );
-	}
-
-	@Override @Deprecated
-	public Iterator<KeyValue> getKeyClosureIterator() {
-		return new SingletonIterator<>( getKey() );
 	}
 
 	@Override
@@ -160,11 +148,6 @@ public class RootClass extends PersistentClass implements TableOwner {
 	public void addSubclass(Subclass subclass) throws MappingException {
 		super.addSubclass( subclass );
 		setPolymorphic( true );
-	}
-
-	@Override
-	public boolean isExplicitPolymorphism() {
-		return explicitPolymorphism;
 	}
 
 	@Override
@@ -201,18 +184,8 @@ public class RootClass extends PersistentClass implements TableOwner {
 	}
 
 	@Override
-	public Class<? extends EntityPersister> getEntityPersisterClass() {
-		return entityPersisterClass;
-	}
-
-	@Override
 	public Table getRootTable() {
 		return getTable();
-	}
-
-	@Override
-	public void setEntityPersisterClass(Class<? extends EntityPersister> persister) {
-		this.entityPersisterClass = persister;
 	}
 
 	@Override
@@ -233,8 +206,11 @@ public class RootClass extends PersistentClass implements TableOwner {
 		this.embeddedIdentifier = embeddedIdentifier;
 	}
 
+	/**
+	 * @deprecated No longer supported
+	 */
+	@Deprecated
 	public void setExplicitPolymorphism(boolean explicitPolymorphism) {
-		this.explicitPolymorphism = explicitPolymorphism;
 	}
 
 	public void setIdentifier(KeyValue identifier) {
@@ -270,6 +246,15 @@ public class RootClass extends PersistentClass implements TableOwner {
 	}
 
 	@Override
+	public boolean isConcreteProxy() {
+		return concreteProxy;
+	}
+
+	public void setConcreteProxy(boolean concreteProxy) {
+		this.concreteProxy = concreteProxy;
+	}
+
+	@Override
 	public String getWhere() {
 		return where;
 	}
@@ -279,7 +264,7 @@ public class RootClass extends PersistentClass implements TableOwner {
 	}
 
 	@Override
-	public void validate(Mapping mapping) throws MappingException {
+	public void validate(Metadata mapping) throws MappingException {
 		super.validate( mapping );
 		if ( !getIdentifier().isValid( mapping ) ) {
 			throw new MappingException(
@@ -290,21 +275,66 @@ public class RootClass extends PersistentClass implements TableOwner {
 			);
 		}
 		checkCompositeIdentifier();
+		checkTableDuplication();
 	}
 
+	/**
+	 * In {@linkplain jakarta.persistence.InheritanceType#SINGLE_TABLE single table}
+	 * inheritance, subclasses share a table with the root class by definition. But
+	 * for {@linkplain jakarta.persistence.InheritanceType#JOINED joined} or
+	 * {@linkplain jakarta.persistence.InheritanceType#TABLE_PER_CLASS union} mappings,
+	 * the subclasses are assumed to occupy distinct tables, and it's an error to map
+	 * two subclasses to the same table.
+	 * <p>
+	 * As a special exception to this, if a joined inheritance hierarchy defines an
+	 * explicit {@link jakarta.persistence.DiscriminatorColumn}, we tolerate table
+	 * duplication among the subclasses, but we must "force" the discriminator to
+	 * account for this. (See issue HHH-14526.)
+	 */
+	private void checkTableDuplication() {
+		if ( hasSubclasses() ) {
+			final Set<Table> tables = new HashSet<>();
+			tables.add( getTable() );
+			for ( Subclass subclass : getSubclasses() ) {
+				if ( !(subclass instanceof SingleTableSubclass) ) {
+					final Table table = subclass.getTable();
+					if ( !tables.add( table ) ) {
+						// we encountered a duplicate table mapping
+						if ( getDiscriminator() == null ) {
+							throw new MappingException( "Two different subclasses of '" + getEntityName()
+									+ "' map to the table '" + table.getName()
+									+ "' and the hierarchy has no discriminator column" );
+						}
+						else {
+							// This is arguably not the right place to do this.
+							// Perhaps it's an issue better dealt with later on
+							// by the persisters. See HHH-14526.
+							forceDiscriminator = true;
+						}
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * Composite id classes are supposed to override {@link #equals} and
+	 * {@link #hashCode}, and programs will typically experience bugs if
+	 * they don't. But instead of actually enforcing this with an error
+	 * (because we can't anyway verify that the implementation is actually
+	 * <em>correct</em>) we simply log a warning.
+	 */
 	private void checkCompositeIdentifier() {
-		if ( getIdentifier() instanceof Component ) {
-			Component id = (Component) getIdentifier();
-			if ( !id.isDynamic() ) {
-				final Class<?> idClass = id.getComponentClass();
-				if ( idClass != null ) {
-					final String idComponentClassName = idClass.getName();
-					if ( !ReflectHelper.overridesEquals( idClass ) ) {
-						LOG.compositeIdClassDoesNotOverrideEquals( idComponentClassName );
-					}
-					if ( !ReflectHelper.overridesHashCode( idClass ) ) {
-						LOG.compositeIdClassDoesNotOverrideHashCode( idComponentClassName );
-					}
+		if ( getIdentifier() instanceof Component id
+				&& !id.isDynamic() ) {
+			final Class<?> idClass = id.getComponentClass();
+			if ( idClass != null ) {
+				if ( !overridesEquals( idClass ) ) {
+					LOG.compositeIdClassDoesNotOverrideEquals( idClass.getName() );
+				}
+				else if ( !overridesHashCode( idClass ) ) {
+					LOG.compositeIdClassDoesNotOverrideHashCode( idClass.getName() );
 				}
 			}
 		}
@@ -324,7 +354,7 @@ public class RootClass extends PersistentClass implements TableOwner {
 	}
 
 	public void setCacheRegionName(String cacheRegionName) {
-		this.cacheRegionName = StringHelper.nullIfEmpty( cacheRegionName );
+		this.cacheRegionName = nullIfEmpty( cacheRegionName );
 	}
 
 	public boolean isLazyPropertiesCacheable() {
@@ -355,13 +385,23 @@ public class RootClass extends PersistentClass implements TableOwner {
 	}
 
 	public Set<Table> getIdentityTables() {
-		Set<Table> tables = new HashSet<>();
+		final Set<Table> tables = new HashSet<>();
 		for ( PersistentClass clazz : getSubclassClosure() ) {
 			if ( clazz.isAbstract() == null || !clazz.isAbstract() ) {
 				tables.add( clazz.getIdentityTable() );
 			}
 		}
 		return tables;
+	}
+
+	@Override
+	public void enableSoftDelete(Column indicatorColumn) {
+		this.softDeleteColumn = indicatorColumn;
+	}
+
+	@Override
+	public Column getSoftDeleteColumn() {
+		return softDeleteColumn;
 	}
 
 	@Override

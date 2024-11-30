@@ -1,15 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
-import org.hibernate.query.hql.spi.SqmCreationProcessingState;
-import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -18,7 +15,7 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 /**
  * @author Christian Beikov
  */
-public class SqmCorrelatedSingularJoin<O, T> extends SqmSingularJoin<O, T> implements SqmCorrelation<O, T> {
+public class SqmCorrelatedSingularJoin<O, T> extends SqmSingularJoin<O, T> implements SqmCorrelatedSingularValuedJoin<O, T> {
 
 	private final SqmCorrelatedRootJoin<O> correlatedRootJoin;
 	private final SqmSingularJoin<O, T> correlationParent;
@@ -46,7 +43,7 @@ public class SqmCorrelatedSingularJoin<O, T> extends SqmSingularJoin<O, T> imple
 			NodeBuilder nodeBuilder,
 			SqmCorrelatedRootJoin<O> correlatedRootJoin,
 			SqmSingularJoin<O, T> correlationParent) {
-		super( lhs, joinedNavigable, alias, joinType, fetched, nodeBuilder );
+		super( lhs, correlationParent.getNavigablePath(), joinedNavigable, alias, joinType, fetched, nodeBuilder );
 		this.correlatedRootJoin = correlatedRootJoin;
 		this.correlationParent = correlationParent;
 	}
@@ -61,7 +58,7 @@ public class SqmCorrelatedSingularJoin<O, T> extends SqmSingularJoin<O, T> imple
 				this,
 				new SqmCorrelatedSingularJoin<>(
 						getLhs().copy( context ),
-						getReferencedPathSource(),
+						getAttribute(),
 						getExplicitAlias(),
 						getSqmJoinType(),
 						isFetched(),
@@ -95,17 +92,7 @@ public class SqmCorrelatedSingularJoin<O, T> extends SqmSingularJoin<O, T> imple
 	}
 
 	@Override
-	public SqmCorrelatedSingularJoin<O, T> makeCopy(SqmCreationProcessingState creationProcessingState) {
-		final SqmPathRegistry pathRegistry = creationProcessingState.getPathRegistry();
-		return new SqmCorrelatedSingularJoin<>(
-				pathRegistry.findFromByPath( getLhs().getNavigablePath() ),
-				getReferencedPathSource(),
-				getExplicitAlias(),
-				getSqmJoinType(),
-				isFetched(),
-				nodeBuilder(),
-				pathRegistry.findFromByPath( correlatedRootJoin.getNavigablePath() ),
-				pathRegistry.findFromByPath( correlationParent.getNavigablePath() )
-		);
+	public <X> X accept(SemanticQueryWalker<X> walker) {
+		return walker.visitCorrelatedSingularJoin( this );
 	}
 }

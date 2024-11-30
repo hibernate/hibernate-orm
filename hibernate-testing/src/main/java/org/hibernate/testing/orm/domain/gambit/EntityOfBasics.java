@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.orm.domain.gambit;
 
@@ -17,6 +15,8 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.Date;
+import java.util.UUID;
+
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -55,6 +55,7 @@ public class EntityOfBasics {
 	private String theString;
 	private Integer theInteger;
 	private int theInt;
+	private short theShort;
 	private double theDouble;
 	private URL theUrl;
 	private Clob theClob;
@@ -63,9 +64,11 @@ public class EntityOfBasics {
 	private Date theTimestamp;
 	private Instant theInstant;
 	private Gender gender;
+	private Gender singleCharGender;
 	private Gender convertedGender;
 	private Gender ordinalGender;
 	private Duration theDuration;
+	private UUID theUuid;
 
 	private LocalDateTime theLocalDateTime;
 	private LocalDate theLocalDate;
@@ -74,6 +77,8 @@ public class EntityOfBasics {
 	private OffsetDateTime theOffsetDateTime;
 
 	private MutableValue mutableValue;
+
+	private String theField = "the string";
 
 	public EntityOfBasics() {
 	}
@@ -91,6 +96,7 @@ public class EntityOfBasics {
 		this.id = id;
 	}
 
+	@Column(name = "the_string")
 	public String getTheString() {
 		return theString;
 	}
@@ -99,6 +105,7 @@ public class EntityOfBasics {
 		this.theString = theString;
 	}
 
+	@Column(name = "the_integer")
 	public Integer getTheInteger() {
 		return theInteger;
 	}
@@ -107,6 +114,7 @@ public class EntityOfBasics {
 		this.theInteger = theInteger;
 	}
 
+	@Column(name = "the_int")
 	public int getTheInt() {
 		return theInt;
 	}
@@ -115,6 +123,16 @@ public class EntityOfBasics {
 		this.theInt = theInt;
 	}
 
+	@Column(name = "the_short")
+	public short getTheShort() {
+		return theShort;
+	}
+
+	public void setTheShort(short theShort) {
+		this.theShort = theShort;
+	}
+
+	@Column(name = "the_double")
 	public double getTheDouble() {
 		return theDouble;
 	}
@@ -123,6 +141,7 @@ public class EntityOfBasics {
 		this.theDouble = theDouble;
 	}
 
+	@Column(name = "the_url")
 	public URL getTheUrl() {
 		return theUrl;
 	}
@@ -131,6 +150,7 @@ public class EntityOfBasics {
 		this.theUrl = theUrl;
 	}
 
+	@Column(name = "the_clob")
 	public Clob getTheClob() {
 		return theClob;
 	}
@@ -146,6 +166,16 @@ public class EntityOfBasics {
 
 	public void setGender(Gender gender) {
 		this.gender = gender;
+	}
+
+	@Enumerated( EnumType.STRING )
+	@Column( name = "single_char_gender", length = 1 )
+	public Gender getSingleCharGender() {
+		return singleCharGender;
+	}
+
+	public void setSingleCharGender(Gender singleCharGender) {
+		this.singleCharGender = singleCharGender;
 	}
 
 	@Convert( converter = GenderConverter.class )
@@ -168,6 +198,7 @@ public class EntityOfBasics {
 		this.ordinalGender = ordinalGender;
 	}
 
+	@Column(name = "the_date")
 	@Temporal( TemporalType.DATE )
 	public Date getTheDate() {
 		return theDate;
@@ -177,6 +208,7 @@ public class EntityOfBasics {
 		this.theDate = theDate;
 	}
 
+	@Column(name = "the_time")
 	@Temporal( TemporalType.TIME )
 	public Date getTheTime() {
 		return theTime;
@@ -186,6 +218,7 @@ public class EntityOfBasics {
 		this.theTime = theTime;
 	}
 
+	@Column(name = "the_timestamp")
 	@Temporal( TemporalType.TIMESTAMP )
 	public Date getTheTimestamp() {
 		return theTimestamp;
@@ -195,6 +228,7 @@ public class EntityOfBasics {
 		this.theTimestamp = theTimestamp;
 	}
 
+	@Column(name = "the_instant")
 	@Temporal( TemporalType.TIMESTAMP )
 	public Instant getTheInstant() {
 		return theInstant;
@@ -204,6 +238,7 @@ public class EntityOfBasics {
 		this.theInstant = theInstant;
 	}
 
+	@Column(name = "the_local_date_time")
 	public LocalDateTime getTheLocalDateTime() {
 		return theLocalDateTime;
 	}
@@ -212,6 +247,7 @@ public class EntityOfBasics {
 		this.theLocalDateTime = theLocalDateTime;
 	}
 
+	@Column(name = "the_local_date")
 	public LocalDate getTheLocalDate() {
 		return theLocalDate;
 	}
@@ -220,6 +256,7 @@ public class EntityOfBasics {
 		this.theLocalDate = theLocalDate;
 	}
 
+	@Column(name = "the_local_time")
 	public LocalTime getTheLocalTime() {
 		return theLocalTime;
 	}
@@ -228,6 +265,7 @@ public class EntityOfBasics {
 		this.theLocalTime = theLocalTime;
 	}
 
+	@Column(name = "the_offset_date_time")
 	public OffsetDateTime getTheOffsetDateTime() {
 		return theOffsetDateTime;
 	}
@@ -236,6 +274,7 @@ public class EntityOfBasics {
 		this.theOffsetDateTime = theOffsetDateTime;
 	}
 
+	@Column(name = "the_zoned_date_time")
 	public ZonedDateTime getTheZonedDateTime() {
 		return theZonedDateTime;
 	}
@@ -244,6 +283,7 @@ public class EntityOfBasics {
 		this.theZonedDateTime = theZonedDateTime;
 	}
 
+	@Column(name = "the_duration")
 	public Duration getTheDuration() {
 		return theDuration;
 	}
@@ -252,6 +292,16 @@ public class EntityOfBasics {
 		this.theDuration = theDuration;
 	}
 
+	@Column(name = "theuuid")
+	public UUID getTheUuid() {
+		return theUuid;
+	}
+
+	public void setTheUuid(UUID theUuid) {
+		this.theUuid = theUuid;
+	}
+
+	@Column(name = "the_boolean")
 	public Boolean isTheBoolean() {
 		return theBoolean;
 	}
@@ -260,6 +310,7 @@ public class EntityOfBasics {
 		this.theBoolean = theBoolean;
 	}
 
+	@Column(name = "the_numeric_boolean")
 	@JdbcTypeCode( Types.INTEGER )
 	public Boolean isTheNumericBoolean() {
 		return theNumericBoolean;
@@ -269,6 +320,7 @@ public class EntityOfBasics {
 		this.theNumericBoolean = theNumericBoolean;
 	}
 
+	@Column(name = "the_string_boolean")
 	@JdbcTypeCode( Types.CHAR )
 	public Boolean isTheStringBoolean() {
 		return theStringBoolean;
@@ -278,7 +330,17 @@ public class EntityOfBasics {
 		this.theStringBoolean = theStringBoolean;
 	}
 
+	@Column(name = "the_column")
+	public String getTheField() {
+		return theField;
+	}
+
+	public void setTheField(String theField) {
+		this.theField = theField;
+	}
+
 	@Convert( converter = MutableValueConverter.class )
+	@Column(name = "mutable_value")
 	public MutableValue getMutableValue() {
 		return mutableValue;
 	}
@@ -335,4 +397,3 @@ public class EntityOfBasics {
 		}
 	}
 }
-

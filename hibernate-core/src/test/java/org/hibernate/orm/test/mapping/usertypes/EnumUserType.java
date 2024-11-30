@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.usertypes;
 
@@ -62,7 +60,8 @@ public class EnumUserType<T extends Enum<T>> implements UserType<T>, Parameteriz
 	}
 
 	@Override
-	public T nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public T nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+			throws SQLException {
 		final String name = rs.getString( position );
 		if ( rs.wasNull() ) {
 			return null;
@@ -79,7 +78,7 @@ public class EnumUserType<T extends Enum<T>> implements UserType<T>, Parameteriz
 			PreparedStatement preparedStatement,
 			T value,
 			int index,
-			SharedSessionContractImplementor session) throws HibernateException, SQLException {
+			SharedSessionContractImplementor session) throws SQLException {
 		if ( null == value ) {
 			preparedStatement.setNull( index, Types.VARCHAR );
 		}
@@ -123,4 +122,3 @@ public class EnumUserType<T extends Enum<T>> implements UserType<T>, Parameteriz
 		return x.equals( y );
 	}
 }
-

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hql;
 
@@ -11,7 +9,13 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 
+import org.hibernate.dialect.CockroachDialect;
+
+import org.hamcrest.number.IsCloseTo;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -20,12 +24,17 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.isOneOf;
+import static org.hibernate.testing.orm.domain.gambit.EntityOfBasics.Gender.FEMALE;
 
 /**
  * @author Steve Ebersole
@@ -45,6 +54,7 @@ public class StandardFunctionTests {
 					entity.setTheDate( new Date( 74, 2, 25 ) );
 					entity.setTheTime( new Time( 20, 10, 8 ) );
 					entity.setTheTimestamp( new Timestamp( 121, 4, 27, 13, 22, 50, 123456789 ) );
+					entity.setTheZonedDateTime( ZonedDateTime.now().withZoneSameInstant( ZoneId.of("CET") ) );
 					em.persist(entity);
 				}
 		);
@@ -170,9 +180,15 @@ public class StandardFunctionTests {
 	public void testCoalesceFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery("select coalesce(nullif('',''), e.gender, e.convertedGender) from EntityOfBasics e")
+					//Derby does not like literal nulls :-/
+//					session.createQuery("select coalesce(null, e.gender, org.hibernate.testing.orm.domain.gambit.EntityOfBasics$Gender.MALE) from EntityOfBasics e")
+//							.list();
+					session.createQuery("select coalesce(nullif(e.gender,org.hibernate.testing.orm.domain.gambit.EntityOfBasics$Gender.FEMALE), e.gender) from EntityOfBasics e")
 							.list();
-					session.createQuery("select ifnull(e.gender, e.convertedGender) from EntityOfBasics e")
+					session.createQuery("select coalesce(nullif(e.gender,?1), e.gender) from EntityOfBasics e")
+							.setParameter(1, FEMALE)
+							.list();
+					session.createQuery("select ifnull(e.gender, org.hibernate.testing.orm.domain.gambit.EntityOfBasics$Gender.MALE) from EntityOfBasics e")
 							.list();
 				}
 		);
@@ -510,20 +526,6 @@ public class StandardFunctionTests {
 					session.createQuery("select (e.theDate - e.theDate) by day from EntityOfBasics e")
 							.list();
 
-					session.createQuery("select (e.theDate - e.theTimestamp) by year from EntityOfBasics e")
-							.list();
-					session.createQuery("select (e.theDate - e.theTimestamp) by month from EntityOfBasics e")
-							.list();
-					session.createQuery("select (e.theDate - e.theTimestamp) by day from EntityOfBasics e")
-							.list();
-
-					session.createQuery("select (e.theTimestamp - e.theDate) by year from EntityOfBasics e")
-							.list();
-					session.createQuery("select (e.theTimestamp - e.theDate) by month from EntityOfBasics e")
-							.list();
-					session.createQuery("select (e.theTimestamp - e.theDate) by day from EntityOfBasics e")
-							.list();
-
 					session.createQuery("select (e.theTimestamp - e.theTimestamp) by hour from EntityOfBasics e")
 							.list();
 					session.createQuery("select (e.theTimestamp - e.theTimestamp) by minute from EntityOfBasics e")
@@ -550,8 +552,30 @@ public class StandardFunctionTests {
 					session.createQuery("select (e.theTimestamp - (e.theTimestamp + (4 day + 2 hour))) by second from EntityOfBasics e")
 							.list();
 
+					// causes numerical overflow on Sybase
+//					session.createQuery("select current_timestamp - (current_timestamp - e.theTimestamp) from EntityOfBasics e")
+//							.list();
+				}
+		);
+	}
 
-					session.createQuery("select current_timestamp - (current_timestamp - e.theTimestamp) from EntityOfBasics e")
+	@Test
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "unsupported binary operator: <date> - <timestamp(6)>")
+	public void testIntervalDiffExpressionsDifferentTypes(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select (e.theDate - e.theTimestamp) by year from EntityOfBasics e")
+							.list();
+					session.createQuery("select (e.theDate - e.theTimestamp) by month from EntityOfBasics e")
+							.list();
+					session.createQuery("select (e.theDate - e.theTimestamp) by day from EntityOfBasics e")
+							.list();
+
+					session.createQuery("select (e.theTimestamp - e.theDate) by year from EntityOfBasics e")
+							.list();
+					session.createQuery("select (e.theTimestamp - e.theDate) by month from EntityOfBasics e")
+							.list();
+					session.createQuery("select (e.theTimestamp - e.theDate) by day from EntityOfBasics e")
 							.list();
 				}
 		);
@@ -618,10 +642,18 @@ public class StandardFunctionTests {
 	public void testExtractFunctionTimeZone(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery("select extract(offset hour from e.theZonedDateTime) from EntityOfBasics e")
-							.list();
-					session.createQuery("select extract(offset minute from e.theZonedDateTime) from EntityOfBasics e")
-							.list();
+					assertThat(
+							session.createQuery("select extract(offset hour from e.theZonedDateTime) from EntityOfBasics e")
+									.getResultList()
+									.get(0),
+							anyOf( nullValue(), instanceOf( Integer.class ) )
+					);
+					assertThat(
+							session.createQuery("select extract(offset minute from e.theZonedDateTime) from EntityOfBasics e")
+									.getResultList()
+									.get(0),
+							anyOf( nullValue(), instanceOf( Integer.class ) )
+					);
 				}
 		);
 	}
@@ -631,8 +663,12 @@ public class StandardFunctionTests {
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFormat.class, comment = "We extract the offset with a format function")
 	public void testExtractFunctionTimeZoneOffset(SessionFactoryScope scope) {
 		scope.inTransaction(
-				session -> session.createQuery( "select extract(offset from e.theZonedDateTime) from EntityOfBasics e")
-						.list()
+				session -> assertThat(
+						session.createQuery( "select extract(offset from e.theZonedDateTime) from EntityOfBasics e")
+								.getResultList()
+								.get( 0 ),
+						anyOf( nullValue(), instanceOf(ZoneOffset.class) )
+				)
 		);
 	}
 
@@ -881,8 +917,6 @@ public class StandardFunctionTests {
 	public void testFormat(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "select format(e.theTime as 'hh:mm:ss a') from EntityOfBasics e" )
-							.list();
 					session.createQuery(
 							"select format(e.theDate as 'dd/MM/yy'), format(e.theDate as 'EEEE, MMMM dd, yyyy') from EntityOfBasics e" )
 							.list();
@@ -897,12 +931,69 @@ public class StandardFunctionTests {
 									.get( 0 ),
 							is( "Monday, 25/03/1974" )
 					);
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFormat.class)
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "unknown signature: experimental_strftime(time, string)") // could cast the first argument to timestamp to workaround this
+	public void testFormatTime(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "select format(e.theTime as 'hh:mm:ss a') from EntityOfBasics e" )
+							.list();
 					assertThat(
 							session.createQuery(
-									"select format(e.theTime as '''Hello'', hh:mm:ss a') from EntityOfBasics e" )
+											"select format(e.theTime as '''Hello'', hh:mm:ss a') from EntityOfBasics e" )
 									.getResultList()
 									.get( 0 ),
-							is( "Hello, 08:10:08 PM" )
+							isOneOf( "Hello, 08:10:08 PM", "Hello, 08:10:08 pm" )
+					);
+				}
+		);
+	}
+
+	@Test
+	public void testPi(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertThat(
+							session.createQuery("select pi", Double.class).getSingleResult(),
+							IsCloseTo.closeTo( Math.PI, 1e-9 )
+					);
+				}
+		);
+	}
+
+	@Test
+	public void testDegreesRadians(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertThat(
+							session.createQuery("select degrees(pi)", Double.class).getSingleResult(),
+							IsCloseTo.closeTo( 180.0, 1e-9 )
+					);
+					assertThat(
+							session.createQuery("select radians(180.0)", Double.class).getSingleResult(),
+							IsCloseTo.closeTo( Math.PI, 1e-9 )
+					);
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "unknown signature: log(int, int)") // could cast an argument to double to workaround this
+	public void testLog(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertThat(
+							session.createQuery("select log(3,9)", Double.class).getSingleResult(),
+							IsCloseTo.closeTo( 2d, 1e-9 )
+					);
+					assertThat(
+							session.createQuery("select log(10,1e12)", Double.class).getSingleResult(),
+							IsCloseTo.closeTo( 12d, 1e-9 )
 					);
 				}
 		);

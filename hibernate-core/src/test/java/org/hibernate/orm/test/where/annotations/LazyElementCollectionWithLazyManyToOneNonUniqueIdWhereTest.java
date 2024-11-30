@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.where.annotations;
 
@@ -26,10 +24,10 @@ import jakarta.persistence.Table;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.annotations.Immutable;
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -144,7 +142,7 @@ public class LazyElementCollectionWithLazyManyToOneNonUniqueIdWhereTest extends 
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12937")
+	@JiraKey( value = "HHH-12937")
 	public void testInitializeFromUniqueAssociationTable() {
 		Session session = openSession();
 		session.beginTransaction();
@@ -167,7 +165,7 @@ public class LazyElementCollectionWithLazyManyToOneNonUniqueIdWhereTest extends 
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12937")
+	@JiraKey( value = "HHH-12937")
 	public void testInitializeFromNonUniqueAssociationTable() {
 		Session session = openSession();
 		session.beginTransaction();
@@ -208,7 +206,7 @@ public class LazyElementCollectionWithLazyManyToOneNonUniqueIdWhereTest extends 
 
 	@Entity( name = "Material" )
 	@Table( name = "MAIN_TABLE" )
-	@Where( clause = "CODE = 'MATERIAL'" )
+	@SQLRestriction( "CODE = 'MATERIAL'" )
 	public static class Material {
 		private int id;
 
@@ -242,7 +240,7 @@ public class LazyElementCollectionWithLazyManyToOneNonUniqueIdWhereTest extends 
 		@AssociationOverrides(
 				value = { @AssociationOverride( name = "size", joinColumns = { @JoinColumn(name = "ASSOCIATION_ID") } ) }
 		)
-		@Where( clause = "MAIN_CODE='MATERIAL' AND ASSOCIATION_CODE='SIZE'")
+		@SQLRestriction("MAIN_CODE='MATERIAL' AND ASSOCIATION_CODE='SIZE'")
 		@Immutable
 		public Set<ContainedSize> getContainedSizesFromCombined() {
 			return containedSizesFromCombined;
@@ -270,7 +268,7 @@ public class LazyElementCollectionWithLazyManyToOneNonUniqueIdWhereTest extends 
 
 	@Entity( name = "Building" )
 	@Table( name = "MAIN_TABLE" )
-	@Where( clause = "CODE = 'BUILDING'" )
+	@SQLRestriction( "CODE = 'BUILDING'" )
 	public static class Building {
 		private int id;
 		private String name;
@@ -300,7 +298,7 @@ public class LazyElementCollectionWithLazyManyToOneNonUniqueIdWhereTest extends 
 				name = "COLLECTION_TABLE",
 				joinColumns = { @JoinColumn( name = "MAIN_ID" ) }
 		)
-		@Where( clause = "MAIN_CODE='BUILDING' AND ASSOCIATION_CODE='SIZE'")
+		@SQLRestriction("MAIN_CODE='BUILDING' AND ASSOCIATION_CODE='SIZE'")
 		@Immutable
 		public Set<ContainedSize> getContainedSizesFromCombined() {
 			return containedSizesFromCombined;
@@ -314,7 +312,7 @@ public class LazyElementCollectionWithLazyManyToOneNonUniqueIdWhereTest extends 
 				name = "COLLECTION_TABLE",
 				joinColumns = { @JoinColumn( name = "MAIN_ID" ) }
 		)
-		@Where( clause = "MAIN_CODE='BUILDING' AND ASSOCIATION_CODE='RATING'" )
+		@SQLRestriction( "MAIN_CODE='BUILDING' AND ASSOCIATION_CODE='RATING'" )
 		@Immutable
 		public Set<ContainedRating> getContainedRatingsFromCombined() {
 			return containedRatingsFromCombined;
@@ -327,7 +325,7 @@ public class LazyElementCollectionWithLazyManyToOneNonUniqueIdWhereTest extends 
 
 	@Entity( name = "Size" )
 	@Table( name = "MAIN_TABLE" )
-	@Where( clause = "CODE = 'SIZE'" )
+	@SQLRestriction( "CODE = 'SIZE'" )
 	public static class Size {
 		private int id;
 		private String name;
@@ -366,7 +364,7 @@ public class LazyElementCollectionWithLazyManyToOneNonUniqueIdWhereTest extends 
 
 	@Entity( name = "Rating" )
 	@Table( name = "MAIN_TABLE" )
-	@Where( clause = "CODE = 'RATING'" )
+	@SQLRestriction( "CODE = 'RATING'" )
 	public static class Rating {
 		private int id;
 		private String name;

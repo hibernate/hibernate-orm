@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor;
 
@@ -11,8 +9,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
- * Contract for extracting value via JDBC from {@link ResultSet} or as output
- * param from {@link CallableStatement}.
+ * Contract for extracting values from a JDBC {@link ResultSet} or
+ * from output the parameters of a {@link CallableStatement}.
+ *
+ * @apiNote Extractors, as well as {@linkplain ValueBinder binders}, should never apply
+ * {@linkplain org.hibernate.type.descriptor.converter.spi.BasicValueConverter conversions}.
+ * Instead, callers of the extractor are expected to coordinate between the extraction and
+ * conversion.
  *
  * @author Steve Ebersole
  */

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping;
 
@@ -12,12 +10,9 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JavaTypedExpressible;
 
 /**
- * Describes a mapping related to any part of the app's domain model - e.g.
- * an attribute, an entity identifier, collection elements, etc
- *
- * NOTE : this does not include EntityPersister, which however is a ValueMappingContainer
- *
- * Used in generation of SQL AST
+ * Describes a mapping related to any part of the app's domain model,
+ * for example, an attribute, an entity identifier, collection elements, etc.
+ * Used during generation of a SQL AST.
  *
  * @author Steve Ebersole
  */
@@ -32,7 +27,7 @@ public interface ValueMapping extends MappingModelExpressible, JavaTypedExpressi
 		return getMappedType().getMappedJavaType();
 	}
 
-	/**return null;
+	/**
 	 * Treat operation.  Asks the ValueMapping to treat itself as the
 	 * given `targetType`, if it can.
 	 *

@@ -1,14 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.service;
 
+import java.lang.reflect.Field;
 import java.util.Properties;
 
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
@@ -19,8 +17,8 @@ import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.Connectio
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Assume;
 import org.junit.Test;
 
@@ -35,17 +33,19 @@ import static org.junit.Assert.assertTrue;
 public class ServiceBootstrappingTest extends BaseUnitTestCase {
 
 	@Test
-	public void testBasicBuild() {
+	public void testBasicBuild() throws Exception{
+		Field globalProperties = Environment.class.getDeclaredField("GLOBAL_PROPERTIES");
+		globalProperties.setAccessible(true);
+		Properties props = (Properties) globalProperties.get(null);
+		Object showSql = props.remove(Environment.SHOW_SQL);
+
 		// this test requires that SHOW_SQL property isn't passed from the outside (eg. via Gradle)
 		final String showSqlPropertyFromOutside = System.getProperty(Environment.SHOW_SQL);
 		Assume.assumeFalse("true".equals(showSqlPropertyFromOutside));
 
-		final StandardServiceRegistryImpl serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder()
-				.applySettings( ConnectionProviderBuilder.getConnectionProviderProperties() )
-				.build();
+		final StandardServiceRegistryImpl serviceRegistry = ServiceRegistryUtil.serviceRegistry();
 		try {
 			final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
-			assertTrue( jdbcServices.getDialect() instanceof H2Dialect );
 			final ConnectionProviderJdbcConnectionAccess connectionAccess = assertTyping(
 					ConnectionProviderJdbcConnectionAccess.class,
 					jdbcServices.getBootstrapJdbcConnectionAccess()
@@ -54,23 +54,22 @@ public class ServiceBootstrappingTest extends BaseUnitTestCase {
 			assertFalse( jdbcServices.getSqlStatementLogger().isLogToStdout() );
 		}
 		finally {
+			if ( showSql != null ) {
+				props.put(Environment.SHOW_SQL, showSql);
+			}
 			serviceRegistry.destroy();
 		}
 	}
 
 	@Test
 	public void testBuildWithLogging() {
-		Properties props = ConnectionProviderBuilder.getConnectionProviderProperties();
-		props.put( Environment.SHOW_SQL, "true" );
-
-		StandardServiceRegistryImpl serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder()
-			.applySettings( props )
+		StandardServiceRegistryImpl serviceRegistry = (StandardServiceRegistryImpl) ServiceRegistryUtil.serviceRegistryBuilder()
+			.applySetting( Environment.SHOW_SQL, "true" )
 			.build();
 
 		try {
 			JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 
-			assertTrue( jdbcServices.getDialect() instanceof H2Dialect );
 			final ConnectionProviderJdbcConnectionAccess connectionAccess = assertTyping(
 					ConnectionProviderJdbcConnectionAccess.class,
 					jdbcServices.getBootstrapJdbcConnectionAccess()
@@ -85,17 +84,11 @@ public class ServiceBootstrappingTest extends BaseUnitTestCase {
 
 	@Test
 	public void testBuildWithServiceOverride() {
-		StandardServiceRegistryImpl serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder()
-				.applySettings( ConnectionProviderBuilder.getConnectionProviderProperties() )
-				.build();
-
-		Properties props = ConnectionProviderBuilder.getConnectionProviderProperties();
-		props.setProperty( Environment.DIALECT, H2Dialect.class.getName() );
+		StandardServiceRegistryImpl serviceRegistry = ServiceRegistryUtil.serviceRegistry();
 
 		try {
 			JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 
-			assertTrue( jdbcServices.getDialect() instanceof H2Dialect );
 			ConnectionProviderJdbcConnectionAccess connectionAccess = assertTyping(
 					ConnectionProviderJdbcConnectionAccess.class,
 					jdbcServices.getBootstrapJdbcConnectionAccess()
@@ -107,13 +100,11 @@ public class ServiceBootstrappingTest extends BaseUnitTestCase {
 		}
 
 		try {
-			serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder()
-					.applySettings( props )
+			serviceRegistry = (StandardServiceRegistryImpl) ServiceRegistryUtil.serviceRegistryBuilder()
 					.addService( ConnectionProvider.class, new UserSuppliedConnectionProviderImpl() )
 					.build();
 			JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 
-			assertTrue( jdbcServices.getDialect() instanceof H2Dialect );
 			ConnectionProviderJdbcConnectionAccess connectionAccess = assertTyping(
 					ConnectionProviderJdbcConnectionAccess.class,
 					jdbcServices.getBootstrapJdbcConnectionAccess()

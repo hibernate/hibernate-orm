@@ -1,12 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql;
 
-import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.LockMode;
@@ -17,6 +14,8 @@ import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.internal.util.StringHelper;
 
 /**
+ * A SQL {@code FOR UPDATE} clause.
+ *
  * @author Gavin King
  */
 public class ForUpdateFragment {
@@ -27,38 +26,37 @@ public class ForUpdateFragment {
 	public ForUpdateFragment(Dialect dialect, LockOptions lockOptions, Map<String, String[]> keyColumnNames) throws QueryException {
 		this.dialect = dialect;
 		LockMode upgradeType = null;
-		Iterator<Map.Entry<String, LockMode>> iter = lockOptions.getAliasLockIterator();
 		this.lockOptions =  lockOptions;
 
-		if ( !iter.hasNext()) {  // no tables referenced
+		if ( !lockOptions.getAliasSpecificLocks().iterator().hasNext() ) {  // no tables referenced
 			final LockMode lockMode = lockOptions.getLockMode();
-			if ( LockMode.READ.lessThan( lockMode ) ) {
+			if ( LockMode.READ.lessThan(lockMode) ) {
 				upgradeType = lockMode;
 			}
 		}
-
-		while ( iter.hasNext() ) {
-			final Map.Entry<String, LockMode> me = iter.next();
-			final LockMode lockMode = me.getValue();
-			if ( LockMode.READ.lessThan( lockMode ) ) {
-				final String tableAlias = me.getKey();
-				if ( dialect.getWriteRowLockStrategy() == RowLockStrategy.COLUMN ) {
-					String[] keyColumns = keyColumnNames.get( tableAlias ); //use the id column alias
-					if ( keyColumns == null ) {
-						throw new IllegalArgumentException( "alias not found: " + tableAlias );
+		else {
+			for ( Map.Entry<String, LockMode> me : lockOptions.getAliasSpecificLocks() ) {
+				final LockMode lockMode = me.getValue();
+				if ( LockMode.READ.lessThan(lockMode) ) {
+					final String tableAlias = me.getKey();
+					if ( dialect.getWriteRowLockStrategy() == RowLockStrategy.COLUMN ) {
+						String[] keyColumns = keyColumnNames.get( tableAlias ); //use the id column alias
+						if ( keyColumns == null ) {
+							throw new IllegalArgumentException( "alias not found: " + tableAlias );
+						}
+						keyColumns = StringHelper.qualify( tableAlias, keyColumns );
+						for ( String keyColumn : keyColumns ) {
+							addTableAlias( keyColumn );
+						}
 					}
-					keyColumns = StringHelper.qualify( tableAlias, keyColumns );
-					for ( String keyColumn : keyColumns ) {
-						addTableAlias( keyColumn );
+					else {
+						addTableAlias( tableAlias );
 					}
+					if ( upgradeType != null && lockMode != upgradeType ) {
+						throw new QueryException( "Mixed LockModes" );
+					}
+					upgradeType = lockMode;
 				}
-				else {
-					addTableAlias( tableAlias );
-				}
-				if ( upgradeType != null && lockMode != upgradeType ) {
-					throw new QueryException( "mixed LockModes" );
-				}
-				upgradeType = lockMode;
 			}
 		}
 	}

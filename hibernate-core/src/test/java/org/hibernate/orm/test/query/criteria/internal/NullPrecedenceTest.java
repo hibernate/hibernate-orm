@@ -1,10 +1,14 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.query.criteria.internal;
 
 import java.util.List;
 
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
@@ -23,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Christian Beikov
  */
-@TestForIssue(jiraKey = "HHH-14897")
+@JiraKey(value = "HHH-14897")
 @Jpa(
 		annotatedClasses = { NullPrecedenceTest.Foo.class }
 )

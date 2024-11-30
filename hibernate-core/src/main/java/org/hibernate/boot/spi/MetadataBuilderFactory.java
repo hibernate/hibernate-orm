@@ -1,21 +1,21 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.spi;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.service.JavaServiceLoadable;
 
 /**
  * An extension point for integrators that wish to hook into the process of how a {@link Metadata} is built. Intended as
- * a "discoverable service" ({@link java.util.ServiceLoader}). There can be at most one implementation discovered that
- * returns a non-null SessionFactoryBuilder.
+ * a "discoverable service" (a {@link java.util.ServiceLoader}). There can be at most one implementation discovered that
+ * returns a non-null {@link org.hibernate.boot.MetadataBuilder}.
  *
  * @author Gunnar Morling
  */
+@JavaServiceLoadable
 public interface MetadataBuilderFactory {
 
 	/**

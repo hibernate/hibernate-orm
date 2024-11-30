@@ -1,25 +1,24 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.dialect.internal;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.selector.spi.StrategySelectionException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.DialectLogging;
 import org.hibernate.engine.jdbc.dialect.spi.DialectFactory;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfoSource;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -32,7 +31,35 @@ import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
  * @author Steve Ebersole
  */
 public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareService {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( "SQL dialect" );
+	private static final Set<String> LEGACY_DIALECTS = Set.of(
+			"org.hibernate.community.dialect.DB297Dialect",
+			"org.hibernate.community.dialect.DB2390Dialect",
+			"org.hibernate.community.dialect.DB2390V8Dialect",
+			"org.hibernate.community.dialect.DerbyTenFiveDialect",
+			"org.hibernate.community.dialect.DerbyTenSevenDialect",
+			"org.hibernate.community.dialect.DerbyTenSixDialect",
+			"org.hibernate.community.dialect.DerbyDialect",
+			"org.hibernate.community.dialect.MariaDB10Dialect",
+			"org.hibernate.community.dialect.MariaDB53Dialect",
+			"org.hibernate.community.dialect.MariaDB102Dialect",
+			"org.hibernate.community.dialect.MySQL5Dialect",
+			"org.hibernate.community.dialect.MySQL55Dialect",
+			"org.hibernate.community.dialect.Oracle8iDialect",
+			"org.hibernate.community.dialect.Oracle9iDialect",
+			"org.hibernate.community.dialect.Oracle10gDialect",
+			"org.hibernate.community.dialect.PostgreSQL9Dialect",
+			"org.hibernate.community.dialect.PostgreSQL81Dialect",
+			"org.hibernate.community.dialect.PostgreSQL82Dialect",
+			"org.hibernate.community.dialect.PostgreSQL91Dialect",
+			"org.hibernate.community.dialect.PostgreSQL92Dialect",
+			"org.hibernate.community.dialect.PostgreSQL93Dialect",
+			"org.hibernate.community.dialect.PostgreSQL94Dialect",
+			"org.hibernate.community.dialect.PostgreSQL95Dialect",
+			"org.hibernate.community.dialect.SQLServer2005Dialect",
+			"org.hibernate.community.dialect.Sybase11Dialect",
+			"org.hibernate.community.dialect.SybaseASE15Dialect",
+			"org.hibernate.community.dialect.SybaseASE157Dialect"
+	);
 
 	private StrategySelector strategySelector;
 	private DialectResolver dialectResolver;
@@ -55,15 +82,15 @@ public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareS
 	@Override
 	public Dialect buildDialect(Map<String,Object> configValues, DialectResolutionInfoSource resolutionInfoSource) throws HibernateException {
 		final Object dialectReference = configValues.get( AvailableSettings.DIALECT );
-		Dialect dialect = !isEmpty( dialectReference ) ?
-				constructDialect( dialectReference, resolutionInfoSource ) :
-				determineDialect( resolutionInfoSource );
+		Dialect dialect = isEmpty( dialectReference )
+				? determineDialect( resolutionInfoSource )
+				: constructDialect( dialectReference, resolutionInfoSource );
 		logSelectedDialect( dialect );
 		return dialect;
 	}
 
 	private static void logSelectedDialect(Dialect dialect) {
-		LOG.usingDialect( dialect );
+		DialectLogging.DIALECT_MESSAGE_LOGGER.usingDialect( dialect );
 
 		Class<? extends Dialect> dialectClass = dialect.getClass();
 		if ( dialectClass.isAnnotationPresent( Deprecated.class ) ) {
@@ -78,17 +105,16 @@ public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareS
 		}
 	}
 
-	@SuppressWarnings("SimplifiableIfStatement")
 	private boolean isEmpty(Object dialectReference) {
-		if ( dialectReference != null ) {
-			// the referenced value is not null
-			if ( dialectReference instanceof String ) {
-				// if it is a String, it might still be empty though...
-				return StringHelper.isEmpty( (String) dialectReference );
-			}
-			return false;
+		if ( dialectReference == null ) {
+			return true;
 		}
-		return true;
+		else {
+			// the referenced value is not null
+			return dialectReference instanceof String
+				// if it is a String, it might still be empty though...
+				&& StringHelper.isEmpty((String) dialectReference);
+		}
 	}
 
 	private Dialect constructDialect(Object dialectReference, DialectResolutionInfoSource resolutionInfoSource) {
@@ -100,7 +126,7 @@ public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareS
 					(dialectClass) -> {
 						try {
 							try {
-								if (resolutionInfoSource != null) {
+								if ( resolutionInfoSource != null ) {
 									return dialectClass.getConstructor( DialectResolutionInfo.class ).newInstance(
 											resolutionInfoSource.getDialectResolutionInfo()
 									);
@@ -122,7 +148,24 @@ public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareS
 			if ( dialect == null ) {
 				throw new HibernateException( "Unable to construct requested dialect [" + dialectReference + "]" );
 			}
+			else if ( Dialect.class.getPackage() == dialect.getClass().getPackage() ) {
+				DEPRECATION_LOGGER.automaticDialect( dialect.getClass().getSimpleName() );
+			}
 			return dialect;
+		}
+		catch (StrategySelectionException e) {
+			final String dialectFqn = dialectReference.toString();
+			if ( LEGACY_DIALECTS.contains( dialectFqn ) ) {
+				throw new StrategySelectionException(
+						"Couldn't load the dialect class for the 'hibernate.dialect' [" + dialectFqn + "], " +
+								"because the application is missing a dependency on the hibernate-community-dialects module. " +
+								"Hibernate 6.2 dropped support for database versions that are unsupported by vendors  " +
+								"and code for old versions was moved to the hibernate-community-dialects module. " +
+								"For further information, read https://in.relation.to/2023/02/15/hibernate-orm-62-db-version-support/",
+						e
+				);
+			}
+			throw e;
 		}
 		catch (HibernateException e) {
 			throw e;
@@ -146,7 +189,7 @@ public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareS
 		if ( resolutionInfoSource == null ) {
 			throw new HibernateException(
 					"Unable to determine Dialect without JDBC metadata "
-					+ "(please set 'javax.persistence.jdbc.url', 'hibernate.connection.url', or 'hibernate.dialect')"
+					+ "(please set '" + JdbcSettings.JAKARTA_JDBC_URL + "' for common cases or '" + JdbcSettings.DIALECT + "' when a custom Dialect implementation must be provided)"
 			);
 		}
 

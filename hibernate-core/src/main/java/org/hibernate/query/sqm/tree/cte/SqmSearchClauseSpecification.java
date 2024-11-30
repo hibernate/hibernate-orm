@@ -1,26 +1,27 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.cte;
 
-import java.io.Serializable;
-
-import org.hibernate.query.sqm.NullPrecedence;
-import org.hibernate.query.sqm.SortOrder;
+import org.hibernate.query.SortDirection;
+import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
+import org.hibernate.query.criteria.JpaSearchOrder;
+import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 /**
  * @author Christian Beikov
  */
-public class SqmSearchClauseSpecification implements Serializable {
+public class SqmSearchClauseSpecification implements JpaSearchOrder {
 	private final SqmCteTableColumn cteColumn;
-	private final SortOrder sortOrder;
-	private final NullPrecedence nullPrecedence;
+	private final SortDirection sortOrder;
+	private NullPrecedence nullPrecedence;
 
-	public SqmSearchClauseSpecification(SqmCteTableColumn cteColumn, SortOrder sortOrder, NullPrecedence nullPrecedence) {
+	public SqmSearchClauseSpecification(SqmCteTableColumn cteColumn, SortDirection sortOrder, NullPrecedence nullPrecedence) {
+		if ( cteColumn == null ) {
+			throw new IllegalArgumentException( "Null cte column" );
+		}
 		this.cteColumn = cteColumn;
 		this.sortOrder = sortOrder;
 		this.nullPrecedence = nullPrecedence;
@@ -38,10 +39,34 @@ public class SqmSearchClauseSpecification implements Serializable {
 		return cteColumn;
 	}
 
-	public SortOrder getSortOrder() {
+	@Override
+	public JpaSearchOrder nullPrecedence(NullPrecedence precedence) {
+		this.nullPrecedence = precedence;
+		return this;
+	}
+
+	@Override
+	public boolean isAscending() {
+		return sortOrder == SortDirection.ASCENDING;
+	}
+
+	@Override
+	public JpaSearchOrder reverse() {
+		SortDirection newSortOrder = this.sortOrder == null ? SortDirection.DESCENDING : sortOrder.reverse();
+		return new SqmSearchClauseSpecification( cteColumn, newSortOrder, nullPrecedence );
+	}
+
+	@Override
+	public JpaCteCriteriaAttribute getAttribute() {
+		return cteColumn;
+	}
+
+	@Override
+	public SortDirection getSortOrder() {
 		return sortOrder;
 	}
 
+	@Override
 	public NullPrecedence getNullPrecedence() {
 		return nullPrecedence;
 	}

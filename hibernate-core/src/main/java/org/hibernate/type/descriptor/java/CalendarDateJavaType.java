@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
@@ -39,34 +37,31 @@ public class CalendarDateJavaType extends AbstractTemporalJavaType<Calendar> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( Types.DATE );
+		return context.getJdbcType( Types.DATE );
 	}
 
-	@Override
+	@Override  @SuppressWarnings("unchecked")
 	protected <X> TemporalJavaType<X> forDatePrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
 		return (TemporalJavaType<X>) this;
 	}
 
-	@Override
+	@Override  @SuppressWarnings("unchecked")
 	protected <X> TemporalJavaType<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
 		return (TemporalJavaType<X>) CalendarJavaType.INSTANCE;
 	}
 
-	@Override
+	@Override  @SuppressWarnings("unchecked")
 	protected <X> TemporalJavaType<X> forTimePrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
 		return (TemporalJavaType<X>) CalendarTimeJavaType.INSTANCE;
 	}
 
 	public String toString(Calendar value) {
-		return DateJavaType.INSTANCE.toString( value.getTime() );
+		return JdbcDateJavaType.INSTANCE.toString( value.getTime() );
 	}
 
 	public Calendar fromString(CharSequence string) {
 		Calendar result = new GregorianCalendar();
-		result.setTime( DateJavaType.INSTANCE.fromString( string.toString() ) );
+		result.setTime( JdbcDateJavaType.INSTANCE.fromString( string.toString() ) );
 		return result;
 	}
 
@@ -105,7 +100,7 @@ public class CalendarDateJavaType extends AbstractTemporalJavaType<Calendar> {
 			return (X) new java.sql.Date( value.getTimeInMillis() );
 		}
 		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
-			return (X) new java.sql.Time( value.getTimeInMillis() );
+			return (X) new java.sql.Time( value.getTimeInMillis() % 86_400_000 );
 		}
 		if ( java.sql.Timestamp.class.isAssignableFrom( type ) ) {
 			return (X) new java.sql.Timestamp( value.getTimeInMillis() );
@@ -120,31 +115,29 @@ public class CalendarDateJavaType extends AbstractTemporalJavaType<Calendar> {
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof Calendar) {
-			return (Calendar) value;
+		else if (value instanceof Calendar calendar) {
+			return calendar;
 		}
-
-		if ( !(value instanceof Date)) {
+		else if ( value instanceof Date date ) {
+			final Calendar cal = new GregorianCalendar();
+			cal.setTime( date );
+			return cal;
+		}
+		else {
 			throw unknownWrap( value.getClass() );
 		}
-
-		Calendar cal = new GregorianCalendar();
-		cal.setTime( (Date) value );
-		return cal;
 	}
 
 	@Override
 	public boolean isWider(JavaType<?> javaType) {
-		switch ( javaType.getJavaType().getTypeName() ) {
-			case "java.sql.Date":
-				return true;
-			default:
-				return false;
-		}
+		return switch ( javaType.getTypeName() ) {
+			case "java.sql.Date" -> true;
+			default -> false;
+		};
 	}
 
 	@Override
 	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
-		return dialect.getDefaultTimestampPrecision();
+		return 0;
 	}
 }

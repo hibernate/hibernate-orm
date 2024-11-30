@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.context.internal;
 
@@ -21,7 +19,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
  * This external manager is responsible for scoping these contextual sessions
  * appropriately binding/unbinding them here for exposure to the application
  * through {@link SessionFactory#getCurrentSession} calls.
- * <p/>
+ * <p>
  *  Basically exposes two interfaces.  <ul>
  * <li>First is the implementation of CurrentSessionContext which is then used
  * by the {@link SessionFactory#getCurrentSession()} calls.  This
@@ -33,9 +31,10 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
  * current session it is scoping.  This portion is static to allow easy
  * reference from that external thing.
  * </ul>
+ * <p>
  * The underlying storage of the current sessions here is a static
  * {@link ThreadLocal}-based map where the sessions are keyed by the
- * the owning session factory.
+ * owning session factory.
  *
  * @author Steve Ebersole
  */

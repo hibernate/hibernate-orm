@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
 
@@ -19,11 +17,11 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 /**
  * @author Steve Ebersole
  */
-class BagAttributeImpl<X, E>
+public class BagAttributeImpl<X, E>
 		extends AbstractPluralAttribute<X, Collection<E>, E>
 		implements BagPersistentAttribute<X, E> {
 
-	BagAttributeImpl(PluralAttributeBuilder<X, Collection<E>, E, ?> xceBuilder, MetadataContext metadataContext) {
+	public BagAttributeImpl(PluralAttributeBuilder<X, Collection<E>, E, ?> xceBuilder, MetadataContext metadataContext) {
 		super( xceBuilder, metadataContext );
 	}
 
@@ -33,20 +31,19 @@ class BagAttributeImpl<X, E>
 	}
 
 	@Override
-	public SqmAttributeJoin createSqmJoin(
-			SqmFrom lhs,
+	public SqmAttributeJoin<X,E> createSqmJoin(
+			SqmFrom<?,X> lhs,
 			SqmJoinType joinType,
 			String alias,
 			boolean fetched,
 			SqmCreationState creationState) {
-		//noinspection unchecked
-		return new SqmBagJoin(
+		return new SqmBagJoin<>(
 				lhs,
 				this,
 				alias,
 				joinType,
 				fetched,
-				creationState.getCreationContext().getQueryEngine().getCriteriaBuilder()
+				creationState.getCreationContext().getNodeBuilder()
 		);
 	}
 }

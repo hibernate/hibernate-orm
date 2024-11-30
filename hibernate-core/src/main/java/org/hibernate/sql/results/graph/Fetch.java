@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph;
 
@@ -38,6 +36,14 @@ public interface Fetch extends DomainResultGraphNode {
 	FetchParent getFetchParent();
 
 	/**
+	 * Utility method to avoid {@code instanceof} checks. Returns this if it's
+	 * an instance of {@link FetchParent}, null otherwise.
+	 */
+	default FetchParent asFetchParent() {
+		return null;
+	}
+
+	/**
 	 * The value mapping being fetched
 	 */
 	Fetchable getFetchedMapping();
@@ -62,5 +68,7 @@ public interface Fetch extends DomainResultGraphNode {
 	/**
 	 * Create the assembler for this fetch
 	 */
-	DomainResultAssembler<?> createAssembler(FetchParentAccess parentAccess, AssemblerCreationState creationState);
+	DomainResultAssembler<?> createAssembler(
+			InitializerParent<?> parent,
+			AssemblerCreationState creationState);
 }

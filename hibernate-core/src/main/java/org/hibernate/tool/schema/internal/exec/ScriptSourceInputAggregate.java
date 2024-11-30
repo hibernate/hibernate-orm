@@ -1,12 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal.exec;
 
 import java.io.Reader;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -44,14 +43,16 @@ public class ScriptSourceInputAggregate implements ScriptSourceInput {
 		int size = 0;
 		for ( int i = 0; i < inputs.length; i++ ) {
 			final AbstractScriptSourceInput scriptSourceInput = inputs[i];
-			final Reader reader = scriptSourceInput.prepareReader();
-			try {
-				log.executingImportScript( scriptSourceInput.getScriptDescription() );
-				lists[i] = extractor.apply( reader );
-				size += lists[i].size();
-			}
-			finally {
-				scriptSourceInput.releaseReader( reader );
+			if ( scriptSourceInput.exists() ) {
+				final Reader reader = scriptSourceInput.prepareReader();
+				try {
+					log.executingScript( scriptSourceInput.getScriptDescription() );
+					lists[i] = extractor.apply( reader );
+					size += lists[i].size();
+				}
+				finally {
+					scriptSourceInput.releaseReader( reader );
+				}
 			}
 		}
 		final List<String> list = new ArrayList<>( size );
@@ -60,6 +61,16 @@ public class ScriptSourceInputAggregate implements ScriptSourceInput {
 		}
 
 		return list;
+	}
+
+	@Override
+	public boolean containsScript(URL url) {
+		for ( int i = 0; i < inputs.length; i++ ) {
+			if ( inputs[i].containsScript( url ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override

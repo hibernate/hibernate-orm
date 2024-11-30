@@ -1,13 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.locking;
 
 import java.util.Collections;
-import java.util.concurrent.CountDownLatch;
 
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -17,7 +14,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
@@ -31,7 +28,7 @@ import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.hibernate.testing.util.ExceptionUtil;
 
@@ -48,14 +45,12 @@ import static org.junit.jupiter.api.Assertions.fail;
  *
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-5275")
+@JiraKey( value = "HHH-5275")
 @SkipForDialect(dialectClass = SybaseASEDialect.class, majorVersion = 15,
 		reason = "skip this test on Sybase ASE 15.5, but run it on 15.7, see HHH-6820")
 public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 
 	private Long id;
-
-	private CountDownLatch endLatch = new CountDownLatch( 1 );
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -66,13 +61,15 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 	protected void applySettings(StandardServiceRegistryBuilder ssrBuilder) {
 		super.applySettings( ssrBuilder );
 		// We can't use a shared connection provider if we use TransactionUtil.setJdbcTimeout because that is set on the connection level
-		ssrBuilder.getSettings().remove( AvailableSettings.CONNECTION_PROVIDER );
+//		ssrBuilder.getSettings().remove( AvailableSettings.CONNECTION_PROVIDER );
 	}
 
 	@BeforeEach
 	public void prepareTest() throws Exception {
 		doInHibernate( this::sessionFactory, session -> {
-			id = (Long) session.save( new A( "it" ) );
+			A a = new A( "it" );
+			session.persist( a );
+			id = a.getId();
 		} );
 	}
 
@@ -81,6 +78,8 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLockTimeouts.class )
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
+	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Can't commit transaction because Altibase closes socket after lock timeout")
 	@SuppressWarnings( {"deprecation"})
 	public void testLoading() {
 		// open a session, begin a transaction and lock row
@@ -97,6 +96,8 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLockTimeouts.class )
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
+	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Can't commit transaction because Altibase closes socket after lock timeout")
 	public void testCriteria() {
 		// open a session, begin a transaction and lock row
 		doInHibernate( this::sessionFactory, session -> {
@@ -119,6 +120,8 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLockTimeouts.class )
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
+	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Can't commit transaction because Altibase closes socket after lock timeout")
 	public void testCriteriaAliasSpecific() {
 			// open a session, begin a transaction and lock row
 		doInHibernate( this::sessionFactory, session -> {
@@ -143,6 +146,8 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLockTimeouts.class )
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
+	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Can't commit transaction because Altibase closes socket after lock timeout")
 	public void testQuery() {
 		// open a session, begin a transaction and lock row
 		doInHibernate( this::sessionFactory, session -> {
@@ -172,7 +177,7 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-2735")
+	@JiraKey(value = "HHH-2735")
 	public void testQueryLockModeNoneWithAlias() {
 		doInHibernate( this::sessionFactory, session -> {
 			// shouldn't throw an exception
@@ -184,7 +189,7 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-2735")
+	@JiraKey(value = "HHH-2735")
 	public void testQueryLockModePessimisticWriteWithAlias() {
 		doInHibernate( this::sessionFactory, session -> {
 			// shouldn't throw an exception
@@ -196,14 +201,12 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12257")
+	@JiraKey(value = "HHH-12257")
 	public void testRefreshLockedEntity() {
 		doInHibernate( this::sessionFactory, session -> {
 			A a = session.get( A.class, id, LockMode.PESSIMISTIC_READ );
 			checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
 			session.refresh( a );
-			checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
-			session.refresh( A.class.getName(), a );
 			checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
 			session.refresh( a, Collections.emptyMap() );
 			checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
@@ -213,40 +216,51 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12257")
+	@JiraKey(value = "HHH-12257")
 	public void testRefreshWithExplicitLowerLevelLockMode() {
 		doInHibernate( this::sessionFactory, session -> {
-						   A a = session.get( A.class, id, LockMode.PESSIMISTIC_READ );
-						   checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
-						   session.refresh( a, LockMode.READ );
-						   checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
-						   session.refresh( a, LockModeType.READ );
-						   checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
-						   session.refresh( a, LockModeType.READ, Collections.emptyMap() );
-						   checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
-					   } );
+						A a = session.get( A.class, id, LockMode.PESSIMISTIC_READ );
+						checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
+						session.refresh( a, LockMode.READ );
+						checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
+						session.refresh( a, LockModeType.READ );
+						checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
+						session.refresh( a, LockModeType.READ, Collections.emptyMap() );
+						checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
+					} );
 	}
 
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12257")
+	@JiraKey(value = "HHH-12257")
 	@SkipForDialect( dialectClass = CockroachDialect.class )
-	public void testRefreshWithExplicitHigherLevelLockMode() {
+	public void testRefreshWithExplicitHigherLevelLockMode1() {
 		doInHibernate( this::sessionFactory, session -> {
-						   A a = session.get( A.class, id );
-						   checkLockMode( a, LockMode.READ, session );
-						   session.refresh( a, LockMode.UPGRADE_NOWAIT );
-						   checkLockMode( a, LockMode.UPGRADE_NOWAIT, session );
-						   session.refresh( a, LockModeType.PESSIMISTIC_READ );
-						   checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
-						   session.refresh( a, LockModeType.PESSIMISTIC_WRITE, Collections.emptyMap() );
-						   checkLockMode( a, LockMode.PESSIMISTIC_WRITE, session );
-					   } );
+						A a = session.get( A.class, id );
+						checkLockMode( a, LockMode.READ, session );
+						session.refresh( a, LockMode.UPGRADE_NOWAIT );
+						checkLockMode( a, LockMode.UPGRADE_NOWAIT, session );
+						session.refresh( a, LockModeType.PESSIMISTIC_WRITE, Collections.emptyMap() );
+						checkLockMode( a, LockMode.PESSIMISTIC_WRITE, session );
+					} );
 	}
 
+	@Test
+	@JiraKey(value = "HHH-12257")
+	@SkipForDialect( dialectClass = CockroachDialect.class )
+	public void testRefreshWithExplicitHigherLevelLockMode2() {
+		doInHibernate( this::sessionFactory, session -> {
+			A a = session.get( A.class, id );
+			checkLockMode( a, LockMode.READ, session );
+			session.refresh( a, LockModeType.PESSIMISTIC_READ );
+			checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
+			session.refresh( a, LockModeType.PESSIMISTIC_WRITE, Collections.emptyMap() );
+			checkLockMode( a, LockMode.PESSIMISTIC_WRITE, session );
+		} );
+	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12257")
+	@JiraKey(value = "HHH-12257")
 	public void testRefreshAfterUpdate() {
 		doInHibernate( this::sessionFactory, session -> {
 			A a = session.get( A.class, id );
@@ -276,33 +290,27 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 
 		try {
 			executeSync( () -> doInHibernate( this::sessionFactory, _session -> {
-					TransactionUtil.setJdbcTimeout( _session );
-					try {
-						// We used to load with write lock here to deal with databases that block (wait indefinitely)
-						// direct attempts to write a locked row.
-						// At some point, due to a bug, the lock mode was lost when applied via lock options, leading
-						// this code to not apply the pessimistic write lock.
-						// See HHH-12847 + https://github.com/hibernate/hibernate-orm/commit/719e5d0c12a6ef709bee907b8b651d27b8b08a6a.
-						// At least Sybase waits indefinitely when really applying a PESSIMISTIC_WRITE lock here (and
-						// the NO_WAIT part is not applied by the Sybase dialect so it doesn't help).
-						// For now going back to LockMode.NONE as it's the lock mode that has been applied for quite
-						// some time and it seems our supported databases don't have a problem with it.
-						A it = _session.get(
-								A.class,
-								id,
-								new LockOptions( LockMode.NONE ).setTimeOut( LockOptions.NO_WAIT )
-						);
-						_session.createNativeQuery( updateStatement() )
-								.setParameter( "value", "changed" )
-								.setParameter( "id", it.getId() )
-								.executeUpdate();
-						fail( "Pessimistic lock not obtained/held" );
-					}
-					catch ( Exception e ) {
-						if ( !ExceptionUtil.isSqlLockTimeout( e) ) {
-							fail( "Unexpected error type testing pessimistic locking : " + e.getClass().getName() );
+					TransactionUtil.withJdbcTimeout( _session, () -> {
+						try {
+							// load with write lock to deal with databases that block (wait indefinitely) direct attempts
+							// to write a locked row
+							A it = _session.get(
+									A.class,
+									id,
+									new LockOptions( LockMode.PESSIMISTIC_WRITE ).setTimeOut( LockOptions.NO_WAIT )
+							);
+							_session.createNativeQuery( updateStatement() )
+									.setParameter( "value", "changed" )
+									.setParameter( "id", it.getId() )
+									.executeUpdate();
+							fail( "Pessimistic lock not obtained/held" );
 						}
-					}
+						catch ( Exception e ) {
+							if ( !ExceptionUtil.isSqlLockTimeout( e) ) {
+								fail( "Unexpected error type testing pessimistic locking : " + e.getClass().getName() );
+							}
+						}
+					} );
 				} )
 			);
 		}

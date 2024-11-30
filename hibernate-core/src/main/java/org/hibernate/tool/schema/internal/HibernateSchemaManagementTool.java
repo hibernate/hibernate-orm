@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal;
 
@@ -11,7 +9,6 @@ import java.util.Map;
 
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -20,7 +17,6 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
@@ -32,7 +28,7 @@ import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.extract.internal.InformationExtractorJdbcDatabaseMetaDataImpl;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.InformationExtractor;
-import org.hibernate.tool.schema.internal.exec.GenerationTarget;
+import org.hibernate.tool.schema.spi.GenerationTarget;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToScript;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToStdout;
@@ -42,10 +38,12 @@ import org.hibernate.tool.schema.internal.exec.JdbcContext;
 import org.hibernate.tool.schema.spi.ExtractionTool;
 import org.hibernate.tool.schema.spi.SchemaCreator;
 import org.hibernate.tool.schema.spi.SchemaDropper;
+import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaFilterProvider;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.SchemaMigrator;
+import org.hibernate.tool.schema.spi.SchemaTruncator;
 import org.hibernate.tool.schema.spi.SchemaValidator;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
 
@@ -57,16 +55,20 @@ import static org.hibernate.cfg.AvailableSettings.DIALECT_DB_NAME;
 import static org.hibernate.cfg.AvailableSettings.DIALECT_DB_VERSION;
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_CONNECTION;
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_DELIMITER;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_CONNECTION;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_MAJOR_VERSION;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_MINOR_VERSION;
-import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_VERSION;
-import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_CONNECTION;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_NAME;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_VERSION;
+import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_FILTER_PROVIDER;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
+import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 /**
- * The standard Hibernate implementation for performing schema management.
+ * The standard Hibernate implementation of {@link SchemaManagementTool}
+ * for performing schema management.
  *
  * @author Steve Ebersole
  */
@@ -75,6 +77,9 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 
 	private ServiceRegistry serviceRegistry;
 	private GenerationTarget customTarget;
+
+	public HibernateSchemaManagementTool() {
+	}
 
 	@Override
 	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
@@ -92,34 +97,31 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 	}
 
 	@Override
+	public SchemaTruncator getSchemaTruncator(Map<String,Object> options) {
+		return new SchemaTruncatorImpl( this, getSchemaFilterProvider( options ).getTruncatorFilter() );
+	}
+
+	@Override
 	public SchemaMigrator getSchemaMigrator(Map<String,Object> options) {
-		if ( determineJdbcMetadaAccessStrategy( options ) == JdbcMetadaAccessStrategy.GROUPED ) {
-			return new GroupedSchemaMigratorImpl( this, getSchemaFilterProvider( options ).getMigrateFilter() );
-		}
-		else {
-			return new IndividuallySchemaMigratorImpl( this, getSchemaFilterProvider( options ).getMigrateFilter() );
-		}
+		final SchemaFilter migrateFilter = getSchemaFilterProvider( options ).getMigrateFilter();
+		return determineJdbcMetadaAccessStrategy( options ) == JdbcMetadaAccessStrategy.GROUPED
+				? new GroupedSchemaMigratorImpl( this, migrateFilter )
+				: new IndividuallySchemaMigratorImpl( this, migrateFilter );
 	}
 
 	@Override
 	public SchemaValidator getSchemaValidator(Map<String,Object> options) {
-		if ( determineJdbcMetadaAccessStrategy( options ) == JdbcMetadaAccessStrategy.GROUPED ) {
-			return new GroupedSchemaValidatorImpl( this, getSchemaFilterProvider( options ).getValidateFilter() );
-		}
-		else {
-			return new IndividuallySchemaValidatorImpl( this, getSchemaFilterProvider( options ).getValidateFilter() );
-		}
+		final SchemaFilter validateFilter = getSchemaFilterProvider( options ).getValidateFilter();
+		return determineJdbcMetadaAccessStrategy( options ) == JdbcMetadaAccessStrategy.GROUPED
+				? new GroupedSchemaValidatorImpl( this, validateFilter )
+				: new IndividuallySchemaValidatorImpl( this, validateFilter );
 	}
 
 	private SchemaFilterProvider getSchemaFilterProvider(Map<String,Object> options) {
-		final Object configuredOption = (options == null)
-				? null
-				: options.get( AvailableSettings.HBM2DDL_FILTER_PROVIDER );
-		return serviceRegistry.getService( StrategySelector.class ).resolveDefaultableStrategy(
-				SchemaFilterProvider.class,
-				configuredOption,
-				DefaultSchemaFilterProvider.INSTANCE
-		);
+		return serviceRegistry.requireService( StrategySelector.class )
+				.resolveDefaultableStrategy( SchemaFilterProvider.class,
+						options == null ? null : options.get( HBM2DDL_FILTER_PROVIDER ),
+						DefaultSchemaFilterProvider.INSTANCE );
 	}
 
 	private JdbcMetadaAccessStrategy determineJdbcMetadaAccessStrategy(Map<String,Object> options) {
@@ -140,10 +142,11 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 		return customTarget;
 	}
 
-	GenerationTarget[] buildGenerationTargets(
+	@Override
+	public GenerationTarget[] buildGenerationTargets(
 			TargetDescriptor targetDescriptor,
 			JdbcContext jdbcContext,
-			Map<String,Object> options,
+			Map<String, Object> options,
 			boolean needsAutoCommit) {
 		final String scriptDelimiter = ConfigurationHelper.getString( HBM2DDL_DELIMITER, options, ";" );
 
@@ -152,7 +155,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 		int index = 0;
 
 		if ( targetDescriptor.getTargetTypes().contains( TargetType.STDOUT ) ) {
-			targets[index] = new GenerationTargetToStdout( scriptDelimiter );
+			targets[index] = buildStdoutTarget( scriptDelimiter );
 			index++;
 		}
 
@@ -160,18 +163,30 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 			if ( targetDescriptor.getScriptTargetOutput() == null ) {
 				throw new SchemaManagementException( "Writing to script was requested, but no script file was specified" );
 			}
-			targets[index] = new GenerationTargetToScript( targetDescriptor.getScriptTargetOutput(), scriptDelimiter );
+			targets[index] = buildScriptTarget( targetDescriptor, scriptDelimiter );
 			index++;
 		}
 
 		if ( targetDescriptor.getTargetTypes().contains( TargetType.DATABASE ) ) {
 			targets[index] = customTarget == null
-					? new GenerationTargetToDatabase( getDdlTransactionIsolator( jdbcContext ), true )
+					? buildDatabaseTarget( jdbcContext, needsAutoCommit )
 					: customTarget;
 			index++;
 		}
 
 		return targets;
+	}
+
+	protected GenerationTarget buildStdoutTarget(String scriptDelimiter) {
+		return new GenerationTargetToStdout( scriptDelimiter );
+	}
+
+	protected GenerationTarget buildScriptTarget(TargetDescriptor targetDescriptor, String scriptDelimiter) {
+		return new GenerationTargetToScript( targetDescriptor.getScriptTargetOutput(), scriptDelimiter );
+	}
+
+	protected GenerationTarget buildDatabaseTarget(JdbcContext jdbcContext, boolean needsAutoCommit) {
+		return new GenerationTargetToDatabase( getDdlTransactionIsolator( jdbcContext ), true, needsAutoCommit );
 	}
 
 	GenerationTarget[] buildGenerationTargets(
@@ -185,7 +200,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 		int index = 0;
 
 		if ( targetDescriptor.getTargetTypes().contains( TargetType.STDOUT ) ) {
-			targets[index] = new GenerationTargetToStdout( scriptDelimiter );
+			targets[index] = buildStdoutTarget( scriptDelimiter );
 			index++;
 		}
 
@@ -193,7 +208,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 			if ( targetDescriptor.getScriptTargetOutput() == null ) {
 				throw new SchemaManagementException( "Writing to script was requested, but no script file was specified" );
 			}
-			targets[index] = new GenerationTargetToScript( targetDescriptor.getScriptTargetOutput(), scriptDelimiter );
+			targets[index] = buildScriptTarget( targetDescriptor, scriptDelimiter );
 			index++;
 		}
 
@@ -211,7 +226,8 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 		if ( jdbcContext.getJdbcConnectionAccess() instanceof JdbcConnectionAccessProvidedConnectionImpl ) {
 			return new DdlTransactionIsolatorProvidedConnectionImpl( jdbcContext );
 		}
-		return serviceRegistry.getService( TransactionCoordinatorBuilder.class ).buildDdlTransactionIsolator( jdbcContext );
+		return serviceRegistry.requireService( TransactionCoordinatorBuilder.class )
+				.buildDdlTransactionIsolator( jdbcContext );
 	}
 
 	public JdbcContext resolveJdbcContext(Map<String,Object> configurationValues) {
@@ -237,7 +253,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 				() -> configurationValues.get( JAKARTA_HBM2DDL_DB_NAME ),
 				() -> {
 					final String name = (String) configurationValues.get( DIALECT_DB_NAME );
-					if ( StringHelper.isNotEmpty( name ) ) {
+					if ( isNotEmpty( name ) ) {
 						DEPRECATION_LOGGER.deprecatedSetting( DIALECT_DB_NAME, JAKARTA_HBM2DDL_DB_NAME );
 					}
 					return name;
@@ -248,7 +264,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 					() -> configurationValues.get( JAKARTA_HBM2DDL_DB_VERSION ),
 					() -> {
 						final String name = (String) configurationValues.get( DIALECT_DB_VERSION );
-						if ( StringHelper.isNotEmpty( name ) ) {
+						if ( isNotEmpty( name ) ) {
 							DEPRECATION_LOGGER.deprecatedSetting( DIALECT_DB_VERSION, JAKARTA_HBM2DDL_DB_VERSION );
 						}
 						return name;
@@ -259,7 +275,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 					() -> configurationValues.get( JAKARTA_HBM2DDL_DB_MAJOR_VERSION ),
 					() -> {
 						final String name = (String) configurationValues.get( DIALECT_DB_MAJOR_VERSION );
-						if ( StringHelper.isNotEmpty( name ) ) {
+						if ( isNotEmpty( name ) ) {
 							DEPRECATION_LOGGER.deprecatedSetting( DIALECT_DB_MAJOR_VERSION, JAKARTA_HBM2DDL_DB_MAJOR_VERSION );
 						}
 						return name;
@@ -270,14 +286,14 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 					() -> configurationValues.get( JAKARTA_HBM2DDL_DB_MINOR_VERSION ),
 					() -> {
 						final String name = (String) configurationValues.get( DIALECT_DB_MINOR_VERSION );
-						if ( StringHelper.isNotEmpty( name ) ) {
+						if ( isNotEmpty( name ) ) {
 							DEPRECATION_LOGGER.deprecatedSetting( DIALECT_DB_MINOR_VERSION, JAKARTA_HBM2DDL_DB_MINOR_VERSION );
 						}
 						return name;
 					}
 			);
 
-			final Dialect indicatedDialect = serviceRegistry.getService( DialectResolver.class ).resolveDialect(
+			final Dialect indicatedDialect = serviceRegistry.requireService( DialectResolver.class ).resolveDialect(
 					new DialectResolutionInfo() {
 						@Override
 						public String getDatabaseName() {
@@ -293,14 +309,14 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 
 						@Override
 						public int getDatabaseMajorVersion() {
-							return StringHelper.isEmpty( dbMajor )
+							return isEmpty( dbMajor )
 									? NO_VERSION
 									: Integer.parseInt( dbMajor );
 						}
 
 						@Override
 						public int getDatabaseMinorVersion() {
-							return StringHelper.isEmpty( dbMinor )
+							return isEmpty( dbMinor )
 									? NO_VERSION
 									: Integer.parseInt( dbMinor );
 						}
@@ -323,6 +339,11 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 						@Override
 						public String getSQLKeywords() {
 							return "";
+						}
+
+						@Override
+						public Map<String, Object> getConfigurationValues() {
+							return configurationValues;
 						}
 					}
 			);
@@ -357,7 +378,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 
 		public JdbcContextBuilder(ServiceRegistry serviceRegistry) {
 			this.serviceRegistry = serviceRegistry;
-			final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
+			final JdbcServices jdbcServices = serviceRegistry.requireService( JdbcServices.class );
 			this.sqlStatementLogger = jdbcServices.getSqlStatementLogger();
 			this.sqlExceptionHelper = jdbcServices.getSqlExceptionHelper();
 
@@ -427,13 +448,13 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 		public ExtractionContext createExtractionContext(
 				ServiceRegistry serviceRegistry,
 				JdbcEnvironment jdbcEnvironment,
-				SqlStringGenerationContext sqlStringGenerationContext,
+				SqlStringGenerationContext context,
 				DdlTransactionIsolator ddlTransactionIsolator,
 				ExtractionContext.DatabaseObjectAccess databaseObjectAccess) {
 			return new ImprovedExtractionContextImpl(
 					serviceRegistry,
 					jdbcEnvironment,
-					sqlStringGenerationContext,
+					context,
 					ddlTransactionIsolator,
 					databaseObjectAccess
 			);

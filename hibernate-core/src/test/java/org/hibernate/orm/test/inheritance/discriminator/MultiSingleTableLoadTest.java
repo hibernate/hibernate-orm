@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.inheritance.discriminator;
 
@@ -20,7 +18,7 @@ import jakarta.persistence.Table;
 
 import org.hibernate.Hibernate;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -29,6 +27,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -74,7 +73,7 @@ public class MultiSingleTableLoadTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5954")
+	@JiraKey(value = "HHH-5954")
 	public void testEagerLoadMultipleHoldersWithDifferentSubtypes(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			Holder task1 = session.find( Holder.class, 1L );
@@ -84,7 +83,11 @@ public class MultiSingleTableLoadTest {
 			assertTrue( task1A instanceof B );
 			B b = (B) task1A;
 			assertTrue( b.getX() instanceof Y );
-			assertTrue( Hibernate.isInitialized( b.getX() ) );
+			// Previously, we asserted that X was initialized in this case,
+			// but doing that is not very sound, since EAGER initialization may only happen
+			// task1.a were instanceof C. Since that is not the case, no initialization happens
+//			assertTrue( Hibernate.isInitialized( b.getX() ) );
+			assertFalse( Hibernate.isInitialized( b.getX() ) );
 			assertEquals( "y", b.getX().getTheString() );
 
 			assertNotNull( task2 );

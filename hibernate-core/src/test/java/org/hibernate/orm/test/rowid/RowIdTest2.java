@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.rowid;
 
@@ -26,7 +24,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 /**
  * @author Gavin King
  */
-@RequiresDialect(value = OracleDialect.class, majorVersion = 9)
+@RequiresDialect(value = OracleDialect.class)
 @DomainModel(
 		xmlMappings = "org/hibernate/orm/test/rowid/Point.hbm.xml"
 )
@@ -51,7 +49,7 @@ public class RowIdTest2 {
 									st,
 									"create table Point (\"x\" number(19,2) not null, \"y\" number(19,2) not null, description varchar2(255) )"
 							);
-                            session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
+							session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
 						}
 				)
 		);

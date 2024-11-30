@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.annotations.derivedidentities.e3.b3;
 
 import jakarta.persistence.*;
@@ -9,10 +13,8 @@ public class Dependent {
 	@EmbeddedId
 	DependentId id;
 
-	@JoinColumns({
-			@JoinColumn(name = "FIRSTNAME", referencedColumnName = "FIRSTNAME"),
-			@JoinColumn(name = "LASTNAME", referencedColumnName = "lastName")
-	})
+	@JoinColumn(name = "FIRSTNAME", referencedColumnName = "FIRSTNAME")
+	@JoinColumn(name = "LASTNAME", referencedColumnName = "lastName")
 	@MapsId("empPK")
 	@ManyToOne
 	Employee emp;

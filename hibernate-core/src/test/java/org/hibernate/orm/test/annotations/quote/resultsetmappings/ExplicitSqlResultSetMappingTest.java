@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.quote.resultsetmappings;
 
@@ -25,7 +23,7 @@ public class ExplicitSqlResultSetMappingTest extends BaseCoreFunctionalTestCase 
 
 	@Override
 	protected void configure(Configuration cfg) {
-		cfg.setProperty( Environment.GLOBALLY_QUOTED_IDENTIFIERS, "true" );
+		cfg.setProperty( Environment.GLOBALLY_QUOTED_IDENTIFIERS, true );
 	}
 
 	private void prepareTestData() {
@@ -33,7 +31,7 @@ public class ExplicitSqlResultSetMappingTest extends BaseCoreFunctionalTestCase 
 		char close = getDialect().closeQuote();
 		queryString="select t."+open+"NAME"+close+" as "+open+"QuotEd_nAMe"+close+" from "+open+"MY_ENTITY_TABLE"+close+" t";
 		inTransaction(
-				s -> s.save( new MyEntity( "mine" ) )
+				s -> s.persist( new MyEntity( "mine" ) )
 
 		);
 	}

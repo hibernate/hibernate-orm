@@ -1,9 +1,13 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.entitygraph.parser;
 
 import java.util.Map;
+
 import jakarta.persistence.Basic;
 import jakarta.persistence.CascadeType;
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
@@ -61,7 +65,6 @@ public class GraphParsingTestEntity {
 	}
 
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	@ElementCollection(targetClass = GraphParsingTestEntity.class)
 	public Map<GraphParsingTestEntity, GraphParsingTestEntity> getMap() {
 		return map;
 	}

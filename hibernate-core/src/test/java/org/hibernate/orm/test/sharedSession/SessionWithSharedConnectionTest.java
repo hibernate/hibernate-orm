@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sharedSession;
 
@@ -17,7 +15,7 @@ import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -43,7 +41,7 @@ import static org.junit.Assert.assertTrue;
 @SessionFactory
 public class SessionWithSharedConnectionTest {
 	@Test
-	@TestForIssue( jiraKey = "HHH-7090" )
+	@JiraKey( value = "HHH-7090" )
 	public void testSharedTransactionContextSessionClosing(SessionFactoryScope scope) {
 		Session session = scope.getSessionFactory().openSession();
 		session.getTransaction().begin();
@@ -58,9 +56,9 @@ public class SessionWithSharedConnectionTest {
 //		secondSession.createCriteria( IrrelevantEntity.class ).list();
 
 		//the list should have registered and then released a JDBC resource
-        assertFalse(
+		assertFalse(
 				((SessionImplementor) secondSession)
-                        .getJdbcCoordinator().getLogicalConnection().getResourceRegistry()
+						.getJdbcCoordinator().getLogicalConnection().getResourceRegistry()
 						.hasRegisteredResources()
 		);
 
@@ -84,7 +82,7 @@ public class SessionWithSharedConnectionTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-7090" )
+	@JiraKey( value = "HHH-7090" )
 	public void testSharedTransactionContextAutoClosing(SessionFactoryScope scope) {
 		Session session = scope.getSessionFactory().openSession();
 		session.getTransaction().begin();
@@ -136,7 +134,7 @@ public class SessionWithSharedConnectionTest {
 	}
 
 //	@Test
-//	@TestForIssue( jiraKey = "HHH-7090" )
+//	@JiraKey( value = "HHH-7090" )
 //	public void testSharedTransactionContextAutoJoining() {
 //		Session session = scope.getSessionFactory().openSession();
 //		session.getTransaction().begin();
@@ -154,7 +152,7 @@ public class SessionWithSharedConnectionTest {
 //	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-7090" )
+	@JiraKey( value = "HHH-7090" )
 	public void testSharedTransactionContextFlushBeforeCompletion(SessionFactoryScope scope) {
 		Session session = scope.getSessionFactory().openSession();
 		session.getTransaction().begin();
@@ -169,7 +167,9 @@ public class SessionWithSharedConnectionTest {
 //		assertTrue( ((SessionImplementor) secondSession).isFlushBeforeCompletionEnabled() );
 
 		// now try it out
-		Integer id = (Integer) secondSession.save( new IrrelevantEntity() );
+		IrrelevantEntity irrelevantEntity = new IrrelevantEntity();
+		secondSession.persist( irrelevantEntity );
+		Integer id = irrelevantEntity.getId();
 		session.getTransaction().commit();
 		assertFalse( ((SessionImplementor) session).isClosed() );
 		assertTrue( ((SessionImplementor) secondSession).isClosed() );
@@ -182,18 +182,18 @@ public class SessionWithSharedConnectionTest {
 		session.getTransaction().begin();
 		IrrelevantEntity it = session.byId( IrrelevantEntity.class ).load( id );
 		assertNotNull( it );
-		session.delete( it );
+		session.remove( it );
 		session.getTransaction().commit();
 		session.close();
 	}
-	
+
 	@Test
-	@TestForIssue( jiraKey = "HHH-7239" )
+	@JiraKey( value = "HHH-7239" )
 	public void testChildSessionCallsAfterTransactionAction(SessionFactoryScope scope) throws Exception {
 		Session session = scope.getSessionFactory().openSession();
 
 		final String postCommitMessage = "post commit was called";
-		
+
 		EventListenerRegistry eventListenerRegistry = scope.getSessionFactory().getServiceRegistry().getService(EventListenerRegistry.class);
 		//register a post commit listener
 		eventListenerRegistry.appendListeners(
@@ -215,7 +215,7 @@ public class SessionWithSharedConnectionTest {
 
 		IrrelevantEntity irrelevantEntityMainSession = new IrrelevantEntity();
 		irrelevantEntityMainSession.setName( "main session" );
-		session.save( irrelevantEntityMainSession );
+		session.persist( irrelevantEntityMainSession );
 
 		//open secondary session to also insert an entity
 		Session secondSession = session.sessionWithOptions()
@@ -226,32 +226,32 @@ public class SessionWithSharedConnectionTest {
 
 		IrrelevantEntity irrelevantEntitySecondarySession = new IrrelevantEntity();
 		irrelevantEntitySecondarySession.setName( "secondary session" );
-		secondSession.save( irrelevantEntitySecondarySession );
+		secondSession.persist( irrelevantEntitySecondarySession );
 
 		session.getTransaction().commit();
-		
+
 		//both entities should have their names updated to the postCommitMessage value
 		assertEquals(postCommitMessage, irrelevantEntityMainSession.getName());
 		assertEquals(postCommitMessage, irrelevantEntitySecondarySession.getName());
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-7239" )
+	@JiraKey( value = "HHH-7239" )
 	public void testChildSessionTwoTransactions(SessionFactoryScope scope) throws Exception {
 		Session session = scope.getSessionFactory().openSession();
-		
+
 		session.getTransaction().begin();
-		
+
 		//open secondary session with managed options
 		Session secondarySession = session.sessionWithOptions()
 				.connection()
 //				.flushBeforeCompletion( true )
 				.autoClose( true )
 				.openSession();
-		
+
 		//the secondary session should be automatically closed after the commit
 		session.getTransaction().commit();
-		
+
 		assertFalse( secondarySession.isOpen() );
 
 		//should be able to create a new transaction and carry on using the original session
@@ -260,7 +260,7 @@ public class SessionWithSharedConnectionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11830")
+	@JiraKey(value = "HHH-11830")
 	public void testSharedSessionTransactionObserver(SessionFactoryScope scope) throws Exception {
 		scope.inTransaction( session -> {
 			Field field = null;

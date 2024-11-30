@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.onetomany;
 
@@ -31,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Burkhard Graves
  * @author Gail Badner
  */
-@SuppressWarnings({ "UnusedDeclaration" })
+@SuppressWarnings("unused")
 public abstract class AbstractRecursiveBidirectionalOneToManyTest extends BaseSessionFactoryFunctionalTest {
 
 	@Override
@@ -76,7 +74,7 @@ public abstract class AbstractRecursiveBidirectionalOneToManyTest extends BaseSe
 					node1.addSubNode( node2 );
 					node2.addSubNode( node3 );
 
-					session.save( node1 );
+					session.persist( node1 );
 				}
 		);
 	}
@@ -85,7 +83,7 @@ public abstract class AbstractRecursiveBidirectionalOneToManyTest extends BaseSe
 		inTransaction(
 				session -> {
 					session.setCacheMode( getSessionCacheMode() );
-					Node node3 = session.load( Node.class, new Integer( 3 ) );
+					Node node3 = session.getReference( Node.class, new Integer( 3 ) );
 					Node node2 = node3.getParentNode();
 					Node node1 = node2.getParentNode();
 
@@ -99,7 +97,7 @@ public abstract class AbstractRecursiveBidirectionalOneToManyTest extends BaseSe
 		inTransaction(
 				session -> {
 					session.setCacheMode( getSessionCacheMode() );
-					Node node3 = session.load( Node.class, new Integer( 3 ) );
+					Node node3 = session.getReference( Node.class, new Integer( 3 ) );
 					Node node2 = node3.getParentNode();
 					Node node1 = node2.getParentNode();
 
@@ -114,7 +112,7 @@ public abstract class AbstractRecursiveBidirectionalOneToManyTest extends BaseSe
 		inTransaction(
 				session -> {
 					session.setCacheMode( getSessionCacheMode() );
-					Node node3 = session.load( Node.class, new Integer( 3 ) );
+					Node node3 = session.getReference( Node.class, new Integer( 3 ) );
 					Node node2 = node3.getParentNode();
 					Node node1 = node2.getParentNode();
 
@@ -155,8 +153,8 @@ public abstract class AbstractRecursiveBidirectionalOneToManyTest extends BaseSe
 		inTransaction(
 				session -> {
 					session.setCacheMode( getSessionCacheMode() );
-					Node node1 = (Node) session.get( Node.class, Integer.valueOf( 1 ) );
-					session.delete( node1 );
+					Node node1 = session.get( Node.class, Integer.valueOf( 1 ) );
+					session.remove( node1 );
 				}
 		);
 	}

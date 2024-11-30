@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal.log;
 
@@ -16,11 +14,11 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Used to annotate classes which define sub-system style logging where
  * loggers are hierarchically defined around functionalities rather than
  * class and package names
- * <p/>
+ * <p>
  * This is helpful to find such classes and is used to generate report
  * (as a release artifact) describing logger names for logging configuration
  * by the application.
- * <p/>
+ * <p>
  * At the moment Hibernate uses a mix sub-system logging and the more traditional
  * package and class name based logging.  This annotation focuses on the classes
  * defining the sub-system approach

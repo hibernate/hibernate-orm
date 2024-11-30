@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemaupdate.foreignkeys;
 
@@ -12,22 +10,27 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.function.UnaryOperator;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.hamcrest.core.Is.is;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -43,7 +46,7 @@ public class ForeignKeyGenerationTest extends BaseUnitTestCase {
 	public void setUp() throws IOException {
 		output = File.createTempFile( "update_script", ".sql" );
 		output.deleteOnExit();
-		ssr = new StandardServiceRegistryBuilder().build();
+		ssr = ServiceRegistryUtil.serviceRegistry();
 	}
 
 	@After
@@ -52,7 +55,7 @@ public class ForeignKeyGenerationTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9591")
+	@JiraKey(value = "HHH-9591")
 	public void oneToOneTest() throws Exception {
 		createSchema( new Class[] {User.class, UserSetting.class, Group.class} );
 
@@ -78,7 +81,7 @@ public class ForeignKeyGenerationTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10396")
+	@JiraKey(value = "HHH-10396")
 	public void oneToManyTest() throws Exception {
 		createSchema( new Class[] {User.class, UserSetting.class, Group.class} );
 
@@ -96,15 +99,15 @@ public class ForeignKeyGenerationTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10385")
+	@JiraKey(value = "HHH-10385")
 	public void oneToManyWithJoinTableTest() throws Exception {
 		createSchema( new Class[] {Person.class, Phone.class} );
 
 		/*
 			The generated SQL for the foreign keys should be:
-            alter table PERSON_PHONE add constraint PERSON_ID_FK foreign key (PERSON_ID) references PERSON
-            alter table PERSON_PHONE add constraint PHONE_ID_FK foreign key (PHONE_ID) references PHONE
-        */
+			alter table PERSON_PHONE add constraint PERSON_ID_FK foreign key (PERSON_ID) references PERSON
+			alter table PERSON_PHONE add constraint PHONE_ID_FK foreign key (PHONE_ID) references PHONE
+		*/
 		checkAlterTableStatement( new AlterTableStatement(
 				ssr,
 				"PERSON_PHONE",
@@ -122,15 +125,15 @@ public class ForeignKeyGenerationTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10386")
+	@JiraKey(value = "HHH-10386")
 	public void manyToManyTest() throws Exception {
 		createSchema( new Class[] {Project.class, Employee.class} );
 
-                /*
+				/*
 				The generated SQL for the foreign keys should be:
-                alter table EMPLOYEE_PROJECT add constraint FK_EMPLOYEE foreign key (EMPLOYEE_ID) references EMPLOYEE
-                alter table EMPLOYEE_PROJECT add constraint FK_PROJECT foreign key (PROJECT_ID) references PROJECT
-                */
+				alter table EMPLOYEE_PROJECT add constraint FK_EMPLOYEE foreign key (EMPLOYEE_ID) references EMPLOYEE
+				alter table EMPLOYEE_PROJECT add constraint FK_PROJECT foreign key (PROJECT_ID) references PROJECT
+				*/
 		checkAlterTableStatement( new AlterTableStatement(
 				ssr,
 				"EMPLOYEE_PROJECT",
@@ -154,6 +157,7 @@ public class ForeignKeyGenerationTest extends BaseUnitTestCase {
 			metadataSources.addAnnotatedClass( c );
 		}
 		metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 		new SchemaExport()
 				.setHaltOnError( true )
@@ -166,13 +170,8 @@ public class ForeignKeyGenerationTest extends BaseUnitTestCase {
 			throws Exception {
 		final String expectedAlterTableStatement = alterTableStatement.toSQL();
 		final List<String> sqlLines = Files.readAllLines( output.toPath(), Charset.defaultCharset() );
-		boolean found = false;
-		for ( String line : sqlLines ) {
-			if ( line.contains( expectedAlterTableStatement ) ) {
-				return;
-			}
-		}
-		assertThat( "Expected alter table statement not found : " + expectedAlterTableStatement, found, is( true ) );
+
+		assertThat( "Expected alter table statement not found", sqlLines, hasItem( containsString( expectedAlterTableStatement ) ) );
 	}
 
 	private static class AlterTableStatement {
@@ -196,7 +195,13 @@ public class ForeignKeyGenerationTest extends BaseUnitTestCase {
 		}
 
 		public String toSQL() {
-			return ssr.getService( JdbcEnvironment.class ).getDialect().getAlterTableString( tableName ) + " add constraint " + fkConstraintName + " foreign key (" + fkColumnName + ") references " + referenceTableName;
+			JdbcEnvironment jdbcEnvironment = ssr.getService( JdbcEnvironment.class );
+			Dialect dialect = jdbcEnvironment.getDialect();
+			IdentifierHelper identifierHelper = jdbcEnvironment.getIdentifierHelper();
+			UnaryOperator<String> asIdentifier = identifier -> identifierHelper.toIdentifier( identifier ).render( dialect );
+			return dialect.getAlterTableString( asIdentifier.apply( tableName ) )
+					+ " add constraint " + asIdentifier.apply( fkConstraintName )
+					+ " foreign key (" + asIdentifier.apply( fkColumnName ) + ") references " + asIdentifier.apply( referenceTableName );
 		}
 	}
 

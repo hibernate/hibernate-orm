@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.insertordering;
 
@@ -20,7 +18,7 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.cfg.Environment;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -33,7 +31,7 @@ import org.junit.jupiter.api.Test;
  * @author Harikant Verma
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-13068")
+@JiraKey(value = "HHH-13068")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJdbcDriverProxying.class)
 @Jpa(
 		annotatedClasses = {
@@ -77,12 +75,9 @@ public class InsertOrderingSelfReferenceSingleTableInheritance {
 	@Test
 	public void test2(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
-			NodeLongValue aparam = new NodeLongValue();
-			aparam.setLongValue( 123L );
-
-			ContentNode xa = new ContentNode( aparam, null, null );
-			ContentNode xb = new ContentNode( aparam, null, null );
-			ContentNode xc = new ContentNode( aparam, xb, null );
+			ContentNode xa = new ContentNode(new NodeLongValue(123L), null, null );
+			ContentNode xb = new ContentNode(new NodeLongValue(123L), null, null );
+			ContentNode xc = new ContentNode(new NodeLongValue(123L), xb, null );
 
 			NodeLink nl = new NodeLink( xc );
 
@@ -118,8 +113,9 @@ public class InsertOrderingSelfReferenceSingleTableInheritance {
 			NodeStringValue stringVal = new NodeStringValue();
 			stringVal.setStringValue( "Node 123" );
 
+			ContentNode cn0 = new ContentNode( null, null, null );
 			ContentNode cn1 = new ContentNode( stringVal, null, null );
-			ContentNode cn2 = new ContentNode( longVal, cn1, null );
+			ContentNode cn2 = new ContentNode( longVal, cn0, null );
 
 			ContentNode cn3 = new ContentNode( null, cn1, cn2 );
 
@@ -342,6 +338,11 @@ public class InsertOrderingSelfReferenceSingleTableInheritance {
 
 		public NodeLongValue(String dataType, Long longValue) {
 			super( dataType );
+			this.longValue = longValue;
+		}
+
+		public NodeLongValue(Long longValue) {
+			super();
 			this.longValue = longValue;
 		}
 

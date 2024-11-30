@@ -1,21 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 
 /**
@@ -24,8 +20,8 @@ import org.hibernate.sql.results.graph.entity.EntityInitializer;
  * @author Andrea Boriero
  */
 public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
-	private final DomainResult<?> keyResult;
-	private final boolean selectByUniqueKey;
+
+	private final boolean isAffectedByFilter;
 
 	public EntityFetchSelectImpl(
 			FetchParent fetchParent,
@@ -33,11 +29,25 @@ public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 			NavigablePath navigablePath,
 			DomainResult<?> keyResult,
 			boolean selectByUniqueKey,
-			@SuppressWarnings("unused") DomainResultCreationState creationState) {
-		super( navigablePath, fetchedAttribute, fetchParent );
+			boolean isAffectedByFilter,
+			DomainResultCreationState creationState) {
+		super( navigablePath, fetchedAttribute, fetchParent, keyResult, false, selectByUniqueKey, creationState );
+		this.isAffectedByFilter = isAffectedByFilter;
+	}
 
-		this.keyResult = keyResult;
-		this.selectByUniqueKey = selectByUniqueKey;
+	/**
+	 * For Hibernate Reactive
+	 */
+	protected EntityFetchSelectImpl(EntityFetchSelectImpl original) {
+		super(
+				original.getNavigablePath(),
+				original.getFetchedMapping(),
+				original.getFetchParent(),
+				original.getKeyResult(),
+				original.getDiscriminatorFetch(),
+				original.isSelectByUniqueKey()
+		);
+		this.isAffectedByFilter = original.isAffectedByFilter();
 	}
 
 	@Override
@@ -45,51 +55,21 @@ public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 		return FetchTiming.IMMEDIATE;
 	}
 
-	@Override
-	public boolean hasTableGroup() {
-		return false;
+	public boolean isAffectedByFilter() {
+		return isAffectedByFilter;
 	}
 
 	@Override
-	public DomainResultAssembler<?> createAssembler(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
-		final EntityInitializer initializer = (EntityInitializer) creationState.resolveInitializer(
-				getNavigablePath(),
+	public EntityInitializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {
+		return EntitySelectFetchInitializerBuilder.createInitializer(
+				parent,
 				getFetchedMapping(),
-				() -> {
-
-					EntityPersister entityPersister = getReferencedMappingContainer().getEntityPersister();
-
-					final ToOneAttributeMapping fetchedAttribute = (ToOneAttributeMapping) getFetchedMapping();
-					if ( selectByUniqueKey ) {
-						return new EntitySelectFetchByUniqueKeyInitializer(
-								parentAccess,
-								fetchedAttribute,
-								getNavigablePath(),
-								entityPersister,
-								keyResult.createResultAssembler( parentAccess, creationState )
-						);
-					}
-					if ( entityPersister.isBatchLoadable() && !creationState.isScrollResult() ) {
-						return new BatchEntitySelectFetchInitializer(
-								parentAccess,
-								fetchedAttribute,
-								getNavigablePath(),
-								entityPersister,
-								keyResult.createResultAssembler( parentAccess, creationState )
-						);
-					}
-					else {
-						return new EntitySelectFetchInitializer(
-								parentAccess,
-								fetchedAttribute,
-								getNavigablePath(),
-								entityPersister,
-								keyResult.createResultAssembler( parentAccess, creationState )
-						);
-					}
-				}
+				getReferencedMappingContainer().getEntityPersister(),
+				getKeyResult(),
+				getNavigablePath(),
+				isSelectByUniqueKey(),
+				isAffectedByFilter(),
+				creationState
 		);
-
-		return new EntityAssembler( getResultJavaType(), initializer );
 	}
 }

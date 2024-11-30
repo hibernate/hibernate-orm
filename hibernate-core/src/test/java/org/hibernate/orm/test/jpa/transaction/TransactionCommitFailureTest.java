@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.transaction;
 
@@ -18,12 +16,14 @@ import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.RollbackException;
 
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
+
+import org.hibernate.testing.jdbc.ConnectionProviderDelegate;
+import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
 import org.hibernate.orm.test.jpa.SettingsGenerator;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.DialectContext;
 import org.junit.jupiter.api.AfterEach;
@@ -31,6 +31,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -67,11 +68,13 @@ public class TransactionCommitFailureTest {
 
 		try {
 			em.getTransaction().begin();
+			// Force connection acquisition
+			em.createQuery( "select 1" ).getResultList();
 			transactionFailureTrigger.set( true );
 			em.getTransaction().commit();
 		}
 		catch (RollbackException e) {
-			assertEquals( COMMIT_FAILURE, e.getLocalizedMessage() );
+			assertTrue( e.getLocalizedMessage().startsWith( COMMIT_FAILURE ) );
 		}
 		finally {
 			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
@@ -84,11 +87,13 @@ public class TransactionCommitFailureTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12285")
+	@JiraKey(value = "HHH-12285")
 	public void assertConnectionIsReleasedIfRollbackFails() {
 		EntityManager em = emf.createEntityManager();
 		try {
 			em.getTransaction().begin();
+			// Force connection acquisition
+			em.createQuery( "select 1" ).getResultList();
 			assertEquals( true, connectionIsOpen.get() );
 			transactionFailureTrigger.set( true );
 			em.getTransaction().rollback();
@@ -115,7 +120,11 @@ public class TransactionCommitFailureTest {
 		);
 	}
 
-	public static class ProxyConnectionProvider extends DriverManagerConnectionProviderImpl {
+	public static class ProxyConnectionProvider extends ConnectionProviderDelegate {
+
+		public ProxyConnectionProvider() {
+			setConnectionProvider( SharedDriverManagerConnectionProviderImpl.getInstance() );
+		}
 
 		@Override
 		public Connection getConnection() throws SQLException {
@@ -129,8 +138,10 @@ public class TransactionCommitFailureTest {
 		}
 
 		@Override
-		public void closeConnection(Connection conn) throws SQLException {
-			super.closeConnection( conn );
+		public void closeConnection(Connection connection) throws SQLException {
+			final ConnectionInvocationHandler handler = (ConnectionInvocationHandler)
+					Proxy.getInvocationHandler( connection );
+			super.closeConnection( handler.delegate );
 			connectionIsOpen.set( false );
 		}
 	}

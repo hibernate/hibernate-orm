@@ -1,38 +1,23 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.mutation.internal.temptable;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
 
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Joinable;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.mutation.internal.UpdateHandler;
 import org.hibernate.query.sqm.mutation.spi.AbstractMutationHandler;
-import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
+import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
@@ -40,8 +25,12 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.predicate.PredicateCollector;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-
 import org.jboss.logging.Logger;
+
+import java.util.List;
+import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 /**
 * @author Steve Ebersole
@@ -60,9 +49,7 @@ public class TableBasedUpdateHandler
 	private final Function<SharedSessionContractImplementor,String> sessionUidAccess;
 	private final DomainParameterXref domainParameterXref;
 
-	private final EntityPersister entityDescriptor;
-
-	TableBasedUpdateHandler(
+	public TableBasedUpdateHandler(
 			SqmUpdateStatement<?> sqmUpdate,
 			DomainParameterXref domainParameterXref,
 			TemporaryTable idTable,
@@ -74,9 +61,6 @@ public class TableBasedUpdateHandler
 		this.afterUseAction = afterUseAction;
 		this.sessionUidAccess = sessionUidAccess;
 		this.domainParameterXref = domainParameterXref;
-
-		final String targetEntityName = sqmUpdate.getTarget().getEntityName();
-		this.entityDescriptor = sessionFactory.getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( targetEntityName );
 	}
 
 	protected SqmUpdateStatement<?> getSqmUpdate() {
@@ -102,7 +86,7 @@ public class TableBasedUpdateHandler
 		return resolveDelegate( executionContext ).execute( executionContextAdapter );
 	}
 
-	private ExecutionDelegate resolveDelegate(DomainQueryExecutionContext executionContext) {
+	protected ExecutionDelegate resolveDelegate(DomainQueryExecutionContext executionContext) {
 		final SessionFactoryImplementor sessionFactory = getSessionFactory();
 		final MappingMetamodel domainModel = sessionFactory.getRuntimeMetamodels().getMappingMetamodel();
 		final EntityPersister entityDescriptor = domainModel.getEntityDescriptor( getSqmDeleteOrUpdateStatement().getTarget().getEntityName() );
@@ -110,7 +94,7 @@ public class TableBasedUpdateHandler
 		final String rootEntityName = entityDescriptor.getRootEntityName();
 		final EntityPersister rootEntityDescriptor = domainModel.getEntityDescriptor( rootEntityName );
 
-		final String hierarchyRootTableName = ( (Joinable) rootEntityDescriptor ).getTableName();
+		final String hierarchyRootTableName = rootEntityDescriptor.getTableName();
 
 		final MultiTableSqmMutationConverter converterDelegate = new MultiTableSqmMutationConverter(
 				entityDescriptor,
@@ -131,66 +115,27 @@ public class TableBasedUpdateHandler
 		);
 		assert hierarchyRootTableReference != null;
 
-		final Map<SqmParameter<?>, List<List<JdbcParameter>>> parameterResolutions;
-		if ( domainParameterXref.getSqmParameterCount() == 0 ) {
-			parameterResolutions = Collections.emptyMap();
-		}
-		else {
-			parameterResolutions = new IdentityHashMap<>();
-		}
-
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// visit the set-clause using our special converter, collecting
 		// information about the assignments
 
-		final List<Assignment> assignments = new ArrayList<>();
-		final Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions = new LinkedHashMap<>();
-
-		converterDelegate.visitSetClause(
-				getSqmDeleteOrUpdateStatement().getSetClause(),
-				assignments::add,
-				(sqmParameter, mappingType, jdbcParameters) -> {
-					parameterResolutions.computeIfAbsent(
-							sqmParameter,
-							k -> new ArrayList<>( 1 )
-					).add( jdbcParameters );
-					paramTypeResolutions.put( sqmParameter, mappingType );
-				}
-		);
+		final List<Assignment> assignments = converterDelegate.visitSetClause( getSqmDeleteOrUpdateStatement().getSetClause() );
 		converterDelegate.addVersionedAssignment( assignments::add, getSqmDeleteOrUpdateStatement() );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// visit the where-clause using our special converter, collecting information
 		// about the restrictions
 
-		final Predicate providedPredicate;
-		final SqmWhereClause whereClause = getSqmUpdate().getWhereClause();
-		if ( whereClause == null || whereClause.getPredicate() == null ) {
-			providedPredicate = null;
-		}
-		else {
-			providedPredicate = converterDelegate.visitWhereClause(
-					whereClause,
-					columnReference -> {},
-					(sqmParameter, mappingType, jdbcParameters) -> {
-						parameterResolutions.computeIfAbsent(
-								sqmParameter,
-								k -> new ArrayList<>( 1 )
-						).add( jdbcParameters );
-						paramTypeResolutions.put( sqmParameter, mappingType );
-					}
-
-			);
-			assert providedPredicate != null;
-		}
-
-		final PredicateCollector predicateCollector = new PredicateCollector( providedPredicate );
+		final PredicateCollector predicateCollector = new PredicateCollector(
+				converterDelegate.visitWhereClause( getSqmUpdate().getWhereClause() )
+		);
 
 		entityDescriptor.applyBaseRestrictions(
 				predicateCollector::applyPredicate,
 				updatingTableGroup,
 				true,
 				executionContext.getSession().getLoadQueryInfluencers().getEnabledFilters(),
+				false,
 				null,
 				converterDelegate
 		);
@@ -207,36 +152,54 @@ public class TableBasedUpdateHandler
 			collectTableReference( updatingTableGroup.getTableReferenceJoins().get( i ), tableReferenceByAlias::put );
 		}
 
-		return new UpdateExecutionDelegate(
-				getSqmUpdate(),
+		return buildExecutionDelegate(
 				converterDelegate,
 				idTable,
 				afterUseAction,
 				sessionUidAccess,
 				domainParameterXref,
 				updatingTableGroup,
-				hierarchyRootTableReference,
 				tableReferenceByAlias,
 				assignments,
 				predicateCollector.getPredicate(),
-				parameterResolutions,
-				paramTypeResolutions,
 				executionContext
 		);
 	}
 
+	protected UpdateExecutionDelegate buildExecutionDelegate(
+			MultiTableSqmMutationConverter sqmConverter,
+			TemporaryTable idTable,
+			AfterUseAction afterUseAction,
+			Function<SharedSessionContractImplementor, String> sessionUidAccess,
+			DomainParameterXref domainParameterXref,
+			TableGroup updatingTableGroup,
+			Map<String, TableReference> tableReferenceByAlias,
+			List<Assignment> assignments,
+			Predicate suppliedPredicate,
+			DomainQueryExecutionContext executionContext) {
+		return new UpdateExecutionDelegate(
+				sqmConverter,
+				idTable,
+				afterUseAction,
+				sessionUidAccess,
+				domainParameterXref,
+				updatingTableGroup,
+				tableReferenceByAlias,
+				assignments,
+				suppliedPredicate,
+				executionContext
+		);
+	}
 
-	private void collectTableReference(
+	protected void collectTableReference(
 			TableReference tableReference,
 			BiConsumer<String, TableReference> consumer) {
 		consumer.accept( tableReference.getIdentificationVariable(), tableReference );
 	}
 
-	private void collectTableReference(
+	protected void collectTableReference(
 			TableReferenceJoin tableReferenceJoin,
 			BiConsumer<String, TableReference> consumer) {
 		collectTableReference( tableReferenceJoin.getJoinedTableReference(), consumer );
 	}
-
-
 }

@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.schemaupdate;
 
 import java.io.File;
@@ -18,8 +22,9 @@ import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -27,7 +32,7 @@ import org.junit.Test;
  * @author Koen Aers
  */
 @RequiresDialect(H2Dialect.class)
-@TestForIssue(jiraKey = "HHH-10158")
+@JiraKey(value = "HHH-10158")
 public class SchemaUpdateFormatterTest extends BaseUnitTestCase {
 
 	private static final String AFTER_FORMAT =
@@ -39,7 +44,7 @@ public class SchemaUpdateFormatterTest extends BaseUnitTestCase {
 
 	@Test
 	public void testSetFormat() throws Exception {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( Environment.HBM2DDL_AUTO, "none" )
 				.build();
 		try {
@@ -49,6 +54,7 @@ public class SchemaUpdateFormatterTest extends BaseUnitTestCase {
 			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( TestEntity.class )
 					.buildMetadata();
+			metadata.orderColumns( false );
 			metadata.validate();
 
 			new SchemaUpdate()

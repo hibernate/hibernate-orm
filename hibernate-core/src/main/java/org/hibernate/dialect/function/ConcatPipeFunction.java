@@ -1,14 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
 
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
@@ -48,13 +47,14 @@ public class ConcatPipeFunction extends AbstractSqmSelfRenderingFunctionDescript
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		String separator = "(";
 		for ( int i = 0; i < sqlAstArguments.size(); i++ ) {
 			final Expression expression = (Expression) sqlAstArguments.get( i );
-			final JdbcType jdbcType = expression.getExpressionType().getJdbcMappings().get( 0 ).getJdbcType();
+			final JdbcType jdbcType = expression.getExpressionType().getSingleJdbcMapping().getJdbcType();
 			sqlAppender.appendSql( separator );
-			switch ( jdbcType.getJdbcTypeCode() ) {
+			switch ( jdbcType.getDdlTypeCode() ) {
 				case SqlTypes.CLOB:
 				case SqlTypes.NCLOB:
 					clobPatternRenderer.render( sqlAppender, Collections.singletonList( expression ), walker );

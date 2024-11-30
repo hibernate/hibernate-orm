@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
 
@@ -53,21 +51,19 @@ public class CastStrEmulation
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		final SqmTypedNode<?> argument = arguments.get( 0 );
 		return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( "cast" )
 				.generateSqmExpression(
 						asList(
 								argument,
 								new SqmCastTarget<>(
-										typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING ),
-										argument.nodeBuilder()
+										queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING ),
+										queryEngine.getCriteriaBuilder()
 								)
 						),
 						impliedResultType,
-						queryEngine,
-						typeConfiguration
+						queryEngine
 				);
 	}
 }

@@ -1,29 +1,36 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.filter.secondarytable;
 
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+
 import org.hibernate.Session;
+import org.hibernate.SharedSessionContract;
+import org.hibernate.orm.test.filter.AbstractStatefulStatelessFilterTest;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.testing.transaction.TransactionUtil;
-import org.junit.Assert;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
-public class SecondaryTableTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				User.class
+		}
+)
+public class SecondaryTableTest extends AbstractStatefulStatelessFilterTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {User.class};
-	}
-
-	@Override
-	protected void prepareTest() throws Exception {
-		TransactionUtil.doInHibernate( this::sessionFactory, s -> {
+	@BeforeEach
+	void prepareTest() {
+		scope.inTransaction( s -> {
 			insertUser( s, "q@s.com", 21, false, "a1", "b" );
 			insertUser( s, "r@s.com", 22, false, "a2", "b" );
 			insertUser( s, "s@s.com", 23, true, "a3", "b" );
@@ -31,19 +38,26 @@ public class SecondaryTableTest extends BaseCoreFunctionalTestCase {
 		} );
 	}
 
-	@Test
-	public void testFilter() {
-		try (Session session = openSession()) {
+	@AfterEach
+	void tearDown() {
+		scope.inTransaction( s -> {
+			s.createQuery( "delete from User" ).executeUpdate();
+		} );
+	}
+
+	@ParameterizedTest
+	@MethodSource("transactionKind")
+	void testFilter(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
+		inTransaction.accept( scope, session -> {
 /*			Assert.assertEquals(
 					4L,
 					session.createQuery( "select count(u) from User u" ).uniqueResult()
 			);*/
 			session.enableFilter( "ageFilter" ).setParameter( "age", 24 );
-			Assert.assertEquals(
-					2L,
+			assertThat(
 					session.createQuery( "select count(u) from User u" ).uniqueResult()
-			);
-		}
+			).isEqualTo( 2L );
+		} );
 	}
 
 	private void insertUser(

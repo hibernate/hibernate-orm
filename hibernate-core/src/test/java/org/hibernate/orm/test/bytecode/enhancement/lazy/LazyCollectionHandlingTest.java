@@ -1,12 +1,8 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -18,30 +14,28 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.MappedSuperclass;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-@TestForIssue(jiraKey = "")
-@RunWith(BytecodeEnhancerRunner.class)
-public class LazyCollectionHandlingTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				LazyCollectionHandlingTest.JafSid.class, LazyCollectionHandlingTest.UserGroup.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class LazyCollectionHandlingTest {
 
 	private Integer id;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[]{
-				JafSid.class, UserGroup.class
-		};
-	}
-
 	@Test
-	public void test() {
-		doInHibernate( this::sessionFactory, s -> {
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			JafSid sid = new JafSid();
-			s.save( sid );
+			s.persist( sid );
 
 			s.flush();
 			s.clear();
@@ -49,7 +43,7 @@ public class LazyCollectionHandlingTest extends BaseCoreFunctionalTestCase {
 			this.id = sid.getId();
 		});
 
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			s.get( JafSid.class, this.id );
 		} );
 	}

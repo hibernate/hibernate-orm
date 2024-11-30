@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
@@ -29,6 +27,11 @@ public class LocaleJavaType extends AbstractClassJavaType<Locale> {
 
 	public LocaleJavaType() {
 		super( Locale.class, ImmutableMutabilityPlan.instance(), LocaleComparator.INSTANCE );
+	}
+
+	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
 	}
 
 	public String toString(Locale value) {
@@ -91,6 +94,9 @@ public class LocaleJavaType extends AbstractClassJavaType<Locale> {
 		if ( value == null ) {
 			return null;
 		}
+		if ( Locale.class.isAssignableFrom( type ) ) {
+			return (X) value;
+		}
 		if ( String.class.isAssignableFrom( type ) ) {
 			return (X) value.toString();
 		}
@@ -101,9 +107,13 @@ public class LocaleJavaType extends AbstractClassJavaType<Locale> {
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof CharSequence) {
-			return fromString( (CharSequence) value );
+		if ( value instanceof Locale locale ) {
+			return locale;
+		}
+		if (value instanceof CharSequence charSequence) {
+			return fromString( charSequence );
 		}
 		throw unknownWrap( value.getClass() );
 	}
+
 }

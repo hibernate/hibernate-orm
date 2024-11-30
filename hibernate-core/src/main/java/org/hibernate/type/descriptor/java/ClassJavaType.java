@@ -1,10 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
+
 import org.hibernate.HibernateException;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -14,18 +13,26 @@ import org.hibernate.type.descriptor.WrapperOptions;
  *
  * @author Steve Ebersole
  */
-public class ClassJavaType extends AbstractClassJavaType<Class> {
+public class ClassJavaType extends AbstractClassJavaType<Class<?>> {
 	public static final ClassJavaType INSTANCE = new ClassJavaType();
 
+	@SuppressWarnings({"unchecked", "rawtypes"} )
 	public ClassJavaType() {
-		super( Class.class );
+		super( (Class) Class.class );
 	}
 
-	public String toString(Class value) {
+	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
+	@Override
+	public String toString(Class<?> value) {
 		return value.getName();
 	}
 
-	public Class fromString(CharSequence string) {
+	@Override
+	public Class<?> fromString(CharSequence string) {
 		if ( string == null ) {
 			return null;
 		}
@@ -38,8 +45,9 @@ public class ClassJavaType extends AbstractClassJavaType<Class> {
 		}
 	}
 
+	@Override
 	@SuppressWarnings("unchecked")
-	public <X> X unwrap(Class value, Class<X> type, WrapperOptions options) {
+	public <X> X unwrap(Class<?> value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
@@ -52,16 +60,18 @@ public class ClassJavaType extends AbstractClassJavaType<Class> {
 		throw unknownUnwrap( type );
 	}
 
-	public <X> Class wrap(X value, WrapperOptions options) {
+	@Override
+	public <X> Class<?> wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
 		if (value instanceof Class) {
-			return (Class) value;
+			return (Class<?>) value;
 		}
 		if (value instanceof CharSequence) {
 			return fromString( (CharSequence) value );
 		}
 		throw unknownWrap( value.getClass() );
 	}
+
 }

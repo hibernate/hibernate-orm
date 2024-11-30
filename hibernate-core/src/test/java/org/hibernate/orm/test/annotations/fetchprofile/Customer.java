@@ -1,12 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-// $Id$
-
 package org.hibernate.orm.test.annotations.fetchprofile;
 
 import java.util.HashSet;
@@ -18,7 +13,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
-import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfile;
 
 /**
@@ -26,13 +20,13 @@ import org.hibernate.annotations.FetchProfile;
  */
 @Entity
 @FetchProfile(name = "customer-with-orders", fetchOverrides = {
-		@FetchProfile.FetchOverride(entity = Customer.class, association = "orders", mode = FetchMode.JOIN)
+		@FetchProfile.FetchOverride(entity = Customer.class, association = "orders")
 })
 @FetchProfile(name = "customer-with-orders-and-country",
 		fetchOverrides = {
-	@FetchProfile.FetchOverride(entity = Customer.class, association = "orders", mode = FetchMode.JOIN),
-	@FetchProfile.FetchOverride(entity = Customer.class, association = "lastOrder", mode = FetchMode.JOIN),
-	@FetchProfile.FetchOverride(entity = Order.class, association = "country", mode = FetchMode.JOIN)
+	@FetchProfile.FetchOverride(entity = Customer.class, association = "orders"),
+	@FetchProfile.FetchOverride(entity = Customer.class, association = "lastOrder"),
+	@FetchProfile.FetchOverride(entity = Order.class, association = "country")
 })
 public class Customer {
 	@Id
@@ -100,5 +94,3 @@ public class Customer {
 		this.orders = orders;
 	}
 }
-
-

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.query;
 
@@ -11,6 +9,7 @@ import java.util.Map;
 
 import org.hibernate.boot.internal.NamedHqlQueryDefinitionImpl;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 
 /**
@@ -23,13 +22,13 @@ import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
  * @author Steve Ebersole
  * @author Gavin King
  */
-public interface NamedHqlQueryDefinition extends NamedQueryDefinition {
+public interface NamedHqlQueryDefinition<E> extends NamedQueryDefinition<E> {
 	String getHqlString();
 
 	@Override
-	NamedSqmQueryMemento resolve(SessionFactoryImplementor factory);
+	NamedSqmQueryMemento<E> resolve(SessionFactoryImplementor factory);
 
-	class Builder extends AbstractNamedQueryBuilder<Builder> {
+	class Builder<E> extends AbstractNamedQueryBuilder<E, Builder<E>> {
 		private String hqlString;
 
 		private Integer firstResult;
@@ -37,12 +36,16 @@ public interface NamedHqlQueryDefinition extends NamedQueryDefinition {
 
 		private Map<String,String> parameterTypes;
 
+		public Builder(String name, AnnotationTarget location) {
+			super( name, location );
+		}
+
 		public Builder(String name) {
-			super( name );
+			super( name, null );
 		}
 
 		@Override
-		protected Builder getThis() {
+		protected Builder<E> getThis() {
 			return this;
 		}
 
@@ -50,24 +53,25 @@ public interface NamedHqlQueryDefinition extends NamedQueryDefinition {
 			return hqlString;
 		}
 
-		public Builder setHqlString(String hqlString) {
+		public Builder<E> setHqlString(String hqlString) {
 			this.hqlString = hqlString;
 			return this;
 		}
 
-		public Builder setFirstResult(Integer firstResult) {
+		public Builder<E> setFirstResult(Integer firstResult) {
 			this.firstResult = firstResult;
 			return getThis();
 		}
 
-		public Builder setMaxResults(Integer maxResults) {
+		public Builder<E> setMaxResults(Integer maxResults) {
 			this.maxResults = maxResults;
 			return getThis();
 		}
 
-		public NamedHqlQueryDefinitionImpl build() {
-			return new NamedHqlQueryDefinitionImpl(
+		public NamedHqlQueryDefinitionImpl<E> build() {
+			return new NamedHqlQueryDefinitionImpl<>(
 					getName(),
+					getResultClass(),
 					hqlString,
 					firstResult,
 					maxResults,
@@ -81,7 +85,9 @@ public interface NamedHqlQueryDefinition extends NamedQueryDefinition {
 					getFetchSize(),
 					getComment(),
 					parameterTypes,
-					getHints()
+					getHints(),
+					//TODO: should this be location.asClassDetails().getClassName() ?
+					getLocation() == null ? null : getLocation().getName()
 			);
 		}
 

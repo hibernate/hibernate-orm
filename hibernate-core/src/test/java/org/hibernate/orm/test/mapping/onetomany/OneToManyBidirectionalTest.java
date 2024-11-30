@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.onetomany;
 
@@ -22,7 +20,6 @@ import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -48,11 +45,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 				OneToManyBidirectionalTest.Item.class
 		}
 )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 @ServiceRegistry(
 		settings = {
 				@Setting(name = AvailableSettings.GENERATE_STATISTICS, value = "true"),
-				@Setting(name = AvailableSettings.HBM2DDL_DATABASE_ACTION, value = "create-drop")
+				@Setting(name = AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, value = "create-drop")
 		}
 )
 public class OneToManyBidirectionalTest {
@@ -61,16 +58,16 @@ public class OneToManyBidirectionalTest {
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			Item i = new Item( 1L );
-			session.save( i );
+			session.persist( i );
 
 			Item i2 = new Item( 2L );
-			session.save( i2 );
+			session.persist( i2 );
 
 			Order o = new Order( 3L );
 			o.addItem( i );
 			o.addItem( i2 );
 
-			session.save( o );
+			session.persist( o );
 		} );
 	}
 
@@ -84,7 +81,7 @@ public class OneToManyBidirectionalTest {
 
 	@Test
 	public void testFetchingSameAssociationTwice(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				session -> {
 					Statistics statistics = session.getSessionFactory().getStatistics();
@@ -94,15 +91,9 @@ public class OneToManyBidirectionalTest {
 					List<Item> items = session.createQuery(
 							"from Item i" +
 									"    join fetch i.order o" +
-									"    join fetch i.order o2", Item.class ).list();
-					/*
-						select i1_0.id, o21_0.id, o21_0.name
-							from Item as i1_0
-							inner join "Order" as o21_0 on i1_0."order_id" = o21_0.id
-							inner join "Order" as o1_0  on i1_0."order_id" = o1_0.id
-					 */
+									"    join fetch i.order", Item.class ).list();
 
-					sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.INNER, 2 );
+					sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.INNER, 1 );
 					sqlStatementInterceptor.clear();
 
 					assertThat( items.size(), is( 2 ) );
@@ -116,8 +107,8 @@ public class OneToManyBidirectionalTest {
 
 					/*
 						select l1_0."order_id", l1_0.id
-    					from Item as l1_0
-   	 					where l1_0."order_id" = ?
+						from Item as l1_0
+							where l1_0."order_id" = ?
 					 */
 
 					sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
@@ -135,7 +126,7 @@ public class OneToManyBidirectionalTest {
 
 	@Test
 	public void testRetrievingItem(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				session -> {
 					Statistics statistics = session.getSessionFactory().getStatistics();
@@ -185,10 +176,10 @@ public class OneToManyBidirectionalTest {
 			List<Item> results = session.createQuery( "select i from Item i", Item.class ).list();
 			/*
 				1) select i1_0.id, i1_0."order_id"
-    				from Item as i1_0
-    			2) 	select o1_0.id, o1_0.name
-    				from "Order" as o1_0
-    				where o1_0.id = ?
+					from Item as i1_0
+				2) 	select o1_0.id, o1_0.name
+					from "Order" as o1_0
+					where o1_0.id = ?
 			 */
 
 			sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
@@ -205,8 +196,8 @@ public class OneToManyBidirectionalTest {
 
 			/*
 				select l1_0."order_id", l1_0.id
-    			from Item as l1_0
-    			where l1_0."order_id" = ?
+				from Item as l1_0
+				where l1_0."order_id" = ?
 			 */
 
 			sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
@@ -228,11 +219,11 @@ public class OneToManyBidirectionalTest {
 			List<Item> results = session.createQuery( "select i from Item i join i.order", Item.class ).list();
 			/*
 				1)	select i1_0.id, i1_0."order_id"
-    				from Item as i1_0
-    				inner join "Order" as o1_0 on i1_0."order_id" = o1_0.id
-    			2) select o1_0.id, o1_0.name
-    				from "Order" as o1_0
-   					 where o1_0.id = ?
+					from Item as i1_0
+					inner join "Order" as o1_0 on i1_0."order_id" = o1_0.id
+				2) select o1_0.id, o1_0.name
+					from "Order" as o1_0
+						where o1_0.id = ?
 			 */
 
 			sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.INNER, 1 );
@@ -248,8 +239,8 @@ public class OneToManyBidirectionalTest {
 
 			/*
 				select l1_0."order_id", l1_0.id
-    			from Item as l1_0
-    			where l1_0."order_id" = ?
+				from Item as l1_0
+				where l1_0."order_id" = ?
 			 */
 
 			sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
@@ -272,8 +263,8 @@ public class OneToManyBidirectionalTest {
 
 			/*
 				select i1_0.id, o1_0.id, o1_0.name
-    			from Item as i1_0
-    			inner join "Order" as o1_0 on i1_0."order_id" = o1_0.id
+				from Item as i1_0
+				inner join "Order" as o1_0 on i1_0."order_id" = o1_0.id
 			 */
 
 			sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.INNER, 1 );
@@ -289,8 +280,8 @@ public class OneToManyBidirectionalTest {
 
 			/*
 				select l1_0."order_id", l1_0.id
-    			from Item as l1_0
-    			where l1_0."order_id" = ?
+				from Item as l1_0
+				where l1_0."order_id" = ?
 			 */
 
 			sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
@@ -318,10 +309,10 @@ public class OneToManyBidirectionalTest {
 
 			/*
 				1)	select i1_0.id, i1_0."order_id"
-    				from Item as i1_0
-    				inner join "Order" as o1_0 on i1_0."order_id" = o1_0.id
-   					inner join Item as l1_0  on l1_0."order_id" = o1_0.id
-   				2)	select o1_0.id, o1_0.name
+					from Item as i1_0
+					inner join "Order" as o1_0 on i1_0."order_id" = o1_0.id
+					inner join Item as l1_0  on l1_0."order_id" = o1_0.id
+				2)	select o1_0.id, o1_0.name
 					from "Order" as o1_0
 					where o1_0.id = ?
 			 */
@@ -340,8 +331,8 @@ public class OneToManyBidirectionalTest {
 
 			/*
 				select l1_0."order_id", l1_0.id
-    			from Item as l1_0
-    			where l1_0."order_id" = ?
+				from Item as l1_0
+				where l1_0."order_id" = ?
 			 */
 
 			sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
@@ -356,7 +347,7 @@ public class OneToManyBidirectionalTest {
 
 	@Test
 	public void testRetrievingOrder(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		scope.inTransaction( session -> {
 			Statistics statistics = session.getSessionFactory().getStatistics();
 			statistics.clear();
@@ -365,9 +356,9 @@ public class OneToManyBidirectionalTest {
 			Order order = session.find( Order.class, 3L );
 
 			/*
-				 select o1_0.id, o1_0.name
-    			from "Order" as o1_0
-    			where o1_0.id = ?
+				select o1_0.id, o1_0.name
+				from "Order" as o1_0
+				where o1_0.id = ?
 			 */
 
 			sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
@@ -381,8 +372,8 @@ public class OneToManyBidirectionalTest {
 
 			/*
 				select l1_0."order_id", l1_0.id
-    			from Item as l1_0
-    			where l1_0."order_id" = ?
+				from Item as l1_0
+				where l1_0."order_id" = ?
 			 */
 
 			sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
@@ -406,7 +397,7 @@ public class OneToManyBidirectionalTest {
 
 			/*
 				select o1_0.id, o1_0.name
-    			from "Order" as o1_0
+				from "Order" as o1_0
 			 */
 
 			sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
@@ -422,8 +413,8 @@ public class OneToManyBidirectionalTest {
 
 			/*
 				select l1_0."order_id", l1_0.id
-    			from Item as l1_0
-    			where l1_0."order_id" = ?
+				from Item as l1_0
+				where l1_0."order_id" = ?
 			 */
 
 			sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
@@ -446,8 +437,8 @@ public class OneToManyBidirectionalTest {
 
 			/*
 				select o1_0.id, o1_0.name
-    			from "Order" as o1_0
-    			inner join Item as l1_0 on l1_0."order_id" = o1_0.id
+				from "Order" as o1_0
+				inner join Item as l1_0 on l1_0."order_id" = o1_0.id
 			 */
 
 			sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.INNER, 1 );
@@ -463,8 +454,8 @@ public class OneToManyBidirectionalTest {
 
 			/*
 				select l1_0."order_id", l1_0.id
-    			from Item as l1_0
-    			where l1_0."order_id" = ?
+				from Item as l1_0
+				where l1_0."order_id" = ?
 			 */
 
 			sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
@@ -488,8 +479,8 @@ public class OneToManyBidirectionalTest {
 
 			/*
 				select o1_0.id, l1_0."order_id", l1_0.id, o1_0.name
-    			from "Order" as o1_0
-    			inner join Item as l1_0 on l1_0."order_id" = o1_0.id
+				from "Order" as o1_0
+				inner join Item as l1_0 on l1_0."order_id" = o1_0.id
 			 */
 
 			sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.INNER, 1 );
@@ -519,10 +510,10 @@ public class OneToManyBidirectionalTest {
 			).list();
 
 			/*
-			    select o1_0.id, l1_0."order_id", l1_0.id, o1_0.name, o2_0.id, o2_0.name
-    			from "Order" as o1_0
-    			inner join Item as l1_0 on l1_0."order_id" = o1_0.id
-    			inner join "Order" as o2_0 on l1_0."order_id" = o2_0.id
+				select o1_0.id, l1_0."order_id", l1_0.id, o1_0.name, o2_0.id, o2_0.name
+				from "Order" as o1_0
+				inner join Item as l1_0 on l1_0."order_id" = o1_0.id
+				inner join "Order" as o2_0 on l1_0."order_id" = o2_0.id
 			 */
 
 			// todo (6.0): this was originally intended to produce only a single SQL join,
@@ -539,8 +530,8 @@ public class OneToManyBidirectionalTest {
 
 			/*
 				select l1_0."order_id", l1_0.id
-    			from Item as l1_0
-    			where l1_0."order_id" = ?
+				from Item as l1_0
+				where l1_0."order_id" = ?
 			 */
 
 			sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
@@ -564,10 +555,10 @@ public class OneToManyBidirectionalTest {
 			).list();
 
 			/*
-			    select o1_0.id, l1_0."order_id", l1_0.id, o1_0.name, o2_0.id, o2_0.name
-    			from "Order" as o1_0
-    			inner join Item as l1_0 on l1_0."order_id" = o1_0.id
-    			inner join "Order" as o2_0 on l1_0."order_id" = o2_0.id
+				select o1_0.id, l1_0."order_id", l1_0.id, o1_0.name, o2_0.id, o2_0.name
+				from "Order" as o1_0
+				inner join Item as l1_0 on l1_0."order_id" = o1_0.id
+				inner join "Order" as o2_0 on l1_0."order_id" = o2_0.id
 			 */
 
 			// todo (6.0): this was originally intended to produce only a single SQL join,
@@ -591,7 +582,7 @@ public class OneToManyBidirectionalTest {
 
 	@Test
 	public void testItemFetchJoin(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		scope.inTransaction( session -> {
 			Statistics statistics = session.getSessionFactory().getStatistics();
 			statistics.clear();
@@ -604,9 +595,9 @@ public class OneToManyBidirectionalTest {
 
 			/*
 				select i1_0.id, o1_0.id, l1_0."order_id", l1_0.id, o1_0.name
-    			from Item as i1_0
-    			inner join "Order" as o1_0 on i1_0."order_id" = o1_0.id
-    			inner join Item as l1_0 on l1_0."order_id" = o1_0.id
+				from Item as i1_0
+				inner join "Order" as o1_0 on i1_0."order_id" = o1_0.id
+				inner join Item as l1_0 on l1_0."order_id" = o1_0.id
 			 */
 
 			sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.INNER, 2 );
@@ -624,7 +615,7 @@ public class OneToManyBidirectionalTest {
 
 	@Test
 	public void testItemJoinWithFetchJoin(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		Assertions.assertThrows( IllegalArgumentException.class, () ->
 				scope.inTransaction( session -> {
 					Statistics statistics = session.getSessionFactory().getStatistics();

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal;
 
@@ -95,7 +93,6 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 			}
 		}
 
-		session.autoFlushIfRequired( (Set) CollectionHelper.setOf( entityDescriptor.getQuerySpaces() ) );
 		final LoadQueryInfluencers loadQueryInfluencers = session.getLoadQueryInfluencers();
 
 		try {
@@ -112,6 +109,7 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 			}
 
 			try {
+				session.autoFlushIfRequired( (Set) CollectionHelper.setOf( entityDescriptor.getQuerySpaces() ) );
 				return (List<T>) entityDescriptor.getMultiNaturalIdLoader().multiLoad( ids, this, session );
 			}
 			finally {

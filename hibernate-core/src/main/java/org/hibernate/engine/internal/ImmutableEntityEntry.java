@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.internal;
 
@@ -18,14 +16,18 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.persister.entity.EntityPersister;
 
+import static org.hibernate.engine.internal.AbstractEntityEntry.EnumState.LOCK_MODE;
+
 /**
- * An EntityEntry implementation for immutable entities.  Note that this implementation is not completely
- * immutable in terms of its internal state; the term immutable here refers to the entity it describes.
+ * An {@link EntityEntry} implementation for immutable entities.
+ *
+ * @implNote Note that this implementation is not completely immutable in terms of its internal state;
+ *           the term immutable here refers to the entity it describes.
  *
  * @author Gavin King
- * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>
+ * @author Emmanuel Bernard
  * @author Gunnar Morling
- * @author <a href="mailto:sanne@hibernate.org">Sanne Grinovero </a>
+ * @author Sanne Grinovero
  *
  * @see org.hibernate.annotations.Immutable
  */
@@ -80,15 +82,12 @@ public final class ImmutableEntityEntry extends AbstractEntityEntry {
 
 	@Override
 	public void setLockMode(LockMode lockMode) {
-		switch ( lockMode ) {
-			case NONE:
-			case READ: {
-				setCompressedValue( EnumState.LOCK_MODE, lockMode );
-				break;
-			}
-			default: {
-				throw new UnsupportedLockAttemptException( "Lock mode not supported" );
-			}
+		if ( lockMode.greaterThan(LockMode.READ) ) {
+			throw new UnsupportedLockAttemptException( "Lock mode "
+					+ lockMode + " not supported for read-only entity" );
+		}
+		else {
+			setCompressedValue( LOCK_MODE, lockMode );
 		}
 	}
 

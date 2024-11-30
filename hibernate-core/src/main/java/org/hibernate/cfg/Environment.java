@@ -1,24 +1,22 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cfg;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.invoke.MethodHandles;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.Version;
-import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 
 import org.jboss.logging.Logger;
-
 
 /**
  * Provides access to configuration properties passed in {@link Properties} objects.
@@ -31,8 +29,6 @@ import org.jboss.logging.Logger;
  * <li><em>System-level</em> properties are shared by all factory instances and are
  * always determined by the {@code Environment} properties in {@link #getProperties()}.
  * </ul>
- * The only system-level properties are {@value #USE_REFLECTION_OPTIMIZER} and
- * {@value #BYTECODE_PROVIDER}.
  * <p>
  * {@code Environment} properties are populated by calling {@link System#getProperties()}
  * and then from a resource named {@code /hibernate.properties}, if it exists. System
@@ -45,6 +41,7 @@ import org.jboss.logging.Logger;
  * <li>any instance of {@link Properties} passed to {@link Configuration#addProperties}.
  * </ul>
  * <table>
+ * <caption>Configuration properties</caption>
  * <tr><td><b>Property</b></td><td><b>Interpretation</b></td></tr>
  * <tr>
  *   <td>{@value #DIALECT}</td>
@@ -71,6 +68,7 @@ import org.jboss.logging.Logger;
  *     {@link java.sql.DriverManager})
  *   </td>
  * </tr>
+ * <tr>
  *   <td>{@value #POOL_SIZE}</td>
  *   <td>the maximum size of the connection pool (only when using
  *     {@link java.sql.DriverManager})
@@ -124,13 +122,16 @@ import org.jboss.logging.Logger;
  * </table>
  *
  * @see org.hibernate.SessionFactory
+ *
+ * @apiNote This is really considered an internal contract, but leaving in place in this
+ * package as many applications use it historically.  However, consider migrating to use
+ * {@link AvailableSettings} instead.
+ *
  * @author Gavin King
  */
+@Internal
 public final class Environment implements AvailableSettings {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, Environment.class.getName());
-
-	private static final BytecodeProvider BYTECODE_PROVIDER_INSTANCE;
-	private static final boolean ENABLE_REFLECTION_OPTIMIZER;
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, Environment.class.getName());
 
 	private static final Properties GLOBAL_PROPERTIES;
 
@@ -138,8 +139,6 @@ public final class Environment implements AvailableSettings {
 		Version.logVersion();
 
 		GLOBAL_PROPERTIES = new Properties();
-		//Set USE_REFLECTION_OPTIMIZER to false to fix HHH-227
-		GLOBAL_PROPERTIES.setProperty( USE_REFLECTION_OPTIMIZER, Boolean.FALSE.toString() );
 
 		try {
 			InputStream stream = ConfigHelper.getResourceAsStream( "/hibernate.properties" );
@@ -165,8 +164,8 @@ public final class Environment implements AvailableSettings {
 
 		try {
 			Properties systemProperties = System.getProperties();
-		    // Must be thread-safe in case an application changes System properties during Hibernate initialization.
-		    // See HHH-8383.
+			// Must be thread-safe in case an application changes System properties during Hibernate initialization.
+			// See HHH-8383.
 			synchronized (systemProperties) {
 				GLOBAL_PROPERTIES.putAll(systemProperties);
 			}
@@ -174,52 +173,13 @@ public final class Environment implements AvailableSettings {
 		catch (SecurityException se) {
 			LOG.unableToCopySystemProperties();
 		}
-
-		ENABLE_REFLECTION_OPTIMIZER = ConfigurationHelper.getBoolean(USE_REFLECTION_OPTIMIZER, GLOBAL_PROPERTIES);
-		if ( ENABLE_REFLECTION_OPTIMIZER ) {
-			LOG.usingReflectionOptimizer();
-		}
-
-		BYTECODE_PROVIDER_INSTANCE = buildBytecodeProvider( GLOBAL_PROPERTIES );
-	}
-
-	/**
-	 * Should we use reflection optimization?
-	 *
-	 * @return True if reflection optimization should be used; false otherwise.
-	 *
-	 * @see #USE_REFLECTION_OPTIMIZER
-	 * @see #getBytecodeProvider()
-	 * @see BytecodeProvider#getReflectionOptimizer
-	 *
-	 * @deprecated Deprecated to indicate that the method will be moved to
-	 * {@link org.hibernate.boot.spi.SessionFactoryOptions} /
-	 * {@link org.hibernate.boot.SessionFactoryBuilder} - probably in 6.0.
-	 * See <a href="https://hibernate.atlassian.net/browse/HHH-12194">HHH-12194</a> and
-	 * <a href="https://hibernate.atlassian.net/browse/HHH-12193">HHH-12193</a> for details
-	 */
-	@Deprecated
-	public static boolean useReflectionOptimizer() {
-		return ENABLE_REFLECTION_OPTIMIZER;
-	}
-
-	/**
-	 * @deprecated Deprecated to indicate that the method will be moved to
-	 * {@link org.hibernate.boot.spi.SessionFactoryOptions} /
-	 * {@link org.hibernate.boot.SessionFactoryBuilder} - probably in 6.0.
-	 * See <a href="https://hibernate.atlassian.net/browse/HHH-12194">HHH-12194</a> and
-	 * <a href="https://hibernate.atlassian.net/browse/HHH-12193">HHH-12193</a> for details
-	 */
-	@Deprecated
-	public static BytecodeProvider getBytecodeProvider() {
-		return BYTECODE_PROVIDER_INSTANCE;
 	}
 
 	/**
 	 * Disallow instantiation
 	 */
 	private Environment() {
-		throw new UnsupportedOperationException();
+		//not to be constructed
 	}
 
 	/**
@@ -232,36 +192,4 @@ public final class Environment implements AvailableSettings {
 		return copy;
 	}
 
-	public static final String BYTECODE_PROVIDER_NAME_BYTEBUDDY = "bytebuddy";
-	public static final String BYTECODE_PROVIDER_NAME_NONE = "none";
-	public static final String BYTECODE_PROVIDER_NAME_DEFAULT = BYTECODE_PROVIDER_NAME_BYTEBUDDY;
-
-	public static BytecodeProvider buildBytecodeProvider(Properties properties) {
-		String provider = ConfigurationHelper.getString( BYTECODE_PROVIDER, properties, BYTECODE_PROVIDER_NAME_DEFAULT );
-		return buildBytecodeProvider( provider );
-	}
-
-	private static BytecodeProvider buildBytecodeProvider(String providerName) {
-		if ( BYTECODE_PROVIDER_NAME_NONE.equals( providerName ) ) {
-			return new org.hibernate.bytecode.internal.none.BytecodeProviderImpl();
-		}
-		if ( BYTECODE_PROVIDER_NAME_BYTEBUDDY.equals( providerName ) ) {
-			return new org.hibernate.bytecode.internal.bytebuddy.BytecodeProviderImpl();
-		}
-
-		LOG.bytecodeProvider( providerName );
-
-		// there is no need to support plugging in a custom BytecodeProvider via FQCN:
-		// - the static helper methods on this class are deprecated
-		// - it's possible to plug a custom BytecodeProvider directly into the ServiceRegistry
-		//
-		// This also allows integrators to inject a BytecodeProvider instance which has some
-		// state; particularly useful to inject proxy definitions which have been prepared in
-		// advance.
-		// See also https://hibernate.atlassian.net/browse/HHH-13804 and how this was solved in
-		// Quarkus.
-
-		LOG.unknownBytecodeProvider( providerName, BYTECODE_PROVIDER_NAME_DEFAULT );
-		return new org.hibernate.bytecode.internal.bytebuddy.BytecodeProviderImpl();
-	}
 }

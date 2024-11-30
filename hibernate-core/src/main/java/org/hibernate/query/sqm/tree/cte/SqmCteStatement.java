@@ -1,97 +1,136 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.cte;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
-import org.hibernate.query.sqm.NullPrecedence;
-import org.hibernate.query.sqm.SortOrder;
+import org.hibernate.query.criteria.JpaCteCriteria;
+import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
+import org.hibernate.query.criteria.JpaCteCriteriaType;
+import org.hibernate.query.criteria.JpaSearchOrder;
+import org.hibernate.query.SortDirection;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmLiteral;
+import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.cte.CteSearchClauseKind;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
-import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
+
+import jakarta.persistence.criteria.AbstractQuery;
+import jakarta.persistence.criteria.Subquery;
 
 /**
  * @author Steve Ebersole
  * @author Christian Beikov
  */
-public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableNode {
+public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableNode, JpaCteCriteria<T> {
 	private final SqmCteContainer cteContainer;
-	private final SqmCteTable cteTable;
-	private final CteMaterialization materialization;
-	private final SqmStatement<?> cteDefinition;
-	private final CteSearchClauseKind searchClauseKind;
-	private final List<SqmSearchClauseSpecification> searchBySpecifications;
-	private final List<SqmCteTableColumn> cycleColumns;
-	private final SqmCteTableColumn cycleMarkColumn;
-	private final char cycleValue;
-	private final char noCycleValue;
+	private final SqmCteTable<T> cteTable;
+	private SqmSelectQuery<?> cteDefinition;
+	private CteMaterialization materialization;
+	private CteSearchClauseKind searchClauseKind;
+	private List<JpaSearchOrder> searchBySpecifications;
+	private String searchAttributeName;
+	private List<JpaCteCriteriaAttribute> cycleAttributes;
+	private String cycleMarkAttributeName;
+	private String cyclePathAttributeName;
+	private SqmLiteral<Object> cycleValue;
+	private SqmLiteral<Object> noCycleValue;
 
 	public SqmCteStatement(
-			SqmCteTable cteTable,
-			SqmStatement<?> cteDefinition,
-			CteMaterialization materialization,
+			String name,
+			SqmSelectQuery<T> cteDefinition,
+			SqmCteContainer cteContainer,
 			NodeBuilder nodeBuilder) {
 		super( nodeBuilder );
-		this.cteTable = cteTable;
 		this.cteDefinition = cteDefinition;
-		this.materialization = materialization;
-		this.cteContainer = null;
-		this.searchClauseKind = null;
-		this.searchBySpecifications = null;
-		this.cycleColumns = null;
-		this.cycleMarkColumn = null;
-		this.cycleValue = '\0';
-		this.noCycleValue = '\0';
+		this.cteContainer = cteContainer;
+		this.materialization = CteMaterialization.UNDEFINED;
+		this.searchBySpecifications = Collections.emptyList();
+		this.cycleAttributes = Collections.emptyList();
+		this.cteTable = SqmCteTable.createStatementTable( name, this, cteDefinition );
 	}
 
 	public SqmCteStatement(
-			SqmCteTable cteTable,
-			SqmStatement<?> cteDefinition,
-			CteMaterialization materialization,
-			SqmCteContainer cteContainer) {
-		super( cteContainer.nodeBuilder() );
-		this.cteTable = cteTable;
-		this.cteDefinition = cteDefinition;
-		this.materialization = materialization;
+			String name,
+			SqmSelectQuery<T> nonRecursiveQueryPart,
+			boolean unionDistinct,
+			Function<JpaCteCriteria<T>, AbstractQuery<T>> finalCriteriaProducer,
+			SqmCteContainer cteContainer,
+			NodeBuilder nodeBuilder) {
+		super( nodeBuilder );
 		this.cteContainer = cteContainer;
-		this.searchClauseKind = null;
-		this.searchBySpecifications = null;
-		this.cycleColumns = null;
-		this.cycleMarkColumn = null;
-		this.cycleValue = '\0';
-		this.noCycleValue = '\0';
+		this.materialization = CteMaterialization.UNDEFINED;
+		this.searchBySpecifications = Collections.emptyList();
+		this.cycleAttributes = Collections.emptyList();
+		this.cteTable = SqmCteTable.createStatementTable( name, this, nonRecursiveQueryPart );
+		final AbstractQuery<T> recursiveQueryPart = finalCriteriaProducer.apply( this );
+		if ( nonRecursiveQueryPart instanceof Subquery<?> ) {
+			if ( unionDistinct ) {
+				this.cteDefinition = (SqmSelectQuery<?>) nodeBuilder.union(
+						(SqmSubQuery<T>) nonRecursiveQueryPart,
+						(SqmSubQuery<T>) recursiveQueryPart
+				);
+			}
+			else {
+				this.cteDefinition = (SqmSelectQuery<?>) nodeBuilder.unionAll(
+						(SqmSubQuery<T>) nonRecursiveQueryPart,
+						(SqmSubQuery<T>) recursiveQueryPart
+				);
+			}
+		}
+		else {
+			if ( unionDistinct ) {
+				this.cteDefinition = (SqmSelectQuery<?>) nodeBuilder.union(
+						(SqmSelectStatement<T>) nonRecursiveQueryPart,
+						(SqmSelectStatement<T>) recursiveQueryPart
+				);
+			}
+			else {
+				this.cteDefinition = (SqmSelectQuery<?>) nodeBuilder.unionAll(
+						(SqmSelectStatement<T>) nonRecursiveQueryPart,
+						(SqmSelectStatement<T>) recursiveQueryPart
+				);
+			}
+		}
 	}
 
 	private SqmCteStatement(
 			NodeBuilder builder,
 			SqmCteContainer cteContainer,
-			SqmCteTable cteTable,
+			SqmCteTable<T> cteTable,
+			SqmSelectQuery<?> cteDefinition,
 			CteMaterialization materialization,
-			SqmStatement<?> cteDefinition,
 			CteSearchClauseKind searchClauseKind,
-			List<SqmSearchClauseSpecification> searchBySpecifications,
-			List<SqmCteTableColumn> cycleColumns,
-			SqmCteTableColumn cycleMarkColumn,
-			char cycleValue,
-			char noCycleValue) {
+			List<JpaSearchOrder> searchBySpecifications,
+			String searchAttributeName,
+			List<JpaCteCriteriaAttribute> cycleAttributes,
+			String cycleMarkAttributeName,
+			String cyclePathAttributeName,
+			SqmLiteral<Object> cycleValue,
+			SqmLiteral<Object> noCycleValue) {
 		super( builder );
 		this.cteContainer = cteContainer;
 		this.cteTable = cteTable;
-		this.materialization = materialization;
 		this.cteDefinition = cteDefinition;
+		this.materialization = materialization;
 		this.searchClauseKind = searchClauseKind;
 		this.searchBySpecifications = searchBySpecifications;
-		this.cycleColumns = cycleColumns;
-		this.cycleMarkColumn = cycleMarkColumn;
+		this.searchAttributeName = searchAttributeName;
+		this.cycleAttributes = cycleAttributes;
+		this.cycleMarkAttributeName = cycleMarkAttributeName;
+		this.cyclePathAttributeName = cyclePathAttributeName;
 		this.cycleValue = cycleValue;
 		this.noCycleValue = noCycleValue;
 	}
@@ -102,62 +141,177 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 		if ( existing != null ) {
 			return existing;
 		}
-		return context.registerCopy(
+		final SqmCteStatement<T> copy = context.registerCopy(
 				this,
 				new SqmCteStatement<>(
 						nodeBuilder(),
 						cteContainer,
 						cteTable,
+						null,
 						materialization,
-						cteDefinition.copy( context ),
 						searchClauseKind,
 						searchBySpecifications,
-						cycleColumns,
-						cycleMarkColumn,
-						cycleValue,
-						noCycleValue
+						searchAttributeName,
+						cycleAttributes,
+						cycleMarkAttributeName,
+						cyclePathAttributeName,
+						cycleValue == null ? null : cycleValue.copy( context ),
+						noCycleValue == null ? null : noCycleValue.copy( context )
 				)
 		);
+		// We have to copy the definition object after registering the copy of this because for recursive CTEs
+		// the select query from clause may contain the current cte statement itself
+		copy.cteDefinition = cteDefinition.copy( context );
+		return copy;
 	}
 
-	public SqmCteTable getCteTable() {
+	@Override
+	public String getName() {
+		return cteTable.getName();
+	}
+
+	public SqmCteTable<?> getCteTable() {
 		return cteTable;
 	}
 
-	public SqmStatement<?> getCteDefinition() {
+	@Override
+	public SqmSelectQuery<?> getCteDefinition() {
 		return cteDefinition;
 	}
 
+	@Override
 	public SqmCteContainer getCteContainer() {
 		return cteContainer;
 	}
 
+	@Override
 	public CteMaterialization getMaterialization() {
 		return materialization;
 	}
 
+	@Override
+	public void setMaterialization(CteMaterialization materialization) {
+		this.materialization = materialization;
+	}
+
+	@Override
 	public CteSearchClauseKind getSearchClauseKind() {
 		return searchClauseKind;
 	}
 
-	public List<SqmSearchClauseSpecification> getSearchBySpecifications() {
+	@Override
+	public List<JpaSearchOrder> getSearchBySpecifications() {
 		return searchBySpecifications;
 	}
 
-	public List<SqmCteTableColumn> getCycleColumns() {
-		return cycleColumns;
+	@Override
+	public String getSearchAttributeName() {
+		return searchAttributeName;
 	}
 
-	public SqmCteTableColumn getCycleMarkColumn() {
-		return cycleMarkColumn;
+	@Override
+	public List<JpaCteCriteriaAttribute> getCycleAttributes() {
+		return cycleAttributes;
 	}
 
-	public char getCycleValue() {
+	@Override
+	public String getCycleMarkAttributeName() {
+		return cycleMarkAttributeName;
+	}
+
+	@Override
+	public String getCyclePathAttributeName() {
+		return cyclePathAttributeName;
+	}
+
+	@Override
+	public Object getCycleValue() {
+		return cycleValue == null ? null : cycleValue.getLiteralValue();
+	}
+
+	@Override
+	public Object getNoCycleValue() {
+		return noCycleValue == null ? null : noCycleValue.getLiteralValue();
+	}
+
+	public SqmLiteral<Object> getCycleLiteral() {
 		return cycleValue;
 	}
 
-	public char getNoCycleValue() {
+	public SqmLiteral<Object> getNoCycleLiteral() {
 		return noCycleValue;
+	}
+
+	@Override
+	public JpaCteCriteriaType<T> getType() {
+		return cteTable;
+	}
+
+	@Override
+	public void search(CteSearchClauseKind kind, String searchAttributeName, List<JpaSearchOrder> searchOrders) {
+		if ( kind == null || searchAttributeName == null || searchOrders == null || searchOrders.isEmpty() ) {
+			this.searchClauseKind = null;
+			this.searchBySpecifications = Collections.emptyList();
+			this.searchAttributeName = null;
+		}
+		else {
+			final List<JpaSearchOrder> orders = new ArrayList<>( searchOrders.size() );
+			for ( JpaSearchOrder order : searchOrders ) {
+				if ( !cteTable.getAttributes().contains( order.getAttribute() ) ) {
+					throw new IllegalArgumentException(
+							"Illegal search order attribute '" +
+									( order.getAttribute() == null ? "null" : order.getAttribute().getName() ) +
+									"' passed, which is not part of the JpaCteCriteria!"
+					);
+				}
+				orders.add( order );
+			}
+			this.searchClauseKind = kind;
+			this.searchAttributeName = searchAttributeName;
+			this.searchBySpecifications = orders;
+		}
+	}
+
+	@Override
+	public <X> void cycleUsing(
+			String cycleMarkAttributeName,
+			String cyclePathAttributeName,
+			X cycleValue,
+			X noCycleValue,
+			List<JpaCteCriteriaAttribute> cycleAttributes) {
+		if ( cycleMarkAttributeName == null || cycleAttributes == null || cycleAttributes.isEmpty() ) {
+			this.cycleMarkAttributeName = null;
+			this.cyclePathAttributeName = null;
+			this.cycleValue = null;
+			this.noCycleValue = null;
+			this.cycleAttributes = Collections.emptyList();
+		}
+		else {
+			if ( cycleValue == null || noCycleValue == null ) {
+				throw new IllegalArgumentException( "Null is an illegal value for cycle mark values!" );
+			}
+			final SqmExpression<X> cycleValueLiteral = nodeBuilder().literal( cycleValue );
+			final SqmExpression<X> noCycleValueLiteral = nodeBuilder().literal( noCycleValue );
+			if ( cycleValueLiteral.getNodeType() != noCycleValueLiteral.getNodeType() ) {
+				throw new IllegalArgumentException( "Inconsistent types for cycle mark values: [" + cycleValueLiteral.getNodeType() + ", " + noCycleValueLiteral.getNodeType() + "]" );
+			}
+			final List<JpaCteCriteriaAttribute> attributes = new ArrayList<>( cycleAttributes.size() );
+			for ( JpaCteCriteriaAttribute cycleAttribute : cycleAttributes ) {
+				if ( !cteTable.getAttributes().contains( cycleAttribute ) ) {
+					throw new IllegalArgumentException(
+							"Illegal cycle attribute '" +
+									( cycleAttribute == null ? "null" : cycleAttribute.getName() ) +
+									"' passed, which is not part of the JpaCteCriteria!"
+					);
+				}
+				attributes.add( cycleAttribute );
+			}
+			this.cycleMarkAttributeName = cycleMarkAttributeName;
+			this.cyclePathAttributeName = cyclePathAttributeName;
+			this.cycleValue = (SqmLiteral<Object>) cycleValueLiteral;
+			this.noCycleValue = (SqmLiteral<Object>) noCycleValueLiteral;
+			this.cycleAttributes = attributes;
+		}
 	}
 
 	@Override
@@ -165,7 +319,11 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 		return walker.visitCteStatement( this );
 	}
 
+	@Override
 	public void appendHqlString(StringBuilder sb) {
+		if ( cteTable.getName() == null ) {
+			sb.append( "generated_" );
+		}
 		sb.append( cteTable.getCteName() );
 		sb.append( " (" );
 		final List<SqmCteTableColumn> columns = cteTable.getColumns();
@@ -180,10 +338,14 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 		if ( getMaterialization() != CteMaterialization.UNDEFINED ) {
 			sb.append( getMaterialization() ).append( ' ' );
 		}
-		sb.append( '(' );
-		getCteDefinition().appendHqlString( sb );
-		sb.append( ')' );
-
+		if ( getCteDefinition() instanceof SqmSubQuery<?> ) {
+			( (SqmSubQuery<?>) getCteDefinition() ).appendHqlString( sb );
+		}
+		else {
+			sb.append( '(' );
+			( (SqmSelectStatement<?>) getCteDefinition() ).appendHqlString( sb );
+			sb.append( ')' );
+		}
 		String separator;
 		if ( getSearchClauseKind() != null ) {
 			sb.append( " search " );
@@ -195,43 +357,50 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 			}
 			sb.append( " first by " );
 			separator = "";
-			for ( SqmSearchClauseSpecification searchBySpecification : getSearchBySpecifications() ) {
+			for ( JpaSearchOrder searchBySpecification : getSearchBySpecifications() ) {
 				sb.append( separator );
-				sb.append( searchBySpecification.getCteColumn().getColumnName() );
+				sb.append( searchBySpecification.getAttribute().getName() );
 				if ( searchBySpecification.getSortOrder() != null ) {
-					if ( searchBySpecification.getSortOrder() == SortOrder.ASCENDING ) {
+					if ( searchBySpecification.getSortOrder() == SortDirection.ASCENDING ) {
 						sb.append( " asc" );
 					}
 					else {
 						sb.append( " desc" );
 					}
 					if ( searchBySpecification.getNullPrecedence() != null ) {
-						if ( searchBySpecification.getNullPrecedence() == NullPrecedence.FIRST ) {
-							sb.append( " nulls first" );
-						}
-						else {
-							sb.append( " nulls last" );
+						switch ( searchBySpecification.getNullPrecedence() ) {
+							case FIRST:
+								sb.append( " nulls first" );
+								break;
+							case LAST:
+								sb.append( " nulls last" );
+								break;
 						}
 					}
 				}
 				separator = ", ";
 			}
+			sb.append( " set " );
+			sb.append( getSearchAttributeName() );
 		}
-		if ( getCycleMarkColumn() != null ) {
+		if ( getCycleMarkAttributeName() != null ) {
 			sb.append( " cycle " );
 			separator = "";
-			for ( SqmCteTableColumn cycleColumn : getCycleColumns() ) {
+			for ( JpaCteCriteriaAttribute cycleColumn : getCycleAttributes() ) {
 				sb.append( separator );
-				sb.append( cycleColumn.getColumnName() );
+				sb.append( cycleColumn.getName() );
 				separator = ", ";
 			}
 			sb.append( " set " );
-			sb.append( getCycleMarkColumn().getColumnName() );
-			sb.append( " to '" );
-			sb.append( getCycleValue() );
-			sb.append( "' default '" );
-			sb.append( getNoCycleValue() );
-			sb.append( "'" );
+			sb.append( getCycleMarkAttributeName() );
+			sb.append( " to " );
+			getCycleLiteral().appendHqlString( sb );
+			sb.append( " default " );
+			getNoCycleLiteral().appendHqlString( sb );
+			if ( getCyclePathAttributeName() != null ) {
+				sb.append( " using " );
+				sb.append( getCyclePathAttributeName() );
+			}
 		}
 	}
 }

@@ -1,13 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.function;
 
 import java.util.List;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
@@ -19,7 +18,6 @@ import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolv
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
@@ -36,22 +34,22 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 
 	public AbstractSqmFunctionDescriptor(
 			String name,
-			ArgumentsValidator argumentsValidator) {
+			@Nullable ArgumentsValidator argumentsValidator) {
 		this( name, argumentsValidator, null, null );
 	}
 
 	public AbstractSqmFunctionDescriptor(
 			String name,
-			ArgumentsValidator argumentsValidator,
-			FunctionArgumentTypeResolver argumentTypeResolver) {
+			@Nullable ArgumentsValidator argumentsValidator,
+			@Nullable FunctionArgumentTypeResolver argumentTypeResolver) {
 		this( name, argumentsValidator, null, argumentTypeResolver );
 	}
 
 	public AbstractSqmFunctionDescriptor(
 			String name,
-			ArgumentsValidator argumentsValidator,
-			FunctionReturnTypeResolver returnTypeResolver,
-			FunctionArgumentTypeResolver argumentTypeResolver) {
+			@Nullable ArgumentsValidator argumentsValidator,
+			@Nullable FunctionReturnTypeResolver returnTypeResolver,
+			@Nullable FunctionArgumentTypeResolver argumentTypeResolver) {
 		this.name = name;
 		this.argumentsValidator = argumentsValidator == null
 				? StandardArgumentsValidators.NONE
@@ -99,15 +97,13 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 	public final <T> SelfRenderingSqmFunction<T> generateSqmExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
-		argumentsValidator.validate( arguments, getName(), queryEngine);
+			QueryEngine queryEngine) {
+		argumentsValidator.validate( arguments, getName(), queryEngine.getTypeConfiguration() );
 
 		return generateSqmFunctionExpression(
 				arguments,
 				impliedResultType,
-				queryEngine,
-				typeConfiguration
+				queryEngine
 		);
 	}
 
@@ -116,16 +112,14 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
-		argumentsValidator.validate( arguments, getName(), queryEngine );
+			QueryEngine queryEngine) {
+		argumentsValidator.validate( arguments, getName(), queryEngine.getTypeConfiguration() );
 
 		return generateSqmAggregateFunctionExpression(
 				arguments,
 				filter,
 				impliedResultType,
-				queryEngine,
-				typeConfiguration
+				queryEngine
 		);
 	}
 
@@ -135,17 +129,15 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 			SqmPredicate filter,
 			SqmOrderByClause withinGroupClause,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
-		argumentsValidator.validate( arguments, getName(), queryEngine );
+			QueryEngine queryEngine) {
+		argumentsValidator.validate( arguments, getName(), queryEngine.getTypeConfiguration() );
 
 		return generateSqmOrderedSetAggregateFunctionExpression(
 				arguments,
 				filter,
 				withinGroupClause,
 				impliedResultType,
-				queryEngine,
-				typeConfiguration
+				queryEngine
 		);
 	}
 
@@ -156,9 +148,8 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 			Boolean respectNulls,
 			Boolean fromFirst,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
-		argumentsValidator.validate( arguments, getName(), queryEngine );
+			QueryEngine queryEngine) {
+		argumentsValidator.validate( arguments, getName(), queryEngine.getTypeConfiguration() );
 
 		return generateSqmWindowFunctionExpression(
 				arguments,
@@ -166,8 +157,7 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 				respectNulls,
 				fromFirst,
 				impliedResultType,
-				queryEngine,
-				typeConfiguration
+				queryEngine
 		);
 	}
 
@@ -175,34 +165,32 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 	 * Return an SQM node or subtree representing an invocation of this function
 	 * with the given arguments. This method may be overridden in the case of
 	 * function descriptors that wish to customize creation of the node.
-	 *  @param arguments the arguments of the function invocation
+	 *
+	 * @param arguments         the arguments of the function invocation
 	 * @param impliedResultType the function return type as inferred from its usage
 	 */
 	protected abstract <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration);
+			QueryEngine queryEngine);
 
 	/**
 	 * Return an SQM node or subtree representing an invocation of this aggregate function
 	 * with the given arguments. This method may be overridden in the case of
 	 * function descriptors that wish to customize creation of the node.
 	 *
-	 * @param arguments the arguments of the function invocation
+	 * @param arguments         the arguments of the function invocation
 	 * @param impliedResultType the function return type as inferred from its usage
 	 */
 	protected <T> SelfRenderingSqmAggregateFunction<T> generateSqmAggregateFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		return (SelfRenderingSqmAggregateFunction<T>) generateSqmExpression(
 				arguments,
 				impliedResultType,
-				queryEngine,
-				typeConfiguration
+				queryEngine
 		);
 	}
 
@@ -211,7 +199,7 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 	 * with the given arguments. This method may be overridden in the case of
 	 * function descriptors that wish to customize creation of the node.
 	 *
-	 * @param arguments the arguments of the function invocation
+	 * @param arguments         the arguments of the function invocation
 	 * @param impliedResultType the function return type as inferred from its usage
 	 */
 	protected <T> SelfRenderingSqmAggregateFunction<T> generateSqmOrderedSetAggregateFunctionExpression(
@@ -219,13 +207,11 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 			SqmPredicate filter,
 			SqmOrderByClause withinGroupClause,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		return (SelfRenderingSqmAggregateFunction<T>) generateSqmExpression(
 				arguments,
 				impliedResultType,
-				queryEngine,
-				typeConfiguration
+				queryEngine
 		);
 	}
 
@@ -233,9 +219,8 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 	 * Return an SQM node or subtree representing an invocation of this window function
 	 * with the given arguments. This method may be overridden in the case of
 	 * function descriptors that wish to customize creation of the node.
-	 *  @param arguments the arguments of the function invocation
-	 * @param respectNulls
-	 * @param fromFirst
+	 *
+	 * @param arguments         the arguments of the function invocation
 	 * @param impliedResultType the function return type as inferred from its usage
 	 */
 	protected <T> SelfRenderingSqmWindowFunction<T> generateSqmWindowFunctionExpression(
@@ -244,14 +229,11 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 			Boolean respectNulls,
 			Boolean fromFirst,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		return (SelfRenderingSqmWindowFunction<T>) generateSqmExpression(
 				arguments,
 				impliedResultType,
-				queryEngine,
-				typeConfiguration
+				queryEngine
 		);
 	}
 }
-

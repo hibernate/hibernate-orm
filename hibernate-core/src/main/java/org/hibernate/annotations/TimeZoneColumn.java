@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
 
@@ -16,10 +14,11 @@ import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 
 /**
- * Specifies the mapped column for storing the time zone information.
- * The annotation can be used in conjunction with the <code>TimeZoneStorageType.AUTO</code> and
- * <code>TimeZoneStorageType.COLUMN</code>. The column is simply ignored if <code>TimeZoneStorageType.AUTO</code>
- * is used and the database supports native time zone storage.
+ * Specifies the mapped column for storing the time zone information,
+ * for use in conjunction with {@link TimeZoneStorageType#COLUMN} or
+ * {@link TimeZoneStorageType#AUTO}. The column is simply ignored if
+ * {@code AUTO} is used and the database supports native time zone
+ * storage.
  *
  * @author Christian Beikov
  * @author Steve Ebersole
@@ -27,6 +26,8 @@ import static java.lang.annotation.ElementType.METHOD;
  * @see TimeZoneStorage
  * @see TimeZoneStorageType#COLUMN
  * @see TimeZoneStorageType#AUTO
+ *
+ * @since 6.0
  */
 @Incubating
 @Retention(RetentionPolicy.RUNTIME)
@@ -64,5 +65,23 @@ public @interface TimeZoneColumn {
 	 * If absent the column is assumed to be in the primary table.
 	 */
 	String table() default "";
+
+	/**
+	 * (Optional) The SQL fragment that is used when
+	 * 	generating the DDL for the column.
+	 * <p>
+	 * The DDL must be written in the native SQL dialect
+	 * of the target database (it is not portable across databases).
+	 *
+	 * @since 7.0
+	 */
+	String options() default "";
+
+	/**
+	 * (Optional) A comment to be applied to the column.
+	 *
+	 * @since 7.0
+	 */
+	String comment() default "";
 
 }

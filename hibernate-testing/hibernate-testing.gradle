@@ -21,7 +21,7 @@ dependencies {
     api testLibs.assertjCore
 
     api testLibs.mockito
-    api testLibs.mockitoInline
+//    api testLibs.mockitoInline
 
     api testLibs.byteman
     api testLibs.bytemanInstall

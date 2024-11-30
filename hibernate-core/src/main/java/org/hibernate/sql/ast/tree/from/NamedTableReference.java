@@ -1,20 +1,18 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.from;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
+
+import static org.hibernate.internal.util.StringHelper.isEmpty;
 
 /**
  * Represents a reference to a "named" table in a query's from clause.
@@ -28,9 +26,14 @@ public class NamedTableReference extends AbstractTableReference {
 
 	public NamedTableReference(
 			String tableExpression,
+			String identificationVariable) {
+		this( tableExpression, identificationVariable, false );
+	}
+
+	public NamedTableReference(
+			String tableExpression,
 			String identificationVariable,
-			boolean isOptional,
-			SessionFactoryImplementor sessionFactory) {
+			boolean isOptional) {
 		super( identificationVariable, isOptional );
 		assert tableExpression != null;
 		this.tableExpression = tableExpression;
@@ -55,31 +58,25 @@ public class NamedTableReference extends AbstractTableReference {
 	}
 
 	@Override
-	public void applyAffectedTableNames(Consumer<String> nameCollector) {
-		nameCollector.accept( getTableExpression() );
-	}
-
-	@Override
 	public List<String> getAffectedTableNames() {
-		return Collections.singletonList( getTableExpression() );
+		return Collections.singletonList( tableExpression );
 	}
 
 	@Override
 	public boolean containsAffectedTableName(String requestedName) {
-		return getTableExpression().equals( requestedName );
+		return isEmpty( requestedName ) || tableExpression.equals( requestedName );
 	}
 
 	@Override
 	public Boolean visitAffectedTableNames(Function<String, Boolean> nameCollector) {
-		return nameCollector.apply( getTableExpression() );
+		return nameCollector.apply( tableExpression );
 	}
 
 	@Override
 	public TableReference resolveTableReference(
 			NavigablePath navigablePath,
-			String tableExpression,
-			boolean allowFkOptimization) {
-		if ( tableExpression.equals( getTableExpression() ) ) {
+			String tableExpression) {
+		if ( this.tableExpression.equals( tableExpression ) ) {
 			return this;
 		}
 
@@ -98,12 +95,8 @@ public class NamedTableReference extends AbstractTableReference {
 	public TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization,
 			boolean resolve) {
-		if ( this.tableExpression.equals( tableExpression ) ) {
-			return this;
-		}
-		return null;
+		return this.tableExpression.equals( tableExpression ) ? this : null;
 	}
 
 	@Override

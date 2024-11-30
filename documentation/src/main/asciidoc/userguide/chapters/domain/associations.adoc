@@ -1,6 +1,9 @@
 [[associations]]
 === Associations
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/associations
+:root-project-dir: ../../../../../../..
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-association: {core-project-dir}/src/test/java/org/hibernate/orm/test/associations
+:example-dir-any: {core-project-dir}/src/test/java/org/hibernate/orm/test/any
 :extrasdir: extras/associations
 
 Associations describe how two or more entities form a relationship based on a database joining semantics.
@@ -16,7 +19,7 @@ and so it establishes a relationship between a child entity and a parent.
 ====
 [source,java]
 ----
-include::{sourcedir}/ManyToOneTest.java[tags=associations-many-to-one-example,indent=0]
+include::{example-dir-association}/ManyToOneTest.java[tags=associations-many-to-one-example,indent=0]
 ----
 
 [source,sql]
@@ -32,7 +35,7 @@ Each entity has a lifecycle of its own. Once the `@ManyToOne` association is set
 ====
 [source,java]
 ----
-include::{sourcedir}/ManyToOneTest.java[tags=associations-many-to-one-lifecycle-example,indent=0]
+include::{example-dir-association}/ManyToOneTest.java[tags=associations-many-to-one-lifecycle-example,indent=0]
 ----
 
 [source,sql]
@@ -58,7 +61,7 @@ When using a unidirectional `@OneToMany` association, Hibernate resorts to using
 ====
 [source,java]
 ----
-include::{sourcedir}/OneToManyUnidirectionalTest.java[tags=associations-one-to-many-unidirectional-example,indent=0]
+include::{example-dir-association}/OneToManyUnidirectionalTest.java[tags=associations-one-to-many-unidirectional-example,indent=0]
 ----
 
 [source,sql]
@@ -78,7 +81,7 @@ Only the parent side of an association makes sense to cascade its entity state t
 ====
 [source,java]
 ----
-include::{sourcedir}/OneToManyUnidirectionalTest.java[tags=associations-one-to-many-unidirectional-lifecycle-example,indent=0]
+include::{example-dir-association}/OneToManyUnidirectionalTest.java[tags=associations-one-to-many-unidirectional-lifecycle-example,indent=0]
 ----
 
 [source,sql]
@@ -111,7 +114,7 @@ Every bidirectional association must have one owning side only (the child side),
 ====
 [source,java]
 ----
-include::{sourcedir}/OneToManyBidirectionalTest.java[tags=associations-one-to-many-bidirectional-example,indent=0]
+include::{example-dir-association}/OneToManyBidirectionalTest.java[tags=associations-one-to-many-bidirectional-example,indent=0]
 ----
 
 [source,sql]
@@ -135,7 +138,7 @@ the `equals()` and the `hashCode()` can make use of this property, and so the `r
 ====
 [source,java]
 ----
-include::{sourcedir}/OneToManyBidirectionalTest.java[tags=associations-one-to-many-bidirectional-lifecycle-example,indent=0]
+include::{example-dir-association}/OneToManyBidirectionalTest.java[tags=associations-one-to-many-bidirectional-lifecycle-example,indent=0]
 ----
 
 [source,sql]
@@ -164,7 +167,7 @@ A bidirectional association features a `mappedBy` `@OneToOne` parent side too.
 ====
 [source,java]
 ----
-include::{sourcedir}/OneToOneUnidirectionalTest.java[tags=associations-one-to-one-unidirectional-example,indent=0]
+include::{example-dir-association}/OneToOneUnidirectionalTest.java[tags=associations-one-to-one-unidirectional-example,indent=0]
 ----
 
 [source,sql]
@@ -188,7 +191,7 @@ This mapping requires a bidirectional `@OneToOne` association as you can see in 
 ====
 [source,java]
 ----
-include::{sourcedir}/OneToOneBidirectionalTest.java[tags=associations-one-to-one-bidirectional-example,indent=0]
+include::{example-dir-association}/OneToOneBidirectionalTest.java[tags=associations-one-to-one-bidirectional-example,indent=0]
 ----
 
 [source,sql]
@@ -204,7 +207,7 @@ This time, the `PhoneDetails` owns the association, and, like any bidirectional 
 ====
 [source,java]
 ----
-include::{sourcedir}/OneToOneBidirectionalTest.java[tags=associations-one-to-one-bidirectional-lifecycle-example,indent=0]
+include::{example-dir-association}/OneToOneBidirectionalTest.java[tags=associations-one-to-one-bidirectional-lifecycle-example,indent=0]
 ----
 
 [source,sql]
@@ -222,7 +225,7 @@ Continuing the previous example, when adding another `PhoneDetails`, Hibernate v
 ====
 [source,java]
 ----
-include::{sourcedir}/OneToOneBidirectionalTest.java[tags=associations-one-to-one-bidirectional-constraint-example,indent=0]
+include::{example-dir-association}/OneToOneBidirectionalTest.java[tags=associations-one-to-one-bidirectional-constraint-example,indent=0]
 ----
 ====
 
@@ -236,15 +239,14 @@ The only way to figure out whether there is an associated record on the child si
 Because this can lead to N+1 query issues, it's much more efficient to use unidirectional `@OneToOne` associations with the `@MapsId` annotation in place.
 
 However, if you really need to use a bidirectional association and want to make sure that this is always going to be fetched lazily,
-then you need to enable lazy state initialization bytecode enhancement and use the
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/LazyToOne.html[`@LazyToOne`] annotation as well.
+then you need to enable lazy state initialization bytecode enhancement.
 
 [[associations-one-to-one-bidirectional-lazy-example]]
 .Bidirectional `@OneToOne` lazy parent-side association
 ====
 [source,java]
 ----
-include::{sourcedir}/OneToOneBidirectionalLazyTest.java[tags=associations-one-to-one-bidirectional-lazy-example,indent=0]
+include::{example-dir-association}/OneToOneBidirectionalLazyTest.java[tags=associations-one-to-one-bidirectional-lazy-example,indent=0]
 ----
 ====
 
@@ -265,7 +267,7 @@ Like the `@OneToMany` association, `@ManyToMany` can be either unidirectional or
 ====
 [source,java]
 ----
-include::{sourcedir}/ManyToManyUnidirectionalTest.java[tags=associations-many-to-many-unidirectional-example,indent=0]
+include::{example-dir-association}/ManyToManyUnidirectionalTest.java[tags=associations-many-to-many-unidirectional-example,indent=0]
 ----
 
 [source,sql]
@@ -284,7 +286,7 @@ Unfortunately, this operation requires removing all entries associated with a gi
 ====
 [source,java]
 ----
-include::{sourcedir}/ManyToManyUnidirectionalTest.java[tags=associations-many-to-many-unidirectional-lifecycle-example,indent=0]
+include::{example-dir-association}/ManyToManyUnidirectionalTest.java[tags=associations-many-to-many-unidirectional-lifecycle-example,indent=0]
 ----
 
 [source,sql]
@@ -319,7 +321,7 @@ By simply removing the parent-side, Hibernate can safely remove the associated l
 ====
 [source,java]
 ----
-include::{sourcedir}/ManyToManyUnidirectionalTest.java[tags=associations-many-to-many-unidirectional-remove-example,indent=0]
+include::{example-dir-association}/ManyToManyUnidirectionalTest.java[tags=associations-many-to-many-unidirectional-remove-example,indent=0]
 ----
 
 [source,sql]
@@ -339,7 +341,7 @@ To preserve synchronicity between both sides, it's good practice to provide help
 ====
 [source,java]
 ----
-include::{sourcedir}/ManyToManyBidirectionalTest.java[tags=associations-many-to-many-bidirectional-example,indent=0]
+include::{example-dir-association}/ManyToManyBidirectionalTest.java[tags=associations-many-to-many-bidirectional-example,indent=0]
 ----
 
 [source,sql]
@@ -355,7 +357,7 @@ With the helper methods in place, the synchronicity management can be simplified
 ====
 [source,java]
 ----
-include::{sourcedir}/ManyToManyBidirectionalTest.java[tags=associations-many-to-many-bidirectional-lifecycle-example,indent=0]
+include::{example-dir-association}/ManyToManyBidirectionalTest.java[tags=associations-many-to-many-bidirectional-lifecycle-example,indent=0]
 ----
 
 [source,sql]
@@ -379,7 +381,7 @@ and the link table has an associated entity which controls the relationship for 
 ====
 [source,java]
 ----
-include::{sourcedir}/ManyToManyBidirectionalWithLinkEntityTest.java[tags=associations-many-to-many-bidirectional-with-link-entity-example,indent=0]
+include::{example-dir-association}/ManyToManyBidirectionalWithLinkEntityTest.java[tags=associations-many-to-many-bidirectional-with-link-entity-example,indent=0]
 ----
 
 [source,sql]
@@ -405,7 +407,7 @@ The entity state transitions are better managed than in the previous bidirection
 ====
 [source,java]
 ----
-include::{sourcedir}/ManyToManyBidirectionalWithLinkEntityTest.java[tags=associations-many-to-many-bidirectional-with-link-entity-lifecycle-example,indent=0]
+include::{example-dir-association}/ManyToManyBidirectionalWithLinkEntityTest.java[tags=associations-many-to-many-bidirectional-with-link-entity-lifecycle-example,indent=0]
 ----
 
 [source,sql]
@@ -457,7 +459,7 @@ Considering the following `City` and `Person` entity mappings:
 ====
 [source,java]
 ----
-include::{sourcedir}/NotFoundTest.java[tags=associations-not-found-domain-model-example,indent=0]
+include::{example-dir-association}/NotFoundTest.java[tags=associations-not-found-domain-model-example,indent=0]
 ----
 ====
 
@@ -468,7 +470,7 @@ If we have the following entities in our database:
 ====
 [source,java]
 ----
-include::{sourcedir}/NotFoundTest.java[tags=associations-not-found-persist-example,indent=0]
+include::{example-dir-association}/NotFoundTest.java[tags=associations-not-found-persist-example,indent=0]
 ----
 ====
 
@@ -479,7 +481,7 @@ When loading the `Person` entity, Hibernate is able to locate the associated `Ci
 ====
 [source,java]
 ----
-include::{sourcedir}/NotFoundTest.java[tags=associations-not-found-find-baseline,indent=0]
+include::{example-dir-association}/NotFoundTest.java[tags=associations-not-found-find-baseline,indent=0]
 ----
 ====
 
@@ -490,7 +492,7 @@ However, if we break the foreign-key:
 ====
 [source,java]
 ----
-include::{sourcedir}/NotFoundTest.java[tags=associations-not-found-break-fk,indent=0]
+include::{example-dir-association}/NotFoundTest.java[tags=associations-not-found-break-fk,indent=0]
 ----
 ====
 
@@ -501,7 +503,7 @@ Hibernate is not going to throw any exception, and it will assign a value of `nu
 ====
 [source,java]
 ----
-include::{sourcedir}/NotFoundTest.java[tags=associations-not-found-non-existing-find-example,indent=0]
+include::{example-dir-association}/NotFoundTest.java[tags=associations-not-found-non-existing-find-example,indent=0]
 ----
 ====
 
@@ -530,7 +532,7 @@ resolve the `city.id` value.
 ====
 [source,java]
 ----
-include::{sourcedir}/NotFoundTest.java[tags=associations-not-found-implicit-join-example,indent=0]
+include::{example-dir-association}/NotFoundTest.java[tags=associations-not-found-implicit-join-example,indent=0]
 ----
 ====
 
@@ -539,12 +541,12 @@ Neither result includes a match for "John Doe" because the inner-join filters ou
 Hibernate does support a means to refer specifically to the key column (`Person.cityName`) in a query
 using the special `fk(..)` function.  E.g.
 
-[[associations-not-found-implicit-join-example]]
+[[associations-not-found-fk-function-example]]
 .Implicit join example
 ====
 [source,java]
 ----
-include::{sourcedir}/NotFoundTest.java[tags=associations-not-found-fk-function-example,indent=0]
+include::{example-dir-association}/NotFoundTest.java[tags=associations-not-found-fk-function-example,indent=0]
 ----
 ====
 
@@ -558,7 +560,7 @@ The `@Any` mapping is useful to emulate a unidirectional `@ManyToOne` associatio
 
 Because the `@Any` mapping defines a polymorphic association to classes from multiple tables,
 this association type requires the FK column which provides the associated parent identifier and
-a metadata information for the associated entity type.
+a discriminator which identifies the associated entity type.
 
 [NOTE]
 ====
@@ -567,16 +569,33 @@ This is not the usual way of mapping polymorphic associations and you should use
 
 To map such an association, Hibernate needs to understand 3 things:
 
-1. The column and mapping for the discriminator
-2. The column and mapping for the key
-3. The mapping between discriminator values and entity classes
+1. The column and mapping for the <<associations-any-discriminator,discriminator>>
+2. The column and mapping for the <<associations-any-key,key>>
+3. The mapping between discriminator values and entity types which may be <<associations-any-explicit-discriminator,explicit>>
+<<associations-any-implicit-discriminator,implicit>> or <<associations-any-mixed-discriminator,mixed>>.
+
+For the rest of this discussion, consider the following model which will be the target types for the `@Any` associations:
+
+[[associations-any-target-example]]
+.`Payment` class hierarchy
+====
+[source, java, indent=0]
+----
+include::{example-dir-any}/discriminator/Payment.java[tags=associations-any-example]
+
+include::{example-dir-any}/discriminator/CardPayment.java[tags=associations-any-example]
+
+include::{example-dir-any}/discriminator/CashPayment.java[tags=associations-any-example]
+
+include::{example-dir-any}/discriminator/CheckPayment.java[tags=associations-any-example]
+----
+====
 
 
 [[associations-any-discriminator]]
 ===== The discriminator
 
-The discriminator of an any-style association holds the value that indicates which entity is
-referred to by a row.
+The discriminator is the value that indicates which entity is referred to by a row.
 
 Its "column" can be specified with either `@Column` or `@Formula`.  The mapping type can be influenced by any of:
 
@@ -600,89 +619,83 @@ type can be influenced by any of:
 4. `@AnyKeyJdbcTypeCode`
 
 
-[[associations-any-values]]
-===== The discriminator value mappings
 
-`@AnyDiscriminatorValue` is used to map the discriminator values to the corresponding entity classes
+[[associations-any-explicit-discriminator]]
+===== Explicit discriminator mappings
+
+Explicit discriminator mappings are defined using one-or-more `@AnyDiscriminatorValue` annotations.  E.g.
 
 
-[[associations-any-property]]
-==== Example using @Any mapping
-
-For this example, consider the following `Property` class hierarchy:
-
-[[associations-any-property-example]]
-.`Property` class hierarchy
+[[associations-any-discriminator-explicit-example]]
+.Explicit @AnyDiscriminatorValue annotations
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/any/Property.java[tags=associations-any-property-example]
-
-include::{sourcedir}/any/IntegerProperty.java[tags=associations-any-property-example]
-
-include::{sourcedir}/any/StringProperty.java[tags=associations-any-property-example]
+include::{example-dir-any}/discriminator/explicit/Order.java[tags=associations-any-explicit-discriminator-example]
 ----
 ====
 
-A `PropertyHolder` entity defines an attribute of type `Property`:
+Here, we map 2 explicit discriminator value mappings:
 
-[[associations-any-example]]
-.`@Any` mapping usage
+1. `CARD` <-> `CardPayment`
+2. `CHECK` <-> `CheckPayment`
+
+Notice that `CashPayment` is not explicitly mapped.  An attempt to use `CashPayment` for this attribute will result
+in an exception.
+
+
+[[associations-any-implicit-discriminator]]
+===== Implicit discriminator mappings
+
+Implicit discriminator mappings define no `@AnyDiscriminatorValue` annotations.  E.g.
+
+[[associations-any-discriminator-implicit-example]]
+.Implicit @Any discriminator mappings
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/any/PropertyHolder.java[tags=associations-any-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/associations-any-example.sql[]
-----
-====
-
-`PropertyHolder#property` can refer to either `StringProperty` or `IntegerProperty` references, as indicated
-by the associated discriminator according to the `@DiscriminatorValue` annotations.
-
-As you can see, there are two columns used to reference a `Property` instance: `property_id` and `property_type`.
-The `property_id` is used to match the `id` column of either the `string_property` or `integer_property` tables,
-while the `property_type` is used to match the `string_property` or the `integer_property` table.
-
-To see the `@Any` annotation in action, consider the next examples.
-
-If we persist an `IntegerProperty` as well as a `StringProperty` entity, and associate
-the `StringProperty` entity with a `PropertyHolder`,
-Hibernate will generate the following SQL queries:
-
-[[associations-any-persist-example]]
-.`@Any` mapping persist example
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/any/AnyTest.java[tags=associations-any-persist-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/associations-any-persist-example.sql[]
+include::{example-dir-any}/discriminator/implicit/Order.java[tags=associations-any-implicit-discriminator-example]
 ----
 ====
 
-When fetching the `PropertyHolder` entity and navigating its `property` association,
-Hibernate will fetch the associated `StringProperty` entity like this:
+Here all `Payment` subtypes are allowed.  By default Hibernate will use the entity's full-name (which is generally the class's FQN).
 
-[[associations-any-query-example]]
-.`@Any` mapping query example
+Hibernate also offers a `@AnyDiscriminatorImplicitValues` annotation which allows configuration of how this implicit
+mapping works.  E.g., to use the entity's short-name instead of the full-name -
+
+
+[[associations-any-discriminator-implicit-short-example]]
+.Implicit @Any discriminator mappings (short name)
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/any/AnyTest.java[tags=associations-any-query-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/associations-any-query-example.sql[]
+include::{example-dir-any}/discriminator/implicit/Order.java[tags=associations-any-implicit-discriminator-short-example]
 ----
 ====
+
+[NOTE]
+====
+`@AnyDiscriminatorImplicitValues` also offers the ability to define a custom strategy for determining the
+discriminator-value <-> entity-type mapping, but its use is not covered here.
+====
+
+
+[[associations-any-mixed-discriminator]]
+===== Mixed discriminator mappings
+
+A mixed strategy combines `@AnyDiscriminatorValue` and `@AnyDiscriminatorImplicitValues`.  Mappings
+explicitly defined using `@AnyDiscriminatorValue` take precedence.  E.g.
+
+
+[[associations-any-discriminator-mixed-example]]
+.Mixed @Any discriminator mappings (short name)
+====
+[source, java, indent=0]
+----
+include::{example-dir-any}/discriminator/mixed/Order.java[tags=associations-any-mixed-discriminator-short-example]
+----
+====
+
 
 
 [[associations-any-meta-annotations]]
@@ -691,22 +704,19 @@ include::{extrasdir}/associations-any-query-example.sql[]
 As mentioned in <<basic-mapping>>, Hibernate's ANY-related annotations can be composed using meta-annotations
 to re-use ANY mapping details.
 
-Looking back at <<associations-any-example>>, we can see how cumbersome it would be to duplicate that
-information every time `Property` is mapped in the domain model.  This description can also be moved
+Given all the details needed to define an ANY mapping, we can see how cumbersome it would be to duplicate that
+information every time `Payment` is mapped in the domain model.  This description can also be moved
 into a single annotation that we can apply in each usage.
 
 
 [[associations-any-composed-example]]
-.`@Any` mapping usage
+.`@Any` mapping with meta-annotation
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/any/PropertyHolder2.java[tags=associations-any-def-example]
+include::{example-dir-any}/discriminator/meta/Order.java[tags=associations-any-discriminator-meta-example]
 ----
 ====
-
-Though the mapping has been "simplified", the mapping works exactly as shown in <<associations-any-example>>.
-
 
 
 
@@ -723,58 +733,21 @@ The mapping details are the same between `@Any` and `@ManyToAny` except for:
     of just `@JoinColumn`
 
 
-In the following example, the `PropertyRepository` entity has a collection of `Property` entities.
+In the following example, the `Loan` entity has a collection of `Payments` objects.
 
-The `repository_properties` link table holds the associations between `PropertyRepository` and `Property` entities.
+The `loan_payments` table holds the associations between `Loan` and `Payment` references.
 
 [[associations-many-to-any-example]]
 .`@ManyToAny` mapping usage
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/any/PropertyRepository.java[tags=associations-many-to-any-example]
+include::{example-dir-any}/discriminator/many/Loan.java[tags=associations-many-to-any-example]
 ----
 
 [source, SQL, indent=0]
 ----
 include::{extrasdir}/associations-many-to-any-example.sql[]
-----
-====
-
-To see the `@ManyToAny` annotation in action, consider the next examples.
-
-If we persist an `IntegerProperty` as well as a `StringProperty` entity,
-and associate both of them with a `PropertyRepository` parent entity,
-Hibernate will generate the following SQL queries:
-
-[[associations-many-to-any-persist-example]]
-.`@ManyToAny` mapping persist example
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/any/ManyToAnyTest.java[tags=associations-many-to-any-persist-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/associations-many-to-any-persist-example.sql[]
-----
-====
-
-When fetching the `PropertyRepository` entity and navigating its `properties` association,
-Hibernate will fetch the associated `IntegerProperty` and `StringProperty` entities like this:
-
-[[associations-many-to-any-query-example]]
-.`@ManyToAny` mapping query example
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/any/ManyToAnyTest.java[tags=associations-many-to-any-query-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/associations-many-to-any-query-example.sql[]
 ----
 ====
 
@@ -788,9 +761,9 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 [[associations-JoinFormula-example]]
 .`@JoinFormula` mapping usage
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/JoinFormulaTest.java[tags=associations-JoinFormula-example]
+include::{example-dir-association}/JoinFormulaTest.java[tags=associations-JoinFormula-example]
 ----
 
 [source, SQL, indent=0]
@@ -806,9 +779,9 @@ Considering we have the following entities:
 [[associations-JoinFormula-persistence-example]]
 .`@JoinFormula` mapping usage
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/JoinFormulaTest.java[tags=associations-JoinFormula-persistence-example]
+include::{example-dir-association}/JoinFormulaTest.java[tags=associations-JoinFormula-persistence-example]
 ----
 ====
 
@@ -817,9 +790,9 @@ When fetching the `User` entities, the `country` property is mapped by the `@Joi
 [[associations-JoinFormula-fetching-example]]
 .`@JoinFormula` mapping usage
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/JoinFormulaTest.java[tags=associations-JoinFormula-fetching-example]
+include::{example-dir-association}/JoinFormulaTest.java[tags=associations-JoinFormula-fetching-example]
 ----
 
 [source, SQL, indent=0]
@@ -838,9 +811,9 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 [[associations-JoinColumnOrFormula-example]]
 .`@JoinColumnOrFormula` mapping usage
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/JoinColumnOrFormulaTest.java[tags=associations-JoinColumnOrFormula-example]
+include::{example-dir-association}/JoinColumnOrFormulaTest.java[tags=associations-JoinColumnOrFormula-example]
 ----
 
 [source, SQL, indent=0]
@@ -856,9 +829,9 @@ Considering we have the following entities:
 [[associations-JoinColumnOrFormula-persistence-example]]
 .`@JoinColumnOrFormula` persist example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/JoinColumnOrFormulaTest.java[tags=associations-JoinColumnOrFormula-persistence-example]
+include::{example-dir-association}/JoinColumnOrFormulaTest.java[tags=associations-JoinColumnOrFormula-persistence-example]
 ----
 ====
 
@@ -867,9 +840,9 @@ When fetching the `User` entities, the `country` property is mapped by the `@Joi
 [[associations-JoinColumnOrFormula-fetching-example]]
 .`@JoinColumnOrFormula` fetching example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/JoinColumnOrFormulaTest.java[tags=associations-JoinColumnOrFormula-fetching-example]
+include::{example-dir-association}/JoinColumnOrFormulaTest.java[tags=associations-JoinColumnOrFormula-fetching-example]
 ----
 
 [source, SQL, indent=0]

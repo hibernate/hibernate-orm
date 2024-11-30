@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id.uuid.interpretation;
 
@@ -17,6 +15,7 @@ import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.VarcharUUIDJdbcType;
+import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.UUIDJavaType;
@@ -76,7 +75,7 @@ public class UUIDBasedIdInterpretationTest {
 	@RequiresDialect(H2Dialect.class)
 	public void testBinaryRuntimeUsage(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			session.byId( UuidIdEntity.class ).load( UUID.randomUUID() );
+			session.byId( UuidIdEntity.class ).load( SafeRandomUUIDGenerator.safeRandomUUID() );
 		} );
 	}
 

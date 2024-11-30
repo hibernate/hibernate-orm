@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.entities.manytomany;
 
@@ -14,7 +12,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 
-import org.hibernate.annotations.WhereJoinTable;
+import org.hibernate.annotations.SQLJoinTableRestriction;
 import org.hibernate.envers.Audited;
 import org.hibernate.orm.test.envers.entities.IntNoAutoIdTestEntity;
 
@@ -36,7 +34,7 @@ public class WhereJoinTableEntity {
 			joinColumns = @JoinColumn(name = "wjte_id"),
 			inverseJoinColumns = @JoinColumn(name = "ite_id")
 	)
-	@WhereJoinTable(clause = "ite_id < 20")
+	@SQLJoinTableRestriction("ite_id < 20")
 	private List<IntNoAutoIdTestEntity> references1;
 
 	@ManyToMany
@@ -45,7 +43,7 @@ public class WhereJoinTableEntity {
 			joinColumns = @JoinColumn(name = "wjte_id"),
 			inverseJoinColumns = @JoinColumn(name = "ite_id")
 	)
-	@WhereJoinTable(clause = "ite_id >= 20")
+	@SQLJoinTableRestriction("ite_id >= 20")
 	private List<IntNoAutoIdTestEntity> references2;
 
 	public Integer getId() {

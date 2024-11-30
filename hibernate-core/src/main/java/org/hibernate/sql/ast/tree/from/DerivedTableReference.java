@@ -1,14 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.from;
 
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.spi.NavigablePath;
 
 /**
@@ -45,8 +44,18 @@ public abstract class DerivedTableReference extends AbstractTableReference {
 	@Override
 	public TableReference resolveTableReference(
 			NavigablePath navigablePath,
-			String tableExpression,
-			boolean allowFkOptimization) {
+			String tableExpression) {
+		throw new UnknownTableReferenceException(
+				tableExpression,
+				"TableReferences cannot be resolved relative to DerivedTableReferences - `" + tableExpression + "` : " + navigablePath
+		);
+	}
+
+	@Override
+	public TableReference resolveTableReference(
+			NavigablePath navigablePath,
+			ValuedModelPart modelPart,
+			String tableExpression) {
 		throw new UnknownTableReferenceException(
 				tableExpression,
 				"TableReferences cannot be resolved relative to DerivedTableReferences - `" + tableExpression + "` : " + navigablePath
@@ -57,7 +66,6 @@ public abstract class DerivedTableReference extends AbstractTableReference {
 	public TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization,
 			boolean resolve) {
 		return null;
 	}

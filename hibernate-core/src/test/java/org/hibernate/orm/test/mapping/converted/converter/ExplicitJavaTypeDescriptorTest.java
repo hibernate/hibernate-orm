@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.converted.converter;
 
+import java.io.Serializable;
 import java.sql.Types;
 import java.util.Locale;
 import jakarta.persistence.AttributeConverter;
@@ -29,7 +28,7 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -53,7 +52,7 @@ public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalT
 	private static int pseudoMutableToDomainCallCount;
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11098" )
+	@JiraKey( value = "HHH-11098" )
 	public void testIt() {
 		// create data and check assertions
 		inTransaction(
@@ -62,7 +61,7 @@ public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalT
 
 		// assertions based on the persist call
 		assertThat( mutableToDomainCallCount, is(1 ) );  			// 1 instead of 0 because of the deep copy call
-		assertThat( mutableToDatabaseCallCount, is(2 ) );  			// 2 instead of 1 because of the deep copy call
+		assertThat( mutableToDatabaseCallCount, is(3 ) );  			// 2 instead of 1 because of the deep copy call
 
 		assertThat( immutableToDomainCallCount, is(0 ) );			// logical
 		assertThat( immutableToDatabaseCallCount, is(1 ) );			// logical
@@ -203,7 +202,7 @@ public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalT
 	// Purely immutable state
 
 	@Immutable
-	public static class ImmutableState {
+	public static class ImmutableState implements Serializable {
 		private final String state;
 
 		public ImmutableState(String state) {
@@ -254,7 +253,7 @@ public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalT
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Mutable state we treat as immutable
 
-	public static class PseudoMutableState {
+	public static class PseudoMutableState implements Serializable {
 		private String state;
 
 		public PseudoMutableState(String state) {
@@ -325,7 +324,7 @@ public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalT
 
 		@Override
 		public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-			return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( Types.VARCHAR );
+			return context.getJdbcType( Types.VARCHAR );
 		}
 
 		@Override

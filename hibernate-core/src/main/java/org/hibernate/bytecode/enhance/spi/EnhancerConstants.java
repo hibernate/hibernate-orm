@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.enhance.spi;
 
@@ -49,7 +47,7 @@ public final class EnhancerConstants {
 
 	/**
 	 * Name of the field used to hold the previous {@link org.hibernate.engine.spi.ManagedEntity}.
-	 * <p/>
+	 * <p>
 	 * Together, previous/next are used to define a "linked list"
 	 *
 	 * @see #NEXT_FIELD_NAME
@@ -72,7 +70,7 @@ public final class EnhancerConstants {
 
 	/**
 	 * Name of the field used to hold the previous {@link org.hibernate.engine.spi.ManagedEntity}.
-	 * <p/>
+	 * <p>
 	 * Together, previous/next are used to define a "linked list"
 	 *
 	 * @see #PREVIOUS_FIELD_NAME
@@ -181,6 +179,11 @@ public final class EnhancerConstants {
 	 * Method to clear the owner of the embedded entity
 	 */
 	public static final String TRACKER_COMPOSITE_CLEAR_OWNER = "$$_hibernate_clearOwner";
+
+	public static final String USE_TRACKER_FIELD_NAME = "$$_hibernate_useTracker";
+	public static final String USE_TRACKER_GETTER_NAME = "$$_hibernate_useTracker";
+	public static final String USE_TRACKER_SETTER_NAME = "$$_hibernate_setUseTracker";
+
 
 	private EnhancerConstants() {
 	}

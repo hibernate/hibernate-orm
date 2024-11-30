@@ -1,12 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.annotations.methods;
 
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.config.spi.ConfigurationService;
 
 import org.hibernate.testing.annotations.AnEntity;
@@ -47,9 +44,7 @@ public class DomainModelTesting {
 	}
 
 	private void settingAssertions(DomainModelScope scope) {
-		final org.hibernate.service.ServiceRegistry serviceRegistry = ( (MetadataImplementor) scope.getDomainModel() )
-				.getTypeConfiguration()
-				.getServiceRegistry();
+		final org.hibernate.service.ServiceRegistry serviceRegistry = scope.getDomainModel().getDatabase().getServiceRegistry();
 		final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
 		assertThat( configurationService.getSettings().get( "simple" ) ).isEqualTo( "simple-value" );
 	}

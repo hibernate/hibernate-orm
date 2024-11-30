@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
@@ -10,16 +8,19 @@ import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.internal.AliasConstantsHelper;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.sql.Template;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.internal.util.StringHelper.replace;
 import static org.hibernate.internal.util.StringHelper.safeInterning;
+import static org.hibernate.sql.Template.TEMPLATE;
+import static org.hibernate.sql.Template.renderWhereStringTemplate;
 
 /**
- * A formula is a derived column value
+ * A mapping model object representing a SQL {@linkplain org.hibernate.annotations.Formula formula}
+ * which is used as a "derived" {@link Column} in an entity mapping.
+ *
  * @author Gavin King
  */
 public class Formula implements Selectable, Serializable {
@@ -39,12 +40,9 @@ public class Formula implements Selectable, Serializable {
 	}
 
 	@Override
-	public String getTemplate(
-			Dialect dialect,
-			TypeConfiguration typeConfiguration,
-			SqmFunctionRegistry functionRegistry) {
-		String template = Template.renderWhereStringTemplate( formula, dialect, typeConfiguration, functionRegistry );
-		return safeInterning( StringHelper.replace( template, "{alias}", Template.TEMPLATE ) );
+	public String getTemplate(Dialect dialect, TypeConfiguration typeConfiguration, SqmFunctionRegistry registry) {
+		final String template = renderWhereStringTemplate( formula, dialect, typeConfiguration );
+		return safeInterning( replace( template, "{alias}", TEMPLATE ) );
 	}
 
 	@Override
@@ -92,6 +90,17 @@ public class Formula implements Selectable, Serializable {
 
 	@Override
 	public String toString() {
-		return this.getClass().getName() + "( " + formula + " )";
+		return getClass().getSimpleName() + "( " + formula + " )";
+	}
+
+	@Override
+	public boolean equals(Object that) {
+		return that instanceof Formula other
+			&& formula.equals( other.formula );
+	}
+
+	@Override
+	public int hashCode() {
+		return formula.hashCode();
 	}
 }

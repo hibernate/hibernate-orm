@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
@@ -10,10 +8,10 @@ import org.hibernate.boot.jaxb.Origin;
 
 /**
  * Thrown when a mapping is found to be invalid.
+ * <p>
+ * Similar to {@link MappingException}, but contains more information
+ * about the path and type of mapping (e.g. file, resource or URL).
  *
- * Similar to MappingException, but this contains more info about the path and type of
- * mapping (e.g. file, resource or url)
- * 
  * @author Max Rydahl Andersen
  * @author Steve Ebersole
  */
@@ -36,7 +34,7 @@ public class InvalidMappingException extends MappingException {
 	}
 
 	/**
-	 * Constructs an InvalidMappingException using the given information.
+	 * Constructs an {@code InvalidMappingException} using the given information.
 	 *
 	 * @param customMessage The custom message explaining the exception condition
 	 * @param type The type of invalid mapping document
@@ -49,7 +47,7 @@ public class InvalidMappingException extends MappingException {
 	}
 
 	/**
-	 * Constructs an InvalidMappingException using the given information.
+	 * Constructs an {@code InvalidMappingException} using the given information.
 	 *
 	 * @param customMessage The custom message explaining the exception condition
 	 * @param origin The origin of the invalid mapping document
@@ -61,7 +59,7 @@ public class InvalidMappingException extends MappingException {
 	public String getType() {
 		return type;
 	}
-	
+
 	public String getPath() {
 		return path;
 	}

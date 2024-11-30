@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.legacy;
 
@@ -45,87 +43,87 @@ public class Root implements Serializable, Named {
 	public void setX(int x) {
 		this.x = x;
 	}
-	
+
 	public Set getDetails() {
 		return details;
 	}
-	
+
 	private void setDetails(Set details) {
 		this.details = details;
 	}
-	
+
 	public void addDetail(Detail d) {
 		details.add(d);
 	}
-	
+
 	public void removeDetail(Detail d) {
 		details.remove(d);
 	}
-	
+
 	public void addIncoming(Root m) {
 		incoming.add(m);
 	}
-	
+
 	public void removeIncoming(Root m) {
 		incoming.remove(m);
 	}
-	
+
 	public void addOutgoing(Root m) {
 		outgoing.add(m);
 	}
-	
+
 	public void removeOutgoing(Root m) {
 		outgoing.remove(m);
 	}
-	
+
 	public Set getIncoming() {
 		return incoming;
 	}
-	
+
 	public void setIncoming(Set incoming) {
 		this.incoming = incoming;
 	}
-	
+
 	public Set getOutgoing() {
 		return outgoing;
 	}
-	
+
 	public void setOutgoing(Set outgoing) {
 		this.outgoing = outgoing;
 	}
-	
+
 	public Set getMoreDetails() {
 		return moreDetails;
 	}
-	
+
 	public void setMoreDetails(Set moreDetails) {
 		this.moreDetails = moreDetails;
 	}
-	
+
 	public String getName() {
 		return name;
 	}
-	
+
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
 	public Date getStamp() {
 		return stamp;
 	}
-	
+
 	public void setStamp(Date stamp) {
 		this.stamp = stamp;
 	}
-	
+
 	public BigDecimal getBigDecimal() {
 		return bigDecimal;
 	}
-	
+
 	public void setBigDecimal(BigDecimal bigDecimal) {
 		this.bigDecimal = bigDecimal;
 	}
-	
+
 	/**
 	 * @return
 	 */
@@ -153,9 +151,3 @@ public class Root implements Serializable, Named {
 		this.allDetails = allDetails;
 	}
 }
-
-
-
-
-
-

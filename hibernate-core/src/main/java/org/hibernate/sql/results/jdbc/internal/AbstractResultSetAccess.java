@@ -1,14 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.jdbc.internal;
 
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.StringHelper;
 
@@ -17,10 +16,12 @@ import org.hibernate.internal.util.StringHelper;
  */
 public abstract class AbstractResultSetAccess implements ResultSetAccess {
 	private final SharedSessionContractImplementor persistenceContext;
+	private final Dialect dialect;
 	private ResultSetMetaData resultSetMetaData;
 
 	public AbstractResultSetAccess(SharedSessionContractImplementor persistenceContext) {
 		this.persistenceContext = persistenceContext;
+		this.dialect = persistenceContext.getJdbcServices().getDialect();
 	}
 
 	protected SharedSessionContractImplementor getPersistenceContext() {
@@ -60,7 +61,7 @@ public abstract class AbstractResultSetAccess implements ResultSetAccess {
 	public int resolveColumnPosition(String columnName) {
 		try {
 			return getResultSet().findColumn(
-					StringHelper.unquote( columnName, persistenceContext.getJdbcServices().getDialect() )
+					StringHelper.unquote( columnName, this.dialect )
 			);
 		}
 		catch (SQLException e) {
@@ -74,9 +75,7 @@ public abstract class AbstractResultSetAccess implements ResultSetAccess {
 	@Override
 	public String resolveColumnName(int position) {
 		try {
-			return getFactory().getJdbcServices().
-					getJdbcEnvironment()
-					.getDialect()
+			return dialect
 					.getColumnAliasExtractor()
 					.extractColumnAlias( getMetaData(), position );
 		}

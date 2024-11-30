@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.derivedidentities.bidirectional;
 import java.io.Serializable;
@@ -24,7 +22,7 @@ public class Order implements Serializable
 	@Id
 	@GeneratedValue
 	private Long id;
-	
+
 	@Column(name = "name", length = 20)
 	private String name;
 
@@ -35,7 +33,7 @@ public class Order implements Serializable
 	{
 		return id;
 	}
-	
+
 	public void setId(Long id)
 	{
 		this.id = id;
@@ -61,7 +59,7 @@ public class Order implements Serializable
 		this.lineItems = lineItems;
 	}
 
-	public void addLineItem(Product product, Integer amount) 
+	public void addLineItem(Product product, Integer amount)
 	{
 		OrderLine part = new OrderLine(this, product, amount);
 		lineItems.add(part);

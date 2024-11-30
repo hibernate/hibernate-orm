@@ -1,14 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.exec.internal;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.AfterLoadAction;
-import org.hibernate.persister.entity.Loadable;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.sql.exec.spi.Callback;
 
 /**
@@ -26,7 +24,12 @@ public class CallbackNoOp implements Callback {
 	}
 
 	@Override
-	public void invokeAfterLoadActions(SharedSessionContractImplementor session, Object entity, Loadable persister) {
+	public void invokeAfterLoadActions(Object entity, EntityMappingType entityMappingType, SharedSessionContractImplementor session) {
 		// don't do anything
+	}
+
+	@Override
+	public boolean hasAfterLoadActions() {
+		return false;
 	}
 }

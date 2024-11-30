@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.cascade.multicircle.nonjpa.sequence;
 
@@ -13,7 +11,7 @@ import java.util.Set;
  */
 @jakarta.persistence.Entity
 public class C extends AbstractEntity {
-    private static final long serialVersionUID = 1226955752L;
+	private static final long serialVersionUID = 1226955752L;
 
 	@jakarta.persistence.OneToMany(mappedBy = "c")
 	private Set<B> bCollection = new java.util.HashSet<B>();
@@ -21,7 +19,6 @@ public class C extends AbstractEntity {
 	@jakarta.persistence.OneToMany(mappedBy = "c")
 	@org.hibernate.annotations.Cascade({
 			org.hibernate.annotations.CascadeType.PERSIST,
-			org.hibernate.annotations.CascadeType.SAVE_UPDATE,
 			org.hibernate.annotations.CascadeType.MERGE,
 			org.hibernate.annotations.CascadeType.REFRESH
 	})

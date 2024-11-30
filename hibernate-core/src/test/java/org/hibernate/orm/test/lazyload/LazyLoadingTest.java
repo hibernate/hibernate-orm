@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.lazyload;
 
@@ -22,7 +20,7 @@ import jakarta.persistence.OneToOne;
 import org.hibernate.Hibernate;
 import org.hibernate.cfg.Environment;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -80,11 +78,11 @@ public class LazyLoadingTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7971")
+	@JiraKey(value = "HHH-7971")
 	public void testLazyCollectionLoadingAfterEndTransaction(SessionFactoryScope scope) {
 		Parent loadedParent = scope.fromTransaction(
 				session ->
-						session.load( Parent.class, parentID )
+						session.getReference( Parent.class, parentID )
 		);
 
 		assertFalse( Hibernate.isInitialized( loadedParent.getChildren() ) );
@@ -99,7 +97,7 @@ public class LazyLoadingTest {
 
 		Child loadedChild = scope.fromTransaction(
 				sesison ->
-						sesison.load( Child.class, lastChildID )
+						sesison.getReference( Child.class, lastChildID )
 		);
 
 		Parent p = loadedChild.getParent();
@@ -113,14 +111,15 @@ public class LazyLoadingTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11838")
+	@JiraKey(value = "HHH-11838")
 	public void testGetIdOneToOne(SessionFactoryScope scope) {
 		final Object clientId = scope.fromTransaction(
 				session -> {
 					Address address = new Address();
-					session.save( address );
+					session.persist( address );
 					Client client = new Client( address );
-					return session.save( client );
+					session.persist( client );
+					return client.getId();
 				}
 		);
 
@@ -151,22 +150,22 @@ public class LazyLoadingTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11838")
+	@JiraKey(value = "HHH-11838")
 	public void testGetIdManyToOne(SessionFactoryScope scope) {
 		Serializable accountId = scope.fromTransaction( session -> {
 			Address address = new Address();
-			session.save( address );
+			session.persist( address );
 			Client client = new Client( address );
 			Account account = new Account();
 			client.addAccount( account );
-			session.save( account );
-			session.save( client );
+			session.persist( account );
+			session.persist( client );
 			return account.getId();
 		} );
 
 		scope.inTransaction(
 				session -> {
-					Account account = session.load( Account.class, accountId );
+					Account account = session.getReference( Account.class, accountId );
 					Client client = account.getClient();
 					client.getId();
 					assertThat( Hibernate.isInitialized( client ), is( false ) );

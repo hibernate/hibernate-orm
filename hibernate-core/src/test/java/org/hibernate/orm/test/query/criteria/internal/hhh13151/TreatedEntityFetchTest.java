@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.criteria.internal.hhh13151;
 
@@ -37,8 +35,8 @@ public class TreatedEntityFetchTest extends BaseCoreFunctionalTestCase {
 	protected void configure(Configuration configuration) {
 		super.configure( configuration );
 
-		configuration.setProperty( AvailableSettings.SHOW_SQL, Boolean.TRUE.toString() );
-		configuration.setProperty( AvailableSettings.FORMAT_SQL, Boolean.TRUE.toString() );
+		configuration.setProperty( AvailableSettings.SHOW_SQL, true );
+		configuration.setProperty( AvailableSettings.FORMAT_SQL, true );
 		// configuration.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
 	}
 
@@ -46,7 +44,7 @@ public class TreatedEntityFetchTest extends BaseCoreFunctionalTestCase {
 	public void prepareEntities() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
-		s.save( new SubEntity().setSubField( new SideEntity( "testName" ) ) );
+		s.persist( new SubEntity().setSubField( new SideEntity( "testName" ) ) );
 		tx.commit();
 		s.close();
 	}

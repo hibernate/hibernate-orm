@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.schematools;
 
 import java.io.Serializable;
@@ -37,6 +41,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -81,14 +86,18 @@ public class PrimaryKeyColumnOrderTest extends BaseSessionFactoryFunctionalTest 
 
 	@Test
 	public void getPrimaryKey() throws Exception {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting(
 						AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY,
 						JdbcMetadaAccessStrategy.GROUPED
 				)
 				.build();
+		DdlTransactionIsolator ddlTransactionIsolator = null;
+		ExtractionContextImpl extractionContext = null;
 		try {
-			TableInformation table = buildInformationExtractor( ssr ).getTable(
+			ddlTransactionIsolator = buildDdlTransactionIsolator( ssr );
+			extractionContext = buildContext( ssr, ddlTransactionIsolator );
+			TableInformation table = buildInformationExtractor( extractionContext ).getTable(
 					null,
 					null,
 					new Identifier( "TEST_ENTITY", false )
@@ -99,8 +108,8 @@ public class PrimaryKeyColumnOrderTest extends BaseSessionFactoryFunctionalTest 
 			List<String> pkColumnNames = new ArrayList<>();
 			primaryKey.getColumns().forEach( columnInformation -> {
 				pkColumnNames.add( columnInformation.getColumnIdentifier()
-										   .getCanonicalName()
-										   .toLowerCase( Locale.ROOT ) );
+										.getCanonicalName()
+										.toLowerCase( Locale.ROOT ) );
 			} );
 
 			assertThat( pkColumnNames.size() ).isEqualTo( 2 );
@@ -108,24 +117,35 @@ public class PrimaryKeyColumnOrderTest extends BaseSessionFactoryFunctionalTest 
 			assertTrue( pkColumnNames.contains( "b" ) );
 		}
 		finally {
+			if ( extractionContext != null ) {
+				extractionContext.cleanup();
+			}
+			if ( ddlTransactionIsolator != null ) {
+				ddlTransactionIsolator.release();
+			}
 			StandardServiceRegistryBuilder.destroy( ssr );
 		}
 	}
 
-	private InformationExtractor buildInformationExtractor(StandardServiceRegistry ssr) throws Exception {
-		ExtractionContextImpl extractionContext = buildContext( ssr );
-
+	private InformationExtractor buildInformationExtractor(ExtractionContextImpl extractionContext) throws Exception {
 		ExtractionTool extractionTool = new HibernateSchemaManagementTool().getExtractionTool();
 
 		return extractionTool.createInformationExtractor( extractionContext );
 	}
 
-	private static ExtractionContextImpl buildContext(StandardServiceRegistry ssr) throws Exception {
+	private static ExtractionContextImpl buildContext(
+			StandardServiceRegistry ssr,
+			DdlTransactionIsolator ddlTransactionIsolator) throws Exception {
 		Database database = new MetadataSources( ssr ).buildMetadata().getDatabase();
 
 		SqlStringGenerationContext sqlStringGenerationContext = SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() );
 
-		DatabaseInformation dbInfo = buildDatabaseInformation( ssr, database, sqlStringGenerationContext );
+		DatabaseInformation dbInfo = buildDatabaseInformation(
+				ssr,
+				database,
+				sqlStringGenerationContext,
+				ddlTransactionIsolator
+		);
 
 		return new ExtractionContextImpl(
 				ssr,
@@ -139,12 +159,13 @@ public class PrimaryKeyColumnOrderTest extends BaseSessionFactoryFunctionalTest 
 	private static DatabaseInformationImpl buildDatabaseInformation(
 			StandardServiceRegistry ssr,
 			Database database,
-			SqlStringGenerationContext sqlStringGenerationContext) throws Exception {
+			SqlStringGenerationContext sqlStringGenerationContext,
+			DdlTransactionIsolator ddlTransactionIsolator) throws Exception {
 		return new DatabaseInformationImpl(
 				ssr,
 				database.getJdbcEnvironment(),
 				sqlStringGenerationContext,
-				buildDdlTransactionIsolator( ssr ),
+				ddlTransactionIsolator,
 				database.getServiceRegistry().getService( SchemaManagementTool.class )
 		);
 	}

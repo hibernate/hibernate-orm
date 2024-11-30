@@ -1,13 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.spi;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
@@ -81,6 +81,11 @@ public abstract class QueryOptionsAdapter implements QueryOptions {
 	}
 
 	@Override
+	public Boolean getQueryPlanCachingEnabled() {
+		return null;
+	}
+
+	@Override
 	public String getResultCacheRegionName() {
 		return null;
 	}
@@ -91,12 +96,22 @@ public abstract class QueryOptionsAdapter implements QueryOptions {
 	}
 
 	@Override
-	public TupleTransformer getTupleTransformer() {
+	public TupleTransformer<?> getTupleTransformer() {
 		return null;
 	}
 
 	@Override
-	public ResultListTransformer getResultListTransformer() {
+	public ResultListTransformer<?> getResultListTransformer() {
+		return null;
+	}
+
+	@Override
+	public Set<String> getEnabledFetchProfiles() {
+		return null;
+	}
+
+	@Override
+	public Set<String> getDisabledFetchProfiles() {
 		return null;
 	}
 }

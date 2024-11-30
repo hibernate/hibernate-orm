@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.collection.ordered.joinedInheritence;
 
@@ -16,6 +14,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.SQLOrder;
 
 /**
  * @author Steve Ebersole
@@ -69,7 +68,7 @@ public class Zoo {
 
 	@OneToMany
 	@JoinColumn
-	@org.hibernate.annotations.OrderBy( clause = "weight" )
+	@SQLOrder( "weight" )
 	public Set<Lion> getLions() {
 		return lions;
 	}

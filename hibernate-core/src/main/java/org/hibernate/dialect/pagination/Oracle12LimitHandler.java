@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.pagination;
 
@@ -33,18 +31,22 @@ public class Oracle12LimitHandler extends AbstractLimitHandler {
 
 	@Override
 	public String processSql(String sql, Limit limit, QueryOptions queryOptions) {
+		final boolean hasFirstRow = hasFirstRow( limit );
 		final boolean hasMaxRows = hasMaxRows( limit );
-		if ( !hasMaxRows ) {
+
+		if ( !hasFirstRow && !hasMaxRows ) {
 			return sql;
 		}
+
 		return processSql(
 				sql,
-				hasFirstRow( limit ),
+				hasFirstRow,
+				hasMaxRows,
 				queryOptions.getLockOptions()
 		);
 	}
 
-	protected String processSql(String sql, boolean hasFirstRow, LockOptions lockOptions) {
+	protected String processSql(String sql, boolean hasFirstRow, boolean hasMaxRows, LockOptions lockOptions) {
 		if ( lockOptions != null ) {
 			final LockMode lockMode = lockOptions.getLockMode();
 			switch ( lockMode ) {
@@ -53,42 +55,43 @@ public class Oracle12LimitHandler extends AbstractLimitHandler {
 				case UPGRADE_NOWAIT:
 				case PESSIMISTIC_FORCE_INCREMENT:
 				case UPGRADE_SKIPLOCKED: {
-					return processSql( sql, getForUpdateIndex( sql ), hasFirstRow );
+					return processSql( sql, getForUpdateIndex( sql ), hasFirstRow, hasMaxRows );
 				}
 				default: {
-					return processSqlOffsetFetch( sql, hasFirstRow );
+					return processSqlOffsetFetch( sql, hasFirstRow, hasMaxRows );
 				}
 			}
 		}
-		return processSqlOffsetFetch( sql, hasFirstRow );
+		return processSqlOffsetFetch( sql, hasFirstRow, hasMaxRows );
 	}
 
-	protected String processSqlOffsetFetch(String sql, boolean hasFirstRow) {
+	protected String processSqlOffsetFetch(String sql, boolean hasFirstRow, boolean hasMaxRows) {
 
 		final int forUpdateLastIndex = getForUpdateIndex( sql );
 
 		if ( forUpdateLastIndex > -1 ) {
-			return processSql( sql, forUpdateLastIndex, hasFirstRow );
+			return processSql( sql, forUpdateLastIndex, hasFirstRow, hasMaxRows );
 		}
 
 		bindLimitParametersInReverseOrder = false;
 		useMaxForLimit = false;
 		supportOffset = true;
 
-		final int offsetFetchLength;
 		final String offsetFetchString;
-		if ( hasFirstRow ) {
+		if ( hasFirstRow && hasMaxRows ) {
 			offsetFetchString = " offset ? rows fetch next ? rows only";
+		}
+		else if ( hasFirstRow ) {
+			offsetFetchString = " offset ? rows";
 		}
 		else {
 			offsetFetchString = " fetch first ? rows only";
 		}
-		offsetFetchLength = sql.length() + offsetFetchString.length();
 
-		return new StringBuilder( offsetFetchLength ).append( sql ).append( offsetFetchString ).toString();
+		return insertAtEnd(offsetFetchString, sql);
 	}
 
-	protected String processSql(String sql, int forUpdateIndex, boolean hasFirstRow) {
+	protected String processSql(String sql, int forUpdateIndex, boolean hasFirstRow, boolean hasMaxRows) {
 		bindLimitParametersInReverseOrder = true;
 		useMaxForLimit = true;
 		supportOffset = false;
@@ -112,11 +115,17 @@ public class Oracle12LimitHandler extends AbstractLimitHandler {
 			forUpdateClauseLength = forUpdateClause.length() + 1;
 		}
 
-		if ( hasFirstRow ) {
+		if ( hasFirstRow && hasMaxRows ) {
 			pagingSelect = new StringBuilder( sql.length() + forUpdateClauseLength + 98 );
 			pagingSelect.append( "select * from (select row_.*,rownum rownum_ from (" );
 			pagingSelect.append( sql );
 			pagingSelect.append( ") row_ where rownum<=?) where rownum_>?" );
+		}
+		else if ( hasFirstRow ) {
+			pagingSelect = new StringBuilder( sql.length() + forUpdateClauseLength + 98 );
+			pagingSelect.append( "select * from (" );
+			pagingSelect.append( sql );
+			pagingSelect.append( ") row_ where rownum>?" );
 		}
 		else {
 			pagingSelect = new StringBuilder( sql.length() + forUpdateClauseLength + 37 );
@@ -136,7 +145,7 @@ public class Oracle12LimitHandler extends AbstractLimitHandler {
 	private int getForUpdateIndex(String sql) {
 		final int forUpdateLastIndex = sql.toLowerCase( Locale.ROOT ).lastIndexOf( "for update" );
 		// We need to recognize cases like : select a from t where b = 'for update';
-		final int lastIndexOfQuote = sql.lastIndexOf( "'" );
+		final int lastIndexOfQuote = sql.lastIndexOf( '\'' );
 		if ( forUpdateLastIndex > -1 ) {
 			if ( lastIndexOfQuote == -1 ) {
 				return forUpdateLastIndex;

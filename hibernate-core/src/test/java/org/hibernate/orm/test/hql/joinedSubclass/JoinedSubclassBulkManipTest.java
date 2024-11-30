@@ -1,13 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.hql.joinedSubclass;
 
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -26,7 +24,7 @@ import org.junit.jupiter.api.Test;
 public class JoinedSubclassBulkManipTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-1657")
+	@JiraKey(value = "HHH-1657")
 	public void testHqlDeleteOnJoinedSubclass(SessionFactoryScope scope) {
 		scope.inTransaction(
 				s -> {
@@ -53,7 +51,7 @@ public class JoinedSubclassBulkManipTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-1657")
+	@JiraKey(value = "HHH-1657")
 	public void testHqlUpdateOnJoinedSubclass(SessionFactoryScope scope) {
 		scope.inTransaction(
 				s -> {

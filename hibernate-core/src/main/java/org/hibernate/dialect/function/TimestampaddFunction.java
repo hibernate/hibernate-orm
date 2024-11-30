@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
 
@@ -10,7 +8,7 @@ import jakarta.persistence.TemporalType;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
@@ -18,6 +16,7 @@ import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -47,8 +46,13 @@ public class TimestampaddFunction
 		extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 	private final Dialect dialect;
+	private final SqlAstNodeRenderingMode[] renderingModes;
 
 	public TimestampaddFunction(Dialect dialect, TypeConfiguration typeConfiguration) {
+		this( dialect, typeConfiguration, SqlAstNodeRenderingMode.DEFAULT );
+	}
+
+	public TimestampaddFunction(Dialect dialect, TypeConfiguration typeConfiguration, SqlAstNodeRenderingMode... renderingModes) {
 		super(
 				"timestampadd",
 				new ArgumentTypesValidator(
@@ -59,12 +63,14 @@ public class TimestampaddFunction
 				StandardFunctionArgumentTypeResolvers.invariant( typeConfiguration, TEMPORAL_UNIT, INTEGER, TEMPORAL )
 		);
 		this.dialect = dialect;
+		this.renderingModes = renderingModes;
 	}
 
 	@Override
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> arguments,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 
 		final DurationUnit field = (DurationUnit) arguments.get( 0 );
@@ -76,8 +82,8 @@ public class TimestampaddFunction
 
 	PatternRenderer patternRenderer(TemporalUnit unit, Expression interval, Expression to) {
 		TemporalType temporalType = getSqlTemporalType( to.getExpressionType() );
-		IntervalType intervalType = getSqlIntervalType( interval.getExpressionType().getJdbcMappings().get(0) );
-		return new PatternRenderer( dialect.timestampaddPattern( unit, temporalType, intervalType ) );
+		IntervalType intervalType = getSqlIntervalType( interval.getExpressionType().getSingleJdbcMapping() );
+		return new PatternRenderer( dialect.timestampaddPattern( unit, temporalType, intervalType ), renderingModes );
 	}
 
 //	@Override
@@ -117,7 +123,7 @@ public class TimestampaddFunction
 				asList( sqlAstArguments ),
 				impliedResultType != null
 						? impliedResultType
-						: (ReturnableType<?>) to.getExpressionType().getJdbcMappings().get( 0 ),
+						: (ReturnableType<?>) to.getExpressionType().getSingleJdbcMapping(),
 				to.getExpressionType()
 		);
 	}

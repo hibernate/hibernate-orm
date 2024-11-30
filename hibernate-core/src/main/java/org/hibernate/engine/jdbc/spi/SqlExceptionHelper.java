@@ -1,17 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.spi;
 
+import java.lang.invoke.MethodHandles;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.hibernate.JDBCException;
 import org.hibernate.exception.internal.SQLStateConversionDelegate;
@@ -24,12 +24,13 @@ import org.jboss.logging.Logger;
 import org.jboss.logging.Logger.Level;
 
 /**
- * Helper for handling SQLExceptions in various manners.
+ * Helper for handling {@link SQLException}s in various manners.
  *
  * @author Steve Ebersole
  */
 public class SqlExceptionHelper {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			SqlExceptionHelper.class.getName()
 	);
@@ -72,10 +73,8 @@ public class SqlExceptionHelper {
 
 	/**
 	 * Inject the exception converter to use.
-	 * <p/>
-	 * NOTE : {@code null} is allowed and signifies to use the default.
 	 *
-	 * @param sqlExceptionConverter The converter to use.
+	 * @param sqlExceptionConverter the converter to use, or {@code null} if the default converter should be used
 	 */
 	public void setSqlExceptionConverter(SQLExceptionConverter sqlExceptionConverter) {
 		this.sqlExceptionConverter = sqlExceptionConverter == null ? DEFAULT_CONVERTER : sqlExceptionConverter;
@@ -106,7 +105,20 @@ public class SqlExceptionHelper {
 	 */
 	public JDBCException convert(SQLException sqlException, String message, String sql) {
 		logExceptions( sqlException, message + " [" + sql + "]" );
-		return sqlExceptionConverter.convert( sqlException, message, sql );
+		return sqlExceptionConverter.convert( sqlException, message + " [" + sqlException.getMessage() + "]", sql );
+	}
+
+	/**
+	 * Convert an SQLException using the current converter, doing some logging first.
+	 *
+	 * @param sqlException The exception to convert
+	 * @param messageSupplier An error message supplier.
+	 * @param sql The SQL being executed when the exception occurred
+	 *
+	 * @return The converted exception
+	 */
+	public JDBCException convert(SQLException sqlException, Supplier<String> messageSupplier, String sql) {
+		return convert( sqlException, messageSupplier.get(), sql );
 	}
 
 	/**
@@ -158,7 +170,7 @@ public class SqlExceptionHelper {
 
 		/**
 		 * Prepare for processing of a {@linkplain SQLWarning warning} stack.
-		 * <p/>
+		 * <p>
 		 * Note that the warning here is also the first passed to {@link #handleWarning}
 		 *
 		 * @param warning The first warning in the stack.
@@ -256,7 +268,7 @@ public class SqlExceptionHelper {
 
 	/**
 	 * Standard (legacy) behavior for logging warnings associated with a JDBC {@link Connection} and clearing them.
-	 * <p/>
+	 * <p>
 	 * Calls {@link #handleAndClearWarnings(Connection, WarningHandler)} using {@link #STANDARD_WARNING_HANDLER}
 	 *
 	 * @param connection The JDBC connection potentially containing warnings

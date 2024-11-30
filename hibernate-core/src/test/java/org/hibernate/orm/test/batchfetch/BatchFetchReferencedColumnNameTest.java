@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.batchfetch;
 
@@ -11,7 +9,7 @@ import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ImplicitListAsBagProvider;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -57,24 +55,24 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class BatchFetchReferencedColumnNameTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13059")
+	@JiraKey(value = "HHH-13059")
 	public void test(SessionFactoryScope scope) throws Exception {
 		scope.inTransaction( session -> {
 			Parent p = new Parent();
 			p.setId( 1L );
-			session.save( p );
+			session.persist( p );
 
 			Child c1 = new Child();
 			c1.setCreatedOn( ZonedDateTime.now() );
 			c1.setParentId( 1L );
 			c1.setId( 10L );
-			session.save( c1 );
+			session.persist( c1 );
 
 			Child c2 = new Child();
 			c2.setCreatedOn( ZonedDateTime.now() );
 			c2.setParentId( 1L );
 			c2.setId( 11L );
-			session.save( c2 );
+			session.persist( c2 );
 		} );
 
 		scope.inTransaction( session -> {

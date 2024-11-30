@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.converted.converter;
 
@@ -14,12 +12,12 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 import org.hibernate.Session;
-import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
+import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -29,7 +27,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-8807" )
+@JiraKey( value = "HHH-8807" )
 public class ExplicitDateConvertersTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	// NOTE : initially unable to reproduce the reported problem
@@ -81,7 +79,7 @@ public class ExplicitDateConvertersTest extends BaseNonConfigCoreFunctionalTestC
 
 	@Test
 	public void testSimpleConvertUsage() throws MalformedURLException {
-        final EntityPersister ep = sessionFactory().getMappingMetamodel().getEntityDescriptor(Entity1.class.getName());
+		final EntityPersister ep = sessionFactory().getMappingMetamodel().getEntityDescriptor(Entity1.class.getName());
 		final Type theDatePropertyType = ep.getPropertyType( "theDate" );
 		final ConvertedBasicTypeImpl type = assertTyping(
 				ConvertedBasicTypeImpl.class,

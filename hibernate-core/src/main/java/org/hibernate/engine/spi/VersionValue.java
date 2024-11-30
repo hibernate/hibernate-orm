@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
@@ -11,6 +9,8 @@ import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.internal.CoreLogging;
 
 import org.jboss.logging.Logger;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * A strategy for determining if a version value is a version of
@@ -23,20 +23,20 @@ import org.jboss.logging.Logger;
 public class VersionValue implements UnsavedValueStrategy {
 	private static final Logger LOG = CoreLogging.logger( VersionValue.class );
 
-	private final Object value;
+	private final @Nullable Object value;
 	/**
 	 * Assume the transient instance is newly instantiated if the version
 	 * is null, otherwise assume it is a detached instance.
 	 */
 	public static final VersionValue NULL = new VersionValue() {
 		@Override
-		public Boolean isUnsaved(Object version) {
+		public Boolean isUnsaved(@Nullable Object version) {
 			LOG.trace( "Version unsaved-value strategy NULL" );
 			return version == null;
 		}
 
 		@Override
-		public Object getDefaultValue(Object currentValue) {
+		public @Nullable Object getDefaultValue(Object currentValue) {
 			return null;
 		}
 
@@ -52,7 +52,7 @@ public class VersionValue implements UnsavedValueStrategy {
 	 */
 	public static final VersionValue UNDEFINED = new VersionValue() {
 		@Override
-		public Boolean isUnsaved(Object version) {
+		public @Nullable Boolean isUnsaved(@Nullable Object version) {
 			LOG.trace( "Version unsaved-value strategy UNDEFINED" );
 			return version == null ? Boolean.TRUE : null;
 		}
@@ -75,13 +75,13 @@ public class VersionValue implements UnsavedValueStrategy {
 	public static final VersionValue NEGATIVE = new VersionValue() {
 
 		@Override
-		public Boolean isUnsaved(Object version) throws MappingException {
+		public Boolean isUnsaved(@Nullable Object version) throws MappingException {
 			LOG.trace( "Version unsaved-value strategy NEGATIVE" );
 			if ( version == null ) {
 				return Boolean.TRUE;
 			}
-			if ( version instanceof Number ) {
-				return ((Number) version).longValue() < 0L;
+			if ( version instanceof Number number ) {
+				return number.longValue() < 0L;
 			}
 			throw new MappingException( "unsaved-value NEGATIVE may only be used with short, int and long types" );
 		}
@@ -114,13 +114,13 @@ public class VersionValue implements UnsavedValueStrategy {
 	}
 
 	@Override
-	public Boolean isUnsaved(Object version) throws MappingException {
+	public @Nullable Boolean isUnsaved(@Nullable Object version) throws MappingException {
 		LOG.tracev( "Version unsaved-value: {0}", value );
 		return version == null || version.equals( value );
 	}
 
 	@Override
-	public Object getDefaultValue(Object currentValue) {
+	public @Nullable Object getDefaultValue(@Nullable Object currentValue) {
 		return value;
 	}
 

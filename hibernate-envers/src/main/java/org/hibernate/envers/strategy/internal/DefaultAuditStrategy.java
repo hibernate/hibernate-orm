@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.strategy.internal;
 
@@ -43,7 +41,7 @@ public class DefaultAuditStrategy implements AuditStrategy {
 			Object id,
 			Object data,
 			Object revision) {
-		session.save( configuration.getAuditEntityName( entityName ), data );
+		session.persist( configuration.getAuditEntityName( entityName ), data );
 		sessionCacheCleaner.scheduleAuditDataRemoval( session, data );
 	}
 
@@ -55,7 +53,7 @@ public class DefaultAuditStrategy implements AuditStrategy {
 			Configuration configuration,
 			PersistentCollectionChangeData persistentCollectionChangeData,
 			Object revision) {
-		session.save( persistentCollectionChangeData.getEntityName(), persistentCollectionChangeData.getData() );
+		session.persist( persistentCollectionChangeData.getEntityName(), persistentCollectionChangeData.getData() );
 		sessionCacheCleaner.scheduleAuditDataRemoval( session, persistentCollectionChangeData.getData() );
 	}
 

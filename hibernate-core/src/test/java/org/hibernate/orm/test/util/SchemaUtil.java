@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.util;
 
@@ -28,7 +26,7 @@ public abstract class SchemaUtil {
 		Set<String> result = new HashSet<>();
 		for ( Table table : metadata.collectTableMappings() ) {
 			if (tableName.equals( table.getName() ) ) {
-				Iterator<Column> columns = table.getColumnIterator();
+				Iterator<Column> columns = table.getColumns().iterator();
 				while ( columns.hasNext() ) {
 					Column column = columns.next();
 					result.add( column.getName() );
@@ -42,7 +40,7 @@ public abstract class SchemaUtil {
 	public static boolean isColumnPresent(String tableName, String columnName, Metadata metadata) {
 		for ( Table table : metadata.collectTableMappings() ) {
 			if (tableName.equals( table.getName() ) ) {
-				Iterator<Column> columns = (Iterator<Column>) table.getColumnIterator();
+				Iterator<Column> columns = (Iterator<Column>) table.getColumns().iterator();
 				while ( columns.hasNext() ) {
 					Column column = columns.next();
 					if ( columnName.equals( column.getName() ) ) {

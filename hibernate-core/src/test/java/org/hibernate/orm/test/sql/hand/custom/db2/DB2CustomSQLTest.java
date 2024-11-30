@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql.hand.custom.db2;
 
@@ -13,7 +11,7 @@ import org.hibernate.testing.RequiresDialect;
 
 /**
  * Custom SQL tests for DB2
- * 
+ *
  * @author Max Rydahl Andersen
  */
 @RequiresDialect( DB2Dialect.class )
@@ -22,4 +20,3 @@ public class DB2CustomSQLTest extends CustomStoredProcTestSupport {
 		return new String[] { "sql/hand/custom/db2/Mappings.hbm.xml" };
 	}
 }
-

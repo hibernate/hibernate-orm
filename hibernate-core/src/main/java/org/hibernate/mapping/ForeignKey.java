@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
@@ -10,31 +8,38 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.util.StringHelper;
+import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.boot.Metadata;
+
+import static org.hibernate.internal.util.StringHelper.qualify;
 
 /**
- * A foreign key constraint
+ * A mapping model object representing a {@linkplain jakarta.persistence.ForeignKey foreign key} constraint.
  *
  * @author Gavin King
  */
 public class ForeignKey extends Constraint {
+
 	private Table referencedTable;
 	private String referencedEntityName;
 	private String keyDefinition;
-	private boolean cascadeDeleteEnabled;
+	private OnDeleteAction onDeleteAction;
 	private final List<Column> referencedColumns = new ArrayList<>();
 	private boolean creationEnabled = true;
+
+	public ForeignKey(Table table){
+		setTable( table );
+	}
 
 	public ForeignKey() {
 	}
 
 	@Override
 	public String getExportIdentifier() {
-		// NOt sure name is always set.  Might need some implicit naming
-		return StringHelper.qualify( getTable().getExportIdentifier(), "FK-" + getName() );
+		// Not sure name is always set.  Might need some implicit naming
+		return qualify( getTable().getExportIdentifier(), "FK-" + getName() );
 	}
 
 	public void disableCreation() {
@@ -55,46 +60,6 @@ public class ForeignKey extends Constraint {
 		}
 	}
 
-	@Override
-	public String sqlConstraintString(
-			SqlStringGenerationContext context,
-			String constraintName,
-			String defaultCatalog,
-			String defaultSchema) {
-		Dialect dialect = context.getDialect();
-		String[] columnNames = new String[getColumnSpan()];
-		String[] referencedColumnNames = new String[getColumnSpan()];
-
-		final List<Column> referencedColumns = isReferenceToPrimaryKey()
-				? referencedTable.getPrimaryKey().getColumns()
-				: this.referencedColumns;
-
-		List<Column> columns = getColumns();
-		for ( int i=0; i<referencedColumns.size() && i<columns.size(); i++ ) {
-			columnNames[i] = columns.get(i).getQuotedName( dialect );
-			referencedColumnNames[i] = referencedColumns.get(i).getQuotedName( dialect );
-		}
-
-		final String result = keyDefinition != null ?
-				dialect.getAddForeignKeyConstraintString(
-						constraintName,
-						keyDefinition
-				) :
-				dialect.getAddForeignKeyConstraintString(
-						constraintName,
-						columnNames,
-						referencedTable.getQualifiedName(
-								context
-						),
-						referencedColumnNames,
-						isReferenceToPrimaryKey()
-				);
-		
-		return cascadeDeleteEnabled && dialect.supportsCascadeDelete()
-				? result + " on delete cascade"
-				: result;
-	}
-
 	public Table getReferencedTable() {
 		return referencedTable;
 	}
@@ -110,45 +75,43 @@ public class ForeignKey extends Constraint {
 	}
 
 	public void setReferencedTable(Table referencedTable) throws MappingException {
-		//if( isReferenceToPrimaryKey() ) alignColumns(referencedTable); // TODO: possibly remove to allow more piecemal building of a foreignkey.  
-
 		this.referencedTable = referencedTable;
 	}
 
 	/**
 	 * Validates that column span of the foreign key and the primary key is the same.
-	 * <p/>
+	 * <p>
 	 * Furthermore it aligns the length of the underlying tables columns.
 	 */
 	public void alignColumns() {
 		if ( isReferenceToPrimaryKey() ) {
-			alignColumns( referencedTable );
-		}
-	}
+			final int columnSpan = getColumnSpan();
+			final PrimaryKey primaryKey = referencedTable.getPrimaryKey();
+			if ( primaryKey.getColumnSpan() != columnSpan ) {
+				StringBuilder sb = new StringBuilder();
+				sb.append( "Foreign key (" ).append( getName() ).append( ":" )
+						.append( getTable().getName() )
+						.append( " [" );
+				appendColumns( sb, getColumns().iterator() );
+				sb.append( "])" )
+						.append( ") must have same number of columns as the referenced primary key (" )
+						.append( referencedTable.getName() )
+						.append( " [" );
+				appendColumns( sb, primaryKey.getColumns().iterator() );
+				sb.append( "])" );
+				throw new MappingException( sb.toString() );
+			}
 
-	private void alignColumns(Table referencedTable) {
-		final int referencedPkColumnSpan = referencedTable.getPrimaryKey().getColumnSpan();
-		if ( referencedPkColumnSpan != getColumnSpan() ) {
-			StringBuilder sb = new StringBuilder();
-			sb.append( "Foreign key (" ).append( getName() ).append( ":" )
-					.append( getTable().getName() )
-					.append( " [" );
-			appendColumns( sb, getColumnIterator() );
-			sb.append( "])" )
-					.append( ") must have same number of columns as the referenced primary key (" )
-					.append( referencedTable.getName() )
-					.append( " [" );
-			appendColumns( sb, referencedTable.getPrimaryKey().getColumnIterator() );
-			sb.append( "])" );
-			throw new MappingException( sb.toString() );
+			//TODO: shouldn't this happen even for non-PK references?
+			for ( int i = 0; i<columnSpan; i++ ) {
+				Column referencedColumn = primaryKey.getColumn(i);
+				Column referencingColumn = getColumn(i);
+				referencingColumn.setLength( referencedColumn.getLength() );
+				referencingColumn.setScale( referencedColumn.getScale() );
+				referencingColumn.setPrecision( referencedColumn.getPrecision() );
+				referencingColumn.setArrayLength( referencedColumn.getArrayLength() );
+			}
 		}
-
-		Iterator<Column> fkCols = getColumnIterator();
-		Iterator<Column> pkCols = referencedTable.getPrimaryKey().getColumnIterator();
-		while ( pkCols.hasNext() ) {
-			fkCols.next().setLength( pkCols.next().getLength() );
-		}
-
 	}
 
 	public String getReferencedEntityName() {
@@ -166,36 +129,19 @@ public class ForeignKey extends Constraint {
 	public void setKeyDefinition(String keyDefinition) {
 		this.keyDefinition = keyDefinition;
 	}
-	
-	@Override
-	public String sqlDropString(SqlStringGenerationContext context,
-			String defaultCatalog, String defaultSchema) {
-		Dialect dialect = context.getDialect();
-		String tableName = getTable().getQualifiedName( context );
-		final StringBuilder buf = new StringBuilder( dialect.getAlterTableString( tableName ) );
-		buf.append( dialect.getDropForeignKeyString() );
-		if ( dialect.supportsIfExistsBeforeConstraintName() ) {
-			buf.append( "if exists " );
-		}
-		buf.append( dialect.quote( getName() ) );
-		if ( dialect.supportsIfExistsAfterConstraintName() ) {
-			buf.append( " if exists" );
-		}
-		return buf.toString();
+
+	public void setOnDeleteAction(OnDeleteAction onDeleteAction) {
+		this.onDeleteAction = onDeleteAction;
 	}
 
-	public boolean isCascadeDeleteEnabled() {
-		return cascadeDeleteEnabled;
-	}
-
-	public void setCascadeDeleteEnabled(boolean cascadeDeleteEnabled) {
-		this.cascadeDeleteEnabled = cascadeDeleteEnabled;
+	public OnDeleteAction getOnDeleteAction() {
+		return onDeleteAction;
 	}
 
 	public boolean isPhysicalConstraint() {
 		return referencedTable.isPhysicalTable()
-				&& getTable().isPhysicalTable()
-				&& !referencedTable.hasDenormalizedTables();
+			&& getTable().isPhysicalTable()
+			&& !referencedTable.hasDenormalizedTables();
 	}
 
 	/**
@@ -228,7 +174,7 @@ public class ForeignKey extends Constraint {
 
 	public String toString() {
 		if ( !isReferenceToPrimaryKey() ) {
-			return getClass().getName()
+			return getClass().getSimpleName()
 					+ '(' + getTable().getName() + getColumns()
 					+ " ref-columns:" + '(' + getReferencedColumns() + ") as " + getName() + ")";
 		}
@@ -238,7 +184,20 @@ public class ForeignKey extends Constraint {
 
 	}
 
-	public String generatedConstraintNamePrefix() {
-		return "FK_";
+	@Internal
+	public PersistentClass resolveReferencedClass(Metadata metadata) {
+		final String referencedEntityName = getReferencedEntityName();
+		if ( referencedEntityName == null ) {
+			throw new MappingException( "An association from the table '" + getTable().getName() +
+					"' does not specify the referenced entity" );
+		}
+
+		final PersistentClass referencedClass = metadata.getEntityBinding( referencedEntityName );
+		if ( referencedClass == null ) {
+			throw new MappingException( "An association from the table '" + getTable().getName() +
+					"' refers to an unmapped class '" + referencedEntityName + "'" );
+		}
+
+		return referencedClass;
 	}
 }

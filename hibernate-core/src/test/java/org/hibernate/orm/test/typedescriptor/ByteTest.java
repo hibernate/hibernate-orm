@@ -1,12 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.typedescriptor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -18,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 @DomainModel(
 		annotatedClasses = VariousTypesEntity.class
@@ -48,7 +46,7 @@ public class ByteTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-6533")
+	@JiraKey(value = "HHH-6533")
 	public void testByteDataPersistenceAndRetrieval(SessionFactoryScope scope) {
 
 		scope.inTransaction(
@@ -61,7 +59,7 @@ public class ByteTest {
 					assertNotNull( entity );
 					assertEquals( TEST_VALUE, entity.getByteData() );
 					entity.setByteData( Byte.MIN_VALUE );
-					session.update( entity );
+					session.persist( entity );
 				}
 		);
 
@@ -75,7 +73,7 @@ public class ByteTest {
 					assertNotNull( entity );
 					assertEquals( Byte.MIN_VALUE, entity.getByteData() );
 					entity.setByteData( Byte.MAX_VALUE );
-					session.update( entity );
+					session.merge( entity );
 				}
 		);
 

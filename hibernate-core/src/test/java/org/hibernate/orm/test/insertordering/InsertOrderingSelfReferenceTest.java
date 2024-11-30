@@ -1,7 +1,24 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.insertordering;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.SortNatural;
+import org.hibernate.community.dialect.AltibaseDialect;
+
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorValue;
@@ -15,21 +32,12 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.OneToMany;
 
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
-import org.hibernate.annotations.SortNatural;
-import org.hibernate.annotations.Where;
-
-import org.hibernate.testing.TestForIssue;
-import org.junit.jupiter.api.Test;
-
 /**
  * @author Normunds Gavars
  * @author Nathan Xu
  */
-@TestForIssue(jiraKey = "HHH-14227")
+@JiraKey(value = "HHH-14227")
+@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "'TYPE' is not escaped even though autoQuoteKeywords is enabled")
 public class InsertOrderingSelfReferenceTest extends BaseInsertOrderingTest {
 
 	@Override
@@ -46,7 +54,7 @@ public class InsertOrderingSelfReferenceTest extends BaseInsertOrderingTest {
 	public void testReferenceItself() {
 		sessionFactoryScope().inTransaction( session -> {
 			Placeholder placeholder = new Placeholder();
-			session.save( placeholder );
+			session.persist( placeholder );
 
 			OutputParameter outputParameter1 = new OutputParameter();
 
@@ -54,24 +62,24 @@ public class InsertOrderingSelfReferenceTest extends BaseInsertOrderingTest {
 			outputParameter1.children.add( childOutputParameter );
 			childOutputParameter.parent = outputParameter1;
 
-			session.save( outputParameter1 );
+			session.persist( outputParameter1 );
 
 			Placeholder placeholder2 = new Placeholder();
-			session.save( placeholder2 );
+			session.persist( placeholder2 );
 
 			InputParameter inputParameter = new InputParameter();
-			session.save( inputParameter );
+			session.persist( inputParameter );
 
 			OutputParameter outputParameter2 = new OutputParameter();
-			session.save( outputParameter2 );
+			session.persist( outputParameter2 );
 
 			clearBatches();
 		} );
 
 		verifyContainsBatches(
-				new Batch( "insert into Placeholder (name, id) values (?, ?)", 2 ),
-				new Batch( "insert into Parameter (name, parent_id, TYPE, id) values (?, ?, " + literal( "INPUT" ) + ", ?)" ),
-				new Batch( "insert into Parameter (name, parent_id, TYPE, id) values (?, ?, " + literal( "OUTPUT" ) + ", ?)", 3 )
+				new Batch( "insert into Placeholder (name,id) values (?,?)", 2 ),
+				new Batch( "insert into Parameter (name,parent_id,TYPE,id) values (?,?," + literal( "INPUT" ) + ",?)" ),
+				new Batch( "insert into Parameter (name,parent_id,TYPE,id) values (?,?," + literal( "OUTPUT" ) + ",?)", 3 )
 		);
 	}
 
@@ -104,7 +112,7 @@ public class InsertOrderingSelfReferenceTest extends BaseInsertOrderingTest {
 
 		@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "parent")
 		@SortNatural
-		@Where(clause = "TYPE = 'INPUT'")
+		@SQLRestriction("TYPE = 'INPUT'")
 		@Fetch(FetchMode.SUBSELECT)
 		List<InputParameter> children = new ArrayList<>();
 	}
@@ -118,7 +126,7 @@ public class InsertOrderingSelfReferenceTest extends BaseInsertOrderingTest {
 
 		@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "parent")
 		@SortNatural
-		@Where(clause = "TYPE = 'OUTPUT'")
+		@SQLRestriction("TYPE = 'OUTPUT'")
 		@Fetch(FetchMode.SUBSELECT)
 		@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 		List<OutputParameter> children = new ArrayList<>();

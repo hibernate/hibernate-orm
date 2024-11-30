@@ -1,8 +1,6 @@
 /*
- * Hibernate Search, full-text search for your domain model
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.hql.size.filter;
 
@@ -10,20 +8,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.query.spi.QueryImplementor;
 
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-@TestForIssue(jiraKey = "HHH-14585")
+@JiraKey(value = "HHH-14585")
 public class WhereAnnotatedOneToManySizeTest extends BaseCoreFunctionalTestCase {
 
 	@Override
@@ -92,7 +90,7 @@ public class WhereAnnotatedOneToManySizeTest extends BaseCoreFunctionalTestCase 
 
 	@Test
 	@SkipForDialect(value = DB2Dialect.class, comment = "DB2 does not support correlated subqueries in the ORDER BY clause")
-	@SkipForDialect(value = AbstractHANADialect.class, comment = "HANA db does not support correlated subqueries in the ORDER BY clause")
+	@SkipForDialect(value = HANADialect.class, comment = "HANA db does not support correlated subqueries in the ORDER BY clause")
 	@SkipForDialect(value = TiDBDialect.class, comment = "TiDB db does not support correlated subqueries in the ORDER BY clause")
 	@SkipForDialect(value = SybaseDialect.class, comment = "Sybase db does not support subqueries in the ORDER BY clause")
 	public void orderBy_sizeOf() {

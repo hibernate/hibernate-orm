@@ -1,17 +1,18 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.map;
 
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.dialect.MariaDBDialect;
+
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -30,8 +31,8 @@ public class MapIndexFormulaTest {
 	public void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "delete from Group" ).executeUpdate();
-					session.createQuery( "delete from User" ).executeUpdate();
+					session.createMutationQuery( "delete from Group" ).executeUpdate();
+					session.createMutationQuery( "delete from User" ).executeUpdate();
 				}
 		);
 	}
@@ -40,22 +41,23 @@ public class MapIndexFormulaTest {
 	public void testIndexFunctionOnManyToManyMap(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "from Group g join g.users u where g.name = 'something' and index(u) = 'nada'" )
+					session.createQuery( "from Group g join g.users u where g.name = 'something' and index(u) = 'nada'", Group.class )
 							.list();
 					session.createQuery(
-									"from Group g where g.name = 'something' and minindex(g.users) = 'nada'" )
+									"from Group g where g.name = 'something' and minindex(g.users) = 'nada'", Group.class )
 							.list();
 					session.createQuery(
-									"from Group g where g.name = 'something' and maxindex(g.users) = 'nada'" )
+									"from Group g where g.name = 'something' and maxindex(g.users) = 'nada'", Group.class )
 							.list();
 					session.createQuery(
-									"from Group g where g.name = 'something' and maxindex(g.users) = 'nada' and maxindex(g.users) = 'nada'" )
+									"from Group g where g.name = 'something' and maxindex(g.users) = 'nada' and maxindex(g.users) = 'nada'", Group.class )
 							.list();
 				}
 		);
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = MariaDBDialect.class, reason = "HHH-18433")
 	public void testIndexFormulaMap(SessionFactoryScope scope) {
 		User turin = new User( "turin", "tiger" );
 		scope.inTransaction(
@@ -88,8 +90,8 @@ public class MapIndexFormulaTest {
 					assertEquals( 1, g.getUsers().size() );
 					Map smap = ( (User) g.getUsers().get( "gavin" ) ).getSession();
 					assertEquals( 1, smap.size() );
-					User gavin = (User) g.getUsers().put( "gavin", turin );
-					session.delete( gavin );
+					User gavin = (User) g.getUsers().put( "gavin", session.merge( turin ) );
+					session.remove( gavin );
 					assertEquals(
 							0l,
 							session.createQuery( "select count(*) from SessionAttribute" ).uniqueResult()
@@ -109,8 +111,8 @@ public class MapIndexFormulaTest {
 							1l,
 							session.createQuery( "select count(*) from User" ).uniqueResult()
 					);
-					session.delete( g );
-					session.delete( t );
+					session.remove( g );
+					session.remove( t );
 					assertEquals(
 							0l,
 							session.createQuery( "select count(*) from User" ).uniqueResult()
@@ -141,11 +143,10 @@ public class MapIndexFormulaTest {
 					gavin = (User) results.get( 0 );
 					assertEquals( "gavin", gavin.getName() );
 					assertEquals( 2, gavin.getSession().size() );
-					session.createQuery( "delete SessionAttribute" ).executeUpdate();
-					session.createQuery( "delete User" ).executeUpdate();
+					session.createMutationQuery( "delete SessionAttribute" ).executeUpdate();
+					session.createMutationQuery( "delete User" ).executeUpdate();
 				}
 		);
 	}
 
 }
-

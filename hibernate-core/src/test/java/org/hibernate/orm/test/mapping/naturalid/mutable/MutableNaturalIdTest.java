@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.naturalid.mutable;
 
@@ -16,7 +14,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -49,7 +47,7 @@ import static org.junit.Assert.assertNull;
 public class MutableNaturalIdTest {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10360")
+	@JiraKey( value = "HHH-10360")
 	public void testNaturalIdNullability(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
 		final EntityMappingType entityMappingType = sessionFactory.getRuntimeMetamodels().getEntityMappingType( User.class );
@@ -108,7 +106,7 @@ public class MutableNaturalIdTest {
 		scope.inTransaction(
 				(session) -> {
 					try {
-						session.update( created );
+						session.merge( created );
 						final User loaded = session
 								.byNaturalId( User.class )
 								.using( "name", "Gavin" )
@@ -130,8 +128,8 @@ public class MutableNaturalIdTest {
 				}
 		);
 	}
-	
-	
+
+
 	@Test
 	public void testReattachmentUnmodifiedNaturalIdCheck(SessionFactoryScope scope) throws Throwable {
 		final User created = scope.fromTransaction(
@@ -148,7 +146,7 @@ public class MutableNaturalIdTest {
 		scope.inTransaction(
 				(session) -> {
 					try {
-						session.buildLockRequest( LockOptions.NONE ).lock( created );
+						session.lock( created, LockOptions.NONE );
 
 						name.set( created, "Gavin" );
 						final User loaded = session
@@ -170,7 +168,7 @@ public class MutableNaturalIdTest {
 						}
 					}
 				} );
-	}	
+	}
 
 	@Test
 	public void testNonexistentNaturalIdCache(SessionFactoryScope scope) {
@@ -249,7 +247,7 @@ public class MutableNaturalIdTest {
 					final User user = session.bySimpleNaturalId( User.class )
 							.load( new Object[] { "steve", "hb" } );
 					assertNotNull( user );
-					session.delete( user );
+					session.remove( user );
 				}
 		);
 
@@ -282,7 +280,7 @@ public class MutableNaturalIdTest {
 							.load();
 					assertNotNull( user );
 
-					session.delete( user );
+					session.remove( user );
 				}
 		);
 	}

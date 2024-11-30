@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query;
 
@@ -14,8 +12,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
- * Specialization of DomainType for types that can be used as a
- * parameter output for a {@link org.hibernate.procedure.ProcedureCall}
+ * Specialization of {@link org.hibernate.metamodel.model.domain.DomainType} for types that
+ * can be used as a parameter output for a {@link org.hibernate.procedure.ProcedureCall}.
  *
  * @apiNote We assume a type that maps to exactly one SQL value, hence {@link #getJdbcType()}
  *

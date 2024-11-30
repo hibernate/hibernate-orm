@@ -1,12 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
-import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.envers.boot.model.AttributeContainer;
@@ -20,7 +17,9 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.internal.EmbeddableCompositeUserTypeInstantiator;
+import org.hibernate.metamodel.internal.EmbeddableInstantiatorPojoIndirecting;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
+import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.usertype.CompositeUserType;
 
@@ -50,32 +49,43 @@ public final class ComponentMetadataGenerator extends AbstractMetadataGenerator 
 			EntityMappingData mappingData,
 			boolean firstPass) {
 		final Component propComponent = (Component) value;
-		final Class<? extends EmbeddableInstantiator> instantiatorClass;
-		if ( propComponent.getCustomInstantiator() != null ) {
-			instantiatorClass = propComponent.getCustomInstantiator();
-		}
-		else {
-			instantiatorClass = null;
-		}
 		final EmbeddableInstantiator instantiator;
 		if ( propComponent.getCustomInstantiator() != null ) {
-			instantiator = getMetadataBuildingContext().getBootstrapContext()
-					.getServiceRegistry()
-					.getService( ManagedBeanRegistry.class )
-					.getBean( propComponent.getCustomInstantiator() )
-					.getBeanInstance();
+			if ( !getMetadataBuildingContext().getBuildingOptions().isAllowExtensionsInCdi() ) {
+				instantiator = FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( propComponent.getCustomInstantiator() );
+			}
+			else {
+				instantiator = getMetadataBuildingContext().getBootstrapContext()
+						.getServiceRegistry()
+						.getService( ManagedBeanRegistry.class )
+						.getBean( propComponent.getCustomInstantiator() )
+						.getBeanInstance();
+			}
 		}
 		else if ( propComponent.getTypeName() != null ) {
-			final CompositeUserType<Object> compositeUserType = (CompositeUserType<Object>) getMetadataBuildingContext().getBootstrapContext()
-					.getServiceRegistry()
-					.getService( ManagedBeanRegistry.class )
-					.getBean(
-							getMetadataBuildingContext().getBootstrapContext()
-									.getClassLoaderAccess()
-									.classForName( propComponent.getTypeName() )
-					)
-					.getBeanInstance();
-			instantiator = new EmbeddableCompositeUserTypeInstantiator( compositeUserType );
+			final Class<CompositeUserType<?>> userTypeClass = getMetadataBuildingContext().getBootstrapContext()
+					.getClassLoaderAccess()
+					.classForName( propComponent.getTypeName() );
+			if ( !getMetadataBuildingContext().getBuildingOptions().isAllowExtensionsInCdi() ) {
+				final CompositeUserType<?> compositeUserType = FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( userTypeClass );
+				//noinspection rawtypes
+				instantiator = new EmbeddableCompositeUserTypeInstantiator( (CompositeUserType) compositeUserType );
+			}
+			else {
+				final CompositeUserType<Object> compositeUserType = (CompositeUserType<Object>) getMetadataBuildingContext().getBootstrapContext()
+						.getServiceRegistry()
+						.getService( ManagedBeanRegistry.class )
+						.getBean( userTypeClass )
+						.getBeanInstance();
+				instantiator = new EmbeddableCompositeUserTypeInstantiator( compositeUserType );
+			}
+		}
+		else if ( propComponent.getInstantiator() != null ) {
+			instantiator = EmbeddableInstantiatorPojoIndirecting.of(
+					propComponent.getPropertyNames(),
+					propComponent.getInstantiator(),
+					propComponent.getInstantiatorPropertyNames()
+			);
 		}
 		else {
 			instantiator = null;
@@ -94,10 +104,7 @@ public final class ComponentMetadataGenerator extends AbstractMetadataGenerator 
 
 		// Adding all properties of the component
 		propComponent.sortProperties();
-		final Iterator<Property> properties = propComponent.getPropertyIterator();
-		while ( properties.hasNext() ) {
-			final Property property = properties.next();
-
+		for ( Property property : propComponent.getProperties() ) {
 			final PropertyAuditingData componentPropertyAuditingData =
 					componentAuditingData.getPropertyAuditingData( property.getName() );
 

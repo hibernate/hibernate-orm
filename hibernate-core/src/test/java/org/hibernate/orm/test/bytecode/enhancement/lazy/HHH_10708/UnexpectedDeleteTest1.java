@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.HHH_10708;
 
@@ -10,12 +8,14 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -26,69 +26,68 @@ import jakarta.persistence.Table;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+@JiraKey( "HHH-10708" )
+@DomainModel(
+		annotatedClasses = {
+			UnexpectedDeleteTest1.Foo.class, UnexpectedDeleteTest1.Bar.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class UnexpectedDeleteTest1 {
 
-@TestForIssue( jiraKey = "HHH-10708" )
-@RunWith( BytecodeEnhancerRunner.class )
-public class UnexpectedDeleteTest1 extends BaseCoreFunctionalTestCase {
+	private long fooId;
 
-    private long fooId;
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			Bar bar1 = new Bar();
+			Bar bar2 = new Bar();
+			Foo foo = new Foo();
+			s.persist( bar1 );
+			s.persist( bar2 );
+			s.persist( foo );
+			bar1.foo = foo;
+			bar2.foo = foo;
+			fooId = foo.id;
+		} );
+	}
 
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class[]{Foo.class, Bar.class};
-    }
+	@Test
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			Foo foo = s.get( Foo.class, fooId );
 
-    @Before
-    public void prepare() {
-        doInHibernate( this::sessionFactory, s -> {
-            Bar bar1 = new Bar();
-            Bar bar2 = new Bar();
-            Foo foo = new Foo();
-            s.save( bar1 );
-            s.save( bar2 );
-            s.save( foo );
-            bar1.foo = foo;
-            bar2.foo = foo;
-            fooId = foo.id;
-        } );
-    }
+			// accessing the collection results in an exception
+			foo.bars.size();
+		} );
+	}
 
-    @Test
-    public void test() {
-        doInHibernate( this::sessionFactory, s -> {
-            Foo foo = s.get( Foo.class, fooId );
+	// --- //
 
-            // accessing the collection results in an exception
-            foo.bars.size();
-        } );
-    }
+	@Entity(name = "Bar")
+	@Table( name = "BAR" )
+	static class Bar {
 
-    // --- //
+		@Id
+		@GeneratedValue
+		Long id;
 
-    @Entity(name = "Bar")
-    @Table( name = "BAR" )
-    private static class Bar {
+		@ManyToOne
+		@Cache( usage = CacheConcurrencyStrategy.READ_WRITE )
+		Foo foo;
+	}
 
-        @Id
-        @GeneratedValue
-        Long id;
+	@Entity(name = "Foo")
+	@Table( name = "FOO" )
+	static class Foo {
 
-        @ManyToOne
-        @Cache( usage = CacheConcurrencyStrategy.READ_WRITE )
-        Foo foo;
-    }
+		@Id
+		@GeneratedValue
+		Long id;
 
-    @Entity(name = "Foo")
-    @Table( name = "FOO" )
-    private static class Foo {
-
-        @Id
-        @GeneratedValue
-        Long id;
-
-        @OneToMany( orphanRemoval = true, mappedBy = "foo", targetEntity = Bar.class )
-        @Cascade( CascadeType.ALL )
-        Set<Bar> bars = new HashSet<>();
-    }
+		@OneToMany( orphanRemoval = true, mappedBy = "foo", targetEntity = Bar.class )
+		@Cascade( CascadeType.ALL )
+		Set<Bar> bars = new HashSet<>();
+	}
 }

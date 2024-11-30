@@ -1,19 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.generated.temporals;
 
 import java.time.Instant;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
 import org.hibernate.HibernateError;
 import org.hibernate.annotations.CurrentTimestamp;
-import org.hibernate.tuple.GenerationTiming;
+import org.hibernate.generator.EventType;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -22,6 +17,10 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -29,7 +28,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @DomainModel( annotatedClasses = GeneratedInstantTests.GeneratedInstantEntity.class )
 @SessionFactory
-@RequiresDialectFeature(feature = DialectFeatureChecks.UsesStandardCurrentTimestampFunction.class, comment = "We rely on current_timestamp being the SQL function name")
 @RequiresDialectFeature(feature = DialectFeatureChecks.CurrentTimestampHasMicrosecondPrecision.class, comment = "Without this, we might not see an update to the timestamp")
 public class GeneratedInstantTests {
 	@Test
@@ -97,10 +95,10 @@ public class GeneratedInstantTests {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Legacy `Generated`
 
-		@CurrentTimestamp( timing = GenerationTiming.INSERT )
+		@CurrentTimestamp(event = EventType.INSERT)
 		public Instant createdAt;
 
-		@CurrentTimestamp( timing = GenerationTiming.ALWAYS )
+		@CurrentTimestamp
 		public Instant updatedAt;
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

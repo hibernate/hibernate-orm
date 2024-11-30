@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.orphan.one2one;
 
@@ -10,7 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -23,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-9663")
+@JiraKey(value = "HHH-9663")
 @DomainModel(
 		annotatedClasses = {
 				OneToOneEagerNonOptionalOrphanRemovalTest.Car.class,
@@ -55,10 +53,10 @@ public class OneToOneEagerNonOptionalOrphanRemovalTest {
 			final Engine engine2 = new Engine( 2, 295 );
 			final Car car = new Car( 1, engine1, color );
 
-			session.save( engine1 );
-			session.save( engine2 );
-			session.save( color );
-			session.save( car );
+			session.persist( engine1 );
+			session.persist( engine2 );
+			session.persist( color );
+			session.persist( car );
 		} );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -67,7 +65,7 @@ public class OneToOneEagerNonOptionalOrphanRemovalTest {
 			final Car car = session.find( Car.class, 1 );
 			final Engine engine = session.find( Engine.class, 2 );
 			car.setEngine( engine );
-			session.update( car );
+			session.merge( car );
 		} );
 
 		scope.inTransaction( session -> {
@@ -84,8 +82,8 @@ public class OneToOneEagerNonOptionalOrphanRemovalTest {
 			final PaintColor color = new PaintColor( 2, "Blue" );
 			final Car car = session.find( Car.class, 1 );
 			car.setPaintColor( color );
-			session.save( color );
-			session.update( car );
+			session.persist( color );
+			session.merge( car );
 		} );
 
 		scope.inTransaction( session -> {

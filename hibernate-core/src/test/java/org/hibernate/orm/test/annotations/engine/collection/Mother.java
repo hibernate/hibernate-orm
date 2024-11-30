@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.engine.collection;
 import java.util.HashSet;
@@ -29,8 +27,8 @@ public class Mother {
 	private Integer id;
 
 	@OneToMany(mappedBy = "mother")
-	@Cascade({ CascadeType.SAVE_UPDATE })
+	@Cascade({ CascadeType.PERSIST, CascadeType.MERGE })
 	public Set<Son> getSons() { return sons; }
 	public void setSons(Set<Son> sons) {  this.sons = sons; }
-	private Set<Son> sons = new HashSet<Son>();
+	private Set<Son> sons = new HashSet<>();
 }

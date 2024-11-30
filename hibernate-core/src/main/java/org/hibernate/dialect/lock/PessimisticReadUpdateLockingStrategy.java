@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.lock;
 
+import java.lang.invoke.MethodHandles;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
@@ -15,9 +14,9 @@ import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.persister.entity.Lockable;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.Update;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -25,11 +24,12 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.jboss.logging.Logger;
 
 /**
- * A pessimistic locking strategy where the locks are obtained through update statements.
- * <p/>
- * This strategy is valid for LockMode.PESSIMISTIC_READ
- *
- * This class is a clone of UpdateLockingStrategy.
+ * A pessimistic locking strategy where a lock is obtained via
+ * an update statement.
+ * <p>
+ * This strategy is valid for {@link LockMode#PESSIMISTIC_READ}.
+ * <p>
+ * This class is a clone of {@link UpdateLockingStrategy}.
  *
  * @author Steve Ebersole
  * @author Scott Marlow
@@ -37,11 +37,12 @@ import org.jboss.logging.Logger;
  */
 public class PessimisticReadUpdateLockingStrategy implements LockingStrategy {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			PessimisticReadUpdateLockingStrategy.class.getName()
 	);
 
-	private final Lockable lockable;
+	private final EntityPersister lockable;
 	private final LockMode lockMode;
 	private final String sql;
 
@@ -52,7 +53,7 @@ public class PessimisticReadUpdateLockingStrategy implements LockingStrategy {
 	 * @param lockMode Indicates the type of lock to be acquired.  Note that
 	 * read-locks are not valid for this strategy.
 	 */
-	public PessimisticReadUpdateLockingStrategy(Lockable lockable, LockMode lockMode) {
+	public PessimisticReadUpdateLockingStrategy(EntityPersister lockable, LockMode lockMode) {
 		this.lockable = lockable;
 		this.lockMode = lockMode;
 		if ( lockMode.lessThan( LockMode.PESSIMISTIC_READ ) ) {
@@ -68,7 +69,7 @@ public class PessimisticReadUpdateLockingStrategy implements LockingStrategy {
 	}
 
 	@Override
-	public void lock(Object id, Object version, Object object, int timeout, SharedSessionContractImplementor session) {
+	public void lock(Object id, Object version, Object object, int timeout, EventSource session) {
 		if ( !lockable.isVersioned() ) {
 			throw new HibernateException( "write locks via update not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
 		}
@@ -89,7 +90,7 @@ public class PessimisticReadUpdateLockingStrategy implements LockingStrategy {
 						lockable.getVersionType().nullSafeSet( st, version, offset, session );
 					}
 
-					final int affected = jdbcCoordinator.getResultSetReturn().executeUpdate( st );
+					final int affected = jdbcCoordinator.getResultSetReturn().executeUpdate( st, sql );
 					// todo:  should this instead check for exactly one row modified?
 					if ( affected < 0 ) {
 						final StatisticsImplementor statistics = factory.getStatistics();
@@ -121,11 +122,11 @@ public class PessimisticReadUpdateLockingStrategy implements LockingStrategy {
 
 	protected String generateLockString() {
 		final SessionFactoryImplementor factory = lockable.getFactory();
-		final Update update = new Update( factory.getJdbcServices().getDialect() );
+		final Update update = new Update( factory );
 		update.setTableName( lockable.getRootTableName() );
-		update.addPrimaryKeyColumns( lockable.getRootTableIdentifierColumnNames() );
-		update.setVersionColumnName( lockable.getVersionColumnName() );
-		update.addColumn( lockable.getVersionColumnName() );
+		update.addAssignment( lockable.getVersionColumnName() );
+		update.addRestriction( lockable.getRootTableIdentifierColumnNames() );
+		update.addRestriction( lockable.getVersionColumnName() );
 		if ( factory.getSessionFactoryOptions().isCommentsEnabled() ) {
 			update.setComment( lockMode + " lock " + lockable.getEntityName() );
 		}

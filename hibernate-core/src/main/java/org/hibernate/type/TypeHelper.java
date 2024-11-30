@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
 
@@ -160,7 +158,7 @@ public class TypeHelper {
 	/**
 	 * Apply the {@link Type#replace} operation across a series of values, as long as the corresponding
 	 * {@link Type} is an association.
-	 * <p/>
+	 * <p>
 	 * If the corresponding type is a component type, then apply {@link Type#replace} across the component
 	 * subtypes but do not replace the component value itself.
 	 *
@@ -182,44 +180,63 @@ public class TypeHelper {
 			final Object owner,
 			final Map<Object, Object> copyCache,
 			final ForeignKeyDirection foreignKeyDirection) {
-		Object[] copied = new Object[original.length];
+		final Object[] copied = new Object[original.length];
 		for ( int i = 0; i < types.length; i++ ) {
-			if ( original[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY
-					|| original[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
-				copied[i] = target[i];
-			}
-			else if ( types[i].isComponentType() ) {
-				// need to extract the component values and check for subtype replacements...
-				CompositeType componentType = ( CompositeType ) types[i];
-				Type[] subtypes = componentType.getSubtypes();
-				Object[] origComponentValues = original[i] == null
-						? new Object[subtypes.length]
-						: componentType.getPropertyValues( original[i], session );
-				Object[] targetComponentValues = target[i] == null
-						? new Object[subtypes.length]
-						: componentType.getPropertyValues( target[i], session );
-				final Object[] objects = replaceAssociations(
-						origComponentValues,
-						targetComponentValues,
-						subtypes,
-						session,
-						null,
-						copyCache,
-						foreignKeyDirection
-				);
-				if ( target[i] != null && objects != null ) {
-					componentType.setPropertyValues( target[i], objects );
-				}
-				copied[i] = target[i];
-			}
-			else if ( !types[i].isAssociationType() ) {
+			final Object currentOriginal = original[i];
+			if ( currentOriginal == LazyPropertyInitializer.UNFETCHED_PROPERTY
+					|| currentOriginal == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
 				copied[i] = target[i];
 			}
 			else {
-				copied[i] = types[i].replace( original[i], target[i], session, owner, copyCache, foreignKeyDirection );
+				final Type type = types[i];
+				// AnyType is both a CompositeType and an AssociationType
+				// but here we want to treat it as an association
+				if ( type instanceof EntityType || type instanceof CollectionType || type instanceof AnyType ) {
+					copied[i] = types[i].replace( currentOriginal, target[i], session, owner, copyCache, foreignKeyDirection );
+				}
+				else {
+					if ( type instanceof ComponentType ) {
+						final ComponentType compositeType = (ComponentType) type;
+						if ( target[i] != null ) {
+							// need to extract the component values and check for subtype replacements...
+							final Object[] objects = replaceCompositeAssociations(
+									session,
+									copyCache,
+									foreignKeyDirection,
+									target[i],
+									currentOriginal,
+									compositeType
+							);
+							target[i] = compositeType.replacePropertyValues( target[i], objects, session );
+						}
+					}
+					copied[i] = target[i];
+				}
 			}
 		}
 		return copied;
+	}
+
+	private static Object[] replaceCompositeAssociations(
+			SharedSessionContractImplementor session,
+			Map<Object, Object> copyCache,
+			ForeignKeyDirection foreignKeyDirection,
+			Object target, Object currentOriginal,
+			ComponentType compositeType) {
+		final Type[] subtypes = compositeType.getSubtypes();
+		return replaceAssociations(
+				currentOriginal == null
+						? new Object[subtypes.length]
+						: compositeType.getPropertyValues( currentOriginal, session ),
+				target == null
+						? new Object[subtypes.length]
+						: compositeType.getPropertyValues( target, session ),
+				subtypes,
+				session,
+				null,
+				copyCache,
+				foreignKeyDirection
+		);
 	}
 
 }

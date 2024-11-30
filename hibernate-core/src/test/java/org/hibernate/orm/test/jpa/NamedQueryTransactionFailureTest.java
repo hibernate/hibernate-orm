@@ -1,12 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id$
-
 package org.hibernate.orm.test.jpa;
 
 import java.util.Map;
@@ -17,10 +12,9 @@ import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
-import jakarta.persistence.PersistenceException;
 import org.mockito.Mockito;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -78,7 +72,7 @@ public class NamedQueryTransactionFailureTest extends BaseEntityManagerFunctiona
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11997" )
+	@JiraKey( value = "HHH-11997" )
 	public void testNamedQueryWithMarkForRollbackOnlyFailure() {
 		try {
 			doInJPA( this::entityManagerFactory, entityManager -> {
@@ -89,9 +83,8 @@ public class NamedQueryTransactionFailureTest extends BaseEntityManagerFunctiona
 					entityManager.createNamedQuery( "NamedQuery" );
 				}
 				catch (Exception e) {
-					assertEquals( PersistenceException.class, e.getClass() );
-					assertEquals( HibernateException.class, e.getCause().getClass() );
-					assertEquals( MarkedForRollbackException.class, e.getCause().getCause().getClass() );
+					assertEquals( HibernateException.class, e.getClass() );
+					assertEquals( MarkedForRollbackException.class, e.getCause().getClass() );
 				}
 			});
 		}

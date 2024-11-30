@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
 
@@ -16,29 +14,44 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Specifies an expression written in native SQL that is used to read the value of
  * an attribute instead of storing the value in a {@link jakarta.persistence.Column}.
+ * <p>
  * A {@code Formula} mapping defines a "derived" attribute, whose state is determined
  * from other columns and functions when an entity is read from the database.
- *
- * <pre><code>
- *     // perform calculations using SQL operators
- *     &#064;Formula("sub_total + (sub_total * tax)")
- *     long getTotalCost() { ... }
- * </code></pre>
- *
- * <pre><code>
- *     // call native SQL functions
- *     &#064;Formula("upper(substring(middle_name, 1))")
- *     Character getMiddleInitial() { ... }
- * </code></pre>
- *
- * {@link ColumnTransformer} is an alternative, allowing the use of native SQL to
- * read and write values.
- *
- * <pre><code>
- *     // it might be better to use @ColumnTransformer in this case
- *     &#064;Formula("decrypt(credit_card_num)")
- *     String getCreditCardNumber() { ... }
- * </code></pre>
+ * <p>
+ * A formula may involve multiple columns and SQL operators:
+ * <pre>
+ * // perform calculations using SQL operators
+ * &#64;Formula("sub_total * (1.0 + tax)")
+ * BigDecimal totalWithTax;
+ * </pre>
+ * <p>
+ * It may even call SQL functions:
+ * <pre>
+ * // call native SQL functions
+ * &#64;Formula("upper(substring(middle_name from 0 for 1))")
+ * Character middleInitial;
+ * </pre>
+ * <p>
+ * By default, the fields of an entity are not updated with the results of evaluating
+ * the formula after an {@code insert} or {@code update}. The {@link Generated @Generated}
+ * annotation may be used to specify that this should happen:
+ * <pre>
+ * &#64;Generated  // evaluate the formula after an insert
+ * &#64;Formula("sub_total * (1.0 + tax)")
+ * BigDecimal totalWithTax;
+ * </pre>
+ * <p>
+ * For an entity with {@linkplain jakarta.persistence.SecondaryTable secondary tables},
+ * a formula may involve columns of the primary table, or columns of any one of the
+ * secondary tables. But it may not involve columns of more than one table.
+ * <p>
+ * The {@link ColumnTransformer} annotation is an alternative in certain cases, allowing
+ * the use of native SQL to read <em>and write</em> values to a column.
+ * <pre>
+ * // it might be better to use &#64;ColumnTransformer in this case
+ * &#064;Formula("decrypt(credit_card_num)")
+ * String getCreditCardNumber() { ... }
+ * </pre>
  *
  * @see ColumnTransformer
  * @see DiscriminatorFormula
@@ -46,6 +59,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author Emmanuel Bernard
  * @author Steve Ebersole
+ *
+ * @see DialectOverride.Formula
  */
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)

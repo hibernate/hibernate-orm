@@ -1,15 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.spi;
 
 import org.hibernate.Incubating;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 /**
- * NavigablePath implementation with special handling for treated paths
+ * An implementation of {@link NavigablePath} with special handling for treated paths.
  *
  * @author Christian Beikov
  */
@@ -20,32 +22,25 @@ public class TreatedNavigablePath extends NavigablePath {
 		this( parent, entityTypeName, null );
 	}
 
-	public TreatedNavigablePath(NavigablePath parent, String entityTypeName, String alias) {
+	public TreatedNavigablePath(NavigablePath parent, String entityTypeName, @Nullable String alias) {
 		super(
 				parent,
-				entityTypeName,
+				"#" + entityTypeName,
 				alias,
 				"treat(" + parent + " as " + entityTypeName + ")",
-				TreatedNavigablePath::calculateTreatedFullPath,
 				1
 		);
 		assert !( parent instanceof TreatedNavigablePath );
 	}
 
-	protected static String calculateTreatedFullPath(NavigablePath parent, String localName, String alias) {
-		return alias == null
-				? "treat(" + parent + " as " + localName + ")"
-				: "treat(" + parent + " as " + localName + ")(" + alias + ")";
-	}
-
 	@Override
 	public NavigablePath treatAs(String entityName) {
-		return new TreatedNavigablePath( getRealParent(), entityName );
+		return new TreatedNavigablePath( castNonNull( getRealParent() ), entityName );
 	}
 
 	@Override
 	public NavigablePath treatAs(String entityName, String alias) {
-		return new TreatedNavigablePath( getRealParent(), entityName, alias );
+		return new TreatedNavigablePath( castNonNull( getRealParent() ), entityName, alias );
 	}
 
 //	@Override

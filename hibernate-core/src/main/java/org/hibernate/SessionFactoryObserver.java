@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
@@ -32,10 +30,10 @@ public interface SessionFactoryObserver extends Serializable {
 	/**
 	 * Callback to indicate that the given factory is about to close.  The passed factory
 	 * reference should be usable since it is only about to close.
-	 * <p/>
-	 * NOTE : defined as default to allow for existing SessionFactoryObserver impls to work
-	 * in 5.2.  Starting in 6.0 the default will be removed and SessionFactoryObserver impls
-	 * will be required to implement this new method.
+	 *
+	 * @apiNote defined as default to allow for existing {@code SessionFactoryObserver}
+	 *          implementations to work in 5.2. Starting in 6.0 the default will be
+	 *          removed and implementations will be required to implement this new method.
 	 *
 	 * @param factory The factory about to be closed.
 	 *

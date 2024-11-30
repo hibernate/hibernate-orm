@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.entitygraph.mappedbyid;
 
@@ -23,7 +21,7 @@ import jakarta.persistence.criteria.Root;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -58,7 +56,7 @@ public class LoadGraphFindByIdTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10842")
+	@JiraKey(value = "HHH-10842")
 	public void findByPrimaryKeyWithId() {
 		doInJPA( this::entityManagerFactory, em -> {
 			User result = em.find( User.class, 1L, createProperties( em ) );
@@ -67,7 +65,7 @@ public class LoadGraphFindByIdTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10842")
+	@JiraKey(value = "HHH-10842")
 	public void findByPrimaryKeyWithQuery() {
 		doInJPA( this::entityManagerFactory, em -> {
 			User result = createTypedQuery( em ).getSingleResult();

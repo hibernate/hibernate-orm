@@ -1,15 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
 
 import java.io.Serializable;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.query.BindingContext;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.sqm.SqmExpressible;
 
@@ -83,7 +81,7 @@ public final class BasicTypeReference<T> implements BindableType<T>, Serializabl
 	}
 
 	@Override
-	public SqmExpressible<T> resolveExpressible(SessionFactoryImplementor sessionFactory) {
-		return sessionFactory.getTypeConfiguration().getBasicTypeRegistry().resolve( this );
+	public SqmExpressible<T> resolveExpressible(BindingContext bindingContext) {
+		return bindingContext.getTypeConfiguration().getBasicTypeRegistry().resolve( this );
 	}
 }

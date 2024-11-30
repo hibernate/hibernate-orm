@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc.internal;
 
@@ -31,14 +29,8 @@ public class JdbcLiteralFormatterTemporal<T> extends BasicJdbcLiteralFormatter<T
 	}
 
 	@Override
-	public void appendJdbcLiteral(SqlAppender appender, Object value, Dialect dialect, WrapperOptions wrapperOptions) {
-		final TimeZone jdbcTimeZone;
-		if ( wrapperOptions == null || wrapperOptions.getJdbcTimeZone() == null ) {
-			jdbcTimeZone = TimeZone.getDefault();
-		}
-		else {
-			jdbcTimeZone = wrapperOptions.getJdbcTimeZone();
-		}
+	public void appendJdbcLiteral(SqlAppender appender, Object value, Dialect dialect, WrapperOptions options) {
+		final TimeZone jdbcTimeZone = getJdbcTimeZone( options );
 		// for performance reasons, avoid conversions if we can
 		if ( value instanceof java.util.Date ) {
 			dialect.appendDateTimeLiteral(
@@ -69,7 +61,7 @@ public class JdbcLiteralFormatterTemporal<T> extends BasicJdbcLiteralFormatter<T
 				case DATE:
 					dialect.appendDateTimeLiteral(
 							appender,
-							unwrap( value, java.sql.Date.class, wrapperOptions ),
+							unwrap( value, java.sql.Date.class, options ),
 							precision,
 							jdbcTimeZone
 					);
@@ -77,7 +69,7 @@ public class JdbcLiteralFormatterTemporal<T> extends BasicJdbcLiteralFormatter<T
 				case TIME:
 					dialect.appendDateTimeLiteral(
 							appender,
-							unwrap( value, java.sql.Time.class, wrapperOptions ),
+							unwrap( value, java.sql.Time.class, options ),
 							precision,
 							jdbcTimeZone
 					);
@@ -85,12 +77,18 @@ public class JdbcLiteralFormatterTemporal<T> extends BasicJdbcLiteralFormatter<T
 				default:
 					dialect.appendDateTimeLiteral(
 							appender,
-							unwrap( value, java.util.Date.class, wrapperOptions ),
+							unwrap( value, java.util.Date.class, options ),
 							precision,
 							jdbcTimeZone
 					);
 					break;
 			}
 		}
+	}
+
+	private static TimeZone getJdbcTimeZone(WrapperOptions options) {
+		return options == null || options.getJdbcTimeZone() == null
+				? TimeZone.getDefault()
+				: options.getJdbcTimeZone();
 	}
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal.util.collections;
 
@@ -18,8 +16,15 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiConsumer;
 import java.util.function.Function;
+
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
+import static java.util.Collections.singleton;
+import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 
 /**
  * Various helper util methods for handling collections.
@@ -37,7 +42,7 @@ public final class CollectionHelper {
 
 	/**
 	 * Build a properly sized map, especially handling load size and load factor to prevent immediate resizing.
-	 * <p/>
+	 * <p>
 	 * Especially helpful for copy map contents.
 	 *
 	 * @param size The size to make the map.
@@ -50,7 +55,7 @@ public final class CollectionHelper {
 
 	/**
 	 * Build a properly sized linked map, especially handling load size and load factor to prevent immediate resizing.
-	 * <p/>
+	 * <p>
 	 * Especially helpful for copy map contents.
 	 *
 	 * @param size The size to make the map.
@@ -81,7 +86,7 @@ public final class CollectionHelper {
 
 	/**
 	 * Build a properly sized set, especially handling load size and load factor to prevent immediate resizing.
-	 * <p/>
+	 * <p>
 	 * Especially helpful for copy set contents.
 	 *
 	 * @param size The size to make the set.
@@ -103,7 +108,7 @@ public final class CollectionHelper {
 
 	/**
 	 * Build a properly sized linked set, especially handling load size and load factor to prevent immediate resizing.
-	 * <p/>
+	 * <p>
 	 * Especially helpful for copy set contents.
 	 *
 	 * @param size The size to make the set.
@@ -131,7 +136,7 @@ public final class CollectionHelper {
 	 *
 	 * @return The proper size.
 	 */
-	public static int determineProperSizing(Map original) {
+	public static int determineProperSizing(Map<?,?> original) {
 		return determineProperSizing( original.size() );
 	}
 
@@ -148,17 +153,12 @@ public final class CollectionHelper {
 		if ( original == null ) {
 			return null;
 		}
-
-		final HashMap<K, V> copy = new HashMap<>( determineProperSizing( original ) );
-
-		original.forEach(
-				(key, value) -> copy.put(
-						keyTransformer.apply( key ),
-						valueTransformer.apply( value )
-				)
-		);
-
-		return copy;
+		else {
+			final HashMap<K, V> copy = new HashMap<>( determineProperSizing( original ) );
+			original.forEach( (key, value) -> copy.put( keyTransformer.apply( key ),
+					valueTransformer.apply( value ) ) );
+			return copy;
+		}
 	}
 
 	public static <K, V> Map<K, V> makeMap(
@@ -172,19 +172,15 @@ public final class CollectionHelper {
 			Function<E,K> keyProducer,
 			Function<E,V> valueProducer) {
 		if ( isEmpty( collection ) ) {
-			return Collections.emptyMap();
+			return emptyMap();
 		}
-
-		final Map<K, V> map = new HashMap<>( determineProperSizing( collection.size() ));
-
-		for ( E element : collection ) {
-			map.put(
-					keyProducer.apply( element ),
-					valueProducer.apply( element )
-			);
+		else {
+			final Map<K, V> map = new HashMap<>( determineProperSizing( collection.size() ) );
+			for ( E element : collection ) {
+				map.put( keyProducer.apply( element ), valueProducer.apply( element ) );
+			}
+			return map;
 		}
-
-		return map;
 	}
 
 	/**
@@ -195,7 +191,7 @@ public final class CollectionHelper {
 	 *
 	 * @return The proper size.
 	 */
-	public static int determineProperSizing(Set original) {
+	public static int determineProperSizing(Set<?> original) {
 		return determineProperSizing( original.size() );
 	}
 
@@ -208,8 +204,7 @@ public final class CollectionHelper {
 	 * @return The proper size.
 	 */
 	public static int determineProperSizing(int numberOfElements) {
-		int actual = ( (int) ( numberOfElements / LOAD_FACTOR ) ) + 1;
-		return Math.max( actual, MINIMUM_INITIAL_CAPACITY );
+		return Math.max( ( (int) ( numberOfElements / LOAD_FACTOR ) ) + 1, MINIMUM_INITIAL_CAPACITY );
 	}
 
 	/**
@@ -244,35 +239,47 @@ public final class CollectionHelper {
 		return new ArrayList<>( Math.max( expectedNumberOfElements + 1, DEFAULT_LIST_CAPACITY ) );
 	}
 
+	public static <T> ArrayList<T> populatedArrayList(int expectedNumberOfElements, T value) {
+		final ArrayList<T> list = new ArrayList<>( Math.max( expectedNumberOfElements + 1, DEFAULT_LIST_CAPACITY ) );
+		for ( int i = 0; i < expectedNumberOfElements; i++ ) {
+			list.add( value );
+		}
+		return list;
+	}
+
 	public static <T> Set<T> makeCopy(Set<T> source) {
 		if ( source == null ) {
 			return null;
 		}
-
-		final int size = source.size();
-		final Set<T> copy = CollectionHelper.setOfSize( size + 1 );
-		copy.addAll( source );
-		return copy;
+		else {
+			final Set<T> copy = setOfSize( source.size() + 1 );
+			copy.addAll( source );
+			return copy;
+		}
 	}
 
-	public static boolean isEmpty(Collection collection) {
+	public static boolean isEmpty(Collection<?> collection) {
 		return collection == null || collection.isEmpty();
 	}
 
-	public static boolean isEmpty(Map map) {
+	public static boolean isEmpty(Map<?,?> map) {
 		return map == null || map.isEmpty();
 	}
 
-	public static boolean isNotEmpty(Collection collection) {
+	public static boolean isNotEmpty(Collection<?> collection) {
 		return !isEmpty( collection );
 	}
 
-	public static boolean isNotEmpty(Map map) {
+	public static boolean isNotEmpty(Map<?,?> map) {
 		return !isEmpty( map );
 	}
 
 	public static boolean isEmpty(Object[] objects) {
 		return objects == null || objects.length == 0;
+	}
+
+	public static boolean isNotEmpty(Object[] objects) {
+		return objects != null && objects.length > 0;
 	}
 
 	public static <T> List<T> listOf(T value1) {
@@ -293,17 +300,21 @@ public final class CollectionHelper {
 		return set;
 	}
 
+	public static <T> Set<T> setOf(Collection<T> values) {
+		return isEmpty( values ) ? emptySet() : new HashSet<>( values );
+	}
+
 	public static Properties asProperties(Map<?,?> map) {
-		if ( map instanceof Properties ) {
-			return ( (Properties) map );
+		if ( map instanceof Properties properties ) {
+			return properties;
 		}
-
-		final Properties properties = new Properties();
-		if ( isNotEmpty( map ) ) {
-			properties.putAll( map );
+		else {
+			final Properties properties = new Properties();
+			if ( isNotEmpty( map ) ) {
+				properties.putAll( map );
+			}
+			return properties;
 		}
-
-		return properties;
 	}
 
 	/**
@@ -317,9 +328,9 @@ public final class CollectionHelper {
 	public static <T> Set<T> toSmallSet(Set<T> set) {
 		switch ( set.size() ) {
 			case 0:
-				return Collections.EMPTY_SET;
+				return emptySet();
 			case 1:
-				return Collections.singleton( set.iterator().next() );
+				return singleton( set.iterator().next() );
 			default:
 				//TODO assert tests pass even if this is set to return an unmodifiable Set
 				return set;
@@ -336,10 +347,10 @@ public final class CollectionHelper {
 	public static <K, V> Map<K, V> toSmallMap(final Map<K, V> map) {
 		switch ( map.size() ) {
 			case 0:
-				return Collections.EMPTY_MAP;
+				return emptyMap();
 			case 1:
 				Map.Entry<K, V> entry = map.entrySet().iterator().next();
-				return Collections.singletonMap( entry.getKey(), entry.getValue() );
+				return singletonMap( entry.getKey(), entry.getValue() );
 			default:
 				//TODO assert tests pass even if this is set to return an unmodifiable Map
 				return map;
@@ -356,91 +367,94 @@ public final class CollectionHelper {
 	public static <V> List<V> toSmallList(ArrayList<V> arrayList) {
 		switch ( arrayList.size() ) {
 			case 0:
-				return Collections.EMPTY_LIST;
+				return emptyList();
 			case 1:
-				return Collections.singletonList( arrayList.get( 0 ) );
+				return singletonList( arrayList.get( 0 ) );
 			default:
 				arrayList.trimToSize();
 				return arrayList;
 		}
 	}
 
-	@SuppressWarnings( "unchecked" )
-	public static <K,V> void collectMapEntries(BiConsumer<K, V> mapEntryConsumer, Object[] mappings) {
-		// even numbered
-		assert mappings.length % 2 == 0;
-
-		for ( int i = 0; i < mappings.length; i += 2 ) {
-			mapEntryConsumer.accept( (K) mappings[i], (V) mappings[i+1] );
-		}
+	public static <O> List<O> combine(List<O> list1, List<O> list2) {
+		final ArrayList<O> combined = arrayList( list1.size() + list2.size() );
+		combined.addAll( list1 );
+		combined.addAll( list2 );
+		return combined;
 	}
 
-	@SuppressWarnings( "unchecked" )
-	public static <K,S> Map<K, S> asMap(Object[] elements) {
-		assert elements != null;
-		assert elements.length % 2 == 0;
-
-		final HashMap<K,S> map = new HashMap<>();
-		collectMapEntries( map::put, elements );
-		for ( int i = 0; i < elements.length; i += 2 ) {
-			map.put( (K) elements[ i ], (S) elements[ i+1 ] );
-		}
-
-		return map;
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public static List combineUntyped(List list1, List list2) {
+		final ArrayList combined = arrayList( list1.size() + list2.size() );
+		combined.addAll( list1 );
+		combined.addAll( list2 );
+		return combined;
 	}
 
-	public static Map<String,String> toMap(String... pairs) {
-		assert pairs.length % 2 == 0;
-		if ( pairs.length == 2 ) {
-			return Collections.singletonMap( pairs[0], pairs[1] );
+	@SafeVarargs
+	public static <O> List<O> combine(List<O>... lists) {
+		final ArrayList<O> combined = new ArrayList<>();
+		for ( List<O> list : lists ) {
+			combined.addAll( list );
 		}
+		return combined;
+	}
 
-		final Map<String,String> result = new HashMap<>();
-		applyToMap( result, pairs );
+	public static int size(List<?> values) {
+		return values == null ? 0 : values.size();
+	}
+
+	public static int size(Collection<?> values) {
+		return values == null ? 0 : values.size();
+	}
+
+	public static int size(Map<?,?> values) {
+		return values == null ? 0 : values.size();
+	}
+
+	@SafeVarargs
+	public static <X> Set<X> toSet(X... values) {
+		final HashSet<X> result = new HashSet<>();
+		if ( isNotEmpty( values ) ) {
+			result.addAll( asList( values ) );
+		}
 		return result;
 	}
 
-	private static void applyToMap(Map<String,String> map, String... pairs) {
-		assert pairs.length % 2 == 0;
-		for ( int i = 0; i < pairs.length; i+=2 ) {
-			map.put( pairs[i], pairs[i+1] );
+	public static <E> List<E> mutableJoin(Collection<E> first, Collection<E> second) {
+		final int totalCount = ( first == null ? 0 : first.size() )
+				+ ( second == null ? 0 : second.size() );
+		if ( totalCount == 0 ) {
+			return new ArrayList<>();
 		}
-	}
-
-	public static Map<String,?> toMap(Object... pairs) {
-		assert pairs.length % 2 == 0;
-		if ( pairs.length == 2 ) {
-			return Collections.singletonMap( (String) pairs[0], pairs[1] );
-		}
-
-		final Map<String,String> result = new HashMap<>();
-		applyToMap( result, pairs );
-		return result;
-	}
-
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private static void applyToMap(Map<String,?> map, Object... pairs) {
-		assert pairs.length % 2 == 0;
-		for ( int i = 0; i < pairs.length; i+=2 ) {
-			( (Map) map ).put( pairs[i], pairs[i+1] );
-		}
-	}
-
-	public static Properties toProperties(Object... pairs) {
-		final Properties properties = new Properties();
-		if ( pairs.length > 0 ) {
-			assert pairs.length % 2 == 0;
-			for ( int i = 0; i < pairs.length; i+=2 ) {
-				properties.put( pairs[i], pairs[i+1] );
+		else {
+			final ArrayList<E> joined = new ArrayList<>( totalCount );
+			if ( first != null ) {
+				joined.addAll( first );
 			}
+			if ( second != null ) {
+				joined.addAll( second );
+			}
+			return joined;
 		}
-		return properties;
 	}
 
-	public static void applyToProperties(Properties properties, Object... pairs) {
-		assert pairs.length % 2 == 0;
-		for ( int i = 0; i < pairs.length; i+=2 ) {
-			properties.put( pairs[i], pairs[i+1] );
+	@SafeVarargs
+	public static <E> List<E> mutableJoin(Collection<E> first, Collection<E>... others) {
+		// it can be empty, but not null
+		assert first != null;
+
+		if ( isEmpty( others ) ) {
+			final ArrayList<E> list = new ArrayList<>( first.size() );
+			list.addAll( first );
+			return list;
 		}
+
+		final List<E> joined = arrayList( first.size() + ( isEmpty( others ) ? 0 : others.length * 8 ) );
+		joined.addAll( first );
+		for ( Collection<E> other : others ) {
+			joined.addAll( other );
+		}
+		return joined;
 	}
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sql.internal;
 
@@ -13,9 +11,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.ScrollMode;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.EmptyScrollableResults;
 import org.hibernate.query.results.ResultSetMapping;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
@@ -26,11 +22,12 @@ import org.hibernate.query.sql.spi.NativeSelectQueryPlan;
 import org.hibernate.query.sql.spi.ParameterOccurrence;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
+import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
+import org.hibernate.sql.results.spi.ResultsConsumer;
 
 /**
  * @author Steve Ebersole
@@ -64,6 +61,44 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 	}
 
 	@Override
+	public <T> T executeQuery(DomainQueryExecutionContext executionContext, ResultsConsumer<T, R> resultsConsumer) {
+		final List<JdbcParameterBinder> jdbcParameterBinders;
+		final JdbcParameterBindings jdbcParameterBindings;
+
+		final QueryParameterBindings queryParameterBindings = executionContext.getQueryParameterBindings();
+		if ( parameterList == null || parameterList.isEmpty() ) {
+			jdbcParameterBinders = Collections.emptyList();
+			jdbcParameterBindings = JdbcParameterBindings.NO_BINDINGS;
+		}
+		else {
+			jdbcParameterBinders = new ArrayList<>( parameterList.size() );
+			jdbcParameterBindings = new JdbcParameterBindingsImpl(
+					queryParameterBindings,
+					parameterList,
+					jdbcParameterBinders,
+					executionContext.getSession().getFactory()
+			);
+		}
+
+		final JdbcOperationQuerySelect jdbcSelect = new JdbcOperationQuerySelect(
+				sql,
+				jdbcParameterBinders,
+				resultSetMapping,
+				affectedTableNames
+		);
+
+		return executionContext.getSession().getJdbcServices().getJdbcSelectExecutor().executeQuery(
+				jdbcSelect,
+				jdbcParameterBindings,
+				SqmJdbcExecutionContextAdapter.usingLockingAndPaging( executionContext ),
+				null,
+				null,
+				-1,
+				resultsConsumer
+		);
+	}
+
+	@Override
 	public List<R> performList(DomainQueryExecutionContext executionContext) {
 		final QueryOptions queryOptions = executionContext.getQueryOptions();
 		if ( queryOptions.getEffectiveLimit().getMaxRowsJpa() == 0 ) {
@@ -79,9 +114,7 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 		}
 		else {
 			jdbcParameterBinders = new ArrayList<>( parameterList.size() );
-			jdbcParameterBindings = new JdbcParameterBindingsImpl( parameterList.size() );
-
-			jdbcParameterBindings.registerNativeQueryParameters(
+			jdbcParameterBindings = new JdbcParameterBindingsImpl(
 					queryParameterBindings,
 					parameterList,
 					jdbcParameterBinders,
@@ -89,20 +122,15 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 			);
 		}
 
-		executionContext.getSession().autoFlushIfRequired( affectedTableNames );
-
-		final JdbcSelect jdbcSelect = new JdbcSelect(
+		final JdbcOperationQuerySelect jdbcSelect = new JdbcOperationQuerySelect(
 				sql,
 				jdbcParameterBinders,
 				resultSetMapping,
-				affectedTableNames,
-				Collections.emptySet()
+				affectedTableNames
 		);
 
-		final SharedSessionContractImplementor session = executionContext.getSession();
-		final SessionFactoryImplementor factory = session.getFactory();
-		final JdbcServices jdbcServices = factory.getJdbcServices();
-		return jdbcServices.getJdbcSelectExecutor().list(
+		executionContext.getSession().autoFlushIfRequired( jdbcSelect.getAffectedTableNames() );
+		return executionContext.getSession().getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,
 				jdbcParameterBindings,
 				SqmJdbcExecutionContextAdapter.usingLockingAndPaging( executionContext ),
@@ -116,6 +144,7 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 	@Override
 	public ScrollableResultsImplementor<R> performScroll(ScrollMode scrollMode, DomainQueryExecutionContext executionContext) {
 		if ( executionContext.getQueryOptions().getEffectiveLimit().getMaxRowsJpa() == 0 ) {
+			//noinspection unchecked
 			return EmptyScrollableResults.INSTANCE;
 		}
 		final List<JdbcParameterBinder> jdbcParameterBinders;
@@ -128,9 +157,7 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 		}
 		else {
 			jdbcParameterBinders = new ArrayList<>( parameterList.size() );
-			jdbcParameterBindings = new JdbcParameterBindingsImpl( parameterList.size() );
-
-			jdbcParameterBindings.registerNativeQueryParameters(
+			jdbcParameterBindings = new JdbcParameterBindingsImpl(
 					queryParameterBindings,
 					parameterList,
 					jdbcParameterBinders,
@@ -138,20 +165,21 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 			);
 		}
 
-		final JdbcSelect jdbcSelect = new JdbcSelect(
+		final JdbcOperationQuerySelect jdbcSelect = new JdbcOperationQuerySelect(
 				sql,
 				jdbcParameterBinders,
 				resultSetMapping,
-				affectedTableNames,
-				Collections.emptySet()
+				affectedTableNames
 		);
 
+		executionContext.getSession().autoFlushIfRequired( jdbcSelect.getAffectedTableNames() );
 		return executionContext.getSession().getJdbcServices().getJdbcSelectExecutor().scroll(
 				jdbcSelect,
 				scrollMode,
 				jdbcParameterBindings,
 				SqmJdbcExecutionContextAdapter.usingLockingAndPaging( executionContext ),
-				null
+				null,
+				-1
 		);
 	}
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.registry.internal;
 
@@ -28,6 +26,8 @@ import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * {@link ServiceRegistry} implementation containing specialized "bootstrap" services, specifically:<ul>
@@ -117,7 +117,7 @@ public class BootstrapServiceRegistryImpl
 		this.integratorServiceBinding = new ServiceBinding<>(
 				this,
 				IntegratorService.class,
-				new IntegratorServiceImpl( providedIntegrators, classLoaderService )
+				IntegratorServiceImpl.create( providedIntegrators, classLoaderService )
 		);
 	}
 
@@ -185,7 +185,7 @@ public class BootstrapServiceRegistryImpl
 
 
 	@Override
-	public <R extends Service> R getService(Class<R> serviceRole) {
+	public <R extends Service> @Nullable R getService(Class<R> serviceRole) {
 		final ServiceBinding<R> binding = locateServiceBinding( serviceRole );
 		return binding == null ? null : binding.getService();
 	}
@@ -225,7 +225,7 @@ public class BootstrapServiceRegistryImpl
 			}
 		}
 	}
-	
+
 	private synchronized void destroy(ServiceBinding serviceBinding) {
 		serviceBinding.getLifecycleOwner().stopService( serviceBinding );
 	}
@@ -235,7 +235,7 @@ public class BootstrapServiceRegistryImpl
 	}
 
 	@Override
-	public ServiceRegistry getParentServiceRegistry() {
+	public @Nullable ServiceRegistry getParentServiceRegistry() {
 		return null;
 	}
 

@@ -1,0 +1,158 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.persister.collection.mutation;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
+import org.hibernate.engine.jdbc.mutation.MutationExecutor;
+import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.sql.model.MutationOperationGroup;
+import org.hibernate.sql.model.MutationType;
+import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
+
+/**
+ * UpdateRowsCoordinator implementation for cases with a separate collection table
+ *
+ * @see org.hibernate.persister.collection.BasicCollectionPersister
+ *
+ * @author Steve Ebersole
+ */
+public class UpdateRowsCoordinatorStandard extends AbstractUpdateRowsCoordinator implements UpdateRowsCoordinator {
+
+	private final RowMutationOperations rowMutationOperations;
+	private MutationOperationGroup operationGroup;
+
+	public UpdateRowsCoordinatorStandard(
+			CollectionMutationTarget mutationTarget,
+			RowMutationOperations rowMutationOperations,
+			SessionFactoryImplementor sessionFactory) {
+		super( mutationTarget, sessionFactory );
+		this.rowMutationOperations = rowMutationOperations;
+	}
+
+	@Override
+	protected int doUpdate(Object key, PersistentCollection<?> collection, SharedSessionContractImplementor session) {
+		final MutationOperationGroup operationGroup = getOperationGroup();
+
+		final MutationExecutor mutationExecutor = mutationExecutorService.createExecutor(
+				() -> new BasicBatchKey( getMutationTarget().getRolePath() + "#UPDATE" ),
+				operationGroup,
+				session
+		);
+
+		try {
+			final Iterator<?> entries = collection.entries( getMutationTarget().getTargetPart()
+					.getCollectionDescriptor() );
+			int count = 0;
+
+			if ( collection.isElementRemoved() ) {
+				// the update should be done starting from the end of the elements
+				// 		- make a copy so that we can go in reverse
+				final List<Object> elements = new ArrayList<>();
+				while ( entries.hasNext() ) {
+					elements.add( entries.next() );
+				}
+
+				for ( int i = elements.size() - 1; i >= 0; i-- ) {
+					final Object entry = elements.get( i );
+					final boolean updated = processRow(
+							key,
+							collection,
+							entry,
+							i,
+							mutationExecutor,
+							session
+					);
+					if ( updated ) {
+						count++;
+					}
+				}
+			}
+			else {
+				int position = 0;
+				while ( entries.hasNext() ) {
+					final Object entry = entries.next();
+					final boolean updated = processRow(
+							key,
+							collection,
+							entry,
+							position++,
+							mutationExecutor,
+							session
+					);
+					if ( updated ) {
+						count++;
+					}
+				}
+			}
+
+			return count;
+		}
+		finally {
+			mutationExecutor.release();
+		}
+	}
+
+	private boolean processRow(
+			Object key,
+			PersistentCollection<?> collection,
+			Object entry,
+			int entryPosition,
+			MutationExecutor mutationExecutor,
+			SharedSessionContractImplementor session) {
+		if ( rowMutationOperations.getUpdateRowOperation() != null ) {
+			final PluralAttributeMapping attribute = getMutationTarget().getTargetPart();
+			if ( !collection.needsUpdating( entry, entryPosition, attribute ) ) {
+				return false;
+			}
+
+			rowMutationOperations.getUpdateRowValues().applyValues(
+					collection,
+					key,
+					entry,
+					entryPosition,
+					session,
+					mutationExecutor.getJdbcValueBindings()
+			);
+
+			rowMutationOperations.getUpdateRowRestrictions().applyRestrictions(
+					collection,
+					key,
+					entry,
+					entryPosition,
+					session,
+					mutationExecutor.getJdbcValueBindings()
+			);
+
+			mutationExecutor.execute( collection, null, null, null, session );
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
+	protected MutationOperationGroup getOperationGroup() {
+		if ( operationGroup == null ) {
+			final JdbcMutationOperation updateRowOperation = rowMutationOperations.getUpdateRowOperation();
+			if ( updateRowOperation == null ) {
+				operationGroup = MutationOperationGroupFactory.noOperations( MutationType.UPDATE, getMutationTarget() );
+			}
+			else {
+				operationGroup = MutationOperationGroupFactory.singleOperation( MutationType.UPDATE, getMutationTarget(), updateRowOperation );
+			}
+		}
+		return operationGroup;
+	}
+
+
+}

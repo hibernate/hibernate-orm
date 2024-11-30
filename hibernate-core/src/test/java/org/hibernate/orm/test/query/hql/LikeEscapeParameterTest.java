@@ -1,7 +1,12 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.query.hql;
 
 import org.hibernate.query.SemanticException;
 
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -49,6 +54,24 @@ public class LikeEscapeParameterTest {
 				session -> {
 					session.createQuery( "select s from TestEntity s where s.name like ?1 escape '\\'", TestEntity.class )
 							.setParameter( 1, "%Foo" );
+				}
+		);
+	}
+
+	@Test
+	@JiraKey(value = "HHH-15745")
+	public void testStringLiteralInSubQuery(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery(
+									"select s from TestEntity s where s.name like ?1 escape '\\'" +
+											" or s.id in (" +
+											" select distinct t.id from TestEntity t where t.name like ?2 escape '\\'" +
+											" )",
+									TestEntity.class
+							)
+							.setParameter( 1, "%Foo" )
+							.setParameter( 2, "Bar%" );
 				}
 		);
 	}

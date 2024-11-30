@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.jointable;
 
@@ -37,7 +35,7 @@ import static org.junit.Assert.assertThat;
 )
 @ServiceRegistry(
 		settings = {
-				@Setting(name = AvailableSettings.HBM2DDL_DATABASE_ACTION, value = "create-drop")
+				@Setting(name = AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, value = "create-drop")
 		}
 )
 @SessionFactory

@@ -1,18 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id$
 package org.hibernate.orm.test.annotations.query;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityResult;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedNativeQueries;
 import jakarta.persistence.NamedNativeQuery;
@@ -48,10 +43,8 @@ public class SpaceShip {
 	}
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumns({
-	@JoinColumn(name = "fname", referencedColumnName = "firstname"),
+	@JoinColumn(name = "fname", referencedColumnName = "firstname")
 	@JoinColumn(name = "lname", referencedColumnName = "lastname")
-			})
 	public Captain getCaptain() {
 		return captain;
 	}

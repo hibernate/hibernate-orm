@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.basic;
 
@@ -18,13 +16,13 @@ import org.hibernate.orm.test.envers.integration.collection.norevision.Name;
 import org.hibernate.orm.test.envers.integration.collection.norevision.Person;
 
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-5565")
+@JiraKey(value = "HHH-5565")
 @SkipForDialect(value = MySQLDialect.class, comment = "The test hangs on")
 public class OutsideTransactionTest extends BaseEnversFunctionalTestCase {
 	@Override
@@ -53,7 +51,7 @@ public class OutsideTransactionTest extends BaseEnversFunctionalTestCase {
 	}
 
 	@Test(expected = TransactionRequiredException.class)
-	public void testUpdateOutsideActiveTransaction() {
+	public void testMergeOutsideActiveTransaction() {
 		Session session = openSession();
 
 		// Revision 1
@@ -64,7 +62,7 @@ public class OutsideTransactionTest extends BaseEnversFunctionalTestCase {
 
 		// Illegal modification of entity state outside of active transaction.
 		entity.setStr( "modified data" );
-		session.update( entity );
+		session.merge( entity );
 		session.flush();
 
 		session.close();
@@ -81,7 +79,7 @@ public class OutsideTransactionTest extends BaseEnversFunctionalTestCase {
 		session.getTransaction().commit();
 
 		// Illegal removal of entity outside of active transaction.
-		session.delete( entity );
+		session.remove( entity );
 		session.flush();
 
 		session.close();
@@ -97,12 +95,12 @@ public class OutsideTransactionTest extends BaseEnversFunctionalTestCase {
 		Name name = new Name();
 		name.setName( "Name" );
 		person.getNames().add( name );
-		session.saveOrUpdate( person );
+		session.persist( person );
 		session.getTransaction().commit();
 
 		// Illegal collection update outside of active transaction.
 		person.getNames().remove( name );
-		session.saveOrUpdate( person );
+		session.merge( person );
 		session.flush();
 
 		session.close();
@@ -118,12 +116,12 @@ public class OutsideTransactionTest extends BaseEnversFunctionalTestCase {
 		Name name = new Name();
 		name.setName( "Name" );
 		person.getNames().add( name );
-		session.saveOrUpdate( person );
+		session.persist( person );
 		session.getTransaction().commit();
 
 		// Illegal collection removal outside of active transaction.
 		person.setNames( null );
-		session.saveOrUpdate( person );
+		session.merge( person );
 		session.flush();
 
 		session.close();

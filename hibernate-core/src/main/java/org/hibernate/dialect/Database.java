@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
@@ -13,6 +11,9 @@ import java.sql.Statement;
 
 import org.hibernate.engine.jdbc.dialect.spi.BasicSQLExceptionConverter;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.internal.util.config.ConfigurationHelper;
+
+import static org.hibernate.cfg.DialectSpecificSettings.COCKROACH_VERSION_STRING;
 
 /**
  * A list of relational database systems for which Hibernate can resolve a {@link Dialect}.
@@ -56,23 +57,6 @@ public enum Database {
 		@Override
 		public String getDriverClassName(String jdbcUrl) {
 			return "com.ibm.db2.jcc.DB2Driver";
-		}
-	},
-
-	DERBY {
-		@Override
-		public Dialect createDialect(DialectResolutionInfo info) {
-			return new DerbyDialect( info );
-		}
-		@Override
-		public boolean productNameMatches(String databaseName) {
-			return "Apache Derby".equals( databaseName );
-		}
-		@Override
-		public String getDriverClassName(String jdbcUrl) {
-			return jdbcUrl.startsWith( "jdbc:derby://" )
-					? "org.apache.derby.jdbc.ClientDriver"
-					: "org.apache.derby.jdbc.EmbeddedDriver";
 		}
 	},
 
@@ -132,7 +116,7 @@ public enum Database {
 	HANA {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
-			return new HANAColumnStoreDialect( info );
+			return new HANADialect( info );
 		}
 		@Override
 		public boolean productNameMatches(String databaseName) {
@@ -207,9 +191,9 @@ public enum Database {
 	POSTGRESQL {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
-			final String version = getVersion( info.getDatabaseMetadata() );
+			final String version = getVersion( info );
 			if ( version.startsWith( "Cockroach" ) ) {
-				return new CockroachDialect( info );
+				return new CockroachDialect( info, version );
 			}
 			return new PostgreSQLDialect( info );
 		}
@@ -221,7 +205,8 @@ public enum Database {
 		public String getDriverClassName(String jdbcUrl) {
 			return "org.postgresql.Driver";
 		}
-		private String getVersion(DatabaseMetaData databaseMetaData) {
+		private String getVersion(DialectResolutionInfo info) {
+			final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
 			if ( databaseMetaData != null ) {
 				try ( Statement statement = databaseMetaData.getConnection().createStatement() ) {
 					final ResultSet rs = statement.executeQuery( "select version()" );
@@ -234,7 +219,8 @@ public enum Database {
 				}
 			}
 
-			return "";
+			// default to the dialect-specific configuration setting
+			return ConfigurationHelper.getString( COCKROACH_VERSION_STRING, info.getConfigurationValues(), "" );
 		}
 	},
 

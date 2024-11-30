@@ -1,18 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.internal;
 
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import jakarta.persistence.Tuple;
 
 import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
 import org.hibernate.query.QueryLogging;
+import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
@@ -23,6 +21,7 @@ import org.hibernate.query.spi.SimpleHqlInterpretationImpl;
 import org.hibernate.query.sql.spi.ParameterInterpretation;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.jboss.logging.Logger;
@@ -40,17 +39,19 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 	 */
 	private final BoundedConcurrentHashMap<Key, QueryPlan> queryPlanCache;
 
-	private final BoundedConcurrentHashMap<String, HqlInterpretation> hqlInterpretationCache;
+	private final ServiceRegistry serviceRegistry;
+	private final BoundedConcurrentHashMap<Object, HqlInterpretation<?>> hqlInterpretationCache;
 	private final BoundedConcurrentHashMap<String, ParameterInterpretation> nativeQueryParamCache;
-	private final Supplier<StatisticsImplementor> statisticsSupplier;
 
-	public QueryInterpretationCacheStandardImpl(int maxQueryPlanCount, Supplier<StatisticsImplementor> statisticsSupplier) {
-		log.debugf( "Starting QueryPlanCache(%s)", maxQueryPlanCount );
+	private StatisticsImplementor statistics;
+
+	public QueryInterpretationCacheStandardImpl(int maxQueryPlanCount, ServiceRegistry serviceRegistry) {
+		log.debugf( "Starting QueryInterpretationCache(%s)", maxQueryPlanCount );
 
 		this.queryPlanCache = new BoundedConcurrentHashMap<>( maxQueryPlanCount, 20, BoundedConcurrentHashMap.Eviction.LIRS );
 		this.hqlInterpretationCache = new BoundedConcurrentHashMap<>( maxQueryPlanCount, 20, BoundedConcurrentHashMap.Eviction.LIRS );
 		this.nativeQueryParamCache = new BoundedConcurrentHashMap<>( maxQueryPlanCount, 20, BoundedConcurrentHashMap.Eviction.LIRS );
-		this.statisticsSupplier = statisticsSupplier;
+		this.serviceRegistry = serviceRegistry;
 	}
 
 	@Override
@@ -63,12 +64,19 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 		return queryPlanCache.size();
 	}
 
+	private StatisticsImplementor getStatistics() {
+		if ( statistics == null ) {
+			statistics = serviceRegistry.requireService( StatisticsImplementor.class );
+		}
+		return statistics;
+	}
+
 	@Override
 	public <R> SelectQueryPlan<R> resolveSelectQueryPlan(
 			Key key,
 			Supplier<SelectQueryPlan<R>> creator) {
 		log.tracef( "QueryPlan#getSelectQueryPlan(%s)", key );
-		final StatisticsImplementor statistics = statisticsSupplier.get();
+		final StatisticsImplementor statistics = getStatistics();
 		final boolean stats = statistics.isStatisticsEnabled();
 
 		@SuppressWarnings("unchecked")
@@ -100,50 +108,54 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 	}
 
 	@Override
-	public HqlInterpretation resolveHqlInterpretation(
+	public <R> HqlInterpretation<R> resolveHqlInterpretation(
 			String queryString,
-			Class<?> expectedResultType,
-			Function<String, SqmStatement<?>> creator) {
+			Class<R> expectedResultType,
+			HqlTranslator translator) {
 		log.tracef( "QueryPlan#resolveHqlInterpretation( `%s` )", queryString );
+		final StatisticsImplementor statistics = getStatistics();
 
-		final String cacheKey;
-		if ( expectedResultType != null
-				&& ( expectedResultType.isArray() || Tuple.class.isAssignableFrom( expectedResultType ) ) ) {
-			cacheKey = "multi_" + queryString;
-		}
-		else {
-			cacheKey = queryString;
-		}
+		final Object cacheKey = expectedResultType != null
+				? new HqlInterpretationCacheKey( queryString, expectedResultType )
+				: queryString;
 
-
-		final HqlInterpretation existing = hqlInterpretationCache.get( cacheKey );
+		final HqlInterpretation<?> existing = hqlInterpretationCache.get( cacheKey );
 		if ( existing != null ) {
-			final StatisticsImplementor statistics = statisticsSupplier.get();
 			if ( statistics.isStatisticsEnabled() ) {
 				statistics.queryPlanCacheHit( queryString );
 			}
-			return existing;
+			return (HqlInterpretation<R>) existing;
+		}
+		else if ( expectedResultType != null ) {
+			final HqlInterpretation<?> existingQueryOnly = hqlInterpretationCache.get( queryString );
+			if ( existingQueryOnly != null ) {
+				if ( statistics.isStatisticsEnabled() ) {
+					statistics.queryPlanCacheHit( queryString );
+				}
+				return (HqlInterpretation<R>) existingQueryOnly;
+			}
 		}
 
-		final HqlInterpretation hqlInterpretation = createHqlInterpretation( queryString, creator, statisticsSupplier );
+		final HqlInterpretation<R> hqlInterpretation =
+				createHqlInterpretation( queryString, expectedResultType, translator, statistics );
 		hqlInterpretationCache.put( cacheKey, hqlInterpretation );
 		return hqlInterpretation;
 	}
 
-	protected static HqlInterpretation createHqlInterpretation(
+	protected static <R> HqlInterpretation<R> createHqlInterpretation(
 			String queryString,
-			Function<String, SqmStatement<?>> creator,
-			Supplier<StatisticsImplementor> statisticsSupplier) {
-		final StatisticsImplementor statistics = statisticsSupplier.get();
+			Class<R> expectedResultType,
+			HqlTranslator translator,
+			StatisticsImplementor statistics) {
 		final boolean stats = statistics.isStatisticsEnabled();
-		final long startTime = ( stats ) ? System.nanoTime() : 0L;
+		final long startTime = stats ? System.nanoTime() : 0L;
 
-		final SqmStatement<?> sqmStatement = creator.apply( queryString );
+		final SqmStatement<R> sqmStatement = translator.translate( queryString, expectedResultType );
 		final ParameterMetadataImplementor parameterMetadata;
 		final DomainParameterXref domainParameterXref;
 
 		if ( sqmStatement.getSqmParameters().isEmpty() ) {
-			domainParameterXref = DomainParameterXref.empty();
+			domainParameterXref = DomainParameterXref.EMPTY;
 			parameterMetadata = ParameterMetadataImpl.EMPTY;
 		}
 		else {
@@ -157,7 +169,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 			statistics.queryCompiled( queryString, microseconds );
 		}
 
-		return new SimpleHqlInterpretationImpl( sqmStatement, parameterMetadata, domainParameterXref );
+		return new SimpleHqlInterpretationImpl<>( sqmStatement, parameterMetadata, domainParameterXref );
 	}
 
 	@Override
@@ -186,6 +198,34 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 		hqlInterpretationCache.clear();
 		nativeQueryParamCache.clear();
 		queryPlanCache.clear();
+	}
+
+	private static final class HqlInterpretationCacheKey {
+		private final String queryString;
+		private final Class<?> expectedResultType;
+
+		public HqlInterpretationCacheKey(String queryString, Class<?> expectedResultType) {
+			this.queryString = queryString;
+			this.expectedResultType = expectedResultType;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if ( o.getClass() != HqlInterpretationCacheKey.class ) {
+				return false;
+			}
+
+			final HqlInterpretationCacheKey that = (HqlInterpretationCacheKey) o;
+			return queryString.equals( that.queryString )
+					&& expectedResultType.equals( that.expectedResultType );
+		}
+
+		@Override
+		public int hashCode() {
+			int result = queryString.hashCode();
+			result = 31 * result + expectedResultType.hashCode();
+			return result;
+		}
 	}
 
 }

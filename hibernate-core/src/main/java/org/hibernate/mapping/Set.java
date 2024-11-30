@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
@@ -16,11 +14,14 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.OrderedSetType;
 import org.hibernate.type.SetType;
 import org.hibernate.type.SortedSetType;
+import org.hibernate.type.MappingContext;
 import org.hibernate.usertype.UserCollectionType;
 
 /**
- * A set with no nullable element columns. It will have a primary key
- * consisting of all table columns (ie. key columns + element columns).
+ * A mapping model object representing a collection of type {@link java.util.List}.
+ * A set has no nullable element columns (unless it is a one-to-many association).
+ * It has a primary key consisting of all columns (i.e. key columns + element columns).
+ *
  * @author Gavin King
  */
 public class Set extends Collection {
@@ -48,7 +49,11 @@ public class Set extends Collection {
 	}
 
 	public void validate(Mapping mapping) throws MappingException {
-		super.validate( mapping );
+		validate( (MappingContext) mapping );
+	}
+
+	public void validate(MappingContext mappingContext) throws MappingException {
+		super.validate( mappingContext );
 		//for backward compatibility, disable this:
 		/*Iterator iter = getElement().getColumnIterator();
 		while ( iter.hasNext() ) {
@@ -78,27 +83,30 @@ public class Set extends Collection {
 
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
-			PrimaryKey pk = new PrimaryKey( getCollectionTable() );
-			pk.addColumns( getKey() );
-			for ( Selectable selectable : getElement().getSelectables() ) {
-				if ( selectable instanceof Column ) {
-					Column col = (Column) selectable;
-					if ( !col.isNullable() ) {
-						pk.addColumn( col );
-					}
-					else {
-						return;
+			final Table collectionTable = getCollectionTable();
+			PrimaryKey pk = collectionTable.getPrimaryKey();
+			if ( pk == null ) {
+				pk = new PrimaryKey( getCollectionTable() );
+				pk.addColumns( getKey() );
+				for ( Selectable selectable : getElement().getSelectables() ) {
+					if ( selectable instanceof Column col ) {
+						if ( !col.isNullable() ) {
+							pk.addColumn( col );
+						}
+						else {
+							return;
+						}
 					}
 				}
+				if ( pk.getColumnSpan() != getKey().getColumnSpan() ) {
+					collectionTable.setPrimaryKey( pk );
+				}
+//				else {
+					//for backward compatibility, allow a set with no not-null
+					//element columns, using all columns in the row locator SQL
+					//TODO: create an implicit not null constraint on all cols?
+//				}
 			}
-			if ( pk.getColumnSpan() != getKey().getColumnSpan() ) {
-				getCollectionTable().setPrimaryKey( pk );
-			}
-//			else {
-				//for backward compatibility, allow a set with no not-null
-				//element columns, using all columns in the row locator SQL
-				//TODO: create an implicit not null constraint on all cols?
-//			}
 		}
 //		else {
 			//create an index on the key columns??

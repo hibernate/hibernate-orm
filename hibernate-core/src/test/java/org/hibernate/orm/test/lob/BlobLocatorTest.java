@@ -1,15 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.lob;
 
 import java.sql.Blob;
 import java.util.Arrays;
 
-import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.dialect.SybaseDialect;
@@ -45,7 +42,7 @@ public class BlobLocatorTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@RequiresDialectFeature(
-			value = DialectChecks.SupportsUnboundedLobLocatorMaterializationCheck.class,
+			value = DialectChecks.SupportsExpectedLobUsagePattern.class,
 			comment = "database/driver does not support materializing a LOB locator outside the owning transaction"
 	)
 	public void testBoundedBlobLocatorAccess() throws Throwable {
@@ -57,7 +54,7 @@ public class BlobLocatorTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 		LobHolder entity = new LobHolder();
 		entity.setBlobLocator( s.getLobHelper().createBlob( original ) );
-		s.save( entity );
+		s.persist( entity );
 		s.getTransaction().commit();
 		s.close();
 
@@ -120,7 +117,7 @@ public class BlobLocatorTest extends BaseCoreFunctionalTestCase {
 			Assert.assertEquals( empty.length, entity.getBlobLocator().length() );
 			assertEquals( empty, extractData( entity.getBlobLocator() ) );
 		}
-		s.delete( entity );
+		s.remove( entity );
 		s.getTransaction().commit();
 		s.close();
 
@@ -142,7 +139,7 @@ public class BlobLocatorTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 		LobHolder entity = new LobHolder();
 		entity.setBlobLocator( s.getLobHelper().createBlob( original ) );
-		s.save( entity );
+		s.persist( entity );
 		s.getTransaction().commit();
 		s.close();
 
@@ -159,7 +156,7 @@ public class BlobLocatorTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		s.delete( entity );
+		s.remove( entity );
 		s.getTransaction().commit();
 		s.close();
 	}

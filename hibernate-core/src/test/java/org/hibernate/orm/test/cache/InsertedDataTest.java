@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cache;
 
@@ -34,7 +32,7 @@ public class InsertedDataTest extends BaseCoreFunctionalTestCase {
 	protected void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.CACHE_REGION_PREFIX, "" );
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
+		cfg.setProperty( Environment.GENERATE_STATISTICS, true );
 	}
 
 	@Test
@@ -45,7 +43,7 @@ public class InsertedDataTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		CacheableItem item = new CacheableItem( "data" );
-		s.save( item );
+		s.persist( item );
 		s.getTransaction().commit();
 		s.close();
 
@@ -66,7 +64,7 @@ public class InsertedDataTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		CacheableItem item = new CacheableItem( "data" );
-		s.save( item );
+		s.persist( item );
 		s.flush();
 		s.getTransaction().rollback();
 		s.close();
@@ -82,7 +80,7 @@ public class InsertedDataTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		CacheableItem item = new CacheableItem( "data" );
-		s.save( item );
+		s.persist( item );
 		s.flush();
 		item.setName( "new data" );
 		s.getTransaction().commit();
@@ -106,7 +104,7 @@ public class InsertedDataTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		CacheableItem item = new CacheableItem( "data" );
-		s.save( item );
+		s.persist( item );
 		s.flush();
 		item.setName( "new data" );
 		s.getTransaction().rollback();
@@ -129,7 +127,7 @@ public class InsertedDataTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		CacheableItem item = new CacheableItem( "data" );
-		s.save( item );
+		s.persist( item );
 		s.flush();
 		s.refresh( item );
 		s.getTransaction().commit();
@@ -152,7 +150,7 @@ public class InsertedDataTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		CacheableItem item = new CacheableItem( "data" );
-		s.save( item );
+		s.persist( item );
 		s.flush();
 		s.refresh( item );
 		s.getTransaction().rollback();
@@ -179,7 +177,7 @@ public class InsertedDataTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		CacheableItem item = new CacheableItem( "data" );
-		s.save( item );
+		s.persist( item );
 		s.flush();
 		s.clear();
 		s.getTransaction().commit();
@@ -202,7 +200,7 @@ public class InsertedDataTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		CacheableItem item = new CacheableItem( "data" );
-		s.save( item );
+		s.persist( item );
 		s.flush();
 		s.clear();
 		item = (CacheableItem) s.get( CacheableItem.class, item.getId() );

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.beans.internal;
 
@@ -14,11 +12,12 @@ import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.jboss.logging.Logger;
 
 /**
- * BeanInstanceProducer implementation based on direct instantiation
- *
- * In normal Hibernate use this is used when either:
- * 		* there is no configured back-end container
- * 		* the back-end container did not define a bean for this class
+ * {@link BeanInstanceProducer} implementation based on direct instantiation.
+ * Usually, this is used when either:
+ * <ul>
+ * <li>there is no configured back-end container, or
+ * <li>the back-end container did not define a bean for this class.
+ * </ul>
  *
  * @author Steve Ebersole
  */

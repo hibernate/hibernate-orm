@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -16,7 +14,7 @@ import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.cte.CteStatement;
+import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -24,6 +22,7 @@ import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
+import org.hibernate.sql.ast.tree.from.UnionTableReference;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
@@ -35,6 +34,8 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
  * @author Christian Beikov
  */
 public class SybaseAnywhereSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
+
+	private static final String UNION_ALL = " union all ";
 
 	public SybaseAnywhereSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
@@ -94,14 +95,40 @@ public class SybaseAnywhereSqlAstTranslator<T extends JdbcOperation> extends Abs
 
 	@Override
 	protected boolean renderNamedTableReference(NamedTableReference tableReference, LockMode lockMode) {
-		super.renderNamedTableReference( tableReference, lockMode );
 		if ( getDialect().getVersion().isBefore( 10 ) ) {
-			if ( LockMode.READ.lessThan( lockMode ) ) {
-				appendSql( " holdlock" );
+			final String tableExpression = tableReference.getTableExpression();
+			if ( tableReference instanceof UnionTableReference && lockMode != LockMode.NONE && tableExpression.charAt( 0 ) == '(' ) {
+				// SQL Server requires to push down the lock hint to the actual table names
+				int searchIndex = 0;
+				int unionIndex;
+				while ( ( unionIndex = tableExpression.indexOf( UNION_ALL, searchIndex ) ) != -1 ) {
+					append( tableExpression, searchIndex, unionIndex );
+					renderLockHint( lockMode );
+					appendSql( UNION_ALL );
+					searchIndex = unionIndex + UNION_ALL.length();
+				}
+				append( tableExpression, searchIndex, tableExpression.length() - 1 );
+				renderLockHint( lockMode );
+				appendSql( " )" );
+
+				registerAffectedTable( tableReference );
+				renderTableReferenceIdentificationVariable( tableReference );
 			}
+			else {
+				super.renderNamedTableReference( tableReference, lockMode );
+				renderLockHint( lockMode );
+			}
+			// Just always return true because SQL Server doesn't support the FOR UPDATE clause
 			return true;
 		}
+		super.renderNamedTableReference( tableReference, lockMode );
 		return false;
+	}
+
+	private void renderLockHint(LockMode lockMode) {
+		if ( LockMode.READ.lessThan( lockMode ) ) {
+			appendSql( " holdlock" );
+		}
 	}
 
 	@Override
@@ -158,16 +185,6 @@ public class SybaseAnywhereSqlAstTranslator<T extends JdbcOperation> extends Abs
 	}
 
 	@Override
-	protected void renderSearchClause(CteStatement cte) {
-		// Sybase Anywhere does not support this, but it's just a hint anyway
-	}
-
-	@Override
-	protected void renderCycleClause(CteStatement cte) {
-		// Sybase Anywhere does not support this, but it can be emulated
-	}
-
-	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		renderComparisonEmulateIntersect( lhs, operator, rhs );
 	}
@@ -197,6 +214,15 @@ public class SybaseAnywhereSqlAstTranslator<T extends JdbcOperation> extends Abs
 	}
 
 	@Override
+	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
+		appendSql( OPEN_PARENTHESIS );
+		visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
+		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
+		visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
+		appendSql( CLOSE_PARENTHESIS );
+	}
+
+	@Override
 	protected boolean supportsRowValueConstructorSyntax() {
 		return false;
 	}
@@ -209,15 +235,5 @@ public class SybaseAnywhereSqlAstTranslator<T extends JdbcOperation> extends Abs
 	@Override
 	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
 		return false;
-	}
-
-	@Override
-	protected String getFromDual() {
-		return " from sys.dummy";
-	}
-
-	@Override
-	protected String getFromDualForSelectOnly() {
-		return getFromDual();
 	}
 }

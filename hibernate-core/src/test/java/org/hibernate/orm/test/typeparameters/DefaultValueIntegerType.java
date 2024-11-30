@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.typeparameters;
 
@@ -49,14 +47,15 @@ public class DefaultValueIntegerType implements UserType<Integer>, Parameterized
 	}
 
 	@Override
-	public Integer nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public Integer nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+			throws SQLException {
 		Number result = (Number) rs.getObject( position );
 		return result == null ? defaultValue : Integer.valueOf( result.intValue() );
 	}
 
 	@Override
 	public void nullSafeSet(PreparedStatement st, Integer value, int index, SharedSessionContractImplementor session)
-			throws HibernateException, SQLException {
+			throws SQLException {
 		if ( value == null || defaultValue.equals( value ) ) {
 			log.trace( "binding null to parameter: " + index );
 			st.setNull( index, Types.INTEGER );

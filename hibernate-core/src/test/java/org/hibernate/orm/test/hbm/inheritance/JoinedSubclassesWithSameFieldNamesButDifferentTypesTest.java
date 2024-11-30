@@ -1,9 +1,13 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.hbm.inheritance;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.junit.jupiter.api.Test;
@@ -12,7 +16,7 @@ import org.junit.jupiter.api.Test;
 public class JoinedSubclassesWithSameFieldNamesButDifferentTypesTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-15369")
+	@JiraKey(value = "HHH-15369")
 	public void testNoExceptionIsThrown(ServiceRegistryScope scope) {
 		try (final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) new MetadataSources( scope.getRegistry() )
 				.addResource( "org/hibernate/orm/test/hbm/inheritance/AnimalReport.hbm.xml" )

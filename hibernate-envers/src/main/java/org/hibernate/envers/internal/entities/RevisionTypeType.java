@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities;
 
@@ -37,7 +35,8 @@ public class RevisionTypeType implements UserType<RevisionType>, Serializable {
 	}
 
 	@Override
-	public RevisionType nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public RevisionType nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+			throws SQLException {
 		byte byteValue = rs.getByte( position );
 		if ( rs.wasNull() ) {
 			return null;
@@ -47,12 +46,12 @@ public class RevisionTypeType implements UserType<RevisionType>, Serializable {
 
 	@Override
 	public void nullSafeSet(PreparedStatement preparedStatement, RevisionType value, int index, SharedSessionContractImplementor session)
-			throws HibernateException, SQLException {
+			throws SQLException {
 		if ( value == null ) {
 			preparedStatement.setNull( index, Types.TINYINT );
 		}
 		else {
-			preparedStatement.setByte( index, ( (RevisionType) value ).getRepresentation() );
+			preparedStatement.setByte( index, value.getRepresentation() );
 		}
 	}
 

@@ -1,24 +1,22 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.jaxb.hbm.transform;
 
-import org.hibernate.boot.jaxb.mapping.JaxbJoinColumn;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinColumnImpl;
 
 /**
  * @author Steve Ebersole
  */
 public class TargetColumnAdapterJaxbJoinColumn implements TargetColumnAdapter {
-	private final JaxbJoinColumn jaxbColumn;
+	private final JaxbJoinColumnImpl jaxbColumn;
 
 	public TargetColumnAdapterJaxbJoinColumn(ColumnDefaults columnDefaults) {
-		this( new JaxbJoinColumn(), columnDefaults );
+		this( new JaxbJoinColumnImpl(), columnDefaults );
 	}
 
-	public TargetColumnAdapterJaxbJoinColumn(JaxbJoinColumn jaxbColumn, ColumnDefaults columnDefaults) {
+	public TargetColumnAdapterJaxbJoinColumn(JaxbJoinColumnImpl jaxbColumn, ColumnDefaults columnDefaults) {
 		this.jaxbColumn = jaxbColumn;
 		this.jaxbColumn.setNullable( columnDefaults.isNullable() );
 		this.jaxbColumn.setUnique( columnDefaults.isUnique() );
@@ -26,7 +24,7 @@ public class TargetColumnAdapterJaxbJoinColumn implements TargetColumnAdapter {
 		this.jaxbColumn.setUpdatable( columnDefaults.isUpdateable() );
 	}
 
-	public JaxbJoinColumn getTargetColumn() {
+	public JaxbJoinColumnImpl getTargetColumn() {
 		return jaxbColumn;
 	}
 

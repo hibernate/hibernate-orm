@@ -1,28 +1,27 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.lob;
 
 import java.util.Arrays;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
+import org.hibernate.dialect.CockroachDialect;
+import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
+import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
-
-import org.hibernate.dialect.CockroachDialect;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
-import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
-
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -38,10 +37,14 @@ public class MaterializedBlobTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@SkipForDialect(value = CockroachDialect.class, comment = "Blob in CockroachDB is same as a varbinary, to assertions will fail")
 	public void testTypeSelection() {
-        int index = sessionFactory().getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor(MaterializedBlobEntity.class.getName()).getEntityMetamodel().getPropertyIndex( "theBytes" );
-        BasicType<?> type = (BasicType<?>) sessionFactory().getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor(MaterializedBlobEntity.class.getName()).getEntityMetamodel().getProperties()[index].getType();
-		assertTrue( type.getJavaTypeDescriptor() instanceof PrimitiveByteArrayJavaType );
-		assertTrue( type.getJdbcType() instanceof BlobJdbcType );
+		final EntityPersister entityDescriptor = sessionFactory().getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( MaterializedBlobEntity.class.getName() );
+		final AttributeMapping theBytesAttr = entityDescriptor.findAttributeMapping( "theBytes" );
+		assertThat( theBytesAttr ).isInstanceOf( BasicValuedModelPart.class );
+		final JdbcMapping mapping = ( (BasicValuedModelPart) theBytesAttr ).getJdbcMapping();
+		assertTrue( mapping.getJavaTypeDescriptor() instanceof PrimitiveByteArrayJavaType );
+		assertTrue( mapping.getJdbcType() instanceof BlobJdbcType );
 	}
 
 	@Test
@@ -51,7 +54,7 @@ public class MaterializedBlobTest extends BaseCoreFunctionalTestCase {
 		Session session = openSession();
 		session.beginTransaction();
 		MaterializedBlobEntity entity = new MaterializedBlobEntity( "test", testData );
-		session.save( entity );
+		session.persist( entity );
 		session.getTransaction().commit();
 		session.close();
 
@@ -59,7 +62,7 @@ public class MaterializedBlobTest extends BaseCoreFunctionalTestCase {
 		session.beginTransaction();
 		entity = session.get( MaterializedBlobEntity.class, entity.getId() );
 		assertTrue( Arrays.equals( testData, entity.getTheBytes() ) );
-		session.delete( entity );
+		session.remove( entity );
 		session.getTransaction().commit();
 		session.close();
 	}

@@ -1,30 +1,38 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
 import java.sql.CallableStatement;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAccessor;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.PessimisticLockException;
+import org.hibernate.QueryTimeoutException;
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.H2AggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.hint.IndexQueryHintHandler;
-import org.hibernate.dialect.identity.H2IdentityColumnSupport;
+import org.hibernate.dialect.identity.H2FinalTableIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.H2V1SequenceSupport;
 import org.hibernate.dialect.sequence.H2V2SequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
+import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
@@ -32,71 +40,81 @@ import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.persister.entity.mutation.EntityMutationTarget;
+import org.hibernate.query.sqm.CastType;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.NullOrdering;
-import org.hibernate.query.sqm.TemporalUnit;
-import org.hibernate.query.sqm.mutation.internal.temptable.BeforeUseAction;
-import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
-import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
+import org.hibernate.query.common.TemporalUnit;
+import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2DatabaseImpl;
+import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
-import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
-import org.hibernate.type.descriptor.jdbc.InstantJdbcType;
+import org.hibernate.type.descriptor.jdbc.EnumJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.OrdinalEnumJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimeUtcAsOffsetTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimestampUtcAsInstantJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NativeEnumDdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
 
-import static org.hibernate.query.sqm.TemporalUnit.SECOND;
-import static org.hibernate.type.SqlTypes.ARRAY;
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
+import static org.hibernate.query.common.TemporalUnit.SECOND;
+import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.CHAR;
-import static org.hibernate.type.SqlTypes.DECIMAL;
+import static org.hibernate.type.SqlTypes.CLOB;
 import static org.hibernate.type.SqlTypes.DOUBLE;
 import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.INTERVAL_SECOND;
+import static org.hibernate.type.SqlTypes.JSON;
 import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
 import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
 import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
 import static org.hibernate.type.SqlTypes.NCHAR;
-import static org.hibernate.type.SqlTypes.NUMERIC;
+import static org.hibernate.type.SqlTypes.NCLOB;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
+import static org.hibernate.type.SqlTypes.OTHER;
 import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
-import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithNanos;
 
 /**
  * A {@linkplain Dialect SQL dialect} for H2.
  *
  * @author Thomas Mueller
+ * @author Jürgen Kreitler
  */
 public class H2Dialect extends Dialect {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( H2Dialect.class );
-	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 1, 4, 197 );
+	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 2, 1, 214 );
 
 	private final boolean ansiSequence;
 	private final boolean cascadeConstraints;
@@ -104,9 +122,12 @@ public class H2Dialect extends Dialect {
 
 	private final SequenceInformationExtractor sequenceInformationExtractor;
 	private final String querySequenceString;
+	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
+
+	private final OptionalTableUpdateStrategy optionalTableUpdateStrategy;
 
 	public H2Dialect(DialectResolutionInfo info) {
-		this( parseVersion( info ) );
+		this( staticDetermineDatabaseVersion( info ) );
 		registerKeywords( info );
 	}
 
@@ -117,25 +138,32 @@ public class H2Dialect extends Dialect {
 	public H2Dialect(DatabaseVersion version) {
 		super(version);
 
-//		supportsTuplesInSubqueries = version.isSameOrAfter( 1, 4, 198 );
-
 		// Prior to 1.4.200 there was no support for 'current value for sequence_name'
 		// After 2.0.202 there is no support for 'sequence_name.nextval' and 'sequence_name.currval'
-		ansiSequence = version.isSameOrAfter( 1, 4, 200 );
+		ansiSequence = true;
 
 		// Prior to 1.4.200 the 'cascade' in 'drop table' was implicit
-		cascadeConstraints = version.isSameOrAfter( 1, 4, 200 );
+		cascadeConstraints = true;
 		// 1.4.200 introduced changes in current_time and current_timestamp
-		useLocalTime = version.isSameOrAfter( 1, 4, 200 );
+		useLocalTime = true;
 
-		this.sequenceInformationExtractor = version.isSameOrAfter( 1, 4, 201 )
-				? SequenceInformationExtractorLegacyImpl.INSTANCE
-				: SequenceInformationExtractorH2DatabaseImpl.INSTANCE;
+		this.sequenceInformationExtractor = SequenceInformationExtractorLegacyImpl.INSTANCE;
 		this.querySequenceString = "select * from INFORMATION_SCHEMA.SEQUENCES";
+		this.optionalTableUpdateStrategy = H2Dialect::usingMerge;
 	}
 
-	private static DatabaseVersion parseVersion(DialectResolutionInfo info) {
-		return DatabaseVersion.make( info.getMajor(), info.getMinor(), parseBuildId( info ) );
+	@Override
+	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
+		return staticDetermineDatabaseVersion(info);
+	}
+
+	// Static version necessary to call from constructor
+	private static DatabaseVersion staticDetermineDatabaseVersion(DialectResolutionInfo info) {
+		DatabaseVersion version = info.makeCopyOrDefault( MINIMUM_VERSION );
+		if ( info.getDatabaseVersion() != null ) {
+			version = DatabaseVersion.make( version.getMajor(), version.getMinor(), parseBuildId( info ) );
+		}
+		return version;
 	}
 
 	private static int parseBuildId(DialectResolutionInfo info) {
@@ -144,8 +172,13 @@ public class H2Dialect extends Dialect {
 			return 0;
 		}
 
-		final String[] bits = databaseVersion.split("[. ]");
+		final String[] bits = StringHelper.split( ". -", databaseVersion );
 		return bits.length > 2 ? Integer.parseInt( bits[2] ) : 0;
+	}
+
+	@Override
+	protected DatabaseVersion getMinimumSupportedVersion() {
+		return MINIMUM_VERSION;
 	}
 
 	@Override
@@ -156,41 +189,36 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public boolean supportsStandardArrays() {
-		return getVersion().isSameOrAfter( 2 );
+		return true;
+	}
+
+	@Override
+	public boolean useArrayForMultiValuedParameters() {
+		// Performance is worse than the in-predicate version
+		return false;
 	}
 
 	@Override
 	protected String columnType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			// prior to version 2.0, H2 reported NUMERIC columns as DECIMAL,
-			// which caused problems for schema update tool
-			case NUMERIC:
-				return getVersion().isBefore( 2 ) ? columnType( DECIMAL ) : super.columnType( sqlTypeCode );
-			case NCHAR:
-				return columnType( CHAR );
-			case NVARCHAR:
-				return columnType( VARCHAR );
-		}
-		return super.columnType( sqlTypeCode );
+		return switch (sqlTypeCode) {
+			// h2 recognizes NCHAR and NCLOB as aliases
+			// but, according to the docs, not NVARCHAR
+			// so just normalize all these types
+			case NCHAR -> columnType( CHAR );
+			case NVARCHAR -> columnType( VARCHAR );
+			case NCLOB -> columnType( CLOB );
+			default -> super.columnType( sqlTypeCode );
+		};
 	}
 
 	@Override
 	protected String castType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case CHAR:
-			case NCHAR:
-				return "char";
-			case VARCHAR:
-			case NVARCHAR:
-			case LONG32VARCHAR:
-			case LONG32NVARCHAR:
-				return "varchar";
-			case BINARY:
-			case VARBINARY:
-			case LONG32VARBINARY:
-				return "varbinary";
-		}
-		return super.castType( sqlTypeCode );
+		return switch (sqlTypeCode) {
+			case CHAR, NCHAR -> "char";
+			case VARCHAR, NVARCHAR, LONG32VARCHAR, LONG32NVARCHAR -> "varchar";
+			case BINARY, VARBINARY, LONG32VARBINARY -> "varbinary";
+			default -> super.castType( sqlTypeCode );
+		};
 	}
 
 	@Override
@@ -198,14 +226,12 @@ public class H2Dialect extends Dialect {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
-		if ( getVersion().isBefore( 2 ) ) {
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( ARRAY, "array", this ) );
-		}
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
-		if ( getVersion().isSameOrAfter( 1, 4, 198 ) ) {
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INTERVAL_SECOND, "interval second($p,$s)", this ) );
-		}
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INTERVAL_SECOND, "interval second($p,$s)", this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
+		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this ) );
+		ddlTypeRegistry.addDescriptor( new NativeOrdinalEnumDdlTypeImpl( this ) );
 	}
 
 	@Override
@@ -215,11 +241,20 @@ public class H2Dialect extends Dialect {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
 
-		jdbcTypeRegistry.addDescriptor( TIMESTAMP_UTC, InstantJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( TimeUtcAsOffsetTimeJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( TimestampUtcAsInstantJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
-		if ( getVersion().isSameOrAfter( 1, 4, 198 ) ) {
-			jdbcTypeRegistry.addDescriptorIfAbsent( H2DurationIntervalSecondJdbcType.INSTANCE );
-		}
+		jdbcTypeRegistry.addDescriptorIfAbsent( H2DurationIntervalSecondJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptorIfAbsent( H2JsonJdbcType.INSTANCE );
+		// Replace the standard array constructor
+		jdbcTypeRegistry.addTypeConstructor( H2JsonArrayJdbcTypeConstructor.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( EnumJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( OrdinalEnumJdbcType.INSTANCE );
+	}
+
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		return H2AggregateSupport.valueOf( this );
 	}
 
 	@Override
@@ -229,14 +264,14 @@ public class H2Dialect extends Dialect {
 
 	public boolean hasOddDstBehavior() {
 		// H2 1.4.200 has a bug: https://github.com/h2database/h2database/issues/3184
-		return getVersion().isSameOrAfter( 1, 4, 200 );
+		return true;
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry(functionContributions);
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 
 		// H2 needs an actual argument type for aggregates like SUM, AVG, MIN, MAX to determine the result type
 		functionFactory.aggregates( this, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
@@ -248,13 +283,14 @@ public class H2Dialect extends Dialect {
 		functionFactory.radians();
 		functionFactory.degrees();
 		functionFactory.log10();
+		functionFactory.mod_operator();
 		functionFactory.rand();
-		functionFactory.truncate();
 		functionFactory.soundex();
 		functionFactory.translate();
 		functionFactory.bitand();
 		functionFactory.bitor();
 		functionFactory.bitxor();
+		functionFactory.bitnot();
 		functionFactory.bitAndOr();
 		functionFactory.yearMonthDay();
 		functionFactory.hourMinuteSecond();
@@ -264,6 +300,8 @@ public class H2Dialect extends Dialect {
 		if ( useLocalTime ) {
 			functionFactory.localtimeLocaltimestamp();
 		}
+		functionFactory.trunc_dateTrunc();
+		functionFactory.dateTrunc();
 		functionFactory.bitLength();
 		functionFactory.octetLength();
 		functionFactory.ascii();
@@ -285,46 +323,90 @@ public class H2Dialect extends Dialect {
 		functionFactory.median();
 		functionFactory.stddevPopSamp();
 		functionFactory.varPopSamp();
-		if ( getVersion().isSame( 1, 4, 200 ) ) {
-			// See https://github.com/h2database/h2database/issues/2518
-			functionFactory.format_toChar();
-		}
-		else {
-			functionFactory.format_formatdatetime();
-		}
+		functionFactory.format_formatdatetime();
 		functionFactory.rownum();
-		if ( getVersion().isSameOrAfter( 1, 4, 200 ) ) {
-			functionFactory.windowFunctions();
-			if ( getVersion().isSameOrAfter( 2 ) ) {
-				functionFactory.listagg( null );
-				functionFactory.inverseDistributionOrderedSetAggregates();
-				functionFactory.hypotheticalOrderedSetAggregates();
-			}
-			else {
-				// Use group_concat until 2.x as listagg was buggy
-				functionFactory.listagg_groupConcat();
-			}
+		functionFactory.windowFunctions();
+		functionFactory.listagg( null );
+		functionFactory.inverseDistributionOrderedSetAggregates();
+		functionFactory.hypotheticalOrderedSetAggregates();
+		functionFactory.array();
+		functionFactory.arrayAggregate();
+		functionFactory.arrayPosition_h2( getMaximumArraySize() );
+		functionFactory.arrayPositions_h2( getMaximumArraySize() );
+		functionFactory.arrayLength_cardinality();
+		functionFactory.arrayConcat_operator();
+		functionFactory.arrayPrepend_operator();
+		functionFactory.arrayAppend_operator();
+		functionFactory.arrayContains_h2( getMaximumArraySize() );
+		functionFactory.arrayIntersects_h2( getMaximumArraySize() );
+		functionFactory.arrayGet_h2();
+		functionFactory.arraySet_h2( getMaximumArraySize() );
+		functionFactory.arrayRemove_h2( getMaximumArraySize() );
+		functionFactory.arrayRemoveIndex_h2( getMaximumArraySize() );
+		functionFactory.arraySlice();
+		functionFactory.arrayReplace_h2( getMaximumArraySize() );
+		functionFactory.arrayTrim_trim_array();
+		functionFactory.arrayFill_h2();
+		functionFactory.arrayToString_h2( getMaximumArraySize() );
+
+		functionFactory.jsonObject();
+		functionFactory.jsonArray();
+		if ( getVersion().isSameOrAfter( 2, 2, 220 ) ) {
+			functionFactory.jsonValue_h2();
+			functionFactory.jsonQuery_h2();
+			functionFactory.jsonExists_h2();
+			functionFactory.jsonArrayAgg_h2();
+			functionFactory.jsonObjectAgg_h2();
 		}
-		else {
-			functionFactory.listagg_groupConcat();
-		}
+
+		functionFactory.xmlelement_h2();
+		functionFactory.xmlcomment();
+		functionFactory.xmlforest_h2();
+		functionFactory.xmlconcat_h2();
+		functionFactory.xmlpi_h2();
+
+		functionFactory.unnest_h2( getMaximumArraySize() );
+		functionFactory.generateSeries_h2( getMaximumSeriesSize() );
+		functionFactory.jsonTable_h2( getMaximumArraySize() );
+	}
+
+	/**
+	 * H2 requires a very special emulation, because {@code unnest} is pretty much useless,
+	 * due to <a href="https://github.com/h2database/h2database/issues/1815">issue 1815</a>.
+	 * This emulation uses {@code array_get}, {@code array_length} and {@code system_range} functions to roughly achieve the same,
+	 * but requires that {@code system_range} is fed with a "maximum array size".
+	 */
+	protected int getMaximumArraySize() {
+		return 1000;
+	}
+
+	/**
+	 * Since H2 doesn't support ordinality for the {@code system_range} function or {@code lateral},
+	 * it's impossible to use {@code system_range} for non-constant cases.
+	 * Luckily, correlation can be emulated, but requires that there is an upper bound on the amount
+	 * of elements that the series can return.
+	 */
+	protected int getMaximumSeriesSize() {
+		return 10000;
+	}
+
+	@Override
+	public @Nullable String getDefaultOrdinalityColumnName() {
+		return "nord";
 	}
 
 	@Override
 	public void augmentPhysicalTableTypes(List<String> tableTypesList) {
-		if ( getVersion().isSameOrAfter( 2 ) ) {
-			tableTypesList.add( "BASE TABLE" );
-		}
+		tableTypesList.add( "BASE TABLE" );
 	}
 
 	@Override
 	protected Integer resolveSqlTypeCode(String columnTypeName, TypeConfiguration typeConfiguration) {
-		switch ( columnTypeName ) {
-			case "FLOAT(24)":
-				// Use REAL instead of FLOAT to get Float as recommended Java type
-				return Types.REAL;
-		}
-		return super.resolveSqlTypeCode( columnTypeName, typeConfiguration );
+		return switch (columnTypeName) {
+			// Use REAL instead of FLOAT to get Float as recommended Java type
+			case "FLOAT(24)" -> Types.REAL;
+			default -> super.resolveSqlTypeCode( columnTypeName, typeConfiguration );
+		};
 	}
 
 	@Override
@@ -335,19 +417,30 @@ public class H2Dialect extends Dialect {
 			int scale,
 			JdbcTypeRegistry jdbcTypeRegistry) {
 		// As of H2 2.0 we get a FLOAT type code even though it is a DOUBLE
-		if ( jdbcTypeCode == FLOAT && "DOUBLE PRECISION".equals( columnTypeName ) ) {
-			return jdbcTypeRegistry.getDescriptor( DOUBLE );
+		switch ( jdbcTypeCode ) {
+			case FLOAT:
+				if ( "DOUBLE PRECISION".equals( columnTypeName ) ) {
+					return jdbcTypeRegistry.getDescriptor( DOUBLE );
+				}
+				break;
+			case OTHER:
+				if ( "GEOMETRY".equals( columnTypeName ) ) {
+					return jdbcTypeRegistry.getDescriptor( GEOMETRY );
+				}
+				else if ( "JSON".equals( columnTypeName ) ) {
+					return jdbcTypeRegistry.getDescriptor( JSON );
+				}
+				break;
 		}
 		return super.resolveSqlTypeDescriptor( columnTypeName, jdbcTypeCode, precision, scale, jdbcTypeRegistry );
 	}
 
 	@Override
 	protected Integer resolveSqlTypeCode(String typeName, String baseTypeName, TypeConfiguration typeConfiguration) {
-		switch ( baseTypeName ) {
-			case "CHARACTER VARYING":
-				return VARCHAR;
-		}
-		return super.resolveSqlTypeCode( typeName, baseTypeName, typeConfiguration );
+		return switch (baseTypeName) {
+			case "CHARACTER VARYING" -> VARCHAR;
+			default -> super.resolveSqlTypeCode( typeName, baseTypeName, typeConfiguration );
+		};
 	}
 
 	@Override
@@ -395,19 +488,146 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
+	public String castPattern(CastType from, CastType to) {
+		if ( from == CastType.STRING && to == CastType.BOOLEAN ) {
+			return "cast(?1 as ?2)";
+		}
+		else {
+			return super.castPattern( from, to );
+		}
+	}
+
+	@Override @SuppressWarnings("deprecation")
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		if ( intervalType != null ) {
 			return "(?2+?3)";
 		}
-		return "dateadd(?1,?2,?3)";
+		return unit == SECOND
+				//TODO: if we have an integral number of seconds
+				//      (the common case) this is unnecessary
+				? "dateadd(nanosecond,?2*1e9,?3)"
+				: "dateadd(?1,?2,?3)";
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		if ( unit == null ) {
 			return "(?3-?2)";
 		}
 		return "datediff(?1,?2,?3)";
+	}
+
+	@Override
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			TemporalAccessor temporalAccessor,
+			@SuppressWarnings("deprecation")
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( "date '" );
+				appendAsDate( appender, temporalAccessor );
+				appender.appendSql( '\'' );
+				break;
+			case TIME:
+				if ( supportsTimeLiteralOffset() && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS )  ) {
+					appender.appendSql( "time with time zone '" );
+					appendAsTime( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				}
+				else {
+					appender.appendSql( "time '" );
+					appendAsLocalTime( appender, temporalAccessor );
+				}
+				appender.appendSql( '\'' );
+				break;
+			case TIMESTAMP:
+				if ( supportsTemporalLiteralOffset() && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
+					appender.appendSql( "timestamp with time zone '" );
+					appendAsTimestampWithNanos( appender, temporalAccessor, true, jdbcTimeZone );
+					appender.appendSql( '\'' );
+				}
+				else {
+					appender.appendSql( "timestamp '" );
+					appendAsTimestampWithNanos( appender, temporalAccessor, false, jdbcTimeZone );
+					appender.appendSql( '\'' );
+				}
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
+
+	@Override
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			Date date,
+			@SuppressWarnings("deprecation")
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( "date '" );
+				appendAsDate( appender, date );
+				appender.appendSql( '\'' );
+				break;
+			case TIME:
+				if ( supportsTimeLiteralOffset() ) {
+					appender.appendSql( "time with time zone '" );
+					appendAsTime( appender, date, jdbcTimeZone );
+				}
+				else {
+					appender.appendSql( "time '" );
+					appendAsLocalTime( appender, date );
+				}
+				appender.appendSql( '\'' );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( "timestamp with time zone '" );
+				appendAsTimestampWithNanos( appender, date, jdbcTimeZone );
+				appender.appendSql( '\'' );
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
+
+	@Override
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			Calendar calendar,
+			@SuppressWarnings("deprecation")
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( "date '" );
+				appendAsDate( appender, calendar );
+				appender.appendSql( '\'' );
+				break;
+			case TIME:
+				if ( supportsTimeLiteralOffset() ) {
+					appender.appendSql( "time with time zone '" );
+					appendAsTime( appender, calendar, jdbcTimeZone );
+				}
+				else {
+					appender.appendSql( "time '" );
+					appendAsLocalTime( appender, calendar );
+				}
+				appender.appendSql( '\'' );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( "timestamp with time zone '" );
+				appendAsTimestampWithMillis( appender, calendar, jdbcTimeZone );
+				appender.appendSql( '\'' );
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
+
+	public boolean supportsTimeLiteralOffset() {
+		return true;
 	}
 
 	@Override
@@ -418,6 +638,11 @@ public class H2Dialect extends Dialect {
 	@Override
 	public TimeZoneSupport getTimeZoneSupport() {
 		return TimeZoneSupport.NATIVE;
+	}
+
+	@Override
+	public boolean supportsIsTrue() {
+		return true;
 	}
 
 	@Override
@@ -462,6 +687,18 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsAlterColumnType() {
+		return true;
+	}
+
+	@Override
+	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
+		return "alter column " + columnName + " set data type " + columnType;
+		// if only altering the type, no need to specify the whole definition
+//		return "alter column " + columnName + " " + columnDefinition;
+	}
+
+	@Override
 	public boolean supportsCommentOn() {
 		return true;
 	}
@@ -495,7 +732,7 @@ public class H2Dialect extends Dialect {
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType entityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableMutationStrategy(
+		return new GlobalTemporaryTableMutationStrategy(
 				TemporaryTable.createIdTable(
 						entityDescriptor,
 						basename -> TemporaryTable.ID_TABLE_PREFIX + basename,
@@ -510,7 +747,7 @@ public class H2Dialect extends Dialect {
 	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
 			EntityMappingType entityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableInsertStrategy(
+		return new GlobalTemporaryTableInsertStrategy(
 				TemporaryTable.createEntityTable(
 						entityDescriptor,
 						name -> TemporaryTable.ENTITY_TABLE_PREFIX + name,
@@ -522,13 +759,13 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
-	public TemporaryTableKind getSupportedTemporaryTableKind() {
-		return TemporaryTableKind.LOCAL;
+	public String getTemporaryTableCreateOptions() {
+		return "TRANSACTIONAL";
 	}
 
 	@Override
-	public BeforeUseAction getTemporaryTableBeforeUseAction() {
-		return BeforeUseAction.CREATE;
+	public TemporaryTableKind getSupportedTemporaryTableKind() {
+		return TemporaryTableKind.GLOBAL;
 	}
 
 	@Override
@@ -542,13 +779,16 @@ public class H2Dialect extends Dialect {
 				// 23001: Unique index or primary key violation: {0}
 				if ( sqle.getSQLState().startsWith( "23" ) ) {
 					final String message = sqle.getMessage();
-					final int idx = message.indexOf( "violation: " );
-					if ( idx > 0 ) {
-						String constraintName = message.substring( idx + "violation: ".length() );
+					final int i = message.indexOf( "violation: " );
+					if ( i > 0 ) {
+						String constraintDescription =
+								message.substring( i + "violation: ".length() )
+										.replace( "\"", "" );
 						if ( sqle.getSQLState().equals( "23506" ) ) {
-							constraintName = constraintName.substring( 1, constraintName.indexOf( ":" ) );
+							constraintDescription = constraintDescription.substring( 1, constraintDescription.indexOf( ':' ) );
 						}
-						return constraintName;
+						final int j = constraintDescription.indexOf(" ON ");
+						return j>0 ? constraintDescription.substring(0, j) : constraintDescription;
 					}
 				}
 				return null;
@@ -556,24 +796,31 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
-		return (sqlException, message, sql) -> {
-			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
-
-			switch (errorCode) {
-				case 40001:
-					// DEADLOCK DETECTED
-					return new LockAcquisitionException(message, sqlException, sql);
-				case 50200:
-					// LOCK NOT AVAILABLE
-					return new PessimisticLockException(message, sqlException, sql);
-				case 90006:
-					// NULL not allowed for column [90006-145]
-					final String constraintName = getViolatedConstraintNameExtractor().extractConstraintName(sqlException);
-					return new ConstraintViolationException(message, sqlException, sql, constraintName);
-			}
-
-			return null;
-		};
+		return (sqlException, message, sql) ->
+				switch ( extractErrorCode( sqlException ) ) {
+					case 23505 ->
+						// Unique constraint violation
+							new ConstraintViolationException(
+									message,
+									sqlException,
+									sql,
+									ConstraintViolationException.ConstraintKind.UNIQUE,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
+							);
+					case 40001 ->
+						// DEADLOCK DETECTED
+							new LockAcquisitionException(message, sqlException, sql);
+					case 50200 ->
+						// LOCK NOT AVAILABLE
+							new PessimisticLockException(message, sqlException, sql);
+					case 90006 ->
+						// NULL not allowed for column [90006-145]
+							new ConstraintViolationException( message, sqlException, sql,
+									getViolatedConstraintNameExtractor().extractConstraintName(sqlException) );
+					case 57014 ->
+							new QueryTimeoutException( message, sqlException, sql );
+					default -> null;
+				};
 	}
 
 	@Override
@@ -627,17 +874,50 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public boolean supportsWindowFunctions() {
-		return getVersion().isSameOrAfter( 1, 4, 200 );
+		return true;
+	}
+
+	@Override
+	public boolean supportsRecursiveCTE() {
+		return true;
 	}
 
 	@Override
 	public boolean supportsFetchClause(FetchClauseType type) {
-		return getVersion().isSameOrAfter( 1, 4, 198 );
+		return true;
+	}
+
+	@Override
+	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
+		return FunctionalDependencyAnalysisSupportImpl.TABLE_GROUP_AND_CONSTANTS;
 	}
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return new H2IdentityColumnSupport();
+		return H2FinalTableIdentityColumnSupport.INSTANCE;
+	}
+
+	/**
+	 * @return {@code true} because we can use {@code select ... from final table (insert .... )}
+	 */
+	@Override
+	public boolean supportsInsertReturning() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsInsertReturningRowId() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsInsertReturningGeneratedKeys() {
+		return true;
+	}
+
+	@Override
+	public boolean unquoteGetGeneratedKeys() {
+		return true;
 	}
 
 	@Override
@@ -647,37 +927,152 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public String getQueryHintString(String query, String hints) {
-		return IndexQueryHintHandler.INSTANCE.addQueryHints( query, hints );
+		return addQueryHints( query, hints );
 	}
 
 	@Override
 	public void appendDatetimeFormat(SqlAppender appender, String format) {
-		if ( getVersion().isSame( 1, 4, 200 ) ) {
-			// See https://github.com/h2database/h2database/issues/2518
-			appender.appendSql( OracleDialect.datetimeFormat( format, true, true ).result() );
-		}
-		else {
-			appender.appendSql(
-					new Replacer( format, "'", "''" )
-					.replace("e", "u")
-					.replace( "xxx", "XXX" )
-					.replace( "xx", "XX" )
-					.replace( "x", "X" )
-					.result()
-			);
-		}
+		appender.appendSql(
+				new Replacer( format, "'", "''" )
+				.replace("e", "u")
+				.replace( "xxx", "XXX" )
+				.replace( "xx", "XX" )
+				.replace( "x", "X" )
+				.result()
+		);
 	}
 
 	public String translateExtractField(TemporalUnit unit) {
-		switch ( unit ) {
-			case DAY_OF_MONTH: return "day";
-			case WEEK: return "iso_week";
-			default: return unit.toString();
-		}
+		return switch (unit) {
+			case DAY_OF_MONTH -> "day";
+			case WEEK -> "iso_week";
+			default -> unit.toString();
+		};
 	}
 
 	@Override
 	public String generatedAs(String generatedAs) {
 		return " generated always as (" + generatedAs + ")";
 	}
+
+	@Override
+	public boolean canDisableConstraints() {
+		return true;
+	}
+
+	@Override
+	public String getEnableConstraintsStatement() {
+		return "set referential_integrity true";
+	}
+
+	@Override
+	public String getEnumTypeDeclaration(String name, String[] values) {
+		StringBuilder type = new StringBuilder();
+		type.append( "enum (" );
+		String separator = "";
+		for ( String value : values ) {
+			type.append( separator ).append('\'').append( value ).append('\'');
+			separator = ",";
+		}
+		return type.append( ')' ).toString();
+	}
+
+	@Override
+	public String getDisableConstraintsStatement() {
+		return "set referential_integrity false";
+	}
+
+	@Override
+	public UniqueDelegate getUniqueDelegate() {
+		return uniqueDelegate;
+	}
+
+	@Override
+	public String rowId(String rowId) {
+		return "_rowid_";
+	}
+
+	@Override
+	public int rowIdSqlType() {
+		return BIGINT;
+	}
+
+	@FunctionalInterface
+	private interface OptionalTableUpdateStrategy {
+		MutationOperation buildMutationOperation(
+				EntityMutationTarget mutationTarget,
+				OptionalTableUpdate optionalTableUpdate,
+				SessionFactoryImplementor factory);
+	}
+
+	@Override
+	public MutationOperation createOptionalTableUpdateOperation(
+			EntityMutationTarget mutationTarget,
+			OptionalTableUpdate optionalTableUpdate,
+			SessionFactoryImplementor factory) {
+		return optionalTableUpdateStrategy.buildMutationOperation( mutationTarget, optionalTableUpdate, factory );
+	}
+
+	private static MutationOperation usingMerge(
+			EntityMutationTarget mutationTarget,
+			OptionalTableUpdate optionalTableUpdate,
+			SessionFactoryImplementor factory) {
+		final H2SqlAstTranslator<?> translator = new H2SqlAstTranslator<>( factory, optionalTableUpdate );
+		return translator.createMergeOperation( optionalTableUpdate );
+	}
+
+//	private static MutationOperation withoutMerge(
+//			EntityMutationTarget mutationTarget,
+//			OptionalTableUpdate optionalTableUpdate,
+//			SessionFactoryImplementor factory) {
+//		return new OptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
+//	}
+
+	@Override
+	public ParameterMarkerStrategy getNativeParameterMarkerStrategy() {
+		return OrdinalParameterMarkerStrategy.INSTANCE;
+	}
+
+	public static class OrdinalParameterMarkerStrategy implements ParameterMarkerStrategy {
+		/**
+		 * Singleton access
+		 */
+		public static final OrdinalParameterMarkerStrategy INSTANCE = new OrdinalParameterMarkerStrategy();
+
+		@Override
+		public String createMarker(int position, JdbcType jdbcType) {
+			return "?" + position;
+		}
+	}
+
+	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+	}
+
+	@Override
+	public String getCaseInsensitiveLike() {
+		return "ilike";
+	}
+
+	@Override
+	public boolean supportsCaseInsensitiveLike(){
+		return true;
+	}
+
+	@Override
+	public boolean supportsBindingNullSqlTypeForSetNull() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsValuesList() {
+		return true;
+	}
+
+	@Override
+	public String getDual() {
+		return "dual";
+	}
+
 }

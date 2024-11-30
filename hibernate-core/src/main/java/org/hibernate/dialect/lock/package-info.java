@@ -6,6 +6,8 @@
  */
 
 /**
- * Support for Dialect-specific locking strategies
+ * Support for {@link org.hibernate.dialect.Dialect}-specific locking strategies.
+ *
+ * @see org.hibernate.dialect.lock.LockingStrategy
  */
 package org.hibernate.dialect.lock;

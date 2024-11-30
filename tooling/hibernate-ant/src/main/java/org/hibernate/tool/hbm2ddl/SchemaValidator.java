@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.hbm2ddl;
 
@@ -49,13 +47,13 @@ public class SchemaValidator {
 		validate( metadata, ( (MetadataImplementor) metadata ).getMetadataBuildingOptions().getServiceRegistry() );
 	}
 
-	@SuppressWarnings("unchecked")
 	public void validate(Metadata metadata, ServiceRegistry serviceRegistry) {
 		LOG.runningSchemaValidator();
 
-		Map config = new HashMap( serviceRegistry.getService( ConfigurationService.class ).getSettings() );
+		Map<String, Object> config =
+				new HashMap<>( serviceRegistry.requireService( ConfigurationService.class ).getSettings() );
 
-		final SchemaManagementTool tool = serviceRegistry.getService( SchemaManagementTool.class );
+		final SchemaManagementTool tool = serviceRegistry.requireService( SchemaManagementTool.class );
 
 		final ExecutionOptions executionOptions = SchemaManagementToolCoordinator.buildExecutionOptions(
 				config,
@@ -148,7 +146,7 @@ public class SchemaValidator {
 
 	private static MetadataImplementor buildMetadata(
 			CommandLineArgs parsedArgs,
-			StandardServiceRegistry serviceRegistry) throws Exception {
+			StandardServiceRegistry serviceRegistry) {
 
 		final MetadataSources metadataSources = new MetadataSources(serviceRegistry);
 
@@ -161,7 +159,7 @@ public class SchemaValidator {
 		}
 
 		final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder();
-		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
+		final StrategySelector strategySelector = serviceRegistry.requireService( StrategySelector.class );
 		if ( parsedArgs.implicitNamingStrategy != null ) {
 			metadataBuilder.applyImplicitNamingStrategy(
 					strategySelector.resolveStrategy( ImplicitNamingStrategy.class, parsedArgs.implicitNamingStrategy )

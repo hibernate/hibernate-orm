@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hql;
 
@@ -17,7 +15,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.OneToMany;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -33,7 +31,8 @@ public class CountExpressionTest extends BaseCoreFunctionalTestCase {
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] {
 			Document.class,
-			Person.class
+			Person.class,
+			CountDistinctTestEntity.class
 		};
 	}
 
@@ -66,7 +65,7 @@ public class CountExpressionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9182")
+	@JiraKey(value = "HHH-9182")
 	public void testCountDistinctExpression() {
 		doInHibernate( this::sessionFactory, session -> {
 			List results = session.createQuery(
@@ -82,11 +81,12 @@ public class CountExpressionTest extends BaseCoreFunctionalTestCase {
 			assertEquals(1, results.size());
 			Object[] tuple = (Object[]) results.get( 0 );
 			assertEquals(1, tuple[0]);
+			assertEquals(2L, tuple[1]);
 		} );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11042")
+	@JiraKey(value = "HHH-11042")
 	public void testCountDistinctTuple() {
 		doInHibernate( this::sessionFactory, session -> {
 			List results = session.createQuery(
@@ -102,8 +102,27 @@ public class CountExpressionTest extends BaseCoreFunctionalTestCase {
 			assertEquals(1, results.size());
 			Object[] tuple = (Object[]) results.get( 0 );
 			assertEquals(1, tuple[0]);
+			assertEquals(4L, tuple[1]);
 		} );
 	}
+
+	@Test
+	@JiraKey(value = "HHH-11042")
+	public void testCountDistinctTupleSanity() {
+		doInHibernate( this::sessionFactory, session -> {
+			// A simple concatenation of tuple arguments would produce a distinct count of 1 in this case
+			// This test checks if the chr(0) count tuple distinct emulation works correctly
+			session.persist( new CountDistinctTestEntity("10", "1") );
+			session.persist( new CountDistinctTestEntity("1", "01") );
+			List<Long> results = session.createQuery("SELECT count(distinct (t.x,t.y)) FROM CountDistinctTestEntity t", Long.class)
+					.getResultList();
+
+			assertEquals(1, results.size());
+			assertEquals( 2L, results.get( 0 ).longValue() );
+		} );
+	}
+
+
 
 	@Entity(name = "Document")
 	public static class Document {
@@ -157,6 +176,39 @@ public class CountExpressionTest extends BaseCoreFunctionalTestCase {
 
 		public void setLocalized(Map<Integer, String> localized) {
 			this.localized = localized;
+		}
+	}
+
+	@Entity(name = "CountDistinctTestEntity")
+	public static class CountDistinctTestEntity {
+
+		private String x;
+		private String y;
+
+		public CountDistinctTestEntity() {
+		}
+
+		public CountDistinctTestEntity(String x, String y) {
+			this.x = x;
+			this.y = y;
+		}
+
+		@Id
+		public String getX() {
+			return x;
+		}
+
+		public void setX(String x) {
+			this.x = x;
+		}
+
+		@Id
+		public String getY() {
+			return y;
+		}
+
+		public void setY(String y) {
+			this.y = y;
 		}
 	}
 

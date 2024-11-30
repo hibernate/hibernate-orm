@@ -13,7 +13,188 @@ There are a number of tenants that make up a good test case as opposed to a poor
 * (V)erifiable - The test should actually reproduce the problem being reported.
 
 
-== Test templates
+[[junit5]]
+== JUnit 5 extensions
+
+JUnit 5 offers better support for integration, compared to JUnit 4, via https://junit.org/junit5/docs/current/user-guide/#extensions[extensions].  Hibernate builds on those concepts in its `hibernate-testing` module allowing set up of test fixtures using annotations.  The following sections describe the Hibernate extensions.
+
+NOTE: The extensions exist in the `org.hibernate.testing.orm.junit` package, as opposed to the older `org.hibernate.testing.junit4` package used with JUnit 4.
+
+
+[[junit5-service-registry]]
+=== ServiceRegistryExtension
+
+Manages a `ServiceRegistry` as part of the test lifecycle.  2 in fact, depending on the annotation(s) used.
+
+`@BootstrapServiceRegistry`:: configures Hibernate's bootstrap `BootstrapServiceRegistry` which manages class-loading, etc.  `@BootstrapServiceRegistry` is used to provide Java services and Hibernate `Integrator` implementations for the test.
+`@ServiceRegistry`:: configures Hibernate's standard `StandardServiceRegistry`.  `@ServiceRegistry` is used to provide settings, contributors, services, etc.
+
+Also exposes `ServiceRegistryScope` via JUnit 5 `ParameterResolver`.  `ServiceRegistryScope` allows
+access to the managed `ServiceRegistry` from tests and callbacks.
+
+```
+@BootstrapServiceRegistry(
+    javaServices=@JavaServices(
+        role=TypeContributions.class,
+        impls=CustomTypeContributions.class
+    ),
+    ...
+)
+@ServiceRegistry(
+    settings=@Setting(
+            name="hibernate.show_sql",
+            value="true"
+    ),
+    services=@Service(
+            role=ConnectionProvider.class,
+            impl=CustomConnectionProvider.class
+    ),
+    ...
+)
+class TheTest {
+    @Test void testIt(ServiceRegistryScope scope) {
+        StandardServiceRegistry reg = scope.getRegistry();
+        ...
+    }
+}
+```
+
+
+[[junit5-domain-model]]
+=== DomainModelExtension
+
+Manages the domain model for the test as part of its lifecycle.
+
+`@DomainModel`:: defines the sources of the domain model used in the test - type contributions, managed classes, XML mappings, etc.
+
+If available, this extension uses the `ServiceRegistry` instances available from <<junit5-service-registry>>.
+
+Exposes `DomainModelScope` via JUnit5 `ParameterResolver`, allowing access to details about the domain model from the `org.hibernate.mapping` "boot model".
+
+
+```
+@DomainModel(
+    standardDomainModels=StandardDomainModel.ANIMAL,
+    annotatedClasses={Entity1.class, Entity2.class},
+    xmlMappings="resource/path/to/my-mapping.xml",
+    ...
+)
+class TheTest {
+    @Test void testIt(DomainModelScope scope) {
+        MetadataImplementor meta = scope.getDomainModel();
+        ...
+
+        PersistentClass entityMapping = scope.getEntityBinding(Entity1.class);
+        ...
+
+        scope.withHierarchy(Entity1.class, (entityMapping) -> {
+            ...
+        }
+    }
+}
+```
+
+
+=== SessionFactoryExtension
+
+Manages a Hibernate `SessionFactory` as part of the test lifecycle.
+
+`@SessionFactory`:: is used to configure the runtime aspects of the `SessionFactory` fixture.
+
+If available, uses the `ServiceRegistry` instances available from <<junit5-service-registry>> as well
+as the domain model defined by <<junit5-domain-model>>.
+
+Exposes `SessionFactoryScope` via JUnit5 `ParameterResolver`.
+
+```
+@SessionFactory(
+    generateStatistics=true,
+    exportSchema=true,
+    useCollectingStatementInspector=true,
+    ...
+)
+class TheTest {
+    @Test void testIt(SessionFactoryScope scope) {
+        SQLStatementInspector sqlCollector = scope.getCollectingStatementInspector();
+        sqlCollector.clear();
+
+        scope.inTransaction( (session) -> {
+            ...
+            assertThat(sqlCollector.getSqlQueries()).isEmpty();
+        } );
+
+        Entity1 e = scope.fromTransaction( (session) -> {
+            Entity1 it = session.find(Entity1.class, id);
+            ...
+            return it;
+        } );
+    }
+}
+```
+
+=== DialectFilterExtension
+
+Allows filtering tests based on Dialect used.  Implemented as a JUnit `ExecutionCondition` which is used to dynamically determine whether a test should be run.  Used in conjunction with:
+
+`@RequiresDialect`:: says to only run this test for the given Dialect(s).
+`@SkipForDialect`:: says to skip this test for the given Dialect(s).
+
+=== ExpectedExceptionExtension
+
+Used with `@ExpectedException` to allow testing that an excepted exception occurs as the "success" condition.
+
+```
+@DomainModel(...)
+@SessionFactory(...)
+class TheTest {
+    @Test
+    @ExpectedException(UnknownEntityTypeException.class)
+    void testIt(SessionFactoryScope) {
+        scope.inTransaction( (session) -> {
+            // Should fail as MyEmbeddable is not an entity
+            session.find(MyEmbeddable.class, 1);
+        } );
+    }
+}
+```
+
+
+=== FailureExpectedExtension
+
+Used with `@FailureExpected` to indicate that a test is (currently) expected to fail.  You might use this, e.g., for a test that is the reproducer for a bug report before working on it.  It basically just flips the success/failure condition.  In fact, a test marked with `@FailureExpected` will be marked a failure if it succeeds.
+
+```
+@Test
+@JiraKey("HHH-123456789")
+@FailureExpected
+void bugReproducer(...) {...}
+```
+
+
+=== LoggingInspectionsExtension and MessageKeyInspectionExtension
+
+Both are used for testing log messages.
+
+`@LoggingInspections`:: used to watch more than one "message key".
+`MessageKeyInspection`:: used to watch a single "message key".
+
+
+=== EntityManagerExtension
+
+Used in conjunction with `@Jpa` to build tests with an `EntityManagerFactory` fixture.
+
+Since Hibernate's `SessionFactory` *is a* `EntityManagerFactory`, `@BootstrapServiceRegistry`, `@ServiceRegistry`, `@DomainModel` and `@SessionFactory` can also be used to perform tests with a (`SessionFactory` as a) `EntityManagerFactory` fixture.
+
+The distinction with `@Jpa` is that `EntityManagerExtension` uses the JPA-defined bootstrap APIs.  How the
+`SessionFactory` is built is the difference.
+
+
+== JUnit 4
+
+Historically, Hibernate used JUnit 4 for its test suite.  Since the release of https://junit.org/junit5/[JUnit 5], we've moved to using the testing approach outlined in <<junit5>>.  However, many existing tests still use the legacy JUnit 4 based infrastructure (boilerplate) based on "test templates".
+
+
+=== Test templates
 
 The Hibernate team maintains a set of "test templates" intended to help developers write tests.  These test templates are maintained in GitHub @ https://github.com/hibernate/hibernate-test-case-templates/tree/main/orm[hibernate-test-case-templates]
 
@@ -22,7 +203,7 @@ The Hibernate team maintains a set of "test templates" intended to help develope
 
 NOTE: the test templates are generally not a good starting point for problems building the SessionFactory/EntityManager.  In JUnit terms they manage the SessionFactory/EntityManager as set-up and teardown constructs._
 
-== Annotations
+=== Annotations
 
 When using "test templates" you can annotate a  single test or a whole test class with one of the following  annotations:
 

@@ -1,17 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-/*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
- */
-
 package org.hibernate.spatial.integration.functions;
 
 import java.util.List;
@@ -33,6 +23,7 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
 import org.geolatte.geom.Geometry;
+import org.geolatte.geom.GeometryEquality;
 import org.geolatte.geom.codec.Wkt;
 
 /**
@@ -115,7 +106,7 @@ public class FunctionTestTemplate {
 					}
 					results.set( query.getResultList() );
 				} );
-		return (List) results.get().stream().map( rowObjectMapper::apply ).collect( Collectors.toList() );
+		return results.get().stream().map( rowObjectMapper::apply ).collect( Collectors.toList() );
 	}
 
 	//only for JtsGeometry because extra mapping of native Geometry object (where needed)
@@ -145,6 +136,8 @@ public class FunctionTestTemplate {
 		RowObjectMapper mapper;
 		Geometry<?> testGeometry;
 
+		GeometryEquality geomEq;
+
 		public Builder(CommonSpatialFunction function) {
 			this.function = function;
 		}
@@ -163,7 +156,7 @@ public class FunctionTestTemplate {
 				}
 			}
 			if ( this.mapper == null ) {
-				this.mapper = new RowObjectMapper() {
+				this.mapper = new RowObjectMapper( geomEq ) {
 				};
 			}
 			return new FunctionTestTemplate( function, hql, sql, mapper, model, testGeometry, codec );
@@ -185,6 +178,11 @@ public class FunctionTestTemplate {
 			if ( value != null ) {
 				this.testGeometry = value;
 			}
+			return this;
+		}
+
+		public Builder equalityTest(GeometryEquality geomEq) {
+			this.geomEq = geomEq;
 			return this;
 		}
 	}

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.hqlfetchscroll;
 
@@ -13,8 +11,6 @@ import java.util.Set;
 import org.hibernate.Hibernate;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.query.Query;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -64,18 +60,7 @@ public class QueryScrollingWithInheritanceTest {
 								Employee.class
 						);
 						final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
-						if ( dialect instanceof DB2Dialect ||  dialect instanceof DerbyDialect ) {
-				/*
-					FetchingScrollableResultsImp#next() in order to check if the ResultSet is empty calls ResultSet#isBeforeFirst()
-					but the support for ResultSet#isBeforeFirst() is optional for ResultSets with a result
-					set type of TYPE_FORWARD_ONLY and db2 does not support it.
-			 	*/
-							scrollableResults = query.scroll( ScrollMode.SCROLL_INSENSITIVE );
-						}
-						else {
-							scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY );
-						}
-
+						scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY );
 						while ( scrollableResults.next() ) {
 							final Employee employee = (Employee) scrollableResults.get();
 							assertThat( Hibernate.isPropertyInitialized( employee, "otherEntities" ), is( true ) );
@@ -142,18 +127,7 @@ public class QueryScrollingWithInheritanceTest {
 								Employee.class
 						);
 						final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
-						if ( dialect instanceof DB2Dialect || dialect instanceof DerbyDialect) {
-				/*
-					FetchingScrollableResultsImp#next() in order to check if the ResultSet is empty calls ResultSet#isBeforeFirst()
-					but the support for ResultSet#isBeforeFirst() is optional for ResultSets with a result
-					set type of TYPE_FORWARD_ONLY and db2 does not support it.
-			 	*/
-							scrollableResults = query.scroll( ScrollMode.SCROLL_INSENSITIVE );
-						}
-						else {
-							scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY );
-						}
-
+						scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY );
 						while ( scrollableResults.next() ) {
 							final Employee employee = (Employee) scrollableResults.get();
 							assertThat( Hibernate.isPropertyInitialized( employee, "otherEntities" ), is( true ) );

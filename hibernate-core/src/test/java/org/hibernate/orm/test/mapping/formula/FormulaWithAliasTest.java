@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.formula;
 
@@ -17,7 +15,7 @@ import jakarta.persistence.Id;
 import org.hibernate.annotations.Formula;
 import org.hibernate.dialect.H2Dialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -53,7 +51,7 @@ public class FormulaWithAliasTest {
 		} );
 	}
 	@Test
-	@TestForIssue(jiraKey = "HHH-12280")
+	@JiraKey(value = "HHH-12280")
 	void testFormulaWithAlias(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final List<Customer> customers = session.createQuery( "select c from Customer c ", Customer.class ).getResultList();
@@ -68,7 +66,7 @@ public class FormulaWithAliasTest {
 	void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction( session -> session.createQuery( "delete from Customer" ).executeUpdate() );
 	}
-	
+
 	@Entity(name = "Customer")
 	public static class Customer implements Serializable{
 

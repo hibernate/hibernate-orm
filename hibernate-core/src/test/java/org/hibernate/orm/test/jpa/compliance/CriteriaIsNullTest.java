@@ -1,15 +1,18 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.compliance;
 
 import java.util.List;
 
+import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -18,6 +21,7 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -67,6 +71,21 @@ public class CriteriaIsNullTest {
 				}
 		);
 
+	}
+
+	@Test
+	@JiraKey( "HHH-17671" )
+	public void testPredicateCopy(EntityManagerFactoryScope scope) {
+		scope.inEntityManager(
+				entityManager -> {
+					CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+					CriteriaQuery<Account> c = builder.createQuery(Account.class);
+					Root<Account> r = c.from(Account.class);
+					Predicate predicate = builder.isNull( r.get( "amount"));
+					c.where(predicate);
+					Assertions.assertDoesNotThrow( () -> ( (SqmPredicate) c.getRestriction() ).copy( SqmCopyContext.simpleContext()) );
+				}
+		);
 	}
 
 	@Entity(name = "Person")

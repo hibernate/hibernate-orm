@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.hashcode;
 
@@ -10,6 +8,15 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+
+import org.hibernate.envers.AuditReader;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
+import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.orm.test.envers.Priority;
+
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.junit.Test;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -22,21 +29,13 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
-import org.hibernate.envers.AuditReader;
-import org.hibernate.envers.Audited;
-import org.hibernate.envers.NotAudited;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-11063")
+@JiraKey(value = "HHH-11063")
 public class ListHashcodeChangeTest extends BaseEnversJPAFunctionalTestCase {
 	private Integer authorId;
 
@@ -255,7 +254,8 @@ public class ListHashcodeChangeTest extends BaseEnversJPAFunctionalTestCase {
 
 		@ManyToOne(fetch = FetchType.LAZY)
 		@JoinTable(name = "author_book",
-				joinColumns = @JoinColumn(name = "book_id"), inverseJoinColumns = @JoinColumn(name="author_id",nullable = false))
+				joinColumns = @JoinColumn(name = "book_id"),
+				inverseJoinColumns = @JoinColumn(name="author_id",nullable = false))
 		@NotAudited
 		private Author author;
 

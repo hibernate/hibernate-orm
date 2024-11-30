@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.pagination;
 
@@ -58,6 +56,16 @@ public class LegacyOracleLimitHandler extends AbstractLimitHandler {
 
 	@Override
 	public boolean supportsLimit() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsOffset() {
+		return true;
+	}
+
+	@Override
+	public boolean forceLimitUsage() {
 		return true;
 	}
 

@@ -1,8 +1,8 @@
 [[tooling]]
 == Build Tool Integration
-:rootProjectDir: ../../../../../../..
-:documentationProjectDir: {rootProjectDir}/documentation
-:documentationModel: {documentationProjectDir}/src/main/java/org/hibernate/userguide/model
+:root-project-dir: ../../../../../../..
+:testing-project-dir: {root-project-dir}/hibernate-testing
+:example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
 
 Hibernate provides build-time services available as plugins for
 

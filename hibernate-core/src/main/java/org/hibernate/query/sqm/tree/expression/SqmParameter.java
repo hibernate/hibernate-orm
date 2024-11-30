@@ -1,14 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.hibernate.HibernateException;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.criteria.JpaParameterExpression;
-import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 /**
@@ -22,7 +20,7 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
  *
  * @author Steve Ebersole
  */
-public interface SqmParameter<T> extends SqmExpression<T>, JpaParameterExpression<T> {
+public interface SqmParameter<T> extends SqmExpression<T>, JpaParameterExpression<T>, Comparable<SqmParameter<T>> {
 	/**
 	 * If this represents a named parameter, return that parameter name;
 	 * otherwise return {@code null}.
@@ -41,7 +39,7 @@ public interface SqmParameter<T> extends SqmExpression<T>, JpaParameterExpressio
 
 	/**
 	 * Can a collection/array of values be bound to this parameter?
-	 * <P/>
+	 * <p>
 	 * This is allowed in very limited contexts within the query:
 	 * <ol>
 	 *     <li>as the value of an IN predicate if the only value is a single param</li>
@@ -56,16 +54,13 @@ public interface SqmParameter<T> extends SqmExpression<T>, JpaParameterExpressio
 	/**
 	 * Based on the context it is declared, what is the anticipated type for
 	 * bind values?
-	 * <p/>
+	 * <p>
 	 * NOTE: If {@link #allowMultiValuedBinding()} is true, this will indicate
 	 * the Type of the individual values.
 	 *
 	 * @return The anticipated Type.
 	 */
 	BindableType<T> getAnticipatedType();
-
-	@Override
-	SqmExpressible<T> getNodeType();
 
 	/**
 	 * Make a copy
@@ -74,4 +69,29 @@ public interface SqmParameter<T> extends SqmExpression<T>, JpaParameterExpressio
 
 	@Override
 	SqmParameter<T> copy(SqmCopyContext context);
+
+	/**
+	 * @implSpec Defined as default since this is an SPI to
+	 * support any previous extensions
+	 */
+	@Override
+	default int compareTo(SqmParameter<T> anotherParameter) {
+		if ( this instanceof SqmNamedParameter ) {
+			final SqmNamedParameter<?> one = (SqmNamedParameter<?>) this;
+			return anotherParameter instanceof SqmNamedParameter<?>
+					? one.getName().compareTo( anotherParameter.getName() )
+					: -1;
+		}
+		else if ( this instanceof SqmPositionalParameter ) {
+			final SqmPositionalParameter<?> one = (SqmPositionalParameter<?>) this;
+			return anotherParameter instanceof SqmPositionalParameter<?>
+					? one.getPosition().compareTo( anotherParameter.getPosition() )
+					: 1;
+		}
+		else if ( this instanceof SqmJpaCriteriaParameterWrapper
+				&& anotherParameter instanceof SqmJpaCriteriaParameterWrapper ) {
+			return Integer.compare( this.hashCode(), anotherParameter.hashCode() );
+		}
+		throw new HibernateException( "Unexpected SqmParameter type for comparison : " + this + " & " + anotherParameter );
+	}
 }

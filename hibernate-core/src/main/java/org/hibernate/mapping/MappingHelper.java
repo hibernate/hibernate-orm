@@ -1,22 +1,28 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import org.hibernate.Internal;
+import org.hibernate.MappingException;
+import org.hibernate.boot.BootLogging;
+import org.hibernate.boot.model.internal.DelayedParameterizedTypeBean;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.metamodel.mapping.MappingModelCreationLogger;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.spi.ImplicitDiscriminatorStrategy;
+import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+import org.hibernate.resource.beans.spi.ProvidedInstanceManagedBeanImpl;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CustomCollectionType;
@@ -28,6 +34,8 @@ import org.hibernate.type.SpecialOneToOneType;
 import org.hibernate.type.Type;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserCollectionType;
+
+import static org.hibernate.metamodel.mapping.MappingModelCreationLogging.MAPPING_MODEL_CREATION_MESSAGE_LOGGER;
 
 /**
  * @author Steve Ebersole
@@ -45,24 +53,58 @@ public final class MappingHelper {
 			String role,
 			String propertyRef,
 			MetadataImplementor metadata) {
-		final ClassLoaderService cls = metadata.getMetadataBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class );
-		final Class<? extends UserCollectionType> typeImpl = cls.classForName( typeName );
+		final Class<? extends UserCollectionType> userCollectionTypeClass =
+				metadata.getMetadataBuildingOptions().getServiceRegistry()
+						.requireService( ClassLoaderService.class )
+						.classForName( typeName );
 
-		final ManagedBeanRegistry beanRegistry = metadata
-				.getMetadataBuildingOptions()
-				.getServiceRegistry()
-				.getService( ManagedBeanRegistry.class );
+		final boolean hasParameters = CollectionHelper.isNotEmpty( typeParameters );
+		final ManagedBean<? extends UserCollectionType> userTypeBean;
 
-		final ManagedBean<? extends UserCollectionType> customTypeBean;
-		if ( typeParameters == null ) {
-			customTypeBean = beanRegistry.getBean( typeImpl );
+		if ( !metadata.getMetadataBuildingOptions().isAllowExtensionsInCdi() ) {
+			//noinspection unchecked,rawtypes
+			userTypeBean = createLocalUserCollectionTypeBean(
+					role,
+					userCollectionTypeClass,
+					hasParameters,
+					(Map) typeParameters
+			);
 		}
 		else {
-			customTypeBean = beanRegistry.getBean( role, typeImpl );
-			injectParameters( customTypeBean.getBeanInstance(), typeParameters );
+			final ManagedBean<? extends UserCollectionType> userCollectionTypeBean =
+					metadata.getMetadataBuildingOptions()
+							.getServiceRegistry()
+							.requireService( ManagedBeanRegistry.class )
+							.getBean( userCollectionTypeClass );
+
+			if ( hasParameters ) {
+				if ( ParameterizedType.class.isAssignableFrom( userCollectionTypeBean.getBeanClass() ) ) {
+					// create a copy of the parameters and create a bean wrapper to delay injecting
+					// the parameters, thereby delaying the need to resolve the instance from the
+					// wrapped bean
+					final Properties copy = new Properties();
+					copy.putAll( typeParameters );
+					userTypeBean = new DelayedParameterizedTypeBean<>( userCollectionTypeBean, copy );
+				}
+				else {
+					// there were parameters, but the custom-type does not implement the interface
+					// used to inject them - log a "warning"
+					BootLogging.BOOT_LOGGER.debugf(
+							"`@CollectionType` (%s) specified parameters, but the" +
+									" implementation does not implement `%s` which is used to inject them - `%s`",
+							role,
+							ParameterizedType.class.getName(),
+							userCollectionTypeClass.getName()
+					);
+					userTypeBean = userCollectionTypeBean;
+				}
+			}
+			else {
+				userTypeBean = userCollectionTypeBean;
+			}
 		}
 
-		return new CustomCollectionType( customTypeBean, role, propertyRef );
+		return new CustomCollectionType( userTypeBean, role, propertyRef );
 	}
 
 	public static void injectParameters(Object type, Properties parameters) {
@@ -70,7 +112,7 @@ public final class MappingHelper {
 			( (ParameterizedType) type ).setParameterValues( parameters == null ? EMPTY_PROPERTIES : parameters );
 		}
 		else if ( parameters != null && !parameters.isEmpty() ) {
-			MappingModelCreationLogger.LOGGER.debugf(
+			MAPPING_MODEL_CREATION_MESSAGE_LOGGER.debugf(
 					"UserCollectionType impl does not implement ParameterizedType but parameters were present : `%s`",
 					type.getClass().getName()
 			);
@@ -82,15 +124,29 @@ public final class MappingHelper {
 	}
 
 	public static AnyType anyMapping(
-			Type metaType,
+			Type discriminatorType,
 			Type identifierType,
-			Map<Object, String> metaValueToEntityNameMap,
+			Map<Object, String> explicitValeMappings,
 			boolean lazy,
 			MetadataBuildingContext buildingContext) {
-		if ( metaValueToEntityNameMap != null ) {
-			metaType = new MetaType( metaValueToEntityNameMap, metaType );
-		}
+		return anyMapping(
+				discriminatorType,
+				identifierType,
+				explicitValeMappings,
+				null,
+				lazy,
+				buildingContext
+		);
+	}
 
+	public static AnyType anyMapping(
+			Type discriminatorType,
+			Type identifierType,
+			Map<Object, String> explicitValeMappings,
+			ImplicitDiscriminatorStrategy implicitValueStrategy,
+			boolean lazy,
+			MetadataBuildingContext buildingContext) {
+		final MetaType metaType = new MetaType( discriminatorType, implicitValueStrategy, explicitValeMappings );
 		return new AnyType( buildingContext.getBootstrapContext().getTypeConfiguration(), metaType, identifierType, lazy );
 	}
 
@@ -165,5 +221,48 @@ public final class MappingHelper {
 				owningEntityPropertyName,
 				constrained
 		);
+	}
+
+	public static ManagedBean<UserCollectionType> createLocalUserCollectionTypeBean(
+			String role,
+			Class<? extends UserCollectionType> implementation,
+			boolean hasParameters,
+			Map<String, String> parameters) {
+		final UserCollectionType userCollectionType = FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( implementation );
+
+		if ( hasParameters ) {
+			// `@CollectionType` declared parameters - inject them
+			if ( userCollectionType instanceof ParameterizedType ) {
+				final Properties properties = new Properties();
+				properties.putAll( parameters );
+				( (ParameterizedType) userCollectionType ).setParameterValues( properties );
+			}
+			else {
+				// there were parameters, but the custom-type does not implement the interface
+				// used to inject them - log a "warning"
+				BootLogging.BOOT_LOGGER.debugf(
+						"`@CollectionType` (%s) specified parameters, but the" +
+								" implementation does not implement `%s` which is used to inject them - `%s`",
+						role,
+						ParameterizedType.class.getName(),
+						implementation.getName()
+				);
+
+				// use the un-configured instance
+			}
+		}
+
+		return new ProvidedInstanceManagedBeanImpl<>( userCollectionType );
+	}
+
+	public static void checkPropertyColumnDuplication(
+			Set<String> distinctColumns,
+			List<Property> properties,
+			String owner) throws MappingException {
+		for ( Property prop : properties ) {
+			if ( prop.isUpdateable() || prop.isInsertable() ) {
+				prop.getValue().checkColumnDuplication( distinctColumns, owner );
+			}
+		}
 	}
 }

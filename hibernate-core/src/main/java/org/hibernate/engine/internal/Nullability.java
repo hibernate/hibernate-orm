@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.internal;
 
@@ -11,18 +9,20 @@ import java.util.Iterator;
 import org.hibernate.HibernateException;
 import org.hibernate.PropertyValueException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
-import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.InMemoryValueGenerationStrategy;
+import org.hibernate.generator.Generator;
+import org.hibernate.type.AnyType;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
+import static org.hibernate.engine.spi.CascadingActions.getLoadedElementsIterator;
+
 /**
  * Implements the algorithm for validating property values for illegal null values
- * 
+ *
  * @author Gavin King
  */
 public final class Nullability {
@@ -72,36 +72,35 @@ public final class Nullability {
 		 */
 		if ( checkNullability ) {
 			/*
-			  * Algorithm
-			  * Check for any level one nullability breaks
-			  * Look at non null components to
-			  *   recursively check next level of nullability breaks
-			  * Look at Collections containing components to
-			  *   recursively check next level of nullability breaks
-			  *
-			  *
-			  * In the previous implementation, not-null stuffs where checked
-			  * filtering by level one only updatable
-			  * or insertable columns. So setting a sub component as update="false"
-			  * has no effect on not-null check if the main component had good checkability
-			  * In this implementation, we keep this feature.
-			  * However, I never see any documentation mentioning that, but it's for
-			  * sure a limitation.
-			  */
+			 * Algorithm
+			 * Check for any level one nullability breaks
+			 * Look at non-null components to
+			 *   recursively check next level of nullability breaks
+			 * Look at Collections containing components to
+			 *   recursively check next level of nullability breaks
+			 *
+			 *
+			 * In the previous implementation, not-null stuffs where checked
+			 * filtering by level one only updatable
+			 * or insertable columns. So setting a subcomponent as update="false"
+			 * has no effect on not-null check if the main component had good checkability
+			 * In this implementation, we keep this feature.
+			 * However, I never see any documentation mentioning that, but it's for
+			 * sure a limitation.
+			 */
 
 			final boolean[] nullability = persister.getPropertyNullability();
 			final boolean[] checkability = checkType == NullabilityCheckType.CREATE
 					? persister.getPropertyInsertability()
 					: persister.getPropertyUpdateability();
 			final Type[] propertyTypes = persister.getPropertyTypes();
-			final InMemoryValueGenerationStrategy[] inMemoryValueGenerationStrategies =
-					persister.getEntityMetamodel().getInMemoryValueGenerationStrategies();
+			final Generator[] generators = persister.getEntityMetamodel().getGenerators();
 
 			for ( int i = 0; i < values.length; i++ ) {
 
-				if ( checkability[i] &&
-						values[i] != LazyPropertyInitializer.UNFETCHED_PROPERTY &&
-						GenerationTiming.NEVER == inMemoryValueGenerationStrategies[i].getGenerationTiming() ) {
+				if ( checkability[i]
+						&& values[i] != LazyPropertyInitializer.UNFETCHED_PROPERTY
+						&& !generated( generators[i] ) ) {
 					final Object value = values[i];
 					if ( !nullability[i] && value == null ) {
 						//check basic level one nullability
@@ -130,6 +129,10 @@ public final class Nullability {
 		}
 	}
 
+	private static boolean generated(Generator generator) {
+		return generator != null && generator.generatesSometimes();
+	}
+
 	/**
 	 * check sub elements-nullability. Returns property path that break
 	 * nullability or null if none
@@ -141,19 +144,22 @@ public final class Nullability {
 	 * @throws HibernateException error while getting subcomponent values
 	 */
 	private String checkSubElementsNullability(Type propertyType, Object value) throws HibernateException {
-		if ( propertyType.isComponentType() ) {
-			return checkComponentNullability( value, (CompositeType) propertyType );
+		if ( propertyType instanceof AnyType ) {
+			return checkComponentNullability( value, (AnyType) propertyType );
+		}
+		if ( propertyType instanceof ComponentType ) {
+			return checkComponentNullability( value, (ComponentType) propertyType );
 		}
 
-		if ( propertyType.isCollectionType() ) {
+		if ( propertyType instanceof CollectionType ) {
 			// persistent collections may have components
 			final CollectionType collectionType = (CollectionType) propertyType;
 			final Type collectionElementType = collectionType.getElementType( session.getFactory() );
 
-			if ( collectionElementType.isComponentType() ) {
+			if ( collectionElementType instanceof ComponentType || collectionElementType instanceof AnyType ) {
 				// check for all components values in the collection
 				final CompositeType componentType = (CompositeType) collectionElementType;
-				final Iterator<?> itr = CascadingActions.getLoadedElementsIterator( session, collectionType, value );
+				final Iterator<?> itr = getLoadedElementsIterator( session, collectionType, value );
 				while ( itr.hasNext() ) {
 					final Object compositeElement = itr.next();
 					if ( compositeElement != null ) {
@@ -186,7 +192,7 @@ public final class Nullability {
 		//
 		// The more correct fix would be to cascade saves of the many-to-any elements before the Nullability checking
 
-		if ( compositeType.isAnyType() ) {
+		if ( compositeType instanceof AnyType ) {
 			return null;
 		}
 

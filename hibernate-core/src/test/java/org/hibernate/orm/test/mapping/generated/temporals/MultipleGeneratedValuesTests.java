@@ -1,20 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.generated.temporals;
 
 import java.time.Instant;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
 import org.hibernate.HibernateError;
 import org.hibernate.annotations.CurrentTimestamp;
-import org.hibernate.dialect.SybaseASEDialect;
-import org.hibernate.tuple.GenerationTiming;
+import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.generator.EventType;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -24,6 +19,10 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -31,10 +30,12 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author Steve Ebersole
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel( annotatedClasses = MultipleGeneratedValuesTests.GeneratedInstantEntity.class )
 @SessionFactory
 @RequiresDialectFeature(feature = DialectFeatureChecks.CurrentTimestampHasMicrosecondPrecision.class, comment = "Without this, we might not see an update to the timestamp")
-@SkipForDialect( dialectClass = SybaseASEDialect.class, matchSubTypes = true, reason = "CURRENT_TIMESTAMP not supported in insert/update in Sybase ASE. Also see https://groups.google.com/g/comp.databases.sybase/c/j-RxPnF3img" )
+@RequiresDialectFeature( feature = DialectFeatureChecks.UsesStandardCurrentTimestampFunction.class )
+@SkipForDialect( dialectClass = SQLServerDialect.class, matchSubTypes = true, reason = "CURRENT_TIMESTAMP has millisecond precision" )
 public class MultipleGeneratedValuesTests {
 	@Test
 	public void test(SessionFactoryScope scope) {
@@ -101,18 +102,18 @@ public class MultipleGeneratedValuesTests {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Legacy `Generated`
 
-		@CurrentTimestamp( timing = GenerationTiming.INSERT )
+		@CurrentTimestamp(event = EventType.INSERT)
 		public Instant createdAt;
 
-		@CurrentTimestamp( timing = GenerationTiming.ALWAYS )
+		@CurrentTimestamp
 		public Instant updatedAt;
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// `GeneratedValue`
 
-		@ProposedGenerated( timing = GenerationTiming.INSERT, sqlDefaultValue = "current_timestamp" )
+		@ProposedGenerated( timing = EventType.INSERT, sqlDefaultValue = "current_timestamp" )
 		public Instant createdAt2;
-		@ProposedGenerated( timing = GenerationTiming.ALWAYS, sqlDefaultValue = "current_timestamp" )
+		@ProposedGenerated( timing = {EventType.INSERT,EventType.UPDATE}, sqlDefaultValue = "current_timestamp" )
 		public Instant updatedAt2;
 
 		public GeneratedInstantEntity() {

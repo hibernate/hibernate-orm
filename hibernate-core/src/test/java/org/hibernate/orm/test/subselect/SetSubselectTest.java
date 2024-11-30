@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.subselect;
 
@@ -11,7 +9,7 @@ import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.hamcrest.core.Is.is;
@@ -21,7 +19,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "")
+@JiraKey(value = "")
 public class SetSubselectTest extends BaseCoreFunctionalTestCase {
 
 	@Override
@@ -44,20 +42,20 @@ public class SetSubselectTest extends BaseCoreFunctionalTestCase {
 			b.setName( "Camilleri" );
 			b.setId( 1 );
 
-			s.save( b );
+			s.persist( b );
 
 			Book book = new Book();
 			book.setId( 2 );
 			book.setAuthorId( 1 );
 			book.setTitle( "Il sognaglio" );
-			s.save( book );
+			s.persist( book );
 
 			Book book2 = new Book();
 			book2.setId( 3 );
 			book2.setAuthorId( 1 );
 			book2.setTitle( "Il casellante" );
 
-			s.save( book2 );
+			s.persist( book2 );
 
 			s.getTransaction().commit();
 		}

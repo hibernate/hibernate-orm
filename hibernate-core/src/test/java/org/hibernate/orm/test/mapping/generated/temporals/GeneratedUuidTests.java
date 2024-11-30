@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.generated.temporals;
 
@@ -11,32 +9,41 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.EnumSet;
 import java.util.UUID;
+
+import org.hibernate.annotations.ValueGenerationType;
+import org.hibernate.dialect.SybaseASEDialect;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.EventType;
+import org.hibernate.generator.EventTypeSets;
+
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import org.hibernate.Session;
-import org.hibernate.annotations.ValueGenerationType;
-import org.hibernate.tuple.AnnotationValueGeneration;
-import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.ValueGenerator;
-
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.Test;
-
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.generator.EventType.INSERT;
+import static org.hibernate.generator.EventType.UPDATE;
 
 /**
  * Test illustrating usage of {@link ValueGenerationType}
  *
  * @author Steve Ebersole
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel( annotatedClasses = GeneratedUuidTests.GeneratedUuidEntity.class )
 @SessionFactory
+@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Driver or DB omit trailing zero bytes of a varbinary, making this test fail intermittently")
 public class GeneratedUuidTests {
 	@Test
 	public void test(SessionFactoryScope scope) {
@@ -65,9 +72,7 @@ public class GeneratedUuidTests {
 		assertThat( merged ).isNotNull();
 
 		// lastly, make sure we can load it..
-		final GeneratedUuidEntity loaded = scope.fromTransaction( (session) -> {
-			return session.get( GeneratedUuidEntity.class, 1 );
-		} );
+		final GeneratedUuidEntity loaded = scope.fromTransaction( (session) -> session.get( GeneratedUuidEntity.class, 1 ));
 
 		assertThat( loaded ).isNotNull();
 
@@ -81,42 +86,26 @@ public class GeneratedUuidTests {
 	@Target( { ElementType.FIELD, ElementType.METHOD, ElementType.ANNOTATION_TYPE } )
 	@Inherited
 	public @interface GeneratedUuidValue {
-		GenerationTiming timing();
+		EventType[] timing();
 	}
 	//end::mapping-generated-custom-ex2[]
 
 	//tag::mapping-generated-custom-ex3[]
-	public static class UuidValueGeneration implements AnnotationValueGeneration<GeneratedUuidValue>, ValueGenerator<UUID> {
-		private GenerationTiming timing;
+	public static class UuidValueGeneration implements BeforeExecutionGenerator {
+		private final EnumSet<EventType> eventTypes;
 
-		@Override
-		public void initialize(GeneratedUuidValue annotation, Class<?> propertyType) {
-			timing = annotation.timing();
+		public UuidValueGeneration(GeneratedUuidValue annotation) {
+			eventTypes = EventTypeSets.fromArray( annotation.timing() );
 		}
 
 		@Override
-		public GenerationTiming getGenerationTiming() {
-			return timing;
+		public EnumSet<EventType> getEventTypes() {
+			return eventTypes;
 		}
 
 		@Override
-		public ValueGenerator<?> getValueGenerator() {
-			return this;
-		}
-
-		@Override
-		public boolean referenceColumnInSql() {
-			return false;
-		}
-
-		@Override
-		public String getDatabaseGeneratedReferencedColumnValue() {
-			return null;
-		}
-
-		@Override
-		public UUID generateValue(Session session, Object owner) {
-			return UUID.randomUUID();
+		public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
+			return SafeRandomUUIDGenerator.safeRandomUUID();
 		}
 	}
 	//end::mapping-generated-custom-ex3[]
@@ -124,17 +113,17 @@ public class GeneratedUuidTests {
 	@Entity( name = "GeneratedUuidEntity" )
 	@Table( name = "t_gen_uuid" )
 	public static class GeneratedUuidEntity {
-	    @Id
-	    public Integer id;
-	    @Basic
-	    public String name;
+		@Id
+		public Integer id;
+		@Basic
+		public String name;
 
 		//tag::mapping-generated-custom-ex1[]
-		@GeneratedUuidValue( timing = GenerationTiming.INSERT )
+		@GeneratedUuidValue( timing = INSERT )
 		public UUID createdUuid;
 
-		@GeneratedUuidValue( timing = GenerationTiming.ALWAYS )
-	    public UUID updatedUuid;
+		@GeneratedUuidValue( timing = {INSERT, UPDATE} )
+		public UUID updatedUuid;
 		//end::mapping-generated-custom-ex1[]
 
 		public GeneratedUuidEntity() {

@@ -1,12 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
@@ -14,13 +11,14 @@ import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.engine.spi.Mapping;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
+import org.hibernate.type.MappingContext;
 
 /**
- * A mapping for a one-to-many association
+ * A mapping model object representing a {@linkplain jakarta.persistence.OneToMany many-to-one association}.
  *
  * @author Gavin King
  */
@@ -50,6 +48,7 @@ public class OneToMany implements Value {
 		return new OneToMany( this );
 	}
 
+	@Override
 	public MetadataBuildingContext getBuildingContext() {
 		return buildingContext;
 	}
@@ -89,12 +88,7 @@ public class OneToMany implements Value {
 	}
 
 	@Override
-	public void createUniqueKey() {
-	}
-
-	@Deprecated
-	public Iterator<Selectable> getColumnIterator() {
-		return associatedClass.getKey().getColumnIterator();
+	public void createUniqueKey(MetadataBuildingContext context) {
 	}
 
 	@Override
@@ -107,10 +101,12 @@ public class OneToMany implements Value {
 		return associatedClass.getKey().getColumns();
 	}
 
+	@Override
 	public int getColumnSpan() {
 		return associatedClass.getKey().getColumnSpan();
 	}
 
+	@Override
 	public FetchMode getFetchMode() {
 		return FetchMode.JOIN;
 	}
@@ -118,31 +114,38 @@ public class OneToMany implements Value {
 	/**
 	 * Table of the owner entity (the "one" side)
 	 */
+	@Override
 	public Table getTable() {
 		return referencingTable;
 	}
 
+	@Override
 	public Type getType() {
 		return getEntityType();
 	}
 
+	@Override
 	public boolean isNullable() {
 		return false;
 	}
 
+	@Override
 	public boolean isSimpleValue() {
 		return false;
 	}
 
+	@Override
 	public boolean isAlternateUniqueKey() {
 		return false;
 	}
 
+	@Override
 	public boolean hasFormula() {
 		return false;
 	}
 
-	public boolean isValid(Mapping mapping) throws MappingException {
+	@Override
+	public boolean isValid(MappingContext mappingContext) throws MappingException {
 		if ( referencedEntityName == null ) {
 			throw new MappingException( "one to many association must specify the referenced entity" );
 		}
@@ -160,9 +163,11 @@ public class OneToMany implements Value {
 		this.referencedEntityName = referencedEntityName == null ? null : referencedEntityName.intern();
 	}
 
+	@Override
 	public void setTypeUsingReflection(String className, String propertyName) {
 	}
 
+	@Override
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept( this );
 	}
@@ -178,9 +183,10 @@ public class OneToMany implements Value {
 			&& Objects.equals( associatedClass, other.associatedClass );
 	}
 
+	@Override
 	public boolean[] getColumnInsertability() {
 		//TODO: we could just return all false...
-		throw new UnsupportedOperationException();
+		return ArrayHelper.EMPTY_BOOLEAN_ARRAY;
 	}
 
 	@Override
@@ -188,9 +194,10 @@ public class OneToMany implements Value {
 		return false;
 	}
 
+	@Override
 	public boolean[] getColumnUpdateability() {
 		//TODO: we could just return all false...
-		throw new UnsupportedOperationException();
+		return ArrayHelper.EMPTY_BOOLEAN_ARRAY;
 	}
 
 	@Override
@@ -216,4 +223,18 @@ public class OneToMany implements Value {
 				: null;
 	}
 
+	@Override
+	public boolean isColumnInsertable(int index) {
+		return false;
+	}
+
+	@Override
+	public boolean isColumnUpdateable(int index) {
+		return false;
+	}
+
+	@Override
+	public String toString() {
+		return getClass().getSimpleName();
+	}
 }

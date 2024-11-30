@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal;
 
@@ -11,21 +9,28 @@ import java.io.Reader;
 import java.io.Writer;
 import java.net.URL;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.extract.internal.DatabaseInformationImpl;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.internal.exec.AbstractScriptSourceInput;
+import org.hibernate.tool.schema.spi.GenerationTarget;
 import org.hibernate.tool.schema.internal.exec.ScriptSourceInputAggregate;
 import org.hibernate.tool.schema.internal.exec.ScriptSourceInputFromFile;
 import org.hibernate.tool.schema.internal.exec.ScriptSourceInputFromReader;
@@ -33,9 +38,14 @@ import org.hibernate.tool.schema.internal.exec.ScriptSourceInputFromUrl;
 import org.hibernate.tool.schema.internal.exec.ScriptTargetOutputToFile;
 import org.hibernate.tool.schema.internal.exec.ScriptTargetOutputToUrl;
 import org.hibernate.tool.schema.internal.exec.ScriptTargetOutputToWriter;
+import org.hibernate.tool.schema.spi.CommandAcceptanceException;
+import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.ScriptSourceInput;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
+import org.hibernate.tool.schema.spi.SqlScriptCommandExtractor;
+
+import static org.hibernate.internal.util.StringHelper.splitAtCommas;
 
 /**
  * Helper methods.
@@ -45,10 +55,9 @@ import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 public class Helper {
 
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( Helper.class );
-	private static final Pattern COMMA_PATTERN = Pattern.compile( "\\s*,\\s*" );
 
 	public static ScriptSourceInput interpretScriptSourceSetting(
-			Object scriptSourceSetting,
+			Object scriptSourceSetting, //Reader or String URL
 			ClassLoaderService classLoaderService,
 			String charsetName ) {
 		if ( scriptSourceSetting instanceof Reader ) {
@@ -58,7 +67,7 @@ public class Helper {
 			final String scriptSourceSettingString = scriptSourceSetting.toString();
 			log.debugf( "Attempting to resolve script source setting : %s", scriptSourceSettingString );
 
-			final String[] paths = COMMA_PATTERN.split( scriptSourceSettingString );
+			final String[] paths = splitAtCommas( scriptSourceSettingString );
 			if ( paths.length == 1 ) {
 				return interpretScriptSourceSetting( scriptSourceSettingString, classLoaderService, charsetName );
 			}
@@ -151,8 +160,7 @@ public class Helper {
 						//Then try the Hibernate ORM setting:
 						ConfigurationHelper.getBoolean(
 								AvailableSettings.HBM2DDL_CREATE_NAMESPACES,
-								configurationValues,
-								false
+								configurationValues
 						)
 				)
 		);
@@ -161,28 +169,88 @@ public class Helper {
 	public static boolean interpretFormattingEnabled(Map<String,Object> configurationValues) {
 		return ConfigurationHelper.getBoolean(
 				AvailableSettings.FORMAT_SQL,
-				configurationValues,
-				false
+				configurationValues
 		);
 	}
 
 	public static DatabaseInformation buildDatabaseInformation(
 			ServiceRegistry serviceRegistry,
 			DdlTransactionIsolator ddlTransactionIsolator,
-			SqlStringGenerationContext sqlStringGenerationContext,
+			SqlStringGenerationContext context,
 			SchemaManagementTool tool) {
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 		try {
 			return new DatabaseInformationImpl(
 					serviceRegistry,
 					jdbcEnvironment,
-					sqlStringGenerationContext,
+					context,
 					ddlTransactionIsolator,
 					tool
 			);
 		}
 		catch (SQLException e) {
 			throw jdbcEnvironment.getSqlExceptionHelper().convert( e, "Unable to build DatabaseInformation" );
+		}
+	}
+
+	public static SqlStringGenerationContext createSqlStringGenerationContext(ExecutionOptions options, Metadata metadata) {
+		final Database database = metadata.getDatabase();
+		return SqlStringGenerationContextImpl.fromConfigurationMap(
+				database.getJdbcEnvironment(),
+				database,
+				options.getConfigurationValues()
+		);
+	}
+
+	public static void applySqlStrings(
+			String[] sqlStrings,
+			Formatter formatter,
+			ExecutionOptions options,
+			GenerationTarget... targets) {
+		if ( sqlStrings == null ) {
+			return;
+		}
+
+		for ( String sqlString : sqlStrings ) {
+			applySqlString( sqlString, formatter, options, targets );
+		}
+	}
+
+	public static void applySqlString(
+			String sqlString,
+			Formatter formatter,
+			ExecutionOptions options,
+			GenerationTarget... targets) {
+		if ( StringHelper.isEmpty( sqlString ) ) {
+			return;
+		}
+
+		String sqlStringFormatted = formatter.format( sqlString );
+		for ( GenerationTarget target : targets ) {
+			try {
+				target.accept( sqlStringFormatted );
+			}
+			catch (CommandAcceptanceException e) {
+				options.getExceptionHandler().handleException( e );
+			}
+		}
+	}
+
+	public static void applyScript(
+			ExecutionOptions options,
+			SqlScriptCommandExtractor commandExtractor,
+			Dialect dialect,
+			ScriptSourceInput scriptInput,
+			Formatter formatter,
+			GenerationTarget[] targets) {
+		final List<String> commands = scriptInput.extract(
+				reader -> commandExtractor.extractCommands( reader, dialect )
+		);
+		for ( GenerationTarget target : targets ) {
+			target.beforeScript( scriptInput );
+		}
+		for ( String command : commands ) {
+			applySqlString( command, formatter, options, targets );
 		}
 	}
 }

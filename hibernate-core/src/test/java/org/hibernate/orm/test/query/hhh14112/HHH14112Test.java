@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.query.hhh14112;
 
 import jakarta.persistence.Entity;
@@ -7,9 +11,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -19,7 +23,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
  * @author Ganesh Tiwari
  * @author Nathan Xu
  */
-@TestForIssue(jiraKey = "HHH-14112")
+@JiraKey(value = "HHH-14112")
 public class HHH14112Test extends BaseCoreFunctionalTestCase {
 
 	@Test
@@ -36,7 +40,7 @@ public class HHH14112Test extends BaseCoreFunctionalTestCase {
 
 	@Entity(name = "Super")
 	@Inheritance(strategy = InheritanceType.JOINED)
-	@Where(clause = "deleted = false")
+	@SQLRestriction("deleted = false")
 	public static class Super {
 		@Id
 		@GeneratedValue(strategy = GenerationType.AUTO)

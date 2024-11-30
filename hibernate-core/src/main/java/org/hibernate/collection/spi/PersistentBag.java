@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.collection.spi;
 
@@ -24,13 +22,15 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
 
 /**
- * An unordered, unkeyed collection that can contain the same element
- * multiple times. The Java collections API, curiously, has no {@code Bag}.
- * Most developers seem to use {@code List}s to represent bag semantics,
- * so Hibernate follows this practice.
+ * An unordered, un-keyed collection that can contain the same element
+ * multiple times. The Java Collections Framework, curiously, has no
+ * {@code Bag} interface. It is, however, common to use {@code List}s
+ * to represent a collection with bag semantics, so Hibernate follows
+ * this practice.
  *
- * @apiNote Incubating in terms of making this non-internal.  These contracts
- * will be getting cleaned up in following releases.
+ * @apiNote Incubating in terms of making this non-internal.
+ *          These contracts will be getting cleaned up in following
+ *          releases.
  *
  * @author Gavin King
  */
@@ -47,7 +47,7 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 	/**
 	 * Constructs a PersistentBag.  Needed for SOAP libraries, etc
 	 */
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public PersistentBag() {
 	}
 
@@ -239,7 +239,8 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 	@Override
 	public void initializeEmptyCollection(CollectionPersister persister) {
 		assert bag == null;
-		bag = (List<E>) persister.getCollectionType().instantiate( 0 );
+		//noinspection unchecked
+		bag = (List<E>) persister.getCollectionSemantics().instantiateRaw( 0, persister );
 		endRead();
 	}
 
@@ -412,7 +413,7 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 
 	@Override
 	public boolean addAll(Collection<? extends E> values) {
-		if ( values.size() == 0 ) {
+		if ( values.isEmpty() ) {
 			return false;
 		}
 		if ( !isOperationQueueEnabled() ) {
@@ -494,7 +495,7 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 	 *
 	 * @return The number of occurrences.
 	 */
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public int occurrences(Object o) {
 		read();
 		final Iterator<E> itr = bag.iterator();
@@ -586,14 +587,12 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 	}
 
 	/**
-	 * Bag does not respect the collection API and do an
-	 * JVM instance comparison to do the equals.
-	 * The semantic is broken not to have to initialize a
-	 * collection for a simple equals() operation.
+	 * For efficiency, bag does not respect the semantics of
+	 * {@link List#equals(Object)} as specified by the supertype
+	 * {@link List}. Instead, instance equality is used, to avoid
+	 * the need to fetch the elements of the bag.
 	 *
 	 * @see Object#equals(Object)
-	 * <p>
-	 * {@inheritDoc}
 	 */
 	@Override
 	public boolean equals(Object obj) {
@@ -630,7 +629,27 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 
 		@Override
 		public void operate() {
-			bag.add( getAddedInstance() );
+			// Delayed operations only work on inverse collections i.e. collections with mappedBy,
+			// and these collections don't have duplicates by definition.
+			// Since cascading also operates on delayed operation's elements,
+			// it can happen that an element is already associated with the collection after cascading,
+			// but the queued operations are still executed after the lazy initialization of the collection.
+			// To avoid duplicates, we have to check if the bag already contains this element
+			if ( !bag.contains( getAddedInstance() ) ) {
+				bag.add( getAddedInstance() );
+			}
+		}
+	}
+
+	final class SimpleRemove extends AbstractValueDelayedOperation {
+
+		public SimpleRemove(E orphan) {
+			super( null, orphan );
+		}
+
+		@Override
+		public void operate() {
+			bag.remove( getOrphan() );
 		}
 	}
 }

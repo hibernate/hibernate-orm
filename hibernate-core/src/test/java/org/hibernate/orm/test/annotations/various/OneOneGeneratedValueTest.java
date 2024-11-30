@@ -1,19 +1,19 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.annotations.various;
 
-import org.hibernate.annotations.Generated;
-import org.hibernate.annotations.GenerationTime;
 import org.hibernate.annotations.Subselect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
@@ -27,7 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 		}
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-15520")
+@JiraKey(value = "HHH-15520")
 public class OneOneGeneratedValueTest {
 
 	@Test
@@ -58,7 +58,6 @@ public class OneOneGeneratedValueTest {
 
 		private String name;
 
-		@Generated(GenerationTime.INSERT)
 		@OneToOne(mappedBy = "a")
 		private EntityB b;
 

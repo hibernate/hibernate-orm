@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.joinable;
 
@@ -14,7 +12,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.SecondaryTable;
@@ -45,7 +42,7 @@ import org.junit.jupiter.api.Test;
 )
 @ServiceRegistry(
 		settings = {
-				@Setting(name = AvailableSettings.HBM2DDL_DATABASE_ACTION, value = "create-drop")
+				@Setting(name = AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, value = "create-drop")
 		}
 )
 @SessionFactory
@@ -88,10 +85,8 @@ public class ManyToOneJoinTableTest implements SessionFactoryProducer {
 		public static final String TABLE_NAME = "issuer_impl";
 
 		@ManyToOne(targetEntity = IssuerImpl.class)
-		@JoinColumns({
-				@JoinColumn(name = PARENT_ISSUER_COLUMN, table = TABLE_NAME, referencedColumnName = "issuer"),
-				@JoinColumn(name = PARENT_IDENTIFIER_COLUMN, table = TABLE_NAME, referencedColumnName = "identifier")
-		})
+		@JoinColumn(name = PARENT_ISSUER_COLUMN, table = TABLE_NAME, referencedColumnName = "issuer")
+		@JoinColumn(name = PARENT_IDENTIFIER_COLUMN, table = TABLE_NAME, referencedColumnName = "identifier")
 		private Issuer parentIssuer;
 
 		public Identifier getIdentifier() {

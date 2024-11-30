@@ -1,18 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.hql;
 
-import org.hibernate.HibernateException;
-import org.hibernate.QueryException;
+import org.hibernate.Hibernate;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
+import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 
+import org.hibernate.query.SemanticException;
+import org.hibernate.query.sqm.UnknownPathException;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -43,27 +44,58 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class ScrollableCollectionFetchingTest {
 
 	@Test
-	public void testTupleReturnFails(SessionFactoryScope scope) {
+	@SkipForDialect(dialectClass=DB2Dialect.class, matchSubTypes = true)
+	@SkipForDialect(dialectClass= DerbyDialect.class)
+	public void testTupleReturnWithFetch(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					try {
-						session.createQuery( "select a, a.weight from Animal a inner join fetch a.offspring" ).scroll();
-						fail( "scroll allowed with collection fetch and reurning tuples" );
-					}
-					catch (IllegalArgumentException e) {
-						assertTyping( QueryException.class, e.getCause() );
-					}
-					catch (HibernateException e) {
-						// expected result...
+					session.createMutationQuery("insert Mammal (description, bodyWeight, pregnant) values ('Human', 80.0, false)").executeUpdate();
+					assertEquals( 1L, session.createSelectionQuery("select count(*) from Mammal").getSingleResult() );
+					try (ScrollableResults results = session.createQuery("select a, a.bodyWeight from Animal a left join fetch a.offspring").scroll()) {
+						assertTrue( results.next() );
+						Object[] result = (Object[]) results.get();
+						assertTrue( Hibernate.isInitialized( ( (Animal) result[0] ).getOffspring() ) );
+						session.createMutationQuery( "delete Mammal" ).executeUpdate();
 					}
 				}
 		);
+	}
 
+	@Test
+	public void testTupleReturnWithFetchFailure(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					try (ScrollableResults<?> sr = session.createQuery(
+									"select a.description, a.bodyWeight from Animal a inner join fetch a.offspring" )
+							.scroll()) {
+						fail( "scroll allowed with fetch and projection result" );
+					}
+					catch (IllegalArgumentException e) {
+						assertTyping( SemanticException.class, e.getCause() );
+					}
+				}
+		);
+	}
+
+
+	@Test
+	public void testUknownPathFailure(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					try (ScrollableResults<?> sr = session.createQuery(
+							"select a, a.weight from Animal a inner join fetch a.offspring" ).scroll()) {
+						fail( "scroll allowed with unknown path" );
+					}
+					catch (IllegalArgumentException e) {
+						assertTyping( UnknownPathException.class, e.getCause() );
+					}
+				}
+		);
 	}
 
 	@Test
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, majorVersion = 15, matchSubTypes = true, reason = "HHH-5229")
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "HANA only supports forward-only cursors.")
+	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "HANA only supports forward-only cursors.")
 	public void testScrollingJoinFetchesEmptyResultSet(SessionFactoryScope scope) {
 		scope.inTransaction(
 				s -> {
@@ -74,55 +106,56 @@ public class ScrollableCollectionFetchingTest {
 					assertEquals( 0, size );
 
 					// now get the scrollable results
-					ScrollableResults results = s.createQuery( query ).setParameter( "desc", "root%" ).scroll();
+					try (ScrollableResults results = s.createQuery( query ).setParameter( "desc", "root%" ).scroll()) {
 
-					assertFalse( results.isFirst() );
-					assertFalse( results.isLast() );
-
-					assertFalse( results.next() );
-					assertFalse( results.isFirst() );
-					assertFalse( results.isLast() );
-
-					assertFalse( results.previous() );
-					assertFalse( results.isFirst() );
-					assertFalse( results.isLast() );
-
-					results.beforeFirst();
-					assertFalse( results.isFirst() );
-					assertFalse( results.isLast() );
-					assertFalse( results.next() );
-
-					assertFalse( results.first() );
-					assertFalse( results.isFirst() );
-					assertFalse( results.isLast() );
-					assertFalse( results.next() );
-
-					results.afterLast();
-					assertFalse( results.isFirst() );
-					assertFalse( results.isLast() );
-					assertFalse( results.next() );
-
-					assertFalse( results.last() );
-					assertFalse( results.isFirst() );
-					assertFalse( results.isLast() );
-					assertFalse( results.next() );
-
-					for ( int i = 1; i < 3; i++ ) {
-						assertFalse( results.scroll( i ) );
 						assertFalse( results.isFirst() );
 						assertFalse( results.isLast() );
 
-						assertFalse( results.scroll( -i ) );
+						assertFalse( results.next() );
 						assertFalse( results.isFirst() );
 						assertFalse( results.isLast() );
 
-						assertFalse( results.setRowNumber( i ) );
+						assertFalse( results.previous() );
 						assertFalse( results.isFirst() );
 						assertFalse( results.isLast() );
 
-						assertFalse( results.setRowNumber( -i ) );
+						results.beforeFirst();
 						assertFalse( results.isFirst() );
 						assertFalse( results.isLast() );
+						assertFalse( results.next() );
+
+						assertFalse( results.first() );
+						assertFalse( results.isFirst() );
+						assertFalse( results.isLast() );
+						assertFalse( results.next() );
+
+						results.afterLast();
+						assertFalse( results.isFirst() );
+						assertFalse( results.isLast() );
+						assertFalse( results.next() );
+
+						assertFalse( results.last() );
+						assertFalse( results.isFirst() );
+						assertFalse( results.isLast() );
+						assertFalse( results.next() );
+
+						for ( int i = 1; i < 3; i++ ) {
+							assertFalse( results.scroll( i ) );
+							assertFalse( results.isFirst() );
+							assertFalse( results.isLast() );
+
+							assertFalse( results.scroll( -i ) );
+							assertFalse( results.isFirst() );
+							assertFalse( results.isLast() );
+
+							assertFalse( results.setRowNumber( i ) );
+							assertFalse( results.isFirst() );
+							assertFalse( results.isLast() );
+
+							assertFalse( results.setRowNumber( -i ) );
+							assertFalse( results.isFirst() );
+							assertFalse( results.isLast() );
+						}
 					}
 				}
 		);
@@ -130,7 +163,7 @@ public class ScrollableCollectionFetchingTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTemporaryTable.class)
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "HANA only supports forward-only cursors")
+	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "HANA only supports forward-only cursors")
 	public void testScrollingJoinFetchesSingleRowResultSet(SessionFactoryScope scope) {
 
 		scope.inTransaction(
@@ -144,8 +177,8 @@ public class ScrollableCollectionFetchingTest {
 					daughter.setMother( mother );
 					mother.addOffspring( daughter );
 
-					session.save( mother );
-					session.save( daughter );
+					session.persist( mother );
+					session.persist( daughter );
 				}
 		);
 
@@ -158,84 +191,85 @@ public class ScrollableCollectionFetchingTest {
 									.setParameter( "desc", "root%" )
 									.uniqueResult() );
 
-					ScrollableResults results = session
+					try (ScrollableResults results = session
 							.createQuery(
 									"from Animal a left join fetch a.offspring where a.description like :desc order by a.id" )
-							.setParameter( "desc", "root%" ).scroll();
+							.setParameter( "desc", "root%" ).scroll()) {
 
-					assertFalse( results.isFirst() );
-					assertFalse( results.isLast() );
-					assertFalse( results.previous() );
+						assertFalse( results.isFirst() );
+						assertFalse( results.isLast() );
+						assertFalse( results.previous() );
 
-					assertTrue( results.next() );
-					assertTrue( results.isFirst() );
-					assertTrue( results.isLast() );
-
-					assertFalse( results.next() );
-					assertFalse( results.isFirst() );
-					assertFalse( results.isLast() );
-
-					assertTrue( results.previous() );
-					assertTrue( results.isFirst() );
-					assertTrue( results.isLast() );
-
-					assertFalse( results.previous() );
-					assertFalse( results.isFirst() );
-					assertFalse( results.isLast() );
-
-					assertTrue( results.next() );
-					assertTrue( results.isFirst() );
-					assertTrue( results.isLast() );
-
-					results.beforeFirst();
-					assertFalse( results.isFirst() );
-					assertFalse( results.isLast() );
-					assertFalse( results.previous() );
-
-					assertTrue( results.first() );
-					assertTrue( results.isFirst() );
-					assertTrue( results.isLast() );
-					assertFalse( results.next() );
-
-					results.afterLast();
-					assertFalse( results.isFirst() );
-					assertFalse( results.isLast() );
-					assertFalse( results.next() );
-
-					assertTrue( results.last() );
-					assertTrue( results.isFirst() );
-					assertTrue( results.isLast() );
-					assertFalse( results.next() );
-
-					assertTrue( results.first() );
-					assertTrue( results.isFirst() );
-					assertTrue( results.isLast() );
-
-					for ( int i = 1; i < 3; i++ ) {
-						assertTrue( results.setRowNumber( 1 ) );
+						assertTrue( results.next() );
 						assertTrue( results.isFirst() );
 						assertTrue( results.isLast() );
 
-						assertFalse( results.scroll( i ) );
+						assertFalse( results.next() );
 						assertFalse( results.isFirst() );
 						assertFalse( results.isLast() );
 
-						assertTrue( results.setRowNumber( 1 ) );
+						assertTrue( results.previous() );
 						assertTrue( results.isFirst() );
 						assertTrue( results.isLast() );
 
-						assertFalse( results.scroll( -i ) );
+						assertFalse( results.previous() );
 						assertFalse( results.isFirst() );
 						assertFalse( results.isLast() );
 
-						if ( i != 1 ) {
-							assertFalse( results.setRowNumber( i ) );
+						assertTrue( results.next() );
+						assertTrue( results.isFirst() );
+						assertTrue( results.isLast() );
+
+						results.beforeFirst();
+						assertFalse( results.isFirst() );
+						assertFalse( results.isLast() );
+						assertFalse( results.previous() );
+
+						assertTrue( results.first() );
+						assertTrue( results.isFirst() );
+						assertTrue( results.isLast() );
+						assertFalse( results.next() );
+
+						results.afterLast();
+						assertFalse( results.isFirst() );
+						assertFalse( results.isLast() );
+						assertFalse( results.next() );
+
+						assertTrue( results.last() );
+						assertTrue( results.isFirst() );
+						assertTrue( results.isLast() );
+						assertFalse( results.next() );
+
+						assertTrue( results.first() );
+						assertTrue( results.isFirst() );
+						assertTrue( results.isLast() );
+
+						for ( int i = 1; i < 3; i++ ) {
+							assertTrue( results.setRowNumber( 1 ) );
+							assertTrue( results.isFirst() );
+							assertTrue( results.isLast() );
+
+							assertFalse( results.scroll( i ) );
 							assertFalse( results.isFirst() );
 							assertFalse( results.isLast() );
 
-							assertFalse( results.setRowNumber( -i ) );
+							assertTrue( results.setRowNumber( 1 ) );
+							assertTrue( results.isFirst() );
+							assertTrue( results.isLast() );
+
+							assertFalse( results.scroll( -i ) );
 							assertFalse( results.isFirst() );
 							assertFalse( results.isLast() );
+
+							if ( i != 1 ) {
+								assertFalse( results.setRowNumber( i ) );
+								assertFalse( results.isFirst() );
+								assertFalse( results.isLast() );
+
+								assertFalse( results.setRowNumber( -i ) );
+								assertFalse( results.isFirst() );
+								assertFalse( results.isLast() );
+							}
 						}
 					}
 				}
@@ -260,86 +294,87 @@ public class ScrollableCollectionFetchingTest {
 
 		scope.inTransaction(
 				s -> {
-					ScrollableResults results = s
+					try (ScrollableResults results = s
 							.createQuery(
 									"from Animal a left join fetch a.offspring where a.description like :desc order by a.id" )
 							.setParameter( "desc", "root%" )
-							.scroll( ScrollMode.FORWARD_ONLY );
+							.scroll( ScrollMode.FORWARD_ONLY )) {
 
-					int counter = 0;
-					while ( results.next() ) {
-						counter++;
-						Animal animal = (Animal) results.get();
-						checkResult( animal );
+						int counter = 0;
+						while ( results.next() ) {
+							counter++;
+							Animal animal = (Animal) results.get();
+							checkResult( animal );
+						}
+						assertEquals( 2, counter, "unexpected result count" );
 					}
-					assertEquals( 2, counter, "unexpected result count" );
-
 				}
 		);
 	}
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTemporaryTable.class)
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "HANA only supports forward-only cursors.")
+	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "HANA only supports forward-only cursors.")
 	public void testScrollingJoinFetchesReverse(SessionFactoryScope scope) {
 		TestData data = new TestData();
 		data.prepare( scope );
 
 		scope.inTransaction(
 				s -> {
-					ScrollableResults results = s
+					try (ScrollableResults results = s
 							.createQuery(
 									"from Animal a left join fetch a.offspring where a.description like :desc order by a.id" )
-							.setParameter( "desc", "root%" ).scroll();
+							.setParameter( "desc", "root%" ).scroll()) {
 
-					results.afterLast();
+						results.afterLast();
 
-					int counter = 0;
-					while ( results.previous() ) {
-						counter++;
-						Animal animal = (Animal) results.get();
-						checkResult( animal );
+						int counter = 0;
+						while ( results.previous() ) {
+							counter++;
+							Animal animal = (Animal) results.get();
+							checkResult( animal );
+						}
+						assertEquals( 2, counter, "unexpected result count" );
 					}
-					assertEquals( 2, counter, "unexpected result count" );
-
 				}
 		);
 	}
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTemporaryTable.class)
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "HANA only supports forward-only cursors.")
+	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "HANA only supports forward-only cursors.")
 	public void testScrollingJoinFetchesPositioning(SessionFactoryScope scope) {
 		TestData data = new TestData();
 		data.prepare( scope );
 
 		scope.inTransaction(
 				session -> {
-					ScrollableResults results = session
+					try (ScrollableResults results = session
 							.createQuery(
 									"from Animal a left join fetch a.offspring where a.description like :desc order by a.id" )
 							.setParameter( "desc", "root%" )
-							.scroll();
+							.scroll()) {
 
-					results.first();
-					Animal animal = (Animal) results.get();
-					assertEquals( data.root1Id, animal.getId(), "first() did not return expected row" );
+						results.first();
+						Animal animal = (Animal) results.get();
+						assertEquals( data.root1Id, animal.getId(), "first() did not return expected row" );
 
-					results.scroll( 1 );
-					animal = (Animal) results.get();
-					assertEquals( data.root2Id, animal.getId(), "scroll(1) did not return expected row" );
+						results.scroll( 1 );
+						animal = (Animal) results.get();
+						assertEquals( data.root2Id, animal.getId(), "scroll(1) did not return expected row" );
 
-					results.scroll( -1 );
-					animal = (Animal) results.get();
-					assertEquals( data.root1Id, animal.getId(), "scroll(-1) did not return expected row" );
+						results.scroll( -1 );
+						animal = (Animal) results.get();
+						assertEquals( data.root1Id, animal.getId(), "scroll(-1) did not return expected row" );
 
-					results.setRowNumber( 1 );
-					animal = (Animal) results.get();
-					assertEquals( data.root1Id, animal.getId(), "setRowNumber(1) did not return expected row" );
+						results.setRowNumber( 1 );
+						animal = (Animal) results.get();
+						assertEquals( data.root1Id, animal.getId(), "setRowNumber(1) did not return expected row" );
 
-					results.setRowNumber( 2 );
-					animal = (Animal) results.get();
-					assertEquals( data.root2Id, animal.getId(), "setRowNumber(2) did not return expected row" );
+						results.setRowNumber( 2 );
+						animal = (Animal) results.get();
+						assertEquals( data.root2Id, animal.getId(), "setRowNumber(2) did not return expected row" );
+					}
 				}
 		);
 	}
@@ -396,12 +431,12 @@ public class ScrollableCollectionFetchingTest {
 						grandDaughter.setMother( daughter );
 						daughter.addOffspring( grandDaughter );
 
-						session.save( mother );
-						session.save( another );
-						session.save( son );
-						session.save( daughter );
-						session.save( grandson );
-						session.save( grandDaughter );
+						session.persist( mother );
+						session.persist( another );
+						session.persist( son );
+						session.persist( daughter );
+						session.persist( grandson );
+						session.persist( grandDaughter );
 					}
 			);
 

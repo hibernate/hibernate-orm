@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.spatial.predicate;
 
@@ -28,7 +26,9 @@ import static org.hibernate.spatial.CommonSpatialFunction.ST_WITHIN;
  * {@link JTSSpatialPredicates}, but for geolatte-geom.
  *
  * @author Daniel Shuy
+ * @deprecated Use {@link org.hibernate.spatial.criteria.GeolatteSpatialCriteriaBuilder GeolatteSpatialCriteriaBuilder} instead
  */
+@Deprecated(since = "6.2")
 @SuppressWarnings("rawtypes")
 public class GeolatteSpatialPredicates {
 

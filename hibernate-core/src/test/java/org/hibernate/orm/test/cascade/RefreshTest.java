@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cascade;
 
@@ -21,6 +19,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -30,6 +29,7 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Implementation of RefreshTest.
@@ -56,7 +56,7 @@ public class RefreshTest {
 				batch.createJob().processingInstructions = "I know you can do it!";
 
 				// write the stuff to the database; at this stage all job.status values are zero
-				session.save( batch );
+				session.persist( batch );
 			}
 		);
 
@@ -65,11 +65,14 @@ public class RefreshTest {
 	}
 
 	@Test
-	void testRefreshCascade(SessionFactoryScope scope) {
+	void testCannotRefreshCascadeDetachedEntity(SessionFactoryScope scope) {
 		scope.inTransaction(
 			session -> {
-				session.refresh( batch );
-				batch.jobs.forEach( job -> assertEquals( "Jobs not refreshed!", 1, job.status ) );
+				assertThrows(IllegalArgumentException.class,
+							() -> session.refresh( batch ),
+							"Given entity is not associated with the persistence context"
+				);
+				batch.jobs.forEach( job -> assertEquals( 0, job.status ) );
 			}
 		);
 	}

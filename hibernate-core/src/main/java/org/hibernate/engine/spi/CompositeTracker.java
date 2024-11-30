@@ -1,17 +1,21 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Ståle W. Pedersen
  */
-public interface CompositeTracker {
+public interface CompositeTracker extends PrimeAmongSecondarySupertypes {
 
 	void $$_hibernate_setOwner(String name, CompositeOwner tracker);
 
 	void $$_hibernate_clearOwner(String name);
+
+	@Override
+	default CompositeTracker asCompositeTracker() {
+		return this;
+	}
+
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.naming;
 
@@ -11,7 +9,8 @@ import java.io.Serializable;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 
 /**
- * Standard implementation of the PhysicalNamingStrategy contract.
+ * Standard implementation of the {@link PhysicalNamingStrategy} contract. This is a trivial implementation
+ * where each physical name is taken to be exactly identical to the corresponding logical name.
  *
  * @author Steve Ebersole
  */

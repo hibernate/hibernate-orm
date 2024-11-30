@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.criteria;
 
@@ -39,24 +37,22 @@ public interface JpaSelectCriteria<T> extends AbstractQuery<T>, JpaCriteriaBase 
 	<X> JpaDerivedRoot<X> from(Subquery<X> subquery);
 
 	/**
-	 * Create and add a query root corresponding to the given lateral subquery,
+	 * Create and add a query root corresponding to the given cte,
 	 * forming a cartesian product with any existing roots.
 	 *
-	 * @param subquery  the subquery
-	 * @return query root corresponding to the given subquery
+	 * @param cte the cte criteria
+	 * @return query root corresponding to the given cte
 	 */
-	<X> JpaDerivedRoot<X> fromLateral(Subquery<X> subquery);
+	<X> JpaRoot<X> from(JpaCteCriteria<X> cte);
 
 	/**
-	 * Create and add a query root corresponding to the given subquery,
+	 * Create and add a query root corresponding to the given set-returning function,
 	 * forming a cartesian product with any existing roots.
-	 * If the subquery is marked as lateral, it may access previous from elements.
 	 *
-	 * @param subquery  the subquery
-	 * @param lateral whether to allow access to previous from elements in the subquery
-	 * @return query root corresponding to the given subquery
+	 * @param function the set-returning function
+	 * @return query root corresponding to the given function
 	 */
-	<X> JpaDerivedRoot<X> from(Subquery<X> subquery, boolean lateral);
+	<X> JpaFunctionRoot<X> from(JpaSetReturningFunction<X> function);
 
 	@Override
 	JpaSelectCriteria<T> distinct(boolean distinct);

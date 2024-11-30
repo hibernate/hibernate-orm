@@ -1,47 +1,67 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.dialect.OracleArrayJdbcType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.IllegalQueryOperationException;
-import org.hibernate.query.sqm.BinaryArithmeticOperator;
+import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.query.sqm.FetchClauseType;
-import org.hibernate.query.sqm.FrameExclusion;
-import org.hibernate.query.sqm.FrameKind;
+import org.hibernate.query.common.FetchClauseType;
+import org.hibernate.query.common.FrameExclusion;
+import org.hibernate.query.common.FrameKind;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
+import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.FunctionExpression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.Over;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
+import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.DerivedTableReference;
+import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.FunctionTableReference;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.UnionTableGroup;
 import org.hibernate.sql.ast.tree.from.ValuesTableReference;
-import org.hibernate.sql.ast.tree.insert.InsertStatement;
+import org.hibernate.sql.ast.tree.insert.ConflictClause;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.insert.Values;
+import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
+import org.hibernate.sql.ast.tree.update.Assignment;
+import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * A SQL AST translator for Oracle.
@@ -55,18 +75,91 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 	}
 
 	@Override
+	protected void visitInsertStatementOnly(InsertSelectStatement statement) {
+		if ( statement.getConflictClause() == null || statement.getConflictClause().isDoNothing() ) {
+			// Render plain insert statement and possibly run into unique constraint violation
+			super.visitInsertStatementOnly( statement );
+		}
+		else {
+			visitInsertStatementEmulateMerge( statement );
+		}
+	}
+
+	@Override
+	protected void visitUpdateStatementOnly(UpdateStatement statement) {
+		if ( hasNonTrivialFromClause( statement.getFromClause() ) ) {
+			visitUpdateStatementEmulateInlineView( statement );
+		}
+		else {
+			renderUpdateClause( statement );
+			renderSetClause( statement.getAssignments() );
+			visitWhereClause( statement.getRestriction() );
+			visitReturningColumns( statement.getReturningColumns() );
+		}
+	}
+
+	@Override
+	protected void renderMergeUpdateClause(List<Assignment> assignments, Predicate wherePredicate) {
+		appendSql( " then update" );
+		renderSetClause( assignments );
+		visitWhereClause( wherePredicate );
+	}
+
+	@Override
+	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
+		super.renderDmlTargetTableExpression( tableReference );
+		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+			renderTableReferenceIdentificationVariable( tableReference );
+		}
+	}
+
+	@Override
+	protected void visitConflictClause(ConflictClause conflictClause) {
+		if ( conflictClause != null ) {
+			if ( conflictClause.isDoUpdate() && conflictClause.getConstraintName() != null ) {
+				throw new IllegalQueryOperationException( "Insert conflict 'do update' clause with constraint name is not supported" );
+			}
+		}
+	}
+
+	@Override
+	protected boolean needsRecursiveKeywordInWithClause() {
+		return false;
+	}
+
+	@Override
+	protected boolean supportsWithClauseInSubquery() {
+		// Oracle has some limitations, see ORA-32034, so we just report false here for simplicity
+		return false;
+	}
+
+	@Override
+	protected boolean supportsRecursiveSearchClause() {
+		return true;
+	}
+
+	@Override
+	protected boolean supportsRecursiveCycleClause() {
+		return true;
+	}
+
+	@Override
+	public void visitSqlSelection(SqlSelection sqlSelection) {
+		if ( getCurrentCteStatement() != null ) {
+			if ( getCurrentCteStatement().getMaterialization() == CteMaterialization.MATERIALIZED ) {
+				appendSql( "/*+ materialize */ " );
+			}
+		}
+		super.visitSqlSelection( sqlSelection );
+	}
+
+	@Override
 	protected LockStrategy determineLockingStrategy(
 			QuerySpec querySpec,
 			ForUpdateClause forUpdateClause,
 			Boolean followOnLocking) {
 		LockStrategy strategy = super.determineLockingStrategy( querySpec, forUpdateClause, followOnLocking );
 		final boolean followOnLockingDisabled = Boolean.FALSE.equals( followOnLocking );
-		if ( strategy != LockStrategy.FOLLOW_ON && querySpec.hasSortSpecifications() ) {
-			if ( followOnLockingDisabled ) {
-				throw new IllegalQueryOperationException( "Locking with ORDER BY is not supported" );
-			}
-			strategy = LockStrategy.FOLLOW_ON;
-		}
 		// Oracle also doesn't support locks with set operators
 		// See https://docs.oracle.com/cd/B19306_01/server.102/b14200/statements_10002.htm#i2066346
 		if ( strategy != LockStrategy.FOLLOW_ON && isPartOfQueryGroup() ) {
@@ -81,28 +174,11 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 			}
 			strategy = LockStrategy.FOLLOW_ON;
 		}
-		if ( strategy != LockStrategy.FOLLOW_ON && useOffsetFetchClause( querySpec ) && !isRowsOnlyFetchClauseType( querySpec ) ) {
+		if ( strategy != LockStrategy.FOLLOW_ON && needsLockingWrapper( querySpec ) && !canApplyLockingWrapper( querySpec ) ) {
 			if ( followOnLockingDisabled ) {
-				throw new IllegalQueryOperationException( "Locking with FETCH is not supported" );
+				throw new IllegalQueryOperationException( "Locking with OFFSET/FETCH is not supported" );
 			}
 			strategy = LockStrategy.FOLLOW_ON;
-		}
-		if ( strategy != LockStrategy.FOLLOW_ON ) {
-			final boolean hasOffset;
-			if ( querySpec.isRoot() && hasLimit() && getLimit().getFirstRow() != null ) {
-				hasOffset = true;
-				// We must record that the generated SQL depends on the fact that there is an offset
-				addAppliedParameterBinding( getOffsetParameter(), null );
-			}
-			else {
-				hasOffset = querySpec.getOffsetClauseExpression() != null;
-			}
-			if ( hasOffset ) {
-				if ( followOnLockingDisabled ) {
-					throw new IllegalQueryOperationException( "Locking with OFFSET is not supported" );
-				}
-				strategy = LockStrategy.FOLLOW_ON;
-			}
 		}
 		return strategy;
 	}
@@ -115,9 +191,22 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 		return getQueryPartStack().findCurrentFirst( part -> part instanceof QueryGroup ? part : null ) != null;
 	}
 
+	@Override
+	protected boolean shouldEmulateLateralWithIntersect(QueryPart queryPart) {
+		// On Oracle 11 where there is no lateral support,
+		// make sure we don't use intersect if the query has an offset/fetch clause
+		return !queryPart.hasOffsetOrFetchClause();
+	}
+
+	@Override
+	protected boolean supportsNestedSubqueryCorrelation() {
+		// It seems it doesn't support it, at least on version 11
+		return false;
+	}
+
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
 		// Check if current query part is already row numbering to avoid infinite recursion
-		if (getQueryPartForRowNumbering() == queryPart) {
+		if ( getQueryPartForRowNumbering() == queryPart ) {
 			return false;
 		}
 		final boolean hasLimit = queryPart.isRoot() && hasLimit() || queryPart.getFetchClauseExpression() != null
@@ -127,106 +216,10 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 		}
 		// Even if Oracle supports the OFFSET/FETCH clause, there are conditions where we still want to use the ROWNUM pagination
 		if ( supportsOffsetFetchClause() ) {
-			// When the query has no sort specifications and offset, we want to use the ROWNUM pagination as that is a special locking case
-			return !queryPart.hasSortSpecifications() && !hasOffset( queryPart )
-					// Workaround an Oracle bug, segmentation fault for insert queries with a plain query group and fetch clause
-					|| queryPart instanceof QueryGroup && getClauseStack().isEmpty() && getStatement() instanceof InsertStatement;
+			// Workaround an Oracle bug, segmentation fault for insert queries with a plain query group and fetch clause
+			return queryPart instanceof QueryGroup && getClauseStack().isEmpty() && getStatement() instanceof InsertSelectStatement;
 		}
 		return true;
-	}
-
-	@Override
-	protected FetchClauseType getFetchClauseTypeForRowNumbering(QueryPart queryPart) {
-		final FetchClauseType fetchClauseType = super.getFetchClauseTypeForRowNumbering( queryPart );
-		final boolean hasOffset;
-		if ( queryPart.isRoot() && hasLimit() ) {
-			hasOffset = getLimit().getFirstRow() != null;
-		}
-		else {
-			hasOffset = queryPart.getOffsetClauseExpression() != null;
-		}
-		if ( queryPart instanceof QuerySpec && !hasOffset && fetchClauseType == FetchClauseType.ROWS_ONLY ) {
-			// We return null here, because in this particular case, we render a special rownum query
-			// which can be seen in #emulateFetchOffsetWithWindowFunctions
-			// Note that we also build upon this in #visitOrderBy
-			return null;
-		}
-		return fetchClauseType;
-	}
-
-	@Override
-	protected void emulateFetchOffsetWithWindowFunctions(
-			QueryPart queryPart,
-			Expression offsetExpression,
-			Expression fetchExpression,
-			FetchClauseType fetchClauseType,
-			boolean emulateFetchClause) {
-		if ( queryPart instanceof QuerySpec && offsetExpression == null && fetchClauseType == FetchClauseType.ROWS_ONLY ) {
-			// Special case for Oracle to support locking along with simple max results paging
-			final QuerySpec querySpec = (QuerySpec) queryPart;
-			withRowNumbering(
-					querySpec,
-					true, // we need select aliases to avoid ORA-00918: column ambiguously defined
-					() -> {
-						final QueryPart currentQueryPart = getQueryPartStack().getCurrent();
-						final boolean needsParenthesis;
-						final boolean needsWrapper;
-						if ( currentQueryPart instanceof QueryGroup ) {
-							needsParenthesis = false;
-							// visitQuerySpec will add the select wrapper
-							needsWrapper = !currentQueryPart.hasOffsetOrFetchClause();
-						}
-						else {
-							needsParenthesis = !querySpec.isRoot();
-							needsWrapper = true;
-						}
-						if ( needsWrapper ) {
-							if ( needsParenthesis ) {
-								appendSql( '(' );
-							}
-							appendSql( "select * from " );
-							if ( !needsParenthesis ) {
-								appendSql( '(' );
-							}
-						}
-						super.visitQuerySpec( querySpec );
-						if ( needsWrapper ) {
-							if ( !needsParenthesis ) {
-								appendSql( ')' );
-							}
-						}
-						appendSql( " where rownum<=" );
-						final Stack<Clause> clauseStack = getClauseStack();
-						clauseStack.push( Clause.WHERE );
-						try {
-							fetchExpression.accept( this );
-
-							// We render the FOR UPDATE clause in the outer query
-							clauseStack.pop();
-							clauseStack.push( Clause.FOR_UPDATE );
-							visitForUpdateClause( querySpec );
-						}
-						finally {
-							clauseStack.pop();
-						}
-
-						if ( needsWrapper ) {
-							if ( needsParenthesis ) {
-								appendSql( ')' );
-							}
-						}
-					}
-			);
-		}
-		else {
-			super.emulateFetchOffsetWithWindowFunctions(
-					queryPart,
-					offsetExpression,
-					fetchExpression,
-					fetchClauseType,
-					emulateFetchClause
-			);
-		}
 	}
 
 	@Override
@@ -244,34 +237,58 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 				final QuerySpec querySpec = (QuerySpec) queryPartForRowNumbering;
 				if ( querySpec.getOffsetClauseExpression() == null
 						&& ( !querySpec.isRoot() || getOffsetParameter() == null ) ) {
-					// When rendering `rownum` for Oracle, we need to render the order by clause still
-					renderOrderBy( true, sortSpecifications );
+					// When we enter here, we need to handle the special ROWNUM pagination
+					if ( hasGroupingOrDistinct( querySpec ) || querySpec.getFromClause().hasJoins() ) {
+						// When the query spec has joins, a group by, having or distinct clause,
+						// we just need to render the order by clause, because the query is wrapped
+						renderOrderBy( true, sortSpecifications );
+					}
+					else {
+						// Otherwise we need to render the ROWNUM pagination predicate in here
+						final Predicate whereClauseRestrictions = querySpec.getWhereClauseRestrictions();
+						if ( whereClauseRestrictions != null && !whereClauseRestrictions.isEmpty() ) {
+							appendSql( " and " );
+						}
+						else {
+							appendSql( " where " );
+						}
+						appendSql( "rownum<=" );
+						final Stack<Clause> clauseStack = getClauseStack();
+						clauseStack.push( Clause.WHERE );
+						try {
+							if ( querySpec.isRoot() && hasLimit() ) {
+								getLimitParameter().accept( this );
+							}
+							else {
+								querySpec.getFetchClauseExpression().accept( this );
+							}
+						}
+						finally {
+							clauseStack.pop();
+						}
+						renderOrderBy( true, sortSpecifications );
+						visitForUpdateClause( querySpec );
+					}
 				}
 			}
 		}
 	}
 
+	private boolean hasGroupingOrDistinct(QuerySpec querySpec) {
+		return querySpec.getSelectClause().isDistinct()
+				|| !querySpec.getGroupByClauseExpressions().isEmpty()
+				|| querySpec.getHavingClauseRestrictions() != null;
+	}
+
 	@Override
 	protected void visitValuesList(List<Values> valuesList) {
 		if ( valuesList.size() < 2 ) {
-			super.visitValuesList( valuesList );
+			visitValuesListStandard( valuesList );
 		}
 		else {
 			// Oracle doesn't support a multi-values insert
 			// So we render a select union emulation instead
-			String separator = "";
-			final Stack<Clause> clauseStack = getClauseStack();
-			try {
-				clauseStack.push( Clause.VALUES );
-				for ( Values values : valuesList ) {
-					appendSql( separator );
-					renderExpressionsAsSubquery( values.getExpressions() );
-					separator = " union all ";
-				}
-			}
-			finally {
-				clauseStack.pop();
-			}
+			visitValuesListEmulateSelectUnion( valuesList );
 		}
 	}
 
@@ -287,9 +304,42 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 
 	@Override
 	public void visitFunctionTableReference(FunctionTableReference tableReference) {
-		append( "table(" );
 		tableReference.getFunctionExpression().accept( this );
-		append( CLOSE_PARENTHESIS );
+		if ( !tableReference.rendersIdentifierVariable() ) {
+			renderDerivedTableReferenceIdentificationVariable( tableReference );
+		}
+	}
+
+	@Override
+	public void renderNamedSetReturningFunction(String functionName, List<? extends SqlAstNode> sqlAstArguments, AnonymousTupleTableGroupProducer tupleType, String tableIdentifierVariable, SqlAstNodeRenderingMode argumentRenderingMode) {
+		final ModelPart ordinalitySubPart = tupleType.findSubPart( CollectionPart.Nature.INDEX.getName(), null );
+		if ( ordinalitySubPart != null ) {
+			appendSql( "lateral (select t.*, rownum " );
+			appendSql( ordinalitySubPart.asBasicValuedModelPart().getSelectionExpression() );
+			appendSql( " from table(" );
+			renderSimpleNamedFunction( functionName, sqlAstArguments, argumentRenderingMode );
+			append( ") t)" );
+		}
+		else {
+			appendSql( "table(" );
+			super.renderNamedSetReturningFunction( functionName, sqlAstArguments, tupleType, tableIdentifierVariable, argumentRenderingMode );
+			append( ')' );
+		}
+	}
+
+	@Override
+	protected void renderDerivedTableReference(DerivedTableReference tableReference) {
+		if ( tableReference instanceof FunctionTableReference && tableReference.isLateral() ) {
+			// No need for a lateral keyword for functions
+			tableReference.accept( this );
+		}
+		else {
+			super.renderDerivedTableReference( tableReference );
+		}
+	}
+
+	@Override
+	protected void renderDerivedTableReferenceIdentificationVariable(DerivedTableReference tableReference) {
 		renderTableReferenceIdentificationVariable( tableReference );
 	}
 
@@ -305,19 +355,158 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 
 	@Override
 	public void visitQuerySpec(QuerySpec querySpec) {
-		if ( shouldEmulateFetchClause( querySpec ) ) {
-			emulateFetchOffsetWithWindowFunctions( querySpec, true );
+		final EntityIdentifierMapping identifierMappingForLockingWrapper = identifierMappingForLockingWrapper( querySpec );
+		final Expression offsetExpression;
+		final Expression fetchExpression;
+		final FetchClauseType fetchClauseType;
+		if ( querySpec.isRoot() && hasLimit() ) {
+			prepareLimitOffsetParameters();
+			offsetExpression = getOffsetParameter();
+			fetchExpression = getLimitParameter();
+			fetchClauseType = FetchClauseType.ROWS_ONLY;
 		}
 		else {
-			super.visitQuerySpec( querySpec );
+			offsetExpression = querySpec.getOffsetClauseExpression();
+			fetchExpression = querySpec.getFetchClauseExpression();
+			fetchClauseType = querySpec.getFetchClauseType();
 		}
+		if ( shouldEmulateFetchClause( querySpec ) ) {
+			if ( identifierMappingForLockingWrapper == null ) {
+				emulateFetchOffsetWithWindowFunctions(
+						querySpec,
+						offsetExpression,
+						fetchExpression,
+						fetchClauseType,
+						true
+				);
+			}
+			else {
+				super.visitQuerySpec(
+						createLockingWrapper(
+								querySpec,
+								offsetExpression,
+								fetchExpression,
+								fetchClauseType,
+								identifierMappingForLockingWrapper
+						)
+				);
+				// Render the for update clause for the original query spec, because the locking wrapper is marked as non-root
+				visitForUpdateClause( querySpec );
+			}
+		}
+		else {
+			if ( identifierMappingForLockingWrapper == null ) {
+				super.visitQuerySpec( querySpec );
+			}
+			else {
+				super.visitQuerySpec(
+						createLockingWrapper(
+								querySpec,
+								offsetExpression,
+								fetchExpression,
+								fetchClauseType,
+								identifierMappingForLockingWrapper
+						)
+				);
+				// Render the for update clause for the original query spec, because the locking wrapper is marked as non-root
+				visitForUpdateClause( querySpec );
+			}
+		}
+	}
+
+	private QuerySpec createLockingWrapper(
+			QuerySpec querySpec,
+			Expression offsetExpression,
+			Expression fetchExpression,
+			FetchClauseType fetchClauseType,
+			EntityIdentifierMapping identifierMappingForLockingWrapper) {
+
+		final TableGroup rootTableGroup = querySpec.getFromClause().getRoots().get( 0 );
+		final List<ColumnReference> idColumnReferences = new ArrayList<>( identifierMappingForLockingWrapper.getJdbcTypeCount() );
+		identifierMappingForLockingWrapper.forEachSelectable(
+				0,
+				(selectionIndex, selectableMapping) -> {
+					idColumnReferences.add( new ColumnReference( rootTableGroup.getPrimaryTableReference(), selectableMapping ) );
+				}
+		);
+		final Expression idExpression;
+		if ( identifierMappingForLockingWrapper instanceof EmbeddableValuedModelPart ) {
+			idExpression = new SqlTuple( idColumnReferences, identifierMappingForLockingWrapper );
+		}
+		else {
+			idExpression = idColumnReferences.get( 0 );
+		}
+		final QuerySpec subquery = new QuerySpec( false, 1 );
+		for ( ColumnReference idColumnReference : idColumnReferences ) {
+			subquery.getSelectClause().addSqlSelection( new SqlSelectionImpl( idColumnReference ) );
+		}
+		subquery.getFromClause().addRoot( rootTableGroup );
+		subquery.applyPredicate( querySpec.getWhereClauseRestrictions() );
+		if ( querySpec.hasSortSpecifications() ) {
+			for ( SortSpecification sortSpecification : querySpec.getSortSpecifications() ) {
+				subquery.addSortSpecification( sortSpecification );
+			}
+		}
+		subquery.setOffsetClauseExpression( offsetExpression );
+		subquery.setFetchClauseExpression( fetchExpression, fetchClauseType );
+
+		// Mark the query spec as non-root even if it might be the root, to avoid applying the pagination there
+		final QuerySpec lockingWrapper = new QuerySpec( false, 1 );
+		lockingWrapper.getFromClause().addRoot( rootTableGroup );
+		for ( SqlSelection sqlSelection : querySpec.getSelectClause().getSqlSelections() ) {
+			lockingWrapper.getSelectClause().addSqlSelection( sqlSelection );
+		}
+		lockingWrapper.applyPredicate( new InSubQueryPredicate( idExpression, subquery, false ) );
+		return lockingWrapper;
+	}
+
+	private EntityIdentifierMapping identifierMappingForLockingWrapper(QuerySpec querySpec) {
+		// We only need a locking wrapper for very simple queries
+		if ( canApplyLockingWrapper( querySpec )
+				// There must be the need for locking in this query
+				&& needsLocking( querySpec )
+				// The query uses some sort of pagination which makes the wrapper necessary
+				&& needsLockingWrapper( querySpec )
+				// The query may not have a group by, having and distinct clause, or use aggregate functions,
+				// as these features will force the use of follow-on locking
+				&& querySpec.getGroupByClauseExpressions().isEmpty()
+				&& querySpec.getHavingClauseRestrictions() == null
+				&& !querySpec.getSelectClause().isDistinct()
+				&& !hasAggregateFunctions( querySpec ) ) {
+			return ( (EntityMappingType) querySpec.getFromClause().getRoots().get( 0 ).getModelPart() ).getIdentifierMapping();
+		}
+		return null;
+	}
+
+	private boolean canApplyLockingWrapper(QuerySpec querySpec) {
+		final FromClause fromClause;
+		return querySpec.isRoot()
+				// Must have a single root with no joins for an entity type
+				&& ( fromClause = querySpec.getFromClause() ).getRoots().size() == 1
+				&& !fromClause.hasJoins()
+				&& fromClause.getRoots().get( 0 ).getModelPart() instanceof EntityMappingType;
+	}
+
+	private boolean needsLockingWrapper(QuerySpec querySpec) {
+		return querySpec.getFetchClauseType() != FetchClauseType.ROWS_ONLY
+				|| hasOffset( querySpec )
+				|| hasLimit( querySpec );
 	}
 
 	@Override
 	public void visitOffsetFetchClause(QueryPart queryPart) {
 		if ( !isRowNumberingCurrentQueryPart() ) {
 			if ( supportsOffsetFetchClause() ) {
-				renderOffsetFetchClause( queryPart, true );
+				if ( getQueryPartStack().depth() > 1 && queryPart.hasSortSpecifications()
+						&& getQueryPartStack().peek( 1 ) instanceof QueryGroup
+						&& ( queryPart.isRoot() && !hasLimit() || !queryPart.hasOffsetOrFetchClause() ) ) {
+					// If the current query part has a query group parent, no offset/fetch clause, but an order by clause,
+					// then we must render "offset 0 rows" as that is needed for the SQL to be valid
+					appendSql( " offset 0 rows" );
+				}
+				else {
+					renderOffsetFetchClause( queryPart, true );
+				}
 			}
 			else {
 				assertRowsOnlyFetchClauseType( queryPart );
@@ -329,6 +518,8 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 	protected void renderRowNumber(SelectClause selectClause, QueryPart queryPart) {
 		if ( !queryPart.hasSortSpecifications() ) {
 			// Oracle doesn't allow an empty over clause for the row_number() function
+			// For regular window function usage, we render a constant order by,
+			// but since this is used for emulating limit/offset anyway, this is fine
 			appendSql( "rownum" );
 		}
 		else {
@@ -344,8 +535,9 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 					&& over.getStartKind() == FrameKind.UNBOUNDED_PRECEDING
 					&& over.getEndKind() == FrameKind.CURRENT_ROW
 					&& over.getExclusion() == FrameExclusion.NO_OTHERS ) {
-				// Oracle doesn't allow an empty over clause for the row_number() function
-				append( "rownum" );
+				// Oracle doesn't allow an empty over clause for the row_number() function,
+				// so we order by a constant
+				append( "row_number() over(order by 1)" );
 				return;
 			}
 		}
@@ -355,11 +547,12 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		final JdbcMappingContainer lhsExpressionType = lhs.getExpressionType();
-		if ( lhsExpressionType == null ) {
+		if ( lhsExpressionType == null || lhsExpressionType.getJdbcTypeCount() != 1 ) {
 			renderComparisonEmulateDecode( lhs, operator, rhs );
 			return;
 		}
-		switch ( lhsExpressionType.getJdbcMappings().get( 0 ).getJdbcType().getJdbcTypeCode() ) {
+		final JdbcType jdbcType = lhsExpressionType.getSingleJdbcMapping().getJdbcType();
+		switch ( jdbcType.getDdlTypeCode() ) {
 			case SqlTypes.SQLXML:
 				// In Oracle, XMLTYPE is not "comparable", so we have to use the xmldiff function for this purpose
 				switch ( operator ) {
@@ -381,8 +574,11 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 				rhs.accept( this );
 				appendSql( "),'/*[local-name()=''xdiff'']/*')" );
 				break;
+			case SqlTypes.CLOB:
+			case SqlTypes.NCLOB:
 			case SqlTypes.BLOB:
-				// In Oracle, BLOB types are not "comparable", so we have to use the dbms_lob.compare function for this purpose
+				// In Oracle, BLOB, CLOB and NCLOB types are not "comparable",
+				// so we have to use the dbms_lob.compare function for this purpose
 				switch ( operator ) {
 					case EQUAL:
 						appendSql( "0=" );
@@ -399,6 +595,54 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 				appendSql( ',' );
 				rhs.accept( this );
 				appendSql( ')' );
+				break;
+			case SqlTypes.ARRAY:
+				final String arrayTypeName = ( (OracleArrayJdbcType) jdbcType ).getSqlTypeName();
+				switch ( operator ) {
+					case DISTINCT_FROM:
+					case NOT_DISTINCT_FROM:
+						appendSql( arrayTypeName );
+						appendSql( "_distinct(" );
+						visitSqlSelectExpression( lhs );
+						appendSql( ',' );
+						visitSqlSelectExpression( rhs );
+						appendSql( ")" );
+						break;
+					default:
+						appendSql( arrayTypeName );
+						appendSql( "_cmp(" );
+						visitSqlSelectExpression( lhs );
+						appendSql( ',' );
+						visitSqlSelectExpression( rhs );
+						appendSql( ")" );
+						break;
+				}
+				switch ( operator ) {
+					case DISTINCT_FROM:
+						appendSql( "=1" );
+						break;
+					case NOT_DISTINCT_FROM:
+						appendSql( "=0" );
+						break;
+					case EQUAL:
+						appendSql( "=0" );
+						break;
+					case NOT_EQUAL:
+						appendSql( "<>0" );
+						break;
+					case LESS_THAN:
+						appendSql( "=-1" );
+						break;
+					case GREATER_THAN:
+						appendSql( "=1" );
+						break;
+					case LESS_THAN_OR_EQUAL:
+						appendSql( "<=0" );
+						break;
+					case GREATER_THAN_OR_EQUAL:
+						appendSql( ">=0" );
+						break;
+				}
 				break;
 			default:
 				renderComparisonEmulateDecode( lhs, operator, rhs );
@@ -467,35 +711,35 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 		return getDialect().getVersion().isSameOrAfter( 9 );
 	}
 
-	@Override
-	protected String getFromDual() {
-		return " from dual";
-	}
-
-	@Override
-	protected String getFromDualForSelectOnly() {
-		return getFromDual();
-	}
-
 	private boolean supportsOffsetFetchClause() {
 		return getDialect().supportsFetchClause( FetchClauseType.ROWS_ONLY );
 	}
 
 	@Override
-	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
-		final BinaryArithmeticOperator operator = arithmeticExpression.getOperator();
-		if ( operator == BinaryArithmeticOperator.MODULO ) {
-			append( "mod" );
-			appendSql( OPEN_PARENTHESIS );
-			arithmeticExpression.getLeftHandOperand().accept( this );
-			appendSql( ',' );
-			arithmeticExpression.getRightHandOperand().accept( this );
-			appendSql( CLOSE_PARENTHESIS );
-			return;
+	protected void visitSetAssignment(Assignment assignment) {
+		final List<ColumnReference> columnReferences = assignment.getAssignable().getColumnReferences();
+		if ( columnReferences.size() == 1 ) {
+			columnReferences.get( 0 ).appendColumnForWrite( this );
+			appendSql( '=' );
+			final Expression assignedValue = assignment.getAssignedValue();
+			final SqlTuple sqlTuple = SqlTupleContainer.getSqlTuple( assignedValue );
+			if ( sqlTuple != null ) {
+				assert sqlTuple.getExpressions().size() == 1;
+				sqlTuple.getExpressions().get( 0 ).accept( this );
+			}
+			else {
+				assignedValue.accept( this );
+			}
 		}
 		else {
-			super.visitBinaryArithmeticExpression( arithmeticExpression );
+			char separator = OPEN_PARENTHESIS;
+			for ( ColumnReference columnReference : columnReferences ) {
+				appendSql( separator );
+				columnReference.appendColumnForWrite( this );
+				separator = COMMA_SEPARATOR_CHAR;
+			}
+			appendSql( ")=" );
+			assignment.getAssignedValue().accept( this );
 		}
 	}
-
 }

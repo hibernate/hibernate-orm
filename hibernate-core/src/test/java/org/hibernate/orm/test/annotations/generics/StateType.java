@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id$
 package org.hibernate.orm.test.annotations.generics;
 
 import java.io.Serializable;
@@ -41,14 +37,16 @@ public class StateType implements UserType<State> {
 	}
 
 	@Override
-	public State nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public State nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+			throws SQLException {
 		int result = rs.getInt( position );
 		if ( rs.wasNull() ) return null;
 		return State.values()[result];
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, State value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
+	public void nullSafeSet(PreparedStatement st, State value, int index, SharedSessionContractImplementor session)
+			throws HibernateException, SQLException {
 		if (value == null) {
 			st.setNull( index, Types.INTEGER );
 		}

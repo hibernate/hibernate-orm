@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
@@ -16,7 +14,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import jakarta.persistence.Embedded;
 
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
@@ -42,6 +39,7 @@ import net.bytebuddy.jar.asm.MethodVisitor;
 import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.jar.asm.Type;
 import net.bytebuddy.matcher.ElementMatcher.Junction;
+import net.bytebuddy.matcher.ElementMatchers;
 import net.bytebuddy.pool.TypePool;
 import net.bytebuddy.utility.OpenedClassReader;
 
@@ -50,7 +48,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( PersistentAttributeTransformer.class );
 
 	private static final Junction<MethodDescription> NOT_HIBERNATE_GENERATED = not( nameStartsWith( "$$_hibernate_" ) );
-	private static final ModifierContributor.ForField REMOVE_FINAL_MODIFIER = new ModifierContributor.ForField() {
+	private static final ModifierContributor.ForField REMOVE_PRIVATE_FINAL_MODIFIER = new ModifierContributor.ForField() {
 		@Override
 		public int getMask() {
 			return EMPTY_MASK; // Do not add any modifier
@@ -58,7 +56,23 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 
 		@Override
 		public int getRange() {
-			return Opcodes.ACC_FINAL; // Remove the "final" modifier
+			return Opcodes.ACC_FINAL | Opcodes.ACC_PRIVATE; // Remove the "final" and "private" modifier
+		}
+
+		@Override
+		public boolean isDefault() {
+			return false;
+		}
+	};
+	private static final ModifierContributor.ForMethod REMOVE_PRIVATE_MODIFIER = new ModifierContributor.ForMethod() {
+		@Override
+		public int getMask() {
+			return EMPTY_MASK; // Do not add any modifier
+		}
+
+		@Override
+		public int getRange() {
+			return Opcodes.ACC_PRIVATE; // Remove the "private" modifier
 		}
 
 		@Override
@@ -84,6 +98,10 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 		this.enhancementContext = enhancementContext;
 		this.classPool = classPool;
 		this.enhancedFields = enhancedFields;
+	}
+
+	public AnnotatedFieldDescription[] getEnhancedFields() {
+		return enhancedFields;
 	}
 
 	public static PersistentAttributeTransformer collectPersistentFields(
@@ -127,7 +145,10 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 		}
 		TypeDefinition managedCtSuperclass = managedCtClass.getSuperClass();
 
-		if ( enhancementContext.isEntityClass( managedCtSuperclass.asErasure() ) ) {
+		// If managedCtSuperclass is null, managedCtClass can be either interface or module-info.
+		// Interfaces are already filtered-out, and module-info does not have any fields to enhance
+		// so we can safely return empty list.
+		if ( managedCtSuperclass == null || enhancementContext.isEntityClass( managedCtSuperclass.asErasure() ) ) {
 			return Collections.emptyList();
 		}
 		else if ( !enhancementContext.isMappedSuperclassClass( managedCtSuperclass.asErasure() ) ) {
@@ -210,6 +231,14 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 	DynamicType.Builder<?> applyTo(DynamicType.Builder<?> builder) {
 		boolean compositeOwner = false;
 
+		// Remove the private modifier from the constructor, which allows to create a better InstantiationOptimizer
+		builder = builder.visit(
+				new ModifierAdjustment().withConstructorModifiers(
+						ElementMatchers.isDefaultConstructor(),
+						REMOVE_PRIVATE_MODIFIER
+				)
+		);
+
 		builder = builder.visit( new AsmVisitorWrapper.ForDeclaredMethods().invokable( NOT_HIBERNATE_GENERATED, this ) );
 		// Remove the final modifier from all enhanced fields, because:
 		// 1. We sometimes need to write to final fields when they are lazy.
@@ -219,13 +248,20 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 		for ( AnnotatedFieldDescription f : enhancedFields ) {
 			enhancedFieldsAsDefined.add( f.asDefined() );
 		}
-		builder = builder.visit( new ModifierAdjustment().withFieldModifiers( anyOf( enhancedFieldsAsDefined ),
-				REMOVE_FINAL_MODIFIER ) );
+		// Replace the private modifier with package-private for all enhanced fields,
+		// because our AccessOptimizer needs to get/set fields and can't use field reader/writer,
+		// as reader/writer methods have different semantics
+		builder = builder.visit(
+				new ModifierAdjustment().withFieldModifiers(
+						anyOf( enhancedFieldsAsDefined ),
+						REMOVE_PRIVATE_FINAL_MODIFIER
+				)
+		);
 		for ( AnnotatedFieldDescription enhancedField : enhancedFields ) {
 			builder = builder
 					.defineMethod(
 							EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + enhancedField.getName(),
-							enhancedField.getType().asErasure(),
+							enhancedField.asDefined().getType().asErasure(),
 							Visibility.PUBLIC
 					)
 					.intercept( fieldReader( enhancedField ) );
@@ -238,14 +274,13 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 								TypeDescription.VOID,
 								Visibility.PUBLIC
 						)
-						.withParameters( enhancedField.getType().asErasure() )
+						.withParameters( enhancedField.asDefined().getType().asErasure() )
 						.intercept( fieldWriter( enhancedField ) );
 			}
 
 			if ( !compositeOwner
 					&& !enhancementContext.isMappedSuperclassClass( managedCtClass )
-					&& enhancedField.hasAnnotation( Embedded.class )
-					&& enhancementContext.isCompositeClass( enhancedField.getType().asErasure() )
+					&& enhancementContext.isCompositeField( enhancedField )
 					&& enhancementContext.doDirtyCheckingInline( managedCtClass ) ) {
 				compositeOwner = true;
 			}
@@ -338,10 +373,10 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 					Opcodes.INVOKESPECIAL,
 					managedCtClass.getSuperClass().asErasure().getInternalName(),
 					EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + persistentField.getName(),
-					Type.getMethodDescriptor( Type.getType( persistentField.getType().asErasure().getDescriptor() ) ),
+					Type.getMethodDescriptor( Type.getType( persistentField.asDefined().getType().asErasure().getDescriptor() ) ),
 					false
 			);
-			methodVisitor.visitInsn( Type.getType( persistentField.getType().asErasure().getDescriptor() ).getOpcode( Opcodes.IRETURN ) );
+			methodVisitor.visitInsn( Type.getType( persistentField.asDefined().getType().asErasure().getDescriptor() ).getOpcode( Opcodes.IRETURN ) );
 			return new Size( persistentField.getType().getStackSize().getSize(), instrumentedMethod.getStackSize() );
 		}
 	}
@@ -364,12 +399,12 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 				MethodDescription instrumentedMethod
 		) {
 			methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
-			methodVisitor.visitVarInsn( Type.getType( persistentField.getType().asErasure().getDescriptor() ).getOpcode( Opcodes.ILOAD ), 1 );
+			methodVisitor.visitVarInsn( Type.getType( persistentField.asDefined().getType().asErasure().getDescriptor() ).getOpcode( Opcodes.ILOAD ), 1 );
 			methodVisitor.visitMethodInsn(
 					Opcodes.INVOKESPECIAL,
 					managedCtClass.getSuperClass().asErasure().getInternalName(),
 					EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + persistentField.getName(),
-					Type.getMethodDescriptor( Type.getType( void.class ), Type.getType( persistentField.getType().asErasure().getDescriptor() ) ),
+					Type.getMethodDescriptor( Type.getType( void.class ), Type.getType( persistentField.asDefined().getType().asErasure().getDescriptor() ) ),
 					false
 			);
 			methodVisitor.visitInsn( Opcodes.RETURN );

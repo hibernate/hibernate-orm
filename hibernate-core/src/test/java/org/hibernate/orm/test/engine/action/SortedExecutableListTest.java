@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.engine.action;
 
@@ -18,9 +16,9 @@ import java.util.Set;
 import org.hibernate.HibernateException;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
-import org.hibernate.action.spi.Executable;
+import org.hibernate.engine.spi.ComparableExecutable;
 import org.hibernate.engine.spi.ExecutableList;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.junit.jupiter.api.AfterEach;
@@ -36,10 +34,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class SortedExecutableListTest {
 
 	// For testing, we need an Executable that is also Comparable and Serializable
-	private static class AnExecutable implements Executable, Comparable<AnExecutable>, Serializable {
+	private static class AnExecutable implements ComparableExecutable {
 
 		private final int n;
-		private Serializable[] spaces;
+		private String[] spaces;
 		private transient boolean afterDeserializeCalled;
 
 		public AnExecutable(int n, String... spaces) {
@@ -52,8 +50,9 @@ public class SortedExecutableListTest {
 		}
 
 		@Override
-		public int compareTo(AnExecutable o) {
-			return Integer.compare( n, o.n );
+		public int compareTo(ComparableExecutable o) {
+			Integer index = (Integer) o.getSecondarySortIndex();
+			return Integer.compare( n, index.intValue() );
 		}
 
 		@Override
@@ -72,7 +71,7 @@ public class SortedExecutableListTest {
 		}
 
 		@Override
-		public Serializable[] getPropertySpaces() {
+		public String[] getPropertySpaces() {
 			return spaces;
 		}
 
@@ -95,14 +94,23 @@ public class SortedExecutableListTest {
 		}
 
 		@Override
-		public void afterDeserialize(SharedSessionContractImplementor session) {
+		public void afterDeserialize(EventSource session) {
 			this.afterDeserializeCalled = true;
 		}
 
 		public String toString() {
-			return String.valueOf(n);
+			return String.valueOf( n );
 		}
 
+		@Override
+		public String getPrimarySortClassifier() {
+			return toString();
+		}
+
+		@Override
+		public Object getSecondarySortIndex() {
+			return Integer.valueOf( n );
+		}
 	}
 
 	private ExecutableList<AnExecutable> actionList;
@@ -135,7 +143,7 @@ public class SortedExecutableListTest {
 		assertThat( actionList ).element( 0 ).isSameAs( action1 );
 		assertThat( actionList ).element( 1 ).isSameAs( action3 );
 	}
-	
+
 	@Test
 	public void testClear() {
 		assertThat( actionList ).isEmpty();
@@ -150,7 +158,7 @@ public class SortedExecutableListTest {
 
 		assertThat( actionList ).isEmpty();
 	}
-	
+
 	@Test
 	public void testIterator() {
 		actionList.add( action1 );
@@ -238,7 +246,7 @@ public class SortedExecutableListTest {
 		assertThat( actionList ).element( 2 ).isSameAs( action3 );
 		assertThat( actionList ).element( 3 ).isSameAs( action4 );
 	}
-	
+
 	@Test
 	public void testSerializeDeserialize() throws IOException, ClassNotFoundException {
 		actionList.add( action4 );
@@ -287,4 +295,3 @@ public class SortedExecutableListTest {
 		assertThat( actionList ).element( 3 ).isEqualTo( action4 );
 	}
 }
-

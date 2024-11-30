@@ -1,42 +1,43 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.group;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 /**
  * Testing OneToOne LazyToOne association
  *
  * @author Jan-Oliver Lustig, Sebastian Viefhaus
  */
-@TestForIssue(jiraKey = "HHH-11986")
-@RunWith(BytecodeEnhancerRunner.class)
-public class LazyGroupMappedByTest extends BaseCoreFunctionalTestCase {
-
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class[] { LGMB_From.class, LGMB_To.class };
-	}
+@SuppressWarnings("JUnitMalformedDeclaration")
+@JiraKey("HHH-11986")
+@DomainModel(annotatedClasses = {LGMB_From.class, LGMB_To.class})
+@SessionFactory
+@BytecodeEnhanced
+public class LazyGroupMappedByTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11986")
-	public void test() {
-		Long fromId = createEntities();
+	@JiraKey("HHH-11986")
+	public void test(SessionFactoryScope scope) {
+		Long fromId = createEntities( scope );
 
-		Statistics stats = sessionFactory().getStatistics();
+		Statistics stats = scope.getSessionFactory().getStatistics();
 		stats.setStatisticsEnabled( true );
 		stats.clear();
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-
+		scope.inTransaction( session -> {
 					SessionStatistics sessionStats = session.getStatistics();
 
 					// Should be loaded lazy.
@@ -65,9 +66,8 @@ public class LazyGroupMappedByTest extends BaseCoreFunctionalTestCase {
 	 *
 	 * @return ID der Quell-Entität
 	 */
-	public Long createEntities() {
-		return doInHibernate(
-				this::sessionFactory, session -> {
+	public Long createEntities(SessionFactoryScope scope) {
+		return scope.fromTransaction( session -> {
 					session.createQuery( "delete from LGMB_To" ).executeUpdate();
 					session.createQuery( "delete from LGMB_From" ).executeUpdate();
 
@@ -76,7 +76,7 @@ public class LazyGroupMappedByTest extends BaseCoreFunctionalTestCase {
 					from.setToRelation( to );
 					to.setFromRelation( from );
 
-					session.save( from );
+					session.persist( from );
 					session.flush();
 
 					return from.getId();

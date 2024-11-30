@@ -20,18 +20,18 @@ repositories {
 }
 
 dependencies {
-    implementation 'jakarta.persistence:jakarta.persistence-api:3.0.0'
+    // NOTE : The version used here is irrelevant in terms of testing the plugin.
+    // We just need a resolvable version
     implementation 'org.hibernate.orm:hibernate-core:6.1.0.Final'
 }
 
 hibernate {
-    // to get using the same version to work, we'd have to install hibernate-core into maven local prior to running these.
-    // suck we won't be able to adequately test this part, but
     useSameVersion = false
     enhancement {
-        lazyInitialization( true )
+        enableLazyInitialization.set(true)
+        lazyInitialization = true
+
+        enableDirtyTracking.set(true)
         dirtyTracking = true
-    }
-    jpaMetamodel {
     }
 }

@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id$
 package org.hibernate.orm.test.annotations.inheritance.joined;
 
 import jakarta.persistence.DiscriminatorColumn;
@@ -15,16 +11,17 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
+import jakarta.persistence.Table;
 
 
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
-@DiscriminatorColumn(name = "DTYPE", discriminatorType = DiscriminatorType.STRING, length = 80)
-@DiscriminatorValue("EventInformationT")
+@Table(name = "events")
+@DiscriminatorColumn(name = "event_type", discriminatorType = DiscriminatorType.STRING, length = 80)
+@DiscriminatorValue("event")
 public class EventInformation implements java.io.Serializable {
-
-
 	protected String notificationId;
+	private String name;
 
 	@Id
 	public String getNotificationId() {
@@ -35,11 +32,17 @@ public class EventInformation implements java.io.Serializable {
 		this.notificationId = value;
 	}
 
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
 	@Override
 	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append( "EventInformationT: id = " + getNotificationId() );
-		return sb.toString();
+		return "EventInformation(" + getNotificationId() + ")";
 	}
 
 }

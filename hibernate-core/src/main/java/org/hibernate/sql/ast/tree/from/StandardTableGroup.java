@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.from;
 
@@ -131,15 +129,13 @@ public class StandardTableGroup extends AbstractTableGroup {
 	}
 
 	@Override
-	protected TableReference getTableReferenceInternal(
+	public TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization,
 			boolean resolve) {
 		final TableReference tableReference = primaryTableReference.getTableReference(
 				navigablePath,
 				tableExpression,
-				allowFkOptimization,
 				resolve
 		);
 		if ( tableReference != null ) {
@@ -152,7 +148,7 @@ public class StandardTableGroup extends AbstractTableGroup {
 					final TableReferenceJoin join = tableJoins.get( i );
 					assert join != null;
 					final TableReference resolveTableReference = join.getJoinedTableReference()
-							.getTableReference( navigablePath, tableExpression, allowFkOptimization, resolve );
+							.getTableReference( navigablePath, tableExpression, resolve );
 					if ( resolveTableReference != null ) {
 						return resolveTableReference;
 					}
@@ -164,13 +160,13 @@ public class StandardTableGroup extends AbstractTableGroup {
 
 		for ( TableGroupJoin tableGroupJoin : getNestedTableGroupJoins() ) {
 			final TableReference primaryTableReference = tableGroupJoin.getJoinedGroup().getPrimaryTableReference();
-			if ( primaryTableReference.getTableReference( navigablePath, tableExpression, allowFkOptimization, resolve ) != null ) {
+			if ( primaryTableReference.getTableReference( navigablePath, tableExpression, resolve ) != null ) {
 				return primaryTableReference;
 			}
 		}
 		for ( TableGroupJoin tableGroupJoin : getTableGroupJoins() ) {
 			final TableReference primaryTableReference = tableGroupJoin.getJoinedGroup().getPrimaryTableReference();
-			if ( primaryTableReference.getTableReference( navigablePath, tableExpression, allowFkOptimization, resolve ) != null ) {
+			if ( primaryTableReference.getTableReference( navigablePath, tableExpression, resolve ) != null ) {
 				return primaryTableReference;
 			}
 		}

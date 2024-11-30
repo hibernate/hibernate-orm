@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.relational;
 
@@ -14,7 +12,7 @@ import org.hibernate.dialect.Dialect;
 
 /**
  * Convenience base class for {@link AuxiliaryDatabaseObject}s.
- * <p/>
+ * <p>
  * This implementation performs dialect scoping checks strictly based on
  * dialect name comparisons.  Custom implementations might want to do
  * instanceof-type checks.

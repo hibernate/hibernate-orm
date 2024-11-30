@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tuple.component;
 
@@ -14,15 +12,11 @@ import org.hibernate.tuple.BaselineAttributeInformation;
 import org.hibernate.type.CompositeType;
 
 /**
- * A base class for a composite, non-identifier attribute.
- *
- * @author Steve Ebersole
+ * @deprecated No direct replacement
  */
+@Deprecated(forRemoval = true)
 public abstract class AbstractCompositionAttribute
-		extends AbstractNonIdentifierAttribute
-		implements AttributeSource {
-
-	private final int columnStartPosition;
+		extends AbstractNonIdentifierAttribute {
 
 	protected AbstractCompositionAttribute(
 			AttributeSource source,
@@ -33,7 +27,6 @@ public abstract class AbstractCompositionAttribute
 			int columnStartPosition,
 			BaselineAttributeInformation baselineInfo) {
 		super( source, sessionFactory, entityBasedAttributeNumber, attributeName, attributeType, baselineInfo );
-		this.columnStartPosition = columnStartPosition;
 	}
 
 	@Override

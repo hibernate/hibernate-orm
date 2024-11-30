@@ -1,15 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.sqm.TreatException;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.PathException;
-import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -39,12 +37,13 @@ public class NonAggregatedCompositeSimplePath<T> extends SqmEntityValuedSimplePa
 			return existing;
 		}
 
+		final SqmPath<?> lhsCopy = getLhs().copy( context );
 		final NonAggregatedCompositeSimplePath<T> path = context.registerCopy(
 				this,
 				new NonAggregatedCompositeSimplePath<>(
-						getNavigablePath(),
-						getReferencedPathSource(),
-						getLhs().copy( context ),
+						getNavigablePathCopy( lhsCopy ),
+						getModel(),
+						lhsCopy,
 						nodeBuilder()
 				)
 		);
@@ -53,24 +52,38 @@ public class NonAggregatedCompositeSimplePath<T> extends SqmEntityValuedSimplePa
 	}
 
 	@Override
-	public SqmPath<?> resolvePathPart(
-			String name,
-			boolean isTerminal,
-			SqmCreationState creationState) {
-		final SqmPath<?> sqmPath = get( name );
-		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
-		return sqmPath;
-	}
-
-	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitNonAggregatedCompositeValuedPath( this );
 	}
 
+	@Override
+	public <S extends T> SqmTreatedEntityValuedSimplePath<T, S> treatAs(Class<S> treatJavaType) throws PathException {
+		throw new TreatException( "Non-aggregate composite paths cannot be TREAT-ed" );
+	}
 
 	@Override
-	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
-		throw new PathException( "Non Aggregate composite paths cannot be TREAT-ed" );
+	public <S extends T> SqmTreatedSimplePath<T, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
+		throw new TreatException( "Non-aggregate composite paths cannot be TREAT-ed" );
 	}
-	
+
+	@Override
+	public <S extends T> SqmTreatedSimplePath<T, S> treatAs(Class<S> treatJavaType, String alias) {
+		throw new TreatException( "Non-aggregate composite paths cannot be TREAT-ed" );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedSimplePath<T, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
+		throw new TreatException( "Non-aggregate composite paths cannot be TREAT-ed" );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedPath<T, S> treatAs(Class<S> treatJavaType, String alias, boolean fetch) {
+		throw new TreatException( "Non-aggregate composite paths cannot be TREAT-ed" );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch) {
+		throw new TreatException( "Non-aggregate composite paths cannot be TREAT-ed" );
+	}
+
 }

@@ -1,40 +1,36 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.onetoone;
 
-import java.util.Iterator;
+import java.util.List;
 
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Root;
-
-import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Join;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Table;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.testing.transaction.TransactionUtil;
 import org.hibernate.orm.test.annotations.Customer;
 import org.hibernate.orm.test.annotations.Discount;
 import org.hibernate.orm.test.annotations.Passport;
 import org.hibernate.orm.test.annotations.Ticket;
+import org.hibernate.query.Query;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.JpaCriteriaQuery;
+import org.hibernate.query.criteria.JpaRoot;
+
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Test;
+
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Emmanuel Bernard
@@ -220,8 +216,8 @@ public class OneToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 				assertNotNull( party.partyAffiliate );
 				assertEquals( party.partyId, party.partyAffiliate.partyId );
 
-				s.delete( party );
-				s.delete( party.partyAffiliate );
+				s.remove( party );
+				s.remove( party.partyAffiliate );
 				tx.commit();
 			}
 			catch (Exception e) {
@@ -269,8 +265,8 @@ public class OneToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 				assertNotNull( zip.trousers );
 				assertEquals( trousers.id, zip.trousers.id );
 
-				s.delete( zip );
-				s.delete( zip.trousers );
+				s.remove( zip );
+				s.remove( zip.trousers );
 				tx.commit();
 			}
 			catch (Exception e) {
@@ -300,30 +296,7 @@ public class OneToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-4606" )
-	public void testJoinColumnConfiguredInXml() {
-		PersistentClass pc = metadata().getEntityBinding( Son.class.getName() );
-		Iterator<Join> iter = pc.getJoinIterator();
-		Table table = iter.next().getTable();
-		Iterator<Column> columnIter = table.getColumnIterator();
-		boolean fooFound = false;
-		boolean barFound = false;
-		while ( columnIter.hasNext() ) {
-			Column column = columnIter.next();
-			if ( column.getName().equals( "foo" ) ) {
-				fooFound = true;
-			}
-			if ( column.getName().equals( "bar" ) ) {
-				barFound = true;
-			}
-		}
-		assertTrue(
-				"The mapping defines join columns which could not be found in the metadata.", fooFound && barFound
-		);
-	}
-
-	@Test
-	@TestForIssue(jiraKey = "HHH-6723")
+	@JiraKey(value = "HHH-6723")
 	public void testPkOneToOneSelectStatementDoesNotGenerateExtraJoin() {
 		// This test uses an interceptor to verify that correct number of joins are generated.
 		TransactionUtil.doInHibernate( this::sessionFactory, s -> {
@@ -386,7 +359,7 @@ public class OneToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5757")
+	@JiraKey(value = "HHH-5757")
 	public void testHqlQuery() {
 		//test a default one to one and a mappedBy in the other side
 		final Passport passport = TransactionUtil.doInHibernate( this::sessionFactory, session -> {
@@ -416,7 +389,37 @@ public class OneToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 			assertThat( p, is( notNullValue() ) );
 		} );
 	}
-	
+
+	@Test
+	public void testDereferenceOneToOne() {
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			Client c1 = new Client();
+			c1.setName( "C1" );
+			Client c2 = new Client();
+			c2.setName( "C2" );
+			Client c3 = new Client();
+			c3.setName( "C3" );
+			Address a = new Address();
+			a.setCity( "Vienna" );
+			c1.setAddress( a );
+			c3.setAddress( new Address() );
+			session.persist( c1 );
+			session.persist( c2 );
+			session.persist( c3 );
+		} );
+
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+			JpaCriteriaQuery<Client> query = cb.createQuery( Client.class );
+			JpaRoot<Client> root = query.from( Client.class );
+			query.where( root.get( "address" ).get( "city" ).isNull() );
+			List<Client> resultList = session.createQuery( query ).getResultList();
+
+			assertEquals( 1, resultList.size() );
+			assertEquals( "C3", resultList.get( 0 ).getName() );
+		} );
+	}
+
 	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
@@ -437,11 +440,6 @@ public class OneToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 				Owner.class,
 				OwnerAddress.class
 		};
-	}
-
-	@Override
-	protected String[] getXmlFiles() {
-		return new String[] { "org/hibernate/orm/test/annotations/onetoone/orm.xml" };
 	}
 
 }

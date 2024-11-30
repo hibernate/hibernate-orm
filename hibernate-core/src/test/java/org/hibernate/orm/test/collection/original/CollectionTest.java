@@ -1,25 +1,23 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.collection.original;
-
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Root;
 
 import org.hibernate.Hibernate;
 import org.hibernate.engine.spi.SessionImplementor;
 
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -78,7 +76,7 @@ public class CollectionTest {
 					assertFalse( Hibernate.isInitialized( u.getSessionAttributeNames() ) );
 					assertTrue( Hibernate.isInitialized( u.getSessionData() ) );
 
-					s.delete( u );
+					s.remove( u );
 				}
 		);
 	}
@@ -121,7 +119,7 @@ public class CollectionTest {
 		scope.inTransaction(
 				s -> {
 					User u2 = findUser( s );
-					s.delete( u2 );
+					s.remove( u2 );
 					s.flush();
 				}
 		);
@@ -151,7 +149,7 @@ public class CollectionTest {
 					assertTrue( Hibernate.isInitialized( u2.getEmailAddresses() ) );
 					assertFalse( Hibernate.isInitialized( u2.getPermissions() ) );
 					assertEquals( 2, u2.getEmailAddresses().size() );
-					s.delete( u2 );
+					s.remove( u2 );
 				}
 		);
 	}
@@ -178,20 +176,20 @@ public class CollectionTest {
 		u.getEmailAddresses().remove( 0 );
 		u.getEmailAddresses().remove( 2 );
 
-		scope.inTransaction(
-				s -> s.update( u )
+		User merged = scope.fromTransaction(
+				s -> s.merge( u )
 		);
 
-		u.getSessionData().clear();
-		u.getEmailAddresses().add( 0, new Email( "gavin@nospam.com" ) );
-		u.getEmailAddresses().add( new Email( "gavin.king@jboss.com" ) );
+		merged.getSessionData().clear();
+		merged.getEmailAddresses().add( 0, new Email( "gavin@nospam.com" ) );
+		merged.getEmailAddresses().add( new Email( "gavin.king@jboss.com" ) );
 
 		scope.inTransaction(
-				s -> s.update( u )
+				s -> s.merge( merged )
 		);
 
 		scope.inTransaction(
-				s -> s.delete( u )
+				s -> s.remove( merged )
 		);
 	}
 
@@ -233,7 +231,7 @@ public class CollectionTest {
 					assertEquals( 2, u2.getEmailAddresses().size() );
 					assertEquals( "new foo value", u2.getSessionData().get( "foo" ) );
 					assertEquals( "gavin@hibernate.org", ( (Email) u2.getEmailAddresses().get( 1 ) ).getAddress() );
-					s.delete( u2 );
+					s.remove( u2 );
 				}
 		);
 	}
@@ -246,7 +244,7 @@ public class CollectionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-3636")
+	@JiraKey(value = "HHH-3636")
 	public void testCollectionInheritance(SessionFactoryScope scope) {
 		Zoo zoo = new Zoo();
 		scope.inTransaction(
@@ -257,7 +255,7 @@ public class CollectionTest {
 					m.setMammalName3( "name3" );
 					m.setZoo( zoo );
 					zoo.getAnimals().add( m );
-					s.save( zoo );
+					s.persist( zoo );
 				}
 		);
 
@@ -265,7 +263,7 @@ public class CollectionTest {
 				s -> {
 					Zoo found = s.get( Zoo.class, zoo.getId() );
 					found.getAnimals().size();
-					s.delete( found );
+					s.remove( found );
 				}
 		);
 	}

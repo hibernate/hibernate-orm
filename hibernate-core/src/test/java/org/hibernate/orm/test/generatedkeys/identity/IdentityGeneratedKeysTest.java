@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.generatedkeys.identity;
 
@@ -33,7 +31,7 @@ public class IdentityGeneratedKeysTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
+		cfg.setProperty( Environment.GENERATE_STATISTICS, true );
 	}
 
 	@Override
@@ -51,10 +49,9 @@ public class IdentityGeneratedKeysTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		MyEntity myEntity = new MyEntity( "test" );
-		Long id = ( Long ) s.save( myEntity );
-		assertNotNull( "identity column did not force immediate insert", id );
-		assertEquals( id, myEntity.getId() );
-		s.delete( myEntity );
+		s.persist(myEntity);
+		assertNotNull( "identity column did not force immediate insert", myEntity.getId() );
+		s.remove( myEntity );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -63,13 +60,6 @@ public class IdentityGeneratedKeysTest extends BaseCoreFunctionalTestCase {
 	public void testPersistOutsideTransaction() {
 		Session s = openSession();
 		try {
-			// first test save() which should force an immediate insert...
-			MyEntity myEntity1 = new MyEntity( "test-save" );
-			Long id = (Long) s.save( myEntity1 );
-			assertNotNull( "identity column did not force immediate insert", id );
-			assertEquals( id, myEntity1.getId() );
-
-			// next test persist() which should cause a delayed insert...
 			long initialInsertCount = sessionFactory().getStatistics().getEntityInsertCount();
 			MyEntity myEntity2 = new MyEntity( "test-persist" );
 			s.persist( myEntity2 );

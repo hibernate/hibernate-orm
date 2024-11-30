@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemaupdate.foreignkeys;
 
@@ -23,8 +21,9 @@ import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 /**
@@ -33,15 +32,16 @@ import org.junit.Test;
 @RequiresDialectFeature( value = {DialectChecks.SupportCatalogCreation.class})
 public class ForeignKeyMigrationTest extends BaseUnitTestCase {
 	@Test
-	@TestForIssue( jiraKey = "HHH-9716" )
+	@JiraKey( value = "HHH-9716" )
 //	@FailureExpected( jiraKey = "HHH-9716" )
 	public void testMigrationOfForeignKeys() {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 		try {
 			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( Box.class )
 					.addAnnotatedClass( Thing.class )
 					.buildMetadata();
+			metadata.orderColumns( false );
 			metadata.validate();
 
 			// first create the schema...

@@ -1,33 +1,30 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.internal.UnsavedValueFactory;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.VersionValue;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.RootClass;
-import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -53,12 +50,11 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 	private final Long length;
 	private final Integer precision;
 	private final Integer scale;
+	private final Integer temporalPrecision;
 
-	private final BasicType versionBasicType;
+	private final BasicType<?> versionBasicType;
 
 	private final VersionValue unsavedValueStrategy;
-
-	private BasicAttributeMapping attributeMapping;
 
 	public EntityVersionMappingImpl(
 			RootClass bootEntityDescriptor,
@@ -70,14 +66,15 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 			Long length,
 			Integer precision,
 			Integer scale,
+			Integer temporalPrecision,
 			BasicType<?> versionBasicType,
-			EntityMappingType declaringType,
-			MappingModelCreationProcess creationProcess) {
+			EntityMappingType declaringType) {
 		this.attributeName = attributeName;
 		this.columnDefinition = columnDefinition;
 		this.length = length;
 		this.precision = precision;
 		this.scale = scale;
+		this.temporalPrecision = temporalPrecision;
 		this.declaringType = declaringType;
 
 		this.columnTableExpression = columnTableExpression;
@@ -88,11 +85,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 		unsavedValueStrategy = UnsavedValueFactory.getUnsavedVersionValue(
 				(KeyValue) bootEntityDescriptor.getVersion().getValue(),
 				(VersionJavaType<?>) versionBasicType.getJavaTypeDescriptor(),
-				length,
-				precision,
-				scale,
-				declaringType
-						.getRepresentationStrategy()
+				declaringType.getRepresentationStrategy()
 						.resolvePropertyAccess( bootEntityDescriptor.getVersion() )
 						.getGetter(),
 				templateInstanceAccess
@@ -125,6 +118,31 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 	}
 
 	@Override
+	public boolean isNullable() {
+		return false;
+	}
+
+	@Override
+	public boolean isInsertable() {
+		return true;
+	}
+
+	@Override
+	public boolean isUpdateable() {
+		return true;
+	}
+
+	@Override
+	public boolean isPartitioned() {
+		return false;
+	}
+
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return false;
+	}
+
+	@Override
 	public String getCustomReadExpression() {
 		return null;
 	}
@@ -152,6 +170,11 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 	@Override
 	public Integer getScale() {
 		return scale;
+	}
+
+	@Override
+	public Integer getTemporalPrecision() {
+		return temporalPrecision;
 	}
 
 	@Override
@@ -195,6 +218,11 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 	}
 
 	@Override
+	public int getFetchableKey() {
+		return getVersionAttribute().getFetchableKey();
+	}
+
+	@Override
 	public FetchOptions getMappedFetchOptions() {
 		return this;
 	}
@@ -214,18 +242,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 		final TableReference columnTableReference = tableGroup.resolveTableReference( fetchablePath, columnTableExpression );
 
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
-				sqlExpressionResolver.resolveSqlExpression(
-						SqlExpressionResolver.createColumnReferenceKey( columnTableReference, columnExpression ),
-						sqlAstProcessingState -> new ColumnReference(
-								columnTableReference,
-								columnExpression,
-								false,
-								null,
-								null,
-								versionBasicType,
-								sqlAstCreationState.getCreationContext().getSessionFactory()
-						)
-				),
+				sqlExpressionResolver.resolveSqlExpression( columnTableReference, this ),
 				versionBasicType.getJdbcJavaType(),
 				fetchParent,
 				sqlAstCreationState.getCreationContext().getSessionFactory().getTypeConfiguration()
@@ -237,7 +254,8 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 				fetchablePath,
 				this,
 				fetchTiming,
-				creationState
+				creationState,
+				!sqlSelection.isVirtual()
 		);
 	}
 
@@ -253,7 +271,9 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				versionBasicType,
-				navigablePath
+				navigablePath,
+				false,
+				!sqlSelection.isVirtual()
 		);
 	}
 
@@ -273,8 +293,15 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 	}
 
 	@Override
-	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		valueConsumer.consume( domainValue, this );
+	public <X, Y> int breakDownJdbcValues(
+			Object domainValue,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
+			SharedSessionContractImplementor session) {
+		valueConsumer.consume( offset, x, y, domainValue, this );
+		return getJdbcTypeCount();
 	}
 
 	private SqlSelection resolveSqlSelection(TableGroup tableGroup, DomainResultCreationState creationState) {
@@ -288,18 +315,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 		);
 
 		return sqlExpressionResolver.resolveSqlSelection(
-				sqlExpressionResolver.resolveSqlExpression(
-						SqlExpressionResolver.createColumnReferenceKey( columnTableReference, columnExpression ),
-						sqlAstProcessingState -> new ColumnReference(
-								columnTableReference,
-								columnExpression,
-								false,
-								null,
-								null,
-								versionBasicType,
-								sqlAstCreationState.getCreationContext().getSessionFactory()
-						)
-				),
+				sqlExpressionResolver.resolveSqlExpression( columnTableReference, this ),
 				versionBasicType.getJdbcJavaType(),
 				null,
 				sqlAstCreationState.getCreationContext().getSessionFactory().getTypeConfiguration()
@@ -322,13 +338,19 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		versionBasicType.addToCacheKey( cacheKey, value, session );
+	}
+
+	@Override
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return versionBasicType.forEachDisassembledJdbcValue( value, clause, offset, valuesConsumer, session );
+		return versionBasicType.forEachDisassembledJdbcValue( value, offset, x, y, valuesConsumer, session );
 	}
 
 	@Override

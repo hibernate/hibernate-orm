@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bootstrap.scanning;
 
@@ -18,17 +16,17 @@ import java.net.URLStreamHandlerFactory;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.archive.scan.internal.ClassDescriptorImpl;
+import org.hibernate.archive.scan.internal.ScanResultCollector;
+import org.hibernate.archive.scan.internal.StandardScanner;
+import org.hibernate.archive.scan.spi.AbstractScannerImpl;
 import org.hibernate.boot.archive.internal.ArchiveHelper;
 import org.hibernate.boot.archive.internal.ExplodedArchiveDescriptor;
 import org.hibernate.boot.archive.internal.JarFileBasedArchiveDescriptor;
 import org.hibernate.boot.archive.internal.JarProtocolArchiveDescriptor;
 import org.hibernate.boot.archive.internal.StandardArchiveDescriptorFactory;
-import org.hibernate.boot.archive.scan.internal.ClassDescriptorImpl;
-import org.hibernate.boot.archive.scan.internal.ScanResultCollector;
 import org.hibernate.boot.archive.scan.internal.StandardScanOptions;
 import org.hibernate.boot.archive.scan.internal.StandardScanParameters;
-import org.hibernate.boot.archive.scan.internal.StandardScanner;
-import org.hibernate.boot.archive.scan.spi.AbstractScannerImpl;
 import org.hibernate.boot.archive.scan.spi.ClassDescriptor;
 import org.hibernate.boot.archive.scan.spi.MappingFileDescriptor;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
@@ -38,7 +36,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.orm.test.jpa.pack.defaultpar.Version;
 import org.hibernate.orm.test.jpa.pack.explodedpar.Carpet;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 
 import org.junit.jupiter.api.Test;
@@ -53,7 +51,6 @@ import static org.junit.Assert.assertTrue;
  * @author Brett Meyer
  */
 @RequiresDialect( H2Dialect.class ) // Nothing dialect-specific -- no need to run in matrix.
-@SuppressWarnings("unchecked")
 public class JarVisitorTest extends PackagingTestCase {
 	@Test
 	public void testHttp() throws Exception {
@@ -277,7 +274,7 @@ public class JarVisitorTest extends PackagingTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-6806")
+	@JiraKey(value = "HHH-6806")
 	public void testJarVisitorFactory() throws Exception {
 		final File explodedPar = buildExplodedPar();
 		final File defaultPar = buildDefaultPar();
@@ -285,17 +282,17 @@ public class JarVisitorTest extends PackagingTestCase {
 
 		//setting URL to accept vfs based protocol
 		URL.setURLStreamHandlerFactory(new URLStreamHandlerFactory() {
-										   public URLStreamHandler createURLStreamHandler(String protocol) {
-											   if("vfszip".equals(protocol) || "vfsfile".equals(protocol) )
-												   return new URLStreamHandler() {
-													   protected URLConnection openConnection(URL u)
-															   throws IOException {
-														   return null;
-													   }
-												   };
-											   return null;
-										   }
-									   });
+										public URLStreamHandler createURLStreamHandler(String protocol) {
+											if("vfszip".equals(protocol) || "vfsfile".equals(protocol) )
+												return new URLStreamHandler() {
+													protected URLConnection openConnection(URL u)
+															throws IOException {
+														return null;
+													}
+												};
+											return null;
+										}
+									});
 
 		URL jarUrl = defaultPar.toURL();
 		ArchiveDescriptor descriptor = StandardArchiveDescriptorFactory.INSTANCE.buildArchiveDescriptor( jarUrl );
@@ -315,7 +312,7 @@ public class JarVisitorTest extends PackagingTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "EJB-230" )
+	@JiraKey( value = "EJB-230" )
 	public void testDuplicateFilterExplodedJarExpected() throws Exception {
 //		File explodedPar = buildExplodedPar();
 //		addPackageToClasspath( explodedPar );
@@ -361,7 +358,7 @@ public class JarVisitorTest extends PackagingTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7835")
+	@JiraKey(value = "HHH-7835")
 	public void testGetBytesFromInputStream() throws Exception {
 		File file = buildLargeJar();
 
@@ -407,7 +404,7 @@ public class JarVisitorTest extends PackagingTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7835")
+	@JiraKey(value = "HHH-7835")
 	public void testGetBytesFromZeroInputStream() throws Exception {
 		// Ensure that JarVisitorFactory#getBytesFromInputStream
 		// can handle 0 length streams gracefully.

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.ops;
 
@@ -11,7 +9,7 @@ import org.hibernate.Session;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -126,10 +124,10 @@ public class GetLoadTest {
 		scope.inTransaction(
 				entityManager -> {
 					Session s = ( Session ) entityManager.getDelegate();
-					Employer emp = s.load( Employer.class, empId );
+					Employer emp = s.getReference( Employer.class, empId );
 					emp.getId();
 					assertFalse( Hibernate.isInitialized( emp ) );
-					Node node = s.load( Node.class, nodeName );
+					Node node = s.getReference( Node.class, nodeName );
 					assertEquals( node.getName(), nodeName );
 					assertFalse( Hibernate.isInitialized( node ) );
 				}
@@ -138,10 +136,10 @@ public class GetLoadTest {
 		scope.inTransaction(
 				entityManager -> {
 					Session s = ( Session ) entityManager.getDelegate();
-					Employer emp = ( Employer ) s.load( Employer.class.getName(), empId );
+					Employer emp = ( Employer ) s.getReference( Employer.class.getName(), empId );
 					emp.getId();
 					assertFalse( Hibernate.isInitialized( emp ) );
-					Node node = ( Node ) s.load( Node.class.getName(), nodeName );
+					Node node = ( Node ) s.getReference( Node.class.getName(), nodeName );
 					assertEquals( node.getName(), nodeName );
 					assertFalse( Hibernate.isInitialized( node ) );
 				}
@@ -160,7 +158,7 @@ public class GetLoadTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9856" )
+	@JiraKey( value = "HHH-9856" )
 	public void testNonEntity(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {
@@ -180,7 +178,7 @@ public class GetLoadTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11838")
+	@JiraKey( value = "HHH-11838")
 	public void testLoadGetId(EntityManagerFactoryScope scope) {
 		Workload workload = scope.fromTransaction(
 				entityManager -> {
@@ -195,7 +193,7 @@ public class GetLoadTest {
 				entityManager -> {
 					Session s = ( Session ) entityManager.getDelegate();
 
-					Workload proxy = s.load(Workload.class, workload.id);
+					Workload proxy = s.getReference(Workload.class, workload.id);
 					proxy.getId();
 
 					assertFalse( Hibernate.isInitialized( proxy ) );
@@ -208,7 +206,7 @@ public class GetLoadTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12034")
+	@JiraKey( value = "HHH-12034")
 	public void testLoadIdNotFound_FieldBasedAccess(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {
@@ -218,7 +216,7 @@ public class GetLoadTest {
 
 						assertNull( s.get( Workload.class, 999 ) );
 
-						Workload proxy = s.load( Workload.class, 999 );
+						Workload proxy = s.getReference( Workload.class, 999 );
 						assertFalse( Hibernate.isInitialized( proxy ) );
 
 						proxy.getId();
@@ -231,7 +229,7 @@ public class GetLoadTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12034")
+	@JiraKey( value = "HHH-12034")
 	public void testReferenceIdNotFound_FieldBasedAccess(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {
@@ -253,7 +251,7 @@ public class GetLoadTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12034")
+	@JiraKey( value = "HHH-12034")
 	public void testLoadIdNotFound_PropertyBasedAccess(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {
@@ -263,7 +261,7 @@ public class GetLoadTest {
 
 						assertNull( s.get( Employee.class, 999 ) );
 
-						Employee proxy = s.load( Employee.class, 999 );
+						Employee proxy = s.getReference( Employee.class, 999 );
 						assertFalse( Hibernate.isInitialized( proxy ) );
 
 						proxy.getId();
@@ -276,7 +274,7 @@ public class GetLoadTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12034")
+	@JiraKey( value = "HHH-12034")
 	public void testReferenceIdNotFound_PropertyBasedAccess(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {

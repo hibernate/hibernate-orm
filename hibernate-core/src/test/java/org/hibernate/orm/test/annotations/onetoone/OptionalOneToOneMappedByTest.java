@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.onetoone;
 
@@ -14,7 +12,7 @@ import jakarta.persistence.criteria.Root;
 
 import org.hibernate.id.IdentifierGenerationException;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -22,6 +20,7 @@ import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
@@ -45,7 +44,7 @@ public class OptionalOneToOneMappedByTest extends BaseCoreFunctionalTestCase {
 			} );
 		}
 		catch (PersistenceException ex) {
-			assertTyping( IdentifierGenerationException.class, ex.getCause() );
+			assertTyping( IdentifierGenerationException.class, ex );
 			// expected
 		}
 	}
@@ -82,7 +81,7 @@ public class OptionalOneToOneMappedByTest extends BaseCoreFunctionalTestCase {
 			);
 			assertNull( affiliate.party );
 
-			session.delete( affiliate );
+			session.remove( affiliate );
 		} );
 	}
 
@@ -121,12 +120,12 @@ public class OptionalOneToOneMappedByTest extends BaseCoreFunctionalTestCase {
 			);
 			assertNull( personAddress.getPerson() );
 
-			session.delete( personAddress );
+			session.remove( personAddress );
 		} );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5757")
+	@JiraKey(value = "HHH-5757")
 	public void testBidirQueryEntityProperty() {
 
 		AtomicReference<Person> personHolder = new AtomicReference<>();
@@ -181,7 +180,9 @@ public class OptionalOneToOneMappedByTest extends BaseCoreFunctionalTestCase {
 //					.add( Restrictions.eq( "personAddress", personAddress ) )
 //					.uniqueResult();
 
-			session.delete( personAddress );
+			session.remove( personAddress );
+			assertNotSame( person, personAddress.getPerson() );
+			personAddress.getPerson().setPersonAddress( null );
 		} );
 	}
 

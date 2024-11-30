@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.distinct;
 
@@ -11,7 +9,7 @@ import java.util.List;
 
 import org.hibernate.boot.SessionFactoryBuilder;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInterceptor;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
@@ -32,7 +30,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-10965")
+@JiraKey(value = "HHH-10965")
 public class SelectDistinctHqlTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	private static final String DISTINCT_NAMED_QUERY = "distinct";
@@ -96,7 +94,7 @@ public class SelectDistinctHqlTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13780")
+	@JiraKey(value = "HHH-13780")
 	public void testNamedQueryDistinctPassThroughTrueWhenNotSpecified() {
 		doInHibernate( this::sessionFactory, session -> {
 			sqlStatementInterceptor.getSqlQueries().clear();

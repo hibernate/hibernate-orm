@@ -1,10 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.spatial.dialect.postgis.hhh14523;
 
 import java.io.Serializable;
@@ -23,7 +20,7 @@ import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import org.geolatte.geom.codec.Wkt;
@@ -33,7 +30,7 @@ import org.locationtech.jts.geom.Point;
 
 import static org.junit.Assert.assertEquals;
 
-@TestForIssue(jiraKey = "HHH-14523")
+@JiraKey(value = "HHH-14523")
 @RequiresDialect(PostgreSQLDialect.class)
 public class DirtyCheckingTest extends BaseEntityManagerFunctionalTestCase {
 

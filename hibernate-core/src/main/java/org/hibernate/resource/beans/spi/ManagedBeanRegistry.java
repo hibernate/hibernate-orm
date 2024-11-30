@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.beans.spi;
 
@@ -11,7 +9,7 @@ import org.hibernate.service.Service;
 
 /**
  * A registry for {@link ManagedBean} instances.  Responsible for managing the lifecycle.
- * <p/>
+ * <p>
  * Access to the beans and usage of them are only valid between the time
  * the registry is initialized and released (however those events are recognized).
  *

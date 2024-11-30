@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.inheritance.discriminator;
 
@@ -75,9 +73,9 @@ public class DiscriminatorTest {
 					yomomma.setName( "mum" );
 					yomomma.setSex( 'F' );
 
-					s.save( yomomma );
-					s.save( mark );
-					s.save( joe );
+					s.persist( yomomma );
+					s.persist( mark );
+					s.persist( joe );
 
 					try {
 						s.createQuery( "from java.io.Serializable" ).list();
@@ -114,9 +112,9 @@ public class DiscriminatorTest {
 
 					mark.setZip( "30306" );
 					assertThat( s.createQuery( "from Person p where p.address.zip = '30306'" ).list().size(), is( 1 ) );
-					s.delete( mark );
-					s.delete( joe );
-					s.delete( yomomma );
+					s.remove( mark );
+					s.remove( joe );
+					s.remove( yomomma );
 					assertTrue( s.createQuery( "from Person" ).list().isEmpty() );
 				}
 		);
@@ -130,7 +128,7 @@ public class DiscriminatorTest {
 					employee.setName( "Steve" );
 					employee.setSex( 'M' );
 					employee.setTitle( "grand poobah" );
-					s.save( employee );
+					s.persist( employee );
 				}
 		);
 
@@ -150,7 +148,7 @@ public class DiscriminatorTest {
 		);
 
 		scope.inTransaction(
-				session -> session.delete( employee )
+				session -> session.remove( employee )
 		);
 	}
 
@@ -179,7 +177,7 @@ public class DiscriminatorTest {
 					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 					CriteriaQuery<Person> criteria = criteriaBuilder.createQuery( Person.class );
 					Root<Person> root = criteria.from( Person.class );
-					criteria.where( criteriaBuilder.gt( root.get( "salary" ), new BigDecimal( 100 ) ) );
+					criteria.where( criteriaBuilder.gt( criteriaBuilder.treat( root, Employee.class ).get( "salary" ), new BigDecimal( 100 ) ) );
 					result = s.createQuery( criteria ).list();
 //					result = s.createCriteria(Person.class)
 //							.add( Property.forName( "salary").gt( new BigDecimal( 100) ) )
@@ -192,8 +190,8 @@ public class DiscriminatorTest {
 		assertEquals( result.size(), 1 );
 		assertEquals( result.get(0), new BigDecimal(1000) );*/
 
-					s.delete( p );
-					s.delete( q );
+					s.remove( p );
+					s.remove( q );
 
 				}
 		);
@@ -207,14 +205,14 @@ public class DiscriminatorTest {
 					e.setName( "Steve" );
 					e.setSex( 'M' );
 					e.setTitle( "grand poobah" );
-					s.save( e );
+					s.persist( e );
 				}
 		);
 
 		scope.inTransaction(
 				s -> {
 					// load the superclass proxy.
-					Person pLoad = s.load( Person.class, e.getId() );
+					Person pLoad = s.getReference( Person.class, e.getId() );
 					assertTrue( pLoad instanceof HibernateProxy );
 					Person pGet = s.get( Person.class, e.getId() );
 					Person pQuery = (Person) s.createQuery( "from Person where id = :id" )
@@ -241,7 +239,7 @@ public class DiscriminatorTest {
 		scope.inTransaction(
 				s -> {
 					// load the superclass proxy.
-					Person pLoad = s.load( Person.class, e.getId() );
+					Person pLoad = s.getReference( Person.class, e.getId() );
 					assertTrue( pLoad instanceof HibernateProxy );
 					Person pGet = s.get( Person.class, e.getId() );
 					Person pQuery = (Person) s.createQuery( "from Person where id = :id" )
@@ -266,7 +264,7 @@ public class DiscriminatorTest {
 		);
 
 		scope.inTransaction(
-				s -> s.delete( e )
+				s -> s.remove( e )
 		);
 	}
 
@@ -278,14 +276,14 @@ public class DiscriminatorTest {
 					e.setName( "Steve" );
 					e.setSex( 'M' );
 					e.setTitle( "grand poobah" );
-					s.save( e );
+					s.persist( e );
 				}
 		);
 
 		scope.inTransaction(
 				s -> {
 					// load the superclass proxy.
-					Person pLoad = s.load( Person.class, e.getId() );
+					Person pLoad = s.getReference( Person.class, e.getId() );
 					assertTrue( pLoad instanceof HibernateProxy );
 					// evict the proxy
 					s.evict( pLoad );
@@ -309,7 +307,7 @@ public class DiscriminatorTest {
 		);
 
 		scope.inTransaction(
-				s -> s.delete( e )
+				s -> s.remove( e )
 		);
 	}
 }

@@ -11,29 +11,33 @@ buildscript {
 //	}
 
 	dependencies {
-		classpath 'org.hibernate.build.gradle:version-injection-plugin:1.0.0'
-		classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.7'
-		classpath 'de.thetaphi:forbiddenapis:3.2'
+//		classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.7'
+		classpath buildscriptLibs.forbiddenapis
 		classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.1'
 	}
 }
 
 
 plugins {
-	id 'org.hibernate.build.xjc-jakarta' version '1.0.2' apply false
+	id 'org.hibernate.build.xjc-jakarta' version '2.0.3' apply false
+	id "org.hibernate.build.version-injection" version "2.0.0" apply false
 	id 'org.hibernate.matrix-test' version '3.1.1' apply false
 	id 'org.hibernate.orm.database-service' apply false
+	id 'biz.aQute.bnd' version '7.0.0' apply false
 
-	id 'io.github.gradle-nexus.publish-plugin' version '1.1.0'
-	id 'nu.studer.credentials' version '2.1'
+	id 'com.diffplug.spotless' version '6.25.0'
+	id 'org.checkerframework' version '0.6.40'
+	id 'org.hibernate.orm.build.jdks'
+
+	id 'io.github.gradle-nexus.publish-plugin' version '2.0.0'
 
 	id 'idea'
 	id 'org.jetbrains.gradle.plugin.idea-ext' version '1.0'
 	id 'eclipse'
+	id "com.dorongold.task-tree" version "2.1.1"
 }
 
 apply from: file( 'gradle/module.gradle' )
-
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Release Task
@@ -44,9 +48,7 @@ task release {
 			"themselves if they have any release-related activities to perform"
 
 	doFirst {
-		def javaVersionsInUse = [gradle.ext.javaVersions.main.compiler, gradle.ext.javaVersions.main.release,
-								 gradle.ext.javaVersions.test.compiler, gradle.ext.javaVersions.test.release,
-								 gradle.ext.javaVersions.test.launcher].toSet()
+		def javaVersionsInUse = jdkVersions.allVersions
 		if ( javaVersionsInUse != [JavaLanguageVersion.of( 11 )].toSet() ) {
 			throw new IllegalStateException( "Please use JDK 11 to perform the release. Currently using: ${javaVersionsInUse}" )
 		}
@@ -60,28 +62,18 @@ task publish {
 }
 
 ext {
-	// look for command-line overrides of the username/password pairs for publishing
 	if ( project.hasProperty( 'hibernatePublishUsername' ) ) {
 		if ( ! project.hasProperty( 'hibernatePublishPassword' ) ) {
 			throw new GradleException( "Should specify both `hibernatePublishUsername` and `hibernatePublishPassword` as project properties" );
 		}
-		credentials.hibernatePublishUsername = project.property( 'hibernatePublishUsername' )
-		credentials.hibernatePublishPassword = project.property( 'hibernatePublishPassword' )
-	}
-	else if ( System.properties.hibernatePublishUsername != null ) {
-		if ( System.properties.hibernatePublishPassword == null ) {
-			throw new GradleException( "Should specify both `hibernatePublishUsername` and `hibernatePublishPassword` as system properties" );
-		}
-		credentials.hibernatePublishUsername = System.properties.hibernatePublishUsername
-		credentials.hibernatePublishPassword = System.properties.hibernatePublishPassword
 	}
 }
 
 nexusPublishing {
 	repositories {
 		sonatype {
-			username = credentials.hibernatePublishUsername
-			password = credentials.hibernatePublishPassword
+			username = project.hasProperty( 'hibernatePublishUsername' ) ? project.property( 'hibernatePublishUsername' ) : null
+			password = project.hasProperty( 'hibernatePublishPassword' ) ? project.property( 'hibernatePublishPassword' ) : null
 		}
 	}
 }
@@ -102,11 +94,11 @@ gradle.taskGraph.addTaskExecutionGraphListener(
 					if ( graph.hasTask( taskToLookFor ) ) {
 						// trying to publish - make sure the needed credentials are available
 
-						if ( credentials.hibernatePublishUsername == null ) {
-							throw new GradleException( "Publishing credentials not specified" );
+						if ( project.property( 'hibernatePublishUsername' ) == null ) {
+							throw new RuntimeException( "`-PhibernatePublishUsername=...` not found" )
 						}
-						if ( credentials.hibernatePublishPassword == null ) {
-							throw new GradleException( "Publishing credentials not specified" );
+						if ( project.property( 'hibernatePublishPassword' ) == null ) {
+							throw new RuntimeException( "`-PhibernatePublishPassword=...` not found" )
 						}
 
 						break;

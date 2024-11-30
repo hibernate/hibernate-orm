@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
@@ -17,7 +15,7 @@ import java.util.Arrays;
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.engine.jdbc.BinaryStream;
-import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
+import org.hibernate.engine.jdbc.internal.ArrayBackedBinaryStream;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -66,7 +64,7 @@ public class SerializableJavaType<T extends Serializable> extends AbstractClassJ
 		final int typeCode = indicators.isLob()
 				? Types.BLOB
 				: Types.VARBINARY;
-		return indicators.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( typeCode );
+		return indicators.getJdbcType( typeCode );
 	}
 
 	public String toString(T value) {
@@ -109,7 +107,7 @@ public class SerializableJavaType<T extends Serializable> extends AbstractClassJ
 			return (X) new ByteArrayInputStream( toBytes( value ) );
 		}
 		else if ( BinaryStream.class.isAssignableFrom( type ) ) {
-			return (X) new BinaryStreamImpl( toBytes( value ) );
+			return (X) new ArrayBackedBinaryStream( toBytes( value ) );
 		}
 		else if ( Blob.class.isAssignableFrom( type ) ) {
 			return (X) options.getLobCreator().createBlob( toBytes( value ) );
@@ -123,15 +121,15 @@ public class SerializableJavaType<T extends Serializable> extends AbstractClassJ
 		if ( value == null ) {
 			return null;
 		}
-		else if (value instanceof byte[]) {
-			return fromBytes( (byte[]) value );
+		else if (value instanceof byte[] bytes) {
+			return fromBytes( bytes );
 		}
-		else if (value instanceof InputStream) {
-			return fromBytes( DataHelper.extractBytes( (InputStream) value ) );
+		else if (value instanceof InputStream inputStream) {
+			return fromBytes( DataHelper.extractBytes( inputStream ) );
 		}
-		else if (value instanceof Blob) {
+		else if (value instanceof Blob blob) {
 			try {
-				return fromBytes( DataHelper.extractBytes( ((Blob) value).getBinaryStream() ) );
+				return fromBytes( DataHelper.extractBytes( blob.getBinaryStream() ) );
 			}
 			catch ( SQLException e ) {
 				throw new HibernateException( e );

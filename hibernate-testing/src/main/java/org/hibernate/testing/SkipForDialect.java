@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing;
 
@@ -22,16 +20,18 @@ import org.hibernate.dialect.Dialect;
  *
  * @author Hardy Ferentschik
  * @author Steve Ebersole
+ * @deprecated Use JUnit 5 and {@link org.hibernate.testing.orm.junit.SkipForDialect} instead.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD, ElementType.TYPE })
 @Repeatable(SkipForDialects.class)
+@Deprecated(forRemoval = true)
 public @interface SkipForDialect {
 	/**
 	 * The dialects against which to skip the test
 	 * @return The dialects
 	 */
-	Class<? extends Dialect>[] value();
+	Class<? extends Dialect> value();
 
 	/**
 	 * Used to indicate if the dialects should be matched strictly (classes equal) or

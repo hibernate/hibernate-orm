@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers;
 
@@ -14,7 +12,6 @@ import java.util.Map;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -34,12 +31,13 @@ import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMu
 
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
-import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.junit4.Helper;
 import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
 import org.hibernate.testing.orm.junit.DialectContext;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 
+import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy;
 import org.hibernate.service.ServiceRegistry;
 import org.junit.After;
 
@@ -79,7 +77,7 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 	}
 
 	@BeforeClassOnce
-	@SuppressWarnings({"UnusedDeclaration"})
+	@SuppressWarnings("unused")
 	public void buildEntityManagerFactory() throws Exception {
 		log.trace( "Building EntityManagerFactory" );
 
@@ -147,14 +145,12 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 			config.put( AvailableSettings.ORM_XML_FILES, dds );
 		}
 
+		config.put( PersistentTableStrategy.DROP_ID_TABLES, "true" );
 		config.put( GlobalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
 		config.put( LocalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
-		if ( !Environment.getProperties().containsKey( AvailableSettings.CONNECTION_PROVIDER ) ) {
-			config.put(
-					AvailableSettings.CONNECTION_PROVIDER,
-					SharedDriverManagerConnectionProviderImpl.getInstance()
-			);
-		}
+		ServiceRegistryUtil.applySettings( config );
+		// Envers tests expect sequences to not skip values...
+		config.put( EnversSettings.REVISION_SEQUENCE_NOCACHE, "true" );
 		addConfigOptions( config );
 
 		return config;
@@ -223,7 +219,7 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 	}
 
 	@After
-	@SuppressWarnings({"UnusedDeclaration"})
+	@SuppressWarnings("unused")
 	public void releaseUnclosedEntityManagers() {
 		releaseUnclosedEntityManager( this.em );
 		auditReader = null;

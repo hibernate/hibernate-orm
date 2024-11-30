@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.jdbc.spi;
 
@@ -28,28 +26,28 @@ import static org.hibernate.ConnectionReleaseMode.ON_CLOSE;
  */
 public enum PhysicalConnectionHandlingMode {
 	/**
-	 * The Connection will be acquired as soon as the Session is opened and
-	 * held until the Session is closed.  This is the only valid combination
+	 * The {@code Connection} will be acquired as soon as the session is opened
+	 * and held until the session is closed.  This is the only valid combination
 	 * including immediate acquisition of the Connection
 	 */
 	IMMEDIATE_ACQUISITION_AND_HOLD( IMMEDIATELY, ON_CLOSE ),
 	/**
-	 * The Connection will be acquired as soon as it is needed and then held
-	 * until the Session is closed.  This is the original Hibernate behavior.
+	 * The {@code Connection} will be acquired as soon as it is needed and then
+	 * held until the session is closed.  This is the original Hibernate behavior.
 	 */
 	DELAYED_ACQUISITION_AND_HOLD( AS_NEEDED, ON_CLOSE ),
 	/**
-	 * The Connection will be acquired as soon as it is needed; it will be
+	 * The {@code Connection} will be acquired as soon as it is needed; it will be
 	 * released after each statement is executed.
 	 */
 	DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT( AS_NEEDED, AFTER_STATEMENT ),
 	/**
-	 * The Connection will be acquired as soon as it is needed; it will be
-	 * released before commit/rollback.
+	 * The {@code Connection} will be acquired as soon as it is needed; it will be
+	 * released before commit or rollback.
 	 */
 	DELAYED_ACQUISITION_AND_RELEASE_BEFORE_TRANSACTION_COMPLETION( AS_NEEDED, BEFORE_TRANSACTION_COMPLETION ),
 	/**
-	 * The Connection will be acquired as soon as it is needed; it will be
+	 * The {@code Connection} will be acquired as soon as it is needed; it will be
 	 * released after each transaction is completed.
 	 */
 	DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION( AS_NEEDED, AFTER_TRANSACTION )

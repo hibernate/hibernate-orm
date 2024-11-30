@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.manytoone;
 
@@ -157,7 +155,7 @@ public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		tx = s.beginTransaction();
 		customer = s.get( Customer.class, customer.getId() );
-		s.delete( customer );
+		s.remove( customer );
 		tx.commit();
 		s.close();
 	}
@@ -189,14 +187,14 @@ public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		discount = s.load( Discount.class, discount.getId() );
+		discount = s.getReference( Discount.class, discount.getId() );
 		assertNotNull( discount );
 		assertFalse( Hibernate.isInitialized( discount.getOwner() ) );
 		tx.commit();
 
 		s = openSession();
 		tx = s.beginTransaction();
-		s.delete( s.get( Discount.class, discount.getId() ) );
+		s.remove( s.get( Discount.class, discount.getId() ) );
 		tx.commit();
 		s.close();
 	}

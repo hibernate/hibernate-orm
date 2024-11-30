@@ -1,11 +1,23 @@
 [[naturalid]]
 === Natural Ids
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/mapping/identifier
+:root-project-dir: ../../../../../../..
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-naturalid: {core-project-dir}/src/test/java/org/hibernate/orm/test/mapping/identifier
+:jcache-project-dir: {root-project-dir}/hibernate-jcache
+:example-dir-caching: {jcache-project-dir}/src/test/java/org/hibernate/orm/test/caching
 :extrasdir: extras
 
 Natural ids represent domain model unique identifiers that have a meaning in the real world too.
 Even if a natural id does not make a good primary key (surrogate keys being usually preferred), it's still useful to tell Hibernate about it.
-As we will see later, Hibernate provides a dedicated, efficient API for loading an entity by its natural id much like it offers for loading by its identifier (PK).
+As we will see later, Hibernate provides a dedicated, efficient API for loading an entity by its natural id much like it offers for loading by identifier (PK).
+
+[IMPORTANT]
+====
+All values used in a natural id must be non-nullable.
+
+For natural id mappings using a to-one association, this precludes the use of not-found
+mappings which effectively define a nullable mapping.
+====
 
 [[naturalid-mapping]]
 ==== Natural Id Mapping
@@ -17,7 +29,7 @@ Natural ids are defined in terms of one or more persistent attributes.
 ====
 [source,java]
 ----
-include::{sourcedir}/SimpleNaturalIdTest.java[tags=naturalid-simple-basic-attribute-mapping-example,indent=0]
+include::{example-dir-naturalid}/SimpleNaturalIdTest.java[tags=naturalid-simple-basic-attribute-mapping-example,indent=0]
 ----
 ====
 
@@ -26,7 +38,7 @@ include::{sourcedir}/SimpleNaturalIdTest.java[tags=naturalid-simple-basic-attrib
 ====
 [source,java]
 ----
-include::{sourcedir}/CompositeNaturalIdTest.java[tags=naturalid-single-embedded-attribute-mapping-example,indent=0]
+include::{example-dir-naturalid}/CompositeNaturalIdTest.java[tags=naturalid-single-embedded-attribute-mapping-example,indent=0]
 ----
 ====
 
@@ -35,7 +47,7 @@ include::{sourcedir}/CompositeNaturalIdTest.java[tags=naturalid-single-embedded-
 ====
 [source,java]
 ----
-include::{sourcedir}/MultipleNaturalIdTest.java[tags=naturalid-multiple-attribute-mapping-example,indent=0]
+include::{example-dir-naturalid}/MultipleNaturalIdTest.java[tags=naturalid-multiple-attribute-mapping-example,indent=0]
 ----
 ====
 
@@ -55,17 +67,17 @@ If the entity does not define a natural id, trying to load an entity by its natu
 ====
 [source,java]
 ----
-include::{sourcedir}/SimpleNaturalIdTest.java[tags=naturalid-load-access-example,indent=0]
+include::{example-dir-naturalid}/SimpleNaturalIdTest.java[tags=naturalid-load-access-example,indent=0]
 ----
 
 [source,java]
 ----
-include::{sourcedir}/CompositeNaturalIdTest.java[tags=naturalid-load-access-example,indent=0]
+include::{example-dir-naturalid}/CompositeNaturalIdTest.java[tags=naturalid-load-access-example,indent=0]
 ----
 
 [source,java]
 ----
-include::{sourcedir}/MultipleNaturalIdTest.java[tags=naturalid-load-access-example,indent=0]
+include::{example-dir-naturalid}/MultipleNaturalIdTest.java[tags=naturalid-load-access-example,indent=0]
 ----
 ====
 
@@ -88,12 +100,12 @@ Because the `Book` entities in the first two examples define "simple" natural id
 ====
 [source,java]
 ----
-include::{sourcedir}/SimpleNaturalIdTest.java[tags=naturalid-simple-load-access-example,indent=0]
+include::{example-dir-naturalid}/SimpleNaturalIdTest.java[tags=naturalid-simple-load-access-example,indent=0]
 ----
 
 [source,java]
 ----
-include::{sourcedir}/CompositeNaturalIdTest.java[tags=naturalid-simple-load-access-example,indent=0]
+include::{example-dir-naturalid}/CompositeNaturalIdTest.java[tags=naturalid-simple-load-access-example,indent=0]
 ----
 ====
 
@@ -122,7 +134,7 @@ If the value(s) of the natural id attribute(s) change, `@NaturalId(mutable = tru
 ====
 [source,java]
 ----
-include::{sourcedir}/MutableNaturalIdTest.java[tags=naturalid-mutable-mapping-example,indent=0]
+include::{example-dir-naturalid}/MutableNaturalIdTest.java[tags=naturalid-mutable-mapping-example,indent=0]
 ----
 ====
 
@@ -144,7 +156,7 @@ This will force Hibernate to circumvent the checking of mutable natural ids.
 ====
 [source,java]
 ----
-include::{sourcedir}/MutableNaturalIdTest.java[tags=naturalid-mutable-synchronized-example,indent=0]
+include::{example-dir-naturalid}/MutableNaturalIdTest.java[tags=naturalid-mutable-synchronized-example,indent=0]
 ----
 ====
 
@@ -155,6 +167,6 @@ Not only can this NaturalId-to-PK resolution be cached in the Session, but we ca
 ====
 [source,java]
 ----
-include::{sourcedir}/CacheableNaturalIdTest.java[tags=naturalid-cacheable-mapping-example,indent=0]
+include::{example-dir-caching}/CacheableNaturalIdTest.java[tags=naturalid-cacheable-mapping-example,indent=0]
 ----
 ====

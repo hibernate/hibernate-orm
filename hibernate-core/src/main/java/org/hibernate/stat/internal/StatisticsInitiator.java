@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.stat.internal;
 
@@ -19,19 +17,19 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.jboss.logging.Logger;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import java.lang.invoke.MethodHandles;
+
+import static org.hibernate.cfg.StatisticsSettings.STATS_BUILDER;
+
 /**
  * @author Steve Ebersole
  */
 public class StatisticsInitiator implements SessionFactoryServiceInitiator<StatisticsImplementor> {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, StatisticsInitiator.class.getName() );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, StatisticsInitiator.class.getName() );
 
 	public static final StatisticsInitiator INSTANCE = new StatisticsInitiator();
-
-	/**
-	 * Names the {@link StatisticsFactory} to use.  Recognizes both a class name as well as an instance of
-	 * {@link StatisticsFactory}.
-	 */
-	public static final String STATS_BUILDER = "hibernate.stats.factory";
 
 	@Override
 	public Class<StatisticsImplementor> getServiceInitiated() {
@@ -41,7 +39,7 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 	@Override
 	public StatisticsImplementor initiateService(SessionFactoryServiceInitiatorContext context) {
 		final Object configValue = context.getServiceRegistry()
-				.getService( ConfigurationService.class )
+				.requireService( ConfigurationService.class )
 				.getSettings()
 				.get( STATS_BUILDER );
 		return initiateServiceInternal( context.getSessionFactory(), configValue, context.getServiceRegistry() );
@@ -49,7 +47,7 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 
 	private StatisticsImplementor initiateServiceInternal(
 			SessionFactoryImplementor sessionFactory,
-			Object configValue,
+			@Nullable Object configValue,
 			ServiceRegistryImplementor registry) {
 
 		final StatisticsFactory statisticsFactory;
@@ -61,7 +59,7 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 		}
 		else {
 			// assume it names the factory class
-			final ClassLoaderService classLoaderService = registry.getService( ClassLoaderService.class );
+			final ClassLoaderService classLoaderService = registry.requireService( ClassLoaderService.class );
 			try {
 				statisticsFactory = (StatisticsFactory) classLoaderService.classForName( configValue.toString() ).newInstance();
 			}

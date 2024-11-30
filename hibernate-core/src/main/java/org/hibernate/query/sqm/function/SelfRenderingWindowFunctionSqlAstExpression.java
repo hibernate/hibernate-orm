@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.function;
 
@@ -32,7 +30,7 @@ public class SelfRenderingWindowFunctionSqlAstExpression extends SelfRenderingFu
 
 	public SelfRenderingWindowFunctionSqlAstExpression(
 			String functionName,
-			FunctionRenderingSupport renderer,
+			FunctionRenderer renderer,
 			List<? extends SqlAstNode> sqlAstArguments,
 			Predicate filter,
 			Boolean respectNulls,
@@ -65,6 +63,6 @@ public class SelfRenderingWindowFunctionSqlAstExpression extends SelfRenderingFu
 			SqlAppender sqlAppender,
 			SqlAstTranslator<?> walker,
 			SessionFactoryImplementor sessionFactory) {
-		getRenderer().render( sqlAppender, getArguments(), filter, respectNulls, fromFirst, walker );
+		getFunctionRenderer().render( sqlAppender, getArguments(), filter, respectNulls, fromFirst, getType(), walker );
 	}
 }

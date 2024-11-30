@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.spi;
 
@@ -11,32 +9,42 @@ import java.time.Instant;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.EntityGraph;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
+import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.query.QueryFlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.TypeMismatchException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.EntityManagerMessageLogger;
-import org.hibernate.internal.HEMLogging;
+import org.hibernate.graph.GraphSemantic;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.AvailableHints;
-import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.query.KeyedPage;
+import org.hibernate.query.KeyedResultList;
+import org.hibernate.query.Order;
+import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.named.NamedQueryMemento;
-import org.hibernate.query.sqm.SqmExpressible;
 
 import static org.hibernate.LockOptions.WAIT_FOREVER;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
@@ -65,13 +73,14 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 public abstract class AbstractQuery<R>
 		extends AbstractSelectionQuery<R>
 		implements QueryImplementor<R> {
-	protected static final EntityManagerMessageLogger log = HEMLogging.messageLogger( AbstractQuery.class );
+	protected static final CoreMessageLogger log = CoreLogging.messageLogger( AbstractQuery.class );
 
 	public AbstractQuery(SharedSessionContractImplementor session) {
 		super( session );
 	}
 
-	protected void applyOptions(NamedQueryMemento memento) {
+	@Override
+	protected void applyOptions(NamedQueryMemento<?> memento) {
 		if ( memento.getHints() != null ) {
 			memento.getHints().forEach( this::setHint );
 		}
@@ -112,10 +121,27 @@ public abstract class AbstractQuery<R>
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// QueryOptions handling
 
-
 	@Override
 	public QueryImplementor<R> setHint(String hintName, Object value) {
 		super.setHint( hintName, value );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> setEntityGraph(EntityGraph<R> graph, GraphSemantic semantic) {
+		super.setEntityGraph( graph, semantic );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> enableFetchProfile(String profileName) {
+		super.enableFetchProfile( profileName );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> disableFetchProfile(String profileName) {
+		super.disableFetchProfile( profileName );
 		return this;
 	}
 
@@ -127,39 +153,23 @@ public abstract class AbstractQuery<R>
 
 	@Override
 	public int getMaxResults() {
-		getSession().checkOpen();
-		return getQueryOptions().getLimit().getMaxRowsJpa();
+		return super.getMaxResults();
 	}
 
 	@Override
 	public QueryImplementor<R> setMaxResults(int maxResult) {
-		if ( maxResult < 0 ) {
-			throw new IllegalArgumentException( "max-results cannot be negative" );
-		}
-
-		getSession().checkOpen();
-
-		getQueryOptions().getLimit().setMaxRows( maxResult );
-
+		super.setMaxResults( maxResult );
 		return this;
 	}
 
 	@Override
 	public int getFirstResult() {
-		getSession().checkOpen();
-		return getQueryOptions().getLimit().getFirstRowJpa();
+		return super.getFirstResult();
 	}
 
 	@Override
 	public QueryImplementor<R> setFirstResult(int startPosition) {
-		getSession().checkOpen();
-
-		if ( startPosition < 0 ) {
-			throw new IllegalArgumentException( "first-result value cannot be negative : " + startPosition );
-		}
-
-		getQueryOptions().getLimit().setFirstRow( startPosition );
-
+		super.setFirstResult( startPosition );
 		return this;
 	}
 
@@ -183,18 +193,14 @@ public abstract class AbstractQuery<R>
 	}
 
 	@Override
-	public FlushModeType getFlushMode() {
-		getSession().checkOpen();
-		final FlushMode flushMode = getQueryOptions().getFlushMode() == null
-				? getSession().getHibernateFlushMode()
-				: getQueryOptions().getFlushMode();
-		return FlushModeTypeHelper.getFlushModeType( flushMode );
+	public QueryImplementor<R> setQueryFlushMode(QueryFlushMode queryFlushMode) {
+		super.setQueryFlushMode( queryFlushMode );
+		return this;
 	}
 
 	@Override
 	public QueryImplementor<R> setFlushMode(FlushModeType flushModeType) {
-		getSession().checkOpen();
-		setHibernateFlushMode( FlushModeTypeHelper.getFlushMode( flushModeType ) );
+		super.setFlushMode( flushModeType );
 		return this;
 	}
 
@@ -203,6 +209,19 @@ public abstract class AbstractQuery<R>
 		super.setCacheMode( cacheMode );
 		return this;
 	}
+
+	@Override
+	public QueryImplementor<R> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+		super.setCacheRetrieveMode( cacheRetrieveMode );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+		super.setCacheStoreMode( cacheStoreMode );
+		return this;
+	}
+
 
 	@Override
 	public boolean isCacheable() {
@@ -218,6 +237,12 @@ public abstract class AbstractQuery<R>
 	@Override
 	public QueryImplementor<R> setCacheRegion(String cacheRegion) {
 		super.setCacheRegion( cacheRegion );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> setQueryPlanCacheable(boolean queryPlanCacheable) {
+		super.setQueryPlanCacheable( queryPlanCacheable );
 		return this;
 	}
 
@@ -247,40 +272,46 @@ public abstract class AbstractQuery<R>
 	@Override
 	public LockModeType getLockMode() {
 		getSession().checkOpen( false );
-
-		return LockModeTypeHelper.getLockModeType( getQueryOptions().getLockOptions().getLockMode() );
+		return super.getLockMode();
 	}
 
 	@Override
 	public QueryImplementor<R> setLockOptions(LockOptions lockOptions) {
-		getQueryOptions().getLockOptions().setLockMode( lockOptions.getLockMode() );
-		getQueryOptions().getLockOptions().setScope( lockOptions.getScope() );
-		getQueryOptions().getLockOptions().setTimeOut( lockOptions.getTimeOut() );
-		getQueryOptions().getLockOptions().setFollowOnLocking( lockOptions.getFollowOnLocking() );
+		getQueryOptions().getLockOptions().overlay( lockOptions );
 		return this;
 	}
 
 	@Override
 	public QueryImplementor<R> setLockMode(String alias, LockMode lockMode) {
-		getQueryOptions().getLockOptions().setAliasSpecificLockMode( alias, lockMode );
+		super.setLockMode( alias, lockMode );
 		return this;
 	}
 
 	@Override
 	public QueryImplementor<R> setLockMode(LockModeType lockModeType) {
 		getSession().checkOpen();
-		getQueryOptions().getLockOptions().setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
+		super.setHibernateLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
 		return this;
 	}
 
 	@Override
+	public Query<R> setOrder(List<? extends Order<? super R>> orders) {
+		throw new UnsupportedOperationException( "Should be implemented by " + this.getClass().getName() );
+	}
+
+	@Override
+	public Query<R> setOrder(Order<? super R> order) {
+		throw new UnsupportedOperationException( "Should be implemented by " + this.getClass().getName() );
+	}
+
+	@Override
 	public String getComment() {
-		return getQueryOptions().getComment();
+		return super.getComment();
 	}
 
 	@Override
 	public QueryImplementor<R> setComment(String comment) {
-		getQueryOptions().setComment( comment );
+		super.setComment( comment );
 		return this;
 	}
 
@@ -295,11 +326,12 @@ public abstract class AbstractQuery<R>
 	// JPA hint handling
 
 
-	@SuppressWarnings( {"UnusedDeclaration"})
+	@SuppressWarnings("unused")
 	public Set<String> getSupportedHints() {
 		return AvailableHints.getDefinedHints();
 	}
 
+	@Override
 	protected void collectHints(Map<String, Object> hints) {
 		if ( getQueryOptions().getTimeout() != null ) {
 			hints.put( HINT_TIMEOUT, getQueryOptions().getTimeout() );
@@ -312,9 +344,9 @@ public abstract class AbstractQuery<R>
 			hints.put( HINT_JAVAEE_LOCK_TIMEOUT, getLockOptions().getTimeOut() );
 		}
 
-		if ( getLockOptions().getScope() ) {
-			hints.put( HINT_SPEC_LOCK_SCOPE, getLockOptions().getScope() );
-			hints.put( HINT_JAVAEE_LOCK_SCOPE, getLockOptions().getScope() );
+		if ( getLockOptions().getLockScope() == PessimisticLockScope.EXTENDED ) {
+			hints.put( HINT_SPEC_LOCK_SCOPE, getLockOptions().getLockScope() );
+			hints.put( HINT_JAVAEE_LOCK_SCOPE, getLockOptions().getLockScope() );
 		}
 
 		if ( getLockOptions().hasAliasSpecificLockModes() ) {
@@ -328,7 +360,7 @@ public abstract class AbstractQuery<R>
 
 		putIfNotNull( hints, HINT_COMMENT, getComment() );
 		putIfNotNull( hints, HINT_FETCH_SIZE, getQueryOptions().getFetchSize() );
-		putIfNotNull( hints, HINT_FLUSH_MODE, getHibernateFlushMode() );
+		putIfNotNull( hints, HINT_FLUSH_MODE,  getQueryOptions().getFlushMode() );
 
 		if ( getCacheMode() != null ) {
 			putIfNotNull( hints, HINT_CACHE_MODE, getCacheMode() );
@@ -358,23 +390,14 @@ public abstract class AbstractQuery<R>
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked", "rawtypes"} )
 	public Set<Parameter<?>> getParameters() {
-		getSession().checkOpen( false );
-		return (Set) getParameterMetadata().getRegistrations();
+		return super.getParameters();
 	}
 
 	@Override
 	public QueryImplementor<R> setParameter(String name, Object value) {
 		super.setParameter( name, value );
 		return this;
-	}
-
-	private boolean isInstance(BindableType<?> parameterType, Object value) {
-		final SqmExpressible<?> sqmExpressible = parameterType.resolveExpressible( getSession().getFactory() );
-		assert sqmExpressible != null;
-
-		return sqmExpressible.getExpressibleJavaType().isInstance( value );
 	}
 
 	@Override
@@ -446,26 +469,6 @@ public abstract class AbstractQuery<R>
 		return this;
 	}
 
-	private <P> void setParameter(Parameter<P> parameter, P value, BindableType<P> type) {
-		if ( parameter instanceof QueryParameter ) {
-			setParameter( (QueryParameter<P>) parameter, value, type );
-		}
-		else if ( value == null ) {
-			locateBinding( parameter ).setBindValue( null, type );
-		}
-		else if ( value instanceof Collection ) {
-			//TODO: this looks wrong to me: how can value be both a P and a (Collection<P>)?
-			locateBinding( parameter ).setBindValues( (Collection<P>) value );
-		}
-		else {
-			locateBinding( parameter ).setBindValue( value, type );
-		}
-	}
-
-
-
-
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Parameter list
 
@@ -513,7 +516,6 @@ public abstract class AbstractQuery<R>
 	@Override
 	public <P> QueryImplementor<R> setParameterList(int position, Collection<? extends P> values, Class<P> javaTypeClass) {
 		super.setParameterList( position, values, javaTypeClass );
-
 		return this;
 	}
 
@@ -637,7 +639,7 @@ public abstract class AbstractQuery<R>
 	@Override
 	public int executeUpdate() throws HibernateException {
 		getSession().checkTransactionNeededForUpdateOperation( "Executing an update/delete query" );
-		beforeQuery();
+		final HashSet<String> fetchProfiles = beforeQueryHandlingFetchProfiles();
 		boolean success = false;
 		try {
 			final int result = doExecuteUpdate();
@@ -647,20 +649,20 @@ public abstract class AbstractQuery<R>
 		catch (IllegalQueryOperationException e) {
 			throw new IllegalStateException( e );
 		}
-		catch (TypeMismatchException e) {
-			throw new IllegalArgumentException( e );
-		}
 		catch (HibernateException e) {
 			throw getSession().getExceptionConverter().convert( e );
 		}
 		finally {
-			afterQuery( success );
+			afterQueryHandlingFetchProfiles( success, fetchProfiles );
 		}
 	}
 
 	protected abstract int doExecuteUpdate();
 
-
+	@Override
+	public KeyedResultList<R> getKeyedResultList(KeyedPage<R> keyedPage) {
+		throw new UnsupportedOperationException("Getting keyed result list is not supported by this query.");
+	}
 
 	@Override
 	public void setOptionalId(Serializable id) {

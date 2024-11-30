@@ -1,14 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.compliance.tck2_2.mapkeycolumn;
 
 import java.util.HashMap;
 import java.util.Map;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
@@ -19,7 +16,7 @@ import jakarta.persistence.Table;
 
 import org.hibernate.boot.MetadataSources;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -31,7 +28,7 @@ import static junit.framework.Assert.assertEquals;
 public class MapKeyColumnElementCollectionTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12150" )
+	@JiraKey( value = "HHH-12150" )
 	public void testReferenceToAlreadyMappedColumn() {
 		inTransaction(
 				session -> {
@@ -64,7 +61,7 @@ public class MapKeyColumnElementCollectionTest extends BaseNonConfigCoreFunction
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12150" )
+	@JiraKey( value = "HHH-12150" )
 	public void testReferenceToNonMappedColumn() {
 		inTransaction(
 				session -> {

@@ -1,32 +1,32 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.derived;
 
 import java.util.function.BiConsumer;
 
 import org.hibernate.Incubating;
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.OwnedValuedModelPart;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SelectablePath;
+import org.hibernate.metamodel.mapping.internal.SelectableMappingImpl;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -38,29 +38,64 @@ import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.descriptor.java.JavaType;
 
-import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
-
 /**
  * @author Christian Beikov
  */
 @Incubating
-public class AnonymousTupleBasicValuedModelPart implements ModelPart, MappingType, BasicValuedModelPart {
+public class AnonymousTupleBasicValuedModelPart implements OwnedValuedModelPart, MappingType, BasicValuedModelPart {
 
 	private static final FetchOptions FETCH_OPTIONS = FetchOptions.valueOf( FetchTiming.IMMEDIATE, FetchStyle.JOIN );
+	private final MappingType declaringType;
 	private final String partName;
-	private final String selectionExpression;
+	private final SelectableMapping selectableMapping;
 	private final SqmExpressible<?> expressible;
-	private final JdbcMapping jdbcMapping;
+	private final int fetchableIndex;
 
 	public AnonymousTupleBasicValuedModelPart(
+			MappingType declaringType,
 			String partName,
 			String selectionExpression,
 			SqmExpressible<?> expressible,
-			JdbcMapping jdbcMapping) {
+			JdbcMapping jdbcMapping,
+			int fetchableIndex) {
+		this(
+				declaringType,
+				partName,
+				new SelectableMappingImpl(
+						"",
+						selectionExpression,
+						new SelectablePath( partName ),
+						null,
+						null,
+						null,
+						null,
+						null,
+						null,
+						null,
+						false,
+						true,
+						false,
+						false,
+						false,
+						false,
+						jdbcMapping
+				),
+				expressible,
+				fetchableIndex
+		);
+	}
+
+	public AnonymousTupleBasicValuedModelPart(
+			MappingType declaringType,
+			String partName,
+			SelectableMapping selectableMapping,
+			SqmExpressible<?> expressible,
+			int fetchableIndex) {
+		this.declaringType = declaringType;
 		this.partName = partName;
-		this.selectionExpression = selectionExpression;
+		this.selectableMapping = selectableMapping;
 		this.expressible = expressible;
-		this.jdbcMapping = jdbcMapping;
+		this.fetchableIndex = fetchableIndex;
 	}
 
 	@Override
@@ -79,6 +114,11 @@ public class AnonymousTupleBasicValuedModelPart implements ModelPart, MappingTyp
 	}
 
 	@Override
+	public MappingType getDeclaringType() {
+		return declaringType;
+	}
+
+	@Override
 	public String getPartName() {
 		return partName;
 	}
@@ -94,53 +134,98 @@ public class AnonymousTupleBasicValuedModelPart implements ModelPart, MappingTyp
 	}
 
 	@Override
+	public String getSelectableName() {
+		return selectableMapping.getSelectableName();
+	}
+
+	@Override
+	public SelectablePath getSelectablePath() {
+		return selectableMapping.getSelectablePath();
+	}
+
+	@Override
+	public String getWriteExpression() {
+		return selectableMapping.getWriteExpression();
+	}
+
+	@Override
 	public JdbcMapping getJdbcMapping() {
-		return jdbcMapping;
+		return selectableMapping.getJdbcMapping();
 	}
 
 	@Override
 	public String getContainingTableExpression() {
-		return "";
+		return selectableMapping.getContainingTableExpression();
 	}
 
 	@Override
 	public String getSelectionExpression() {
-		return selectionExpression;
+		return selectableMapping.getSelectionExpression();
 	}
 
 	@Override
 	public String getCustomReadExpression() {
-		return null;
+		return selectableMapping.getCustomReadExpression();
 	}
 
 	@Override
 	public String getCustomWriteExpression() {
-		return null;
+		return selectableMapping.getCustomWriteExpression();
 	}
 
 	@Override
 	public boolean isFormula() {
-		return false;
+		return selectableMapping.isFormula();
+	}
+
+	@Override
+	public boolean isNullable() {
+		return selectableMapping.isNullable();
+	}
+
+	@Override
+	public boolean isInsertable() {
+		return selectableMapping.isInsertable();
+	}
+
+	@Override
+	public boolean isUpdateable() {
+		return selectableMapping.isUpdateable();
+	}
+
+	@Override
+	public boolean isPartitioned() {
+		return selectableMapping.isPartitioned();
+	}
+
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return selectableMapping.isPartitioned();
 	}
 
 	@Override
 	public String getColumnDefinition() {
-		return null;
+		return selectableMapping.getColumnDefinition();
 	}
 
 	@Override
 	public Long getLength() {
-		return null;
+		return selectableMapping.getLength();
 	}
 
 	@Override
 	public Integer getPrecision() {
-		return null;
+		return selectableMapping.getPrecision();
 	}
 
 	@Override
 	public Integer getScale() {
-		return null;
+		return selectableMapping.getScale();
+	}
+
+	@Override
+	public Integer getTemporalPrecision() {
+		return selectableMapping.getTemporalPrecision();
 	}
 
 	@Override
@@ -151,6 +236,11 @@ public class AnonymousTupleBasicValuedModelPart implements ModelPart, MappingTyp
 	@Override
 	public String getFetchableName() {
 		return partName;
+	}
+
+	@Override
+	public int getFetchableKey() {
+		return fetchableIndex;
 	}
 
 	@Override
@@ -174,8 +264,10 @@ public class AnonymousTupleBasicValuedModelPart implements ModelPart, MappingTyp
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				jdbcMapping,
-				navigablePath
+				getJdbcMapping(),
+				navigablePath,
+				false,
+				!sqlSelection.isVirtual()
 		);
 	}
 
@@ -187,16 +279,10 @@ public class AnonymousTupleBasicValuedModelPart implements ModelPart, MappingTyp
 		final SqlExpressionResolver expressionResolver = creationState.getSqlExpressionResolver();
 		final TableReference tableReference = tableGroup.resolveTableReference(
 				navigablePath,
+				this,
 				getContainingTableExpression()
 		);
-		final Expression expression = expressionResolver.resolveSqlExpression(
-				createColumnReferenceKey( tableReference, getSelectionExpression() ),
-				sqlAstProcessingState -> new ColumnReference(
-						tableReference,
-						this,
-						creationState.getCreationContext().getSessionFactory()
-				)
-		);
+		final Expression expression = expressionResolver.resolveSqlExpression( tableReference, this );
 		return expressionResolver.resolveSqlSelection(
 				expression,
 				getJdbcMapping().getJdbcJavaType(),
@@ -206,7 +292,7 @@ public class AnonymousTupleBasicValuedModelPart implements ModelPart, MappingTyp
 	}
 
 	@Override
-	public BasicFetch generateFetch(
+	public BasicFetch<?> generateFetch(
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,
 			FetchTiming fetchTiming,
@@ -233,7 +319,8 @@ public class AnonymousTupleBasicValuedModelPart implements ModelPart, MappingTyp
 				fetchablePath,
 				this,
 				fetchTiming,
-				creationState
+				creationState,
+				!sqlSelection.isVirtual()
 		);
 	}
 
@@ -258,13 +345,14 @@ public class AnonymousTupleBasicValuedModelPart implements ModelPart, MappingTyp
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		valuesConsumer.consume( offset, value, getJdbcMapping() );
+		valuesConsumer.consume( offset, x, y, value, getJdbcMapping() );
 		return getJdbcTypeCount();
 	}
 
@@ -275,8 +363,15 @@ public class AnonymousTupleBasicValuedModelPart implements ModelPart, MappingTyp
 	}
 
 	@Override
-	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		valueConsumer.consume( domainValue, this );
+	public <X, Y> int breakDownJdbcValues(
+			Object domainValue,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
+			SharedSessionContractImplementor session) {
+		valueConsumer.consume( offset, x, y, domainValue, this );
+		return getJdbcTypeCount();
 	}
 
 	@Override
@@ -285,8 +380,23 @@ public class AnonymousTupleBasicValuedModelPart implements ModelPart, MappingTyp
 	}
 
 	@Override
-	public int forEachJdbcValue(Object value, Clause clause, int offset, JdbcValuesConsumer valuesConsumer, SharedSessionContractImplementor session) {
-		valuesConsumer.consume( offset, value, getJdbcMapping() );
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		if ( value == null ) {
+			return;
+		}
+		cacheKey.addValue( value );
+		cacheKey.addHashCode( ( (JavaType) getExpressibleJavaType() ).extractHashCode( value ) );
+	}
+
+	@Override
+	public <X, Y> int forEachJdbcValue(
+			Object value,
+			int offset,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			SharedSessionContractImplementor session) {
+		valuesConsumer.consume( offset, x, y, value, getJdbcMapping() );
 		return getJdbcTypeCount();
 	}
 

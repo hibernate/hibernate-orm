@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemaupdate;
 
@@ -27,10 +25,11 @@ import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Guillaume Smet
  */
-@TestForIssue(jiraKey = "HHH-12939")
+@JiraKey(value = "HHH-12939")
 @RequiresDialect(value = H2Dialect.class)
 @RequiresDialect(value = PostgreSQLDialect.class)
 @RequiresDialect(value = SQLServerDialect.class, majorVersion = 11)
@@ -95,7 +94,7 @@ public class AlterTableQuoteSpecifiedSchemaTest extends AbstractAlterTableQuoteS
 		File output = File.createTempFile( "update_script", ".sql" );
 		output.deleteOnExit();
 
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, Boolean.TRUE.toString() )
 				.build();
 
@@ -103,6 +102,7 @@ public class AlterTableQuoteSpecifiedSchemaTest extends AbstractAlterTableQuoteS
 			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( MyEntity.class )
 					.buildMetadata();
+			metadata.orderColumns( false );
 			metadata.validate();
 
 			new SchemaUpdate()
@@ -126,13 +126,14 @@ public class AlterTableQuoteSpecifiedSchemaTest extends AbstractAlterTableQuoteS
 			fail( e.getMessage() );
 		}
 
-		ssr = new StandardServiceRegistryBuilder()
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, Boolean.TRUE.toString() )
 				.build();
 		try {
 			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( MyEntityUpdated.class )
 					.buildMetadata();
+			metadata.orderColumns( false );
 			metadata.validate();
 
 			new SchemaUpdate()

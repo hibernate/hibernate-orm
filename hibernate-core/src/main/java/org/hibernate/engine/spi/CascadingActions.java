@@ -1,39 +1,38 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
-import java.util.Iterator;
-
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ReplicationMode;
-import org.hibernate.TransientPropertyValueException;
+import org.hibernate.TransientObjectException;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.event.spi.DeleteContext;
-import org.hibernate.event.spi.MergeContext;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.event.spi.MergeContext;
 import org.hibernate.event.spi.PersistContext;
 import org.hibernate.event.spi.RefreshContext;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.CollectionType;
-import org.hibernate.type.EntityType;
-import org.hibernate.type.Type;
-
 import org.jboss.logging.Logger;
+
+import java.lang.invoke.MethodHandles;
+import java.util.Iterator;
+
+import static java.util.Collections.emptyIterator;
+import static org.hibernate.engine.internal.ForeignKeys.isTransient;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
 
 /**
  * @author Steve Ebersole
  */
 public class CascadingActions {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			CascadingAction.class.getName()
 	);
@@ -45,9 +44,9 @@ public class CascadingActions {
 	}
 
 	/**
-	 * @see org.hibernate.Session#delete(Object)
+	 * @see org.hibernate.Session#remove(Object)
 	 */
-	public static final CascadingAction<DeleteContext> DELETE = new BaseCascadingAction<>() {
+	public static final CascadingAction<DeleteContext> REMOVE = new BaseCascadingAction<>() {
 		@Override
 		public void cascade(
 				EventSource session,
@@ -81,8 +80,20 @@ public class CascadingActions {
 	};
 
 	/**
-	 * @see org.hibernate.Session#lock(Object, LockMode)
+	 * Used in legacy {@code Session#delete} method, which has been removed
+	 *
+	 * @deprecated Use {@link #REMOVE}
 	 */
+	@Deprecated(since = "6.6", forRemoval = true)
+	public static final CascadingAction<DeleteContext> DELETE = REMOVE;
+
+	/**
+	 * @see org.hibernate.Session#lock(Object, LockMode)
+	 *
+	 * @deprecated because {@link org.hibernate.annotations.CascadeType#LOCK}
+	 *             is deprecated
+	 */
+	@Deprecated(since="7", forRemoval = true)
 	public static final CascadingAction<LockOptions> LOCK = new BaseCascadingAction<>() {
 		@Override
 		public void cascade(
@@ -92,18 +103,7 @@ public class CascadingActions {
 				LockOptions lockOptions,
 				boolean isCascadeDeleteEnabled) {
 			LOG.tracev( "Cascading to lock: {0}", entityName );
-			LockMode lockMode = LockMode.NONE;
-			LockOptions lr = new LockOptions();
-			if ( lockOptions != null ) {
-				lr.setTimeOut( lockOptions.getTimeOut() );
-				lr.setScope( lockOptions.getScope() );
-				lr.setFollowOnLocking( lockOptions.getFollowOnLocking() );
-				if ( lockOptions.getScope() ) {
-					lockMode = lockOptions.getLockMode();
-				}
-			}
-			lr.setLockMode( lockMode );
-			session.buildLockRequest( lr ).lock( entityName, child );
+			session.lock( entityName, child, lockOptions );
 		}
 
 		@Override
@@ -201,48 +201,6 @@ public class CascadingActions {
 		@Override
 		public String toString() {
 			return "ACTION_EVICT";
-		}
-	};
-
-	/**
-	 * @see org.hibernate.Session#saveOrUpdate(Object)
-	 */
-	public static final CascadingAction<PersistContext> SAVE_UPDATE = new BaseCascadingAction<>() {
-		@Override
-		public void cascade(
-				EventSource session,
-				Object child,
-				String entityName,
-				PersistContext nothing,
-				boolean isCascadeDeleteEnabled)
-				throws HibernateException {
-			LOG.tracev( "Cascading to save or update: {0}", entityName );
-			session.saveOrUpdate( entityName, child );
-		}
-
-		@Override
-		public Iterator<?> getCascadableChildrenIterator(
-				EventSource session,
-				CollectionType collectionType,
-				Object collection) {
-			// saves / updates don't cascade to uninitialized collections
-			return getLoadedElementsIterator( session, collectionType, collection );
-		}
-
-		@Override
-		public boolean deleteOrphans() {
-			// orphans should be deleted during save/update
-			return true;
-		}
-
-		@Override
-		public boolean performOnLazyProperty() {
-			return false;
-		}
-
-		@Override
-		public String toString() {
-			return "ACTION_SAVE_UPDATE";
 		}
 	};
 
@@ -357,51 +315,8 @@ public class CascadingActions {
 		}
 
 		@Override
-		public boolean requiresNoCascadeChecking() {
-			return true;
-		}
-
-		@Override
-		public void noCascade(
-				EventSource session,
-				Object parent,
-				EntityPersister persister,
-				Type propertyType,
-				int propertyIndex) {
-			if ( propertyType.isEntityType() ) {
-				Object child = persister.getValue( parent, propertyIndex );
-				if ( child != null
-						&& !isInManagedState( child, session )
-						&& !(child instanceof HibernateProxy) ) { //a proxy cannot be transient and it breaks ForeignKeys.isTransient
-					final String childEntityName =
-							((EntityType) propertyType).getAssociatedEntityName( session.getFactory() );
-					if ( ForeignKeys.isTransient(childEntityName, child, null, session) ) {
-						String parentEntityName = persister.getEntityName();
-						String propertyName = persister.getPropertyNames()[propertyIndex];
-						throw new TransientPropertyValueException(
-							"object references an unsaved transient instance - save the transient instance before flushing",
-							childEntityName,
-							parentEntityName,
-							propertyName
-						);
-					}
-				}
-			}
-		}
-
-		@Override
 		public boolean performOnLazyProperty() {
 			return false;
-		}
-
-		private boolean isInManagedState(Object child, EventSource session) {
-			EntityEntry entry = session.getPersistenceContextInternal().getEntry( child );
-			return entry != null &&
-					(
-							entry.getStatus() == Status.MANAGED ||
-									entry.getStatus() == Status.READ_ONLY ||
-									entry.getStatus() == Status.SAVING
-					);
 		}
 
 		@Override
@@ -409,6 +324,97 @@ public class CascadingActions {
 			return "ACTION_PERSIST_ON_FLUSH";
 		}
 	};
+
+	@Internal
+	// this is not a real type of cascade, but it's a check that
+	// is at least a bit sensitive to the cascade style, and it's
+	// convenient to be able to use the graph-walking logic that
+	// is already implemented in the Cascade class (though perhaps
+	// we could reuse the logic in Nullability instead)
+	public static final CascadingAction<Void> CHECK_ON_FLUSH = new BaseCascadingAction<>() {
+		@Override
+		public void cascade(
+				EventSource session,
+				Object child,
+				String entityName,
+				Void context,
+				boolean isCascadeDeleteEnabled)
+				throws HibernateException {
+			if ( child != null && isChildTransient( session, child, entityName ) ) {
+				throw new TransientObjectException( "Persistent instance references an unsaved transient instance of '"
+						+ entityName + "' (save the transient instance before flushing)" );
+				//TODO: should be TransientPropertyValueException
+//				throw new TransientPropertyValueException(
+//						"object references an unsaved transient instance - save the transient instance before flushing",
+//						entityName,
+//						persister.getEntityName(),
+//						persister.getPropertyNames()[propertyIndex]
+//				);
+			}
+		}
+
+		@Override
+		public Iterator<?> getCascadableChildrenIterator(
+				EventSource session,
+				CollectionType collectionType,
+				Object collection) {
+			if ( collectionType.isInverse( session.getSessionFactory() ) ) {
+				// For now, don't throw when an unowned collection
+				// contains references to transient/deleted objects.
+				// Strictly speaking, we should throw: but it just
+				// feels a bit too heavy-handed, especially in the
+				// case where the entity isn't transient but removed.
+				return emptyIterator();
+			}
+			else {
+				return getLoadedElementsIterator( session, collectionType, collection );
+			}
+		}
+
+		@Override
+		public boolean deleteOrphans() {
+			return false;
+		}
+
+		@Override
+		public boolean performOnLazyProperty() {
+			return false;
+		}
+
+		@Override
+		public String toString() {
+			return "ACTION_CHECK_ON_FLUSH";
+		}
+	};
+
+	private static boolean isChildTransient(EventSource session, Object child, String entityName) {
+		if ( isHibernateProxy( child ) ) {
+			// a proxy is always non-transient
+			// and ForeignKeys.isTransient()
+			// is not written to expect a proxy
+			// TODO: but the proxied entity might have been deleted!
+			return false;
+		}
+		else {
+			final EntityEntry entry = session.getPersistenceContextInternal().getEntry( child );
+			if ( entry != null ) {
+				// if it's associated with the session
+				// we are good, even if it's not yet
+				// inserted, since ordering problems
+				// are detected and handled elsewhere
+				return entry.getStatus().isDeletedOrGone();
+			}
+			else {
+				// TODO: check if it is a merged entity which has not yet been flushed
+				// Currently this throws if you directly reference a new transient
+				// instance after a call to merge() that results in its managed copy
+				// being scheduled for insertion, if the insert has not yet occurred.
+				// This is not terrible: it's more correct to "swap" the reference to
+				// point to the managed instance, but it's probably too heavy-handed.
+				return isTransient( entityName, child, null, session );
+			}
+		}
+	}
 
 	/**
 	 * @see org.hibernate.Session#replicate
@@ -448,15 +454,6 @@ public class CascadingActions {
 
 	public abstract static class BaseCascadingAction<T> implements CascadingAction<T> {
 		@Override
-		public boolean requiresNoCascadeChecking() {
-			return false;
-		}
-
-		@Override
-		public void noCascade(EventSource session, Object parent, EntityPersister persister, Type propertyType, int propertyIndex) {
-		}
-
-		@Override
 		public boolean performOnLazyProperty() {
 			return true;
 		}
@@ -492,7 +489,7 @@ public class CascadingActions {
 			return collectionType.getElementsIterator( collection );
 		}
 		else {
-			// does not handle arrays (thats ok, cos they can't be lazy)
+			// does not handle arrays (that's ok, cos they can't be lazy)
 			// or newly instantiated collections, so we can do the cast
 			return ((PersistentCollection<?>) collection).queuedAdditionIterator();
 		}

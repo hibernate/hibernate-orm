@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.from;
 
@@ -11,6 +9,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
@@ -47,12 +46,16 @@ public class CorrelatedTableGroup extends AbstractTableGroup {
 		this.joinPredicateConsumer = joinPredicateConsumer;
 	}
 
+	public TableGroup getCorrelatedTableGroup() {
+		return correlatedTableGroup;
+	}
+
 	@Override
 	public void addTableGroupJoin(TableGroupJoin join) {
 		assert !getTableGroupJoins().contains( join );
 		assert join.getJoinType() == SqlAstJoinType.INNER;
 		querySpec.getFromClause().addRoot( join.getJoinedGroup() );
-		joinPredicateConsumer.accept( join.getPredicate() );
+		registerPredicate( join );
 		super.addTableGroupJoin( join );
 	}
 
@@ -66,20 +69,32 @@ public class CorrelatedTableGroup extends AbstractTableGroup {
 		assert !getTableGroupJoins().contains( join );
 		assert join.getJoinType() == SqlAstJoinType.INNER;
 		querySpec.getFromClause().addRoot( join.getJoinedGroup() );
-		joinPredicateConsumer.accept( join.getPredicate() );
+		registerPredicate( join );
 		super.addNestedTableGroupJoin( join );
 	}
 
+	private void registerPredicate(TableGroupJoin join) {
+		if ( join.getPredicate() != null ) {
+			joinPredicateConsumer.accept( join.getPredicate() );
+		}
+		else if ( join.getJoinedGroup() instanceof LazyTableGroup ) {
+			// Wait for the table group to get initialized before consuming the predicate
+			( (LazyTableGroup) join.getJoinedGroup() ).setTableGroupInitializerCallback(
+					tableGroup -> joinPredicateConsumer.accept( join.getPredicate() )
+			);
+		}
+	}
+
 	@Override
-	protected TableReference getTableReferenceInternal(
+	public TableReference getTableReference(
 			NavigablePath navigablePath,
+			ValuedModelPart modelPart,
 			String tableExpression,
-			boolean allowFkOptimization,
 			boolean resolve) {
 		final TableReference tableReference = correlatedTableGroup.getTableReference(
 				navigablePath,
+				modelPart,
 				tableExpression,
-				allowFkOptimization,
 				resolve
 		);
 		if ( tableReference != null ) {
@@ -88,7 +103,7 @@ public class CorrelatedTableGroup extends AbstractTableGroup {
 		for ( TableGroupJoin tableGroupJoin : getNestedTableGroupJoins() ) {
 			final TableReference groupTableReference = tableGroupJoin.getJoinedGroup()
 					.getPrimaryTableReference()
-					.getTableReference( navigablePath, tableExpression, allowFkOptimization, resolve );
+					.getTableReference( navigablePath, modelPart, tableExpression, resolve );
 			if ( groupTableReference != null ) {
 				return groupTableReference;
 			}
@@ -96,7 +111,39 @@ public class CorrelatedTableGroup extends AbstractTableGroup {
 		for ( TableGroupJoin tableGroupJoin : getTableGroupJoins() ) {
 			final TableReference groupTableReference = tableGroupJoin.getJoinedGroup()
 					.getPrimaryTableReference()
-					.getTableReference( navigablePath, tableExpression, allowFkOptimization, resolve );
+					.getTableReference( navigablePath, modelPart, tableExpression, resolve );
+			if ( groupTableReference != null ) {
+				return groupTableReference;
+			}
+		}
+		return null;
+	}
+
+	@Override
+	public TableReference getTableReference(
+			NavigablePath navigablePath,
+			String tableExpression,
+			boolean resolve) {
+		final TableReference tableReference = correlatedTableGroup.getTableReference(
+				navigablePath,
+				tableExpression,
+				resolve
+		);
+		if ( tableReference != null ) {
+			return tableReference;
+		}
+		for ( TableGroupJoin tableGroupJoin : getNestedTableGroupJoins() ) {
+			final TableReference groupTableReference = tableGroupJoin.getJoinedGroup()
+					.getPrimaryTableReference()
+					.getTableReference( navigablePath, tableExpression, resolve );
+			if ( groupTableReference != null ) {
+				return groupTableReference;
+			}
+		}
+		for ( TableGroupJoin tableGroupJoin : getTableGroupJoins() ) {
+			final TableReference groupTableReference = tableGroupJoin.getJoinedGroup()
+					.getPrimaryTableReference()
+					.getTableReference( navigablePath, tableExpression, resolve );
 			if ( groupTableReference != null ) {
 				return groupTableReference;
 			}
@@ -121,5 +168,14 @@ public class CorrelatedTableGroup extends AbstractTableGroup {
 
 	public Consumer<Predicate> getJoinPredicateConsumer() {
 		return joinPredicateConsumer;
+	}
+
+	@Override
+	public TableGroup findCompatibleJoinedGroup(TableGroupJoinProducer joinProducer, SqlAstJoinType requestedJoinType) {
+		final TableGroup compatibleJoinedGroup = super.findCompatibleJoinedGroup( joinProducer, requestedJoinType );
+		return compatibleJoinedGroup == null ? correlatedTableGroup.findCompatibleJoinedGroup(
+				joinProducer,
+				requestedJoinType
+		) : compatibleJoinedGroup;
 	}
 }

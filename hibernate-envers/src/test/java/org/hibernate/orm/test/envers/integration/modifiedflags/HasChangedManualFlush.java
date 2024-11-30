@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.modifiedflags;
 
@@ -12,7 +10,7 @@ import jakarta.persistence.EntityManager;
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.integration.basic.BasicTestEntity1;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.orm.test.envers.tools.TestTools.extractRevisionNumbers;
@@ -22,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-7918")
+@JiraKey(value = "HHH-7918")
 public class HasChangedManualFlush extends AbstractModifiedFlagsEntityTest {
 	private Integer id = null;
 

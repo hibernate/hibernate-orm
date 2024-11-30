@@ -1,22 +1,31 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.temporal.TemporalAccessor;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
 
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.NationalizationSupport;
+import org.hibernate.dialect.SybaseDriverKind;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.IntegralTimestampaddFunction;
+import org.hibernate.dialect.function.SybaseTruncFunction;
+import org.hibernate.dialect.unique.SkipNullableUniqueDelegate;
+import org.hibernate.dialect.unique.UniqueDelegate;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -24,13 +33,14 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.procedure.internal.JTDSCallableStatementSupport;
+import org.hibernate.procedure.internal.SybaseCallableStatementSupport;
+import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.TemporalUnit;
-import org.hibernate.query.sqm.TrimSpec;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.sql.SqmTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
@@ -47,14 +57,21 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.JavaObjectType;
+import org.hibernate.type.NullType;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
-import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
+import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
+import org.hibernate.type.descriptor.jdbc.TinyIntAsSmallIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import jakarta.persistence.TemporalType;
+
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
 
 /**
@@ -64,10 +81,42 @@ import jakarta.persistence.TemporalType;
  */
 public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 
-	protected final boolean jtdsDriver;
-
 	//All Sybase dialects share an IN list size limit.
 	private static final int PARAM_LIST_SIZE_LIMIT = 250000;
+	private final UniqueDelegate uniqueDelegate = new SkipNullableUniqueDelegate(this);
+	private final SybaseDriverKind driverKind;
+
+	@Deprecated(forRemoval = true)
+	protected final boolean jtdsDriver;
+
+	private final SizeStrategy sizeStrategy = new SizeStrategyImpl() {
+		@Override
+		public Size resolveSize(
+				JdbcType jdbcType,
+				JavaType<?> javaType,
+				Integer precision,
+				Integer scale,
+				Long length) {
+			switch ( jdbcType.getDdlTypeCode() ) {
+				case Types.NCLOB:
+				case Types.CLOB:
+				case Types.BLOB:
+					return super.resolveSize(
+							jdbcType,
+							javaType,
+							precision,
+							scale,
+							length == null ? getDefaultLobLength() : length
+					);
+				case Types.FLOAT:
+					// Sybase ASE allows FLOAT with a precision up to 48
+					if ( precision != null ) {
+						return Size.precision( Math.min( Math.max( precision, 1 ), 48 ) );
+					}
+			}
+			return super.resolveSize( jdbcType, javaType, precision, scale, length );
+		}
+	};
 
 	public SybaseLegacyDialect() {
 		this( DatabaseVersion.make( 11, 0 ) );
@@ -75,13 +124,18 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 
 	public SybaseLegacyDialect(DatabaseVersion version) {
 		super(version);
-		jtdsDriver = true;
+		this.driverKind = SybaseDriverKind.OTHER;
+		this.jtdsDriver = true;
 	}
 
 	public SybaseLegacyDialect(DialectResolutionInfo info) {
 		super(info);
-		jtdsDriver = info.getDriverName() != null
-				&& info.getDriverName().contains( "jTDS" );
+		this.driverKind = SybaseDriverKind.determineKind( info );
+		this.jtdsDriver = driverKind == SybaseDriverKind.JTDS;
+	}
+
+	public SybaseDriverKind getDriverKind() {
+		return driverKind;
 	}
 
 	@Override
@@ -97,10 +151,6 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 				if ( precision == 19 && scale == 0 ) {
 					return jdbcTypeRegistry.getDescriptor( Types.BIGINT );
 				}
-			case Types.TINYINT:
-				if ( jtdsDriver ) {
-					return jdbcTypeRegistry.getDescriptor( Types.SMALLINT );
-				}
 		}
 		return super.resolveSqlTypeDescriptor(
 				columnTypeName,
@@ -109,6 +159,24 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 				scale,
 				jdbcTypeRegistry
 		);
+	}
+
+	@Override
+	public int resolveSqlTypeLength(
+			String columnTypeName,
+			int jdbcTypeCode,
+			int precision,
+			int scale,
+			int displaySize) {
+		// Sybase jconnect driver reports the "actual" precision in the display size
+		switch ( jdbcTypeCode ) {
+			case Types.CHAR:
+			case Types.VARCHAR:
+			case Types.REAL:
+			case Types.DOUBLE:
+				return displaySize;
+		}
+		return super.resolveSqlTypeLength( columnTypeName, jdbcTypeCode, precision, scale, displaySize );
 	}
 
 	@Override
@@ -148,6 +216,11 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public SizeStrategy getSizeStrategy() {
+		return sizeStrategy;
+	}
+
+	@Override
 	public boolean supportsNullPrecedence() {
 		return false;
 	}
@@ -162,8 +235,8 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 		super.contributeTypes(typeContributions, serviceRegistry);
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
-		if ( jtdsDriver ) {
-			jdbcTypeRegistry.addDescriptor( Types.TINYINT, SmallIntJdbcType.INSTANCE );
+		if ( driverKind == SybaseDriverKind.JTDS ) {
+			jdbcTypeRegistry.addDescriptor( Types.TINYINT, TinyIntAsSmallIntJdbcType.INSTANCE );
 
 			// The jTDS driver doesn't support the JDBC4 signatures using 'long length' for stream bindings
 			jdbcTypeRegistry.addDescriptor( Types.CLOB, ClobJdbcType.CLOB_BINDING );
@@ -180,12 +253,20 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 		jdbcTypeRegistry.addDescriptor( Types.BLOB, BlobJdbcType.PRIMITIVE_ARRAY_BINDING );
 
 		// Sybase requires a custom binder for binding untyped nulls with the NULL type
-		typeContributions.contributeJdbcType( ObjectNullAsNullTypeJdbcType.INSTANCE );
+		typeContributions.contributeJdbcType( ObjectNullAsBinaryTypeJdbcType.INSTANCE );
 
 		// Until we remove StandardBasicTypes, we have to keep this
 		typeContributions.contributeType(
 				new JavaObjectType(
-						ObjectNullAsNullTypeJdbcType.INSTANCE,
+						ObjectNullAsBinaryTypeJdbcType.INSTANCE,
+						typeContributions.getTypeConfiguration()
+								.getJavaTypeRegistry()
+								.getDescriptor( Object.class )
+				)
+		);
+		typeContributions.contributeType(
+				new NullType(
+						ObjectNullAsBinaryTypeJdbcType.INSTANCE,
 						typeContributions.getTypeConfiguration()
 								.getJavaTypeRegistry()
 								.getDescriptor( Object.class )
@@ -196,22 +277,31 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 	@Override
 	public NationalizationSupport getNationalizationSupport() {
 		// At least the jTDS driver doesn't support this
-		return jtdsDriver ? NationalizationSupport.IMPLICIT : super.getNationalizationSupport();
+		return driverKind == SybaseDriverKind.JTDS ? NationalizationSupport.IMPLICIT : super.getNationalizationSupport();
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry(queryEngine);
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry(functionContributions);
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+
+		functionFactory.stddev();
+		functionFactory.variance();
+		functionFactory.stddevPopSamp_stdevp();
+		functionFactory.varPopSamp_varp();
+		functionFactory.stddevPopSamp();
+		functionFactory.varPopSamp();
+		functionFactory.round_round();
 
 		// For SQL-Server we need to cast certain arguments to varchar(16384) to be able to concat them
-		queryEngine.getSqmFunctionRegistry().register(
+		functionContributions.getFunctionRegistry().register(
 				"count",
 				new CountFunction(
 						this,
-						queryEngine.getTypeConfiguration(),
+						functionContributions.getTypeConfiguration(),
 						SqlAstNodeRenderingMode.DEFAULT,
+						"count_big",
 						"+",
 						"varchar(16384)",
 						false
@@ -231,8 +321,13 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 		functionFactory.octetLength_pattern( "datalength(?1)" );
 		functionFactory.bitLength_pattern( "datalength(?1)*8" );
 
-		queryEngine.getSqmFunctionRegistry().register( "timestampadd",
-				new IntegralTimestampaddFunction( this, queryEngine.getTypeConfiguration() ) );
+		functionContributions.getFunctionRegistry().register( "timestampadd",
+				new IntegralTimestampaddFunction( this, functionContributions.getTypeConfiguration() ) );
+		functionContributions.getFunctionRegistry().register(
+				"trunc",
+				new SybaseTruncFunction( functionContributions.getTypeConfiguration() )
+		);
+		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
 	}
 
 	@Override
@@ -261,14 +356,93 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 		if ( to == CastType.STRING ) {
 			switch ( from ) {
 				case DATE:
-					return "str_replace(convert(varchar,?1,102),'.','-')";
+					return "substring(convert(varchar,?1,23),1,10)";
 				case TIME:
-					return "convert(varchar,?1,108)";
+					return "convert(varchar,?1,8)";
 				case TIMESTAMP:
-					return "str_replace(convert(varchar,?1,23),'T',' ')";
+					return "convert(varchar,?1,140)";
 			}
 		}
 		return super.castPattern( from, to );
+	}
+
+	/* Something odd is going on with the jConnect driver when using JDBC escape syntax, so let's use native functions */
+
+	@Override
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			TemporalAccessor temporalAccessor,
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( "convert(date,'" );
+				appendAsDate( appender, temporalAccessor );
+				appender.appendSql( "',140)" );
+				break;
+			case TIME:
+				appender.appendSql( "convert(time,'" );
+				appendAsTime( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appender.appendSql( "',8)" );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( "convert(datetime,'" );
+				appendAsTimestampWithMillis( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appender.appendSql( "',140)" );
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
+
+	@Override
+	public void appendDateTimeLiteral(SqlAppender appender, Date date, TemporalType precision, TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( "convert(date,'" );
+				appendAsDate( appender, date );
+				appender.appendSql( "',140)" );
+				break;
+			case TIME:
+				appender.appendSql( "convert(time,'" );
+				appendAsLocalTime( appender, date );
+				appender.appendSql( "',8)" );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( "convert(datetime,'" );
+				appendAsTimestampWithMillis( appender, date, jdbcTimeZone );
+				appender.appendSql( "',140)" );
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
+
+	@Override
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			Calendar calendar,
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( "convert(date,'" );
+				appendAsDate( appender, calendar );
+				appender.appendSql( "',140)" );
+				break;
+			case TIME:
+				appender.appendSql( "convert(time,'" );
+				appendAsLocalTime( appender, calendar );
+				appender.appendSql( "',8)" );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( "convert(datetime,'" );
+				appendAsTimestampWithMillis( appender, calendar, jdbcTimeZone );
+				appender.appendSql( "',140)" );
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
 	}
 
 	@Override
@@ -303,14 +477,13 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public String trimPattern(TrimSpec specification, char character) {
-		return super.trimPattern(specification, character)
-				.replace("replace", "str_replace");
+	public void appendDatetimeFormat(SqlAppender appender, String format) {
+		throw new UnsupportedOperationException( "format() function not supported on Sybase");
 	}
 
 	@Override
-	public void appendDatetimeFormat(SqlAppender appender, String format) {
-		throw new UnsupportedOperationException( "format() function not supported on Sybase");
+	public boolean supportsStandardCurrentTimestampFunction() {
+		return false;
 	}
 
 	@Override
@@ -326,10 +499,34 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public NameQualifierSupport getNameQualifierSupport() {
-		if ( getVersion().isSameOrAfter( 15 ) ) {
-			return NameQualifierSupport.BOTH;
-		}
+		// No support for schemas: https://userapps.support.sap.com/sap/support/knowledge/en/2591730
+		// Authorization schemas seem to be something different: https://infocenter.sybase.com/help/index.jsp?topic=/com.sybase.infocenter.dc36272.1550/html/commands/X48762.htm
 		return NameQualifierSupport.CATALOG;
 	}
 
+	@Override
+	public UniqueDelegate getUniqueDelegate() {
+		return uniqueDelegate;
+	}
+
+	@Override
+	public CallableStatementSupport getCallableStatementSupport() {
+		return driverKind == SybaseDriverKind.JTDS ? JTDSCallableStatementSupport.INSTANCE : SybaseCallableStatementSupport.INSTANCE;
+	}
+
+	@Override
+	public boolean supportsNamedParameters(DatabaseMetaData databaseMetaData) throws SQLException {
+		// Only the jTDS driver supports named parameters properly
+		return driverKind == SybaseDriverKind.JTDS && super.supportsNamedParameters( databaseMetaData );
+	}
+
+	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+	}
+
+	@Override
+	public boolean supportsFromClauseInUpdate() {
+		return true;
+	}
 }

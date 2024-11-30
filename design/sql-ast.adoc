@@ -30,10 +30,11 @@ The actual tree nodes are defined in the `org.hibernate.sql.ast.tree` package.
 
 == Building SQL AST
 
-There are 2 main producers of SQL AST atm:
+There are 3 main producers of SQL AST:
 
-* SQM translation - see `org.hibernate.query.sqm.sql`
-* metamodel-based loading - see `org.hibernate.loader.internal.MetamodelSelectBuilderProcess`
+SQM:: Translation of HQL and criteria queries. See `org.hibernate.query.sqm.sql`
+Loading:: SQL generated for persistence-context events to load entities and collections.  This includes `Session#find`, `Session#get`, `Session#lock`, ...  See `org.hibernate.loader.internal.MetamodelSelectBuilderProcess`
+Mutations:: SQL generated for persistence-context flush events to write entity and collection state to the database.  See `org.hibernate.persister.entity.mutation` and `org.hibernate.persister.collection.mutation`
 
 
 == Translating SQL AST

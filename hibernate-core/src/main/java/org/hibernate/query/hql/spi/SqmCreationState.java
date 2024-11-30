@@ -1,14 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.hql.spi;
 
 import org.hibernate.Incubating;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
+import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 
 /**
  * Models the state pertaining to the creation of a single SQM.
@@ -39,4 +38,6 @@ public interface SqmCreationState {
 	default SqmCreationProcessingState getCurrentProcessingState() {
 		return getProcessingStateStack().getCurrent();
 	}
+
+	SqmCteStatement<?> findCteStatement(String name);
 }

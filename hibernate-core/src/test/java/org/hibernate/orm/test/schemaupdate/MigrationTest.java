@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemaupdate;
 
@@ -20,8 +18,9 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,7 +36,7 @@ public class MigrationTest extends BaseUnitTestCase {
 
 	@Before
 	public void setUp() {
-		serviceRegistry = new StandardServiceRegistryBuilder().build();
+		serviceRegistry = ServiceRegistryUtil.serviceRegistry();
 	}
 
 	@After
@@ -63,6 +62,10 @@ public class MigrationTest extends BaseUnitTestCase {
 				v1metadata
 		);
 
+		v1schemaUpdate.getExceptions().forEach(
+				e -> System.out.println( e.getCause().getMessage() )
+		);
+
 		assertEquals( 0, v1schemaUpdate.getExceptions().size() );
 
 		MetadataImplementor v2metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
@@ -74,12 +77,60 @@ public class MigrationTest extends BaseUnitTestCase {
 				EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ),
 				v2metadata
 		);
+
+		v2schemaUpdate.getExceptions().forEach(
+				e -> System.out.println( e.getCause().getMessage() )
+		);
+
 		assertEquals( 0, v2schemaUpdate.getExceptions().size() );
-		
+
 		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), v2metadata );
 
 	}
-	
+
+	@Test
+	public void testSimpleColumnTypeChange() {
+		String resource1 = "org/hibernate/orm/test/schemaupdate/1_Version.hbm.xml";
+		String resource4 = "org/hibernate/orm/test/schemaupdate/4_Version.hbm.xml";
+
+		MetadataImplementor v1metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
+				.addResource( resource1 )
+				.buildMetadata();
+
+		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), v1metadata );
+
+		final SchemaUpdate v1schemaUpdate = new SchemaUpdate();
+		v1schemaUpdate.execute(
+				EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ),
+				v1metadata
+		);
+
+		v1schemaUpdate.getExceptions().forEach(
+				e -> System.out.println( e.getCause().getMessage() )
+		);
+
+		assertEquals( 0, v1schemaUpdate.getExceptions().size() );
+
+		MetadataImplementor v2metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
+				.addResource( resource4 )
+				.buildMetadata();
+
+		final SchemaUpdate v2schemaUpdate = new SchemaUpdate();
+		v2schemaUpdate.execute(
+				EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ),
+				v2metadata
+		);
+
+		v2schemaUpdate.getExceptions().forEach(
+				e -> System.out.println( e.getCause().getMessage() )
+		);
+
+		assertEquals( 0, v2schemaUpdate.getExceptions().size() );
+
+		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), v2metadata );
+
+	}
+
 //	/**
 //	 * 3_Version.hbm.xml contains a named unique constraint and an un-named
 //	 * unique constraint (will receive a randomly-generated name).  Create
@@ -88,7 +139,7 @@ public class MigrationTest extends BaseUnitTestCase {
 //	 * generate any exceptions.
 //	 */
 //	@Test
-//	@TestForIssue( jiraKey = "HHH-8162" )
+//	@JiraKey( value = "HHH-8162" )
 //	public void testConstraintUpdate() {
 //		doConstraintUpdate(UniqueConstraintSchemaUpdateStrategy.DROP_RECREATE_QUIETLY);
 //		doConstraintUpdate(UniqueConstraintSchemaUpdateStrategy.RECREATE_QUIETLY);
@@ -130,7 +181,7 @@ public class MigrationTest extends BaseUnitTestCase {
 
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9713" )
+	@JiraKey( value = "HHH-9713" )
 	public void testIndexCreationViaSchemaUpdate() {
 		MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
 				.addAnnotatedClass( EntityWithIndex.class )
@@ -158,7 +209,7 @@ public class MigrationTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9550" )
+	@JiraKey( value = "HHH-9550" )
 	public void testSameTableNameDifferentExplicitSchemas() {
 		MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
 				.addAnnotatedClass( CustomerInfo.class )
@@ -194,4 +245,3 @@ public class MigrationTest extends BaseUnitTestCase {
 
 
 }
-

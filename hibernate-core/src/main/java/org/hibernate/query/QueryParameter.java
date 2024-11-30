@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query;
 
@@ -17,7 +15,7 @@ import org.hibernate.Incubating;
 public interface QueryParameter<T> extends jakarta.persistence.Parameter<T> {
 	/**
 	 * Does this parameter allow multi-valued (collection, array, etc) binding?
-	 * <p/>
+	 * <p>
 	 * This is only valid for HQL/JPQL and (I think) Criteria queries, and is
 	 * determined based on the context of the parameters declaration.
 	 *

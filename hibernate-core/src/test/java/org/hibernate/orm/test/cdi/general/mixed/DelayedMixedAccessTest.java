@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cdi.general.mixed;
 
@@ -11,7 +9,6 @@ import jakarta.enterprise.inject.se.SeContainer;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.resource.beans.container.internal.CdiBeanContainerBuilder;
 import org.hibernate.resource.beans.container.internal.CdiBeanContainerDelayedAccessImpl;
@@ -20,6 +17,7 @@ import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.tool.schema.Action;
 
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -44,7 +42,7 @@ public class DelayedMixedAccessTest implements BeanContainer.LifecycleOptions {
 	public void testDelayedMixedAccess() {
 		try ( final SeContainer cdiContainer = Helper.createSeContainer();
 			final BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
-			final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder( bsr )
+			final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder( bsr )
 					.applySetting( AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP )
 					.applySetting( AvailableSettings.CDI_BEAN_MANAGER, cdiContainer.getBeanManager() )
 					.applySetting( AvailableSettings.DELAY_CDI_ACCESS, "true" )

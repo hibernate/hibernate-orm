@@ -1,0 +1,14 @@
+"json_query(" expression "," expression passingClause? wrapperClause? onErrorClause? onEmptyClause? ")"
+
+wrapperClause
+	: "with" ("conditional"|"unconditional")? "array"? "wrapper"
+	| "without" "array"? "wrapper"
+
+passingClause
+	: "passing" expression "as" identifier ("," expression "as" identifier)*
+
+onErrorClause
+	: ( "error" | "null" | ( "empty" ( "array" | "object" )? ) ) "on error";
+
+onEmptyClause
+	: ( "error" | "null" | ( "empty" ( "array" | "object" )? ) ) "on empty";

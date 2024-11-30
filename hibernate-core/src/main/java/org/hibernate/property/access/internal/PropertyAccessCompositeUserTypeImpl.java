@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.property.access.internal;
 
@@ -18,8 +16,10 @@ import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.Setter;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
- * PropertyAccessor for accessing the wrapped property via get/set pair, which may be nonpublic.
+ * {@link PropertyAccess} for accessing the wrapped property via get/set pair, which may be nonpublic.
  *
  * @author Steve Ebersole
  *
@@ -46,17 +46,18 @@ public class PropertyAccessCompositeUserTypeImpl implements PropertyAccess, Gett
 	}
 
 	@Override
-	public Setter getSetter() {
+	public @Nullable Setter getSetter() {
 		return null;
 	}
 
 	@Override
-	public Object get(Object owner) {
+	public @Nullable Object get(Object owner) {
 		return strategy.compositeUserType.getPropertyValue( owner, propertyIndex );
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
-	public Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
+	public @Nullable Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
 		return get( owner );
 	}
 
@@ -71,17 +72,17 @@ public class PropertyAccessCompositeUserTypeImpl implements PropertyAccess, Gett
 	}
 
 	@Override
-	public Member getMember() {
+	public @Nullable Member getMember() {
 		return null;
 	}
 
 	@Override
-	public String getMethodName() {
+	public @Nullable String getMethodName() {
 		return null;
 	}
 
 	@Override
-	public Method getMethod() {
+	public @Nullable Method getMethod() {
 		return null;
 	}
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
@@ -13,9 +11,11 @@ import java.sql.Clob;
 import java.sql.NClob;
 
 /**
- * A {@link Session session's} helper for creating LOB data.
+ * A factory for instances of {@link Blob} and {@link Clob} used for writing LOB data.
  *
  * @author Steve Ebersole
+ *
+ * @see Session#getLobHelper()
  */
 public interface LobHelper {
 

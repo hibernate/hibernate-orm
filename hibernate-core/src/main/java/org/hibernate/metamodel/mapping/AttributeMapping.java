@@ -1,15 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping;
 
+import org.hibernate.generator.Generator;
+import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.results.graph.DatabaseSnapshotContributor;
 import org.hibernate.sql.results.graph.Fetchable;
-import org.hibernate.tuple.ValueGeneration;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.MutabilityPlanExposer;
 
@@ -19,7 +19,7 @@ import org.hibernate.type.descriptor.java.MutabilityPlanExposer;
  * @author Steve Ebersole
  */
 public interface AttributeMapping
-		extends ModelPart, ValueMapping, Fetchable, DatabaseSnapshotContributor, PropertyBasedMapping, MutabilityPlanExposer {
+		extends OwnedValuedModelPart, Fetchable, DatabaseSnapshotContributor, PropertyBasedMapping, MutabilityPlanExposer {
 	/**
 	 * The name of the mapped attribute
 	 */
@@ -38,7 +38,7 @@ public interface AttributeMapping
 	/**
 	 * Access to AttributeMetadata
 	 */
-	AttributeMetadataAccess getAttributeMetadataAccess();
+	AttributeMetadata getAttributeMetadata();
 
 	/**
 	 * The managed type that declares this attribute
@@ -54,14 +54,14 @@ public interface AttributeMapping
 	 * Convenient access to getting the value for this attribute from the declarer
 	 */
 	default Object getValue(Object container) {
-		return getPropertyAccess().getGetter().get( container );
+		return getDeclaringType().getValue( container, getStateArrayPosition() );
 	}
 
 	/**
 	 * Convenient access to setting the value for this attribute on the declarer
 	 */
 	default void setValue(Object container, Object value) {
-		getPropertyAccess().getSetter().set( container, value );
+		getDeclaringType().setValue( container, getStateArrayPosition(), value );
 	}
 
 	/**
@@ -69,7 +69,7 @@ public interface AttributeMapping
 	 *
 	 * @apiNote Only relevant for non-id attributes
 	 */
-	ValueGeneration getValueGeneration();
+	Generator getGenerator();
 
 	@Override
 	default EntityMappingType findContainingEntityMapping() {
@@ -78,6 +78,43 @@ public interface AttributeMapping
 
 	@Override
 	default MutabilityPlan<?> getExposedMutabilityPlan() {
-		return getAttributeMetadataAccess().resolveAttributeMetadata( null ).getMutabilityPlan();
+		return getAttributeMetadata().getMutabilityPlan();
 	}
+
+	default int compare(Object value1, Object value2) {
+		//noinspection unchecked,rawtypes
+		return ( (JavaType) getJavaType() ).getComparator().compare( value1, value2 );
+	}
+
+	@Override //Overrides multiple interfaces!
+	default AttributeMapping asAttributeMapping() {
+		return this;
+	}
+
+	/**
+	 * A utility method to avoid casting explicitly to PluralAttributeMapping
+	 *
+	 * @return PluralAttributeMapping if this is an instance of PluralAttributeMapping otherwise {@code null}
+	 */
+	default PluralAttributeMapping asPluralAttributeMapping() {
+		return null;
+	}
+
+	default boolean isPluralAttributeMapping() {
+		return false;
+	}
+
+	/**
+	 * A utility method to avoid casting explicitly to EmbeddedAttributeMapping
+	 *
+	 * @return EmbeddedAttributeMapping if this is an instance of EmbeddedAttributeMapping otherwise {@code null}
+	 */
+	default EmbeddedAttributeMapping asEmbeddedAttributeMapping(){
+		return null;
+	}
+
+	default boolean isEmbeddedAttributeMapping(){
+		return false;
+	}
+
 }

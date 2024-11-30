@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.merge;
 
@@ -13,14 +11,14 @@ import org.hibernate.orm.test.envers.BaseEnversFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-6753")
+@JiraKey(value = "HHH-6753")
 public class AddDelTest extends BaseEnversFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -40,17 +38,17 @@ public class AddDelTest extends BaseEnversFunctionalTestCase {
 		// Revision 2
 		session.getTransaction().begin();
 		session.persist( new StrTestEntity( "another data" ) ); // Just to create second revision.
-		entity = (GivenIdStrEntity) session.get( GivenIdStrEntity.class, 1 );
-		session.delete( entity ); // First try to remove the entity.
-		session.save( entity ); // Then save it.
+		entity = session.get( GivenIdStrEntity.class, 1 );
+		session.remove( entity ); // First try to remove the entity.
+		session.persist( entity ); // Then save it.
 		session.getTransaction().commit();
 
 		// Revision 3
 		session.getTransaction().begin();
-		entity = (GivenIdStrEntity) session.get( GivenIdStrEntity.class, 1 );
-		session.delete( entity ); // First try to remove the entity.
+		entity = session.get( GivenIdStrEntity.class, 1 );
+		session.remove( entity ); // First try to remove the entity.
 		entity.setData( "modified data" ); // Then change it's state.
-		session.save( entity ); // Finally save it.
+		session.persist( entity ); // Finally save it.
 		session.getTransaction().commit();
 
 		session.close();

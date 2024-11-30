@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.ast.internal;
 
@@ -10,9 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.LockOptions;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -22,17 +17,12 @@ import org.hibernate.loader.ast.spi.MultiNaturalIdLoadOptions;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.spi.Callback;
-import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.exec.spi.JdbcSelect;
-import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
@@ -56,11 +46,11 @@ public class MultiNaturalIdLoadingBatcher {
 	private final EntityMappingType entityDescriptor;
 
 	private final SelectStatement sqlSelect;
-	private final List<JdbcParameter> jdbcParameters;
+	private final JdbcParametersList jdbcParameters;
 
 	private final KeyValueResolver keyValueResolver;
 
-	private final JdbcSelect jdbcSelect;
+	private final JdbcOperationQuerySelect jdbcSelect;
 
 	public MultiNaturalIdLoadingBatcher(
 			EntityMappingType entityDescriptor,
@@ -71,8 +61,8 @@ public class MultiNaturalIdLoadingBatcher {
 			LockOptions lockOptions,
 			SessionFactoryImplementor sessionFactory) {
 		this.entityDescriptor = entityDescriptor;
+		final JdbcParametersList.Builder jdbcParametersBuilder = JdbcParametersList.newBuilder();
 
-		jdbcParameters = new ArrayList<>( batchSize );
 		sqlSelect = LoaderSelectBuilder.createSelect(
 				entityDescriptor,
 				// return the full entity rather than parts
@@ -83,15 +73,15 @@ public class MultiNaturalIdLoadingBatcher {
 				batchSize,
 				loadQueryInfluencers,
 				lockOptions,
-				jdbcParameters::add,
+				jdbcParametersBuilder::add,
 				sessionFactory
 		);
+		this.jdbcParameters = jdbcParametersBuilder.build();
 
 		this.keyValueResolver = keyValueResolver;
 
-		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
-		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
+		final SqlAstTranslatorFactory sqlAstTranslatorFactory =
+				sessionFactory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory();
 		this.jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlSelect )
 				.translate( null, QueryOptions.NONE );
 	}
@@ -101,26 +91,28 @@ public class MultiNaturalIdLoadingBatcher {
 		final JdbcParameterBindingsImpl jdbcParamBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
 
 		int offset = 0;
+		int size = 0;
 
 		for ( int i = 0; i < naturalIdValues.length; i++ ) {
 			final Object bindValue = keyValueResolver.resolveKeyToLoad( naturalIdValues[ i ], session );
 			if ( bindValue != null ) {
 				offset += jdbcParamBindings.registerParametersForEachJdbcValue(
 						bindValue,
-						Clause.IRRELEVANT,
 						offset,
 						entityDescriptor.getNaturalIdMapping(),
 						jdbcParameters,
 						session
 				);
+				size++;
 			}
 
 			if ( offset == jdbcParameters.size() ) {
 				// we've hit the batch mark
-				final List<E> batchResults = performLoad( jdbcParamBindings, session );
+				final List<E> batchResults = performLoad( jdbcParamBindings, session, size );
 				multiLoadResults.addAll( batchResults );
 				jdbcParamBindings.clear();
 				offset = 0;
+				size = 0;
 			}
 		}
 
@@ -129,24 +121,27 @@ public class MultiNaturalIdLoadingBatcher {
 				// pad the remaining parameters with null
 				offset += jdbcParamBindings.registerParametersForEachJdbcValue(
 						null,
-						Clause.IRRELEVANT,
 						offset,
 						entityDescriptor.getNaturalIdMapping(),
 						jdbcParameters,
 						session
 				);
+				size++;
 			}
-			final List<E> batchResults = performLoad( jdbcParamBindings, session );
+			final List<E> batchResults = performLoad( jdbcParamBindings, session, size );
 			multiLoadResults.addAll( batchResults );
 		}
 
 		return multiLoadResults;
 	}
 
-	private <E> List<E> performLoad(JdbcParameterBindings jdbcParamBindings, SharedSessionContractImplementor session) {
+	private <E> List<E> performLoad(
+			JdbcParameterBindings jdbcParamBindings,
+			SharedSessionContractImplementor session,
+			int size) {
 		final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler;
 
-		if ( entityDescriptor.getEntityPersister().hasSubselectLoadableCollections() ) {
+		if ( session.getLoadQueryInfluencers().hasSubselectLoadableCollections( entityDescriptor.getEntityPersister() ) ) {
 			subSelectFetchableKeysHandler = SubselectFetch.createRegistrationHandler(
 					session.getPersistenceContext().getBatchFetchQueue(),
 					sqlSelect,
@@ -164,41 +159,12 @@ public class MultiNaturalIdLoadingBatcher {
 		return session.getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,
 				jdbcParamBindings,
-				new ExecutionContext() {
-					@Override
-					public SharedSessionContractImplementor getSession() {
-						return session;
-					}
-
-					@Override
-					public QueryOptions getQueryOptions() {
-						return QueryOptions.NONE;
-					}
-
-					@Override
-					public String getQueryIdentifier(String sql) {
-						return sql;
-					}
-
-					@Override
-					public QueryParameterBindings getQueryParameterBindings() {
-						return QueryParameterBindings.NO_PARAM_BINDINGS;
-					}
-
-					@Override
-					public Callback getCallback() {
-						return null;
-					}
-
-					@Override
-					public void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
-						if ( subSelectFetchableKeysHandler != null ) {
-							subSelectFetchableKeysHandler.addKey( entityKey, entry );
-						}
-					}
-				},
+				new ExecutionContextWithSubselectFetchHandler( session, subSelectFetchableKeysHandler ),
 				RowTransformerStandardImpl.instance(),
-				ListResultsConsumer.UniqueSemantic.FILTER
+				null,
+				ListResultsConsumer.UniqueSemantic.FILTER,
+				size
 		);
 	}
+
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.callbacks;
 
@@ -15,14 +13,14 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
+import org.hibernate.bytecode.internal.BytecodeProviderInitiator;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.proxy.pojo.bytebuddy.ByteBuddyProxyFactory;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.logger.LoggerInspectionRule;
-import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.util.ExceptionUtil;
@@ -33,10 +31,12 @@ import org.junit.jupiter.api.Test;
 
 import org.jboss.logging.Logger;
 
+import java.lang.invoke.MethodHandles;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@TestForIssue(jiraKey = "HHH-13020")
+@JiraKey(value = "HHH-13020")
 @Jpa(annotatedClasses = {
 		PrivateConstructorTest.Parent.class,
 		PrivateConstructorTest.Child.class
@@ -45,9 +45,9 @@ public class PrivateConstructorTest {
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule( Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
-			proxyFactoryClass()
-					.getName()
+			proxyFactoryClass().getName()
 	) );
 
 	@AfterEach
@@ -70,7 +70,6 @@ public class PrivateConstructorTest {
 
 		scope.inTransaction(
 				entityManager -> {
-					Triggerable triggerable = logInspection.watchForLogMessages( "HHH000143:" );
 					Child childReference = entityManager.getReference( Child.class, child.getId() );
 					try {
 						assertEquals( child.getParent().getName(), childReference.getParent().getName() );
@@ -81,14 +80,13 @@ public class PrivateConstructorTest {
 								"Bytecode enhancement failed because no public, protected or package-private default constructor was found for entity"
 						) );
 					}
-					assertTrue( triggerable.wasTriggered() );
 				}
 		);
 	}
 
 	private static Class<? extends ProxyFactory> proxyFactoryClass() {
 		String byteCodeProvider = Environment.getProperties().getProperty( AvailableSettings.BYTECODE_PROVIDER );
-		if ( byteCodeProvider == null || Environment.BYTECODE_PROVIDER_NAME_BYTEBUDDY.equals( byteCodeProvider ) ) {
+		if ( byteCodeProvider == null || BytecodeProviderInitiator.BYTECODE_PROVIDER_NAME_BYTEBUDDY.equals( byteCodeProvider ) ) {
 			return ByteBuddyProxyFactory.class;
 		}
 		else {

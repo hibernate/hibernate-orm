@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.sqm.exec;
 
@@ -68,9 +66,9 @@ public class SubQueryTest {
 					BasicEntity entity1 = new BasicEntity( 1, "e1" );
 					BasicEntity entity2 = new BasicEntity( 2, "e2" );
 					BasicEntity entity3 = new BasicEntity( 3, "e1" );
-					session.save( entity1 );
-					session.save( entity2 );
-					session.save( entity3 );
+					session.persist( entity1 );
+					session.persist( entity2 );
+					session.persist( entity3 );
 				}
 		);
 	}

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.naming;
 
@@ -10,9 +8,9 @@ package org.hibernate.boot.model.naming;
  * Implementation of the ImplicitNamingStrategy contract which conforms to the
  * naming rules initially implemented by Hibernate for JPA 1.0, prior to many
  * things being clarified.
- * <p/>
+ * <p>
  * For a more JPA 2 compliant strategy, see/use {@link ImplicitNamingStrategyJpaCompliantImpl}
- * <p/>
+ * <p>
  * Corresponds roughly to the legacy org.hibernate.cfg.EJB3NamingStrategy class.
  *
  * @author Steve Ebersole

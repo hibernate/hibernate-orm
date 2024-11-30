@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.multitenancy.schema;
 
@@ -13,10 +11,10 @@ import org.hibernate.SessionBuilder;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
+import org.hibernate.engine.jdbc.env.internal.ExtractedDatabaseMetaDataImpl;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
@@ -27,20 +25,25 @@ import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.SchemaDropperImpl;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
 
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+
 import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernateSessionBuilder;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantConnectionProvider, C extends ConnectionProvider & Stoppable> extends BaseUnitTestCase {
+public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantConnectionProvider<String>, C extends ConnectionProvider> extends BaseUnitTestCase {
 	protected C acmeProvider;
 	protected C jbossProvider;
 
@@ -60,8 +63,11 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 		settings.put( Environment.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName() );
 		settings.put( Environment.GENERATE_STATISTICS, "true" );
 
-		serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
+		serviceRegistry = (ServiceRegistryImplementor) ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySettings( settings )
+				// Make sure to continue configuring the MultiTenantConnectionProvider by adding a service,
+				// rather than by setting 'hibernate.multi_tenant_connection_provider':
+				// that's important to reproduce the regression we test in 'testJdbcMetadataAccessible'.
 				.addService( MultiTenantConnectionProvider.class, multiTenantConnectionProvider )
 				.build();
 
@@ -77,26 +83,23 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 		HibernateSchemaManagementTool tool = new HibernateSchemaManagementTool();
 		tool.injectServices( serviceRegistry );
 
-		final GenerationTargetToDatabase acmeTarget =  new GenerationTargetToDatabase(
-				new DdlTransactionIsolatorTestingImpl(
-						serviceRegistry,
-						acmeProvider
-				)
-		);
-		final GenerationTargetToDatabase jbossTarget = new GenerationTargetToDatabase(
-				new DdlTransactionIsolatorTestingImpl(
-						serviceRegistry,
-						jbossProvider
-				)
-		);
-
 		new SchemaDropperImpl( serviceRegistry ).doDrop(
 				metadata,
 				serviceRegistry,
 				settings,
 				true,
-				acmeTarget,
-				jbossTarget
+				new GenerationTargetToDatabase(
+						new DdlTransactionIsolatorTestingImpl(
+								serviceRegistry,
+								acmeProvider
+						)
+				),
+				new GenerationTargetToDatabase(
+						new DdlTransactionIsolatorTestingImpl(
+								serviceRegistry,
+								jbossProvider
+						)
+				)
 		);
 
 		new SchemaCreatorImpl( serviceRegistry ).doCreation(
@@ -104,8 +107,18 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 				serviceRegistry,
 				settings,
 				true,
-				acmeTarget,
-				jbossTarget
+				new GenerationTargetToDatabase(
+						new DdlTransactionIsolatorTestingImpl(
+								serviceRegistry,
+								acmeProvider
+						)
+				),
+				new GenerationTargetToDatabase(
+						new DdlTransactionIsolatorTestingImpl(
+								serviceRegistry,
+								jbossProvider
+						)
+				)
 		);
 
 		final SessionFactoryBuilder sfb = metadata.getSessionFactoryBuilder();
@@ -127,18 +140,26 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 			serviceRegistry.destroy();
 		}
 		if ( jbossProvider != null ) {
-			jbossProvider.stop();
+			( (Stoppable) jbossProvider ).stop();
 		}
 		if ( acmeProvider != null ) {
-			acmeProvider.stop();
+			( (Stoppable) acmeProvider ).stop();
 		}
+	}
+
+	@Test
+	@JiraKey(value = "HHH-16310")
+	public void testJdbcMetadataAccessible() {
+		assertThat( ( (ExtractedDatabaseMetaDataImpl) sessionFactory.getJdbcServices().getJdbcEnvironment()
+				.getExtractedDatabaseMetaData() ).isJdbcMetadataAccessible() )
+				.isTrue();
 	}
 
 	@Test
 	public void testBasicExpectedBehavior() {
 		Customer steve = doInHibernateSessionBuilder( this::jboss, session -> {
 			Customer _steve = new Customer( 1L, "steve" );
-			session.save( _steve );
+			session.persist( _steve );
 			return _steve;
 		} );
 
@@ -148,7 +169,7 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 		} );
 
 		doInHibernateSessionBuilder( this::jboss, session -> {
-			session.delete( steve );
+			session.remove( steve );
 		} );
 	}
 
@@ -157,14 +178,14 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 		// create a customer 'steve' in jboss
 		Customer steve = doInHibernateSessionBuilder( this::jboss, session -> {
 			Customer _steve = new Customer( 1L, "steve" );
-			session.save( _steve );
+			session.persist( _steve );
 			return _steve;
 		} );
 
 		// now, create a customer 'john' in acme
 		Customer john = doInHibernateSessionBuilder( this::acme, session -> {
 			Customer _john = new Customer( 1L, "john" );
-			session.save( _john );
+			session.persist( _john );
 			return _john;
 		} );
 
@@ -173,7 +194,7 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 		// make sure we get the correct people back, from cache
 		// first, jboss
 		doInHibernateSessionBuilder( this::jboss, session -> {
-			Customer customer = session.load( Customer.class, 1L );
+			Customer customer = session.getReference( Customer.class, 1L );
 			Assert.assertEquals( "steve", customer.getName() );
 			// also, make sure this came from second level
 			Assert.assertEquals( 1, sessionFactory.getStatistics().getSecondLevelCacheHitCount() );
@@ -182,7 +203,7 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 		sessionFactory.getStatistics().clear();
 		// then, acme
 		doInHibernateSessionBuilder( this::acme, session -> {
-			Customer customer = session.load( Customer.class, 1L );
+			Customer customer = session.getReference( Customer.class, 1L );
 			Assert.assertEquals( "john", customer.getName() );
 			// also, make sure this came from second level
 			Assert.assertEquals( 1, sessionFactory.getStatistics().getSecondLevelCacheHitCount() );
@@ -193,7 +214,7 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 		sessionFactory.getCache().evictEntityData();
 		// first jboss
 		doInHibernateSessionBuilder( this::jboss, session -> {
-			Customer customer = session.load( Customer.class, 1L );
+			Customer customer = session.getReference( Customer.class, 1L );
 			Assert.assertEquals( "steve", customer.getName() );
 			// also, make sure this came from second level
 			Assert.assertEquals( 0, sessionFactory.getStatistics().getSecondLevelCacheHitCount() );
@@ -202,18 +223,18 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 		sessionFactory.getStatistics().clear();
 		// then, acme
 		doInHibernateSessionBuilder( this::acme, session -> {
-			Customer customer = session.load( Customer.class, 1L );
+			Customer customer = session.getReference( Customer.class, 1L );
 			Assert.assertEquals( "john", customer.getName() );
 			// also, make sure this came from second level
 			Assert.assertEquals( 0, sessionFactory.getStatistics().getSecondLevelCacheHitCount() );
 		} );
 
 		doInHibernateSessionBuilder( this::jboss, session -> {
-			session.delete( steve );
+			session.remove( steve );
 		} );
 
 		doInHibernateSessionBuilder( this::acme, session -> {
-			session.delete( john );
+			session.remove( john );
 		} );
 	}
 
@@ -221,24 +242,24 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 	public void testTableIdentifiers() {
 		Invoice orderJboss = doInHibernateSessionBuilder( this::jboss, session -> {
 			Invoice _orderJboss = new Invoice();
-			session.save( _orderJboss );
+			session.persist( _orderJboss );
 			Assert.assertEquals( Long.valueOf( 1 ), _orderJboss.getId() );
 			return _orderJboss;
 		} );
 
 		Invoice orderAcme = doInHibernateSessionBuilder( this::acme, session -> {
 			Invoice _orderAcme = new Invoice();
-			session.save( _orderAcme );
+			session.persist( _orderAcme );
 			Assert.assertEquals( Long.valueOf( 1 ), _orderAcme.getId() );
 			return _orderAcme;
 		} );
 
 		doInHibernateSessionBuilder( this::jboss, session -> {
-			session.delete( orderJboss );
+			session.remove( orderJboss );
 		} );
 
 		doInHibernateSessionBuilder( this::acme, session -> {
-			session.delete( orderAcme );
+			session.remove( orderAcme );
 		} );
 
 		sessionFactory.getStatistics().clear();
@@ -247,7 +268,7 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 	protected SessionBuilder newSession(String tenant) {
 		return sessionFactory
 			.withOptions()
-			.tenantIdentifier( tenant );
+			.tenantIdentifier( (Object) tenant );
 	}
 
 	private SessionBuilder jboss() {

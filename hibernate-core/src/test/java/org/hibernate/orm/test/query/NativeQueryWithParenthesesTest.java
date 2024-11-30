@@ -1,14 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query;
+
+import org.hibernate.community.dialect.FirebirdDialect;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -22,6 +23,9 @@ import jakarta.persistence.Table;
 @DomainModel(
 		annotatedClasses = NativeQueryWithParenthesesTest.Person.class
 )
+@SkipForDialect(dialectClass = FirebirdDialect.class, majorVersion = 4, reason = "Firebird 4.0 and earlier don't support simple query grouping")
+@SkipForDialect(dialectClass = FirebirdDialect.class, majorVersion = 3, reason = "Firebird 4.0 and earlier don't support simple query grouping")
+@SkipForDialect(dialectClass = FirebirdDialect.class, majorVersion = 2, reason = "Firebird 4.0 and earlier don't support simple query grouping")
 @SessionFactory
 public class NativeQueryWithParenthesesTest {
 

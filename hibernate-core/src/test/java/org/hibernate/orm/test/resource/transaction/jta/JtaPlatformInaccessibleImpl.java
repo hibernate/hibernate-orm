@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.resource.transaction.jta;
 
@@ -12,6 +10,7 @@ import jakarta.transaction.SystemException;
 import jakarta.transaction.Transaction;
 import jakarta.transaction.TransactionManager;
 import jakarta.transaction.UserTransaction;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 
@@ -28,7 +27,7 @@ public class JtaPlatformInaccessibleImpl implements JtaPlatform {
 	}
 
 	@Override
-	public TransactionManager retrieveTransactionManager() {
+	public @Nullable TransactionManager retrieveTransactionManager() {
 		if ( preferExceptions ) {
 			throw new JtaPlatformInaccessibleException();
 		}
@@ -36,7 +35,7 @@ public class JtaPlatformInaccessibleImpl implements JtaPlatform {
 	}
 
 	@Override
-	public UserTransaction retrieveUserTransaction() {
+	public @Nullable UserTransaction retrieveUserTransaction() {
 		if ( preferExceptions ) {
 			throw new JtaPlatformInaccessibleException();
 		}
@@ -44,7 +43,7 @@ public class JtaPlatformInaccessibleImpl implements JtaPlatform {
 	}
 
 	@Override
-	public Object getTransactionIdentifier(Transaction transaction) {
+	public @Nullable Object getTransactionIdentifier(Transaction transaction) {
 		if ( preferExceptions ) {
 			throw new JtaPlatformInaccessibleException();
 		}

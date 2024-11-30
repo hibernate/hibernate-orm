@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.boot.model;
 
@@ -30,7 +28,7 @@ public class DiscriminatorType implements Bindable<JaxbHbmEntityDiscriminatorTyp
 		final JaxbHbmEntityDiscriminatorType mapping = new JaxbHbmEntityDiscriminatorType();
 		mapping.setType( discriminator.getType().getName() );
 
-		final Iterator<Selectable> iterator = discriminator.getColumnIterator();
+		final Iterator<Selectable> iterator = discriminator.getSelectables().iterator();
 		while ( iterator.hasNext() ) {
 			final Selectable selectable = iterator.next();
 			if ( selectable.isFormula() ) {

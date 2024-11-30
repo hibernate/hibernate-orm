@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.ecid;
 
@@ -12,10 +10,9 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.ManyToOne;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -49,7 +46,7 @@ public class CompositeIdAssociationsWithEmbeddedCompositeIdTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13114")
+	@JiraKey(value = "HHH-13114")
 	public void testQueries(SessionFactoryScope scope) {
 		Parent parent1 = new Parent( "Jane", 0 );
 		Parent parent2 = new Parent( "Jim", 1 );
@@ -96,18 +93,14 @@ public class CompositeIdAssociationsWithEmbeddedCompositeIdTest {
 	@Entity(name = "Person")
 	public static class Person implements Serializable {
 		@Id
-		@JoinColumns(value = {
-				@JoinColumn(name = "p1Name"),
-				@JoinColumn(name = "p1Index")
-		})
+		@JoinColumn(name = "p1Name")
+		@JoinColumn(name = "p1Index")
 		@ManyToOne
 		private Parent parent1;
 
 		@Id
-		@JoinColumns(value = {
-				@JoinColumn(name = "p2Name"),
-				@JoinColumn(name = "p2Index")
-		})
+		@JoinColumn(name = "p2Name")
+		@JoinColumn(name = "p2Index")
 		@ManyToOne
 		private Parent parent2;
 

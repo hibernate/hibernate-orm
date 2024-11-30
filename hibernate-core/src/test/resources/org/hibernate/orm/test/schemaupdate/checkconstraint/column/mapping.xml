@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="3.2">
+    <package>org.hibernate.orm.test.schemaupdate.checkconstraint.column</package>
+    <entity class="TestEntity" metadata-complete="true">
+        <table name="TEST_ENTITY"/>
+        <attributes>
+            <id name="id"/>
+            <basic name="name">
+                <column name="NAME_COLUMN">
+                    <check-constraint name="column_constraint" constraint="name_column is not null" options="enforced"/>
+                </column>
+            </basic>
+            <many-to-one name="testEntity">
+                <join-column name="MANY_TO_ONE_JOIN_COLUMN_NAME">
+                    <check-constraint name="MANY_TO_ONE_JOIN_COLUMN_CONSTRAINT" constraint="ID = 3"/>
+                </join-column>
+            </many-to-one>
+            <one-to-many name="testEntities">
+                <join-column name="ONE_TO_MAIN_JOIN_COLUMN_NAME">
+                    <check-constraint name="ONE_TO_MANY_JOIN_COLUMN_CONSTRAINT" constraint="ID = 2"/>
+                </join-column>
+            </one-to-many>
+            <one-to-one name="entity">
+                <join-column name="ONE_TO_ONE_JOIN_COLUMN_NAME">
+                    <check-constraint name="ONE_TO_ONE_JOIN_COLUMN_CONSTRAINT" constraint="ID is not null"/>
+                </join-column>
+            </one-to-one>
+            <many-to-many name="testEntities2">
+                <join-table name="MANY_T0_MANY_TABLE">
+                    <join-column name="MANY_TO_MANY_JOIN_COLUMN_NAME">
+                        <check-constraint name="MANY_TO_MANY_JOIN_COLUMN_CONSTRAINT" constraint="ID = 4"/>
+                    </join-column>
+                    <inverse-join-column name="MANY_TO_MANY_INVERSE_JOIN_COLUMN_NAME">
+                        <check-constraint name="MANY_TO_MANY_INVERSE_JOIN_COLUMN_CONSTRAINT" constraint="ID = 5"/>
+                    </inverse-join-column>
+                </join-table>
+            </many-to-many>
+            <transient name="another"/>
+        </attributes>
+    </entity>
+
+    <entity class="AnotherTestEntity" metadata-complete="true">
+        <table name="ANOTHER_TEST_ENTITY"/>
+        <attributes>
+            <id name="id"/>
+            <basic name="firstName">
+                <column name="FIRST_NAME"/>
+            </basic>
+        </attributes>
+    </entity>
+
+</entity-mappings>

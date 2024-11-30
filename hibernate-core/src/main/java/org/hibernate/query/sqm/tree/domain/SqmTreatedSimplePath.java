@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
@@ -10,7 +8,9 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.spi.NavigablePath;
 
 /**
  * @author Steve Ebersole
@@ -31,7 +31,7 @@ public class SqmTreatedSimplePath<T, S extends T>
 				wrappedPath.getNavigablePath().treatAs(
 						treatTarget.getHibernateEntityName()
 				),
-				(EntityDomainType<S>) wrappedPath.getReferencedPathSource(),
+				(SqmPathSource<S>) wrappedPath.getReferencedPathSource(),
 				wrappedPath.getLhs(),
 				nodeBuilder
 		);
@@ -48,7 +48,23 @@ public class SqmTreatedSimplePath<T, S extends T>
 				wrappedPath.getNavigablePath().treatAs(
 						treatTarget.getHibernateEntityName()
 				),
-				(EntityDomainType<S>) wrappedPath.getReferencedPathSource(),
+				(SqmPathSource<S>) wrappedPath.getReferencedPathSource(),
+				wrappedPath.getLhs(),
+				nodeBuilder
+		);
+		this.treatTarget = treatTarget;
+		this.wrappedPath = wrappedPath;
+	}
+
+	private SqmTreatedSimplePath(
+			NavigablePath navigablePath,
+			SqmPath<T> wrappedPath,
+			EntityDomainType<S> treatTarget,
+			NodeBuilder nodeBuilder) {
+		//noinspection unchecked
+		super(
+				navigablePath,
+				(SqmPathSource<S>) wrappedPath.getReferencedPathSource(),
 				wrappedPath.getLhs(),
 				nodeBuilder
 		);
@@ -66,6 +82,7 @@ public class SqmTreatedSimplePath<T, S extends T>
 		final SqmTreatedSimplePath<T, S> path = context.registerCopy(
 				this,
 				new SqmTreatedSimplePath<>(
+						getNavigablePath(),
 						wrappedPath.copy( context ),
 						getTreatTarget(),
 						nodeBuilder()
@@ -91,8 +108,24 @@ public class SqmTreatedSimplePath<T, S extends T>
 	}
 
 	@Override
-	public <S1 extends S> SqmTreatedSimplePath<S,S1> treatAs(Class<S1> treatJavaType) throws PathException {
+	public SqmPathSource<S> getReferencedPathSource() {
+		return treatTarget;
+	}
+
+	@Override
+	public SqmPathSource<?> getResolvedModel() {
+		return treatTarget;
+	}
+
+	@Override
+	public <S1 extends S> SqmTreatedEntityValuedSimplePath<S,S1> treatAs(Class<S1> treatJavaType) throws PathException {
 		return super.treatAs( treatJavaType );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public SqmPath<?> get(String attributeName) {
+		return resolvePath( attributeName, treatTarget.getSubPathSource( attributeName ) );
 	}
 
 	@Override

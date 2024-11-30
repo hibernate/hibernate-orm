@@ -1,21 +1,33 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.batch.spi;
+
 import java.sql.PreparedStatement;
+import java.util.function.Supplier;
+
+import org.hibernate.HibernateException;
+import org.hibernate.Incubating;
+import org.hibernate.StaleStateException;
+import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
+import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
+import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
 
 /**
- * Conceptually models a batch.
- * <p/>
- * Unlike directly in JDBC, here we add the ability to batch together multiple statements at a time.  In the underlying
- * JDBC this correlates to multiple {@link PreparedStatement} objects (one for each DML string) maintained within the
- * batch.
+ * Represents a batch of statements to be executed together.
+ * <p>
+ * Unlike in JDBC, here we add the ability to batch together multiple statements at a time.
+ * In the underlying JDBC this correlates to multiple {@link PreparedStatement} objects,
+ * one for each DML string, all maintained within the batch.
+ * <p>
+ * A batch is usually associated with a {@link org.hibernate.engine.jdbc.spi.JdbcCoordinator}.
  *
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.engine.jdbc.spi.JdbcCoordinator#getBatch(BatchKey, Integer, Supplier)
  */
+@Incubating
 public interface Batch {
 	/**
 	 * Retrieves the object being used to key (uniquely identify) this batch.
@@ -31,20 +43,24 @@ public interface Batch {
 	 */
 	void addObserver(BatchObserver observer);
 
-	/**
-	 * Get a statement which is part of the batch, creating if necessary (and storing for next time).
-	 *
-	 * @param sql The SQL statement.
-	 * @param callable Is the SQL statement callable?
-	 *
-	 * @return The prepared statement instance, representing the SQL statement.
-	 */
-	PreparedStatement getBatchStatement(String sql, boolean callable);
+	PreparedStatementGroup getStatementGroup();
 
 	/**
-	 * Indicates completion of the current part of the batch.
+	 * Apply the value bindings to the batch JDBC statements and indicates completion
+	 * of the current part of the batch.
 	 */
-	void addToBatch();
+	void addToBatch(JdbcValueBindings jdbcValueBindings, TableInclusionChecker inclusionChecker);
+
+	/**
+	 * Apply the value bindings to the batch JDBC statements and indicates completion
+	 * of the current part of the batch.
+	 */
+	void addToBatch(JdbcValueBindings jdbcValueBindings, TableInclusionChecker inclusionChecker, StaleStateMapper staleStateMapper);
+
+	@FunctionalInterface
+	interface StaleStateMapper {
+		HibernateException map(StaleStateException staleStateException);
+	}
 
 	/**
 	 * Execute this batch.
@@ -52,8 +68,8 @@ public interface Batch {
 	void execute();
 
 	/**
-	 * Used to indicate that the batch instance is no longer needed and that, therefore, it can release its
-	 * resources.
+	 * Used to indicate that the batch instance is no longer needed and that, therefore,
+	 * it can release its resources.
 	 */
 	void release();
 }

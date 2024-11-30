@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
 
@@ -11,6 +9,7 @@ import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.event.spi.EventSource;
@@ -19,9 +18,10 @@ import org.hibernate.event.spi.EvictEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+
+import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
  * Defines the default evict event listener used by hibernate for evicting entities
@@ -40,6 +40,7 @@ public class DefaultEvictEventListener implements EvictEventListener {
 	 * @param event The evict event to be handled.
 	 *
 	 */
+	@Override
 	public void onEvict(EvictEvent event) throws HibernateException {
 		final EventSource source = event.getSession();
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
@@ -47,28 +48,29 @@ public class DefaultEvictEventListener implements EvictEventListener {
 		if ( object == null ) {
 			throw new NullPointerException( "null passed to Session.evict()" );
 		}
-		if ( object instanceof HibernateProxy ) {
-			final LazyInitializer li = ( (HibernateProxy) object ).getHibernateLazyInitializer();
-			final Object id = li.getInternalIdentifier();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+		if ( lazyInitializer != null ) {
+			final Object id = lazyInitializer.getInternalIdentifier();
 			if ( id == null ) {
 				throw new IllegalArgumentException( "Could not determine identifier of proxy passed to evict()" );
 			}
-			final EntityPersister persister = source.getFactory()
-					.getMappingMetamodel()
-					.getEntityDescriptor( li.getEntityName() );
+			final EntityPersister persister =
+					source.getFactory().getMappingMetamodel()
+							.getEntityDescriptor( lazyInitializer.getEntityName() );
 			final EntityKey key = source.generateEntityKey( id, persister );
-			persistenceContext.removeProxy( key );
-			if ( !li.isUninitialized() ) {
-				final Object entity = persistenceContext.removeEntity( key );
+			final EntityHolder holder = persistenceContext.detachEntity( key );
+			// if the entity has been evicted then its holder is null
+			if ( holder != null && !lazyInitializer.isUninitialized() ) {
+				final Object entity = holder.getEntity();
 				if ( entity != null ) {
-					EntityEntry entry = persistenceContext.removeEntry( entity );
+					final EntityEntry entry = persistenceContext.removeEntry( entity );
 					doEvict( entity, key, entry.getPersister(), event.getSession() );
 				}
 			}
-			li.unsetSession();
+			lazyInitializer.unsetSession();
 		}
 		else {
-			EntityEntry entry = persistenceContext.getEntry( object );
+			final EntityEntry entry = persistenceContext.getEntry( object );
 			if ( entry != null ) {
 				doEvict( object, entry.getEntityKey(), entry.getPersister(), source );
 			}
@@ -84,11 +86,12 @@ public class DefaultEvictEventListener implements EvictEventListener {
 	 * requires with EntityManager.detach().
 	 */
 	private static void checkEntity(Object object, EventSource source) {
-		String entityName = source.getSession().guessEntityName( object );
+		final String entityName = source.getSession().guessEntityName( object );
 		if ( entityName != null ) {
 			try {
-				EntityPersister persister = source.getFactory().getMappingMetamodel()
-						.getEntityDescriptor( entityName );
+				final EntityPersister persister =
+						source.getFactory().getMappingMetamodel()
+								.getEntityDescriptor( entityName );
 				if ( persister != null ) {
 					return; //ALL GOOD
 				}
@@ -106,12 +109,12 @@ public class DefaultEvictEventListener implements EvictEventListener {
 			final EventSource session)
 			throws HibernateException {
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "Evicting {0}", MessageHelper.infoString( persister ) );
+			LOG.tracev( "Evicting {0}", infoString( persister ) );
 		}
 
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		if ( persister.hasNaturalIdentifier() ) {
-			persistenceContext.getNaturalIdResolutions().handleEviction( object, key.getIdentifier(), persister );
+			persistenceContext.getNaturalIdResolutions().handleEviction( key.getIdentifier(), object, persister );
 		}
 
 		// remove all collections for the entity from the session-level cache
@@ -124,8 +127,8 @@ public class DefaultEvictEventListener implements EvictEventListener {
 		// EntityEntry to take precedence
 		// This is now handled by removeEntity()
 		//session.getPersistenceContext().removeDatabaseSnapshot(key);
-		
-		persistenceContext.removeEntity( key );
+
+		persistenceContext.removeEntityHolder( key );
 		persistenceContext.removeEntry( object );
 
 		Cascade.cascade( CascadingActions.EVICT, CascadePoint.AFTER_EVICT, session, persister, object );

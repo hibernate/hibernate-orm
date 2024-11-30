@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.env.internal;
 
@@ -18,7 +16,7 @@ import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter;
 
 /**
- * Standard implementation of QualifiedObjectNameFormatter which uses information reported
+ * Standard implementation of {@link QualifiedObjectNameFormatter} which uses information reported
  * by {@link DatabaseMetaData} to render qualified names.
  *
  * @author Steve Ebersole

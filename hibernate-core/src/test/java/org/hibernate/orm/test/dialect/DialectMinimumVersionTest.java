@@ -1,12 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.dialect;
 
-import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SimpleDatabaseVersion;
@@ -21,6 +18,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import org.jboss.logging.Logger;
 
+import java.lang.invoke.MethodHandles;
+
 /**
  * @author Jan Schatteman
  */
@@ -31,7 +30,7 @@ public class DialectMinimumVersionTest {
 	@RegisterExtension
 	public LoggerInspectionExtension logger = LoggerInspectionExtension
 			.builder().setLogger(
-					Logger.getMessageLogger( CoreMessageLogger.class, Dialect.class.getName()  )
+					Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, Dialect.class.getName()  )
 			).build();
 
 	@BeforeEach

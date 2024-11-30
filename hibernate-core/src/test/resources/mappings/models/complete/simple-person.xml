@@ -1,0 +1,23 @@
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright: Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="3.1">
+    <package>org.hibernate.orm.test.boot.models.xml.complete</package>
+    <entity class="SimplePerson" metadata-complete="true" access="FIELD">
+        <attributes>
+            <id name="id"/>
+            <embedded name="name"/>
+        </attributes>
+    </entity>
+    <embeddable class="Name" metadata-complete="true" access="FIELD">
+        <attributes>
+            <basic name="first"/>
+            <basic name="last"/>
+        </attributes>
+    </embeddable>
+</entity-mappings>

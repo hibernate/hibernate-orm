@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.expression;
 
@@ -12,148 +10,130 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.MappingModelExpressible;
-import org.hibernate.sql.Template;
+import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.update.Assignable;
 
-import static org.hibernate.metamodel.relational.RuntimeRelationModelHelper.DEFAULT_COLUMN_WRITE_EXPRESSION;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
+import static org.hibernate.internal.util.StringHelper.replace;
+import static org.hibernate.sql.Template.TEMPLATE;
 
 /**
  * Models a reference to a Column in a SQL AST
  *
  * @author Steve Ebersole
  * @author Nathan Xu
+ * @author Yanming Zhou
  */
 public class ColumnReference implements Expression, Assignable {
-	private final String qualifier;
+	private final @Nullable String qualifier;
 	private final String columnExpression;
+	private final @Nullable SelectablePath selectablePath;
 	private final boolean isFormula;
-	private final String readExpression;
-	private final String writeExpression;
+	private final @Nullable String readExpression;
 	private final JdbcMapping jdbcMapping;
 
-	public ColumnReference(
-			String qualifier,
-			SelectableMapping selectableMapping,
-			SessionFactoryImplementor sessionFactory) {
+	public ColumnReference(TableReference tableReference, SelectableMapping selectableMapping) {
+		this(
+				tableReference.getIdentificationVariable(),
+				selectableMapping.getSelectionExpression(),
+				selectableMapping.getSelectablePath(),
+				selectableMapping.isFormula(),
+				selectableMapping.getCustomReadExpression(),
+				selectableMapping.getJdbcMapping()
+		);
+	}
+
+	public ColumnReference(TableReference tableReference, String mapping, JdbcMapping jdbcMapping) {
+		this(
+				tableReference.getIdentificationVariable(),
+				mapping,
+				null,
+				false,
+				null,
+				jdbcMapping
+		);
+	}
+
+	public ColumnReference(@Nullable String qualifier, SelectableMapping selectableMapping) {
 		this(
 				qualifier,
 				selectableMapping.getSelectionExpression(),
+				selectableMapping.getSelectablePath(),
 				selectableMapping.isFormula(),
 				selectableMapping.getCustomReadExpression(),
-				selectableMapping.getCustomWriteExpression(),
-				selectableMapping.getJdbcMapping(),
-				sessionFactory
+				selectableMapping.getJdbcMapping()
+		);
+	}
+
+	public ColumnReference(@Nullable String qualifier, SelectableMapping selectableMapping, JdbcMapping jdbcMapping) {
+		this(
+				qualifier,
+				selectableMapping.getSelectionExpression(),
+				selectableMapping.getSelectablePath(),
+				selectableMapping.isFormula(),
+				selectableMapping.getCustomReadExpression(),
+				jdbcMapping
 		);
 	}
 
 	public ColumnReference(
-			String qualifier,
-			SelectableMapping selectableMapping,
-			JdbcMapping jdbcMapping,
-			SessionFactoryImplementor sessionFactory) {
-		this(
-				qualifier,
-				selectableMapping.getSelectionExpression(),
-				selectableMapping.isFormula(),
-				selectableMapping.getCustomReadExpression(),
-				selectableMapping.getCustomWriteExpression(),
-				jdbcMapping,
-				sessionFactory
-		);
-	}
-
-	public ColumnReference(
-			String qualifier,
+			TableReference tableReference,
 			String columnExpression,
 			boolean isFormula,
-			String customReadExpression,
-			String customWriteExpression,
-			JdbcMapping jdbcMapping,
-			SessionFactoryImplementor sessionFactory) {
-		this.qualifier = StringHelper.nullIfEmpty( qualifier );
+			@Nullable String customReadExpression,
+			JdbcMapping jdbcMapping) {
+		this(
+				tableReference.getIdentificationVariable(),
+				columnExpression,
+				null,
+				isFormula,
+				customReadExpression,
+				jdbcMapping
+		);
+	}
+
+	public ColumnReference(
+			@Nullable String qualifier,
+			String columnExpression,
+			boolean isFormula,
+			@Nullable String customReadExpression,
+			JdbcMapping jdbcMapping) {
+		this( qualifier, columnExpression, null, isFormula, customReadExpression, jdbcMapping );
+	}
+
+	public ColumnReference(
+			@Nullable String qualifier,
+			String columnExpression,
+			@Nullable SelectablePath selectablePath,
+			boolean isFormula,
+			@Nullable String customReadExpression,
+			JdbcMapping jdbcMapping) {
+		this.qualifier = nullIfEmpty( qualifier );
 
 		if ( isFormula ) {
-			assert qualifier != null;
-			this.columnExpression = StringHelper.replace( columnExpression, Template.TEMPLATE, qualifier );
+			this.columnExpression = qualifier == null
+					? replace( columnExpression, TEMPLATE + '.', "" )
+					: replace( columnExpression, TEMPLATE, qualifier );
 		}
 		else {
 			this.columnExpression = columnExpression;
 		}
 
+		this.selectablePath = selectablePath == null
+				? new SelectablePath( this.columnExpression )
+				: selectablePath;
+
 		this.isFormula = isFormula;
 		this.readExpression = customReadExpression;
-
-		if ( isFormula ) {
-			this.writeExpression = null;
-		}
-		else if ( customWriteExpression != null ) {
-			if ( this.qualifier == null ) {
-				this.writeExpression = StringHelper.replace( customWriteExpression, Template.TEMPLATE + ".", "" );
-			}
-			else {
-				this.writeExpression = StringHelper.replace( customWriteExpression, Template.TEMPLATE, qualifier );
-			}
-		}
-		else {
-			this.writeExpression = DEFAULT_COLUMN_WRITE_EXPRESSION;
-		}
-
 		this.jdbcMapping = jdbcMapping;
-	}
-
-	public ColumnReference(
-			TableReference tableReference,
-			SelectableMapping selectableMapping,
-			SessionFactoryImplementor sessionFactory) {
-		this(
-				tableReference.getIdentificationVariable(),
-				selectableMapping,
-				sessionFactory
-		);
-	}
-
-	public ColumnReference(
-			TableReference tableReference,
-			String mapping,
-			JdbcMapping jdbcMapping,
-			SessionFactoryImplementor sessionFactory) {
-		this(
-				tableReference.getIdentificationVariable(),
-				mapping,
-				false,
-				null,
-				null,
-				jdbcMapping,
-				sessionFactory
-		);
-	}
-
-	public ColumnReference(
-			TableReference tableReference,
-			String columnExpression,
-			boolean isFormula,
-			String customReadExpression,
-			String customWriteExpression,
-			JdbcMapping jdbcMapping,
-			SessionFactoryImplementor sessionFactory) {
-		this(
-				tableReference.getIdentificationVariable(),
-				columnExpression,
-				isFormula,
-				customReadExpression,
-				customWriteExpression,
-				jdbcMapping,
-				sessionFactory
-		);
 	}
 
 	@Override
@@ -161,12 +141,24 @@ public class ColumnReference implements Expression, Assignable {
 		return this;
 	}
 
-	public String getQualifier() {
+	public @Nullable String getQualifier() {
 		return qualifier;
 	}
 
 	public String getColumnExpression() {
 		return columnExpression;
+	}
+
+	public @Nullable String getReadExpression() {
+		return readExpression;
+	}
+
+	public @Nullable String getSelectableName() {
+		return selectablePath == null ? null : selectablePath.getSelectableName();
+	}
+
+	public @Nullable SelectablePath getSelectablePath() {
+		return selectablePath;
 	}
 
 	public boolean isColumnExpressionFormula() {
@@ -180,24 +172,41 @@ public class ColumnReference implements Expression, Assignable {
 	}
 
 	public void appendReadExpression(SqlAppender appender) {
+		appendReadExpression( appender, qualifier );
+	}
+
+	public void appendReadExpression(@Nullable String qualifier, Consumer<String> appender) {
 		if ( isFormula ) {
-			appender.append( columnExpression );
+			appender.accept( columnExpression );
 		}
 		else if ( readExpression != null ) {
-			if ( qualifier == null ) {
-				appender.append( StringHelper.replace( readExpression, Template.TEMPLATE + ".", "" ) );
-			}
-			else {
-				appender.append( StringHelper.replace( readExpression, Template.TEMPLATE, qualifier ) );
-			}
+			appender.accept( qualifier == null
+					? replace( readExpression, TEMPLATE + '.', "" )
+					: replace( readExpression, TEMPLATE, qualifier ) );
 		}
 		else {
 			if ( qualifier != null ) {
-				appender.append( qualifier );
-				appender.append( '.' );
+				appender.accept( qualifier );
+				appender.accept( "." );
 			}
-			appender.append( columnExpression );
+			appender.accept( columnExpression );
 		}
+	}
+
+	public void appendReadExpression(SqlAppender appender, @Nullable String qualifier) {
+		appendReadExpression( qualifier, appender::appendSql );
+	}
+
+	public void appendColumnForWrite(SqlAppender appender) {
+		appendColumnForWrite( appender, qualifier );
+	}
+
+	public void appendColumnForWrite(SqlAppender appender, @Nullable String qualifier) {
+		if ( qualifier != null ) {
+			appender.append( qualifier );
+			appender.append( '.' );
+		}
+		appender.append( columnExpression );
 	}
 
 	public JdbcMapping getJdbcMapping() {
@@ -205,8 +214,8 @@ public class ColumnReference implements Expression, Assignable {
 	}
 
 	@Override
-	public MappingModelExpressible getExpressionType() {
-		return (MappingModelExpressible) jdbcMapping;
+	public JdbcMapping getExpressionType() {
+		return jdbcMapping;
 	}
 
 	@Override

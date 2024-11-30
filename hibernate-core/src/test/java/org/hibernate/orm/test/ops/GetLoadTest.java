@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.ops;
 
@@ -75,10 +73,10 @@ public class GetLoadTest {
 
 		scope.inTransaction(
 				session -> {
-					Employer e = session.load( Employer.class, emp.getId() );
+					Employer e = session.getReference( Employer.class, emp.getId() );
 					e.getId();
 					assertFalse( Hibernate.isInitialized( e ) );
-					Node n = session.load( Node.class, node.getName() );
+					Node n = session.getReference( Node.class, node.getName() );
 					assertThat( n.getName(), is( "foo" ) );
 					assertFalse( Hibernate.isInitialized( n ) );
 				}
@@ -95,10 +93,10 @@ public class GetLoadTest {
 
 		scope.inTransaction(
 				session -> {
-					Employer e = (Employer) session.load( "org.hibernate.orm.test.ops.Employer", emp.getId() );
+					Employer e = (Employer) session.getReference( "org.hibernate.orm.test.ops.Employer", emp.getId() );
 					e.getId();
 					assertFalse( Hibernate.isInitialized( e ) );
-					Node n = (Node) session.load( "org.hibernate.orm.test.ops.Node", node.getName() );
+					Node n = (Node) session.getReference( "org.hibernate.orm.test.ops.Node", node.getName() );
 					assertThat( n.getName(), is( "foo" ) );
 					assertFalse( Hibernate.isInitialized( n ) );
 				}
@@ -120,7 +118,7 @@ public class GetLoadTest {
 
 		Employer e = scope.fromTransaction(
 				session -> {
-					session.delete( emp );
+					session.remove( emp );
 					return session.get( Employer.class, emp.getId() );
 				}
 		);
@@ -138,4 +136,3 @@ public class GetLoadTest {
 	}
 
 }
-

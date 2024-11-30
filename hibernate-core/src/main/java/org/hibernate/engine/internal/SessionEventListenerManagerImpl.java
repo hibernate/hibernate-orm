@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.internal;
 
@@ -226,6 +224,28 @@ public class SessionEventListenerManagerImpl implements SessionEventListenerMana
 
 		for ( SessionEventListener listener : listeners ) {
 			listener.flushEnd( numberOfEntities, numberOfCollections );
+		}
+	}
+
+	@Override
+	public void prePartialFlushStart() {
+		if ( listeners == null ) {
+			return;
+		}
+
+		for ( SessionEventListener listener : listeners ) {
+			listener.prePartialFlushStart();
+		}
+	}
+
+	@Override
+	public void prePartialFlushEnd() {
+		if ( listeners == null ) {
+			return;
+		}
+
+		for ( SessionEventListener listener : listeners ) {
+			listener.prePartialFlushEnd();
 		}
 	}
 

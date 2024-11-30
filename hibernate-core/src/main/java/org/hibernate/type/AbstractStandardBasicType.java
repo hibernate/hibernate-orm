@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
 
@@ -12,13 +10,13 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.time.ZonedDateTime;
+import java.util.Comparator;
 import java.util.Map;
 
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -28,11 +26,15 @@ import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.java.MutableMutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
- * Convenience base class for {@link BasicType} implementations
+ * Convenience base class for {@link BasicType} implementations.
+ * Packages a {@link JavaType} with a {@link JdbcType}.
  *
  * @author Steve Ebersole
  * @author Brett Meyer
@@ -46,15 +48,25 @@ public abstract class AbstractStandardBasicType<T>
 	private final ValueBinder<T> jdbcValueBinder;
 	private final ValueExtractor<T> jdbcValueExtractor;
 	private final JdbcLiteralFormatter<T> jdbcLiteralFormatter;
+	private final @Nullable Type typeForEqualsHashCode;
+	private final Class<?> javaTypeClass;
+	private final MutabilityPlan<T> mutabilityPlan;
+	private final Comparator<T> javatypeComparator;
 
 	public AbstractStandardBasicType(JdbcType jdbcType, JavaType<T> javaType) {
 		this.jdbcType = jdbcType;
-		this.sqlTypes = new int[] { jdbcType.getDefaultSqlTypeCode() };
+		this.sqlTypes = new int[] { jdbcType.getDdlTypeCode() };
 		this.javaType = javaType;
 
 		this.jdbcValueBinder = jdbcType.getBinder( javaType );
 		this.jdbcValueExtractor = jdbcType.getExtractor( javaType );
 		this.jdbcLiteralFormatter = jdbcType.getJdbcLiteralFormatter( javaType );
+
+		//A very simple dispatch optimisation, make these a constant:
+		this.javaTypeClass = javaType.getJavaTypeClass();
+		this.mutabilityPlan = javaType.getMutabilityPlan();
+		this.javatypeComparator = javaType.getComparator();
+		this.typeForEqualsHashCode = javaType.useObjectEqualsHashCode() ? null : this;
 	}
 
 	@Override
@@ -68,7 +80,7 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
-	public JdbcLiteralFormatter getJdbcLiteralFormatter() {
+	public JdbcLiteralFormatter<T> getJdbcLiteralFormatter() {
 		return jdbcLiteralFormatter;
 	}
 
@@ -82,18 +94,18 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	protected MutabilityPlan<T> getMutabilityPlan() {
-		return javaType.getMutabilityPlan();
+		return this.mutabilityPlan;
 	}
 
 	@Override
-	public boolean[] toColumnNullness(Object value, Mapping mapping) {
+	public boolean[] toColumnNullness(Object value, MappingContext mapping) {
 		return value == null ? ArrayHelper.FALSE : ArrayHelper.TRUE;
 	}
 
 	@Override
 	public String[] getRegistrationKeys() {
 		return registerUnderJavaType()
-				? new String[] { getName(), javaType.getJavaType().getTypeName() }
+				? new String[] { getName(), javaType.getTypeName() }
 				: new String[] { getName() };
 	}
 
@@ -112,17 +124,17 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
-	public final Class getReturnedClass() {
-		return javaType.getJavaTypeClass();
+	public final Class<?> getReturnedClass() {
+		return javaTypeClass;
 	}
 
 	@Override
-	public final int getColumnSpan(Mapping mapping) throws MappingException {
+	public final int getColumnSpan(MappingContext mapping) throws MappingException {
 		return 1;
 	}
 
 	@Override
-	public final int[] getSqlTypeCodes(Mapping mapping) throws MappingException {
+	public final int[] getSqlTypeCodes(MappingContext mappingContext) throws MappingException {
 		return sqlTypes;
 	}
 
@@ -164,13 +176,29 @@ public abstract class AbstractStandardBasicType<T>
 	@Override
 	@SuppressWarnings("unchecked")
 	public boolean isEqual(Object one, Object another) {
-		return javaType.areEqual( (T) one, (T) another );
+		if ( one == another ) {
+			return true;
+		}
+		else if ( one == null || another == null ) {
+			return false;
+		}
+		else if ( typeForEqualsHashCode == null ) {
+			return one.equals( another );
+		}
+		else {
+			return javaType.areEqual( (T) one, (T) another );
+		}
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public int getHashCode(Object x) {
-		return javaType.extractHashCode( (T) x );
+		if ( typeForEqualsHashCode == null ) {
+			return x.hashCode();
+		}
+		else {
+			return javaType.extractHashCode( (T) x );
+		}
 	}
 
 	@Override
@@ -179,9 +207,14 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
+	public @Nullable Type getTypeForEqualsHashCode() {
+		return typeForEqualsHashCode;
+	}
+
+	@Override
 	@SuppressWarnings("unchecked")
 	public final int compare(Object x, Object y) {
-		return javaType.getComparator().compare( (T) x, (T) y );
+		return this.javatypeComparator.compare( (T) x, (T) y );
 	}
 
 	@Override
@@ -195,7 +228,9 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	protected final boolean isDirty(Object old, Object current) {
-		return !isSame( old, current );
+		// MutableMutabilityPlan.INSTANCE is a special plan for which we always have to assume the value is dirty,
+		// because we can't actually copy a value, but have no knowledge about the mutability of the java type
+		return getMutabilityPlan() == MutableMutabilityPlan.INSTANCE || !isSame( old, current );
 	}
 
 	@Override
@@ -346,7 +381,7 @@ public abstract class AbstractStandardBasicType<T>
 		// and the cast type determination here. Note that we interpret the converter in ConvertedBasicTypeImpl
 		// to properly determine the correct cast type
 		final JdbcType jdbcType = getJdbcType();
-		final int jdbcTypeCode = jdbcType.getJdbcTypeCode();
+		final int jdbcTypeCode = jdbcType.getDdlTypeCode();
 		switch ( jdbcTypeCode ) {
 			case Types.BIT:
 			case Types.SMALLINT:

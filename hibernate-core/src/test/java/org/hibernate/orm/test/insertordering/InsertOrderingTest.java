@@ -1,22 +1,18 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.insertordering;
 
-import java.sql.PreparedStatement;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
+import java.util.function.Supplier;
 
-import org.hibernate.cfg.Environment;
-import org.hibernate.engine.jdbc.batch.internal.BatchBuilderImpl;
-import org.hibernate.engine.jdbc.batch.internal.BatchBuilderInitiator;
-import org.hibernate.engine.jdbc.batch.internal.BatchingBatch;
+import org.hibernate.cfg.BatchSettings;
+import org.hibernate.engine.jdbc.batch.internal.BatchImpl;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
+import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
+import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -36,9 +32,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 )
 @SessionFactory
 @ServiceRegistry(
-		settings = {@Setting( name = Environment.ORDER_INSERTS, value = "true"),
-				@Setting( name = Environment.STATEMENT_BATCH_SIZE, value = "10"),
-				@Setting( name = BatchBuilderInitiator.BUILDER, value = "org.hibernate.orm.test.insertordering.InsertOrderingTest$StatsBatchBuilder" )
+		settings = {@Setting( name = BatchSettings.ORDER_INSERTS, value = "true"),
+				@Setting( name = BatchSettings.STATEMENT_BATCH_SIZE, value = "10"),
+				@Setting( name = BatchSettings.BUILDER, value = "org.hibernate.orm.test.insertordering.InsertOrderingTest$StatsBatchBuilder" )
 		}
 )
 public class InsertOrderingTest {
@@ -51,8 +47,8 @@ public class InsertOrderingTest {
 					for ( int i = 0; i < iterations; i++ ) {
 						User user = new User( "user-" + i );
 						Group group = new Group( "group-" + i );
-						session.save( user );
-						session.save( group );
+						session.persist( user );
+						session.persist( group );
 						user.addMembership( group );
 					}
 					StatsBatch.reset();
@@ -60,61 +56,56 @@ public class InsertOrderingTest {
 		);
 
 
-		assertEquals( 3, StatsBatch.batchSizes.size() );
+		// 1 for first 10 User (1)
+		// 1 for final 2 User (2)
+		// 1 for first 10 Group (3)
+		// 1 for last 2 Group (4)
+		// 1 for first 10 Membership (5)
+		// 1 for last 2 Membership (6)
+		assertEquals( 6, StatsBatch.numberOfBatches );
 
 		scope.inTransaction(
 				session -> {
 					Iterator users = session.createQuery(
 							"from User u left join fetch u.memberships m left join fetch m.group" ).list().iterator();
 					while ( users.hasNext() ) {
-						session.delete( users.next() );
+						session.remove( users.next() );
 					}
 				}
 		);
 	}
 
-	public static class Counter {
-		public int count = 0;
+	@SuppressWarnings("unused")
+	public static class StatsBatchBuilder implements BatchBuilder {
+
+		@Override
+		public Batch buildBatch(BatchKey key, Integer batchSize, Supplier<PreparedStatementGroup> statementGroupSupplier, JdbcCoordinator jdbcCoordinator) {
+			return new StatsBatch( key, batchSize, statementGroupSupplier.get(), jdbcCoordinator );
+		}
 	}
 
-	public static class StatsBatch extends BatchingBatch {
-		private static String batchSQL;
-		private static List batchSizes = new ArrayList();
-		private static int currentBatch = -1;
+	public static class StatsBatch extends BatchImpl {
+		private static int numberOfBatches = -1;
 
-		public StatsBatch(BatchKey key, JdbcCoordinator jdbcCoordinator, int jdbcBatchSize) {
-			super( key, jdbcCoordinator, jdbcBatchSize );
+		public StatsBatch(
+				BatchKey key,
+				int batchSize,
+				PreparedStatementGroup statementGroup,
+				JdbcCoordinator jdbcCoordinator) {
+			super( key, statementGroup, batchSize, jdbcCoordinator );
 		}
 
 		static void reset() {
-			batchSizes = new ArrayList();
-			currentBatch = -1;
-			batchSQL = null;
+			numberOfBatches = -1;
 		}
 
 		@Override
-		public PreparedStatement getBatchStatement(String sql, boolean callable) {
-			if ( batchSQL == null || !batchSQL.equals( sql ) ) {
-				currentBatch++;
-				batchSQL = sql;
-				batchSizes.add( currentBatch, new Counter() );
+		protected void performExecution() {
+			super.performExecution();
+			if ( numberOfBatches < 0 ) {
+				numberOfBatches = 0;
 			}
-			return super.getBatchStatement( sql, callable );
-		}
-
-		@Override
-		public void addToBatch() {
-			Counter counter = (Counter) batchSizes.get( currentBatch );
-			counter.count++;
-			super.addToBatch();
-		}
-	}
-
-	public static class StatsBatchBuilder extends BatchBuilderImpl {
-
-		@Override
-		public Batch buildBatch(BatchKey key, JdbcCoordinator jdbcCoordinator) {
-			return new StatsBatch( key, jdbcCoordinator, getJdbcBatchSize() );
+			numberOfBatches++;
 		}
 	}
 }

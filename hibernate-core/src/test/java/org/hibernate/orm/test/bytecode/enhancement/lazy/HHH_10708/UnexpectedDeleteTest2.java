@@ -1,18 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.HHH_10708;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -23,71 +24,72 @@ import jakarta.persistence.Table;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+@JiraKey( "HHH-10708" )
+@DomainModel(
+		annotatedClasses = {
+			UnexpectedDeleteTest2.Foo.class, UnexpectedDeleteTest2.Bar.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class UnexpectedDeleteTest2 {
 
-@TestForIssue( jiraKey = "HHH-10708" )
-@RunWith( BytecodeEnhancerRunner.class )
-public class UnexpectedDeleteTest2 extends BaseCoreFunctionalTestCase {
+	private Bar myBar;
 
-    private Bar myBar;
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			Bar bar = new Bar();
+			Foo foo1 = new Foo();
+			Foo foo2 = new Foo();
+			s.persist( bar );
+			s.persist( foo1 );
+			s.persist( foo2 );
 
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class[]{Foo.class, Bar.class};
-    }
+			bar.foos.add( foo1 );
+			bar.foos.add( foo2 );
 
-    @Before
-    public void prepare() {
-        doInHibernate( this::sessionFactory, s -> {
-            Bar bar = new Bar();
-            Foo foo1 = new Foo();
-            Foo foo2 = new Foo();
-            s.save( bar );
-            s.save( foo1 );
-            s.save( foo2 );
+			myBar = bar;
+		} );
+	}
 
-            bar.foos.add( foo1 );
-            bar.foos.add( foo2 );
+	@Test
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			assertThrows(IllegalArgumentException.class,
+						() -> s.refresh( myBar ),
+						"Given entity is not associated with the persistence context"
+			);
 
-            myBar = bar;
-        } );
-    }
+			// The issue is that currently, for some unknown reason, foos are deleted on flush
+		} );
 
-    @Test
-    public void test() {
-        doInHibernate( this::sessionFactory, s -> {
-            s.refresh( myBar );
-            Assert.assertFalse( myBar.foos.isEmpty() );
+		scope.inTransaction( s -> {
+			Bar bar = s.get( Bar.class, myBar.id );
+			assertFalse( bar.foos.isEmpty() );
+		} );
+	}
 
-            // The issue is that currently, for some unknown reason, foos are deleted on flush
-        } );
+	// --- //
 
-        doInHibernate( this::sessionFactory, s -> {
-            Bar bar = s.get( Bar.class, myBar.id );
-            Assert.assertFalse( bar.foos.isEmpty() );
-        } );
-    }
+	@Entity(name = "Bar")
+	@Table( name = "BAR" )
+	static class Bar {
 
-    // --- //
+		@Id
+		@GeneratedValue
+		Long id;
 
-    @Entity(name = "Bar")
-    @Table( name = "BAR" )
-    private static class Bar {
+		@ManyToMany( fetch = FetchType.LAZY, targetEntity = Foo.class )
+		Set<Foo> foos = new HashSet<>();
+	}
 
-        @Id
-        @GeneratedValue
-        Long id;
+	@Entity(name = "Foo")
+	@Table( name = "FOO" )
+	static class Foo {
 
-        @ManyToMany( fetch = FetchType.LAZY, targetEntity = Foo.class )
-        Set<Foo> foos = new HashSet<>();
-    }
-
-    @Entity(name = "Foo")
-    @Table( name = "FOO" )
-    private static class Foo {
-
-        @Id
-        @GeneratedValue
-        Long id;
-    }
+		@Id
+		@GeneratedValue
+		Long id;
+	}
 }

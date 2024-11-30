@@ -1,13 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.event.collection.detached;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -26,8 +25,8 @@ public class MultipleCollectionRefEntity1 implements org.hibernate.orm.test.even
 	private String text;
 
 	@ManyToOne
-	@JoinColumn(name = "MCE_ID", nullable = false, insertable = false, updatable = false)
-	@org.hibernate.annotations.ForeignKey(name = "FK_RE1_MCE")
+	@JoinColumn(name = "MCE_ID", nullable = false, insertable = false, updatable = false,
+			foreignKey = @ForeignKey(name = "FK_RE1_MCE"))
 	private MultipleCollectionEntity multipleCollectionEntity;
 
 	@Column(name = "MCE_ID", insertable = false, updatable = false)
@@ -97,7 +96,7 @@ public class MultipleCollectionRefEntity1 implements org.hibernate.orm.test.even
 			return false;
 		return true;
 	}
-	
+
 	public MultipleCollectionRefEntity1 deepCopy(MultipleCollectionEntity newRef) {
 		MultipleCollectionRefEntity1 clone = new MultipleCollectionRefEntity1();
 		clone.setText(this.text);

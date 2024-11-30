@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.orm.junit;
 
@@ -16,7 +14,9 @@ import java.util.Properties;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import jakarta.persistence.PersistenceUnitTransactionType;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
+import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.jpa.HibernatePersistenceProvider;
@@ -24,17 +24,15 @@ import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy;
 
-import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterEach;
-
-import org.jboss.logging.Logger;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
-import jakarta.persistence.spi.PersistenceUnitTransactionType;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
@@ -44,7 +42,6 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 @FunctionalEntityManagerFactoryTesting
 public class EntityManagerFactoryBasedFunctionalTest
 		implements EntityManagerFactoryProducer, EntityManagerFactoryScopeContainer {
-	private static final Logger log = Logger.getLogger( EntityManagerFactoryBasedFunctionalTest.class );
 
 	private EntityManagerFactoryScope entityManagerFactoryScope;
 
@@ -139,14 +136,10 @@ public class EntityManagerFactoryBasedFunctionalTest
 			config.put( AvailableSettings.ORM_XML_FILES, dds );
 		}
 
+		config.put( PersistentTableStrategy.DROP_ID_TABLES, "true" );
 		config.put( GlobalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
 		config.put( LocalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
-		if ( !config.containsKey( Environment.CONNECTION_PROVIDER ) ) {
-			config.put(
-					AvailableSettings.CONNECTION_PROVIDER,
-					SharedDriverManagerConnectionProviderImpl.getInstance()
-			);
-		}
+		ServiceRegistryUtil.applySettings( config );
 		addConfigOptions( config );
 		return config;
 	}
@@ -206,8 +199,13 @@ public class EntityManagerFactoryBasedFunctionalTest
 			return false;
 		}
 
+		@Override @SuppressWarnings("removal")
+		public jakarta.persistence.spi.PersistenceUnitTransactionType getTransactionType() {
+			return null;
+		}
+
 		@Override
-		public PersistenceUnitTransactionType getTransactionType() {
+		public PersistenceUnitTransactionType getPersistenceUnitTransactionType() {
 			return null;
 		}
 
@@ -263,6 +261,11 @@ public class EntityManagerFactoryBasedFunctionalTest
 
 		@Override
 		public void pushClassTransformer(EnhancementContext enhancementContext) {
+		}
+
+		@Override
+		public ClassTransformer getClassTransformer() {
+			return null;
 		}
 	}
 

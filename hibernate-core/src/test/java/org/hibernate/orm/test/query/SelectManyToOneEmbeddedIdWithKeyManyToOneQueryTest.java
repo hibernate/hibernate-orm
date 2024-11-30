@@ -1,9 +1,13 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.query;
 
 import java.io.Serializable;
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -20,7 +24,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Tuple;
@@ -28,7 +31,6 @@ import jakarta.persistence.Tuple;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 @DomainModel(
 		annotatedClasses = {
@@ -37,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 		}
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-15339")
+@JiraKey(value = "HHH-15339")
 public class SelectManyToOneEmbeddedIdWithKeyManyToOneQueryTest {
 
 	@BeforeEach
@@ -120,10 +122,8 @@ public class SelectManyToOneEmbeddedIdWithKeyManyToOneQueryTest {
 		}
 
 		@ManyToOne(fetch = FetchType.LAZY)
-		@JoinColumns({
-				@JoinColumn(name = "assoc_key", referencedColumnName = "id_key"),
-				@JoinColumn(name = "assoc_fk", referencedColumnName = "id_fk")
-		})
+		@JoinColumn(name = "assoc_key", referencedColumnName = "id_key")
+		@JoinColumn(name = "assoc_fk", referencedColumnName = "id_fk")
 		public EmbeddableTestEntity getManyToOne() {
 			return manyToOne;
 		}

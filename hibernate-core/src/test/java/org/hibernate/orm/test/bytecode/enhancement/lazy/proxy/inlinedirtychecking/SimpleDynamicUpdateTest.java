@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy.inlinedirtychecking;
 
@@ -14,58 +12,58 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 
 import org.hibernate.annotations.DynamicUpdate;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
+import org.hibernate.bytecode.internal.BytecodeProviderInitiator;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
-@RunWith(BytecodeEnhancerRunner.class)
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+@DomainModel(
+		annotatedClasses = {
+				SimpleDynamicUpdateTest.User.class,
+				SimpleDynamicUpdateTest.Role.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting(name = AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, value = "100"),
+				@Setting(name = AvailableSettings.GENERATE_STATISTICS, value = "true"),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @CustomEnhancementContext({ NoDirtyCheckEnhancementContext.class, DirtyCheckEnhancementContext.class })
-public class SimpleDynamicUpdateTest extends BaseNonConfigCoreFunctionalTestCase {
+public class SimpleDynamicUpdateTest {
 
-	boolean skipTest;
-
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, "100" );
-		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
-	}
-
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
+	@BeforeAll
+	static void beforeAll() {
 		String byteCodeProvider = Environment.getProperties().getProperty( AvailableSettings.BYTECODE_PROVIDER );
-		if ( byteCodeProvider != null && !Environment.BYTECODE_PROVIDER_NAME_BYTEBUDDY.equals( byteCodeProvider ) ) {
-			// skip the test if the bytecode provider is Javassist
-			skipTest = true;
-		}
-		else {
-			sources.addAnnotatedClass( User.class );
-			sources.addAnnotatedClass( Role.class );
-		}
+		assumeFalse( byteCodeProvider != null && !BytecodeProviderInitiator.BYTECODE_PROVIDER_NAME_BYTEBUDDY.equals(
+				byteCodeProvider ) );
 	}
 
-	@Before
-	public void setUp() {
-		if ( skipTest ) {
-			return;
-		}
-		inTransaction(
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					User user = new User();
 					user.setId( 1 );
@@ -82,18 +80,15 @@ public class SimpleDynamicUpdateTest extends BaseNonConfigCoreFunctionalTestCase
 
 					user.setRole( role );
 
-					session.save( role );
-					session.save( user );
+					session.persist( role );
+					session.persist( user );
 				}
 		);
 	}
 
 	@Test
-	public void testIt() {
-		if ( skipTest ) {
-			return;
-		}
-		inTransaction(
+	public void testIt(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					User user = session.getReference( User.class, 1 );
 					assertThat(
@@ -107,14 +102,14 @@ public class SimpleDynamicUpdateTest extends BaseNonConfigCoreFunctionalTestCase
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					User entity = session.getReference( User.class, 1 );
 					entity.setName( "abc" );
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					User entity = session.getReference( User.class, 1 );
 					assertThat( entity.getName(), is( "abc" ) );
@@ -122,14 +117,14 @@ public class SimpleDynamicUpdateTest extends BaseNonConfigCoreFunctionalTestCase
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					User entity = session.getReference( User.class, 1 );
 					entity.setRole( null );
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					User entity = session.getReference( User.class, 1 );
 					assertThat( entity.getName(), is( "abc" ) );
@@ -138,14 +133,14 @@ public class SimpleDynamicUpdateTest extends BaseNonConfigCoreFunctionalTestCase
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					User entity = session.getReference( User.class, 1 );
 					entity.setName( null );
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					User entity = session.getReference( User.class, 1 );
 					assertThat( entity.getName(), is( nullValue() ) );
@@ -153,14 +148,14 @@ public class SimpleDynamicUpdateTest extends BaseNonConfigCoreFunctionalTestCase
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					User entity = session.getReference( User.class, 1 );
 					entity.setAddress( null );
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					User entity = session.getReference( User.class, 1 );
 					assertThat( entity.getName(), is( nullValue() ) );
@@ -170,18 +165,18 @@ public class SimpleDynamicUpdateTest extends BaseNonConfigCoreFunctionalTestCase
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					User entity = session.getReference( User.class, 1 );
 					Role role = new Role();
 					role.setId( 3 );
 					role.setName( "user" );
 					entity.setRole( role );
-					session.save( role );
+					session.persist( role );
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					User entity = session.getReference( User.class, 1 );
 					assertThat( entity.getName(), is( nullValue() ) );
@@ -310,4 +305,3 @@ public class SimpleDynamicUpdateTest extends BaseNonConfigCoreFunctionalTestCase
 	}
 
 }
-

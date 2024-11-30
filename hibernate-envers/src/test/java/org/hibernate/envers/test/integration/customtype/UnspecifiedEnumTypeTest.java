@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.test.integration.customtype;
 
@@ -21,13 +19,13 @@ import org.hibernate.type.StandardBasicTypes;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.envers.RequiresAuditStrategy;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-7780")
+@JiraKey(value = "HHH-7780")
 @RequiresAuditStrategy(DefaultAuditStrategy.class)
 public class UnspecifiedEnumTypeTest extends BaseEnversFunctionalTestCase {
 	private Long id = null;
@@ -43,6 +41,7 @@ public class UnspecifiedEnumTypeTest extends BaseEnversFunctionalTestCase {
 
 		settings.put( AvailableSettings.SHOW_SQL, "true" );
 		settings.put( AvailableSettings.FORMAT_SQL, "true" );
+		settings.put( AvailableSettings.PREFER_NATIVE_ENUM_TYPES, "false" );
 	}
 
 	@Test
@@ -63,10 +62,10 @@ public class UnspecifiedEnumTypeTest extends BaseEnversFunctionalTestCase {
 
 		// Revision 2
 		session.getTransaction().begin();
-		entity = (UnspecifiedEnumTypeEntity) session.get( UnspecifiedEnumTypeEntity.class, entity.getId() );
+		entity = session.get( UnspecifiedEnumTypeEntity.class, entity.getId() );
 		entity.setEnum1( UnspecifiedEnumTypeEntity.E1.Y );
 		entity.setEnum2( UnspecifiedEnumTypeEntity.E2.B );
-		session.update( entity );
+		session.merge( entity );
 		session.getTransaction().commit();
 
 		session.close();

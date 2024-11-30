@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.query;
 
@@ -22,13 +20,18 @@ import jakarta.persistence.PersistenceException;
 import jakarta.persistence.Query;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Tuple;
+import jakarta.persistence.TypedQuery;
 
 import org.hibernate.Hibernate;
 import org.hibernate.QueryException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.CockroachDialect;
+import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.community.dialect.DerbyDialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.orm.test.jpa.Distributor;
@@ -37,7 +40,9 @@ import org.hibernate.orm.test.jpa.Wallet;
 import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 import junit.framework.Assert;
 
@@ -53,6 +58,7 @@ import static org.junit.Assert.fail;
  * @author Emmanuel Bernard
  * @author Steve Ebersole
  * @author Chris Cranford
+ * @author Yanming Zhou
  */
 public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
@@ -74,7 +80,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7192")
+	@JiraKey(value = "HHH-7192")
 	public void testTypedManipulationQueryError() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -385,16 +391,16 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			em.persist( item );
 			// native queries don't seem to flush by default ?!?
 			em.flush();
-			Query q = em.createNativeQuery( "select * from Item i where i.intVal=?" );
+			Query q = em.createNativeQuery( "select * from Item i where i.int_val=?" );
 			q.setParameter( 1, null );
 			List results = q.getResultList();
 			// null != null
 			assertEquals( 0, results.size() );
-			q = em.createNativeQuery( "select * from Item i where i.intVal is null and ? is null" );
+			q = em.createNativeQuery( "select * from Item i where i.int_val is null and ? is null" );
 			q.setParameter( 1, null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
-			q = em.createNativeQuery( "select * from Item i where i.intVal is null or i.intVal = ?" );
+			q = em.createNativeQuery( "select * from Item i where i.int_val is null or i.int_val = ?" );
 			q.setParameter(1, null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
@@ -408,7 +414,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10161")
+	@JiraKey(value = "HHH-10161")
 	@SkipForDialect(value = PostgreSQLDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
 	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
 	@SkipForDialect(value = CockroachDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
@@ -420,7 +426,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			em.persist( item );
 			// native queries don't seem to flush by default ?!?
 			em.flush();
-			Query q = em.createNativeQuery( "select * from Item i where i.intVal=?" );
+			Query q = em.createNativeQuery( "select * from Item i where i.int_val=?" );
 			Parameter p = new Parameter() {
 				@Override
 				public String getName() {
@@ -442,11 +448,11 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			List results = q.getResultList();
 			// null != null
 			assertEquals( 0, results.size() );
-			q = em.createNativeQuery( "select * from Item i where i.intVal is null and ? is null" );
+			q = em.createNativeQuery( "select * from Item i where i.int_val is null and ? is null" );
 			q.setParameter( p, null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
-			q = em.createNativeQuery( "select * from Item i where i.intVal is null or i.intVal = ?" );
+			q = em.createNativeQuery( "select * from Item i where i.int_val is null or i.int_val = ?" );
 			q.setParameter( p, null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
@@ -471,16 +477,16 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			em.persist( item );
 			// native queries don't seem to flush by default ?!?
 			em.flush();
-			Query q = em.createNativeQuery( "select * from Item i where i.intVal=:iVal" );
+			Query q = em.createNativeQuery( "select * from Item i where i.int_val=:iVal" );
 			q.setParameter( "iVal", null );
 			List results = q.getResultList();
 			// null != null
 			assertEquals( 0, results.size() );
-			q = em.createNativeQuery( "select * from Item i where (i.intVal is null) and (:iVal is null)" );
+			q = em.createNativeQuery( "select * from Item i where (i.int_val is null) and (:iVal is null)" );
 			q.setParameter( "iVal", null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
-			q = em.createNativeQuery( "select * from Item i where i.intVal is null or i.intVal = :iVal" );
+			q = em.createNativeQuery( "select * from Item i where i.int_val is null or i.int_val = :iVal" );
 			q.setParameter( "iVal", null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
@@ -494,7 +500,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10161")
+	@JiraKey(value = "HHH-10161")
 	@SkipForDialect(value = PostgreSQLDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
 	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
 	@SkipForDialect(value = CockroachDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
@@ -506,7 +512,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			em.persist( item );
 			// native queries don't seem to flush by default ?!?
 			em.flush();
-			Query q = em.createNativeQuery( "select * from Item i where i.intVal=:iVal" );
+			Query q = em.createNativeQuery( "select * from Item i where i.int_val=:iVal" );
 			Parameter p = new Parameter() {
 				@Override
 				public String getName() {
@@ -527,14 +533,84 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			Parameter pGotten = q.getParameter( p.getName() );
 			List results = q.getResultList();
 			assertEquals( 0, results.size() );
-			q = em.createNativeQuery( "select * from Item i where (i.intVal is null) and (:iVal is null)" );
+			q = em.createNativeQuery( "select * from Item i where (i.int_val is null) and (:iVal is null)" );
 			q.setParameter( p, null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
-			q = em.createNativeQuery( "select * from Item i where i.intVal is null or i.intVal = :iVal" );
+			q = em.createNativeQuery( "select * from Item i where i.int_val is null or i.int_val = :iVal" );
 			q.setParameter( p, null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
+		}
+		finally {
+			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
+				em.getTransaction().rollback();
+			}
+			em.close();
+		}
+	}
+
+	@Test
+	@JiraKey("HHH-18033")
+	public void testQueryContainsQuotedSemicolonWithLimit() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		try {
+			em.persist( new Item( "Mouse;", "Micro$oft mouse" ) );
+
+			Query q = em.createQuery( "from Item where name like '%;%'" ).setMaxResults(10);
+			assertEquals( 1, q.getResultList().size() );
+
+			q = em.createQuery( "from Item where name like '%;%' " ).setMaxResults(10);
+			assertEquals( 1, q.getResultList().size() );
+		}
+		finally {
+			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
+				em.getTransaction().rollback();
+			}
+			em.close();
+		}
+	}
+
+	@Test
+	@JiraKey("HHH-18033")
+	public void testNativeQueryContainsQuotedSemicolonWithLimit() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		try {
+			em.persist( new Item( "Mouse;", "Micro$oft mouse" ) );
+
+			Query q = em.createNativeQuery( "select * from Item where name like '%;%'" ).setMaxResults(10);
+			assertEquals( 1, q.getResultList().size() );
+
+			q = em.createNativeQuery( "select * from Item where name like '%;%' " ).setMaxResults(10);
+			assertEquals( 1, q.getResultList().size() );
+		}
+		finally {
+			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
+				em.getTransaction().rollback();
+			}
+			em.close();
+		}
+	}
+
+	@Test
+	@JiraKey("HHH-18033")
+	@SkipForDialect(value = OracleDialect.class, comment = "Doesn't support semicolon as ending of statement")
+	@SkipForDialect(value = SybaseDialect.class, comment = "Doesn't support semicolon as ending of statement")
+	@SkipForDialect(value = DerbyDialect.class, comment = "Doesn't support semicolon as ending of statement")
+	@SkipForDialect(value = DB2Dialect.class, comment = "Doesn't support semicolon as ending of statement")
+	public void testNativeQueryContainsQuotedSemicolonAndEndsWithSemicolonWithLimit() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		try {
+			em.persist( new Item( "Mouse;", "Micro$oft mouse" ) );
+
+			Query q = em.createNativeQuery( "select * from Item where name like '%;%';" ).setMaxResults(10);
+			assertEquals( 1, q.getResultList().size() );
+
+			q = em.createNativeQuery( "select * from Item where name like '%;%' ; " ).setMaxResults(10);
+			assertEquals( 1, q.getResultList().size() );
 		}
 		finally {
 			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
@@ -588,7 +664,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH_7407")
+	@JiraKey(value = "HHH_7407")
 	public void testMultipleParameterLists() throws Exception {
 		final Item item = new Item( "Mouse", "Micro$oft mouse" );
 		final Item item2 = new Item( "Computer", "Dell computer" );
@@ -636,7 +712,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH_8949")
+	@JiraKey(value = "HHH_8949")
 	public void testCacheStoreAndRetrieveModeParameter() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -697,7 +773,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12290")
+	@JiraKey(value = "HHH-12290")
 	public void testParameterCollectionAndPositional() {
 		final Item item = new Item( "Mouse", "Microsoft mouse" );
 		final Item item2 = new Item( "Computer", "Dell computer" );
@@ -723,7 +799,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12290")
+	@JiraKey(value = "HHH-12290")
 	public void testParameterCollectionParenthesesAndPositional() {
 		final Item item = new Item( "Mouse", "Microsoft mouse" );
 		final Item item2 = new Item( "Computer", "Dell computer" );
@@ -749,7 +825,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12290")
+	@JiraKey(value = "HHH-12290")
 	public void testParameterCollectionSingletonParenthesesAndPositional() {
 		final Item item = new Item( "Mouse", "Microsoft mouse" );
 		final Item item2 = new Item( "Computer", "Dell computer" );
@@ -879,6 +955,54 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			result = q.getResultList();
 			assertNotNull( result );
 			assertEquals( 2, result.size() );
+			em.remove( result.get( 0 ) );
+			em.remove( result.get( 1 ) );
+			em.getTransaction().commit();
+		}
+		catch (Exception e){
+			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
+				em.getTransaction().rollback();
+			}
+			throw e;
+		}
+		finally {
+			em.close();
+		}
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17490" )
+	public void testEmptyParameterList() throws Exception {
+		final Item item = new Item( "Mouse", "Micro$oft mouse" );
+		final Item item2 = new Item( "Computer", "Dell computer" );
+
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		try {
+			em.persist( item );
+			em.persist( item2 );
+			assertTrue( em.contains( item ) );
+			em.getTransaction().commit();
+
+			em.getTransaction().begin();
+			TypedQuery<Item> q = em.createQuery(
+					"select item from Item item where item.name in :names",
+					Item.class
+			);
+			q.setParameter( "names", List.of() );
+			List<Item> result = q.getResultList();
+			assertNotNull( result );
+			assertEquals( 0, result.size() );
+
+			q = em.createQuery(
+					"select item from Item item where item.name not in :names",
+					Item.class
+			);
+			q.setParameter( "names", List.of() );
+			result = q.getResultList();
+			assertNotNull( result );
+			assertEquals( 2, result.size() );
+
 			em.remove( result.get( 0 ) );
 			em.remove( result.get( 1 ) );
 			em.getTransaction().commit();
@@ -1037,7 +1161,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		try {
 			Query query = em.createQuery( "select w from " + Wallet.class.getName() + " w where w.marketEntrance = :me" );
 			Parameter parameter = query.getParameter( "me", Date.class );
-			assertEquals( parameter.getParameterType(), Date.class );
+			assertEquals( parameter.getParameterType(), java.sql.Timestamp.class );
 
 			query.setParameter( "me", new Date() );
 			query.setParameter( "me", new Date(), TemporalType.DATE );
@@ -1117,7 +1241,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			catch ( IllegalArgumentException e ) {
 				assertNotNull( e.getCause() );
 				assertTyping( QueryException.class, e.getCause() );
-				assertTrue( e.getCause().getMessage().contains( "gap" ) );
+				assertTrue( e.getCause().getMessage().contains( "Gap" ) );
 			}
 
 			// using jpa-style, position index should match syntax '?<position>'.
@@ -1160,7 +1284,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10803")
+	@JiraKey(value = "HHH-10803")
 	public void testNamedParameterWithUserError() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -1478,7 +1602,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10269")
+	@JiraKey(value = "HHH-10269")
 	public void testFailingNativeQuery() {
 		final EntityManager entityManager = getOrCreateEntityManager();
 		try {
@@ -1499,7 +1623,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10833")
+	@JiraKey(value = "HHH-10833")
 	public void testGetSingleResultWithNoResultException() {
 		final EntityManager entityManager  = getOrCreateEntityManager();
 		try {

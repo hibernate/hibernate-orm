@@ -1,34 +1,21 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.util.List;
-import java.util.function.Consumer;
-
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Component;
-import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
-import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.SelectableConsumer;
-import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
-import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -38,7 +25,8 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.spi.CompositeTypeImplementor;
 
-import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import static org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping.IdentifierValueMapper;
 
 /**
@@ -49,9 +37,6 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 	private final NonAggregatedIdentifierMapping idMapping;
 	private final VirtualIdRepresentationStrategy representationStrategy;
 
-	private final List<SingularAttributeMapping> attributeMappings;
-	private SelectableMappings selectableMappings;
-
 	public VirtualIdEmbeddable(
 			Component virtualIdSource,
 			NonAggregatedIdentifierMapping idMapping,
@@ -59,7 +44,7 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 			String rootTableExpression,
 			String[] rootTableKeyColumnNames,
 			MappingModelCreationProcess creationProcess) {
-		super( creationProcess );
+		super( new MutableAttributeMappingList( virtualIdSource.getType().getPropertyNames().length ) );
 
 		this.navigableRole = idMapping.getNavigableRole();
 		this.idMapping = idMapping;
@@ -70,10 +55,7 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 				creationProcess.getCreationContext()
 		);
 
-		final CompositeType compositeType = (CompositeType) virtualIdSource.getType();
-		this.attributeMappings = arrayList( (compositeType).getPropertyNames().length );
-
-		// todo (6.0) : can/should this be a separate VirtualIdEmbedded?
+		final CompositeType compositeType = virtualIdSource.getType();
 		( (CompositeTypeImplementor) compositeType ).injectMappingModelPart( idMapping, creationProcess );
 
 		creationProcess.registerInitializationCallback(
@@ -95,12 +77,11 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 			SelectableMappings selectableMappings,
 			VirtualIdEmbeddable inverseMappingType,
 			MappingModelCreationProcess creationProcess) {
-		super( creationProcess );
+		super( new MutableAttributeMappingList( inverseMappingType.attributeMappings.size() ) );
 
 		this.navigableRole = inverseMappingType.getNavigableRole();
 		this.idMapping = (NonAggregatedIdentifierMapping) valueMapping;
 		this.representationStrategy = inverseMappingType.representationStrategy;
-		this.attributeMappings = arrayList( inverseMappingType.attributeMappings.size() );
 		this.selectableMappings = selectableMappings;
 		creationProcess.registerInitializationCallback(
 				"VirtualIdEmbeddable(" + inverseMappingType.getNavigableRole().getFullPath() + ".{inverse})#finishInitialization",
@@ -109,7 +90,7 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 						selectableMappings,
 						inverseMappingType,
 						creationProcess,
-						valueMapping.getDeclaringType(),
+						this,
 						this.attributeMappings
 				)
 		);
@@ -163,180 +144,42 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 	}
 
 	@Override
-	public AttributeMapping findAttributeMapping(String name) {
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final AttributeMapping attr = attributeMappings.get( i );
-			if ( name.equals( attr.getAttributeName() ) ) {
-				return attr;
-			}
-		}
-		return null;
-	}
-
-	@Override
-	public SelectableMapping getSelectable(int columnIndex) {
-		return getSelectableMappings().getSelectable( columnIndex );
-	}
-
-	@Override
-	public int forEachSelectable(SelectableConsumer consumer) {
-		return getSelectableMappings().forEachSelectable( 0, consumer );
-	}
-
-	@Override
-	public int forEachSelectable(int offset, SelectableConsumer consumer) {
-		return getSelectableMappings().forEachSelectable( offset, consumer );
-	}
-
-	@Override
-	public int getJdbcTypeCount() {
-		return getSelectableMappings().getJdbcTypeCount();
-	}
-
-	@Override
-	public List<JdbcMapping> getJdbcMappings() {
-		return getSelectableMappings().getJdbcMappings();
-	}
-
-	private SelectableMappings getSelectableMappings() {
-		if (selectableMappings == null) {
-			// This is expected to happen when processing a
-			// PostInitCallbackEntry because the callbacks
-			// are not ordered. The exception is caught in
-			// MappingModelCreationProcess.executePostInitCallbacks()
-			// and the callback is re-queued.
-			throw new IllegalStateException("Not yet ready");
-		}
-		return selectableMappings;
-	}
-
-	@Override
-	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
-		return getSelectableMappings().forEachSelectable(
-				offset,
-				(index, selectable) -> action.accept( index, selectable.getJdbcMapping() )
-		);
-	}
-
-	@Override
-	public boolean isCreateEmptyCompositesEnabled() {
-		// generally we do not want empty composites for identifiers
-		return false;
-	}
-
-	@Override
-	public int getNumberOfAttributeMappings() {
-		return attributeMappings.size();
-	}
-
-	@Override
-	public AttributeMapping getAttributeMapping(int position) {
-		return attributeMappings.get( position );
-	}
-
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	@Override
-	public List<AttributeMapping> getAttributeMappings() {
-		return (List) attributeMappings;
-	}
-
-	@Override
-	public void visitAttributeMappings(Consumer<? super AttributeMapping> action) {
-		forEachAttribute( (index, attribute) -> action.accept( attribute ) );
-	}
-
-	@Override
-	public void forEachAttributeMapping(IndexedConsumer<AttributeMapping> consumer) {
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			consumer.accept( i, attributeMappings.get( i ) );
-		}
-	}
-
-	@Override
-	public int getNumberOfFetchables() {
-		return getNumberOfAttributeMappings();
-	}
-
-	@Override
 	public EntityMappingType findContainingEntityMapping() {
 		return idMapping.findContainingEntityMapping();
 	}
 
 	@Override
-	public void visitSubParts(Consumer<ModelPart> consumer, EntityMappingType treatTargetType) {
-		attributeMappings.forEach( consumer );
-	}
-
-	@Override
-	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final SingularAttributeMapping attribute = attributeMappings.get( i );
-			if ( attribute.getAttributeName().equals( name ) ) {
-				return attribute;
-			}
-		}
-		return null;
-	}
-
-	@Override
 	public <T> DomainResult<T> createDomainResult(NavigablePath navigablePath, TableGroup tableGroup, String resultVariable, DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public int forEachJdbcValue(
-			Object value,
-			Clause clause,
+	public <X, Y> int decompose(
+			Object domainValue,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
-			SharedSessionContractImplementor session) {
-		int span = 0;
-
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final AttributeMapping attributeMapping = attributeMappings.get( i );
-			if ( attributeMapping instanceof PluralAttributeMapping ) {
-				continue;
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer, SharedSessionContractImplementor session) {
+		if ( idMapping.getIdClassEmbeddable() != null ) {
+			// during decompose, if there is an IdClass for the entity the
+			// incoming `domainValue` should be an instance of that IdClass
+			return idMapping.getIdClassEmbeddable().decompose( domainValue, offset, x, y, valueConsumer, session );
+		}
+		else {
+			int span = 0;
+			for ( int i = 0; i < attributeMappings.size(); i++ ) {
+				final AttributeMapping attributeMapping = attributeMappings.get( i );
+				span += attributeMapping.decompose(
+						attributeMapping.getValue( domainValue ),
+						offset + span,
+						x,
+						y,
+						valueConsumer,
+						session
+				);
 			}
-			final Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
-			span += attributeMapping.forEachJdbcValue( o, clause, span + offset, valuesConsumer, session );
+			return span;
 		}
-		return span;
-	}
-
-	@Override
-	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		attributeMappings.forEach( (attribute) -> {
-			final Object attributeValue = attribute.getValue( domainValue );
-			attribute.breakDownJdbcValues( attributeValue, valueConsumer, session );
-		} );
-	}
-
-	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		final Object[] result = new Object[ attributeMappings.size() ];
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final AttributeMapping attributeMapping = attributeMappings.get( i );
-			Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
-			result[i] = attributeMapping.disassemble( o, session );
-		}
-
-		return result;
-	}
-
-	@Override
-	public int forEachDisassembledJdbcValue(
-			Object value,
-			Clause clause,
-			int offset,
-			JdbcValuesConsumer valuesConsumer,
-			SharedSessionContractImplementor session) {
-		final Object[] values = (Object[]) value;
-		int span = 0;
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final AttributeMapping mapping = attributeMappings.get( i );
-			span += mapping.forEachDisassembledJdbcValue( values[i], clause, span + offset, valuesConsumer, session );
-		}
-		return span;
 	}
 
 	@Override
@@ -397,25 +240,40 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 		);
 	}
 
-	private boolean initColumnMappings() {
-		this.selectableMappings = SelectableMappingsImpl.from( this );
-		return true;
-	}
-
-	private void addAttribute(AttributeMapping attributeMapping) {
-		addAttribute( (SingularAttributeMapping) attributeMapping );
-	}
-
-	private void addAttribute(SingularAttributeMapping attributeMapping) {
-		// check if we've already seen this attribute...
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final AttributeMapping previous = attributeMappings.get( i );
-			if ( attributeMapping.getAttributeName().equals( previous.getAttributeName() ) ) {
-				attributeMappings.set( i, attributeMapping );
-				return;
-			}
+	@Override
+	public boolean areEqual(@Nullable Object one, @Nullable Object other, SharedSessionContractImplementor session) {
+		final IdClassEmbeddable idClassEmbeddable = idMapping.getIdClassEmbeddable();
+		if ( idClassEmbeddable != null ) {
+			return idClassEmbeddable.areEqual( one, other, session );
 		}
+		else {
+			final AttributeMappingsList attributeMappings = getAttributeMappings();
+			for ( int i = 0; i < attributeMappings.size(); i++ ) {
+				final AttributeMapping attribute = attributeMappings.get( i );
+				if ( !attribute.areEqual( attribute.getValue( one ), attribute.getValue( other ), session ) ) {
+					return false;
+				}
+			}
+			return true;
+		}
+	}
 
-		attributeMappings.add( attributeMapping );
+	@Override
+	public int compare(Object value1, Object value2) {
+		final IdClassEmbeddable idClassEmbeddable = idMapping.getIdClassEmbeddable();
+		if ( idClassEmbeddable != null ) {
+			final AttributeMappingsList attributeMappings = idClassEmbeddable.getAttributeMappings();
+			for ( int i = 0; i < attributeMappings.size(); i++ ) {
+				final AttributeMapping attribute = attributeMappings.get( i );
+				final int comparison = attribute.compare( attribute.getValue( value1 ), attribute.getValue( value2 ) );
+				if ( comparison != 0 ) {
+					return comparison;
+				}
+			}
+			return 0;
+		}
+		else {
+			return super.compare( value1, value2 );
+		}
 	}
 }

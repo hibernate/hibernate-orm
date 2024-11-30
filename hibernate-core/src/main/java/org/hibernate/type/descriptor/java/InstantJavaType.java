@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
@@ -19,19 +17,17 @@ import java.util.GregorianCalendar;
 
 import jakarta.persistence.TemporalType;
 
-import org.hibernate.cache.internal.CacheKeyValueDescriptor;
-import org.hibernate.cache.internal.DefaultCacheKeyValueDescriptor;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Java type descriptor for the LocalDateTime type.
+ * Java type descriptor for the Java {@link Instant} type.
+ *
+ * @see org.hibernate.cfg.AvailableSettings#PREFERRED_INSTANT_JDBC_TYPE
  *
  * @author Steve Ebersole
  */
@@ -51,27 +47,29 @@ public class InstantJavaType extends AbstractTemporalJavaType<Instant>
 		return TemporalType.TIMESTAMP;
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	protected <X> TemporalJavaType<X> forDatePrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
 		return (TemporalJavaType<X>) this;
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	protected <X> TemporalJavaType<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
 		return (TemporalJavaType<X>) this;
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	protected <X> TemporalJavaType<X> forTimePrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
 		return (TemporalJavaType<X>) this;
 	}
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( context.getPreferredSqlTypeCodeForInstant() );
+		return context.getJdbcType( context.getPreferredSqlTypeCodeForInstant() );
+	}
+
+	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
 	}
 
 	@Override
@@ -128,7 +126,7 @@ public class InstantJavaType extends AbstractTemporalJavaType<Instant>
 		}
 
 		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
-			return (X) new java.sql.Time( instant.toEpochMilli() );
+			return (X) new java.sql.Time( instant.toEpochMilli() % 86_400_000 );
 		}
 
 		if ( Date.class.isAssignableFrom( type ) ) {
@@ -148,16 +146,15 @@ public class InstantJavaType extends AbstractTemporalJavaType<Instant>
 			return null;
 		}
 
-		if ( value instanceof Instant ) {
-			return (Instant) value;
+		if ( value instanceof Instant instant ) {
+			return instant;
 		}
 
-		if ( value instanceof OffsetDateTime ) {
-			return ( (OffsetDateTime) value ).toInstant();
+		if ( value instanceof OffsetDateTime offsetDateTime ) {
+			return offsetDateTime.toInstant();
 		}
 
-		if ( value instanceof Timestamp ) {
-			final Timestamp ts = (Timestamp) value;
+		if ( value instanceof Timestamp timestamp ) {
 			/*
 			 * This works around two bugs:
 			 * - HHH-13266 (JDK-8061577): around and before 1900,
@@ -168,20 +165,19 @@ public class InstantJavaType extends AbstractTemporalJavaType<Instant>
 			 * (on DST end), so conversion must be done using the number of milliseconds since the epoch.
 			 * - around 1905, both methods are equally valid, so we don't really care which one is used.
 			 */
-			if ( ts.getYear() < 5 ) { // Timestamp year 0 is 1900
-				return ts.toLocalDateTime().atZone( ZoneId.systemDefault() ).toInstant();
+			if ( timestamp.getYear() < 5 ) { // Timestamp year 0 is 1900
+				return timestamp.toLocalDateTime().atZone( ZoneId.systemDefault() ).toInstant();
 			}
 			else {
-				return ts.toInstant();
+				return timestamp.toInstant();
 			}
 		}
 
-		if ( value instanceof Long ) {
-			return Instant.ofEpochMilli( (Long) value );
+		if ( value instanceof Long longValue ) {
+			return Instant.ofEpochMilli( longValue );
 		}
 
-		if ( value instanceof Calendar ) {
-			final Calendar calendar = (Calendar) value;
+		if ( value instanceof Calendar calendar ) {
 			return ZonedDateTime.ofInstant( calendar.toInstant(), calendar.getTimeZone().toZoneId() ).toInstant();
 		}
 
@@ -210,11 +206,6 @@ public class InstantJavaType extends AbstractTemporalJavaType<Instant>
 			Integer scale,
 			SharedSessionContractImplementor session) {
 		return Instant.now( ClockHelper.forPrecision( precision, session ) );
-	}
-
-	@Override
-	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
-		return DefaultCacheKeyValueDescriptor.INSTANCE;
 	}
 
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -20,40 +18,38 @@ public class CommunityDialectSelector implements DialectSelector {
 			return null;
 		}
 		switch ( name ) {
+			case "Cache71":
 			case "Cache":
 				return CacheDialect.class;
-			case "Cache71":
-				return Cache71Dialect.class;
 			case "CUBRID":
 				return CUBRIDDialect.class;
+			case "Altibase":
+				return AltibaseDialect.class;
 			case "Firebird":
 				return FirebirdDialect.class;
+			case "Informix10":
 			case "Informix":
 				return InformixDialect.class;
-			case "Informix10":
-				return Informix10Dialect.class;
+			case "Ingres9":
+			case "Ingres10":
 			case "Ingres":
 				return IngresDialect.class;
-			case "Ingres9":
-				return Ingres9Dialect.class;
-			case "Ingres10":
-				return Ingres10Dialect.class;
 			case "MimerSQL":
 				return MimerSQLDialect.class;
 			case "RDMSOS2200":
 				return RDMSOS2200Dialect.class;
 			case "SAPDB":
-				return SAPDBDialect.class;
 			case "MaxDB":
 				return MaxDBDialect.class;
 			case "SybaseAnywhere":
 				return SybaseAnywhereDialect.class;
+			case "Teradata14":
 			case "Teradata":
 				return TeradataDialect.class;
-			case "Teradata14":
-				return Teradata14Dialect.class;
 			case "TimesTen":
 				return TimesTenDialect.class;
+			case "SingleStore":
+				return SingleStoreDialect.class;
 		}
 		return null;
 	}

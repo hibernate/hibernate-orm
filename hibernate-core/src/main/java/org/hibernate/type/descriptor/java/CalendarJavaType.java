@@ -1,12 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
-import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
@@ -14,9 +11,7 @@ import java.util.GregorianCalendar;
 
 import jakarta.persistence.TemporalType;
 
-import org.hibernate.cache.internal.CacheKeyValueDescriptor;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.compare.CalendarComparator;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -40,18 +35,6 @@ public class CalendarJavaType extends AbstractTemporalJavaType<Calendar> impleme
 		}
 	}
 
-	private static final CacheKeyValueDescriptor CACHE_KEY_VALUE_DESCRIPTOR = new CacheKeyValueDescriptor() {
-		@Override
-		public int getHashCode(Object key) {
-			return INSTANCE.extractHashCode( (Calendar) key );
-		}
-
-		@Override
-		public boolean isEqual(Object key1, Object key2) {
-			return INSTANCE.areEqual( (Calendar) key1, (Calendar) key2 );
-		}
-	};
-
 	protected CalendarJavaType() {
 		super( Calendar.class, CalendarMutabilityPlan.INSTANCE, CalendarComparator.INSTANCE );
 	}
@@ -63,24 +46,21 @@ public class CalendarJavaType extends AbstractTemporalJavaType<Calendar> impleme
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( Types.TIMESTAMP );
+		return context.getJdbcType( Types.TIMESTAMP );
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	protected <X> TemporalJavaType<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
 		return (TemporalJavaType<X>) this;
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	protected <X> TemporalJavaType<X> forDatePrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
 		return (TemporalJavaType<X>) CalendarDateJavaType.INSTANCE;
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	protected <X> TemporalJavaType<X> forTimePrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
 		return (TemporalJavaType<X>) CalendarTimeJavaType.INSTANCE;
 	}
 
@@ -125,11 +105,6 @@ public class CalendarJavaType extends AbstractTemporalJavaType<Calendar> impleme
 		return hashCode;
 	}
 
-	@Override
-	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
-		return CACHE_KEY_VALUE_DESCRIPTOR;
-	}
-
 	@SuppressWarnings("unchecked")
 	public <X> X unwrap(Calendar value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
@@ -142,7 +117,7 @@ public class CalendarJavaType extends AbstractTemporalJavaType<Calendar> impleme
 			return (X) new java.sql.Date( value.getTimeInMillis() );
 		}
 		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
-			return (X) new java.sql.Time( value.getTimeInMillis() );
+			return (X) new java.sql.Time( value.getTimeInMillis() % 86_400_000 );
 		}
 		if ( java.sql.Timestamp.class.isAssignableFrom( type ) ) {
 			return (X) new java.sql.Timestamp( value.getTimeInMillis() );
@@ -157,29 +132,26 @@ public class CalendarJavaType extends AbstractTemporalJavaType<Calendar> impleme
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof Calendar) {
-			return (Calendar) value;
+		else if (value instanceof Calendar calendar) {
+			return calendar;
 		}
-
-		if ( !(value instanceof java.util.Date)) {
+		else if ( value instanceof java.util.Date date ) {
+			final Calendar cal = new GregorianCalendar();
+			cal.setTime( date );
+			return cal;
+		}
+		else {
 			throw unknownWrap( value.getClass() );
 		}
 
-		Calendar cal = new GregorianCalendar();
-		cal.setTime( (java.util.Date) value );
-		return cal;
 	}
 
 	@Override
 	public boolean isWider(JavaType<?> javaType) {
-		switch ( javaType.getJavaType().getTypeName() ) {
-			case "java.util.Date":
-			case "java.sql.Date":
-			case "java.sql.Timestamp":
-				return true;
-			default:
-				return false;
-		}
+		return switch ( javaType.getTypeName() ) {
+			case "java.util.Date", "java.sql.Date", "java.sql.Timestamp" -> true;
+			default -> false;
+		};
 	}
 
 	@Override
@@ -199,6 +171,6 @@ public class CalendarJavaType extends AbstractTemporalJavaType<Calendar> impleme
 
 	@Override
 	public Calendar seed(Long length, Integer precision, Integer scale, SharedSessionContractImplementor session) {
-		return GregorianCalendar.from( ZonedDateTime.now( ClockHelper.forPrecision( precision, session ) ) );
+		return GregorianCalendar.from( ZonedDateTime.now( ClockHelper.forPrecision( precision, session, 3 ) ) );
 	}
 }

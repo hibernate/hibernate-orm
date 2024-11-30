@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.logger;
 
@@ -23,7 +21,7 @@ import org.apache.logging.log4j.spi.AbstractLogger;
  * A {@code Logger} implementation which delegates to Log4J2 but makes it possible
  * to test for events being logged (not logged).
  *
- * @author <a href="mailto:sanne@hibernate.org">Sanne Grinovero</a> (C) 2015 Red Hat Inc.
+ * @author Sanne Grinovero (C) 2015 Red Hat Inc.
  */
 public final class Log4J2DelegatingLogger extends Logger {
 

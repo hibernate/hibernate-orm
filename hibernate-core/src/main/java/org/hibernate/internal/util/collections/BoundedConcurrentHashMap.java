@@ -1,19 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-/*
- * Written by Doug Lea with assistance from members of JCP JSR-166
- * Expert Group and released to the public domain, as explained at
- * http://creativecommons.org/licenses/publicdomain
- *
- * Modified for https://jira.jboss.org/jira/browse/ISPN-299
- * Includes ideas described in http://portal.acm.org/citation.cfm?id=1547428
- *
- */
-
 package org.hibernate.internal.util.collections;
 
 import java.io.IOException;
@@ -34,6 +22,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -47,7 +36,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * in a way that prevents all access.  This class is fully
  * interoperable with {@code Hashtable} in programs that rely on its
  * thread safety but not on its synchronization details.
- * <p/>
+ * <p>
  * <p> Retrieval operations (including {@code get}) generally do not
  * block, so may overlap with update operations (including
  * {@code put} and {@code remove}). Retrievals reflect the results
@@ -59,7 +48,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * at some point at or since the creation of the iterator/enumeration.
  * They do <em>not</em> throw {@link java.util.ConcurrentModificationException}.
  * However, iterators are designed to be used by only one thread at a time.
- * <p/>
+ * <p>
  * <p> The allowed concurrency among update operations is guided by
  * the optional {@code concurrencyLevel} constructor argument
  * (default {@code 16}), which is used as a hint for internal sizing.  The
@@ -77,17 +66,17 @@ import java.util.concurrent.locks.ReentrantLock;
  * hash table is a relatively slow operation, so, when possible, it is
  * a good idea to provide estimates of expected table sizes in
  * constructors.
- * <p/>
+ * <p>
  * <p>This class and its views and iterators implement all of the
  * <em>optional</em> methods of the {@link Map} and {@link Iterator}
  * interfaces.
- * <p/>
+ * <p>
  * <p>This class is copied from Infinispan, and was originally written
  * by Doug Lea with assistance from members of JCP JSR-166 Expert Group and
  * released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain</p>
- * <p/>
- * <p/>
+ * <p>
+ * <p>
  * <p> Like {@link java.util.Hashtable} but unlike {@link HashMap}, this class
  * does <em>not</em> allow {@code null} to be used as a key or value.
  *
@@ -192,7 +181,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 	/**
 	 * ConcurrentHashMap list entry. Note that this is never exported
 	 * out as a user-visible Map.Entry.
-	 * <p/>
+	 * <p>
 	 * Because the value field is volatile, not final, it is legal wrt
 	 * the Java Memory Model for an unsynchronized reader to see null
 	 * instead of initial value when read via a data race.  Although a
@@ -269,10 +258,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		HashEntry<K, V> createNewEntry(K key, int hash, HashEntry<K, V> next, V value);
 
 		/**
-		 * Invokes eviction policy algorithm and returns set of evicted entries.
-		 * <p/>
-		 * <p/>
-		 * Set cannot be null but could possibly be an empty set.
+		 * Invokes eviction policy algorithm.
 		 */
 		void execute();
 
@@ -287,7 +273,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		/**
 		 * Invoked to notify EvictionPolicy implementation that an entry in Segment has been
 		 * accessed. Returns true if batching threshold has been reached, false otherwise.
-		 * <p/>
+		 * <p>
 		 * Note that this method is potentially invoked without holding a lock on Segment.
 		 *
 		 * @param e accessed entry in Segment
@@ -319,7 +305,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
 		/**
 		 * Returns true if batching threshold has expired, false otherwise.
-		 * <p/>
+		 * <p>
 		 * Note that this method is potentially invoked without holding a lock on Segment.
 		 *
 		 * @return true if batching threshold has expired, false otherwise.
@@ -330,33 +316,45 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 	static final class LRU<K, V> extends LinkedHashMap<HashEntry<K, V>, V> implements EvictionPolicy<K, V> {
 
 		private final ConcurrentLinkedQueue<HashEntry<K, V>> accessQueue;
+
+		private final AtomicInteger accessQueueSize;
 		private final Segment<K, V> segment;
 		private final int maxBatchQueueSize;
 		private final int trimDownSize;
 		private final float batchThresholdFactor;
 		private final Set<HashEntry<K, V>> evicted;
 
-		public LRU(Segment<K, V> s, int capacity, float lf, int maxBatchSize, float batchThresholdFactor) {
+		LRU(Segment<K, V> s, int capacity, float lf, int maxBatchSize, float batchThresholdFactor) {
 			super( capacity, lf, true );
 			this.segment = s;
 			this.trimDownSize = capacity;
-			this.maxBatchQueueSize = maxBatchSize > MAX_BATCH_SIZE ? MAX_BATCH_SIZE : maxBatchSize;
+			this.maxBatchQueueSize = Math.min( maxBatchSize, MAX_BATCH_SIZE );
 			this.batchThresholdFactor = batchThresholdFactor;
 			this.accessQueue = new ConcurrentLinkedQueue<>();
 			this.evicted = new HashSet<>();
+			this.accessQueueSize = new AtomicInteger();
 		}
 
 		@Override
 		public void execute() {
-			for ( HashEntry<K, V> e : accessQueue ) {
-				put( e, e.value );
+			assert segment.isHeldByCurrentThread();
+			int removed = 0;
+			HashEntry<K, V> e;
+			try {
+				while ((e = accessQueue.poll()) != null) {
+					removed++;
+					put(e, e.value);
+				}
 			}
-			accessQueue.clear();
-			evicted.clear();
+			finally {
+				// guarantee that under OOM size won't be broken
+				accessQueueSize.addAndGet(-removed);
+			}
 		}
 
 		@Override
 		public void onEntryMiss(HashEntry<K, V> e) {
+			assert segment.isHeldByCurrentThread();
 			put( e, e.value );
 			if ( !evicted.isEmpty() ) {
 				evicted.clear();
@@ -369,7 +367,11 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		@Override
 		public boolean onEntryHit(HashEntry<K, V> e) {
 			accessQueue.add( e );
-			return accessQueue.size() >= maxBatchQueueSize * batchThresholdFactor;
+			// counter-intuitive:
+			// Why not placing this *before* appending the entry to the access queue?
+			// we don't want the eviction to kick-in if the access queue doesn't contain enough entries.
+			final int size = accessQueueSize.incrementAndGet();
+			return size >= maxBatchQueueSize * batchThresholdFactor;
 		}
 
 		/*
@@ -377,22 +379,30 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		 */
 		@Override
 		public boolean thresholdExpired() {
-			return accessQueue.size() >= maxBatchQueueSize;
+			return accessQueueSize.get() >= maxBatchQueueSize;
 		}
 
 		@Override
 		public void onEntryRemove(HashEntry<K, V> e) {
+			assert segment.isHeldByCurrentThread();
 			remove( e );
 			// we could have multiple instances of e in accessQueue; remove them all
+			int removed = 0;
 			while ( accessQueue.remove( e ) ) {
-				continue;
+				removed--;
 			}
+			accessQueueSize.addAndGet(-removed);
 		}
 
 		@Override
 		public void clear() {
+			assert segment.isHeldByCurrentThread();
 			super.clear();
-			accessQueue.clear();
+			int removed = 0;
+			while (accessQueue.poll() != null) {
+				removed++;
+			}
+			accessQueueSize.addAndGet(-removed);
 		}
 
 		@Override
@@ -400,11 +410,12 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 			return Eviction.LRU;
 		}
 
-		protected boolean isAboveThreshold() {
+		private boolean isAboveThreshold() {
 			return size() > trimDownSize;
 		}
 
 		protected boolean removeEldestEntry(Map.Entry<HashEntry<K, V>, V> eldest) {
+			assert segment.isHeldByCurrentThread();
 			boolean aboveThreshold = isAboveThreshold();
 			if ( aboveThreshold ) {
 				HashEntry<K, V> evictedEntry = eldest.getKey();
@@ -799,9 +810,8 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		 * Removes this entry from the cache. This operation is not specified in
 		 * the paper, which does not account for forced eviction.
 		 */
-		private V remove() {
+		private void remove() {
 			boolean wasHot = ( state == Recency.LIR_RESIDENT );
-			V result = value;
 			LIRSHashEntry<K, V> end = owner != null ? owner.queueEnd() : null;
 			evict();
 
@@ -811,8 +821,6 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 					end.migrateToStack();
 				}
 			}
-
-			return result;
 		}
 	}
 
@@ -834,14 +842,16 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		 * The accessQueue for reducing lock contention
 		 * See "BP-Wrapper: a system framework making any replacement algorithms
 		 * (almost) lock contention free"
-		 * <p/>
+		 * <p>
 		 * http://www.cse.ohio-state.edu/hpcs/WWW/HTML/publications/abs09-1.html
 		 */
 		private final ConcurrentLinkedQueue<LIRSHashEntry<K, V>> accessQueue;
 
+		private final AtomicInteger accessQueueSize;
+
 		/**
 		 * The maxBatchQueueSize
-		 * <p/>
+		 * <p>
 		 * See "BP-Wrapper: a system framework making any replacement algorithms (almost) lock
 		 * contention free"
 		 */
@@ -857,7 +867,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
 		/**
 		 * This header encompasses two data structures:
-		 * <p/>
+		 * <p>
 		 * <ul>
 		 * <li>The LIRS stack, S, which is maintains recency information. All hot
 		 * entries are on the stack. All cold and non-resident entries which are more
@@ -866,7 +876,6 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		 * accessed more recently than the last hot entry are present in the stack).
 		 * The stack is ordered by recency, with its most recently accessed entry
 		 * at the top, and its least recently accessed entry at the bottom.</li>
-		 * <p/>
 		 * <li>The LIRS queue, Q, which enqueues all cold entries for eviction. Cold
 		 * entries (by definition in the queue) may be absent from the stack (due to
 		 * pruning of the stack). Cold entries are added to the end of the queue
@@ -891,13 +900,14 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		private int hotSize;
 
 
-		public LIRS(Segment<K, V> s, int capacity, int maxBatchSize, float batchThresholdFactor) {
+		LIRS(Segment<K, V> s, int capacity, int maxBatchSize, float batchThresholdFactor) {
 			this.segment = s;
 			this.maximumSize = capacity;
 			this.maximumHotSize = calculateLIRSize( capacity );
-			this.maxBatchQueueSize = maxBatchSize > MAX_BATCH_SIZE ? MAX_BATCH_SIZE : maxBatchSize;
+			this.maxBatchQueueSize = Math.min( maxBatchSize, MAX_BATCH_SIZE );
 			this.batchThresholdFactor = batchThresholdFactor;
 			this.accessQueue = new ConcurrentLinkedQueue<LIRSHashEntry<K, V>>();
+			this.accessQueueSize = new AtomicInteger();
 		}
 
 		private static int calculateLIRSize(int maximumSize) {
@@ -907,9 +917,13 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
 		@Override
 		public void execute() {
+			assert segment.isHeldByCurrentThread();
 			Set<HashEntry<K, V>> evicted = new HashSet<>();
+			int removed = 0;
 			try {
-				for ( LIRSHashEntry<K, V> e : accessQueue ) {
+				LIRSHashEntry<K, V> e;
+				while ( (e = accessQueue.poll()) != null ) {
+					removed++;
 					if ( e.isResident() ) {
 						e.hit( evicted );
 					}
@@ -917,7 +931,8 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 				removeFromSegment( evicted );
 			}
 			finally {
-				accessQueue.clear();
+				// guarantee that under OOM size won't be broken
+				accessQueueSize.addAndGet(-removed);
 			}
 		}
 
@@ -963,12 +978,16 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		}
 
 		/*
-			   * Invoked without holding a lock on Segment
-			   */
+		* Invoked without holding a lock on Segment
+		*/
 		@Override
 		public boolean onEntryHit(HashEntry<K, V> e) {
 			accessQueue.add( (LIRSHashEntry<K, V>) e );
-			return accessQueue.size() >= maxBatchQueueSize * batchThresholdFactor;
+			// counter-intuitive:
+			// Why not placing this *before* appending the entry to the access queue?
+			// we don't want the eviction to kick-in if the access queue doesn't contain enough entries.
+			final int size = accessQueueSize.incrementAndGet();
+			return size >= maxBatchQueueSize * batchThresholdFactor;
 		}
 
 		/*
@@ -976,21 +995,29 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		 */
 		@Override
 		public boolean thresholdExpired() {
-			return accessQueue.size() >= maxBatchQueueSize;
+			return accessQueueSize.get() >= maxBatchQueueSize;
 		}
 
 		@Override
 		public void onEntryRemove(HashEntry<K, V> e) {
-
+			assert segment.isHeldByCurrentThread();
 			( (LIRSHashEntry<K, V>) e ).remove();
+			int removed = 0;
 			// we could have multiple instances of e in accessQueue; remove them all
 			while ( accessQueue.remove( e ) ) {
+				removed++;
 			}
+			accessQueueSize.addAndGet(-removed);
 		}
 
 		@Override
 		public void clear() {
-			accessQueue.clear();
+			assert segment.isHeldByCurrentThread();
+			int removed = 0;
+			while (accessQueue.poll() != null) {
+				removed++;
+			}
+			accessQueueSize.addAndGet(-removed);
 		}
 
 		@Override
@@ -1036,41 +1063,41 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 	 */
 	static final class Segment<K, V> extends ReentrantLock {
 		/*
-			   * Segments maintain a table of entry lists that are ALWAYS
-			   * kept in a consistent state, so can be read without locking.
-			   * Next fields of nodes are immutable (final).  All list
-			   * additions are performed at the front of each bin. This
-			   * makes it easy to check changes, and also fast to traverse.
-			   * When nodes would otherwise be changed, new nodes are
-			   * created to replace them. This works well for hash tables
-			   * since the bin lists tend to be short. (The average length
-			   * is less than two for the default load factor threshold.)
-			   *
-			   * Read operations can thus proceed without locking, but rely
-			   * on selected uses of volatiles to ensure that completed
-			   * write operations performed by other threads are
-			   * noticed. For most purposes, the "count" field, tracking the
-			   * number of elements, serves as that volatile variable
-			   * ensuring visibility.  This is convenient because this field
-			   * needs to be read in many read operations anyway:
-			   *
-			   *   - All (unsynchronized) read operations must first read the
-			   *     "count" field, and should not look at table entries if
-			   *     it is 0.
-			   *
-			   *   - All (synchronized) write operations should write to
-			   *     the "count" field after structurally changing any bin.
-			   *     The operations must not take any action that could even
-			   *     momentarily cause a concurrent read operation to see
-			   *     inconsistent data. This is made easier by the nature of
-			   *     the read operations in Map. For example, no operation
-			   *     can reveal that the table has grown but the threshold
-			   *     has not yet been updated, so there are no atomicity
-			   *     requirements for this with respect to reads.
-			   *
-			   * As a guide, all critical volatile reads and writes to the
-			   * count field are marked in code comments.
-			   */
+			* Segments maintain a table of entry lists that are ALWAYS
+			* kept in a consistent state, so can be read without locking.
+			* Next fields of nodes are immutable (final).  All list
+			* additions are performed at the front of each bin. This
+			* makes it easy to check changes, and also fast to traverse.
+			* When nodes would otherwise be changed, new nodes are
+			* created to replace them. This works well for hash tables
+			* since the bin lists tend to be short. (The average length
+			* is less than two for the default load factor threshold.)
+			*
+			* Read operations can thus proceed without locking, but rely
+			* on selected uses of volatiles to ensure that completed
+			* write operations performed by other threads are
+			* noticed. For most purposes, the "count" field, tracking the
+			* number of elements, serves as that volatile variable
+			* ensuring visibility.  This is convenient because this field
+			* needs to be read in many read operations anyway:
+			*
+			*   - All (unsynchronized) read operations must first read the
+			*     "count" field, and should not look at table entries if
+			*     it is 0.
+			*
+			*   - All (synchronized) write operations should write to
+			*     the "count" field after structurally changing any bin.
+			*     The operations must not take any action that could even
+			*     momentarily cause a concurrent read operation to see
+			*     inconsistent data. This is made easier by the nature of
+			*     the read operations in Map. For example, no operation
+			*     can reveal that the table has grown but the threshold
+			*     has not yet been updated, so there are no atomicity
+			*     requirements for this with respect to reads.
+			*
+			* As a guide, all critical volatile reads and writes to the
+			* count field are marked in code comments.
+			*/
 
 		private static final long serialVersionUID = 2249069246763182397L;
 
@@ -1122,7 +1149,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		}
 
 		@SuppressWarnings("unchecked")
-		static <K, V> Segment<K, V>[] newArray(int i) {
+		private static <K, V> Segment<K, V>[] newArray(int i) {
 			return new Segment[i];
 		}
 
@@ -1313,68 +1340,6 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 			}
 		}
 
-		void rehash() {
-			HashEntry<K, V>[] oldTable = table;
-			int oldCapacity = oldTable.length;
-			if ( oldCapacity >= MAXIMUM_CAPACITY ) {
-				return;
-			}
-
-			/*
-					  * Reclassify nodes in each list to new Map.  Because we are
-					  * using power-of-two expansion, the elements from each bin
-					  * must either stay at same index, or move with a power of two
-					  * offset. We eliminate unnecessary node creation by catching
-					  * cases where old nodes can be reused because their next
-					  * fields won't change. Statistically, at the default
-					  * threshold, only about one-sixth of them need cloning when
-					  * a table doubles. The nodes they replace will be garbage
-					  * collectable as soon as they are no longer referenced by any
-					  * reader thread that may be in the midst of traversing table
-					  * right now.
-					  */
-
-			HashEntry<K, V>[] newTable = HashEntry.newArray( oldCapacity << 1 );
-			threshold = (int) ( newTable.length * loadFactor );
-			int sizeMask = newTable.length - 1;
-			for ( int i = 0; i < oldCapacity; i++ ) {
-				// We need to guarantee that any existing reads of old Map can
-				//  proceed. So we cannot yet null out each bin.
-				HashEntry<K, V> e = oldTable[i];
-
-				if ( e != null ) {
-					HashEntry<K, V> next = e.next;
-					int idx = e.hash & sizeMask;
-
-					//  Single node on list
-					if ( next == null ) {
-						newTable[idx] = e;
-					}
-					else {
-						// Reuse trailing consecutive sequence at same slot
-						HashEntry<K, V> lastRun = e;
-						int lastIdx = idx;
-						for ( HashEntry<K, V> last = next; last != null; last = last.next ) {
-							int k = last.hash & sizeMask;
-							if ( k != lastIdx ) {
-								lastIdx = k;
-								lastRun = last;
-							}
-						}
-						newTable[lastIdx] = lastRun;
-
-						// Clone all remaining nodes
-						for ( HashEntry<K, V> p = e; p != lastRun; p = p.next ) {
-							int k = p.hash & sizeMask;
-							HashEntry<K, V> n = newTable[k];
-							newTable[k] = eviction.createNewEntry( p.key, p.hash, n, p.value );
-						}
-					}
-				}
-			}
-			table = newTable;
-		}
-
 		/**
 		 * Remove; match on key only if value null, else match both.
 		 */
@@ -1489,7 +1454,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		concurrencyLevel = Math.max( concurrencyLevel, 1 ); // concurrencyLevel cannot be less than 1
 
 		// minimum two elements per segment
-		if ( capacity < concurrencyLevel * 2 && capacity != 1 ) {
+		if ( capacity < concurrencyLevel << 1 && capacity != 1 ) {
 			throw new IllegalArgumentException( "Maximum capacity has to be at least twice the concurrencyLevel" );
 		}
 
@@ -1548,14 +1513,14 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 	public boolean isEmpty() {
 		final Segment<K, V>[] segments = this.segments;
 		/*
-			   * We keep track of per-segment modCounts to avoid ABA
-			   * problems in which an element in one segment was added and
-			   * in another removed during traversal, in which case the
-			   * table was never actually empty at any point. Note the
-			   * similar use of modCounts in the size() and containsValue()
-			   * methods, which are the only other methods also susceptible
-			   * to ABA problems.
-			   */
+			* We keep track of per-segment modCounts to avoid ABA
+			* problems in which an element in one segment was added and
+			* in another removed during traversal, in which case the
+			* table was never actually empty at any point. Note the
+			* similar use of modCounts in the size() and containsValue()
+			* methods, which are the only other methods also susceptible
+			* to ABA problems.
+			*/
 		int[] mc = new int[segments.length];
 		int mcsum = 0;
 		for ( int i = 0; i < segments.length; ++i ) {
@@ -1642,7 +1607,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 	/**
 	 * Returns the value to which the specified key is mapped,
 	 * or {@code null} if this map contains no mapping for the key.
-	 * <p/>
+	 * <p>
 	 * <p>More formally, if this map contains a mapping from a key
 	 * {@code k} to a value {@code v} such that {@code key.equals(k)},
 	 * then this method returns {@code v}; otherwise it returns
@@ -1768,7 +1733,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 	/**
 	 * Maps the specified key to the specified value in this table.
 	 * Neither the key nor the value can be null.
-	 * <p/>
+	 * <p>
 	 * <p> The value can be retrieved by calling the {@code get} method
 	 * with a key that is equal to the original key.
 	 *
@@ -1901,7 +1866,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 	 * {@code removeAll}, {@code retainAll}, and {@code clear}
 	 * operations.  It does not support the {@code add} or
 	 * {@code addAll} operations.
-	 * <p/>
+	 * <p>
 	 * <p>The view's {@code iterator} is a "weakly consistent" iterator
 	 * that will never throw {@link java.util.ConcurrentModificationException},
 	 * and guarantees to traverse elements as they existed upon
@@ -1923,7 +1888,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 	 * {@code Collection.remove}, {@code removeAll},
 	 * {@code retainAll}, and {@code clear} operations.  It does not
 	 * support the {@code add} or {@code addAll} operations.
-	 * <p/>
+	 * <p>
 	 * <p>The view's {@code iterator} is a "weakly consistent" iterator
 	 * that will never throw {@link java.util.ConcurrentModificationException},
 	 * and guarantees to traverse elements as they existed upon
@@ -1945,7 +1910,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 	 * {@code removeAll}, {@code retainAll}, and {@code clear}
 	 * operations.  It does not support the {@code add} or
 	 * {@code addAll} operations.
-	 * <p/>
+	 * <p>
 	 * <p>The view's {@code iterator} is a "weakly consistent" iterator
 	 * that will never throw {@link java.util.ConcurrentModificationException},
 	 * and guarantees to traverse elements as they existed upon
@@ -1956,28 +1921,6 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 	public Set<Entry<K, V>> entrySet() {
 		Set<Entry<K, V>> es = entrySet;
 		return es != null ? es : ( entrySet = new EntrySet() );
-	}
-
-	/**
-	 * Returns an enumeration of the keys in this table.
-	 *
-	 * @return an enumeration of the keys in this table
-	 *
-	 * @see #keySet()
-	 */
-	public Enumeration<K> keys() {
-		return new KeyIterator();
-	}
-
-	/**
-	 * Returns an enumeration of the values in this table.
-	 *
-	 * @return an enumeration of the values in this table
-	 *
-	 * @see #values()
-	 */
-	public Enumeration<V> elements() {
-		return new ValueIterator();
 	}
 
 	/* ---------------- Iterator Support -------------- */

@@ -1,19 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql.results;
 
 import java.util.List;
-import java.util.UUID;
 
 import javax.money.Monetary;
 import javax.money.MonetaryAmount;
 
 import jakarta.persistence.Tuple;
 
+import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 import org.hibernate.query.TypedTupleTransformer;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
@@ -236,7 +234,7 @@ public class ResultsShapeTests {
 			final Vendor acme = new Vendor( 1, "Acme, Inc.", null );
 			session.persist( acme );
 
-			final Product widget = new Product( 1, UUID.randomUUID(), acme );
+			final Product widget = new Product( 1, SafeRandomUUIDGenerator.safeRandomUUID(), acme );
 			session.persist( widget );
 
 			final SalesAssociate associate = new SalesAssociate( 1, new Name( "John", "Doe" ) );

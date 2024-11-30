@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping;
 
@@ -12,17 +10,26 @@ import org.hibernate.type.descriptor.java.JavaTypedExpressible;
 /**
  * Hibernate understands mapping a collection into 4 parts<ol>
  *     <li>The key - the foreign-key defining the association to the owner</li>
- *     <li>The element - for Map's this is analogous to the value</li>
+ *     <li>The element - for Maps this is analogous to the value</li>
  *     <li>The index - the List/array index or Map key</li>
  *     <li>The collection-id - this is only relevant for id-bag mappings</li>
  * </ol>
  *
  * @author Steve Ebersole
  */
-public interface CollectionPart extends ModelPart, Fetchable, JavaTypedExpressible {
+public interface CollectionPart extends ValuedModelPart, Fetchable, JavaTypedExpressible {
 	enum Nature {
+		/**
+		 * The Collection element or Map element
+		 */
 		ELEMENT( "{element}" ),
+		/**
+		 * The List index or Map key
+		 */
 		INDEX( "{index}" ),
+		/**
+		 * The identifier for
+		 */
 		ID( "{collection-id}" );
 
 		private final String name;
@@ -78,8 +85,14 @@ public interface CollectionPart extends ModelPart, Fetchable, JavaTypedExpressib
 
 	Nature getNature();
 
+	PluralAttributeMapping getCollectionAttribute();
+
 	@Override
 	default String getPartName() {
 		return getNature().getName();
+	}
+
+	default ModelPart getInclusionCheckPart() {
+		return this;
 	}
 }

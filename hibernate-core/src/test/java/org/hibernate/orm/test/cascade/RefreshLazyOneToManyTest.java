@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cascade;
 
@@ -26,11 +24,11 @@ import jakarta.persistence.Table;
 import org.hibernate.Hibernate;
 
 import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
-@TestForIssue(jiraKey = "HHH-12867")
+@JiraKey(value = "HHH-12867")
 public class RefreshLazyOneToManyTest extends BaseCoreFunctionalTestCase {
 
 	@Override
@@ -43,10 +41,10 @@ public class RefreshLazyOneToManyTest extends BaseCoreFunctionalTestCase {
 	public void testRefreshCascade() {
 		doInHibernate( this::sessionFactory, session -> {
 			Invoice invoice = new Invoice( "An invoice for John Smith" );
-			session.save( invoice );
+			session.persist( invoice );
 
-			session.save( new Line( "1 pen - 5€", invoice ) );
-			session.save( new Tax( "21%", invoice ) );
+			session.persist( new Line( "1 pen - 5€", invoice ) );
+			session.persist( new Tax( "21%", invoice ) );
 		} );
 
 		doInHibernate( this::sessionFactory, session -> {

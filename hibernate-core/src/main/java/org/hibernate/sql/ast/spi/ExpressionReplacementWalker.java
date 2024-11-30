@@ -1,10 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.sql.ast.spi;
 
 import java.util.ArrayList;
@@ -22,9 +19,11 @@ import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.Collation;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.AggregateColumnWriteExpression;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
+import org.hibernate.sql.ast.tree.expression.EmbeddableTypeLiteral;
 import org.hibernate.sql.ast.tree.expression.EntityTypeLiteral;
 import org.hibernate.sql.ast.tree.expression.Every;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -33,6 +32,7 @@ import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.ModifiedSubQueryExpression;
+import org.hibernate.sql.ast.tree.expression.NestedColumnReference;
 import org.hibernate.sql.ast.tree.expression.Over;
 import org.hibernate.sql.ast.tree.expression.Overflow;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
@@ -43,6 +43,7 @@ import org.hibernate.sql.ast.tree.expression.Star;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.ast.tree.expression.UnaryOperation;
+import org.hibernate.sql.ast.tree.expression.UnparsedNumericLiteral;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.FunctionTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
@@ -51,13 +52,14 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.from.ValuesTableReference;
-import org.hibernate.sql.ast.tree.insert.InsertStatement;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.BetweenPredicate;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.ExistsPredicate;
 import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.sql.ast.tree.predicate.GroupedPredicate;
+import org.hibernate.sql.ast.tree.predicate.InArrayPredicate;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
@@ -66,6 +68,7 @@ import org.hibernate.sql.ast.tree.predicate.NegatedPredicate;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.predicate.SelfRenderingPredicate;
+import org.hibernate.sql.ast.tree.predicate.ThruthnessPredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -74,6 +77,14 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.model.ast.ColumnWriteFragment;
+import org.hibernate.sql.model.internal.OptionalTableUpdate;
+import org.hibernate.sql.model.internal.TableDeleteCustomSql;
+import org.hibernate.sql.model.internal.TableDeleteStandard;
+import org.hibernate.sql.model.internal.TableInsertCustomSql;
+import org.hibernate.sql.model.internal.TableInsertStandard;
+import org.hibernate.sql.model.internal.TableUpdateCustomSql;
+import org.hibernate.sql.model.internal.TableUpdateStandard;
 
 /**
  * A walker that allows to replace expressions.
@@ -105,6 +116,16 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 	@Override
 	public void visitColumnReference(ColumnReference columnReference) {
 		doReplaceExpression( columnReference );
+	}
+
+	@Override
+	public void visitNestedColumnReference(NestedColumnReference nestedColumnReference) {
+		doReplaceExpression( nestedColumnReference );
+	}
+
+	@Override
+	public void visitAggregateColumnWriteExpression(AggregateColumnWriteExpression aggregateColumnWriteExpression) {
+		doReplaceExpression( aggregateColumnWriteExpression );
 	}
 
 	@Override
@@ -193,6 +214,11 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 	}
 
 	@Override
+	public void visitEmbeddableTypeLiteral(EmbeddableTypeLiteral expression) {
+		doReplaceExpression( expression );
+	}
+
+	@Override
 	public void visitTuple(SqlTuple tuple) {
 		doReplaceExpression( tuple );
 	}
@@ -215,6 +241,11 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 	@Override
 	public void visitQueryLiteral(QueryLiteral<?> queryLiteral) {
 		doReplaceExpression( queryLiteral );
+	}
+
+	@Override
+	public <N extends Number> void visitUnparsedNumericLiteral(UnparsedNumericLiteral<N> literal) {
+		doReplaceExpression( literal );
 	}
 
 	@Override
@@ -313,9 +344,15 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 	}
 
 	@Override
+	public void visitInArrayPredicate(InArrayPredicate inArrayPredicate) {
+		final Expression replacedTestExpression = replaceExpression( inArrayPredicate.getTestExpression() );
+		returnedNode = new InArrayPredicate( replacedTestExpression, inArrayPredicate.getArrayParameter() );
+	}
+
+	@Override
 	public void visitInSubQueryPredicate(InSubQueryPredicate inSubQueryPredicate) {
 		final Expression testExpression = replaceExpression( inSubQueryPredicate.getTestExpression() );
-		final QueryPart subQuery = replaceExpression( inSubQueryPredicate.getSubQuery() );
+		final SelectStatement subQuery = replaceExpression( inSubQueryPredicate.getSubQuery() );
 		if ( testExpression != inSubQueryPredicate.getTestExpression()
 				|| subQuery != inSubQueryPredicate.getSubQuery() ) {
 			returnedNode = new InSubQueryPredicate(
@@ -332,10 +369,10 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 
 	@Override
 	public void visitExistsPredicate(ExistsPredicate existsPredicate) {
-		final QueryPart queryPart = replaceExpression( existsPredicate.getExpression() );
-		if ( queryPart != existsPredicate.getExpression() ) {
+		final SelectStatement selectStatement = replaceExpression( existsPredicate.getExpression() );
+		if ( selectStatement != existsPredicate.getExpression() ) {
 			returnedNode = new ExistsPredicate(
-					queryPart,
+					selectStatement,
 					existsPredicate.isNegated(),
 					existsPredicate.getExpressionType()
 			);
@@ -421,6 +458,22 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 	}
 
 	@Override
+	public void visitThruthnessPredicate(ThruthnessPredicate thruthnessPredicate) {
+		final Expression expression = replaceExpression( thruthnessPredicate.getExpression() );
+		if ( expression != thruthnessPredicate.getExpression() ) {
+			returnedNode = new ThruthnessPredicate(
+					expression,
+					thruthnessPredicate.getBooleanValue(),
+					thruthnessPredicate.isNegated(),
+					thruthnessPredicate.getExpressionType()
+			);
+		}
+		else {
+			returnedNode = thruthnessPredicate;
+		}
+	}
+
+	@Override
 	public void visitRelationalPredicate(ComparisonPredicate comparisonPredicate) {
 		final Expression lhs = replaceExpression( comparisonPredicate.getLeftHandExpression() );
 		final Expression rhs = replaceExpression( comparisonPredicate.getRightHandExpression() );
@@ -469,7 +522,7 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 	}
 
 	@Override
-	public void visitInsertStatement(InsertStatement statement) {
+	public void visitInsertStatement(InsertSelectStatement statement) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -555,6 +608,46 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 
 	@Override
 	public void visitFilterFragmentPredicate(FilterPredicate.FilterFragmentPredicate fragmentPredicate) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void visitStandardTableInsert(TableInsertStandard tableInsert) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void visitCustomTableInsert(TableInsertCustomSql tableInsert) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void visitStandardTableUpdate(TableUpdateStandard tableUpdate) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void visitOptionalTableUpdate(OptionalTableUpdate tableUpdate) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void visitCustomTableUpdate(TableUpdateCustomSql tableUpdate) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void visitStandardTableDelete(TableDeleteStandard tableDelete) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void visitCustomTableDelete(TableDeleteCustomSql tableDelete) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void visitColumnWriteFragment(ColumnWriteFragment columnWriteFragment) {
 		throw new UnsupportedOperationException();
 	}
 }

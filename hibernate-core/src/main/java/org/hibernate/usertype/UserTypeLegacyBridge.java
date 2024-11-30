@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.usertype;
 
@@ -16,8 +14,8 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;
 
 /**
- * Convenience UserType implementation to mimic the legacy `@Type` annotation
- * which based on the {@code hbm.xml} mapping's String-based type support
+ * Convenience {@link UserType} implementation which mimics the legacy <code>@Type</code>
+ * annotation which was based on the {@code hbm.xml} mapping's string-based type support.
  *
  * @see Type
  */

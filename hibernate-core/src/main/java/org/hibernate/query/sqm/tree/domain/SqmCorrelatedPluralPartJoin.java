@@ -1,27 +1,25 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
 /**
  * @author Christian Beikov
  */
-public class SqmCorrelatedPluralPartJoin<O, T> extends SqmPluralPartJoin<O, T> implements SqmCorrelation<O, T> {
+public class SqmCorrelatedPluralPartJoin<O, T> extends SqmPluralPartJoin<O, T> implements SqmCorrelatedJoin<O, T> {
 
 	private final SqmCorrelatedRootJoin<O> correlatedRootJoin;
 	private final SqmPluralPartJoin<O, T> correlationParent;
 
 	public SqmCorrelatedPluralPartJoin(SqmPluralPartJoin<O, T> correlationParent) {
 		super(
-				(SqmFrom<?, O>) correlationParent.getLhs(),
+				correlationParent.getLhs(),
 				correlationParent.getNavigablePath(),
 				correlationParent.getReferencedPathSource(),
 				correlationParent.getExplicitAlias(),
@@ -47,6 +45,11 @@ public class SqmCorrelatedPluralPartJoin<O, T> extends SqmPluralPartJoin<O, T> i
 	}
 
 	@Override
+	public <X> X accept(SemanticQueryWalker<X> walker) {
+		return walker.visitCorrelatedPluralPartJoin( this );
+	}
+
+	@Override
 	public SqmPluralPartJoin<O, T> getCorrelationParent() {
 		return correlationParent;
 	}
@@ -65,4 +68,5 @@ public class SqmCorrelatedPluralPartJoin<O, T> extends SqmPluralPartJoin<O, T> i
 	public SqmRoot<O> getCorrelatedRoot() {
 		return correlatedRootJoin;
 	}
+
 }

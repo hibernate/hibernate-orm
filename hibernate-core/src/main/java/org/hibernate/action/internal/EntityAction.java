@@ -1,19 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.action.internal;
-
-import java.io.Serializable;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
-import org.hibernate.action.spi.Executable;
+import org.hibernate.engine.spi.ComparableExecutable;
 import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.FastSessionServices;
 import org.hibernate.internal.util.StringHelper;
@@ -27,13 +22,13 @@ import org.hibernate.pretty.MessageHelper;
  * @author Gavin King
  */
 public abstract class EntityAction
-		implements Executable, Serializable, Comparable<EntityAction>, AfterTransactionCompletionProcess {
+		implements ComparableExecutable, AfterTransactionCompletionProcess {
 
 	private final String entityName;
 	private final Object id;
 
 	private transient Object instance;
-	private transient SharedSessionContractImplementor session;
+	private transient EventSource session;
 	private transient EntityPersister persister;
 
 	private transient boolean veto;
@@ -47,7 +42,7 @@ public abstract class EntityAction
 	 * @param persister The entity persister
 	 */
 	protected EntityAction(
-			SharedSessionContractImplementor session,
+			EventSource session,
 			Object id,
 			Object instance,
 			EntityPersister persister) {
@@ -123,7 +118,7 @@ public abstract class EntityAction
 	 *
 	 * @return The session from which this action originated.
 	 */
-	public final SharedSessionContractImplementor getSession() {
+	public final EventSource getSession() {
 		return session;
 	}
 
@@ -137,7 +132,7 @@ public abstract class EntityAction
 	}
 
 	@Override
-	public final Serializable[] getPropertySpaces() {
+	public final String[] getPropertySpaces() {
 		return persister.getPropertySpaces();
 	}
 
@@ -152,12 +147,23 @@ public abstract class EntityAction
 	}
 
 	@Override
-	public int compareTo(EntityAction action) {
+	public int compareTo(ComparableExecutable o) {
 		//sort first by entity name
-		final int roleComparison = entityName.compareTo( action.entityName );
-		return roleComparison != 0 ? roleComparison
+		final int roleComparison = entityName.compareTo( o.getPrimarySortClassifier() );
+		return roleComparison != 0
+				? roleComparison
 				//then by id
-				: persister.getIdentifierType().compare( id, action.id );
+				: persister.getIdentifierType().compare( id, o.getSecondarySortIndex(), session.getSessionFactory() );
+	}
+
+	@Override
+	public String getPrimarySortClassifier() {
+		return entityName;
+	}
+
+	@Override
+	public Object getSecondarySortIndex() {
+		return id;
 	}
 
 	/**
@@ -166,7 +172,7 @@ public abstract class EntityAction
 	 * @param session The session being deserialized
 	 */
 	@Override
-	public void afterDeserialize(SharedSessionContractImplementor session) {
+	public void afterDeserialize(EventSource session) {
 		if ( this.session != null || this.persister != null ) {
 			throw new IllegalStateException( "already attached to a session." );
 		}
@@ -180,7 +186,7 @@ public abstract class EntityAction
 	}
 
 	protected EventSource eventSource() {
-		return (EventSource) getSession();
+		return getSession();
 	}
 
 	/**

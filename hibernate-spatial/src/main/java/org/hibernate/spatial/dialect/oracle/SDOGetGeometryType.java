@@ -1,14 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.spatial.dialect.oracle;
 
 import java.util.List;
 
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -27,10 +25,12 @@ public class SDOGetGeometryType extends OracleSpatialFunction {
 				StandardFunctionReturnTypeResolvers.invariant( typeRegistry.resolve( StandardBasicTypes.STRING ) )
 		);
 	}
-
 	@Override
 	public void render(
-			SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments, SqlAstTranslator<?> walker) {
+			SqlAppender sqlAppender,
+			List<? extends SqlAstNode> sqlAstArguments,
+			ReturnableType<?> returnType,
+			SqlAstTranslator<?> walker) {
 		sqlAppender.appendSql( "CASE " );
 		( (Expression) sqlAstArguments.get( 0 ) ).accept( walker );
 		sqlAppender.appendSql( ".Get_GType() " );

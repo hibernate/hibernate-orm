@@ -1,19 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi.support;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
- * A general read/write abstraction over the specific "cache"
- * object from the caching provider.
+ * A general read/write abstraction over the specific "cache" object from the caching provider.
  *
  * @apiNote Similar to {@link org.hibernate.cache.spi.access.CachedDomainDataAccess},
- * some methods represent "transactional" (access to Session) and some are non-"transactional"
+ *          some methods handle "transactional" access (access in the scope of a session),
+ *          and some are non-"transactional" (for cache management outside a session).
  *
  * @author Steve Ebersole
  */

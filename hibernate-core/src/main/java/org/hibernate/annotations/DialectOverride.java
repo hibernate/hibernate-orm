@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
 
@@ -24,6 +22,21 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p>
  * For example, a {@link org.hibernate.annotations.Formula} annotation may be
  * customized for a given {@code Dialect} using the {@link Formula} annotation.
+ * <pre>
+ * &#64;Formula(value = "(rate * 100) || '%'")
+ * &#64;DialectOverride.Formula(dialect = MySQLDialect.class,
+ *                          override = &#64;Formula("concat(rate * 100, '%')"))
+ * &#64;DialectOverride.Formula(dialect = DB2Dialect.class,
+ *                          override = &#64;Formula("varchar_format(rate * 100) || '%'"))
+ * &#64;DialectOverride.Formula(dialect = OracleDialect.class,
+ *                          override = &#64;Formula("to_char(rate * 100) || '%'"))
+ * &#64;DialectOverride.Formula(dialect = SQLServerDialect.class,
+ *                          override = &#64;Formula("ltrim(str(rate * 100, 10, 2)) + '%'"))
+ * &#64;DialectOverride.Formula(dialect = SybaseDialect.class,
+ *                          override = &#64;Formula("ltrim(str(rate * 100, 10, 2)) + '%'"))
+ * private String ratePercent;
+ * </pre>
+ * <p>
  * An annotation may even be customized for a specific range of <em>versions</em>
  * of the dialect by specifying a {@link Version}.
  * <ul>
@@ -34,7 +47,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *     <li>{@link Formula#before() before} specifies that the override applies
  *         to all versions earlier than the given version.
  * </ul>
+ * <p>
  *
+ * @since 6.0
  * @author Gavin King
  */
 @Incubating
@@ -76,14 +91,14 @@ public interface DialectOverride {
 	}
 
 	/**
-	 * Specializes an {@link org.hibernate.annotations.OrderBy}
+	 * Specializes an {@link org.hibernate.annotations.SQLOrder}
 	 * in a certain dialect.
 	 */
 	@Target({METHOD, FIELD})
 	@Retention(RUNTIME)
-	@Repeatable(OrderBys.class)
-	@OverridesAnnotation(org.hibernate.annotations.OrderBy.class)
-	@interface OrderBy {
+	@Repeatable(SQLOrders.class)
+	@OverridesAnnotation(org.hibernate.annotations.SQLOrder.class)
+	@interface SQLOrder {
 		/**
 		 * The {@link Dialect} in which this override applies.
 		 */
@@ -91,12 +106,12 @@ public interface DialectOverride {
 		Version before() default @Version(major = MAX_VALUE);
 		Version sameOrAfter() default @Version(major = MIN_VALUE);
 
-		org.hibernate.annotations.OrderBy override();
+		org.hibernate.annotations.SQLOrder override();
 	}
 	@Target({METHOD, FIELD})
 	@Retention(RUNTIME)
-	@interface OrderBys {
-		OrderBy[] value();
+	@interface SQLOrders {
+		SQLOrder[] value();
 	}
 
 	/**
@@ -201,6 +216,7 @@ public interface DialectOverride {
 	 */
 	@Target({METHOD, FIELD})
 	@Retention(RUNTIME)
+	@Repeatable(JoinFormulas.class)
 	@OverridesAnnotation(org.hibernate.annotations.JoinFormula.class)
 	@interface JoinFormula {
 		/**
@@ -219,13 +235,14 @@ public interface DialectOverride {
 	}
 
 	/**
-	 * Specializes a {@link org.hibernate.annotations.Where}
+	 * Specializes a {@link org.hibernate.annotations.SQLRestriction}
 	 * in a certain dialect.
 	 */
 	@Target({METHOD, FIELD, TYPE})
 	@Retention(RUNTIME)
-	@OverridesAnnotation(org.hibernate.annotations.Where.class)
-	@interface Where {
+	@Repeatable(SQLRestrictions.class)
+	@OverridesAnnotation(org.hibernate.annotations.SQLRestriction.class)
+	@interface SQLRestriction {
 		/**
 		 * The {@link Dialect} in which this override applies.
 		 */
@@ -233,12 +250,12 @@ public interface DialectOverride {
 		Version before() default @Version(major = MAX_VALUE);
 		Version sameOrAfter() default @Version(major = MIN_VALUE);
 
-		org.hibernate.annotations.Where override();
+		org.hibernate.annotations.SQLRestriction override();
 	}
 	@Target({METHOD, FIELD, TYPE})
 	@Retention(RUNTIME)
-	@interface Wheres {
-		Where[] value();
+	@interface SQLRestrictions {
+		SQLRestriction[] value();
 	}
 
 	/**
@@ -287,6 +304,126 @@ public interface DialectOverride {
 	@Retention(RUNTIME)
 	@interface FilterDefOverrides {
 		FilterDefs[] value();
+	}
+
+	/**
+	 * Specializes a {@link org.hibernate.annotations.SQLSelect}
+	 * in a certain dialect.
+	 */
+	@Target({METHOD, FIELD, TYPE})
+	@Retention(RUNTIME)
+	@Repeatable(SQLSelects.class)
+	@OverridesAnnotation(org.hibernate.annotations.SQLSelect.class)
+	@interface SQLSelect {
+		/**
+		 * The {@link Dialect} in which this override applies.
+		 */
+		Class<? extends Dialect> dialect();
+		Version before() default @Version(major = MAX_VALUE);
+		Version sameOrAfter() default @Version(major = MIN_VALUE);
+
+		org.hibernate.annotations.SQLSelect override();
+	}
+	@Target({METHOD, FIELD, TYPE})
+	@Retention(RUNTIME)
+	@interface SQLSelects {
+		SQLSelect[] value();
+	}
+
+	/**
+	 * Specializes a {@link org.hibernate.annotations.SQLInsert}
+	 * in a certain dialect.
+	 */
+	@Target({METHOD, FIELD, TYPE})
+	@Retention(RUNTIME)
+	@Repeatable(SQLInserts.class)
+	@OverridesAnnotation(org.hibernate.annotations.SQLInsert.class)
+	@interface SQLInsert {
+		/**
+		 * The {@link Dialect} in which this override applies.
+		 */
+		Class<? extends Dialect> dialect();
+		Version before() default @Version(major = MAX_VALUE);
+		Version sameOrAfter() default @Version(major = MIN_VALUE);
+
+		org.hibernate.annotations.SQLInsert override();
+	}
+	@Target({METHOD, FIELD, TYPE})
+	@Retention(RUNTIME)
+	@interface SQLInserts {
+		SQLInsert[] value();
+	}
+
+	/**
+	 * Specializes a {@link org.hibernate.annotations.SQLUpdate}
+	 * in a certain dialect.
+	 */
+	@Target({METHOD, FIELD, TYPE})
+	@Retention(RUNTIME)
+	@Repeatable(SQLUpdates.class)
+	@OverridesAnnotation(org.hibernate.annotations.SQLUpdate.class)
+	@interface SQLUpdate {
+		/**
+		 * The {@link Dialect} in which this override applies.
+		 */
+		Class<? extends Dialect> dialect();
+		Version before() default @Version(major = MAX_VALUE);
+		Version sameOrAfter() default @Version(major = MIN_VALUE);
+
+		org.hibernate.annotations.SQLUpdate override();
+	}
+	@Target({METHOD, FIELD, TYPE})
+	@Retention(RUNTIME)
+	@interface SQLUpdates {
+		SQLUpdate[] value();
+	}
+
+	/**
+	 * Specializes a {@link org.hibernate.annotations.SQLDelete}
+	 * in a certain dialect.
+	 */
+	@Target({METHOD, FIELD, TYPE})
+	@Retention(RUNTIME)
+	@Repeatable(SQLDeletes.class)
+	@OverridesAnnotation(org.hibernate.annotations.SQLDelete.class)
+	@interface SQLDelete {
+		/**
+		 * The {@link Dialect} in which this override applies.
+		 */
+		Class<? extends Dialect> dialect();
+		Version before() default @Version(major = MAX_VALUE);
+		Version sameOrAfter() default @Version(major = MIN_VALUE);
+
+		org.hibernate.annotations.SQLDelete override();
+	}
+	@Target({METHOD, FIELD, TYPE})
+	@Retention(RUNTIME)
+	@interface SQLDeletes {
+		SQLDelete[] value();
+	}
+
+	/**
+	 * Specializes a {@link org.hibernate.annotations.SQLDeleteAll}
+	 * in a certain dialect.
+	 */
+	@Target({METHOD, FIELD, TYPE})
+	@Retention(RUNTIME)
+	@Repeatable(SQLDeleteAlls.class)
+	@OverridesAnnotation(org.hibernate.annotations.SQLDeleteAll.class)
+	@interface SQLDeleteAll {
+		/**
+		 * The {@link Dialect} in which this override applies.
+		 */
+		Class<? extends Dialect> dialect();
+		Version before() default @Version(major = MAX_VALUE);
+		Version sameOrAfter() default @Version(major = MIN_VALUE);
+
+		org.hibernate.annotations.SQLDeleteAll override();
+	}
+	@Target({METHOD, FIELD, TYPE})
+	@Retention(RUNTIME)
+	@interface SQLDeleteAlls {
+		SQLDeleteAll[] value();
 	}
 
 	/**

@@ -9,9 +9,7 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
 	id 'java-gradle-plugin'
-	id 'com.gradle.plugin-publish' version '0.20.0'
-
-	id 'checkstyle'
+	id 'com.gradle.plugin-publish' version '1.2.1'
 
 	// for local publishing
 	id 'maven-publish'
@@ -22,11 +20,6 @@ apply from: rootProject.file( 'gradle/javadoc.gradle' )
 apply from: rootProject.file( 'gradle/releasable.gradle' )
 
 description = "Gradle plugin for integrating Hibernate aspects into your build"
-
-ext {
-	pluginId = 'org.hibernate.orm'
-	pluginVersion = project.version
-}
 
 dependencies {
 	implementation project(':hibernate-core')
@@ -48,37 +41,30 @@ dependencies {
 }
 
 gradlePlugin {
+	website = 'https://github.com/hibernate/hibernate-orm/tree/main/tooling/hibernate-gradle-plugin'
+	vcsUrl = 'https://github.com/hibernate/hibernate-orm/tree/main/tooling/hibernate-gradle-plugin'
+
 	plugins {
 		ormPlugin {
-			id = project.pluginId
-			implementationClass = 'org.hibernate.orm.tooling.gradle.HibernateOrmPlugin'
+			id = "org.hibernate.orm"
+			implementationClass = "org.hibernate.orm.tooling.gradle.HibernateOrmPlugin"
+			displayName = 'Gradle plugin for Hibernate ORM'
+			description = 'Applies Hibernate aspects into the build'
+			tags = ['hibernate','orm','bytecode','enhancement','bytebuddy']
 		}
 	}
 }
 
-pluginBundle {
-	website = 'https://github.com/hibernate/hibernate-orm/tree/main/tooling/hibernate-gradle-plugin'
-	vcsUrl = 'https://github.com/hibernate/hibernate-orm/tree/main/tooling/hibernate-gradle-plugin'
-	tags = ['hibernate','orm','bytecode','enhancement','bytebuddy']
-
-	// sigh
-	mavenCoordinates {
-		groupId = project.group.toString()
-		artifactId = project.name
-		version = project.version.toString()
-	}
-
-	plugins {
-		ormPlugin {
-			id = project.pluginId
-			displayName = 'Gradle plugin for Hibernate ORM'
-			description = 'Applies Hibernate aspects into the build'
-		}
-	}
+tasks.withType(AbstractArchiveTask).configureEach {
+	preserveFileTimestamps = false
+	reproducibleFileOrder = true
 }
 
 test {
 	useJUnitPlatform()
+	if ( project.hasProperty( 'excludeTests' ) ) {
+		exclude project.property( 'excludeTests' )
+	}
 }
 
 // Publish to the Gradle Plugin Portal
@@ -125,10 +111,10 @@ tasks.withType( JavaCompile ) {
 	options.encoding = 'UTF-8'
 }
 
-if ( !gradle.ext.javaToolchainEnabled ) {
+if ( !jdkVersions.explicit ) {
 	tasks.withType( GroovyCompile ) {
-		sourceCompatibility = JavaVersion.toVersion( gradle.ext.baselineJavaVersion )
-		targetCompatibility = JavaVersion.toVersion( gradle.ext.baselineJavaVersion )
+		sourceCompatibility = JavaVersion.toVersion( jdkVersions.baseline )
+		targetCompatibility = JavaVersion.toVersion( jdkVersions.baseline )
 	}
 }
 else {
@@ -136,10 +122,11 @@ else {
 						 " Using the JDK that runs Gradle for Groovy compilation." )
 }
 
-checkstyle {
-	sourceSets = [ project.sourceSets.main ]
-	configFile = rootProject.file( 'shared/config/checkstyle/checkstyle.xml' )
-	showViolations = false
+tasks.named( "javadoc", Javadoc ) {
+	configure( options ) {
+		windowTitle = "Hibernate Javadocs ($project.name)"
+		docTitle = "Hibernate Javadocs ($project.name : $project.version)"
+	}
 }
 
 tasks.publish.enabled !project.ormVersion.isSnapshot
@@ -154,14 +141,12 @@ gradle.taskGraph.whenReady { tg ->
 		}
 		else {
 			// use the values from the credentials provider, if any
-			if ( credentials.hibernatePluginPortalUsername == null ) {
-				throw new RuntimeException( "`hibernatePluginPortalUsername` not found" )
+			if ( project.property( 'gradle.publish.key' ) == null ) {
+				throw new RuntimeException( "`-Pgradle.publish.key=...` not found" )
 			}
-			if ( credentials.hibernatePluginPortalPassword == null ) {
-				throw new RuntimeException( "`hibernatePluginPortalPassword` not found" )
+			if ( project.property( 'gradle.publish.secret' ) == null ) {
+				throw new RuntimeException( "`-Pgradle.publish.secret=...` not found" )
 			}
-			System.setProperty( 'gradle.publish.key', credentials.hibernatePluginPortalUsername )
-			System.setProperty( 'gradle.publish.secret', credentials.hibernatePluginPortalPassword )
 		}
 	}
 }

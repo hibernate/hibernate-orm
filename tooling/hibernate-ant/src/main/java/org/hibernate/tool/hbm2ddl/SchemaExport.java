@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.hbm2ddl;
 
@@ -273,12 +271,13 @@ public class SchemaExport {
 			Metadata metadata,
 			ServiceRegistry serviceRegistry,
 			TargetDescriptor targetDescriptor) {
-		Map<String,Object> config = new HashMap<>( serviceRegistry.getService( ConfigurationService.class ).getSettings() );
+		Map<String,Object> config =
+				new HashMap<>( serviceRegistry.requireService( ConfigurationService.class ).getSettings() );
 		config.put( AvailableSettings.HBM2DDL_DELIMITER, delimiter );
 		config.put( AvailableSettings.FORMAT_SQL, format );
 		config.put( AvailableSettings.HBM2DDL_IMPORT_FILES, importFiles );
 
-		final SchemaManagementTool tool = serviceRegistry.getService( SchemaManagementTool.class );
+		final SchemaManagementTool tool = serviceRegistry.requireService( SchemaManagementTool.class );
 
 		final ExceptionHandler exceptionHandler = haltOnError
 				? ExceptionHandlerHaltImpl.INSTANCE
@@ -352,7 +351,8 @@ public class SchemaExport {
 			scriptTarget = Helper.interpretScriptTargetSetting(
 					outputFile,
 					serviceRegistry.getService( ClassLoaderService.class ),
-					(String) serviceRegistry.getService( ConfigurationService.class ).getSettings().get( AvailableSettings.HBM2DDL_CHARSET_NAME ),
+					(String) serviceRegistry.requireService( ConfigurationService.class )
+							.getSettings().get( AvailableSettings.HBM2DDL_CHARSET_NAME ),
 					append
 			);
 		}
@@ -440,7 +440,7 @@ public class SchemaExport {
 
 
 		final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder();
-		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
+		final StrategySelector strategySelector = serviceRegistry.requireService( StrategySelector.class );
 		if ( parsedArgs.implicitNamingStrategyImplName != null ) {
 			metadataBuilder.applyImplicitNamingStrategy(
 					strategySelector.resolveStrategy(

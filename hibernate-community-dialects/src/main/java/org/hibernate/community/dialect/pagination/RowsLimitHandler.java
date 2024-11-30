@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect.pagination;
 
@@ -32,6 +30,11 @@ public class RowsLimitHandler extends AbstractSimpleLimitHandler {
 	}
 
 	@Override
+	protected String offsetOnlyClause() {
+		return " rows ? to " + Integer.MAX_VALUE;
+	}
+
+	@Override
 	public final boolean useMaxForLimit() {
 		return true;
 	}
@@ -42,10 +45,15 @@ public class RowsLimitHandler extends AbstractSimpleLimitHandler {
 	}
 
 	private static final Pattern FOR_UPDATE_PATTERN =
-			compile("\\s+for\\s+update\\b|\\s+with\\s+lock\\b|\\s*(;|$)", CASE_INSENSITIVE);
+			compile("\\s+for\\s+update\\b|\\s+with\\s+lock\\b|\\s*;?\\s*$", CASE_INSENSITIVE);
 
 	@Override
 	protected Pattern getForUpdatePattern() {
 		return FOR_UPDATE_PATTERN;
+	}
+
+	@Override
+	public boolean supportsOffset() {
+		return true;
 	}
 }

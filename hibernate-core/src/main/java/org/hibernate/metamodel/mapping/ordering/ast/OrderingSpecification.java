@@ -1,13 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.ordering.ast;
 
-import org.hibernate.query.sqm.NullPrecedence;
-import org.hibernate.query.sqm.SortOrder;
+import org.hibernate.query.NullPrecedence;
+import org.hibernate.query.SortDirection;
 
 /**
  * An individual sort specification in an order-by fragment
@@ -18,7 +16,7 @@ public class OrderingSpecification implements Node {
 	private final OrderingExpression orderingExpression;
 
 	private String collation;
-	private SortOrder sortOrder;
+	private SortDirection sortOrder = SortDirection.ASCENDING;
 	private NullPrecedence nullPrecedence = NullPrecedence.NONE;
 	private String orderByValue;
 
@@ -39,11 +37,11 @@ public class OrderingSpecification implements Node {
 		this.collation = collation;
 	}
 
-	public SortOrder getSortOrder() {
+	public SortDirection getSortOrder() {
 		return sortOrder;
 	}
 
-	public void setSortOrder(SortOrder sortOrder) {
+	public void setSortOrder(SortDirection sortOrder) {
 		this.sortOrder = sortOrder;
 	}
 

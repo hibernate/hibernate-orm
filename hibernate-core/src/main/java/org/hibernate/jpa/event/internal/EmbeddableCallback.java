@@ -1,13 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.event.internal;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Locale;
 
 import org.hibernate.jpa.event.spi.Callback;
 import org.hibernate.jpa.event.spi.CallbackDefinition;
@@ -20,7 +19,7 @@ import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
  *
  * @author Vlad Mihalcea
  */
-final class EmbeddableCallback extends AbstractCallback {
+public class EmbeddableCallback extends AbstractCallback {
 
 	public static class Definition implements CallbackDefinition {
 		private final Getter embeddableGetter;
@@ -69,5 +68,16 @@ final class EmbeddableCallback extends AbstractCallback {
 		catch (Exception e) {
 			throw new RuntimeException( e );
 		}
+	}
+
+	@Override
+	public String toString() {
+		return String.format(
+				Locale.ROOT,
+				"EmbeddableCallback([%s] %s.%s)",
+				getCallbackType().name(),
+				callbackMethod.getDeclaringClass().getName(),
+				callbackMethod.getName()
+		);
 	}
 }

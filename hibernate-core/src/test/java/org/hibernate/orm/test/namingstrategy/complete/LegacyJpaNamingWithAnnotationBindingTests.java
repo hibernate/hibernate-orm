@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.namingstrategy.complete;
 
@@ -14,6 +12,9 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Selectable;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 
@@ -49,7 +50,7 @@ public class LegacyJpaNamingWithAnnotationBindingTests extends BaseAnnotationBin
 	@Override
 	protected void validateCustomerHqAddressComponent(Component component) {
 		assertEquals( 3, component.getColumnSpan() );
-		Iterator<Selectable> selectables = component.getColumnIterator();
+		Iterator<Selectable> selectables = component.getSelectables().iterator();
 		int pass = 1;
 		while ( selectables.hasNext() ) {
 			final Column column = assertTyping( Column.class, selectables.next() );
@@ -68,7 +69,7 @@ public class LegacyJpaNamingWithAnnotationBindingTests extends BaseAnnotationBin
 
 	@Override
 	protected void validateOrderPrimaryTableName(String name) {
-		assertEquals( "Order", name );
+		assertThat( name, anyOf( equalTo( "Order"), equalTo( "`Order`") ) );
 	}
 
 	@Override
@@ -153,7 +154,7 @@ public class LegacyJpaNamingWithAnnotationBindingTests extends BaseAnnotationBin
 	@Override
 	protected void validateCustomerAddressesElementComponent(Component component) {
 		assertEquals( 3, component.getColumnSpan() );
-		Iterator<Selectable> selectables = component.getColumnIterator();
+		Iterator<Selectable> selectables = component.getSelectables().iterator();
 		int pass = 1;
 		while ( selectables.hasNext() ) {
 			final Column column = assertTyping( Column.class, selectables.next() );
@@ -172,7 +173,7 @@ public class LegacyJpaNamingWithAnnotationBindingTests extends BaseAnnotationBin
 
 	@Override
 	protected void validateCustomerOrdersTableName(String name) {
-		assertEquals( "Order", name );
+		assertThat( name, anyOf( equalTo( "Order"), equalTo( "`Order`") ) );
 	}
 
 	@Override

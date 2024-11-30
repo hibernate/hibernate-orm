@@ -1,10 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.spatial.dialect.postgis.hhh14932;
 
 import java.util.List;
@@ -12,7 +9,7 @@ import java.util.List;
 import org.hibernate.dialect.PostgreSQLDialect;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,7 +25,7 @@ import static org.geolatte.geom.crs.CoordinateReferenceSystems.WGS84;
 import static org.junit.Assert.assertEquals;
 
 
-@TestForIssue(jiraKey = "HHH-14932")
+@JiraKey(value = "HHH-14932")
 
 @RequiresDialect(PostgreSQLDialect.class)
 public class TestUsingPostgisWkb221AndLater extends BaseCoreFunctionalTestCase {

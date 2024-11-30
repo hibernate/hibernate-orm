@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
@@ -10,13 +8,14 @@ import java.util.function.BiConsumer;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.internal.AbstractCompositeIdentifierMapping;
-import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.AggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -28,7 +27,7 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
  */
 public class EmbeddedIdentifierMappingImpl
 		extends AbstractCompositeIdentifierMapping
-		implements SingleAttributeIdentifierMapping {
+		implements AggregatedIdentifierMapping {
 	private final String name;
 	private final EmbeddableMappingType embeddableDescriptor;
 	private final PropertyAccess propertyAccess;
@@ -50,6 +49,11 @@ public class EmbeddedIdentifierMappingImpl
 	@Override
 	public String getPartName() {
 		return name;
+	}
+
+	@Override
+	public Nature getNature() {
+		return Nature.COMPOSITE;
 	}
 
 	@Override
@@ -78,17 +82,10 @@ public class EmbeddedIdentifierMappingImpl
 	}
 
 	@Override
-	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
-		if ( entity instanceof HibernateProxy ) {
-			return ( (HibernateProxy) entity ).getHibernateLazyInitializer().getIdentifier();
-		}
-		return propertyAccess.getGetter().get( entity );
-	}
-
-	@Override
 	public Object getIdentifier(Object entity) {
-		if ( entity instanceof HibernateProxy ) {
-			return ( (HibernateProxy) entity ).getHibernateLazyInitializer().getIdentifier();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entity );
+		if ( lazyInitializer != null ) {
+			return lazyInitializer.getIdentifier();
 		}
 		return propertyAccess.getGetter().get( entity );
 	}
@@ -109,13 +106,6 @@ public class EmbeddedIdentifierMappingImpl
 		return name;
 	}
 
-
-	@Override
-	public int getNumberOfFetchables() {
-		return getEmbeddableTypeDescriptor().getNumberOfAttributeMappings();
-	}
-
-
 	@Override
 	public PropertyAccess getPropertyAccess() {
 		return propertyAccess;
@@ -127,36 +117,7 @@ public class EmbeddedIdentifierMappingImpl
 	}
 
 	@Override
-	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		getEmbeddableTypeDescriptor().breakDownJdbcValues( domainValue, valueConsumer, session );
-	}
-
-	@Override
-	public int forEachDisassembledJdbcValue(
-			Object value,
-			Clause clause,
-			int offset,
-			JdbcValuesConsumer valuesConsumer,
-			SharedSessionContractImplementor session) {
-		return getEmbeddableTypeDescriptor().forEachDisassembledJdbcValue(
-				value,
-				clause,
-				offset,
-				valuesConsumer,
-				session
-		);
-	}
-
-	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		final EmbeddableMappingType embeddableTypeDescriptor = getEmbeddableTypeDescriptor();
-		final Object[] result = new Object[embeddableTypeDescriptor.getNumberOfAttributeMappings()];
-		embeddableTypeDescriptor.forEachAttributeMapping(
-				(i, mapping) -> {
-					Object o = mapping.getPropertyAccess().getGetter().get( value );
-					result[i] = mapping.disassemble( o, session );
-				}
-		);
-		return result;
+	public int compare(Object value1, Object value2) {
+		return getEmbeddableTypeDescriptor().compare( value1, value2 );
 	}
 }

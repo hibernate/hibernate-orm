@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
@@ -43,11 +41,7 @@ class TimestampAttributeSourceImpl
 			JaxbHbmTimestampAttributeType timestampElement) {
 		super( mappingDocument );
 		this.timestampElement = timestampElement;
-		this.typeSource = new HibernateTypeSourceImpl(
-				"db".equals( timestampElement.getSource().value() )
-						? "dbtimestamp"
-						: "timestamp"
-		);
+		this.typeSource = new HibernateTypeSourceImpl("timestamp");
 
 		final RelationalValueSource columnSource = RelationalValueSourceHelper.buildColumnSource(
 				mappingDocument,
@@ -148,6 +142,10 @@ class TimestampAttributeSourceImpl
 	@Override
 	public GenerationTiming getGenerationTiming() {
 		return timestampElement.getGenerated();
+	}
+
+	public String getSource() {
+		return timestampElement.getSource().value();
 	}
 
 	@Override

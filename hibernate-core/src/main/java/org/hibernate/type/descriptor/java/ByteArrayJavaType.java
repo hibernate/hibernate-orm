@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
@@ -14,11 +12,16 @@ import java.util.Arrays;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.BinaryStream;
-import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
+import org.hibernate.engine.jdbc.internal.ArrayBackedBinaryStream;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.jdbc.AdjustableJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
 /**
- * Descriptor for {@code Byte[]} handling.
+ * Descriptor for {@code Byte[]} handling, which disallows {@code null} elements.
+ * This {@link JavaType} is useful if the domain model uses {@code Byte[]} and wants to map to {@link SqlTypes#VARBINARY}.
  *
  * @author Steve Ebersole
  */
@@ -32,7 +35,7 @@ public class ByteArrayJavaType extends AbstractClassJavaType<Byte[]> {
 	@Override
 	public boolean areEqual(Byte[] one, Byte[] another) {
 		return one == another
-				|| ( one != null && another != null && Arrays.equals(one, another) );
+			|| one != null && another != null && Arrays.equals(one, another);
 	}
 	@Override
 	public int extractHashCode(Byte[] bytes) {
@@ -41,6 +44,15 @@ public class ByteArrayJavaType extends AbstractClassJavaType<Byte[]> {
 			hashCode = 31 * hashCode + aByte;
 		}
 		return hashCode;
+	}
+
+	@Override
+	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators indicators) {
+		// match legacy behavior
+		final JdbcType descriptor = indicators.getJdbcType( indicators.resolveJdbcTypeCode( SqlTypes.VARBINARY ) );
+		return descriptor instanceof AdjustableJdbcType
+				? ( (AdjustableJdbcType) descriptor ).resolveIndicatedType( indicators, this )
+				: descriptor;
 	}
 
 	@Override
@@ -87,7 +99,7 @@ public class ByteArrayJavaType extends AbstractClassJavaType<Byte[]> {
 			return (X) new ByteArrayInputStream( unwrapBytes( value ) );
 		}
 		if ( BinaryStream.class.isAssignableFrom( type ) ) {
-			return (X) new BinaryStreamImpl( unwrapBytes( value ) );
+			return (X) new ArrayBackedBinaryStream( unwrapBytes( value ) );
 		}
 		if ( Blob.class.isAssignableFrom( type ) ) {
 			return (X) options.getLobCreator().createBlob( unwrapBytes( value ) );
@@ -100,18 +112,18 @@ public class ByteArrayJavaType extends AbstractClassJavaType<Byte[]> {
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof Byte[]) {
-			return (Byte[]) value;
+		if (value instanceof Byte[] bytes) {
+			return bytes;
 		}
-		if (value instanceof byte[]) {
-			return wrapBytes( (byte[]) value );
+		if (value instanceof byte[] bytes) {
+			return wrapBytes( bytes );
 		}
-		if (value instanceof InputStream) {
-			return wrapBytes( DataHelper.extractBytes( (InputStream) value ) );
+		if (value instanceof InputStream inputStream) {
+			return wrapBytes( DataHelper.extractBytes( inputStream ) );
 		}
-		if ( value instanceof Blob || DataHelper.isNClob( value.getClass() ) ) {
+		if ( value instanceof Blob blob ) {
 			try {
-				return wrapBytes( DataHelper.extractBytes( ( (Blob) value ).getBinaryStream() ) );
+				return wrapBytes( DataHelper.extractBytes( blob.getBinaryStream() ) );
 			}
 			catch ( SQLException e ) {
 				throw new HibernateException( "Unable to access lob stream", e );

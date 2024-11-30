@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping;
 
@@ -18,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
 
@@ -53,9 +52,9 @@ public class SecondaryTableTests {
 	}
 
 	@Entity( name = "SimpleEntityWithSecondaryTables" )
-	@Table( name = "simple_w_secondary_tables0" )
-	@SecondaryTable( name = "simple_w_secondary_tables1" )
-	@SecondaryTable( name = "simple_w_secondary_tables2" )
+	@Table( name = "root_table" )
+	@SecondaryTable( name = "secondary_table1", pkJoinColumns = @PrimaryKeyJoinColumn( name = "s1_id" ) )
+	@SecondaryTable( name = "secondary_table2", pkJoinColumns = @PrimaryKeyJoinColumn( name = "s2_id" ) )
 	public static class SimpleEntityWithSecondaryTables {
 		private Integer id;
 		private String name;
@@ -89,7 +88,7 @@ public class SecondaryTableTests {
 			this.name = name;
 		}
 
-		@Column( table = "simple_w_secondary_tables1" )
+		@Column( table = "secondary_table1" )
 		public Date getDob() {
 			return dob;
 		}
@@ -98,7 +97,7 @@ public class SecondaryTableTests {
 			this.dob = dob;
 		}
 
-		@Column( table = "simple_w_secondary_tables2" )
+		@Column( table = "secondary_table2" )
 		public String getData() {
 			return data;
 		}

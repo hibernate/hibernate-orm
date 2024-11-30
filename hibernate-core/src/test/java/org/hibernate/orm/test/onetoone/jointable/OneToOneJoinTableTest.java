@@ -1,12 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.onetoone.jointable;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -31,23 +29,23 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class OneToOneJoinTableTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9188")
+	@JiraKey(value = "HHH-9188")
 	public void test(SessionFactoryScope scope) throws Exception {
 		Long id = scope.fromTransaction( s -> {
 			Event childEvent = new Event();
 			childEvent.setDescription( "childEvent" );
-			s.save( childEvent );
+			s.persist( childEvent );
 
 			Event parentEvent = new Event();
 			parentEvent.setDescription( "parentEvent" );
-			s.save( parentEvent );
+			s.persist( parentEvent );
 
 			OtherEntity otherEntity = new OtherEntity();
 			otherEntity.setId( "123" );
-			s.save( otherEntity );
+			s.persist( otherEntity );
 
 			childEvent.setOther( otherEntity );
-			s.save( childEvent );
+			s.persist( childEvent );
 			s.flush();
 
 			// Test updates and deletes

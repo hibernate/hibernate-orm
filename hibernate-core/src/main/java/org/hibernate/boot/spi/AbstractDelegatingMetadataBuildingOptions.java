@@ -1,23 +1,25 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.spi;
 
 import java.util.List;
-import jakarta.persistence.SharedCacheMode;
+
 import org.hibernate.HibernateException;
 import org.hibernate.TimeZoneStorageStrategy;
-import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
+import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
+import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cfg.MetadataSourceType;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.dialect.TimeZoneSupport;
+import org.hibernate.type.WrapperArrayHandling;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.usertype.CompositeUserType;
+
+import jakarta.persistence.SharedCacheMode;
 
 /**
  * Convenience base class for custom implementors of {@link MetadataBuildingOptions} using delegation.
@@ -49,18 +51,28 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	}
 
 	@Override
-	public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
-		return delegate.getIdentifierGeneratorFactory();
-	}
-
-	@Override
 	public TimeZoneStorageStrategy getDefaultTimeZoneStorage() {
 		return delegate.getDefaultTimeZoneStorage();
 	}
 
 	@Override
+	public TimeZoneSupport getTimeZoneSupport() {
+		return delegate.getTimeZoneSupport();
+	}
+
+	@Override
+	public WrapperArrayHandling getWrapperArrayHandling() {
+		return delegate.getWrapperArrayHandling();
+	}
+
+	@Override
 	public List<BasicTypeRegistration> getBasicTypeRegistrations() {
 		return delegate.getBasicTypeRegistrations();
+	}
+
+	@Override
+	public List<CompositeUserType<?>> getCompositeUserTypes() {
+		return delegate.getCompositeUserTypes();
 	}
 
 	@Override
@@ -79,6 +91,11 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	}
 
 	@Override
+	public ColumnOrderingStrategy getColumnOrderingStrategy() {
+		return delegate.getColumnOrderingStrategy();
+	}
+
+	@Override
 	public SharedCacheMode getSharedCacheMode() {
 		return delegate.getSharedCacheMode();
 	}
@@ -91,11 +108,6 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	@Override
 	public boolean isMultiTenancyEnabled() {
 		return delegate.isMultiTenancyEnabled();
-	}
-
-	@Override
-	public IdGeneratorStrategyInterpreter getIdGenerationTypeInterpreter() {
-		return delegate.getIdGenerationTypeInterpreter();
 	}
 
 	@Override
@@ -129,14 +141,23 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	}
 
 	@Override
-	public List<MetadataSourceType> getSourceProcessOrdering() {
-		return delegate.getSourceProcessOrdering();
-	}
-
-	@Override
 	public void apply(JpaOrmXmlPersistenceUnitDefaults jpaOrmXmlPersistenceUnitDefaults) {
 		if ( delegate instanceof JpaOrmXmlPersistenceUnitDefaultAware ) {
 			( (JpaOrmXmlPersistenceUnitDefaultAware) delegate ).apply( jpaOrmXmlPersistenceUnitDefaults );
+		}
+		else {
+			throw new HibernateException(
+					"AbstractDelegatingMetadataBuildingOptions delegate did not " +
+							"implement JpaOrmXmlPersistenceUnitDefaultAware; " +
+							"cannot delegate JpaOrmXmlPersistenceUnitDefaultAware#apply"
+			);
+		}
+	}
+
+	@Override
+	public void apply(PersistenceUnitMetadata persistenceUnitMetadata) {
+		if ( delegate instanceof JpaOrmXmlPersistenceUnitDefaultAware ) {
+			( (JpaOrmXmlPersistenceUnitDefaultAware) delegate ).apply( persistenceUnitMetadata );
 		}
 		else {
 			throw new HibernateException(
@@ -157,4 +178,13 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 		return delegate.isXmlMappingEnabled();
 	}
 
+	@Override
+	public boolean isAllowExtensionsInCdi() {
+		return delegate.isAllowExtensionsInCdi();
+	}
+
+	@Override
+	public boolean isXmlFormatMapperLegacyFormatEnabled() {
+		return delegate.isXmlFormatMapperLegacyFormatEnabled();
+	}
 }

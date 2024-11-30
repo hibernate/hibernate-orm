@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.ordering.ast;
 
@@ -11,9 +9,9 @@ import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
-import org.hibernate.persister.entity.AbstractEntityPersister;
-import org.hibernate.query.sqm.NullPrecedence;
-import org.hibernate.query.sqm.SortOrder;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.NullPrecedence;
+import org.hibernate.query.SortDirection;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -21,6 +19,9 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
+import org.hibernate.type.NullType;
+
+import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
  * Represents a column-reference used in an order-by fragment
@@ -53,13 +54,10 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 			TableGroup tableGroup,
 			String modelPartName,
 			SqlAstCreationState creationState) {
-		TableReference tableReference;
-
-		tableReference = getTableReference( tableGroup );
-
+		final TableReference tableReference = getTableReference( tableGroup );
 		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlExpressionResolver();
 		return sqlExpressionResolver.resolveSqlExpression(
-				SqlExpressionResolver.createColumnReferenceKey( tableReference, columnExpression ),
+				createColumnReferenceKey( tableReference, columnExpression, NullType.INSTANCE ),
 				sqlAstProcessingState -> new org.hibernate.sql.ast.tree.expression.ColumnReference(
 						tableReference,
 						columnExpression,
@@ -67,9 +65,7 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 						// because these ordering fragments are only ever part of the order-by clause, there
 						//		is no need for the JdbcMapping
 						null,
-						null,
-						null,
-						creationState.getCreationContext().getSessionFactory()
+						null
 				)
 		);
 	}
@@ -89,7 +85,7 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 			TableGroup tableGroup,
 			String collation,
 			String modelPartName,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence,
 			SqlAstCreationState creationState) {
 		final Expression expression = resolve( ast, tableGroup, modelPartName, creationState );
@@ -108,7 +104,7 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 				collation,
 				creationState
 		);
-		ast.addSortSpecification( new SortSpecification( sortExpression, sortOrder, nullPrecedence ) );
+		ast.addSortSpecification( new SortSpecification( sortExpression, sortOrder, nullPrecedence.getJpaValue() ) );
 	}
 
 	TableReference getTableReference(TableGroup tableGroup) {
@@ -121,11 +117,9 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 
 			final MappingType elementMappingType = pluralAttribute.getElementDescriptor().getPartMappingType();
 
-			if ( elementMappingType instanceof AbstractEntityPersister ) {
-				final AbstractEntityPersister abstractEntityPersister = (AbstractEntityPersister) elementMappingType;
-				final int tableNumber = abstractEntityPersister.determineTableNumberForColumn( columnExpression );
-				final String tableName = abstractEntityPersister.getTableName( tableNumber );
-
+			if ( elementMappingType instanceof EntityPersister) {
+				final EntityPersister entityPersister = (EntityPersister) elementMappingType;
+				final String tableName = entityPersister.getTableNameForColumn( columnExpression );
 				return tableGroup.getTableReference( tableGroup.getNavigablePath(), tableName );
 			}
 			else {
@@ -135,4 +129,8 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 		return null;
 	}
 
+	@Override
+	public String toDescriptiveText() {
+		return "column reference (" + columnExpression + ")";
+	}
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.criteria;
 
@@ -30,8 +28,9 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.spi.QueryImplementor;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 public class CriteriaQueryTypeQueryAdapterTest extends BaseEntityManagerFunctionalTestCase {
@@ -45,7 +44,7 @@ public class CriteriaQueryTypeQueryAdapterTest extends BaseEntityManagerFunction
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12685")
+	@JiraKey(value = "HHH-12685")
 	public void testCriteriaQueryParameterIsBoundCheckNotFails() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -62,7 +61,7 @@ public class CriteriaQueryTypeQueryAdapterTest extends BaseEntityManagerFunction
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12685")
+	@JiraKey(value = "HHH-12685")
 	public void testCriteriaQueryGetParameters() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -82,7 +81,7 @@ public class CriteriaQueryTypeQueryAdapterTest extends BaseEntityManagerFunction
 		} );
 	}
 
-	@TestForIssue(jiraKey = "HHH-12685")
+	@JiraKey(value = "HHH-12685")
 	@Test(expected = IllegalArgumentException.class)
 	public void testCriteriaQueryGetParameterOfWrongType() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
@@ -97,7 +96,7 @@ public class CriteriaQueryTypeQueryAdapterTest extends BaseEntityManagerFunction
 		} );
 	}
 
-	@TestForIssue(jiraKey = "HHH-12685")
+	@JiraKey(value = "HHH-12685")
 	@Test(expected = IllegalArgumentException.class)
 	public void testCriteriaQueryGetNonExistingParameter() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
@@ -109,6 +108,22 @@ public class CriteriaQueryTypeQueryAdapterTest extends BaseEntityManagerFunction
 			query.where( predicate );
 			TypedQuery<Item> criteriaQuery = entityManager.createQuery( query );
 			criteriaQuery.getParameter( "placedAt" );
+		} );
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	@JiraKey("HHH-13932")
+	public void testCriteriaQuerySetNonExistingParameter() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+			CriteriaQuery<Item> query = builder.createQuery( Item.class );
+			Root<Item> root = query.from( Item.class );
+			ParameterExpression<String> parameter = builder.parameter( String.class, "name" );
+			Predicate predicate = builder.equal( root.get( "name" ), parameter );
+			query.where( predicate );
+			TypedQuery<Item> criteriaQuery = entityManager.createQuery( query );
+			ParameterExpression<String> nonExistingParam = builder.parameter( String.class, "nonExistingParam" );
+			criteriaQuery.setParameter( nonExistingParam, "George" );
 		} );
 	}
 
@@ -148,7 +163,7 @@ public class CriteriaQueryTypeQueryAdapterTest extends BaseEntityManagerFunction
 		} );
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = SemanticException.class)
 	public void testSetParameterOfTypeInstantToAFloatParameterType() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -167,7 +182,7 @@ public class CriteriaQueryTypeQueryAdapterTest extends BaseEntityManagerFunction
 	}
 
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = SemanticException.class)
 	public void testSetParameterOfTypeDateToAFloatParameterType() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			CriteriaBuilder builder = entityManager.getCriteriaBuilder();

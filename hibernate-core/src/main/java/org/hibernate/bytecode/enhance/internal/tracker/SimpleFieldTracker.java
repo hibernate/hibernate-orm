@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.enhance.internal.tracker;
 
@@ -12,11 +10,11 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 
 /**
  * small low memory class to keep track of changed fields
- * <p/>
+ * <p>
  * uses an array as a set (under the assumption that the number of elements will be low) to avoid having to instantiate an HashSet.
  * if the assumption does not, hold the array can be kept ordered to reduce the cost of verifying duplicates
  *
- * @author <a href="mailto:lbarreiro@redhat.com">Luis Barreiro</a>
+ * @author Luis Barreiro
  */
 public final class SimpleFieldTracker implements DirtyTracker {
 

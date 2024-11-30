@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.exceptionhandling;
 
@@ -15,12 +13,12 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.junit.Assert.fail;
 
-@TestForIssue(jiraKey = "HHH-12666")
+@JiraKey(value = "HHH-12666")
 @RequiresDialect(H2Dialect.class)
 public class TransientObjectExceptionHandlingTest extends BaseExceptionHandlingTest {
 
@@ -35,46 +33,6 @@ public class TransientObjectExceptionHandlingTest extends BaseExceptionHandlingT
 				A.class,
 				AInfo.class
 		};
-	}
-
-	@Test
-	public void testSave() {
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		A a = new A();
-		a.id = 1;
-		a.aInfo = new AInfo();
-		try {
-			s.save( a );
-			fail( "should have thrown an exception" );
-		}
-		catch (RuntimeException expected) {
-			exceptionExpectations.onTransientObjectOnSaveAndSaveOrUpdate( expected );
-		}
-		finally {
-			tx.rollback();
-			s.close();
-		}
-	}
-
-	@Test
-	public void testSaveOrUpdate() {
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		A a = new A();
-		a.id = 1;
-		a.aInfo = new AInfo();
-		try {
-			s.saveOrUpdate( a );
-			fail( "should have thrown an exception" );
-		}
-		catch (RuntimeException expected) {
-			exceptionExpectations.onTransientObjectOnSaveAndSaveOrUpdate( expected );
-		}
-		finally {
-			tx.rollback();
-			s.close();
-		}
 	}
 
 	@Test
@@ -118,14 +76,14 @@ public class TransientObjectExceptionHandlingTest extends BaseExceptionHandlingT
 	}
 
 	@Test
-	public void testUpdateFlush() {
+	public void testMergeFlush() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		A a = new A();
 		a.id = 1;
 		a.aInfo = new AInfo();
 		try {
-			s.update( a );
+			s.merge( a );
 			s.flush();
 			fail( "should have thrown an exception" );
 		}

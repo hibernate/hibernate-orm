@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.proxy;
 
@@ -38,14 +36,14 @@ import org.hibernate.orm.test.envers.integration.manytomany.ternary.TernaryMapEn
 import org.hibernate.orm.test.envers.tools.TestTools;
 
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-5845")
+@JiraKey(value = "HHH-5845")
 public class RemovedObjectQueryTest extends BaseEnversJPAFunctionalTestCase {
 	private Integer stringSetId = null;
 	private Integer ternaryMapId = null;
@@ -156,6 +154,7 @@ public class RemovedObjectQueryTest extends BaseEnversJPAFunctionalTestCase {
 		// Revision 9 - removing first object
 		em.getTransaction().begin();
 		setOwningEntity2 = em.find( SetOwningEntity.class, 7 );
+		setOwnedEntity2.getReferencing().remove( setOwningEntity2 );
 		em.remove( setOwningEntity2 );
 		em.getTransaction().commit();
 

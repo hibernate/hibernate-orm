@@ -21,7 +21,7 @@ containers through `jakarta.persistence.spi.ClassTransformer`.  See the document
 your container for any additional details.  Run-time enhancement is controlled through
 3 true/false settings (all of which default to false):
 
-`hibernate.enhancer.enableDirtyTracking`:: Whether to enhance the model for dirty-tracking
+`hibernate.enhancer.enableDirtyTracking`:: Whether to enhance the model for dirty-tracking. This setting is deprecated for removal without a replacement.
 `hibernate.enhancer.enableLazyInitialization`:: Whether to enhance the model for lazy loading at the attribute level.  This allows
-even basic types to be fetched lazily.  It also allows definition of fetch groups (`LazyGroup`).
+even basic types to be fetched lazily.  It also allows definition of fetch groups (`LazyGroup`). This setting is deprecated for removal without a replacement.
 `hibernate.enhancer.enableAssociationManagement`:: Whether to automatically synchronize a bidirectional association when only one side is changed.

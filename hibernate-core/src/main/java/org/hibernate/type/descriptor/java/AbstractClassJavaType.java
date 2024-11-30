@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
@@ -14,12 +12,13 @@ import org.hibernate.HibernateException;
 import org.hibernate.internal.util.compare.ComparableComparator;
 
 /**
- * Abstract adapter for Java type descriptors.
+ * Abstract adapter for {@link JavaType Java type descriptors}.
  *
- * @apiNote This abstract descriptor implements BasicJavaType
- * because we currently only categorize "basic" JavaTypes,
- * as in the {@link jakarta.persistence.metamodel.Type.PersistenceType#BASIC}
- * sense
+ * @apiNote This abstract descriptor implements {@link BasicJavaType}
+ * because we currently only categorize basic {@link JavaType}s, where
+ * "basic" is meant in the sense of the JPA specification, that is,
+ * {@link jakarta.persistence.metamodel.Type.PersistenceType#BASIC}.
+ *
  *
  * @author Steve Ebersole
  */
@@ -45,13 +44,12 @@ public abstract class AbstractClassJavaType<T> implements BasicJavaType<T>, Seri
 	 * @param type The Java type.
 	 * @param mutabilityPlan The plan for handling mutability aspects of the java type.
 	 */
-	@SuppressWarnings("unchecked")
 	protected AbstractClassJavaType(Class<? extends T> type, MutabilityPlan<? extends T> mutabilityPlan) {
 		this(
 				type,
 				mutabilityPlan,
 				Comparable.class.isAssignableFrom( type )
-						? (Comparator<T>) ComparableComparator.INSTANCE
+						? ComparableComparator.instance()
 						: null
 		);
 	}

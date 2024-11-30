@@ -1,12 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
-import java.util.Iterator;
 import java.util.Locale;
 
 import org.hibernate.envers.boot.EnversMappingException;
@@ -27,12 +24,12 @@ import org.hibernate.envers.internal.entities.mapper.id.MultipleIdMapper;
 import org.hibernate.envers.internal.entities.mapper.id.NestedEmbeddedIdMapper;
 import org.hibernate.envers.internal.entities.mapper.id.SimpleIdMapperBuilder;
 import org.hibernate.envers.internal.entities.mapper.id.SingleIdMapper;
-import org.hibernate.loader.PropertyPath;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
@@ -68,7 +65,7 @@ public final class IdMetadataGenerator extends AbstractMetadataGenerator {
 			Property virtualProperty,
 			boolean audited) {
 
-		if ( PropertyPath.IDENTIFIER_MAPPER_PROPERTY.equals( mappedProperty.getName() ) ) {
+		if ( NavigablePath.IDENTIFIER_MAPPER_PROPERTY.equals( mappedProperty.getName() ) ) {
 			return false;
 		}
 
@@ -120,18 +117,10 @@ public final class IdMetadataGenerator extends AbstractMetadataGenerator {
 			SimpleIdMapperBuilder mapper,
 			boolean key,
 			boolean audited) {
-		final Iterator<Property> properties = component.getPropertyIterator();
-		while ( properties.hasNext() ) {
-			final Property property = properties.next();
-
-			final Property virtualProperty;
-			if ( virtualComponent != null ) {
-				virtualProperty = virtualComponent.getProperty( property.getName() );
-			}
-			else {
-				virtualProperty = null;
-			}
-
+		for ( Property property : component.getProperties() ) {
+			final Property virtualProperty = virtualComponent != null
+					? virtualComponent.getProperty( property.getName() )
+					: null;
 			if ( !addIdProperty( attributeContainer, key, mapper, property, virtualProperty, audited ) ) {
 				// If the entity is audited, and a non-supported id component is used, throw exception.
 				if ( audited ) {
@@ -162,12 +151,11 @@ public final class IdMetadataGenerator extends AbstractMetadataGenerator {
 	}
 
 	private void generateSecondPass(String entityName, Component component) {
-		Iterator<Property> properties = component.getPropertyIterator();
-		while ( properties.hasNext() ) {
-			final Property property = properties.next();
-			if ( property.getValue() instanceof ToOne ) {
+		for ( Property property : component.getProperties() ) {
+			final Value value = property.getValue();
+			if ( value instanceof ToOne ) {
 				final PropertyAuditingData propertyData = getIdPersistentPropertyAuditingData( property );
-				final String referencedEntityName = ( (ToOne) property.getValue() ).getReferencedEntityName();
+				final String referencedEntityName = ( (ToOne) value).getReferencedEntityName();
 
 				final String prefix = getMetadataBuildingContext().getConfiguration()
 						.getOriginalIdPropertyName() + "." + propertyData.getName();

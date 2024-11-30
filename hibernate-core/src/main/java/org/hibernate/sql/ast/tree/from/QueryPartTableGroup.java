@@ -1,20 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.from;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.tree.select.QueryPart;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
 
 /**
  * A special table group for a sub-queries.
@@ -29,7 +26,7 @@ public class QueryPartTableGroup extends AbstractTableGroup {
 	public QueryPartTableGroup(
 			NavigablePath navigablePath,
 			TableGroupProducer tableGroupProducer,
-			QueryPart queryPart,
+			SelectStatement selectStatement,
 			String sourceAlias,
 			List<String> columnNames,
 			boolean lateral,
@@ -38,7 +35,7 @@ public class QueryPartTableGroup extends AbstractTableGroup {
 		this(
 				navigablePath,
 				tableGroupProducer,
-				queryPart,
+				selectStatement,
 				sourceAlias,
 				columnNames,
 				Collections.emptySet(),
@@ -51,7 +48,7 @@ public class QueryPartTableGroup extends AbstractTableGroup {
 	public QueryPartTableGroup(
 			NavigablePath navigablePath,
 			TableGroupProducer tableGroupProducer,
-			QueryPart queryPart,
+			SelectStatement selectStatement,
 			String sourceAlias,
 			List<String> columnNames,
 			Set<String> compatibleTableExpressions,
@@ -68,7 +65,7 @@ public class QueryPartTableGroup extends AbstractTableGroup {
 		);
 		this.compatibleTableExpressions = compatibleTableExpressions;
 		this.queryPartTableReference = new QueryPartTableReference(
-				queryPart,
+				selectStatement,
 				sourceAlias,
 				columnNames,
 				lateral,
@@ -82,10 +79,9 @@ public class QueryPartTableGroup extends AbstractTableGroup {
 	}
 
 	@Override
-	protected TableReference getTableReferenceInternal(
+	public TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization,
 			boolean resolve) {
 		if ( compatibleTableExpressions.contains( tableExpression ) ) {
 			return getPrimaryTableReference();
@@ -93,7 +89,7 @@ public class QueryPartTableGroup extends AbstractTableGroup {
 		for ( TableGroupJoin tableGroupJoin : getNestedTableGroupJoins() ) {
 			final TableReference groupTableReference = tableGroupJoin.getJoinedGroup()
 					.getPrimaryTableReference()
-					.getTableReference( navigablePath, tableExpression, allowFkOptimization, resolve );
+					.getTableReference( navigablePath, tableExpression, resolve );
 			if ( groupTableReference != null ) {
 				return groupTableReference;
 			}
@@ -101,7 +97,7 @@ public class QueryPartTableGroup extends AbstractTableGroup {
 		for ( TableGroupJoin tableGroupJoin : getTableGroupJoins() ) {
 			final TableReference groupTableReference = tableGroupJoin.getJoinedGroup()
 					.getPrimaryTableReference()
-					.getTableReference( navigablePath, tableExpression, allowFkOptimization, resolve );
+					.getTableReference( navigablePath, tableExpression, resolve );
 			if ( groupTableReference != null ) {
 				return groupTableReference;
 			}

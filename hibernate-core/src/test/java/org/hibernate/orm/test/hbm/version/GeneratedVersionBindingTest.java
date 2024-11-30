@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.hbm.version;
 
@@ -12,6 +10,7 @@ import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 /**
@@ -20,7 +19,7 @@ import org.junit.Test;
 public class GeneratedVersionBindingTest extends BaseUnitTestCase {
 	@Test
 	public void testIt() {
-		MetadataSources metadataSources = new MetadataSources()
+		MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() )
 			.addResource( "org/hibernate/orm/test/hbm/version/Mappings.hbm.xml" );
 
 		try {

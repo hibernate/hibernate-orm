@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.orm.junit;
 
@@ -51,9 +49,11 @@ public @interface SessionFactory {
 	Class<? extends StatementInspector> statementInspectorClass() default StatementInspector.class;
 
 	/**
-	 * Short hand for {@code statementInspectorClass = org.hibernate.testing.jdbc.SQLStatementInspector.class}
+	 * Shorthand for {@code statementInspectorClass = org.hibernate.testing.jdbc.SQLStatementInspector.class}
 	 *
 	 * @see SQLStatementInspector
 	 */
 	boolean useCollectingStatementInspector() default false;
+
+	boolean applyCollectionsInDefaultFetchGroup() default true;
 }

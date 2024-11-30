@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.namingstrategy;
 
@@ -11,7 +9,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.junit.jupiter.api.Test;
 
@@ -19,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Emmanuel Bernard
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 public class NamingStrategyTest extends BaseSessionFactoryFunctionalTest {
 
@@ -47,17 +45,17 @@ public class NamingStrategyTest extends BaseSessionFactoryFunctionalTest {
 	@Test
 	public void testDatabaseColumnNames() {
 		PersistentClass classMapping = getMetadata().getEntityBinding( Customers.class.getName() );
-		Column stateColumn = (Column) classMapping.getProperty( "specified_column" ).getColumnIterator().next();
+		Column stateColumn = (Column) classMapping.getProperty( "specified_column" ).getSelectables().get( 0 );
 		assertEquals( "CN_specified_column", stateColumn.getName() );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5848")
+	@JiraKey(value = "HHH-5848")
 	public void testDatabaseTableNames() {
 		PersistentClass classMapping = getMetadata().getEntityBinding( Item.class.getName() );
-		Column secTabColumn = (Column) classMapping.getProperty( "specialPrice" ).getColumnIterator().next();
+		Column secTabColumn = (Column) classMapping.getProperty( "specialPrice" ).getSelectables().get( 0 );
 		assertEquals( "TAB_ITEMS_SEC", secTabColumn.getValue().getTable().getName() );
-		Column tabColumn = (Column) classMapping.getProperty( "price" ).getColumnIterator().next();
+		Column tabColumn = (Column) classMapping.getProperty( "price" ).getSelectables().get( 0 );
 		assertEquals( "TAB_ITEMS", tabColumn.getValue().getTable().getName() );
 	}
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.convert.spi;
 
@@ -13,8 +11,8 @@ import org.hibernate.boot.model.convert.internal.AutoApplicableConverterDescript
 import org.hibernate.boot.model.convert.internal.AutoApplicableConverterDescriptorStandardImpl;
 import org.hibernate.boot.model.convert.internal.ConverterHelper;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.metamodel.model.convert.internal.JpaAttributeConverterImpl;
-import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
+import org.hibernate.type.descriptor.converter.internal.JpaAttributeConverterImpl;
+import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -94,7 +92,7 @@ public class RegisteredConversion {
 		return explicitDomainType;
 	}
 
-	public Class<?> getConverterType() {
+	public Class<? extends AttributeConverter<?,?>> getConverterType() {
 		return converterType;
 	}
 
@@ -152,9 +150,8 @@ public class RegisteredConversion {
 		@SuppressWarnings("unchecked")
 		@Override
 		public JpaAttributeConverter<?, ?> createJpaAttributeConverter(JpaAttributeConverterCreationContext context) {
-			final ManagedBean<? extends AttributeConverter<?, ?>> converterBean = context
-					.getManagedBeanRegistry()
-					.getBean( converterType );
+			final ManagedBean<? extends AttributeConverter<?, ?>> converterBean =
+					context.getManagedBeanRegistry().getBean( converterType );
 
 			final TypeConfiguration typeConfiguration = context.getTypeConfiguration();
 			final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.jdbc.internal;
 
@@ -10,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -29,7 +28,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
  */
 public class JdbcValuesMappingProducerStandard implements JdbcValuesMappingProducer {
 
-	private final JdbcValuesMapping resolvedMapping;
+	private final StandardJdbcValuesMapping resolvedMapping;
 
 	public JdbcValuesMappingProducerStandard(List<SqlSelection> sqlSelections, List<DomainResult<?>> domainResults) {
 		this.resolvedMapping = new StandardJdbcValuesMapping( sqlSelections, domainResults );
@@ -43,7 +42,11 @@ public class JdbcValuesMappingProducerStandard implements JdbcValuesMappingProdu
 	@Override
 	public JdbcValuesMapping resolve(
 			JdbcValuesMetadata jdbcResultsMetadata,
+			LoadQueryInfluencers loadQueryInfluencers,
 			SessionFactoryImplementor sessionFactory) {
+		if ( !resolvedMapping.needsResolve() ) {
+			return resolvedMapping;
+		}
 		final List<SqlSelection> sqlSelections = resolvedMapping.getSqlSelections();
 		List<SqlSelection> resolvedSelections = null;
 		for ( int i = 0; i < sqlSelections.size(); i++ ) {
@@ -59,6 +62,9 @@ public class JdbcValuesMappingProducerStandard implements JdbcValuesMappingProdu
 		if ( resolvedSelections == null ) {
 			return resolvedMapping;
 		}
-		return new StandardJdbcValuesMapping( resolvedSelections, resolvedMapping.getDomainResults() );
+		return new StandardJdbcValuesMapping(
+				resolvedSelections,
+				resolvedMapping.getDomainResults()
+		);
 	}
 }

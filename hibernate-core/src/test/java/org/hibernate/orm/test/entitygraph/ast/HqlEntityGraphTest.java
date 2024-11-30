@@ -1,35 +1,26 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.entitygraph.ast;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
@@ -43,6 +34,7 @@ import org.hibernate.sql.ast.tree.from.StandardVirtualTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.results.graph.BiDirectionalFetch;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.Fetchable;
@@ -53,7 +45,7 @@ import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.graph.entity.internal.EntityDelayedFetchImpl;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchJoinedImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -63,13 +55,22 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.platform.commons.util.CollectionUtils;
 
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hibernate.testing.hamcrest.AssignableMatcher.assignableTo;
 import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
 import static org.hibernate.testing.hamcrest.CollectionMatchers.isEmpty;
-import static org.junit.Assert.assertThat;
 
 /**
  * @author Nathan Xu
@@ -84,7 +85,7 @@ import static org.junit.Assert.assertThat;
 		}
 )
 @SessionFactory
-@TestForIssue( jiraKey = "HHH-13756" )
+@JiraKey( value = "HHH-13756" )
 public class HqlEntityGraphTest implements SessionFactoryScopeAware {
 
 	private SessionFactoryScope scope;
@@ -107,8 +108,20 @@ public class HqlEntityGraphTest implements SessionFactoryScopeAware {
 					assertEmptyJoinedGroup( sqlAst );
 
 					// Check the domain-result graph
-					assertDomainResult( sqlAst, Cat.class, "owner", Person.class,
-										entityFetch -> assertThat( entityFetch, instanceOf( EntityDelayedFetchImpl.class ) )
+					assertDomainResult(sqlAst, Cat.class,
+							fetch -> {
+								if (graphSemantic == GraphSemantic.LOAD) {
+									assertThat(fetch, instanceOf(BiDirectionalFetch.class));
+								} else {
+									assertThat(fetch, instanceOf(EntityFetch.class));
+
+									final EntityFetch entityFetch = (EntityFetch) fetch;
+									assertThat(entityFetch.getFetchedMapping().getFetchableName(), is("owner"));
+									assertThat(entityFetch.getReferencedModePart().getJavaType().getJavaTypeClass(), assignableTo(Person.class));
+
+									assertThat(entityFetch, instanceOf(EntityDelayedFetchImpl.class));
+								}
+							}
 					);
 				}
 		);
@@ -128,12 +141,18 @@ public class HqlEntityGraphTest implements SessionFactoryScopeAware {
 					assertEntityValuedJoinedGroup( sqlAst, "owner", Person.class, this::assertPersonHomeAddressJoinedGroup );
 
 					// Check the domain-result graph
-					assertDomainResult( sqlAst, Cat.class, "owner", Person.class, entityFetch -> {
+					assertDomainResult( sqlAst, Cat.class, fetch -> {
+						assertThat( fetch, instanceOf( EntityFetch.class ) );
+
+						final EntityFetch entityFetch = (EntityFetch) fetch;
+						assertThat( entityFetch.getFetchedMapping().getFetchableName(), is( "owner" ) );
+						assertThat( entityFetch.getReferencedModePart().getJavaType().getJavaTypeClass(), assignableTo( Person.class ) );
+
 						if ( graphSemantic == GraphSemantic.LOAD ) {
 							assertThat( entityFetch, instanceOf( EntityFetchJoinedImpl.class ) );
 							final EntityResult entityResult = ( (EntityFetchJoinedImpl) entityFetch ).getEntityResult();
 							final Map<String, Class<? extends Fetch>> fetchClassByAttributeName = entityResult.getFetches().stream().collect( Collectors.toMap(
-									fetch -> fetch.getFetchedMapping().getPartName(),
+									aFetch -> aFetch.getFetchedMapping().getPartName(),
 									Fetch::getClass
 							) );
 							final Map<String, Class<? extends Fetch>> expectedFetchClassByAttributeName = new HashMap<>();
@@ -172,12 +191,18 @@ public class HqlEntityGraphTest implements SessionFactoryScopeAware {
 					} );
 
 					// Check the domain-result graph
-					assertDomainResult( sqlAst, Cat.class, "owner", Person.class, entityFetch -> {
+					assertDomainResult( sqlAst, Cat.class, fetch -> {
+						assertThat( fetch, instanceOf( EntityFetch.class ) );
+
+						final EntityFetch entityFetch = (EntityFetch) fetch;
+						assertThat( entityFetch.getFetchedMapping().getFetchableName(), is( "owner" ) );
+						assertThat( entityFetch.getReferencedModePart().getJavaType().getJavaTypeClass(), assignableTo( Person.class ) );
+
 						assertThat( entityFetch, instanceOf( EntityFetchJoinedImpl.class ) );
 						final EntityResult ownerEntityResult = ( (EntityFetchJoinedImpl) entityFetch ).getEntityResult();
 						final Map<String, Class<? extends Fetch>> fetchClassByAttributeName = ownerEntityResult.getFetches()
 								.stream().collect( Collectors.toMap(
-										fetch -> fetch.getFetchedMapping().getPartName(),
+										aFetch -> aFetch.getFetchedMapping().getPartName(),
 										Fetch::getClass
 								) );
 						final Map<String, Class<? extends Fetch>> expectedFetchClassByAttributeName = new HashMap<>();
@@ -191,9 +216,9 @@ public class HqlEntityGraphTest implements SessionFactoryScopeAware {
 						assertThat( companyFetch, notNullValue() );
 
 						final EntityResult companyEntityResult = ( (EntityFetchJoinedImpl) companyFetch).getEntityResult();
-						assertThat( companyEntityResult.getFetches(), hasSize( 1 ) );
+						assertThat( companyEntityResult.getFetches().size(), is( 1 ) );
 
-						final Fetch shipAddressesFetch = companyEntityResult.getFetches().get( 0 );
+						final Fetch shipAddressesFetch = companyEntityResult.getFetches().iterator().next();
 						assertThat( shipAddressesFetch.getFetchedMapping().getPartName(), is( "shipAddresses" ) );
 						assertThat( shipAddressesFetch, instanceOf( DelayedCollectionFetch.class ) );
 					} );
@@ -206,11 +231,12 @@ public class HqlEntityGraphTest implements SessionFactoryScopeAware {
 				.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.findEntityDescriptor( entityClass.getName() );
-		Collection<AttributeMapping> attributeMappings = person.getAttributeMappings();
+		AttributeMappingsList attributeMappings = person.getAttributeMappings();
 		Fetchable fetchable = null;
-		for(AttributeMapping mapping :attributeMappings){
-			if(mapping.getAttributeName().equals( attributeName  )){
-				fetchable = (Fetchable) mapping;
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			AttributeMapping mapping = attributeMappings.get( i );
+			if ( mapping.getAttributeName().equals( attributeName ) ) {
+				fetchable = mapping;
 			}
 		}
 		return fetchable;
@@ -250,34 +276,31 @@ public class HqlEntityGraphTest implements SessionFactoryScopeAware {
 					// Check the from-clause
 					assertPluralAttributeJoinedGroup( sqlAst, "shipAddresses", tableGroup -> {
 						if ( graphSemantic == GraphSemantic.LOAD ) {
-							assertThat( tableGroup.getTableGroupJoins(), isEmpty() );
-							assertThat( tableGroup.getNestedTableGroupJoins(), hasSize( 1 ) );
+							assertThat( tableGroup.getTableGroupJoins(), hasSize( 1 ) );
+							assertThat( tableGroup.getNestedTableGroupJoins(), isEmpty() );
 
-							final TableGroup compositeTableGroup = tableGroup.getNestedTableGroupJoins()
+							final TableGroup compositeTableGroup = tableGroup.getTableGroupJoins()
 									.iterator()
 									.next()
 									.getJoinedGroup();
 							assertThat( compositeTableGroup, instanceOf( StandardVirtualTableGroup.class ) );
-							assertThat( compositeTableGroup.getTableGroupJoins(), hasSize( 1 ) );
 							assertThat( compositeTableGroup.getNestedTableGroupJoins(), isEmpty() );
+							assertThat( compositeTableGroup.getTableGroupJoins(), hasSize( 1 ) );
 
-							final TableGroup countryTableGroup = compositeTableGroup.getTableGroupJoins()
-									.iterator()
-									.next()
-									.getJoinedGroup();
-							assertThat( countryTableGroup.getModelPart().getPartName(), is( "country" ) );
-
-							assertThat( countryTableGroup.getTableGroupJoins(), isEmpty() );
-							assertThat( countryTableGroup.getNestedTableGroupJoins(), isEmpty() );
+							final TableGroup joinedGroup = compositeTableGroup.getTableGroupJoins().get( 0 ).getJoinedGroup();
+							assertThat( joinedGroup.isInitialized(), is( false ) );
 						}
 						else {
-							assertThat( tableGroup.getTableGroupJoins(), isEmpty() );
-							assertThat( tableGroup.getNestedTableGroupJoins(), hasSize( 1 ) );
+							assertThat( tableGroup.getTableGroupJoins(), hasSize( 1 ) );
+							assertThat( tableGroup.getNestedTableGroupJoins(), isEmpty() );
 
-							final TableGroup compositeTableGroup = CollectionUtils.getOnlyElement( tableGroup.getNestedTableGroupJoins() ).getJoinedGroup();
+							final TableGroup compositeTableGroup = CollectionUtils.getOnlyElement( tableGroup.getTableGroupJoins() ).getJoinedGroup();
 							assertThat( compositeTableGroup, instanceOf( StandardVirtualTableGroup.class ) );
-							assertThat( compositeTableGroup.getTableGroupJoins(), isEmpty() );
 							assertThat( compositeTableGroup.getNestedTableGroupJoins(), isEmpty() );
+							assertThat( compositeTableGroup.getTableGroupJoins(), hasSize( 1 ) );
+
+							final TableGroup joinedGroup = compositeTableGroup.getTableGroupJoins().get( 0 ).getJoinedGroup();
+							assertThat( joinedGroup.isInitialized(), is( false ) );
 						}
 					} );
 				}
@@ -291,7 +314,10 @@ public class HqlEntityGraphTest implements SessionFactoryScopeAware {
 		assertThat( fromClause.getRoots(), hasSize( 1 ) );
 
 		final TableGroup rootTableGroup = fromClause.getRoots().get( 0 );
-		assertThat( rootTableGroup.getTableGroupJoins(), isEmpty() );
+		assertThat( rootTableGroup.getTableGroupJoins(), hasSize( 1 ) );
+
+		final TableGroup tableGroup = rootTableGroup.getTableGroupJoins().get( 0 ).getJoinedGroup();
+		assertThat( tableGroup.isInitialized(), is( false ) );
 	}
 
 	private void assertEntityValuedJoinedGroup(SelectStatement sqlAst, String expectedAttributeName, Class<?> expectedEntityJpaClass, Consumer<TableGroup> tableGroupConsumer) {
@@ -316,28 +342,33 @@ public class HqlEntityGraphTest implements SessionFactoryScopeAware {
 		final TableGroup root = fromClause.getRoots().get( 0 );
 		assertThat( root.getTableGroupJoins(), hasSize( 1 ) );
 
-		final TableGroup joinedGroup = root.getTableGroupJoins().iterator().next().getJoinedGroup();
+		final TableGroup joinedGroup = root.getTableGroupJoins().get( 0 ).getJoinedGroup();
 		assertThat( joinedGroup.getModelPart().getPartName(), is( expectedPluralAttributeName ) );
 		assertThat( joinedGroup.getModelPart(), instanceOf( PluralAttributeMapping.class ) );
 		tableGroupConsumer.accept( joinedGroup );
 	}
 
 	private void assertPersonHomeAddressJoinedGroup(TableGroup tableGroup) {
-		assertThat( tableGroup.getTableGroupJoins(), hasSize( 1 ) );
 
-		final TableGroup joinedGroup = tableGroup.getTableGroupJoins().iterator().next().getJoinedGroup();
-		assertThat( joinedGroup.getModelPart().getPartName(), is( "homeAddress" ) );
-		assertThat( joinedGroup.getModelPart(), instanceOf( EmbeddedAttributeMapping.class ) );
-		assertThat( joinedGroup, instanceOf( StandardVirtualTableGroup.class ) );
+		assertThat( tableGroup.getTableGroupJoins(), hasSize( 2 ) );
+
+		final TableGroup company = tableGroup.getTableGroupJoins().get( 0 ).getJoinedGroup();
+		assertThat( company.getModelPart().getPartName(), is( "company" ) );
+		assertThat( company.getModelPart(), instanceOf( ToOneAttributeMapping.class ) );
+		assertThat( company, instanceOf( LazyTableGroup.class ) );
+		assertThat( company.isInitialized(), is( false ) );
+
+		final TableGroup homeAddress = tableGroup.getTableGroupJoins().get( 1 ).getJoinedGroup();
+		assertThat( homeAddress.getModelPart().getPartName(), is( "homeAddress" ) );
+		assertThat( homeAddress.getModelPart(), instanceOf( EmbeddedAttributeMapping.class ) );
+		assertThat( homeAddress, instanceOf( StandardVirtualTableGroup.class ) );
 	}
 
 	// util methods for verifying 'domain-result' graph ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	private void assertDomainResult(SelectStatement sqlAst,
 									Class<?> expectedEntityJpaClass,
-									String expectedAttributeName,
-									Class<?> expectedAttributeEntityJpaClass,
-									Consumer<EntityFetch> entityFetchConsumer) {
+									Consumer<Fetch> fetchConsumer) {
 		assertThat( sqlAst.getDomainResultDescriptors(), hasSize( 1 ) );
 
 		final DomainResult domainResult = sqlAst.getDomainResultDescriptors().get( 0 );
@@ -345,16 +376,10 @@ public class HqlEntityGraphTest implements SessionFactoryScopeAware {
 
 		final EntityResult entityResult = (EntityResult) domainResult;
 		assertThat( entityResult.getReferencedModePart().getJavaType().getJavaTypeClass(), assignableTo( expectedEntityJpaClass ) );
-		assertThat( entityResult.getFetches(), hasSize( 1 ) );
+		assertThat( entityResult.getFetches().size(), is( 1 ) );
 
-		final Fetch fetch = entityResult.getFetches().get( 0 );
-		assertThat( fetch, instanceOf( EntityFetch.class ) );
-
-		final EntityFetch entityFetch = (EntityFetch) fetch;
-		assertThat( entityFetch.getFetchedMapping().getFetchableName(), is( expectedAttributeName ) );
-		assertThat( entityFetch.getReferencedModePart().getJavaType().getJavaTypeClass(), assignableTo( expectedAttributeEntityJpaClass ) );
-
-		entityFetchConsumer.accept( entityFetch );
+		final Fetch fetch = entityResult.getFetches().iterator().next();
+		fetchConsumer.accept(fetch);
 	}
 
 	private <T> SelectStatement buildSqlSelectAst(
@@ -443,5 +468,3 @@ public class HqlEntityGraphTest implements SessionFactoryScopeAware {
 		String name;
 	}
 }
-
-

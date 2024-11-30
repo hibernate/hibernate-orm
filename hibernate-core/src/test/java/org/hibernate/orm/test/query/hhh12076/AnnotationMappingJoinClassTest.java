@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hhh12076;
 
@@ -13,6 +11,17 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -26,122 +35,113 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Version;
 
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertNotNull;
+@JiraKey(value = "HHH-12076")
+@DomainModel(
+		annotatedClasses = {
+				AnnotationMappingJoinClassTest.Claim.class,
+				AnnotationMappingJoinClassTest.Settlement.class,
+				AnnotationMappingJoinClassTest.Task.class,
+				AnnotationMappingJoinClassTest.SettlementTask.class,
+				AnnotationMappingJoinClassTest.TaskStatus.class,
+				AnnotationMappingJoinClassTest.Extension.class,
+				AnnotationMappingJoinClassTest.SettlementExtension.class,
+				AnnotationMappingJoinClassTest.GapAssessmentExtension.class,
+				AnnotationMappingJoinClassTest.EwtAssessmentExtension.class
+		}
+)
+@SessionFactory
+public class AnnotationMappingJoinClassTest {
 
-@TestForIssue(jiraKey = "HHH-12076")
-public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
+	@BeforeAll
+	protected void prepareTest(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			TaskStatus taskStatus = new TaskStatus();
+			taskStatus.setName( "Enabled" );
+			taskStatus.setDisplayName( "Enabled" );
+			session.persist( taskStatus );
 
-    @Override
-    protected Class[] getAnnotatedClasses() {
-        return new Class[]{
-            Claim.class,
-            Settlement.class,
-            Task.class,
-            SettlementTask.class,
-            TaskStatus.class,
-            Extension.class,
-            SettlementExtension.class,
-            GapAssessmentExtension.class,
-            EwtAssessmentExtension.class
-        };
-    }
+			for ( long i = 0; i < 10; i++ ) {
+				SettlementTask settlementTask = new SettlementTask();
+				settlementTask.setId( i );
+				Settlement settlement = new Settlement();
+				settlementTask.setLinked( settlement );
+				settlementTask.setStatus( taskStatus );
 
-    @Override
-    protected void prepareTest() {
-        doInHibernate( this::sessionFactory, session -> {
-            TaskStatus taskStatus = new TaskStatus();
-            taskStatus.setName("Enabled");
-            taskStatus.setDisplayName("Enabled");
-            session.save(taskStatus);
+				Claim claim = new Claim();
+				claim.setId( i );
+				settlement.setClaim( claim );
 
-            for (long i = 0; i < 10; i++) {
-                SettlementTask settlementTask = new SettlementTask();
-                settlementTask.setId(i);
-                Settlement settlement = new Settlement();
-                settlementTask.setLinked(settlement);
-                settlementTask.setStatus(taskStatus);
+				for ( int j = 0; j < 2; j++ ) {
+					GapAssessmentExtension gapAssessmentExtension = new GapAssessmentExtension();
+					gapAssessmentExtension.setSettlement( settlement );
+					EwtAssessmentExtension ewtAssessmentExtension = new EwtAssessmentExtension();
+					ewtAssessmentExtension.setSettlement( settlement );
 
-                Claim claim = new Claim();
-                claim.setId(i);
-                settlement.setClaim(claim);
+					settlement.getExtensions().add( gapAssessmentExtension );
+					settlement.getExtensions().add( ewtAssessmentExtension );
+				}
+				session.persist( claim );
+				session.persist( settlement );
+				session.persist( settlementTask );
+			}
+		} );
+	}
 
-                for (int j = 0; j < 2; j++) {
-                    GapAssessmentExtension gapAssessmentExtension = new GapAssessmentExtension();
-                    gapAssessmentExtension.setSettlement(settlement);
-                    EwtAssessmentExtension ewtAssessmentExtension = new EwtAssessmentExtension();
-                    ewtAssessmentExtension.setSettlement(settlement);
+	@Test
+	public void testClassExpressionInOnClause(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			List<SettlementTask> results = session.createQuery(
+							"select " +
+									"   rootAlias.id, " +
+									"   linked.id, " +
+									"   extensions.id " +
+									"from SettlementTask as rootAlias " +
+									"join rootAlias.linked as linked " +
+									"left join linked.extensions as extensions on extensions.class = EwtAssessmentExtension " +
+									"where linked.id = :claimId "
+					)
+					.setParameter( "claimId", 1L )
+					.getResultList();
 
-                    settlement.getExtensions().add(gapAssessmentExtension);
-                    settlement.getExtensions().add(ewtAssessmentExtension);
-                }
-                session.save(claim);
-                session.save(settlement);
-                session.save(settlementTask);
-            }
-        } );
-    }
+			assertThat( results ).isNotNull();
+		} );
+	}
 
-    @Test
-    public void testClassExpressionInOnClause() {
-        doInHibernate( this::sessionFactory, session -> {
-            List<SettlementTask> results = session.createQuery(
-                "select " +
-                "   rootAlias.id, " +
-                "   linked.id, " +
-                "   extensions.id " +
-                "from SettlementTask as rootAlias " +
-                "join rootAlias.linked as linked " +
-                "left join linked.extensions as extensions on extensions.class = EwtAssessmentExtension " +
-                "where linked.id = :claimId "
-            )
-            .setParameter("claimId", 1L)
-            .getResultList();
+	@Test
+	public void testClassExpressionInWhereClause(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			List<SettlementTask> results = session.createQuery(
+							"select " +
+									"   rootAlias.id, " +
+									"   linked.id, " +
+									"   extensions.id " +
+									"from SettlementTask as rootAlias " +
+									"join rootAlias.linked as linked " +
+									"left join linked.extensions as extensions " +
+									"where linked.id = :claimId and (extensions is null or extensions.class = EwtAssessmentExtension)"
+					)
+					.setParameter( "claimId", 1L )
+					.getResultList();
 
-            assertNotNull(results);
-        } );
-    }
+			assertThat( results ).isNotNull();
+		} );
+	}
 
-    @Test
-    public void testClassExpressionInWhereClause() {
-        doInHibernate( this::sessionFactory, session -> {
-            List<SettlementTask> results = session.createQuery(
-                "select " +
-                "   rootAlias.id, " +
-                "   linked.id, " +
-                "   extensions.id " +
-                "from SettlementTask as rootAlias " +
-                "join rootAlias.linked as linked " +
-                "left join linked.extensions as extensions " +
-                "where linked.id = :claimId and (extensions is null or extensions.class = EwtAssessmentExtension)"
-            )
-            .setParameter("claimId", 1L)
-            .getResultList();
-
-            assertNotNull(results);
-        } );
-    }
-
-    @Entity(name = "Claim")
+	@Entity(name = "Claim")
 	@Table(name = "claim")
 	public static class Claim {
 		public static final long serialVersionUID = 1L;
 
 		@Id
-		@GeneratedValue
+//		@GeneratedValue
 		private Long id;
 
 		@Version
@@ -157,25 +157,25 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 		private Integer term;
 		private Double initialReserve = 0.0;
 
-		@Temporal( TemporalType.DATE )
+		@Temporal(TemporalType.DATE)
 		private Date effectiveDate;
 
-		@Temporal( TemporalType.DATE )
+		@Temporal(TemporalType.DATE)
 		private Date expiryDate;
 
-		@Temporal( TemporalType.DATE )
+		@Temporal(TemporalType.DATE)
 		private Date notificationDate;
 
-		@Temporal( TemporalType.DATE )
+		@Temporal(TemporalType.DATE)
 		private Date pendingDate;
 
-		@Temporal( TemporalType.DATE )
+		@Temporal(TemporalType.DATE)
 		private Date openDate;
 
-		@Temporal( TemporalType.DATE )
+		@Temporal(TemporalType.DATE)
 		private Date suspendDate;
 
-		@Temporal( TemporalType.DATE )
+		@Temporal(TemporalType.DATE)
 		private Date closeDate;
 
 		private String externalId;
@@ -193,13 +193,13 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 		}
 
 		public void addExtension(Extension extension) {
-			extensions.add( extension);
-			extension.setClaim(this);
+			extensions.add( extension );
+			extension.setClaim( this );
 		}
 
 		public void addSettlement(Settlement settlement) {
-			settlements.add( settlement);
-			settlement.setClaim(this);
+			settlements.add( settlement );
+			settlement.setClaim( this );
 		}
 
 		public Long getId() {
@@ -347,8 +347,7 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-    @Entity(name = "EwtAssessmentExtension")
-	@Table(name = "claimsettlement_ext_i3_ewt")
+	@Entity(name = "EwtAssessmentExtension")
 	public static class EwtAssessmentExtension extends SettlementExtension {
 		public static final long serialVersionUID = 1L;
 
@@ -551,7 +550,7 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 
 	}
 
-    @Entity(name = "Extension")
+	@Entity(name = "Extension")
 	@Table(name = "claimext")
 	@Inheritance(strategy = InheritanceType.JOINED)
 	public abstract static class Extension {
@@ -575,8 +574,8 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 		private Claim claim;
 
 		public Extension() {
-			String[] name = this.getClass().getName().split("\\.");
-			type = name[name.length-1];
+			String[] name = this.getClass().getName().split( "\\." );
+			type = name[name.length - 1];
 		}
 
 		public Long getId() {
@@ -629,8 +628,7 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 
 	}
 
-    @Entity(name = "GapAssessmentExtension")
-	@Table(name = "claim_settlement_ext_gap")
+	@Entity(name = "GapAssessmentExtension")
 	public static class GapAssessmentExtension extends SettlementExtension {
 
 		private Double insuredsObligation = 0.0;
@@ -671,7 +669,7 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-    @Entity(name = "Settlement")
+	@Entity(name = "Settlement")
 	@Table(name = "claim_settlement")
 	public static class Settlement {
 
@@ -703,13 +701,13 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 		private Double totalAmount = 0.0;
 		private Double underinsuredAmount = 0.0;
 
-		@Temporal( TemporalType.TIMESTAMP )
+		@Temporal(TemporalType.TIMESTAMP)
 		private Date openDate;
 
-		@Temporal( TemporalType.TIMESTAMP )
+		@Temporal(TemporalType.TIMESTAMP)
 		private Date allocateDate;
 
-		@Temporal( TemporalType.TIMESTAMP )
+		@Temporal(TemporalType.TIMESTAMP)
 		private Date closeDate;
 
 		private String trackingId;
@@ -721,7 +719,6 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 		private SettlementStatus status = SettlementStatus.RESERVED;
 
 		@OneToMany(mappedBy = "settlement", cascade = CascadeType.ALL, orphanRemoval = true)
-		@OrderColumn(name = "orderindex")
 		private Set<SettlementExtension> extensions = new HashSet<>();
 
 		private transient Map<Class<?>, SettlementExtension> extensionMap;
@@ -823,29 +820,29 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 		}
 
 		public void addExtension(SettlementExtension extension) {
-			if (!hasExtension(extension.getClass())) {
-				if (extension.getOrderIndex() == null) {
-					extension.setOrderIndex( extensions.size());
+			if ( !hasExtension( extension.getClass() ) ) {
+				if ( extension.getOrderIndex() == null ) {
+					extension.setOrderIndex( extensions.size() );
 				}
-				extension.setSettlement(this);
-				extensions.add( extension);
+				extension.setSettlement( this );
+				extensions.add( extension );
 			}
 		}
 
 		@SuppressWarnings("unchecked")
 		public <X extends SettlementExtension> X getExtension(Class<X> extensionType) {
-			if (extensionMap == null || extensionMap.size() != extensions.size()) {
-				Map<Class<?>, SettlementExtension> map = new HashMap<Class<?>, SettlementExtension>( extensions.size());
-				for (SettlementExtension extension : extensions ) {
-					map.put(extension.getClass(), extension);
+			if ( extensionMap == null || extensionMap.size() != extensions.size() ) {
+				Map<Class<?>, SettlementExtension> map = new HashMap<Class<?>, SettlementExtension>( extensions.size() );
+				for ( SettlementExtension extension : extensions ) {
+					map.put( extension.getClass(), extension );
 				}
 				extensionMap = map;
 			}
-			return (X)extensionMap.get(extensionType);
+			return (X) extensionMap.get( extensionType );
 		}
 
 		public <X extends SettlementExtension> boolean hasExtension(Class<X> extensionType) {
-			return getExtension(extensionType) != null;
+			return getExtension( extensionType ) != null;
 		}
 
 		public Boolean isOverride() {
@@ -930,7 +927,7 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 
 	}
 
-    @Entity(name = "SettlementExtension")
+	@Entity(name = "SettlementExtension")
 	@Table(name = "claimsettlement_ext")
 	public abstract static class SettlementExtension {
 
@@ -1010,11 +1007,11 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 
 	}
 
-    public enum SettlementStatus {
+	public enum SettlementStatus {
 		RESERVED, ALLOCATED, PAID, VOID, DENIED
 	}
 
-    @Entity(name = "SettlementTask")
+	@Entity(name = "SettlementTask")
 	public static class SettlementTask extends Task<Settlement> {
 
 		@ManyToOne(fetch = FetchType.LAZY)
@@ -1030,13 +1027,13 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 
 	}
 
-    @Entity(name = "Task")
+	@Entity(name = "Task")
 	@Table(name = "wf_task")
 	@Inheritance
 	public abstract static class Task<T> {
 
 		@Id
-		@GeneratedValue
+//		@GeneratedValue
 		private Long id;
 
 		@Version
@@ -1048,25 +1045,25 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 		@UpdateTimestamp
 		private Date modifiedDate;
 
-		@Temporal( TemporalType.DATE )
+		@Temporal(TemporalType.DATE)
 		private Date startDate;
 
-		@Temporal( TemporalType.DATE )
+		@Temporal(TemporalType.DATE)
 		private Date closeDate;
 
-		@Temporal( TemporalType.DATE )
+		@Temporal(TemporalType.DATE)
 		private Date dueDate;
 
-		@Temporal( TemporalType.DATE )
+		@Temporal(TemporalType.DATE)
 		private Date stateDueDate;
 
-		@Temporal( TemporalType.DATE )
+		@Temporal(TemporalType.DATE)
 		private Date statusDueDate;
 
-		@Temporal( TemporalType.DATE )
+		@Temporal(TemporalType.DATE)
 		private Date stateTransitionDate;
 
-		@Temporal( TemporalType.DATE )
+		@Temporal(TemporalType.DATE)
 		private Date statusTransitionDate;
 
 		@ManyToOne(fetch = FetchType.LAZY)
@@ -1083,11 +1080,12 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 //		private Set<Task<?>> linkedTasks = new HashSet<>();
 
 		public abstract T getLinked();
+
 		public abstract void setLinked(T linked);
 
 		public void addChild(Task<?> task) {
-			task.setParent(this);
-			children.add( task);
+			task.setParent( this );
+			children.add( task );
 		}
 
 		public Long getId() {
@@ -1099,7 +1097,7 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 		}
 
 		public Integer getVersion() {
-			return  version;
+			return version;
 		}
 
 		public void setVersion(Integer version) {
@@ -1107,7 +1105,7 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 		}
 
 		public Date getCreationDate() {
-			return  creationDate;
+			return creationDate;
 		}
 
 		public void setCreationDate(Date creationDate) {
@@ -1115,7 +1113,7 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 		}
 
 		public Date getModifiedDate() {
-			return  modifiedDate;
+			return modifiedDate;
 		}
 
 		public void setModifiedDate(Date modifiedDate) {
@@ -1135,9 +1133,9 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 			Set<X> children = null;
 
 			children = new LinkedHashSet<X>();
-			for (Task<?> child : this.children ) {
-				if (ofType.isInstance(child)) {
-					children.add((X) child);
+			for ( Task<?> child : this.children ) {
+				if ( ofType.isInstance( child ) ) {
+					children.add( (X) child );
 				}
 			}
 			return children;
@@ -1152,15 +1150,15 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 		}
 
 		public Date getStartDate() {
-			return  startDate;
+			return startDate;
 		}
 
 		public void setStartDate(Date openDate) {
-		 	startDate = openDate;
+			startDate = openDate;
 		}
 
 		public Date getCloseDate() {
-			return  closeDate;
+			return closeDate;
 		}
 
 		public void setCloseDate(Date closeDate) {
@@ -1168,11 +1166,11 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 		}
 
 		public Date getDueDate() {
-			return  dueDate;
+			return dueDate;
 		}
 
 		public void setDueDate(Date expiryDate) {
-		 	dueDate = expiryDate;
+			dueDate = expiryDate;
 		}
 
 		public Task<?> getParent() {
@@ -1192,7 +1190,7 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 //		}
 
 		public Date getStateTransitionDate() {
-			return  stateTransitionDate;
+			return stateTransitionDate;
 		}
 
 		public void setStateTransitionDate(Date stateTransitionDate) {
@@ -1200,15 +1198,15 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 		}
 
 		public Date getStatusTransitionDate() {
-			return  statusTransitionDate;
+			return statusTransitionDate;
 		}
 
 		public void setStatusTransitionDate(Date taskTransitionDate) {
-		 	statusTransitionDate = taskTransitionDate;
+			statusTransitionDate = taskTransitionDate;
 		}
 
 		public Date getStateDueDate() {
-			return  stateDueDate;
+			return stateDueDate;
 		}
 
 		public void setStateDueDate(Date stateDueDate) {
@@ -1216,7 +1214,7 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 		}
 
 		public Date getStatusDueDate() {
-			return  statusDueDate;
+			return statusDueDate;
 		}
 
 		public void setStatusDueDate(Date statusDueDate) {
@@ -1225,40 +1223,40 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 
 	}
 
-    @Entity(name = "TaskStatus")
+	@Entity(name = "TaskStatus")
 	@Table(name = "wf_task_status")
 	public static class TaskStatus {
 
 		@Id
 		@GeneratedValue
-		private Long  id;
+		private Long id;
 
 		@Version
-		private Integer  version;
+		private Integer version;
 
 		@CreationTimestamp
-		private Date  creationDate;
+		private Date creationDate;
 
 		@UpdateTimestamp
-		private Date  modifiedDate;
+		private Date modifiedDate;
 
-		private boolean  active;
+		private boolean active;
 
 		@Column(name = "order_index")
 		private Integer orderIndex;
 
-		private String  name;
-		private String  displayName;
+		private String name;
+		private String displayName;
 
 		public TaskStatus() {
 		}
 
 		public String getEntityName() {
-			return  displayName;
+			return displayName;
 		}
 
 		public Long getId() {
-			return  id;
+			return id;
 		}
 
 		public void setId(Long id) {
@@ -1266,7 +1264,7 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 		}
 
 		public Integer getVersion() {
-			return  version;
+			return version;
 		}
 
 		public void setVersion(Integer version) {
@@ -1274,7 +1272,7 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 		}
 
 		public Date getCreationDate() {
-			return  creationDate;
+			return creationDate;
 		}
 
 		public void setCreationDate(Date creationDate) {
@@ -1282,7 +1280,7 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 		}
 
 		public Date getModifiedDate() {
-			return  modifiedDate;
+			return modifiedDate;
 		}
 
 		public void setModifiedDate(Date modifiedDate) {
@@ -1290,7 +1288,7 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 		}
 
 		public String getName() {
-			return  name;
+			return name;
 		}
 
 		public void setName(String name) {
@@ -1298,15 +1296,15 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 		}
 
 		public String getDisplayName() {
-			return  displayName;
+			return displayName;
 		}
 
 		public void setDisplayName(String displayName) {
-		 	this.displayName = displayName;
+			this.displayName = displayName;
 		}
 
 		public boolean isActive() {
-			return  active;
+			return active;
 		}
 
 		public void setActive(boolean active) {
@@ -1315,7 +1313,7 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 
 		@Override
 		public String toString() {
-			return  name;
+			return name;
 		}
 
 	}

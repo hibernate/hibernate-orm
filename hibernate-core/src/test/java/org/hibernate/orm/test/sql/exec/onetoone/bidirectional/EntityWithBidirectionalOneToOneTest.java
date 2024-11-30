@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql.exec.onetoone.bidirectional;
 
@@ -16,7 +14,6 @@ import org.hibernate.validator.internal.util.Contracts;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -48,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		}
 )
 @ServiceRegistry
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 public class EntityWithBidirectionalOneToOneTest {
 
 	@BeforeEach
@@ -60,9 +57,9 @@ public class EntityWithBidirectionalOneToOneTest {
 
 			AdoptedChild adoptedChild = new AdoptedChild( 3, "Fab", mother );
 
-			session.save( mother );
-			session.save( child );
-			session.save( adoptedChild );
+			session.persist( mother );
+			session.persist( child );
+			session.persist( adoptedChild );
 		} );
 	}
 
@@ -77,7 +74,7 @@ public class EntityWithBidirectionalOneToOneTest {
 
 	@Test
 	public void testGetMother(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction( session -> {
 			final Mother mother = session.get( Mother.class, 1 );
@@ -136,12 +133,12 @@ public class EntityWithBidirectionalOneToOneTest {
 
 			adoptedChild.setBiologicalMother( mother );
 
-			session.save( mother );
-			session.save( child );
-			session.save( adoptedChild );
+			session.persist( mother );
+			session.persist( child );
+			session.persist( adoptedChild );
 		} );
 
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction( session -> {
 			final Mother mother = session.get( Mother.class, 4 );
@@ -187,14 +184,14 @@ public class EntityWithBidirectionalOneToOneTest {
 
 			Child anotherChild = new Child( 8, "Igor", biologicalMother );
 
-			session.save( mother );
-			session.save( biologicalMother );
-			session.save( child );
-			session.save( adoptedChild );
-			session.save( anotherChild );
+			session.persist( mother );
+			session.persist( biologicalMother );
+			session.persist( child );
+			session.persist( adoptedChild );
+			session.persist( anotherChild );
 		} );
 
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction( session -> {
 			final Mother mother = session.get( Mother.class, 4 );
@@ -236,7 +233,7 @@ public class EntityWithBidirectionalOneToOneTest {
 
 	@Test
 	public void testGetChild(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction( session -> {
 			final Child child = session.get( Child.class, 2 );
@@ -289,11 +286,11 @@ public class EntityWithBidirectionalOneToOneTest {
 		scope.inTransaction(
 				session -> {
 					Mother mother = new Mother( 10, "Strange mom" );
-					session.save( mother );
+					session.persist( mother );
 					session.get( AdoptedChild.class, 3 ).setBiologicalMother( mother );
 				}
 		);
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction( session -> {
 			final Child child = session.get( Child.class, 2 );
@@ -335,7 +332,7 @@ public class EntityWithBidirectionalOneToOneTest {
 
 	@Test
 	public void testGetAdoptedChild(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction( session -> {
 			final AdoptedChild adoptedChild = session.get( AdoptedChild.class, 3 );
@@ -400,14 +397,14 @@ public class EntityWithBidirectionalOneToOneTest {
 
 			Child child3 = new Child( 8, "Carla", biologicalMother );
 
-			session.save( mother );
-			session.save( biologicalMother );
-			session.save( child );
-			session.save( child2 );
-			session.save( child3 );
+			session.persist( mother );
+			session.persist( biologicalMother );
+			session.persist( child );
+			session.persist( child2 );
+			session.persist( child3 );
 		} );
 
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction( session -> {
 			final Child child = session.get( Child.class, 5 );
@@ -457,7 +454,7 @@ public class EntityWithBidirectionalOneToOneTest {
 
 	@Test
 	public void testHqlSelectMother(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
@@ -481,7 +478,7 @@ public class EntityWithBidirectionalOneToOneTest {
 
 	@Test
 	public void testHqlSelectChild(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {

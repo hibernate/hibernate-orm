@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
@@ -33,6 +31,18 @@ public interface TemporalJavaType<T> extends BasicJavaType<T> {
 		throw new UnsupportedOperationException( "Unsupported precision: " + requestedTemporalPrecision );
 	}
 
+	static Class<?> resolveJavaTypeClass(TemporalType requestedTemporalPrecision) {
+		switch ( requestedTemporalPrecision ) {
+			case DATE:
+				return java.sql.Date.class;
+			case TIME:
+				return java.sql.Time.class;
+			case TIMESTAMP:
+				return java.sql.Timestamp.class;
+		}
+		throw new UnsupportedOperationException( "Unsupported precision: " + requestedTemporalPrecision );
+	}
+
 	/**
 	 * The precision represented by this type
 	 */
@@ -45,4 +55,9 @@ public interface TemporalJavaType<T> extends BasicJavaType<T> {
 	<X> TemporalJavaType<X> resolveTypeForPrecision(
 			TemporalType precision,
 			TypeConfiguration typeConfiguration);
+
+	@Override
+	default boolean isTemporalType() {
+		return true;
+	}
 }

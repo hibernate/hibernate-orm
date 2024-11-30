@@ -1,31 +1,32 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
 import java.util.function.BiConsumer;
 
+import org.hibernate.cache.MutableCacheKeyBuilder;
+import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchOptions;
+import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -33,7 +34,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 /**
  * @author Nathan Xu
  */
-public class EntityRowIdMappingImpl implements EntityRowIdMapping, SelectableMapping {
+public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 	private final String rowIdName;
 	private final EntityMappingType declaringType;
 	private final String tableExpression;
@@ -43,8 +44,9 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping, SelectableMap
 		this.rowIdName = rowIdName;
 		this.tableExpression = tableExpression;
 		this.declaringType = declaringType;
-		this.rowIdType = declaringType.getEntityPersister().getFactory().getTypeConfiguration()
-				.getBasicTypeForJavaType( Object.class );
+		final SessionFactoryImplementor factory = declaringType.getEntityPersister().getFactory();
+		this.rowIdType = factory.getTypeConfiguration().getBasicTypeRegistry()
+				.resolve( Object.class, factory.getJdbcServices().getDialect().rowIdSqlType() );
 	}
 
 	@Override
@@ -78,6 +80,11 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping, SelectableMap
 	}
 
 	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return false;
+	}
+
+	@Override
 	public <T> DomainResult<T> createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
@@ -89,22 +96,7 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping, SelectableMap
 		final TableReference columnTableReference = tableGroup.resolveTableReference( navigablePath, tableExpression );
 
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
-				sqlExpressionResolver.resolveSqlExpression(
-						SqlExpressionResolver.createColumnReferenceKey( columnTableReference, rowIdName ),
-						sqlAstProcessingState -> new ColumnReference(
-								columnTableReference,
-								rowIdName,
-								false,
-								// todo (6.0) : allowing custom read / write transformers on ROW_ID might
-								//		be an easy way to allow customization of the how ROW_ID is rendered
-								//		- e.g. quickly testing whether that syntax works for a db without
-								//			having to write a Dialect
-								null,
-								null,
-								rowIdType,
-								sqlAstCreationState.getCreationContext().getSessionFactory()
-						)
-				),
+				sqlExpressionResolver.resolveSqlExpression( columnTableReference, this ),
 				rowIdType.getJdbcJavaType(),
 				null,
 				sqlAstCreationState.getCreationContext().getSessionFactory().getTypeConfiguration()
@@ -114,13 +106,23 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping, SelectableMap
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				rowIdType,
-				navigablePath
+				navigablePath,
+				false,
+				!sqlSelection.isVirtual()
 		);
 	}
 
 	@Override
-	public int getJdbcTypeCount() {
-		return 1;
+	public JdbcMapping getJdbcMapping(int index) {
+		if ( index != 0 ) {
+			throw new IndexOutOfBoundsException( index );
+		}
+		return getJdbcMapping();
+	}
+
+	@Override
+	public JdbcMapping getSingleJdbcMapping() {
+		return getJdbcMapping();
 	}
 
 	@Override
@@ -129,13 +131,19 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping, SelectableMap
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		rowIdType.addToCacheKey( cacheKey, value, session );
+	}
+
+	@Override
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return rowIdType.forEachDisassembledJdbcValue( value, clause, offset, valuesConsumer, session );
+		return rowIdType.forEachDisassembledJdbcValue( value, offset, x, y, valuesConsumer, session );
 	}
 
 	@Override
@@ -158,8 +166,15 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping, SelectableMap
 	}
 
 	@Override
-	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		valueConsumer.consume( domainValue, this );
+	public <X, Y> int breakDownJdbcValues(
+			Object domainValue,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
+			SharedSessionContractImplementor session) {
+		valueConsumer.consume( offset, x, y, domainValue, this );
+		return getJdbcTypeCount();
 	}
 
 	@Override
@@ -174,7 +189,7 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping, SelectableMap
 
 	@Override
 	public String getCustomReadExpression() {
-		return rowIdName;
+		return null;
 	}
 
 	@Override
@@ -203,12 +218,68 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping, SelectableMap
 	}
 
 	@Override
+	public Integer getTemporalPrecision() {
+		return null;
+	}
+
+	@Override
 	public boolean isFormula() {
-		return true;
+		return false;
+	}
+
+	@Override
+	public boolean isNullable() {
+		return false;
+	}
+
+	@Override
+	public boolean isInsertable() {
+		return false;
+	}
+
+	@Override
+	public boolean isUpdateable() {
+		return false;
+	}
+
+	@Override
+	public boolean isPartitioned() {
+		return false;
 	}
 
 	@Override
 	public JdbcMapping getJdbcMapping() {
 		return rowIdType.getJdbcMapping();
+	}
+
+	@Override
+	public MappingType getMappedType() {
+		return rowIdType;
+	}
+
+	@Override
+	public String getFetchableName() {
+		return rowIdName;
+	}
+
+	@Override
+	public int getFetchableKey() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public FetchOptions getMappedFetchOptions() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Fetch generateFetch(
+			FetchParent fetchParent,
+			NavigablePath fetchablePath,
+			FetchTiming fetchTiming,
+			boolean selected,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		throw new UnsupportedOperationException();
 	}
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.naming.ids;
 
@@ -126,7 +124,7 @@ public class JoinMulIdNaming extends BaseEnversJPAFunctionalTestCase {
 	public void testJoinColumnNames() {
 		Iterator<Selectable> columns = metadata().getEntityBinding(
 				"org.hibernate.orm.test.envers.integration.naming.ids.JoinMulIdNamingRefIngEntity_AUD"
-		).getProperty( "reference_id1" ).getColumnIterator();
+		).getProperty( "reference_id1" ).getSelectables().iterator();
 
 		assertTrue( columns.hasNext() );
 		assertEquals( "ID1_reference", columns.next().getText() );
@@ -134,7 +132,7 @@ public class JoinMulIdNaming extends BaseEnversJPAFunctionalTestCase {
 
 		columns = metadata().getEntityBinding(
 				"org.hibernate.orm.test.envers.integration.naming.ids.JoinMulIdNamingRefIngEntity_AUD"
-		).getProperty( "reference_id2" ).getColumnIterator();
+		).getProperty( "reference_id2" ).getSelectables().iterator();
 
 		assertTrue( columns.hasNext() );
 		assertEquals( "ID2_reference", columns.next().getText() );

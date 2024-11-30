@@ -12,6 +12,7 @@ import javax.inject.Inject;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.Optional;
 
 /**
  * Defines how we rename a file being transformed.
@@ -43,6 +44,7 @@ public class TransformationNaming implements Serializable {
 	 * @see #getExtension()
 	 */
 	@Input
+	@Optional
 	public Property<String> getPrefix() {
 		return prefix;
 	}
@@ -57,11 +59,13 @@ public class TransformationNaming implements Serializable {
 	 * @see #getExtension()
 	 */
 	@Input
+	@Optional
 	public Property<String> getSuffix() {
 		return suffix;
 	}
 
 	@Input
+	@Optional
 	public Property<String> getExtension() {
 		return extension;
 	}

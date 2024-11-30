@@ -1,29 +1,25 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.internal;
 
 import java.util.Map;
 
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
-import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 
 /**
  * Standard implementation of the {@link JdbcServices} contract
@@ -34,9 +30,15 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 	private ServiceRegistryImplementor serviceRegistry;
 	private JdbcEnvironment jdbcEnvironment;
 
-	private boolean multiTenancyEnabled;
-
 	private SqlStatementLogger sqlStatementLogger;
+	private ParameterMarkerStrategy parameterMarkerStrategy;
+
+	public JdbcServicesImpl() {
+	}
+
+	public JdbcServicesImpl(ServiceRegistryImplementor serviceRegistry) {
+		this.serviceRegistry = serviceRegistry;
+	}
 
 	@Override
 	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
@@ -45,17 +47,9 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 
 	@Override
 	public void configure(Map<String, Object> configValues) {
-		this.jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
-		assert jdbcEnvironment != null : "JdbcEnvironment was not found";
-
-		this.multiTenancyEnabled = serviceRegistry.getService(MultiTenantConnectionProvider.class)!=null;
-
-		final boolean showSQL = ConfigurationHelper.getBoolean( Environment.SHOW_SQL, configValues, false );
-		final boolean formatSQL = ConfigurationHelper.getBoolean( Environment.FORMAT_SQL, configValues, false );
-		final boolean highlightSQL = ConfigurationHelper.getBoolean( Environment.HIGHLIGHT_SQL, configValues, false );
-		final long logSlowQuery = ConfigurationHelper.getLong( Environment.LOG_SLOW_QUERY, configValues, 0 );
-
-		this.sqlStatementLogger = new SqlStatementLogger( showSQL, formatSQL, highlightSQL, logSlowQuery );
+		this.jdbcEnvironment = serviceRegistry.requireService( JdbcEnvironment.class );
+		this.sqlStatementLogger = serviceRegistry.getService( SqlStatementLogger.class );
+		this.parameterMarkerStrategy = serviceRegistry.getService( ParameterMarkerStrategy.class );
 	}
 
 	@Override
@@ -65,7 +59,7 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 
 	@Override
 	public JdbcConnectionAccess getBootstrapJdbcConnectionAccess() {
-		return JdbcEnvironmentInitiator.buildBootstrapJdbcConnectionAccess( multiTenancyEnabled, serviceRegistry );
+		return JdbcEnvironmentInitiator.buildBootstrapJdbcConnectionAccess( serviceRegistry );
 	}
 
 	@Override
@@ -82,27 +76,26 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 	}
 
 	@Override
+	public ParameterMarkerStrategy getParameterMarkerStrategy() {
+		return parameterMarkerStrategy;
+	}
+
+	@Override
 	public SqlExceptionHelper getSqlExceptionHelper() {
-		if ( jdbcEnvironment != null ) {
-			return jdbcEnvironment.getSqlExceptionHelper();
-		}
-		return null;
+		assert jdbcEnvironment != null : "JdbcEnvironment was not found";
+		return jdbcEnvironment.getSqlExceptionHelper();
 	}
 
 	@Override
 	public ExtractedDatabaseMetaData getExtractedMetaDataSupport() {
-		if ( jdbcEnvironment != null ) {
-			return jdbcEnvironment.getExtractedDatabaseMetaData();
-		}
-		return null;
+		assert jdbcEnvironment != null : "JdbcEnvironment was not found";
+		return jdbcEnvironment.getExtractedDatabaseMetaData();
 	}
 
 	@Override
 	public LobCreator getLobCreator(LobCreationContext lobCreationContext) {
-		if ( jdbcEnvironment != null ) {
-			return jdbcEnvironment.getLobCreatorBuilder().buildLobCreator( lobCreationContext );
-		}
-		return null;
+		assert jdbcEnvironment != null : "JdbcEnvironment was not found";
+		return jdbcEnvironment.getLobCreatorBuilder().buildLobCreator( lobCreationContext );
 	}
 
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.procedure;
 
@@ -26,24 +24,25 @@ import org.hibernate.type.BasicTypeReference;
 
 /**
  * Defines support for executing database stored procedures and functions.
- * <p/>
+ * <p>
  * Note that here we use the terms "procedure" and "function" as follows:<ul>
  *     <li>procedure is a named database executable we expect to call via : {@code {call procedureName(...)}}</li>
  *     <li>function is a named database executable we expect to call via : {@code {? = call functionName(...)}}</li>
  * </ul>
+ * <p>
  * Unless explicitly specified, the ProcedureCall is assumed to follow the
  * procedure call syntax.  To explicitly specify that this should be a function
  * call, use {@link #markAsFunctionCall}.  JPA users could either:<ul>
  *     <li>use {@code storedProcedureQuery.unwrap( ProcedureCall.class }.markAsFunctionCall()</li>
  *     <li>set the {@link #FUNCTION_RETURN_TYPE_HINT} hint (avoids casting to Hibernate-specific classes)</li>
  * </ul>
- * <p/>
+ * <p>
  * When using function-call syntax:<ul>
  *     <li>parameters must be registered by position (not name)</li>
  *     <li>The first parameter is considered to be the function return (the `?` before the call)</li>
  *     <li>the first parameter must have mode of OUT, INOUT or REF_CURSOR; IN is invalid</li>
  * </ul>
- * <p/>
+ * <p>
  * In some cases, based on the Dialect, we will have other validations and
  * assumptions as well.  For example, on PGSQL, whenever we see a REF_CURSOR mode
  * parameter, we know that:<ul>
@@ -72,15 +71,15 @@ public interface ProcedureCall
 	String getProcedureName();
 
 	/**
-	 * Does this ProcedureCall represent a call to a database FUNCTION (as opposed
-	 * to a PROCEDURE call)?
+	 * Does this {@code ProcedureCall} represent a call to a database {@code FUNCTION},
+	 * as opposed to a {@code PROCEDURE}?
 	 *
-	 * NOTE : this will only report whether this ProcedureCall was marked
-	 * as a function via call to {@link #markAsFunctionCall}.  Specifically
-	 * will not return {@code true} when using JPA query hint.
+	 * @apiNote this will only report whether this {@code ProcedureCall} was marked
+	 *           as a function via call to {@link #markAsFunctionCall}. In particular,
+	 *           it will not return {@code true} when using JPA query hint.
 	 *
 	 * @return {@code true} indicates that this ProcedureCall represents a
-	 * function call; {@code false} indicates a procedure call.
+	 *         function call; {@code false} indicates a procedure call.
 	 */
 	boolean isFunctionCall();
 
@@ -93,6 +92,28 @@ public interface ProcedureCall
 	 * @return {@code this}, for method chaining
 	 */
 	ProcedureCall markAsFunctionCall(int sqlType);
+
+	/**
+	 * Mark this ProcedureCall as representing a call to a database function,
+	 * rather than a database procedure.
+	 *
+	 * @param resultType The result type for the function return
+	 *
+	 * @return {@code this}, for method chaining
+	 * @since 6.2
+	 */
+	ProcedureCall markAsFunctionCall(Class<?> resultType);
+
+	/**
+	 * Mark this ProcedureCall as representing a call to a database function,
+	 * rather than a database procedure.
+	 *
+	 * @param typeReference The result type for the function return
+	 *
+	 * @return {@code this}, for method chaining
+	 * @since 6.2
+	 */
+	ProcedureCall markAsFunctionCall(BasicTypeReference<?> typeReference);
 
 	/**
 	 * Basic form for registering a positional parameter.
@@ -196,7 +217,7 @@ public interface ProcedureCall
 	/**
 	 * Retrieves access to outputs of this procedure call.  Can be called multiple times, returning the same
 	 * ProcedureOutputs instance each time.
-	 * <p/>
+	 * <p>
 	 * If the procedure call has not actually be executed yet, it will be executed and then the ProcedureOutputs
 	 * will be returned.
 	 *
@@ -258,7 +279,7 @@ public interface ProcedureCall
 	@Override
 	ProcedureCall setParameter(int position, Date value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	ProcedureCall setFlushMode(FlushModeType flushMode);
 
 	@Override

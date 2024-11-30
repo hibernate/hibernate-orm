@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.onetomany;
 
@@ -14,11 +12,12 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
+import org.hibernate.annotations.SQLOrder;
 
 /**
  * Entity used to test {@code NULL} values ordering in SQL {@code ORDER BY} clause.
  * Implementation note: By default H2 places {@code NULL} values first.
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 @Entity
 public class Zoo implements Serializable {
@@ -30,7 +29,7 @@ public class Zoo implements Serializable {
 
 	@OneToMany
 	@JoinColumn(name = "zoo_id")
-	@org.hibernate.annotations.OrderBy(clause = "name asc nulls last") // By default H2 places NULL values first.
+	@SQLOrder("name asc nulls last") // By default H2 places NULL values first.
 	private Set<Tiger> tigers = new HashSet<Tiger>();
 
 	@OneToMany

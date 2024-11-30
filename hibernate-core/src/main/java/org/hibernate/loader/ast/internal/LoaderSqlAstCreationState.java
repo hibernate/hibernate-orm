@@ -1,25 +1,30 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.ast.internal;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.query.spi.Limit;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
@@ -32,24 +37,29 @@ import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlAstProcessingState;
+import org.hibernate.sql.ast.spi.SqlAstQueryPartProcessingState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.tree.from.FromClause;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 
 /**
  * Helper used when generating the database-snapshot select query
  */
 public class LoaderSqlAstCreationState
-		implements SqlAstProcessingState, SqlAstCreationState, DomainResultCreationState, QueryOptions {
+		implements SqlAstQueryPartProcessingState, SqlAstCreationState, DomainResultCreationState, QueryOptions {
 	public interface FetchProcessor {
-		List<Fetch> visitFetches(FetchParent fetchParent, QuerySpec querySpec, LoaderSqlAstCreationState creationState);
+		ImmutableFetchList visitFetches(FetchParent fetchParent, LoaderSqlAstCreationState creationState);
 	}
 
 	private final SqlAliasBaseManager sqlAliasBaseManager;
 	private final boolean forceIdentifierSelection;
+	private final LoadQueryInfluencers loadQueryInfluencers;
 	private final SqlAstCreationContext sf;
 	private final SqlAstQueryPartProcessingStateImpl processingState;
 	private final FromClauseAccess fromClauseAccess;
@@ -58,7 +68,7 @@ public class LoaderSqlAstCreationState
 
 	private boolean resolvingCircularFetch;
 	private ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide;
-	private Set<AssociationKey> visitedAssociationKeys = new HashSet<>();
+	private final Set<AssociationKey> visitedAssociationKeys = new HashSet<>();
 
 	public LoaderSqlAstCreationState(
 			QueryPart queryPart,
@@ -67,12 +77,14 @@ public class LoaderSqlAstCreationState
 			LockOptions lockOptions,
 			FetchProcessor fetchProcessor,
 			boolean forceIdentifierSelection,
+			LoadQueryInfluencers loadQueryInfluencers,
 			SqlAstCreationContext sf) {
 		this.sqlAliasBaseManager = sqlAliasBaseManager;
 		this.fromClauseAccess = fromClauseAccess;
 		this.lockOptions = lockOptions;
 		this.fetchProcessor = fetchProcessor;
 		this.forceIdentifierSelection = forceIdentifierSelection;
+		this.loadQueryInfluencers = loadQueryInfluencers;
 		this.sf = sf;
 		this.processingState = new SqlAstQueryPartProcessingStateImpl(
 				queryPart,
@@ -84,6 +96,13 @@ public class LoaderSqlAstCreationState
 	}
 
 	@Override
+	public void applyOrdering(TableGroup tableGroup, OrderByFragment orderByFragment) {
+		final QuerySpec querySpec = getInflightQueryPart().getFirstQuerySpec();
+		assert querySpec.isRoot() : "Illegal attempt to apply order-by fragment to a non-root query spec";
+		orderByFragment.apply( querySpec, tableGroup, this );
+	}
+
+	@Override
 	public SqlAstCreationContext getCreationContext() {
 		return sf;
 	}
@@ -91,6 +110,36 @@ public class LoaderSqlAstCreationState
 	@Override
 	public SqlAstProcessingState getCurrentProcessingState() {
 		return this;
+	}
+
+	@Override
+	public QueryPart getInflightQueryPart() {
+		return processingState.getInflightQueryPart();
+	}
+
+	@Override
+	public FromClause getFromClause() {
+		return processingState.getFromClause();
+	}
+
+	@Override
+	public void applyPredicate(Predicate predicate) {
+		processingState.applyPredicate( predicate );
+	}
+
+	@Override
+	public void registerTreatedFrom(SqmFrom<?, ?> sqmFrom) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void registerFromUsage(SqmFrom<?, ?> sqmFrom, boolean downgradeTreatUses) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Map<SqmFrom<?, ?>, Boolean> getFromRegistrations() {
+		return Collections.emptyMap();
 	}
 
 	@Override
@@ -109,13 +158,32 @@ public class LoaderSqlAstCreationState
 	}
 
 	@Override
+	public LoadQueryInfluencers getLoadQueryInfluencers() {
+		return loadQueryInfluencers;
+	}
+
+	@Override
+	public boolean applyOnlyLoadByKeyFilters() {
+		return true;
+	}
+
+	@Override
 	public void registerLockMode(String identificationVariable, LockMode explicitLockMode) {
 		throw new UnsupportedOperationException( "Registering lock modes should only be done for result set mappings" );
 	}
 
 	@Override
-	public List<Fetch> visitFetches(FetchParent fetchParent) {
-		return fetchProcessor.visitFetches( fetchParent, processingState.getInflightQueryPart().getFirstQuerySpec(), this );
+	public ImmutableFetchList visitFetches(FetchParent fetchParent) {
+		return fetchProcessor.visitFetches( fetchParent, this );
+	}
+
+	@Override
+	public <R> R withNestedFetchParent(FetchParent fetchParent, Function<FetchParent, R> action) {
+		final FetchParent nestingFetchParent = processingState.getNestingFetchParent();
+		processingState.setNestingFetchParent( fetchParent );
+		final R result = action.apply( fetchParent );
+		processingState.setNestingFetchParent( nestingFetchParent );
+		return result;
 	}
 
 	@Override
@@ -202,18 +270,23 @@ public class LoaderSqlAstCreationState
 	}
 
 	@Override
-	public TupleTransformer getTupleTransformer() {
+	public TupleTransformer<?> getTupleTransformer() {
 		return null;
 	}
 
 	@Override
-	public ResultListTransformer getResultListTransformer() {
+	public ResultListTransformer<?> getResultListTransformer() {
 		return null;
 	}
 
 	@Override
 	public Boolean isResultCachingEnabled() {
 		return false;
+	}
+
+	@Override
+	public Boolean getQueryPlanCachingEnabled() {
+		return null;
 	}
 
 	@Override
@@ -253,6 +326,16 @@ public class LoaderSqlAstCreationState
 
 	@Override
 	public Limit getLimit() {
+		return null;
+	}
+
+	@Override
+	public Set<String> getEnabledFetchProfiles() {
+		return null;
+	}
+
+	@Override
+	public Set<String> getDisabledFetchProfiles() {
 		return null;
 	}
 }

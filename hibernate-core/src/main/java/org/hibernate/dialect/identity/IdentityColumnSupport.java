@@ -1,14 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.identity;
 
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.id.PostInsertIdentityPersister;
+import org.hibernate.id.insert.GetGeneratedKeysDelegate;
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * A set of operations providing support for identity columns
@@ -46,7 +45,7 @@ public interface IdentityColumnSupport {
 	/**
 	 * Provided we {@link #supportsInsertSelectIdentity}, then attach the
 	 * "select identity" clause to the  insert statement.
-	 * <p/>
+	 * <p>
 	 * Note, if {@link #supportsInsertSelectIdentity} == false then
 	 * the insert-string should be returned without modification.
 	 *
@@ -54,8 +53,28 @@ public interface IdentityColumnSupport {
 	 *
 	 * @return The insert command with any necessary identity select
 	 * clause attached.
+	 *
+	 * @deprecated Use {@link #appendIdentitySelectToInsert(String, String)} instead.
 	 */
+	@Deprecated( forRemoval = true, since = "6.5" )
 	String appendIdentitySelectToInsert(String insertString);
+
+	/**
+	 * Provided we {@link #supportsInsertSelectIdentity}, then attach the
+	 * "select identity" clause to the  insert statement.
+	 * <p>
+	 * Note, if {@link #supportsInsertSelectIdentity} == false then
+	 * the insert-string should be returned without modification.
+	 *
+	 * @param identityColumnName The name of the identity column
+	 * @param insertString The insert command
+	 *
+	 * @return The insert command with any necessary identity select
+	 * clause attached.
+	 */
+	default String appendIdentitySelectToInsert(String identityColumnName, String insertString) {
+		return appendIdentitySelectToInsert( insertString );
+	}
 
 	/**
 	 * Get the select command to use to retrieve the last generated IDENTITY
@@ -94,14 +113,21 @@ public interface IdentityColumnSupport {
 	String getIdentityInsertString();
 
 	/**
-	 * The Delegate for dealing with IDENTITY columns using JDBC3 getGeneratedKeys
+	 * Is there a keyword used to insert a generated value into an identity column.
+	 *
+	 * @return {@code true} if the dialect does not support inserts that specify no column values.
+	 */
+	default boolean hasIdentityInsertKeyword() {
+		return getIdentityInsertString() != null;
+	}
+
+	/**
+	 * The delegate for dealing with {@code IDENTITY} columns using
+	 * {@link java.sql.PreparedStatement#getGeneratedKeys}.
 	 *
 	 * @param persister The persister
-	 * @param dialect The dialect against which to generate the delegate
 	 *
-	 * @return the dialect specific GetGeneratedKeys delegate
+	 * @return the dialect-specific {@link GetGeneratedKeysDelegate}
 	 */
-	GetGeneratedKeysDelegate buildGetGeneratedKeysDelegate(
-			PostInsertIdentityPersister persister,
-			Dialect dialect);
+	GetGeneratedKeysDelegate buildGetGeneratedKeysDelegate(EntityPersister persister);
 }

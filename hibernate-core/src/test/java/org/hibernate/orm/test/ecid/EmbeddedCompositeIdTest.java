@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.ecid;
 
@@ -11,7 +9,7 @@ import java.util.List;
 import org.hibernate.Hibernate;
 import org.hibernate.proxy.HibernateProxy;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -63,14 +61,14 @@ public class EmbeddedCompositeIdTest {
 
 		scope.inTransaction(
 				session -> {
-					session.delete( c );
-					session.delete( uc );
+					session.remove( c );
+					session.remove( uc );
 				}
 		);
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-799")
+	@JiraKey(value = "HHH-799")
 	public void testMerging(SessionFactoryScope scope) {
 		Course course = new Course( "EN-101", "BA", "preparatory english" );
 		scope.inTransaction(
@@ -93,7 +91,7 @@ public class EmbeddedCompositeIdTest {
 					Course cid = new Course( "EN-101", "BA", null );
 					Course c = session.get( Course.class, cid );
 					assertEquals( newDesc, c.getDescription(), "description not merged" );
-					session.delete( c );
+					session.remove( c );
 				}
 		);
 	}
@@ -113,8 +111,8 @@ public class EmbeddedCompositeIdTest {
 				session -> {
 					Course ucid = new Course( "mat2000", "Monash", null );
 					Course cid = new Course( "eng5000", "BHS", null );
-					Course luc = session.load( Course.class, ucid );
-					Course lc = session.load( Course.class, cid );
+					Course luc = session.getReference( Course.class, ucid );
+					Course lc = session.getReference( Course.class, cid );
 					assertFalse( Hibernate.isInitialized( luc ) );
 					assertFalse( Hibernate.isInitialized( lc ) );
 					assertEquals( UniversityCourse.class, Hibernate.getClass( luc ) );
@@ -158,15 +156,14 @@ public class EmbeddedCompositeIdTest {
 
 		scope.inTransaction(
 				session -> {
-					session.saveOrUpdate( courses.get( 0 ) );
-					session.saveOrUpdate( courses.get( 1 ) );
+					session.merge( courses.get( 0 ) );
+					session.merge( courses.get( 1 ) );
 				}
 		);
 
 		scope.inTransaction(
 				session ->
-						courses.forEach( course -> session.delete( c ) )
+						courses.forEach( course -> session.remove( c ) )
 		);
 	}
 }
-

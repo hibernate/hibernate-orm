@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id.array;
 
@@ -13,11 +11,12 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -30,11 +29,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * @author <a href="mailto:p.krauzowicz@visiona.pl">Piotr Krauzowicz</a>
+ * @author Piotr Krauzowicz
  * @author Gail Badner
  */
 @SkipForDialect(dialectClass = MySQLDialect.class, majorVersion = 5, reason = "BLOB/TEXT column 'id' used in key specification without a key length")
 @SkipForDialect(dialectClass = OracleDialect.class, matchSubTypes = true, reason = "ORA-02329: column of datatype LOB cannot be unique or a primary key")
+@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix does not support unique / primary constraints on binary columns")
 @DomainModel(
 		annotatedClasses = PrimitiveByteArrayIdTest.DemoEntity.class
 )
@@ -72,14 +72,14 @@ public class PrimitiveByteArrayIdTest {
 	 * Removes two records from database.
 	 */
 	@Test
-	@TestForIssue(jiraKey = "HHH-8999")
+	@JiraKey(value = "HHH-8999")
 	public void testMultipleDeletions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					Query query = session.createQuery( "SELECT s FROM PrimitiveByteArrayIdTest$DemoEntity s" );
 					List results = query.list();
-					session.delete( results.get( 0 ) );
-					session.delete( results.get( 1 ) );
+					session.remove( results.get( 0 ) );
+					session.remove( results.get( 1 ) );
 				}
 		);
 
@@ -95,7 +95,7 @@ public class PrimitiveByteArrayIdTest {
 	 * Updates two records from database.
 	 */
 	@Test
-	@TestForIssue(jiraKey = "HHH-8999")
+	@JiraKey(value = "HHH-8999")
 	public void testMultipleUpdates(SessionFactoryScope scope) {
 		final String lastResultName = scope.fromTransaction(
 				session -> {

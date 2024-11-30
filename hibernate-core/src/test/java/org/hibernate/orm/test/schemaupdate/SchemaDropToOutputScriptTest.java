@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemaupdate;
 
@@ -27,9 +25,10 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,7 +38,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-@TestForIssue(jiraKey = "HHH-11817")
+@JiraKey(value = "HHH-11817")
 @RequiresDialect(H2Dialect.class)
 @BaseUnitTest
 public class SchemaDropToOutputScriptTest {
@@ -74,10 +73,10 @@ public class SchemaDropToOutputScriptTest {
 	}
 
 	private void createServiceRegistryAndMetadata(String append) {
-		final StandardServiceRegistryBuilder standardServiceRegistryBuilder = new StandardServiceRegistryBuilder()
+		final StandardServiceRegistryBuilder standardServiceRegistryBuilder = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( Environment.FORMAT_SQL, "false" )
-				.applySetting( Environment.HBM2DDL_SCRIPTS_ACTION, "drop" )
-				.applySetting( AvailableSettings.HBM2DDL_SCRIPTS_DROP_TARGET, output.getAbsolutePath() );
+				.applySetting( Environment.JAKARTA_HBM2DDL_SCRIPTS_ACTION, "drop" )
+				.applySetting( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_DROP_TARGET, output.getAbsolutePath() );
 
 		if ( append != null ) {
 			standardServiceRegistryBuilder.applySetting( AvailableSettings.HBM2DDL_SCRIPTS_CREATE_APPEND, append );
@@ -89,6 +88,7 @@ public class SchemaDropToOutputScriptTest {
 				.addAnnotatedClass( MyEntity.class )
 				.addAnnotatedClass( MySecondEntity.class )
 				.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 	}
 

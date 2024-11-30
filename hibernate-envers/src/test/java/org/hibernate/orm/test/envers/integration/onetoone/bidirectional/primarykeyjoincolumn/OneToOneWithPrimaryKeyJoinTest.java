@@ -1,13 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.onetoone.bidirectional.primarykeyjoincolumn;
 
 import java.util.Arrays;
-import jakarta.persistence.EntityManager;
 
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.query.AuditEntity;
@@ -15,19 +12,20 @@ import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.proxy.HibernateProxy;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
+
+import jakarta.persistence.EntityManager;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-6825")
+@JiraKey(value = "HHH-6825")
 public class OneToOneWithPrimaryKeyJoinTest extends BaseEnversJPAFunctionalTestCase {
 	private Long personId = null;
 	private Long accountId = null;
 	private Long proxyPersonId = null;
-	private Long noProxyPersonId = null;
 	private Long accountNotAuditedOwnersId = null;
 
 	@Override
@@ -36,8 +34,7 @@ public class OneToOneWithPrimaryKeyJoinTest extends BaseEnversJPAFunctionalTestC
 				Person.class,
 				Account.class,
 				AccountNotAuditedOwners.class,
-				NotAuditedNoProxyPerson.class,
-				NotAuditedProxyPerson.class
+				NotAuditedPerson.class
 		};
 	}
 
@@ -58,15 +55,11 @@ public class OneToOneWithPrimaryKeyJoinTest extends BaseEnversJPAFunctionalTestC
 
 		// Revision 2
 		em.getTransaction().begin();
-		NotAuditedNoProxyPerson noProxyPerson = new NotAuditedNoProxyPerson( "Kinga" );
-		NotAuditedProxyPerson proxyPerson = new NotAuditedProxyPerson( "Lukasz" );
+		NotAuditedPerson proxyPerson = new NotAuditedPerson( "Lukasz" );
 		AccountNotAuditedOwners accountNotAuditedOwners = new AccountNotAuditedOwners( "Standard" );
-		noProxyPerson.setAccount( accountNotAuditedOwners );
 		proxyPerson.setAccount( accountNotAuditedOwners );
-		accountNotAuditedOwners.setOwner( noProxyPerson );
-		accountNotAuditedOwners.setCoOwner( proxyPerson );
+		accountNotAuditedOwners.setOwner( proxyPerson );
 		em.persist( accountNotAuditedOwners );
-		em.persist( noProxyPerson );
 		em.persist( proxyPerson );
 		em.getTransaction().commit();
 
@@ -74,7 +67,6 @@ public class OneToOneWithPrimaryKeyJoinTest extends BaseEnversJPAFunctionalTestC
 		accountId = account.getAccountId();
 		accountNotAuditedOwnersId = accountNotAuditedOwners.getAccountId();
 		proxyPersonId = proxyPerson.getPersonId();
-		noProxyPersonId = noProxyPerson.getPersonId();
 	}
 
 	@Test
@@ -127,16 +119,13 @@ public class OneToOneWithPrimaryKeyJoinTest extends BaseEnversJPAFunctionalTestC
 
 	@Test
 	public void testHistoryOfAccountNotAuditedOwners() {
-		NotAuditedNoProxyPerson noProxyPersonVer1 = new NotAuditedNoProxyPerson( noProxyPersonId, "Kinga" );
-		NotAuditedProxyPerson proxyPersonVer1 = new NotAuditedProxyPerson( proxyPersonId, "Lukasz" );
+		NotAuditedPerson proxyPersonVer1 = new NotAuditedPerson( proxyPersonId, "Lukasz" );
 		AccountNotAuditedOwners accountNotAuditedOwnersVer1 = new AccountNotAuditedOwners(
 				accountNotAuditedOwnersId,
 				"Standard"
 		);
-		noProxyPersonVer1.setAccount( accountNotAuditedOwnersVer1 );
 		proxyPersonVer1.setAccount( accountNotAuditedOwnersVer1 );
-		accountNotAuditedOwnersVer1.setOwner( noProxyPersonVer1 );
-		accountNotAuditedOwnersVer1.setCoOwner( proxyPersonVer1 );
+		accountNotAuditedOwnersVer1.setOwner( proxyPersonVer1 );
 
 		Object[] result = ((Object[]) getAuditReader().createQuery()
 				.forRevisionsOfEntity( AccountNotAuditedOwners.class, false, true )
@@ -146,13 +135,10 @@ public class OneToOneWithPrimaryKeyJoinTest extends BaseEnversJPAFunctionalTestC
 
 		Assert.assertEquals( accountNotAuditedOwnersVer1, result[0] );
 		Assert.assertEquals( RevisionType.ADD, result[2] );
-		// Checking non-proxy reference
-		Assert.assertEquals( accountNotAuditedOwnersVer1.getOwner(), ((AccountNotAuditedOwners) result[0]).getOwner() );
-		// Checking proxy reference
-		Assert.assertTrue( ((AccountNotAuditedOwners) result[0]).getCoOwner() instanceof HibernateProxy );
+		Assert.assertTrue( ((AccountNotAuditedOwners) result[0]).getOwner() instanceof HibernateProxy );
 		Assert.assertEquals(
 				proxyPersonVer1.getPersonId(),
-				((AccountNotAuditedOwners) result[0]).getCoOwner().getPersonId()
+				((AccountNotAuditedOwners) result[0]).getOwner().getPersonId()
 		);
 
 		Assert.assertEquals(

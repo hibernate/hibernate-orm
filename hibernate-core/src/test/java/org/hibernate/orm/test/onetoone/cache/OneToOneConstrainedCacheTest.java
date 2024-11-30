@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.onetoone.cache;
 
@@ -52,7 +50,7 @@ public class OneToOneConstrainedCacheTest {
 
 	/**
 	 * creates a new MainObject
-	 * <p/>
+	 * <p>
 	 * one hibernate transaction !
 	 */
 	private Object createMainObject(SessionFactoryScope scope) {
@@ -71,7 +69,7 @@ public class OneToOneConstrainedCacheTest {
 	/**
 	 * loads the newly created MainObject
 	 * and adds a new Object2 to it
-	 * <p/>
+	 * <p>
 	 * one hibernate transaction
 	 */
 	private void addObject2(Object mainObjectId, SessionFactoryScope scope) {
@@ -90,7 +88,7 @@ public class OneToOneConstrainedCacheTest {
 	/**
 	 * reads the newly created MainObject
 	 * and its Object2 if it exists
-	 * <p/>
+	 * <p>
 	 * one hibernate transaction
 	 */
 	private MainObject readMainObject(Object id, SessionFactoryScope scope) {

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
@@ -13,9 +11,7 @@ import java.util.GregorianCalendar;
 
 import jakarta.persistence.TemporalType;
 
-import org.hibernate.cache.internal.CacheKeyValueDescriptor;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.compare.CalendarComparator;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -30,18 +26,6 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class CalendarTimeJavaType extends AbstractTemporalJavaType<Calendar> {
 	public static final CalendarTimeJavaType INSTANCE = new CalendarTimeJavaType();
 
-	private static final CacheKeyValueDescriptor CACHE_KEY_VALUE_DESCRIPTOR = new CacheKeyValueDescriptor() {
-		@Override
-		public int getHashCode(Object key) {
-			return INSTANCE.extractHashCode( (Calendar) key );
-		}
-
-		@Override
-		public boolean isEqual(Object key1, Object key2) {
-			return INSTANCE.areEqual( (Calendar) key1, (Calendar) key2 );
-		}
-	};
-
 	protected CalendarTimeJavaType() {
 		super( Calendar.class, CalendarJavaType.CalendarMutabilityPlan.INSTANCE, CalendarComparator.INSTANCE );
 	}
@@ -53,34 +37,31 @@ public class CalendarTimeJavaType extends AbstractTemporalJavaType<Calendar> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( Types.TIME );
+		return context.getJdbcType( Types.TIME );
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	protected <X> TemporalJavaType<X> forTimePrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
 		return (TemporalJavaType<X>) this;
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	protected <X> TemporalJavaType<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
 		return (TemporalJavaType<X>) CalendarJavaType.INSTANCE;
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	protected <X> TemporalJavaType<X> forDatePrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
 		return (TemporalJavaType<X>) CalendarDateJavaType.INSTANCE;
 	}
 
 	public String toString(Calendar value) {
-		return DateJavaType.INSTANCE.toString( value.getTime() );
+		return JdbcTimeJavaType.INSTANCE.toString( value.getTime() );
 	}
 
 	public Calendar fromString(CharSequence string) {
 		Calendar result = new GregorianCalendar();
-		result.setTime( DateJavaType.INSTANCE.fromString( string.toString() ) );
+		result.setTime( JdbcTimeJavaType.INSTANCE.fromString( string.toString() ) );
 		return result;
 	}
 
@@ -93,23 +74,20 @@ public class CalendarTimeJavaType extends AbstractTemporalJavaType<Calendar> {
 			return false;
 		}
 
-		return one.get(Calendar.DAY_OF_MONTH) == another.get(Calendar.DAY_OF_MONTH)
-			&& one.get(Calendar.MONTH) == another.get(Calendar.MONTH)
-			&& one.get(Calendar.YEAR) == another.get(Calendar.YEAR);
+		return one.get(Calendar.MILLISECOND) == another.get(Calendar.MILLISECOND)
+			&& one.get(Calendar.SECOND) == another.get(Calendar.SECOND)
+			&& one.get(Calendar.MINUTE) == another.get(Calendar.MINUTE)
+			&& one.get(Calendar.HOUR_OF_DAY) == another.get(Calendar.HOUR_OF_DAY);
 	}
 
 	@Override
 	public int extractHashCode(Calendar value) {
 		int hashCode = 1;
-		hashCode = 31 * hashCode + value.get(Calendar.DAY_OF_MONTH);
-		hashCode = 31 * hashCode + value.get(Calendar.MONTH);
-		hashCode = 31 * hashCode + value.get(Calendar.YEAR);
+		hashCode = 31 * hashCode + value.get(Calendar.MILLISECOND);
+		hashCode = 31 * hashCode + value.get(Calendar.SECOND);
+		hashCode = 31 * hashCode + value.get(Calendar.MINUTE);
+		hashCode = 31 * hashCode + value.get(Calendar.HOUR_OF_DAY);
 		return hashCode;
-	}
-
-	@Override
-	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
-		return CACHE_KEY_VALUE_DESCRIPTOR;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -124,7 +102,7 @@ public class CalendarTimeJavaType extends AbstractTemporalJavaType<Calendar> {
 			return (X) new java.sql.Date( value.getTimeInMillis() );
 		}
 		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
-			return (X) new java.sql.Time( value.getTimeInMillis() );
+			return (X) new java.sql.Time( value.getTimeInMillis() % 86_400_000 );
 		}
 		if ( java.sql.Timestamp.class.isAssignableFrom( type ) ) {
 			return (X) new java.sql.Timestamp( value.getTimeInMillis() );
@@ -139,31 +117,32 @@ public class CalendarTimeJavaType extends AbstractTemporalJavaType<Calendar> {
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof Calendar) {
-			return (Calendar) value;
+		else if (value instanceof Calendar calendar) {
+			return calendar;
 		}
-
-		if ( !(value instanceof Date)) {
+		else if ( value instanceof Date date) {
+			final Calendar cal = new GregorianCalendar();
+			cal.setTime( date );
+			return cal;
+		}
+		else {
 			throw unknownWrap( value.getClass() );
 		}
-
-		Calendar cal = new GregorianCalendar();
-		cal.setTime( (Date) value );
-		return cal;
 	}
 
 	@Override
 	public boolean isWider(JavaType<?> javaType) {
-		switch ( javaType.getJavaType().getTypeName() ) {
-			case "java.sql.Time":
-				return true;
-			default:
-				return false;
-		}
+		return switch ( javaType.getTypeName() ) {
+			case "java.sql.Time" -> true;
+			default -> false;
+		};
 	}
 
 	@Override
 	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
-		return 0; //seconds (currently ignored since Dialects don't parameterize time type by precision)
+		// times represent repeating events - they
+		// almost never come equipped with seconds,
+		// let alone fractional seconds!
+		return 0;
 	}
 }

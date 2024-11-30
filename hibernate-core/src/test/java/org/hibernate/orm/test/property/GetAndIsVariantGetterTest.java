@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.property;
 
@@ -19,11 +17,13 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.internal.util.ReflectHelper;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
@@ -40,7 +40,7 @@ public class GetAndIsVariantGetterTest {
 
 	@BeforeClass
 	public static void prepare() {
-		ssr = new StandardServiceRegistryBuilder(  ).build();
+		ssr = ServiceRegistryUtil.serviceRegistry();
 	}
 
 	@AfterClass
@@ -51,7 +51,7 @@ public class GetAndIsVariantGetterTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10172" )
+	@JiraKey( value = "HHH-10172" )
 	public void testHbmXml() {
 		try {
 			new MetadataSources( ssr )
@@ -60,12 +60,12 @@ public class GetAndIsVariantGetterTest {
 			fail( "Expecting a failure" );
 		}
 		catch (MappingException e) {
-			assertThat( e.getMessage(), startsWith( "In trying to locate getter for property [id]" ) );
+			assertThat( e.getMessage(), endsWith( "variants of getter for property 'id'" ) );
 		}
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10172" )
+	@JiraKey( value = "HHH-10172" )
 	public void testAnnotations() {
 		try {
 			new MetadataSources( ssr )
@@ -74,12 +74,12 @@ public class GetAndIsVariantGetterTest {
 			fail( "Expecting a failure" );
 		}
 		catch (MappingException e) {
-			assertThat( e.getMessage(), startsWith( "HHH000474: Ambiguous persistent property methods detected on" ) );
+			assertThat( e.getMessage(), startsWith( "Ambiguous persistent property methods" ) );
 		}
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10242" )
+	@JiraKey( value = "HHH-10242" )
 	public void testAnnotationsCorrected() {
 		Metadata metadata = new MetadataSources( ssr )
 				.addAnnotatedClass( TheEntity2.class )
@@ -89,7 +89,7 @@ public class GetAndIsVariantGetterTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10309" )
+	@JiraKey( value = "HHH-10309" )
 	public void testAnnotationsFieldAccess() {
 		// this one should be ok because the AccessType is FIELD
 		Metadata metadata = new MetadataSources( ssr )
@@ -100,7 +100,7 @@ public class GetAndIsVariantGetterTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12046" )
+	@JiraKey( value = "HHH-12046" )
 	public void testInstanceStaticConflict() {
 		Metadata metadata = new MetadataSources( ssr )
 				.addAnnotatedClass( InstanceStaticEntity.class )

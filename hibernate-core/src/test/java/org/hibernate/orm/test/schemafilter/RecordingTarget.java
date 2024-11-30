@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.schemafilter;
 
 import java.util.EnumMap;
@@ -6,14 +10,14 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.hibernate.tool.schema.internal.exec.GenerationTarget;
+import org.hibernate.tool.schema.spi.GenerationTarget;
 
 class RecordingTarget implements GenerationTarget {
 	public enum Category {
 		SCHEMA_CREATE( Pattern.compile( "create schema (.*)" ) ),
-		SCHEMA_DROP( Pattern.compile( "drop schema (.*)" ) ),
+		SCHEMA_DROP( Pattern.compile( "drop schema(?: if exists)? (.*)" ) ),
 		TABLE_CREATE( Pattern.compile( "create table (\\S+) .*" ) ),
-		TABLE_DROP( Pattern.compile( "drop table (.*)" ) ),
+		TABLE_DROP( Pattern.compile( "drop table(?: if exists)? (.*)" ) ),
 		SEQUENCE_CREATE(Pattern.compile( "create sequence (.*) start (.*)" )),
 		SEQUENCE_DROP(Pattern.compile( "drop sequence if exists (.*)" ));
 

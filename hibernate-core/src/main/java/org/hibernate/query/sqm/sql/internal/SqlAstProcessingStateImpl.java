@@ -1,12 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.sql.internal;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +18,6 @@ import org.hibernate.sql.ast.spi.SqlAstProcessingState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -39,7 +35,7 @@ public class SqlAstProcessingStateImpl
 	private final SqlExpressionResolver expressionResolver;
 	private final Supplier<Clause> currentClauseAccess;
 
-	private final Map<String, Expression> expressionMap = new HashMap<>();
+	private final Map<ColumnReferenceKey, Expression> expressionMap = new HashMap<>();
 
 	public SqlAstProcessingStateImpl(
 			SqlAstProcessingState parentState,
@@ -87,7 +83,7 @@ public class SqlAstProcessingStateImpl
 
 	@Override
 	public Expression resolveSqlExpression(
-			String key,
+			ColumnReferenceKey key,
 			Function<SqlAstProcessingState,Expression> creator) {
 		final Expression existing = expressionMap.get( key );
 

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.keymanytoone.bidir.component;
 
@@ -33,7 +31,7 @@ public class EagerCollectionLazyKeyManyToOneTest {
 				session -> {
 					List<Customer> customers = session.createQuery( "from Customer" ).list();
 					customers.forEach(
-							customer -> session.delete( customer )
+							customer -> session.remove( customer )
 					);
 				}
 		);
@@ -47,7 +45,7 @@ public class EagerCollectionLazyKeyManyToOneTest {
 
 		scope.inTransaction(
 				session -> {
-					session.save( cust );
+					session.persist( cust );
 				}
 		);
 
@@ -73,7 +71,7 @@ public class EagerCollectionLazyKeyManyToOneTest {
 					Order order = new Order( new Order.Id( cust, 1 ) );
 					cust.getOrders().add( order );
 					statistics.clear();
-					session.save( cust );
+					session.persist( cust );
 					session.flush();
 
 					assertEquals( 2, statistics.getEntityInsertCount() );
@@ -89,7 +87,7 @@ public class EagerCollectionLazyKeyManyToOneTest {
 		customer.getOrders().add( order );
 
 		scope.inTransaction(
-				session -> session.save( customer )
+				session -> session.persist( customer )
 		);
 
 		scope.inTransaction(

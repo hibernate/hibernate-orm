@@ -1,15 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.interceptor;
 
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
-import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -18,12 +15,11 @@ import java.util.Queue;
 import org.junit.Test;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.EmptyInterceptor;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import org.hibernate.resource.jdbc.internal.EmptyStatementInspector;
@@ -40,7 +36,7 @@ import static org.junit.Assert.fail;
 
 /**
  * @author Gavin King
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 public class InterceptorTest extends BaseCoreFunctionalTestCase {
 	@Override
@@ -67,7 +63,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 		t = s.beginTransaction();
 		u = s.get( User.class, "Gavin" );
 		assertEquals( 2, u.getActions().size() );
-		s.delete( u );
+		s.remove( u );
 		t.commit();
 		s.close();
 	}
@@ -87,7 +83,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 		u = s.get( User.class, "Gavin" );
 		assertNotNull( u.getCreated() );
 		assertNotNull( u.getLastUpdated() );
-		s.delete( u );
+		s.remove( u );
 		t.commit();
 		s.close();
 	}
@@ -98,7 +94,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 	 * causes EntityPersister.findDirty() to return no dirty properties.
 	 */
 	@Test
-	@TestForIssue(jiraKey = "HHH-1921")
+	@JiraKey(value = "HHH-1921")
 	public void testPropertyIntercept2() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -108,11 +104,11 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		s = openSession(
-				new EmptyInterceptor() {
+				new Interceptor() {
 					@Override
 					public boolean onFlushDirty(
 							Object entity,
-							Serializable id,
+							Object id,
 							Object[] currentState,
 							Object[] previousState,
 							String[] propertyNames,
@@ -137,7 +133,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 		t = s.beginTransaction();
 		u = s.get( User.class, "Josh" );
 		assertEquals( "test", u.getPassword() );
-		s.delete( u );
+		s.remove( u );
 		t.commit();
 		s.close();
 
@@ -165,11 +161,11 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 			fail( "Transaction should have timed out" );
 		}
 		catch (PersistenceException e) {
-			assertTyping( TransactionException.class, e.getCause() );
+			assertTyping( TransactionException.class, e );
 			assertTrue(
 					"Transaction failed for the wrong reason.  Expecting transaction timeout, but found [" +
-							e.getCause().getMessage() + "]",
-					e.getCause().getMessage().contains( "transaction timeout expired" )
+							e.getMessage() + "]",
+					e.getMessage().contains( "transaction timeout expired" )
 			);
 		}
 	}
@@ -180,9 +176,9 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 		final String checkComment = "generated from interceptor";
 
 		Session s = openSession(
-				new EmptyInterceptor() {
+				new Interceptor() {
 					@Override
-					public boolean onSave(
+					public boolean onPersist(
 							Object entity,
 							Object id,
 							Object[] state,
@@ -214,7 +210,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 		assertNotNull( i.getDetails() );
 		assertEquals( checkPerm, i.getDetails().getPerm1() );
 		assertEquals( checkComment, i.getDetails().getComment() );
-		s.delete( i );
+		s.remove( i );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -249,8 +245,8 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 					List<Log> logs = s.createQuery( criteria ).list();
 //		List logs = s.createCriteria(Log.class).list();
 					assertEquals( 2, logs.size() );
-					s.delete( u );
-					s.createQuery( "delete from Log" ).executeUpdate();
+					s.remove( u );
+					s.createMutationQuery( "delete from Log" ).executeUpdate();
 
 				}
 		);
@@ -281,7 +277,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 
 		merged.setInjectedString( null );
 
-		User loaded = s.load( User.class, merged.getName() );
+		User loaded = s.getReference( User.class, merged.getName() );
 		// the session-bound instance was not instantiated by the interceptor, load simply returns it
 		assertSame( merged, loaded );
 		assertNull( merged.getInjectedString() );
@@ -290,19 +286,19 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 		s.evict( merged );
 
-		User reloaded = s.load( User.class, merged.getName() );
+		User reloaded = s.getReference( User.class, merged.getName() );
 		// Interceptor IS called for instantiating the persistent instance associated to the session when using load
 		assertEquals( injectedString, reloaded.getInjectedString() );
 		assertEquals( u.getName(), reloaded.getName() );
 		assertEquals( u.getPassword(), reloaded.getPassword() );
 
-		s.delete( reloaded );
+		s.remove( reloaded );
 		t.commit();
 		s.close();
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-6594")
+	@JiraKey(value = "HHH-6594")
 	public void testPrepareStatementIntercept() {
 		final Queue<String> expectedSQLs = new LinkedList<>();
 		// Transaction 1
@@ -354,7 +350,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 
 		s = sessionFactory().withOptions().statementInspector( statementInspector ).openSession();
 		t = s.beginTransaction();
-		s.delete( u );
+		s.remove( u );
 		t.commit();
 		s.close();
 
@@ -385,4 +381,3 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 }
-

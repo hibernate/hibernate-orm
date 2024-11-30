@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.legacy;
 import java.util.HashSet;
@@ -14,40 +12,40 @@ import java.util.Set;
  */
 public class Role {
 
-   long id;
-   String name;
-   Set interventions = new HashSet();
+long id;
+String name;
+Set interventions = new HashSet();
 private List bunchOfStrings;
 
-  long getId() {
-    return id;
-  }
+long getId() {
+	return id;
+}
 
-  void  setId(long newValue) {
-    id = newValue;
-  }
+void  setId(long newValue) {
+	id = newValue;
+}
 
-  String getName() {
-    return name;
-  }
+String getName() {
+	return name;
+}
 
-  void  setName(String newValue) {
-    name = newValue;
-  }
+void  setName(String newValue) {
+	name = newValue;
+}
 
-  public Set getInterventions() {
-  	return interventions;
-  }
-  
-  public void setInterventions(Set iv) {
-  	interventions = iv;
-  }
+public Set getInterventions() {
+	return interventions;
+}
 
-  List getBunchOfStrings() {
-  	return bunchOfStrings;
-  }
-  
-  void setBunchOfStrings(List s) {
-  	bunchOfStrings = s;
-  }
+public void setInterventions(Set iv) {
+	interventions = iv;
+}
+
+List getBunchOfStrings() {
+	return bunchOfStrings;
+}
+
+void setBunchOfStrings(List s) {
+	bunchOfStrings = s;
+}
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.fetch.subselect;
 
@@ -44,12 +42,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 		SimpleMultipleLazySubSelectFetchTests.Thing.class,
 		SimpleMultipleLazySubSelectFetchTests.Trinket.class,
 })
-@SessionFactory( statementInspectorClass = SQLStatementInspector.class )
+@SessionFactory( useCollectingStatementInspector = true )
 public class SimpleMultipleLazySubSelectFetchTests {
 
 	@Test
 	public void smokeTest(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {

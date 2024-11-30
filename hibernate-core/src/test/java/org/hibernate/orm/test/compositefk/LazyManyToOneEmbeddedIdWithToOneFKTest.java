@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.compositefk;
 
@@ -42,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 				LazyManyToOneEmbeddedIdWithToOneFKTest.Subsystem.class
 		}
 )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 public class LazyManyToOneEmbeddedIdWithToOneFKTest {
 
 	@BeforeEach
@@ -56,9 +54,9 @@ public class LazyManyToOneEmbeddedIdWithToOneFKTest {
 					System system = new System( 1, "sub1" );
 					system.setUser( user );
 
-					session.save( subsystem );
-					session.save( user );
-					session.save( system );
+					session.persist( subsystem );
+					session.persist( user );
+					session.persist( system );
 				}
 		);
 	}
@@ -76,7 +74,7 @@ public class LazyManyToOneEmbeddedIdWithToOneFKTest {
 
 	@Test
 	public void testGet(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
@@ -108,7 +106,7 @@ public class LazyManyToOneEmbeddedIdWithToOneFKTest {
 					assertTrue( Hibernate.isInitialized( system.getUser() ) );
 
 					statementInspector.assertExecutedCount( 1 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 0 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 1 );
 
 				}
 		);
@@ -116,7 +114,7 @@ public class LazyManyToOneEmbeddedIdWithToOneFKTest {
 
 	@Test
 	public void testHql(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
@@ -147,7 +145,7 @@ public class LazyManyToOneEmbeddedIdWithToOneFKTest {
 					assertTrue( Hibernate.isInitialized( system.getUser() ) );
 
 					statementInspector.assertExecutedCount( 1 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 0 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 1 );
 
 				}
 		);
@@ -155,7 +153,7 @@ public class LazyManyToOneEmbeddedIdWithToOneFKTest {
 
 	@Test
 	public void testHqlJoin(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
@@ -176,7 +174,7 @@ public class LazyManyToOneEmbeddedIdWithToOneFKTest {
 
 	@Test
 	public void testHqlJoinFetch(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
@@ -201,7 +199,7 @@ public class LazyManyToOneEmbeddedIdWithToOneFKTest {
 
 	@Test
 	public void testHql2(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {

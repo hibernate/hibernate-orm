@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql.hand;
 import java.io.Serializable;
@@ -10,7 +8,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class Product {
-	
+
 	static public class ProductId implements Serializable {
 		String orgid;
 		String productnumber;
@@ -26,29 +24,29 @@ public class Product {
 		public void setOrgid(String orgid) {
 			this.orgid = orgid;
 		}
-		
-		
+
+
 	}
-	
+
 	ProductId productId;
-	
+
 	String name;
 
 	Person person;
-	
+
 	Set orders = new HashSet();
-	
+
 	public Set getOrders() {
 		return orders;
 	}
-	
+
 	public void setOrders(Set orders) {
 		this.orders = orders;
 	}
 	public Person getPerson() {
 		return person;
 	}
-	
+
 	public void setPerson(Person person) {
 		this.person = person;
 	}

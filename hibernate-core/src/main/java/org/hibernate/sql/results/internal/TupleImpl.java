@@ -1,23 +1,23 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.internal;
 
+import java.util.Arrays;
 import java.util.List;
+
+import jakarta.persistence.Tuple;
 import jakarta.persistence.TupleElement;
 
-import org.hibernate.internal.util.type.PrimitiveWrapperHelper;
-import org.hibernate.query.JpaTuple;
+import static org.hibernate.internal.util.type.PrimitiveWrapperHelper.getDescriptorByPrimitiveType;
 
 /**
  * Implementation of the JPA Tuple contract
  *
  * @author Steve Ebersole
  */
-public class TupleImpl implements JpaTuple {
+public class TupleImpl implements Tuple {
 	private final TupleMetadata tupleMetadata;
 	private final Object[] row;
 
@@ -44,7 +44,7 @@ public class TupleImpl implements JpaTuple {
 	public <X> X get(String alias, Class<X> type) {
 		final Object untyped = get( alias );
 		if ( untyped != null ) {
-			if (!elementTypeMatches(type, untyped)) {
+			if ( !elementTypeMatches( type, untyped ) ) {
 				throw new IllegalArgumentException(
 						String.format(
 								"Requested tuple value [alias=%s, value=%s] cannot be assigned to requested type [%s]",
@@ -98,9 +98,8 @@ public class TupleImpl implements JpaTuple {
 	}
 
 	private <X> boolean elementTypeMatches(Class<X> type, Object untyped) {
-		return type.isInstance(untyped)
-				|| type.isPrimitive()
-				&& PrimitiveWrapperHelper.getDescriptorByPrimitiveType( type).getWrapperClass().isInstance( untyped);
+		return type.isInstance( untyped )
+			|| type.isPrimitive() && getDescriptorByPrimitiveType( type ).getWrapperClass().isInstance( untyped );
 	}
 
 	@Override
@@ -111,5 +110,10 @@ public class TupleImpl implements JpaTuple {
 	@Override
 	public List<TupleElement<?>> getElements() {
 		return tupleMetadata.getList();
+	}
+
+	@Override
+	public String toString() {
+		return Arrays.toString( row );
 	}
 }

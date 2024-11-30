@@ -1,21 +1,20 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
-import org.hibernate.cache.internal.CacheKeyValueDescriptor;
-import org.hibernate.cache.internal.DefaultCacheKeyValueDescriptor;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.CharSequenceHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * Descriptor for {@link Boolean} handling.
+ *
+ * @see org.hibernate.cfg.AvailableSettings#PREFERRED_BOOLEAN_JDBC_TYPE
  *
  * @author Steve Ebersole
  */
@@ -45,13 +44,33 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 		stringValueTrue = String.valueOf( characterValueTrue );
 		stringValueFalse = String.valueOf( characterValueFalse );
 	}
+
+	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
 	@Override
 	public String toString(Boolean value) {
 		return value == null ? null : value.toString();
 	}
+
 	@Override
 	public Boolean fromString(CharSequence string) {
 		return Boolean.valueOf( string.toString() );
+	}
+
+	@Override
+	public Boolean fromEncodedString(CharSequence charSequence, int start, int end) {
+		switch ( charSequence.charAt( start ) ) {
+			case 't':
+			case 'T':
+				return CharSequenceHelper.regionMatchesIgnoreCase( charSequence, start + 1, "rue", 0, 3 );
+			case 'y':
+			case 'Y':
+				return end == start + 1;
+		}
+		return false;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -60,7 +79,7 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 		if ( value == null ) {
 			return null;
 		}
-		if ( Boolean.class.isAssignableFrom( type ) ) {
+		if ( Boolean.class.isAssignableFrom( type ) || type == Object.class ) {
 			return (X) value;
 		}
 		if ( Byte.class.isAssignableFrom( type ) ) {
@@ -83,32 +102,29 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 		}
 		throw unknownUnwrap( type );
 	}
+
 	@Override
 	public <X> Boolean wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof Boolean) {
-			return (Boolean) value;
+		if (value instanceof Boolean booleanValue) {
+			return booleanValue;
 		}
-		if (value instanceof Number) {
-			final int intValue = ( (Number) value ).intValue();
-			return intValue != 0;
+		if (value instanceof Number number) {
+			return number.intValue() != 0;
 		}
-		if (value instanceof Character) {
-			return isTrue( (Character) value );
+		if (value instanceof Character character) {
+			return isTrue( character );
 		}
-		if (value instanceof String) {
-			return isTrue( (String) value );
+		if (value instanceof String string) {
+			return isTrue( string );
 		}
 		throw unknownWrap( value.getClass() );
 	}
 
 	private boolean isTrue(String strValue) {
-		if (strValue != null && !strValue.isEmpty()) {
-			return isTrue(strValue.charAt(0));
-		}
-		return false;
+		return strValue != null && !strValue.isEmpty() && isTrue( strValue.charAt(0) );
 	}
 
 	private boolean isTrue(char charValue) {
@@ -136,7 +152,7 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 	}
 
 	@Override
-	public Class getPrimitiveClass() {
+	public Class<?> getPrimitiveClass() {
 		return boolean.class;
 	}
 
@@ -171,18 +187,62 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 	}
 
 	@Override
-	public String getCheckCondition(String columnName, JdbcType sqlTypeDescriptor, Dialect dialect) {
-		return dialect.getBooleanCheckCondition(
-				columnName,
-				sqlTypeDescriptor.getJdbcTypeCode(),
-				characterValueFalse,
-				characterValueTrue
-		);
+	public String getCheckCondition(String columnName, JdbcType jdbcType, BasicValueConverter<Boolean, ?> converter, Dialect dialect) {
+		if ( converter != null ) {
+			if ( jdbcType.isString() ) {
+				final Object falseValue = converter.toRelationalValue( false );
+				final Object trueValue = converter.toRelationalValue( true );
+				final String[] values = getPossibleStringValues( converter, falseValue, trueValue );
+				return dialect.getCheckCondition( columnName, values );
+			}
+			else if ( jdbcType.isInteger() ) {
+				@SuppressWarnings("unchecked")
+				final BasicValueConverter<Boolean, ? extends Number> numericConverter =
+						(BasicValueConverter<Boolean, ? extends Number>) converter;
+				final Number falseValue = numericConverter.toRelationalValue( false );
+				final Number trueValue = numericConverter.toRelationalValue( true );
+				final Long[] values = getPossibleNumericValues( numericConverter, falseValue, trueValue );
+				return dialect.getCheckCondition( columnName, values );
+			}
+		}
+		return null;
 	}
 
-	@Override
-	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
-		return DefaultCacheKeyValueDescriptor.INSTANCE;
+	private static Long[] getPossibleNumericValues(
+			BasicValueConverter<Boolean, ? extends Number> numericConverter,
+			Number falseValue,
+			Number trueValue) {
+		Number nullValue = null;
+		try {
+			nullValue = numericConverter.toRelationalValue( null );
+		}
+		catch ( NullPointerException ignored ) {
+		}
+		final Long[] values = new Long[nullValue != null ? 3 : 2];
+		values[0] = falseValue != null ? falseValue.longValue() : null;
+		values[1] = trueValue != null ? trueValue.longValue() : null;
+		if ( nullValue != null ) {
+			values[2] = nullValue.longValue();
+		}
+		return values;
 	}
 
+	private static String[] getPossibleStringValues(
+			BasicValueConverter<Boolean, ?> stringConverter,
+			Object falseValue,
+			Object trueValue) {
+		Object nullValue = null;
+		try {
+			nullValue =  stringConverter.toRelationalValue( null);
+		}
+		catch ( NullPointerException ignored ) {
+		}
+		final String[] values = new String[nullValue != null ? 3 : 2];
+		values[0] = falseValue != null ? falseValue.toString() : null;
+		values[1] = trueValue != null ? trueValue.toString() : null;
+		if ( nullValue != null ) {
+			values[2] =  nullValue.toString();
+		}
+		return values;
+	}
 }

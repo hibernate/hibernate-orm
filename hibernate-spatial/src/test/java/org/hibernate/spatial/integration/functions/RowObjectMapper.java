@@ -1,33 +1,41 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.spatial.integration.functions;
 
 import java.util.Arrays;
 import java.util.Objects;
 
+import org.geolatte.geom.GeometryEquality;
+import org.geolatte.geom.jts.JTS;
+
 /**
  * Mapper to ensure that the results of the test queries can be compared for equality.
- * 
- * @param <T> the returned object by the test query
  */
-public interface RowObjectMapper<T> {
-	default Data apply(Object obj) {
+public class RowObjectMapper {
+
+	final GeometryEquality geomEq;
+
+	RowObjectMapper(GeometryEquality geomEq) {
+		this.geomEq = geomEq;
+	}
+
+	Data apply(Object obj) {
 		Object[] row = (Object[]) obj;
-		return new Data( (Number) row[0], row[1] );
+		return new Data( (Number) row[0], row[1], geomEq );
 	}
 }
 
 class Data {
 	final Number id;
 	Object datum;
+	final GeometryEquality geomEq;
 
-	Data(Number id, Object datum) {
+	Data(Number id, Object datum, GeometryEquality geomEq) {
 		this.id = id;
 		this.datum = datum;
+		this.geomEq = geomEq;
 	}
 
 	@Override
@@ -42,6 +50,7 @@ class Data {
 		return Objects.equals( id.intValue(), data.id.intValue() ) && isEquals( datum, data.datum );
 	}
 
+	@SuppressWarnings("unchecked")
 	private boolean isEquals(Object thisDatum, Object thatDatum) {
 		if ( thisDatum instanceof byte[] ) {
 			if ( !( thatDatum instanceof byte[] ) ) {
@@ -49,10 +58,27 @@ class Data {
 			}
 			return Arrays.equals( (byte[]) thisDatum, (byte[]) thatDatum );
 		}
+		if ( thisDatum instanceof org.geolatte.geom.Geometry ) {
+			return this.geomEq.equals( asGeolatte( thisDatum ), asGeolatte( thatDatum ) );
+		}
 
+		if ( thisDatum instanceof org.locationtech.jts.geom.Geometry ) {
+			return this.geomEq.equals( fromJts( thisDatum ), fromJts( thatDatum ) );
+		}
 		return Objects.equals( thisDatum, thatDatum );
 
 	}
+
+	@SuppressWarnings("rawtypes")
+	private org.geolatte.geom.Geometry asGeolatte(Object obj) {
+		return (org.geolatte.geom.Geometry) obj;
+	}
+
+	@SuppressWarnings("rawtypes")
+	private org.geolatte.geom.Geometry fromJts(Object obj) {
+		return JTS.from( (org.locationtech.jts.geom.Geometry) obj );
+	}
+
 
 	@Override
 	public int hashCode() {
@@ -68,5 +94,3 @@ class Data {
 				'}';
 	}
 }
-
-

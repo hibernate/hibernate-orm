@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
 
@@ -18,15 +16,28 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Registers a custom composite user type implementation to be used
- * for all references to a particular {@link jakarta.persistence.Embeddable}.
- * <p/>
- * May be overridden for a specific embedded using {@link org.hibernate.annotations.CompositeType}
+ * Registers a custom {@linkplain CompositeUserType composite user type}
+ * implementation to be used by default for all references to a particular
+ * {@linkplain jakarta.persistence.Embeddable embeddable} class.
+ * <p>
+ * May be overridden for a specific entity field or property using
+ * {@link CompositeType @CompositeType}.
+ *
+ * @see CompositeUserType
+ * @see CompositeType
+ * @see TypeRegistration
  */
 @Target( {TYPE, ANNOTATION_TYPE, PACKAGE} )
 @Retention( RUNTIME )
 @Repeatable( CompositeTypeRegistrations.class )
 public @interface CompositeTypeRegistration {
+	/**
+	 * The embeddable type described by the {@link #userType}.
+	 */
 	Class<?> embeddableClass();
+
+	/**
+	 * The {@link CompositeUserType}.
+	 */
 	Class<? extends CompositeUserType<?>> userType();
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.spi;
 
@@ -15,8 +13,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.query.QueryFlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -29,7 +27,6 @@ import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
-import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
@@ -40,12 +37,11 @@ import org.hibernate.query.BindableType;
 import org.hibernate.query.CommonQueryContract;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.QueryParameter;
-import org.hibernate.query.ResultListTransformer;
-import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.TypedParameterValue;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.tree.expression.NullSqmExpressible;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -55,7 +51,6 @@ import org.hibernate.type.descriptor.java.JavaType;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityGraph;
-import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
@@ -72,6 +67,8 @@ import static org.hibernate.jpa.HibernateHints.HINT_FETCH_SIZE;
 import static org.hibernate.jpa.HibernateHints.HINT_FLUSH_MODE;
 import static org.hibernate.jpa.HibernateHints.HINT_FOLLOW_ON_LOCKING;
 import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_SPACES;
+import static org.hibernate.jpa.HibernateHints.HINT_QUERY_DATABASE;
+import static org.hibernate.jpa.HibernateHints.HINT_QUERY_PLAN_CACHEABLE;
 import static org.hibernate.jpa.HibernateHints.HINT_TIMEOUT;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_CACHE_RETRIEVE_MODE;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_CACHE_STORE_MODE;
@@ -87,16 +84,26 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_FETCH_GRAPH;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOAD_GRAPH;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
+import static org.hibernate.jpa.internal.util.ConfigurationHelper.getBoolean;
+import static org.hibernate.jpa.internal.util.ConfigurationHelper.getCacheMode;
+import static org.hibernate.jpa.internal.util.ConfigurationHelper.getInteger;
+import static org.hibernate.jpa.internal.util.LockModeTypeHelper.interpretLockMode;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractCommonQueryContract implements CommonQueryContract {
 	private final SharedSessionContractImplementor session;
-	private final QueryOptionsImpl queryOptions = new QueryOptionsImpl();
+	private final QueryOptionsImpl queryOptions;
 
 	public AbstractCommonQueryContract(SharedSessionContractImplementor session) {
 		this.session = session;
+		this.queryOptions = new QueryOptionsImpl();
+	}
+
+	protected AbstractCommonQueryContract(AbstractCommonQueryContract original) {
+		this.session = original.session;
+		this.queryOptions = original.queryOptions;
 	}
 
 	public SharedSessionContractImplementor getSession() {
@@ -138,15 +145,11 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			throw new IllegalArgumentException( "Can't get max rows value from: " + expression );
 		}
 		// Note that we can never have ties because this is only used when we de-duplicate results
-		switch ( selectStatement.getFetchClauseType() ) {
-			case ROWS_ONLY:
-			case ROWS_WITH_TIES:
-				return fetchValue.intValue();
-			case PERCENT_ONLY:
-			case PERCENT_WITH_TIES:
-				return (int) Math.ceil( ( ( (double) size ) * fetchValue.doubleValue() ) / 100d );
-		}
-		throw new UnsupportedOperationException( "Unsupported fetch clause type: " + selectStatement.getFetchClauseType() );
+		return switch ( selectStatement.getFetchClauseType() ) {
+			case ROWS_ONLY, ROWS_WITH_TIES -> fetchValue.intValue();
+			case PERCENT_ONLY, PERCENT_WITH_TIES ->
+					(int) Math.ceil( ( ((double) size) * fetchValue.doubleValue() ) / 100d );
+		};
 	}
 
 
@@ -172,13 +175,14 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		}
 
 		putIfNotNull( hints, HINT_COMMENT, getComment() );
-		putIfNotNull( hints, HINT_FLUSH_MODE, getHibernateFlushMode() );
+		putIfNotNull( hints, HINT_FLUSH_MODE,  getQueryOptions().getFlushMode() );
 
 		putIfNotNull( hints, HINT_READONLY, getQueryOptions().isReadOnly() );
 		putIfNotNull( hints, HINT_FETCH_SIZE, getQueryOptions().getFetchSize() );
 		putIfNotNull( hints, HINT_CACHEABLE, getQueryOptions().isResultCachingEnabled() );
 		putIfNotNull( hints, HINT_CACHE_REGION, getQueryOptions().getResultCacheRegionName() );
 		putIfNotNull( hints, HINT_CACHE_MODE, getQueryOptions().getCacheMode() );
+		putIfNotNull( hints, HINT_QUERY_PLAN_CACHEABLE, getQueryOptions().getQueryPlanCachingEnabled() );
 
 		putIfNotNull( hints, HINT_SPEC_CACHE_RETRIEVE_MODE, getQueryOptions().getCacheRetrieveMode() );
 		putIfNotNull( hints, HINT_JAVAEE_CACHE_RETRIEVE_MODE, getQueryOptions().getCacheRetrieveMode() );
@@ -236,61 +240,46 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	@Override
 	public CommonQueryContract setHint(String hintName, Object value) {
-		applyHint( hintName, value );
+		if ( !applyHint( hintName, value ) ) {
+			QueryLogging.QUERY_MESSAGE_LOGGER.ignoringUnrecognizedQueryHint( hintName );
+		}
 		return this;
 	}
 
 	public final boolean applyHint(String hintName, Object value) {
 		getSession().checkOpen( true );
-
 		try {
-			if ( HINT_FLUSH_MODE.equals( hintName ) ) {
-				applyFlushModeHint( ConfigurationHelper.getFlushMode( value ) );
-				return true;
-			}
-
-			if ( HINT_TIMEOUT.equals( hintName ) ) {
-				applyTimeoutHint( ConfigurationHelper.getInteger( value ) );
-				return true;
-			}
-
-			if ( HINT_SPEC_QUERY_TIMEOUT.equals( hintName )
-					|| HINT_JAVAEE_QUERY_TIMEOUT.equals( hintName ) ) {
-				if ( HINT_JAVAEE_QUERY_TIMEOUT.equals( hintName ) ) {
+			switch ( hintName ) {
+				case HINT_FLUSH_MODE:
+					applyFlushModeHint( ConfigurationHelper.getFlushMode( value ) );
+					return true;
+				case HINT_TIMEOUT:
+					applyTimeoutHint( getInteger( value ) );
+					return true;
+				case HINT_JAVAEE_QUERY_TIMEOUT:
 					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_QUERY_TIMEOUT, HINT_SPEC_QUERY_TIMEOUT );
-				}
-				// convert milliseconds to seconds
-				int timeout = (int)Math.round( ConfigurationHelper.getInteger( value ).doubleValue() / 1000.0 );
-				applyTimeoutHint( timeout );
-				return true;
-			}
-
-			if ( HINT_COMMENT.equals( hintName ) ) {
-				applyCommentHint( (String) value );
-				return true;
-			}
-
-			if ( HINT_NATIVE_SPACES.equals( hintName ) ) {
-				applySynchronizeSpacesHint( value );
-				return true;
-			}
-
-			final boolean selectionHintApplied = applySelectionHint( hintName, value );
-			if ( selectionHintApplied ) {
-				return true;
+					//fall through:
+				case HINT_SPEC_QUERY_TIMEOUT:
+					// convert milliseconds to seconds
+					int timeout = (int) Math.round( getInteger( value ).doubleValue() / 1000.0 );
+					applyTimeoutHint( timeout );
+					return true;
+				case HINT_COMMENT:
+					applyCommentHint( (String) value );
+					return true;
+				case HINT_NATIVE_SPACES:
+					applySynchronizeSpacesHint( value );
+					return true;
+				case HINT_QUERY_DATABASE:
+					applyDatabaseHint( (String) value );
+					return true;
+				default:
+					return applySelectionHint( hintName, value );
 			}
 		}
 		catch ( ClassCastException e ) {
-			throw new IllegalArgumentException( "Value for Query hint", e );
+			throw new IllegalArgumentException( "Incorrect value for query hint: " + hintName, e );
 		}
-
-		final boolean appliedAdditionalHint = applyAdditionalPossibleHints( hintName, value );
-		if ( appliedAdditionalHint ) {
-			return true;
-		}
-
-		QueryLogging.QUERY_MESSAGE_LOGGER.ignoringUnrecognizedQueryHint( hintName );
-		return false;
 	}
 
 	protected void applySynchronizeSpacesHint(Object value) {
@@ -298,111 +287,76 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	protected final boolean applySelectionHint(String hintName, Object value) {
-		final boolean lockingHintApplied = applyLockingHint( hintName, value );
-		if ( lockingHintApplied ) {
+		if ( applyLockingHint( hintName, value ) ) {
 			return true;
 		}
-
-		if ( HINT_READONLY.equals( hintName ) ) {
-			applyReadOnlyHint( ConfigurationHelper.getBoolean( value ) );
-			return true;
-		}
-
-		if ( HINT_FETCH_SIZE.equals( hintName ) ) {
-			applyFetchSizeHint( ConfigurationHelper.getInteger( value ) );
-			return true;
-		}
-
-		if ( HINT_CACHEABLE.equals( hintName ) ) {
-			applyCacheableHint( ConfigurationHelper.getBoolean( value ) );
-			return true;
-		}
-
-		if ( HINT_CACHE_REGION.equals( hintName ) ) {
-			applyCacheRegionHint( (String) value );
-			return true;
-		}
-
-		if ( HINT_CACHE_MODE.equals( hintName ) ) {
-			applyCacheModeHint( ConfigurationHelper.getCacheMode( value ) );
-			return true;
-		}
-
-		if ( HINT_SPEC_CACHE_RETRIEVE_MODE.equals( hintName ) ) {
-			final CacheRetrieveMode retrieveMode = value != null ? CacheRetrieveMode.valueOf( value.toString() ) : null;
-			applyJpaCacheRetrieveModeHint( retrieveMode );
-			return true;
-		}
-
-		if ( HINT_SPEC_CACHE_STORE_MODE.equals( hintName ) ) {
-			final CacheStoreMode storeMode = value != null ? CacheStoreMode.valueOf( value.toString() ) : null;
-			applyJpaCacheStoreModeHint( storeMode );
-			return true;
-		}
-
-		if ( HINT_JAVAEE_CACHE_RETRIEVE_MODE.equals( hintName ) ) {
-			DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_CACHE_RETRIEVE_MODE, HINT_SPEC_CACHE_RETRIEVE_MODE );
-			final CacheRetrieveMode retrieveMode = value != null ? CacheRetrieveMode.valueOf( value.toString() ) : null;
-			applyJpaCacheRetrieveModeHint( retrieveMode );
-			return true;
-		}
-
-		if ( HINT_JAVAEE_CACHE_STORE_MODE.equals( hintName ) ) {
-			DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_CACHE_STORE_MODE, HINT_SPEC_CACHE_STORE_MODE );
-			final CacheStoreMode storeMode = value != null ? CacheStoreMode.valueOf( value.toString() ) : null;
-			applyJpaCacheStoreModeHint( storeMode );
-			return true;
-		}
-
-		if ( HINT_SPEC_FETCH_GRAPH.equals( hintName ) || HINT_SPEC_LOAD_GRAPH.equals( hintName ) ) {
-			applyEntityGraphHint( hintName, value );
-			return true;
-		}
-
-		if ( HINT_JAVAEE_FETCH_GRAPH.equals( hintName ) || HINT_JAVAEE_LOAD_GRAPH.equals( hintName ) ) {
-			if ( HINT_JAVAEE_FETCH_GRAPH.equals( hintName ) ) {
-				DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_FETCH_GRAPH, HINT_SPEC_FETCH_GRAPH );
+		else {
+			final MutableQueryOptions queryOptions = getQueryOptions();
+			switch ( hintName ) {
+				case HINT_READONLY:
+					queryOptions.setReadOnly( getBoolean( value ) );
+					return true;
+				case HINT_FETCH_SIZE:
+					queryOptions.setFetchSize( getInteger( value ) );
+					return true;
+				case HINT_QUERY_PLAN_CACHEABLE:
+					queryOptions.setQueryPlanCachingEnabled( getBoolean( value ) );
+					return true;
+				case HINT_CACHEABLE:
+					queryOptions.setResultCachingEnabled( getBoolean( value ) );
+					return true;
+				case HINT_CACHE_REGION:
+					queryOptions.setResultCacheRegionName( (String) value );
+					return true;
+				case HINT_CACHE_MODE:
+					queryOptions.setCacheMode( getCacheMode( value ) );
+					return true;
+				case HINT_JAVAEE_CACHE_RETRIEVE_MODE:
+					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_CACHE_RETRIEVE_MODE, HINT_SPEC_CACHE_RETRIEVE_MODE );
+					//fall through to:
+				case HINT_SPEC_CACHE_RETRIEVE_MODE:
+					final CacheRetrieveMode retrieveMode =
+							value == null ? null : CacheRetrieveMode.valueOf( value.toString() );
+					queryOptions.setCacheRetrieveMode( retrieveMode );
+					return true;
+				case HINT_JAVAEE_CACHE_STORE_MODE:
+					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_CACHE_STORE_MODE, HINT_SPEC_CACHE_STORE_MODE );
+					//fall through to:
+				case HINT_SPEC_CACHE_STORE_MODE:
+					final CacheStoreMode storeMode =
+							value == null ? null : CacheStoreMode.valueOf( value.toString() );
+					queryOptions.setCacheStoreMode( storeMode );
+					return true;
+				case HINT_JAVAEE_FETCH_GRAPH:
+					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_FETCH_GRAPH, HINT_SPEC_FETCH_GRAPH );
+					//fall through to:
+				case HINT_SPEC_FETCH_GRAPH:
+					applyEntityGraphHint( hintName, value );
+					return true;
+				case HINT_JAVAEE_LOAD_GRAPH:
+					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_LOAD_GRAPH, HINT_SPEC_LOAD_GRAPH );
+					//fall through to:
+				case HINT_SPEC_LOAD_GRAPH:
+					applyEntityGraphHint( hintName, value );
+					return true;
+				default:
+					// unrecognized hint
+					return false;
 			}
-			else {
-				DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_LOAD_GRAPH, HINT_SPEC_LOAD_GRAPH );
-			}
-			applyEntityGraphHint( hintName, value );
-			return true;
 		}
-
-		return false;
-	}
-
-	protected void applyFetchSizeHint(int fetchSize) {
-		getQueryOptions().setFetchSize( fetchSize );
-	}
-
-	protected void applyCacheModeHint(CacheMode cacheMode) {
-		getQueryOptions().setCacheMode( cacheMode );
-	}
-
-	protected void applyCacheableHint(boolean isCacheable) {
-		getQueryOptions().setResultCachingEnabled( isCacheable );
-	}
-
-	protected void applyCacheRegionHint(String regionName) {
-		getQueryOptions().setResultCacheRegionName( regionName );
-	}
-
-	private void applyReadOnlyHint(Boolean readOnly) {
-		getQueryOptions().setReadOnly( readOnly );
 	}
 
 	protected void applyEntityGraphHint(String hintName, Object value) {
-		final GraphSemantic graphSemantic = GraphSemantic.fromJpaHintName( hintName );
-		if ( value instanceof RootGraphImplementor ) {
-			applyGraph( (RootGraphImplementor<?>) value, graphSemantic );
+		final GraphSemantic graphSemantic = GraphSemantic.fromHintName( hintName );
+		if ( value instanceof RootGraphImplementor<?> rootGraphImplementor ) {
+			applyGraph( rootGraphImplementor, graphSemantic );
 		}
-		else if ( value instanceof String ) {
-			applyGraph( (String) value, graphSemantic );
+		else if ( value instanceof String string ) {
+			applyGraph( string, graphSemantic );
 		}
 		else {
-			QueryLogging.QUERY_LOGGER.debugf( "The %s hint was set, but the value was neither an EntityGraph nor String", hintName );
+			throw new IllegalArgumentException( "The value of the hint '" + hintName
+					+ "' must be an instance of EntityGraph or the string name of a named EntityGraph" );
 		}
 	}
 
@@ -425,7 +379,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		final String entityName = runtimeMetamodels.getImportedName( graphString.substring( 0, separatorPosition ).trim() );
 		final String graphNodes = graphString.substring( separatorPosition + 1, terminatorPosition );
 
-		final RootGraphImpl<?> rootGraph = new RootGraphImpl<>( null, jpaMetamodel.entity( entityName ), jpaMetamodel );
+		final RootGraphImpl<?> rootGraph = new RootGraphImpl<>( null, jpaMetamodel.entity( entityName ) );
 		GraphParser.parseInto( (EntityGraph<?>) rootGraph, graphNodes, getSession().getSessionFactory() );
 		applyGraph( rootGraph, graphSemantic );
 	}
@@ -435,33 +389,33 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	private boolean applyLockingHint(String hintName, Object value) {
-		if ( HINT_SPEC_LOCK_TIMEOUT.equals( hintName ) && value != null ) {
-			applyLockTimeoutHint( ConfigurationHelper.getInteger( value ) );
-			return true;
+		switch ( hintName ) {
+			case HINT_JAVAEE_LOCK_TIMEOUT:
+				DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_LOCK_TIMEOUT, HINT_SPEC_LOCK_TIMEOUT );
+				//fall through to:
+			case HINT_SPEC_LOCK_TIMEOUT:
+				if ( value != null ) {
+					applyLockTimeoutHint( getInteger( value ) );
+					return true;
+				}
+				else {
+					return false;
+				}
+			case HINT_FOLLOW_ON_LOCKING:
+				applyFollowOnLockingHint( getBoolean( value ) );
+				return true;
+			case HINT_NATIVE_LOCKMODE:
+				applyLockModeHint( value );
+				return true;
+			default:
+				if ( hintName.startsWith( HINT_NATIVE_LOCKMODE ) ) {
+					applyAliasSpecificLockModeHint( hintName, value );
+					return true;
+				}
+				else {
+					return false;
+				}
 		}
-
-		if ( HINT_JAVAEE_LOCK_TIMEOUT.equals( hintName ) && value != null ) {
-			DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_LOCK_TIMEOUT, HINT_SPEC_LOCK_TIMEOUT );
-			applyLockTimeoutHint( ConfigurationHelper.getInteger( value ) );
-			return true;
-		}
-
-		if ( HINT_FOLLOW_ON_LOCKING.equals( hintName ) ) {
-			applyFollowOnLockingHint( ConfigurationHelper.getBoolean( value ) );
-			return true;
-		}
-
-		if ( HINT_NATIVE_LOCKMODE.equals( hintName ) ) {
-			applyLockModeHint( value );
-			return true;
-		}
-
-		if ( hintName.startsWith( HINT_NATIVE_LOCKMODE ) ) {
-			applyAliasSpecificLockModeHint( hintName, value );
-			return true;
-		}
-
-		return false;
 	}
 
 	protected void applyLockTimeoutHint(Integer timeout) {
@@ -483,14 +437,14 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	protected final void applyLockModeHint(Object value) {
-		if ( value instanceof LockMode ) {
-			applyHibernateLockMode( (LockMode) value );
+		if ( value instanceof LockMode lockMode ) {
+			applyHibernateLockMode( lockMode );
 		}
-		else if ( value instanceof LockModeType ) {
-			applyLockModeType( (LockModeType) value );
+		else if ( value instanceof LockModeType lockModeType ) {
+			applyLockModeType( lockModeType );
 		}
 		else if ( value instanceof String ) {
-			applyHibernateLockMode( LockModeTypeHelper.interpretLockMode( value ) );
+			applyHibernateLockMode( interpretLockMode( value ) );
 		}
 		else {
 			throw new IllegalArgumentException(
@@ -510,8 +464,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		final String alias = hintName.substring( HINT_NATIVE_LOCKMODE.length() + 1 );
 		// determine the LockMode
 		try {
-			final LockMode lockMode = LockModeTypeHelper.interpretLockMode( value );
-			getQueryOptions().getLockOptions().setAliasSpecificLockMode( alias, lockMode );
+			getQueryOptions().getLockOptions().setAliasSpecificLockMode( alias, interpretLockMode( value ) );
 		}
 		catch ( Exception e ) {
 			QueryLogging.QUERY_MESSAGE_LOGGER.unableToDetermineLockModeValue( hintName, value );
@@ -520,10 +473,6 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	protected void applyFollowOnLockingHint(Boolean followOnLocking) {
 		getQueryOptions().getLockOptions().setFollowOnLocking( followOnLocking );
-	}
-
-	protected boolean applyAdditionalPossibleHints(String hintName, Object value) {
-		return false;
 	}
 
 
@@ -541,7 +490,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	@Override
 	public FlushMode getHibernateFlushMode() {
-		return getQueryOptions().getFlushMode();
+		final FlushMode flushMode = getQueryOptions().getFlushMode();
+		return flushMode == null ? getSession().getHibernateFlushMode() : flushMode;
 	}
 
 	@Override
@@ -550,14 +500,15 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		return this;
 	}
 
-	protected boolean applyJpaCacheRetrieveModeHint(CacheRetrieveMode retrieveMode) {
-		getQueryOptions().setCacheRetrieveMode( retrieveMode );
-		return true;
+	@Override
+	public QueryFlushMode getQueryFlushMode() {
+		return FlushModeTypeHelper.getForcedFlushMode( getQueryOptions().getFlushMode() );
 	}
 
-	protected boolean applyJpaCacheStoreModeHint(CacheStoreMode storeMode) {
-		getQueryOptions().setCacheStoreMode( storeMode );
-		return true;
+	@Override
+	public CommonQueryContract setQueryFlushMode(QueryFlushMode queryFlushMode) {
+		getQueryOptions().setFlushMode( FlushModeTypeHelper.getFlushMode(queryFlushMode) );
+		return this;
 	}
 
 	protected void applyTimeoutHint(int timeout) {
@@ -572,6 +523,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		setHibernateFlushMode( flushMode );
 	}
 
+	protected void applyDatabaseHint(String hint) {
+		getQueryOptions().addDatabaseHint( hint );
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Options
@@ -585,6 +539,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		return getQueryOptions().getTimeout();
 	}
 
+
 	@Override
 	public CommonQueryContract setTimeout(int timeout) {
 		getQueryOptions().setTimeout( timeout );
@@ -596,49 +551,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		return getQueryOptions().getLimit().getMaxRowsJpa();
 	}
 
-	public void applyMaxResults(int maxResult) {
-		if ( maxResult < 0 ) {
-			throw new IllegalArgumentException( "max-results cannot be negative" );
-		}
-		getSession().checkOpen();
-		getQueryOptions().getLimit().setMaxRows( maxResult );
-	}
-
 	public int getFirstResult() {
 		getSession().checkOpen();
 		return getQueryOptions().getLimit().getFirstRowJpa();
-	}
-
-	public void applyFirstResult(int startPosition) {
-		if ( startPosition < 0 ) {
-			throw new IllegalArgumentException( "first-result value cannot be negative : " + startPosition );
-		}
-
-		getSession().checkOpen();
-		getQueryOptions().getLimit().setFirstRow( startPosition );
-	}
-
-	protected FlushModeType getJpaFlushMode() {
-		getSession().checkOpen();
-		final FlushMode flushMode = getQueryOptions().getFlushMode() == null
-				? getSession().getHibernateFlushMode()
-				: getQueryOptions().getFlushMode();
-		return FlushModeTypeHelper.getFlushModeType( flushMode );
-	}
-
-	protected void applyJpaFlushMode(FlushModeType flushModeType) {
-		getSession().checkOpen();
-		setHibernateFlushMode( FlushModeTypeHelper.getFlushMode( flushModeType ) );
-	}
-
-	public boolean applyTupleTransformer(TupleTransformer<?> transformer) {
-		getQueryOptions().setTupleTransformer( transformer );
-		return true;
-	}
-
-	public boolean applyResultListTransformer(ResultListTransformer<?> transformer) {
-		getQueryOptions().setResultListTransformer( transformer );
-		return true;
 	}
 
 
@@ -671,7 +586,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		try {
 			//noinspection rawtypes
 			final QueryParameterImplementor parameter = getParameterMetadata().getQueryParameter( name );
-			if ( !parameter.getParameterType().isAssignableFrom( type ) ) {
+			if ( !type.isAssignableFrom( parameter.getParameterType() ) ) {
 				throw new IllegalArgumentException(
 						"The type [" + parameter.getParameterType().getName() +
 								"] associated with the parameter corresponding to name [" + name +
@@ -702,7 +617,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 		try {
 			final QueryParameterImplementor parameter = getParameterMetadata().getQueryParameter( position );
-			if ( !parameter.getParameterType().isAssignableFrom( type ) ) {
+			if ( !type.isAssignableFrom( parameter.getParameterType() ) ) {
 				throw new IllegalArgumentException(
 						"The type [" + parameter.getParameterType().getName() +
 								"] associated with the parameter corresponding to position [" + position +
@@ -787,14 +702,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	public Object getParameterValue(String name) {
 		getSession().checkOpen( false );
 
-		final QueryParameterImplementor<?> parameter = getParameterMetadata().getQueryParameter( name );
-		if ( parameter == null ) {
-			throw new IllegalArgumentException( "Could not resolve parameter by name - " + name );
-		}
-
-		final QueryParameterBinding<?> binding = getQueryParameterBindings().getBinding( parameter );
-		if ( binding == null || !binding.isBound() ) {
-			throw new IllegalStateException( "Parameter value not yet bound : " + parameter );
+		final QueryParameterBinding<Object> binding = getQueryParameterBindings().getBinding( name );
+		if ( !binding.isBound() ) {
+			throw new IllegalStateException( "The parameter [" + name + "] has not yet been bound" );
 		}
 
 		if ( binding.isMultiValued() ) {
@@ -808,13 +718,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	public Object getParameterValue(int position) {
 		getSession().checkOpen( false );
 
-		final QueryParameterImplementor<?> parameter = getParameterMetadata().getQueryParameter( position );
-		if ( parameter == null ) {
-			throw new IllegalArgumentException( "Could not resolve parameter by position - " + position );
-		}
-
-		final QueryParameterBinding<?> binding = getQueryParameterBindings().getBinding( parameter );
-		if ( binding == null || !binding.isBound() ) {
+		final QueryParameterBinding<Object> binding = getQueryParameterBindings().getBinding( position );
+		if ( !binding.isBound() ) {
 			throw new IllegalStateException( "The parameter [" + position + "] has not yet been bound" );
 		}
 
@@ -841,12 +746,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			}
 		}
 
-		final QueryParameterImplementor<?> param = getParameterMetadata().getQueryParameter( name );
-
-		if ( param == null ) {
-			throw new IllegalArgumentException( "Named parameter [" + name + "] is not registered with this procedure call" );
-		}
-
+		final QueryParameterBinding<Object> binding = getQueryParameterBindings().getBinding( name );
+		final QueryParameter<Object> param = binding.getQueryParameter();
 		if ( param.allowsMultiValuedBinding() ) {
 			final BindableType<?> hibernateType = param.getHibernateType();
 			if ( hibernateType == null || isInstance( hibernateType, value ) ) {
@@ -857,7 +758,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			}
 		}
 
-		locateBinding( name ).setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
+		binding.setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
 
 		return this;
 	}
@@ -881,7 +782,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		}
 		else {
 			final BindableType<P> paramType;
-			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+			final BasicType<P> basicType = getSession().getFactory()
+					.getTypeConfiguration()
+					.standardBasicTypeForJavaType( javaType );
 			if ( basicType != null ) {
 				paramType = basicType;
 			}
@@ -918,6 +821,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	@Override
 	public CommonQueryContract setParameter(int position, Object value) {
+		getSession().checkOpen( false );
+
 		if ( value instanceof TypedParameterValue ) {
 			@SuppressWarnings("unchecked")
 			final TypedParameterValue<Object> typedValue = (TypedParameterValue<Object>) value;
@@ -930,23 +835,19 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			}
 		}
 
-		final QueryParameterImplementor<?> param = getParameterMetadata().getQueryParameter( position );
-
-		if ( param == null ) {
-			throw new IllegalArgumentException( "Positional parameter [" + position + "] is not registered with this procedure call" );
-		}
-
+		final QueryParameterBinding<Object> binding = getQueryParameterBindings().getBinding( position );
+		final QueryParameter<Object> param = binding.getQueryParameter();
 		if ( param.allowsMultiValuedBinding() ) {
 			final BindableType<?> hibernateType = param.getHibernateType();
-			if ( hibernateType == null || isInstance( hibernateType, value ) ) {
+			if ( hibernateType == null || hibernateType instanceof NullSqmExpressible || isInstance( hibernateType, value ) ) {
 				if ( value instanceof Collection && !isRegisteredAsBasicType( value.getClass() ) ) {
-					//noinspection rawtypes,unchecked
-					return setParameterList( param, (Collection) value );
+					//noinspection rawtypes
+					return setParameterList( position, (Collection) value );
 				}
 			}
 		}
 
-		locateBinding( position ).setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
+		binding.setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
 		return this;
 	}
 
@@ -965,7 +866,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		}
 		else {
 			final BindableType<P> paramType;
-			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+			final BasicType<P> basicType = getSession().getFactory()
+					.getTypeConfiguration()
+					.standardBasicTypeForJavaType( javaType );
 			if ( basicType != null ) {
 				paramType = basicType;
 			}
@@ -1019,7 +922,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		}
 		else {
 			final BindableType<P> paramType;
-			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+			final BasicType<P> basicType = getSession().getFactory()
+					.getTypeConfiguration()
+					.standardBasicTypeForJavaType( javaType );
 			if ( basicType != null ) {
 				paramType = basicType;
 			}
@@ -1429,7 +1334,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			type = getParameterMetadata().getQueryParameter( namedParam ).getHibernateType();
 		}
 		if ( type == null && retType != null ) {
-			type = getSession().getFactory().resolveParameterBindType( retType );
+			type = getSession().getFactory().getMappingMetamodel().resolveParameterBindType( retType );
 		}
 		//noinspection unchecked
 		return (BindableType<Object>) type;

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.where.annotations;
 
@@ -19,10 +17,10 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
-import org.hibernate.annotations.Where;
-import org.hibernate.annotations.WhereJoinTable;
+import org.hibernate.annotations.SQLJoinTableRestriction;
+import org.hibernate.annotations.SQLRestriction;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -46,7 +44,7 @@ public class EagerToManyWhereTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-13011" )
+	@JiraKey( value = "HHH-13011" )
 	public void testAssociatedWhereClause() {
 
 		Product product = new Product();
@@ -172,7 +170,7 @@ public class EagerToManyWhereTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		@OneToMany(fetch = FetchType.EAGER)
 		@JoinColumn
-		@Where( clause = "description is not null" )
+		@SQLRestriction( "description is not null" )
 		private Set<Category> categoriesWithDescOneToMany = new HashSet<>();
 
 		@ManyToMany(fetch = FetchType.EAGER)
@@ -181,19 +179,19 @@ public class EagerToManyWhereTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		@ManyToMany(fetch = FetchType.EAGER)
 		@JoinTable(name = "categoriesWithDescManyToMany", inverseJoinColumns = { @JoinColumn( name = "categoryId" )})
-		@Where( clause = "description is not null" )
+		@SQLRestriction( "description is not null" )
 		private Set<Category> categoriesWithDescManyToMany = new HashSet<>();
 
 		@ManyToMany(fetch = FetchType.EAGER)
 		@JoinTable(name = "categoriesWithDescIdLt4MToM", inverseJoinColumns = { @JoinColumn( name = "categoryId" )})
-		@Where( clause = "description is not null" )
-		@WhereJoinTable( clause = "categoryId < 4")
+		@SQLRestriction( "description is not null" )
+		@SQLJoinTableRestriction( "categoryId < 4")
 		private Set<Category> categoriesWithDescIdLt4ManyToMany = new HashSet<>();
 	}
 
 	@Entity(name = "Category")
 	@Table(name = "CATEGORY")
-	@Where(clause = "inactive = 0")
+	@SQLRestriction("inactive = 0")
 	public static class Category {
 		@Id
 		private int id;

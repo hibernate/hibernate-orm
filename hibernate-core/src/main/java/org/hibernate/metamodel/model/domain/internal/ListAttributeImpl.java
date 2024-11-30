@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
 
@@ -22,16 +20,17 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 /**
  * @author Steve Ebersole
  */
-class ListAttributeImpl<X, E> extends AbstractPluralAttribute<X, List<E>, E> implements ListPersistentAttribute<X, E> {
+public class ListAttributeImpl<X, E> extends AbstractPluralAttribute<X, List<E>, E> implements ListPersistentAttribute<X, E> {
 	private final SqmPathSource<Integer> indexPathSource;
 
-	ListAttributeImpl(PluralAttributeBuilder<X, List<E>, E, ?> builder, MetadataContext metadataContext) {
+	public ListAttributeImpl(PluralAttributeBuilder<X, List<E>, E, ?> builder, MetadataContext metadataContext) {
 		super( builder, metadataContext );
 
 		//noinspection unchecked
 		this.indexPathSource = (SqmPathSource<Integer>) SqmMappingModelHelper.resolveSqmKeyPathSource(
 				builder.getListIndexOrMapKeyType(),
-				BindableType.PLURAL_ATTRIBUTE
+				BindableType.PLURAL_ATTRIBUTE,
+				false
 		);
 	}
 
@@ -60,19 +59,34 @@ class ListAttributeImpl<X, E> extends AbstractPluralAttribute<X, List<E>, E> imp
 	}
 
 	@Override
-	public SqmPathSource<?> getIntermediatePathSource(SqmPathSource<?> pathSource) {
-		return pathSource == getElementPathSource() || pathSource == indexPathSource ? null : getElementPathSource();
+	public SqmPathSource<?> findSubPathSource(String name, boolean includeSubtypes) {
+		final CollectionPart.Nature nature = CollectionPart.Nature.fromNameExact( name );
+		if ( nature != null ) {
+			switch ( nature ) {
+				case INDEX:
+					return indexPathSource;
+				case ELEMENT:
+					return getElementPathSource();
+			}
+		}
+		return getElementPathSource().findSubPathSource( name, includeSubtypes );
 	}
 
 	@Override
-	public SqmAttributeJoin createSqmJoin(
-			SqmFrom lhs,
+	public SqmPathSource<?> getIntermediatePathSource(SqmPathSource<?> pathSource) {
+		final String pathName = pathSource.getPathName();
+		return pathName.equals( getElementPathSource().getPathName() )
+			|| pathName.equals( indexPathSource.getPathName() ) ? null : getElementPathSource();
+	}
+
+	@Override
+	public SqmAttributeJoin<X,E> createSqmJoin(
+			SqmFrom<?,X> lhs,
 			SqmJoinType joinType,
 			String alias,
 			boolean fetched,
 			SqmCreationState creationState) {
-		//noinspection unchecked
-		return new SqmListJoin(
+		return new SqmListJoin<>(
 				lhs,
 				this,
 				alias,

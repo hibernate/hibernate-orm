@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jdbc;
 import java.sql.Connection;
@@ -51,7 +49,7 @@ public class GeneralWorkTest extends BaseCoreFunctionalTestCase {
 							statement = ((SessionImplementor)session).getJdbcCoordinator().getStatementPreparer().createStatement();
 							ResultSet resultSet = null;
 							try {
-								
+
 								resultSet = ((SessionImplementor)session).getJdbcCoordinator().getResultSetReturn().extract( statement, "select * from T_JDBC_PERSON" );
 							}
 							finally {
@@ -107,7 +105,7 @@ public class GeneralWorkTest extends BaseCoreFunctionalTestCase {
 		Session session = openSession();
 		session.beginTransaction();
 		Person p = new Person( "Abe", "Lincoln" );
-		session.save( p );
+		session.persist( p );
 		session.getTransaction().commit();
 
 		final Session session2 = openSession();
@@ -144,7 +142,7 @@ public class GeneralWorkTest extends BaseCoreFunctionalTestCase {
 
 		session = openSession();
 		session.beginTransaction();
-		session.delete( p );
+		session.remove( p );
 		session.getTransaction().commit();
 		session.close();
 	}
@@ -154,7 +152,7 @@ public class GeneralWorkTest extends BaseCoreFunctionalTestCase {
 			return;
 		}
 		try {
-            s.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( statement );
+			s.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( statement );
 		}
 		catch (Exception e) {
 			// ignore
@@ -166,7 +164,7 @@ public class GeneralWorkTest extends BaseCoreFunctionalTestCase {
 			return;
 		}
 		try {
-            s.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( resultSet, statement );
+			s.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( resultSet, statement );
 		}
 		catch (Exception e) {
 			// ignore

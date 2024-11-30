@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
 
@@ -225,7 +223,7 @@ public final class StandardBasicTypes {
 
 	/**
 	 * The standard Hibernate type for mapping {@link String} to JDBC {@link org.hibernate.type.SqlTypes#LONGVARCHAR LONGVARCHAR}.
-	 * <p/>
+	 * <p>
 	 * Similar to a {@link #MATERIALIZED_CLOB}
 	 */
 	public static final BasicTypeReference<String> TEXT = new BasicTypeReference<>(
@@ -236,7 +234,7 @@ public final class StandardBasicTypes {
 
 	/**
 	 * The standard Hibernate type for mapping {@link String} to JDBC {@link org.hibernate.type.SqlTypes#LONGNVARCHAR LONGNVARCHAR}.
-	 * <p/>
+	 * <p>
 	 * Similar to a {@link #MATERIALIZED_NCLOB}
 	 */
 	public static final BasicTypeReference<String> NTEXT = new BasicTypeReference<>(
@@ -413,12 +411,40 @@ public final class StandardBasicTypes {
 	);
 
 	/**
-	 * The standard Hibernate type for mapping {@link OffsetTime} to JDBC {@link org.hibernate.type.SqlTypes#TIME TIME}.
+	 * The standard Hibernate type for mapping {@link OffsetTime} to JDBC {@link org.hibernate.type.SqlTypes#TIME_WITH_TIMEZONE TIME_WITH_TIMEZONE}.
 	 */
 	public static final BasicTypeReference<OffsetTime> OFFSET_TIME = new BasicTypeReference<>(
 			"OffsetTime",
 			OffsetTime.class,
-			// todo (6.0): why not TIME_WITH_TIMEZONE ?
+			SqlTypes.TIME_WITH_TIMEZONE
+	);
+
+	/**
+	 * The standard Hibernate type for mapping {@link OffsetTime} to JDBC {@link org.hibernate.type.SqlTypes#TIME_UTC TIME_UTC}.
+	 * This maps to {@link org.hibernate.TimeZoneStorageStrategy#NORMALIZE_UTC}.
+	 */
+	public static final BasicTypeReference<OffsetTime> OFFSET_TIME_UTC = new BasicTypeReference<>(
+			"OffsetTimeUtc",
+			OffsetTime.class,
+			SqlTypes.TIME_UTC
+	);
+
+	/**
+	 * The standard Hibernate type for mapping {@link OffsetTime} to JDBC {@link org.hibernate.type.SqlTypes#TIME_WITH_TIMEZONE TIME_WITH_TIMEZONE}.
+	 * This maps to {@link org.hibernate.TimeZoneStorageStrategy#NATIVE}.
+	 */
+	public static final BasicTypeReference<OffsetTime> OFFSET_TIME_WITH_TIMEZONE = new BasicTypeReference<>(
+			"OffsetTimeWithTimezone",
+			OffsetTime.class,
+			SqlTypes.TIME_WITH_TIMEZONE
+	);
+
+	/**
+	 * The standard Hibernate type for mapping {@link OffsetTime} to JDBC {@link org.hibernate.type.SqlTypes#TIME TIME}.
+	 */
+	public static final BasicTypeReference<OffsetTime> OFFSET_TIME_WITHOUT_TIMEZONE = new BasicTypeReference<>(
+			"OffsetTimeWithoutTimezone",
+			OffsetTime.class,
 			SqlTypes.TIME
 	);
 
@@ -523,7 +549,6 @@ public final class StandardBasicTypes {
 	);
 
 
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Binary mappings
 
@@ -544,14 +569,6 @@ public final class StandardBasicTypes {
 			Byte[].class,
 			SqlTypes.VARBINARY
 	);
-
-	/**
-	 * The standard Hibernate type for mapping {@link Byte Byte[]} to JDBC {@link org.hibernate.type.SqlTypes#VARBINARY VARBINARY}.
-	 *
-	 * @deprecated use {@link #BINARY_WRAPPER} instead
-	 */
-	@Deprecated(forRemoval = true)
-	public static final BasicTypeReference<Byte[]> WRAPPER_BINARY = BINARY_WRAPPER;
 
 	/**
 	 * The standard Hibernate type for mapping {@code byte[]} to JDBC {@link org.hibernate.type.SqlTypes#LONGVARBINARY LONGVARBINARY}.
@@ -601,7 +618,7 @@ public final class StandardBasicTypes {
 
 	/**
 	 * The standard Hibernate type for mapping {@link Serializable} to JDBC {@link org.hibernate.type.SqlTypes#VARBINARY VARBINARY}.
-	 * <p/>
+	 * <p>
 	 * See especially the discussion wrt {@link ClassLoader} determination on {@link SerializableType}
 	 */
 	public static final BasicTypeReference<Serializable> SERIALIZABLE = new BasicTypeReference<>(
@@ -716,6 +733,39 @@ public final class StandardBasicTypes {
 	);
 
 
+	/**
+	 * The standard Hibernate type for mapping {@code float[]} to JDBC {@link org.hibernate.type.SqlTypes#VECTOR VECTOR},
+	 * specifically for embedding vectors like provided by the PostgreSQL extension pgvector and Oracle 23ai.
+	 */
+	public static final BasicTypeReference<float[]> VECTOR = new BasicTypeReference<>(
+			"vector", float[].class, SqlTypes.VECTOR
+	);
+
+	/**
+	 * The standard Hibernate type for mapping {@code byte[]} to JDBC {@link org.hibernate.type.SqlTypes#VECTOR_INT8 VECTOR_INT8},
+	 * specifically for embedding integer vectors (8-bits) like provided by Oracle 23ai.
+	 */
+	public static final BasicTypeReference<byte[]> VECTOR_INT8 = new BasicTypeReference<>(
+			"byte_vector", byte[].class, SqlTypes.VECTOR_INT8
+	);
+
+	/**
+	 * The standard Hibernate type for mapping {@code float[]} to JDBC {@link org.hibernate.type.SqlTypes#VECTOR VECTOR},
+	 * specifically for embedding single-precision floating-point (32-bits) vectors like provided by Oracle 23ai.
+	 */
+	public static final BasicTypeReference<float[]> VECTOR_FLOAT32 = new BasicTypeReference<>(
+			"float_vector", float[].class, SqlTypes.VECTOR_FLOAT32
+	);
+
+	/**
+	 * The standard Hibernate type for mapping {@code double[]} to JDBC {@link org.hibernate.type.SqlTypes#VECTOR VECTOR},
+	 * specifically for embedding double-precision floating-point (64-bits) vectors like provided by Oracle 23ai.
+	 */
+	public static final BasicTypeReference<double[]> VECTOR_FLOAT64 = new BasicTypeReference<>(
+			"double_vector", double[].class, SqlTypes.VECTOR_FLOAT64
+	);
+
+
 	public static void prime(TypeConfiguration typeConfiguration) {
 		BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
 
@@ -777,7 +827,7 @@ public final class StandardBasicTypes {
 				BINARY_WRAPPER,
 				"org.hibernate.type.WrapperBinaryType",
 				basicTypeRegistry,
-				"binary_wrapper", "wrapper-binary", "Byte[]", Byte[].class.getName()
+				"binary_wrapper", "wrapper-binary"//, "Byte[]", Byte[].class.getName()
 		);
 
 		handle(
@@ -905,7 +955,7 @@ public final class StandardBasicTypes {
 				CHARACTER_ARRAY,
 				"org.hibernate.type.CharacterArrayType",
 				basicTypeRegistry,
-				"wrapper-characters", Character[].class.getName(), "Character[]"
+				"wrapper-characters"//, Character[].class.getName(), "Character[]"
 		);
 
 		handle(
@@ -1036,6 +1086,27 @@ public final class StandardBasicTypes {
 				"org.hibernate.type.OffsetTimeType",
 				basicTypeRegistry,
 				OffsetTime.class.getSimpleName(), OffsetTime.class.getName()
+		);
+
+		handle(
+				OFFSET_TIME_UTC,
+				null,
+				basicTypeRegistry,
+				OFFSET_TIME_UTC.getName()
+		);
+
+		handle(
+				OFFSET_TIME_WITH_TIMEZONE,
+				null,
+				basicTypeRegistry,
+				OFFSET_TIME_WITH_TIMEZONE.getName()
+		);
+
+		handle(
+				OFFSET_TIME_WITHOUT_TIMEZONE,
+				null,
+				basicTypeRegistry,
+				OFFSET_TIME_WITHOUT_TIMEZONE.getName()
 		);
 
 		handle(
@@ -1187,6 +1258,34 @@ public final class StandardBasicTypes {
 				"url", java.net.URL.class.getName()
 		);
 
+		handle(
+				VECTOR,
+				null,
+				basicTypeRegistry,
+				"vector"
+		);
+
+		handle(
+				VECTOR_FLOAT32,
+				null,
+				basicTypeRegistry,
+				"float_vector"
+		);
+
+		handle(
+				VECTOR_FLOAT64,
+				null,
+				basicTypeRegistry,
+				"double_vector"
+		);
+
+		handle(
+				VECTOR_INT8,
+				null,
+				basicTypeRegistry,
+				"byte_vector"
+		);
+
 
 		// Specialized version handlers
 
@@ -1195,13 +1294,6 @@ public final class StandardBasicTypes {
 				null,
 				basicTypeRegistry,
 				"row_version"
-		);
-
-		handle(
-				DbTimestampType.INSTANCE,
-				null,
-				basicTypeRegistry,
-				DbTimestampType.INSTANCE.getName(), "dbtimestamp"
 		);
 
 		handle(
@@ -1217,13 +1309,6 @@ public final class StandardBasicTypes {
 				basicTypeRegistry,
 				"null"
 		);
-
-		// todo (6.0) - ? how to handle DbTimestampType?
-		//		DbTimestampType was really just a variant of TimestampType with overridden
-		//		version (opt lock) support
-		//handle( DbTimestampType.INSTANCE, typeConfiguration, basicTypeProducerRegistry, "dbtimestamp" );
-		//handle( new AdaptedImmutableType( DbTimestampType.INSTANCE ), typeConfiguration,
-		//		basicTypeProducerRegistry, "imm_dbtimestamp" );
 
 		final BasicTypeReference<Date> dateTypeImmutableType = DATE.asImmutable();
 		handle( dateTypeImmutableType, null, basicTypeRegistry, dateTypeImmutableType.getName() );

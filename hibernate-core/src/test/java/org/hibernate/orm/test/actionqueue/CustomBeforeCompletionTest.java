@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.actionqueue;
 
@@ -15,7 +13,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.engine.spi.SessionImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Assert;
 import org.junit.Test;
@@ -28,7 +26,7 @@ import static org.junit.Assert.assertThat;
 public class CustomBeforeCompletionTest extends BaseCoreFunctionalTestCase {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13666")
+	@JiraKey(value = "HHH-13666")
 	public void success() {
 		inSession( session -> {
 			AtomicBoolean called = new AtomicBoolean( false );
@@ -54,7 +52,7 @@ public class CustomBeforeCompletionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13666")
+	@JiraKey(value = "HHH-13666")
 	public void failure() {
 		try {
 			inSession( session -> {

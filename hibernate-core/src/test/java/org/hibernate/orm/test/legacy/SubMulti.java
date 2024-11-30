@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id: SubMulti.java 4599 2004-09-26 05:18:27Z oneovthafew $
 package org.hibernate.orm.test.legacy;
 import java.util.List;
 
@@ -21,7 +17,7 @@ public class SubMulti extends Multi {
 	public float getAmount() {
 		return amount;
 	}
-	
+
 	/**
 	 * Sets the amount.
 	 * @param amount The amount to set
@@ -29,7 +25,7 @@ public class SubMulti extends Multi {
 	public void setAmount(float amount) {
 		this.amount = amount;
 	}
-	
+
 	/**
 	 * Returns the childen.
 	 * @return List
@@ -37,7 +33,7 @@ public class SubMulti extends Multi {
 	public List getChildren() {
 		return children;
 	}
-	
+
 	/**
 	 * Returns the parent.
 	 * @return SubMulti
@@ -45,7 +41,7 @@ public class SubMulti extends Multi {
 	public SubMulti getParent() {
 		return parent;
 	}
-	
+
 	/**
 	 * Sets the childen.
 	 * @param childen The childen to set
@@ -53,7 +49,7 @@ public class SubMulti extends Multi {
 	public void setChildren(List children) {
 		this.children = children;
 	}
-	
+
 	/**
 	 * Sets the parent.
 	 * @param parent The parent to set
@@ -61,7 +57,7 @@ public class SubMulti extends Multi {
 	public void setParent(SubMulti parent) {
 		this.parent = parent;
 	}
-	
+
 	/**
 	 * Returns the moreChildren.
 	 * @return List
@@ -79,9 +75,3 @@ public class SubMulti extends Multi {
 	}
 
 }
-
-
-
-
-
-

@@ -1,17 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.eviction;
 
 import org.hibernate.engine.spi.ManagedEntity;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -20,83 +20,83 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Gail Badner
  */
-@RunWith( BytecodeEnhancerRunner.class )
-public class EvictionTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+			EvictionTest.Parent.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class EvictionTest {
 
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{Parent.class};
-    }
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		// Create a Parent
+		scope.inTransaction( s -> {
+			Parent p = new Parent();
+			p.name = "PARENT";
+			s.persist( p );
+		} );
+	}
 
-    @Before
-    public void prepare() {
-        // Create a Parent
-        doInHibernate( this::sessionFactory, s -> {
-            Parent p = new Parent();
-            p.name = "PARENT";
-            s.persist( p );
-        } );
-    }
+	@Test
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 
-    @Test
-    public void test() {
-        doInHibernate( this::sessionFactory, s -> {
+			// Delete the Parent
+			Parent loadedParent = (Parent) s.createQuery( "SELECT p FROM Parent p WHERE name=:name" )
+					.setParameter( "name", "PARENT" )
+					.uniqueResult();
+			assertTyping( ManagedEntity.class, loadedParent );
+			ManagedEntity managedParent = (ManagedEntity) loadedParent;
 
-            // Delete the Parent
-            Parent loadedParent = (Parent) s.createQuery( "SELECT p FROM Parent p WHERE name=:name" )
-                    .setParameter( "name", "PARENT" )
-                    .uniqueResult();
-            assertTyping( ManagedEntity.class, loadedParent );
-            ManagedEntity managedParent = (ManagedEntity) loadedParent;
+			// before eviction
+			assertNotNull( managedParent.$$_hibernate_getEntityInstance() );
+			assertNotNull( managedParent.$$_hibernate_getEntityEntry() );
+			assertNull( managedParent.$$_hibernate_getPreviousManagedEntity() );
+			assertNull( managedParent.$$_hibernate_getNextManagedEntity() );
 
-            // before eviction
-            assertNotNull( managedParent.$$_hibernate_getEntityInstance() );
-            assertNotNull( managedParent.$$_hibernate_getEntityEntry() );
-            assertNull( managedParent.$$_hibernate_getPreviousManagedEntity() );
-            assertNull( managedParent.$$_hibernate_getNextManagedEntity() );
+			assertTrue( s.contains( managedParent ) );
+			s.evict( managedParent );
 
-            assertTrue( s.contains( managedParent ) );
-            s.evict( managedParent );
+			// after eviction
+			assertFalse( s.contains( managedParent ) );
+			assertNotNull( managedParent.$$_hibernate_getEntityInstance() );
+			assertNull( managedParent.$$_hibernate_getEntityEntry() );
+			assertNull( managedParent.$$_hibernate_getPreviousManagedEntity() );
+			assertNull( managedParent.$$_hibernate_getNextManagedEntity() );
 
-            // after eviction
-            assertFalse( s.contains( managedParent ) );
-            assertNotNull( managedParent.$$_hibernate_getEntityInstance() );
-            assertNull( managedParent.$$_hibernate_getEntityEntry() );
-            assertNull( managedParent.$$_hibernate_getPreviousManagedEntity() );
-            assertNull( managedParent.$$_hibernate_getNextManagedEntity() );
+			// evict again
+			s.evict( managedParent );
 
-            // evict again
-            s.evict( managedParent );
+			assertFalse( s.contains( managedParent ) );
+			assertNotNull( managedParent.$$_hibernate_getEntityInstance() );
+			assertNull( managedParent.$$_hibernate_getEntityEntry() );
+			assertNull( managedParent.$$_hibernate_getPreviousManagedEntity() );
+			assertNull( managedParent.$$_hibernate_getNextManagedEntity() );
 
-            assertFalse( s.contains( managedParent ) );
-            assertNotNull( managedParent.$$_hibernate_getEntityInstance() );
-            assertNull( managedParent.$$_hibernate_getEntityEntry() );
-            assertNull( managedParent.$$_hibernate_getPreviousManagedEntity() );
-            assertNull( managedParent.$$_hibernate_getNextManagedEntity() );
+			s.remove( managedParent );
+		} );
+	}
 
-            s.delete( managedParent );
-        } );
-    }
+	// --- //
 
-    // --- //
+	@Entity( name = "Parent" )
+	@Table( name = "PARENT" )
+	static class Parent {
 
-    @Entity( name = "Parent" )
-    @Table( name = "PARENT" )
-    private static class Parent {
+		@Id
+		@GeneratedValue( strategy = GenerationType.AUTO )
+		Long id;
 
-        @Id
-        @GeneratedValue( strategy = GenerationType.AUTO )
-        Long id;
-
-        String name;
-    }
+		String name;
+	}
 }

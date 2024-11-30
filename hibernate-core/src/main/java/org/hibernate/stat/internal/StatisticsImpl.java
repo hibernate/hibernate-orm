@@ -1,17 +1,18 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.stat.internal;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
+import java.util.function.Function;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.CacheImplementor;
@@ -20,12 +21,16 @@ import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.Service;
 import org.hibernate.stat.Statistics;
 import org.hibernate.stat.spi.StatisticsImplementor;
+
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
@@ -73,18 +78,18 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	private final LongAdder secondLevelCacheHitCount = new LongAdder();
 	private final LongAdder secondLevelCacheMissCount = new LongAdder();
 	private final LongAdder secondLevelCachePutCount = new LongAdder();
-	
+
 	private final LongAdder naturalIdCacheHitCount = new LongAdder();
 	private final LongAdder naturalIdCacheMissCount = new LongAdder();
 	private final LongAdder naturalIdCachePutCount = new LongAdder();
 	private final LongAdder naturalIdQueryExecutionCount = new LongAdder();
 	private final AtomicLong naturalIdQueryExecutionMaxTime = new AtomicLong();
-	private volatile String naturalIdQueryExecutionMaxTimeRegion;
-	private volatile String naturalIdQueryExecutionMaxTimeEntity;
+	private volatile @Nullable String naturalIdQueryExecutionMaxTimeRegion;
+	private volatile @Nullable String naturalIdQueryExecutionMaxTimeEntity;
 
 	private final LongAdder queryExecutionCount = new LongAdder();
 	private final AtomicLong queryExecutionMaxTime = new AtomicLong();
-	private volatile String queryExecutionMaxTimeQueryString;
+	private volatile @Nullable String queryExecutionMaxTimeQueryString;
 	private final LongAdder queryCacheHitCount = new LongAdder();
 	private final LongAdder queryCacheMissCount = new LongAdder();
 	private final LongAdder queryCachePutCount = new LongAdder();
@@ -115,6 +120,11 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	 */
 	private final StatsNamedContainer<CacheRegionStatisticsImpl> l2CacheStatsMap = new StatsNamedContainer<>();
 
+	/**
+	 * Keyed by query SQL
+	 */
+	private final Map<String, Long> slowQueries = new ConcurrentHashMap<>();
+
 	public StatisticsImpl(SessionFactoryImplementor sessionFactory) {
 		Objects.requireNonNull( sessionFactory );
 		SessionFactoryOptions sessionFactoryOptions = sessionFactory.getSessionFactoryOptions();
@@ -144,7 +154,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		secondLevelCacheHitCount.reset();
 		secondLevelCacheMissCount.reset();
 		secondLevelCachePutCount.reset();
-		
+
 		naturalIdCacheHitCount.reset();
 		naturalIdCacheMissCount.reset();
 		naturalIdCachePutCount.reset();
@@ -201,7 +211,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		resetStart();
 	}
 
-	private void resetStart() {
+	private void resetStart(@UnknownInitialization StatisticsImpl this) {
 		startTime = Instant.now();
 	}
 
@@ -237,9 +247,11 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public EntityStatisticsImpl getEntityStatistics(String entityName) {
-		return entityStatsMap.getOrCompute(
-				entityName,
-				this::instantiateEntityStatistics
+		return NullnessUtil.castNonNull(
+					entityStatsMap.getOrCompute(
+							entityName,
+							this::instantiateEntityStatistics
+					)
 		);
 	}
 
@@ -341,10 +353,12 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public CollectionStatisticsImpl getCollectionStatistics(String role) {
-		return collectionStatsMap.getOrCompute(
-				role,
-				this::instantiateCollectionStatistics
-		);
+		return NullnessUtil.castNonNull(
+					collectionStatsMap.getOrCompute(
+						role,
+						this::instantiateCollectionStatistics
+					)
+				);
 	}
 
 	@Override
@@ -429,9 +443,11 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public NaturalIdStatisticsImpl getNaturalIdStatistics(String rootEntityName) {
-		return naturalIdQueryStatsMap.getOrCompute(
-				rootEntityName,
-				this::instantiateNaturalStatistics
+		return NullnessUtil.castNonNull(
+					naturalIdQueryStatsMap.getOrCompute(
+						rootEntityName,
+						this::instantiateNaturalStatistics
+					)
 		);
 	}
 
@@ -446,12 +462,12 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	}
 
 	@Override
-	public String getNaturalIdQueryExecutionMaxTimeRegion() {
+	public @Nullable String getNaturalIdQueryExecutionMaxTimeRegion() {
 		return naturalIdQueryExecutionMaxTimeRegion;
 	}
 
 	@Override
-	public String getNaturalIdQueryExecutionMaxTimeEntity() {
+	public @Nullable String getNaturalIdQueryExecutionMaxTimeEntity() {
 		return naturalIdQueryExecutionMaxTimeEntity;
 	}
 
@@ -540,18 +556,29 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public CacheRegionStatisticsImpl getDomainDataRegionStatistics(String regionName) {
-		return l2CacheStatsMap.getOrCompute(
-				regionName,
-				this::instantiateCacheRegionStatistics
+		return NullnessUtil.castNonNull(
+					l2CacheStatsMap.getOrCompute(
+						regionName,
+						this::instantiateCacheRegionStatistics
+					)
 		);
 	}
 
 	@Override
-	public CacheRegionStatisticsImpl getQueryRegionStatistics(final String regionName) {
-		return l2CacheStatsMap.getOrCompute( regionName, this::computeQueryRegionStatistics );
+	public @Nullable CacheRegionStatisticsImpl getQueryRegionStatistics(final String regionName) {
+		return l2CacheStatsMap.getOrCompute(
+				regionName,
+
+				new Function<>() {
+					@Override
+					public @Nullable CacheRegionStatisticsImpl apply(String regionName1) {
+						return StatisticsImpl.this.computeQueryRegionStatistics( regionName1 );
+					}
+				}
+		);
 	}
 
-	private CacheRegionStatisticsImpl computeQueryRegionStatistics(final String regionName) {
+	private @Nullable CacheRegionStatisticsImpl computeQueryRegionStatistics(final String regionName) {
 		final QueryResultsCache regionAccess = cache.getQueryResultsCacheStrictly( regionName );
 		if ( regionAccess == null ) {
 			return null; //this null value will be cached
@@ -563,14 +590,19 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 
 	@Override
-	public CacheRegionStatisticsImpl getCacheRegionStatistics(String regionName) {
+	public @Nullable CacheRegionStatisticsImpl getCacheRegionStatistics(String regionName) {
 		if ( ! secondLevelCacheEnabled ) {
 			return null;
 		}
 
 		return l2CacheStatsMap.getOrCompute(
 				regionName,
-				this::createCacheRegionStatistics
+				new Function<>() {
+					@Override
+					public @Nullable CacheRegionStatisticsImpl apply(String regionName1) {
+						return StatisticsImpl.this.createCacheRegionStatistics( regionName1 );
+					}
+				}
 		);
 	}
 
@@ -630,9 +662,11 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public QueryStatisticsImpl getQueryStatistics(String queryString) {
-		return queryStatsMap.getOrCompute(
-				queryString,
-				QueryStatisticsImpl::new
+		return NullnessUtil.castNonNull(
+					queryStatsMap.getOrCompute(
+						queryString,
+						QueryStatisticsImpl::new
+					)
 		);
 	}
 
@@ -657,7 +691,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	}
 
 	@Override
-	public String getQueryExecutionMaxTimeQueryString() {
+	public @Nullable String getQueryExecutionMaxTimeQueryString() {
 		return queryExecutionMaxTimeQueryString;
 	}
 
@@ -765,9 +799,11 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	}
 
 	private CacheRegionStatisticsImpl getQueryRegionStats(String regionName) {
-		return l2CacheStatsMap.getOrCompute(
-				regionName,
-				this::instantiateCacheRegionStatsForQueryResults
+		return NullnessUtil.castNonNull(
+					l2CacheStatsMap.getOrCompute(
+						regionName,
+						this::instantiateCacheRegionStatsForQueryResults
+					)
 		);
 	}
 
@@ -975,7 +1011,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		return new CacheRegionStatisticsImpl( cache.getQueryResultsCache( regionName ).getRegion() );
 	}
 
-	private CacheRegionStatisticsImpl createCacheRegionStatistics(final String regionName) {
+	private @Nullable CacheRegionStatisticsImpl createCacheRegionStatistics(final String regionName) {
 		Region region = cache.getRegion( regionName );
 
 		if ( region == null ) {
@@ -990,5 +1026,15 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		}
 
 		return new CacheRegionStatisticsImpl( region );
+	}
+
+	@Override
+	public Map<String, Long> getSlowQueries() {
+		return slowQueries;
+	}
+
+	@Override
+	public void slowQuery(String sql, long executionTime) {
+		slowQueries.merge( sql, executionTime, Math::max );
 	}
 }

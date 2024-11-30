@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hql;
 
@@ -11,8 +9,8 @@ import java.util.Map;
 
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.orm.test.query.sqm.domain.ConstructedLookupListItem;
-import org.hibernate.orm.test.query.sqm.domain.InjectedLookupListItem;
 import org.hibernate.orm.test.query.sqm.domain.NestedCtorLookupListItem;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.DynamicInstantiationNature;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
@@ -29,6 +27,7 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Steve Ebersole
@@ -241,21 +240,15 @@ public class DynamicInstantiationTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testSimpleInjectedInstantiation() {
-		// todo (6.0) : this should blow up as early as possible - no aliases for bean-injection-based dynamic-instantiation
-		//		atm this does not fail until later when building the SQL AST
 
-		SqmSelectStatement<?> statement = interpretSelect(
-				"select new org.hibernate.orm.test.query.sqm.domain.InjectedLookupListItem( e.id, e.theString ) from EntityOfBasics e"
-		);
-		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
-
-		final SqmDynamicInstantiation<?> dynamicInstantiation = TestingUtil.cast(
-				statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode(),
-				SqmDynamicInstantiation.class
-		);
-
-		assertThat( dynamicInstantiation.getInstantiationTarget().getNature(), is( DynamicInstantiationNature.CLASS ) );
-		assertThat( dynamicInstantiation.getInstantiationTarget().getJavaType(), is( equalTo( InjectedLookupListItem.class ) ) );
-		assertThat( dynamicInstantiation.getArguments(), hasSize( 2 ) );
+		try {
+			interpretSelect(
+					"select new org.hibernate.orm.test.query.sqm.domain.InjectedLookupListItem( e.id, e.theString ) from EntityOfBasics e"
+			);
+			fail("no constructor or aliases");
+		}
+		catch (SemanticException se) {
+			// should fail
+		}
 	}
 }

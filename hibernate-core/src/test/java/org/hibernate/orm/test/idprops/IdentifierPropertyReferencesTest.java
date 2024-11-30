@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.idprops;
 import org.hibernate.Session;
@@ -42,10 +40,10 @@ public class IdentifierPropertyReferencesTest {
 		Order o = new Order( new Long( 1 ), p );
 		scope.inTransaction(
 				s -> {
-					s.save( p );
+					s.persist( p );
 					LineItem l = new LineItem( o, "my-product", 2 );
 					l.setId( "456" );
-					s.save( o );
+					s.persist( o );
 				}
 		);
 
@@ -84,8 +82,8 @@ public class IdentifierPropertyReferencesTest {
 					count = extractCount( s, "select count(*) from LineItem l where l.pk.order.orderee.pk = 1" );
 					assertEquals( 1, count );
 
-					s.delete( o );
-					s.delete( p );
+					s.remove( o );
+					s.remove( p );
 				}
 		);
 	}

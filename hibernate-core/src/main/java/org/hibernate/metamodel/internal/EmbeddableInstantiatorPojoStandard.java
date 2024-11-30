@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.internal;
 
@@ -17,7 +15,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.ValueAccess;
-import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Support for instantiating embeddables as POJO representation
@@ -26,19 +23,18 @@ public class EmbeddableInstantiatorPojoStandard extends AbstractPojoInstantiator
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( PojoInstantiatorImpl.class );
 
 	private final Supplier<EmbeddableMappingType> embeddableMappingAccess;
-	private final boolean constructorInjection = false;
 	private final Constructor<?> constructor;
 
-	public EmbeddableInstantiatorPojoStandard(JavaType<?> javaType, Supplier<EmbeddableMappingType> embeddableMappingAccess) {
-		super( javaType.getJavaTypeClass() );
+	public EmbeddableInstantiatorPojoStandard(Class<?> embeddableClass, Supplier<EmbeddableMappingType> embeddableMappingAccess) {
+		super( embeddableClass );
 
 		this.embeddableMappingAccess = embeddableMappingAccess;
-		this.constructor = resolveConstructor( javaType.getJavaTypeClass() );
+		this.constructor = resolveConstructor( embeddableClass );
 	}
 
 	protected static Constructor<?> resolveConstructor(Class<?> mappedPojoClass) {
 		try {
-			return ReflectHelper.getDefaultConstructor( mappedPojoClass);
+			return ReflectHelper.getDefaultConstructor( mappedPojoClass );
 		}
 		catch ( PropertyNotFoundException e ) {
 			LOG.noDefaultConstructor( mappedPojoClass.getName() );
@@ -51,7 +47,7 @@ public class EmbeddableInstantiatorPojoStandard extends AbstractPojoInstantiator
 	public Object instantiate(ValueAccess valuesAccess, SessionFactoryImplementor sessionFactory) {
 		if ( isAbstract() ) {
 			throw new InstantiationException(
-					"Cannot instantiate abstract class or interface: ", getMappedPojoClass()
+					"Cannot instantiate abstract class or interface", getMappedPojoClass()
 			);
 		}
 
@@ -60,11 +56,7 @@ public class EmbeddableInstantiatorPojoStandard extends AbstractPojoInstantiator
 		}
 
 		try {
-			if ( constructorInjection ) {
-				return constructor.newInstance( valuesAccess.getValues() );
-			}
-
-			Object[] values = valuesAccess == null ? null : valuesAccess.getValues();
+			final Object[] values = valuesAccess == null ? null : valuesAccess.getValues();
 			final Object instance = constructor.newInstance();
 			if ( values != null ) {
 				// At this point, createEmptyCompositesEnabled is always true.
@@ -81,7 +73,7 @@ public class EmbeddableInstantiatorPojoStandard extends AbstractPojoInstantiator
 			return instance;
 		}
 		catch ( Exception e ) {
-			throw new InstantiationException( "Could not instantiate entity: ", getMappedPojoClass(), e );
+			throw new InstantiationException( "Could not instantiate entity", getMappedPojoClass(), e );
 		}
 	}
 }

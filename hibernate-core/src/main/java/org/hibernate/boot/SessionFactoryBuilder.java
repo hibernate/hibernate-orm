@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot;
 
@@ -10,26 +8,31 @@ import java.util.function.Supplier;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
+import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.annotations.CacheLayout;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.jpa.spi.JpaCompliance;
-import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
+import org.hibernate.type.format.FormatMapper;
+
+import jakarta.persistence.criteria.Nulls;
 
 /**
- * The contract for building a {@link SessionFactory} given a number of options.
+ * The contract for building a {@link SessionFactory} given a specified set of options.
  *
  * @author Steve Ebersole
  * @author Gail Badner
  *
  * @since 5.0
+ *
+ * @see Metadata#getSessionFactoryBuilder()
  */
 public interface SessionFactoryBuilder {
 	/**
@@ -78,7 +81,9 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 *
+	 * @see org.hibernate.cfg.AvailableSettings#SESSION_FACTORY_NAME
 	 * @see org.hibernate.cfg.AvailableSettings#SESSION_FACTORY_NAME_IS_JNDI
+	 * @see org.hibernate.cfg.AvailableSettings#SESSION_FACTORY_JNDI_NAME
 	 */
 	SessionFactoryBuilder applyNameAsJndiName(boolean isJndiName);
 
@@ -217,7 +222,7 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyEntityNotFoundDelegate(EntityNotFoundDelegate entityNotFoundDelegate);
 
 	/**
-	 * Should generated identifiers be "unset" on entities during a rollback?
+	 * Should the generated identifier be "unset" when an entity is deleted?
 	 *
 	 * @param enabled {@code true} indicates identifiers should be unset; {@code false} indicates not.
 	 *
@@ -253,21 +258,13 @@ public interface SessionFactoryBuilder {
 	 */
 	SessionFactoryBuilder applyLazyInitializationOutsideTransaction(boolean enabled);
 
-	SessionFactoryBuilder applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling);
-
 	/**
-	 * What style of batching should be used?
+	 * Specifies how temporary tables should be created or dropped with respect
+	 * to transaction handling.
 	 *
-	 * @param style The style to use
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#BATCH_FETCH_STYLE
-	 *
-	 * @deprecated : an appropriate style is selected
+	 * @see TempTableDdlTransactionHandling
 	 */
-	@Deprecated(since = "6.0")
-	SessionFactoryBuilder applyBatchFetchStyle(BatchFetchStyle style);
+	SessionFactoryBuilder applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling);
 
 	/**
 	 * Should entity {@linkplain org.hibernate.loader.ast.spi.Loader loaders} be
@@ -304,8 +301,19 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyMaximumFetchDepth(int depth);
 
 	/**
-	 * Apply a null precedence (NULLS FIRST, NULLS LAST) to be applied to
-	 * order by clauses rendered in SQL queries.
+	 * Enable the use of subselect fetching.
+	 *
+	 * @param enabled {@code true} indicates that subselect fetching is enabled
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#USE_SUBSELECT_FETCH
+	 */
+	SessionFactoryBuilder applySubselectFetchEnabled(boolean enabled);
+
+	/**
+	 * Apply a null precedence, {@code NULLS FIRST} or {@code NULLS LAST},
+	 * to {@code order by} clauses rendered in SQL queries.
 	 *
 	 * @param nullPrecedence The default null precedence to use.
 	 *
@@ -313,7 +321,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#DEFAULT_NULL_ORDERING
 	 */
-	SessionFactoryBuilder applyDefaultNullPrecedence(NullPrecedence nullPrecedence);
+	SessionFactoryBuilder applyDefaultNullPrecedence(Nulls nullPrecedence);
 
 	/**
 	 * Specify whether ordering of inserts should be enabled.
@@ -346,18 +354,24 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyOrderingOfUpdates(boolean enabled);
 
 	/**
-	 * Specifies whether multi-tenancy is enabled
+	 * Specifies whether multitenancy is enabled via use of a
+	 * {@link org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider}.
+	 * <p>
+	 * Note that this setting does not affect
+	 * {@linkplain org.hibernate.annotations.TenantId discriminator-based}
+	 * multitenancy.
 	 *
-	 * @param enabled True if multi-tenancy in use.
+	 * @param enabled True if multi-tenancy in use via a {@code MultiTenantConnectionProvider}.
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#MULTI_TENANT_CONNECTION_PROVIDER
 	 */
 	SessionFactoryBuilder applyMultiTenancy(boolean enabled);
 
 	/**
 	 * Specifies a {@link CurrentTenantIdentifierResolver} that is responsible for
-	 * resolving the current tenant identifier when
-	 * {@link org.hibernate.SessionFactory#getCurrentSession()} is used.
+	 * resolving the current tenant identifier.
 	 *
 	 * @param resolver The resolution strategy to use.
 	 *
@@ -365,7 +379,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#MULTI_TENANT_IDENTIFIER_RESOLVER
 	 */
-	SessionFactoryBuilder applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver resolver);
+	SessionFactoryBuilder applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver<?> resolver);
 
 	/**
 	 * If using the built-in JTA-based
@@ -434,6 +448,19 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyQueryCacheSupport(boolean enabled);
 
 	/**
+	 * Specifies the default {@link CacheLayout} to use for query cache entries.
+	 *
+	 * @param cacheLayout The cache layout to use.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#QUERY_CACHE_LAYOUT
+	 * @since 6.5
+	 */
+	@Incubating
+	SessionFactoryBuilder applyQueryCacheLayout(CacheLayout cacheLayout);
+
+	/**
 	 * Specifies a {@link org.hibernate.cache.spi.TimestampsCacheFactory}.
 	 *
 	 * @param factory The {@link org.hibernate.cache.spi.TimestampsCacheFactory} to use
@@ -460,8 +487,8 @@ public interface SessionFactoryBuilder {
 	 * if that data already exists.  For some caches (mainly distributed caches) this can have a
 	 * major adverse performance impact.  For these caches, it is best to enable this "minimal puts"
 	 * feature.
-	 * <p/>
-	 * Cache integrations also report whether "minimal puts" should be enabled by default.  So its is
+	 * <p>
+	 * Cache integrations also report whether "minimal puts" should be enabled by default.  So it's
 	 * very rare that users need to set this, generally speaking.
 	 *
 	 * @param enabled {@code true} indicates Hibernate should first check whether data exists and only
@@ -480,7 +507,7 @@ public interface SessionFactoryBuilder {
 	 * that format is impossible to "read" if browsing the cache.  The use of "structured" cache
 	 * entries allows the cached data to be read.
 	 *
-	 * @param enabled {@code true} indicates that structured cache entries (human readable) should be used;
+	 * @param enabled {@code true} indicates that structured (human-readable) cache entries should be used;
 	 * {@code false} indicates that the native entry structure should be used.
 	 *
 	 * @return {@code this}, for method chaining
@@ -507,11 +534,11 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyDirectReferenceCaching(boolean enabled);
 
 	/**
-	 * When using bi-directional many-to-one associations and caching the one-to-many side
+	 * When using bidirectional many-to-one associations and caching the one-to-many side
 	 * it is expected that both sides of the association are managed (actually that is true of
-	 * all bi-directional associations).  However, in this case, if the user forgets to manage the
+	 * all bidirectional associations).  However, in this case, if the user forgets to manage the
 	 * one-to-many side stale data can be left in the second-level cache.
-	 * <p/>
+	 * <p>
 	 * Warning: enabling this will have a performance impact.  Hence why it is disabled by default
 	 * (for good citizens) and is an opt-in setting.
 	 *
@@ -653,7 +680,7 @@ public interface SessionFactoryBuilder {
 	/**
 	 * Should resources held by an {@link jakarta.persistence.EntityManager} be
 	 * released immediately on close?
-	 * <p/>
+	 * <p>
 	 * The other option is to release them as part of an after transaction callback.
 	 */
 	SessionFactoryBuilder enableReleaseResourcesOnCloseEnabled(boolean enable);
@@ -681,14 +708,12 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder enableJpaTransactionCompliance(boolean enabled);
 
 	/**
-	 * @see JpaCompliance#isJpaListComplianceEnabled()
+	 * @deprecated No longer has any effect.
 	 *
-	 * @see org.hibernate.cfg.AvailableSettings#JPA_LIST_COMPLIANCE
-	 *
-	 * @deprecated Use {@link org.hibernate.cfg.AvailableSettings#DEFAULT_LIST_SEMANTICS} instead
+	 * @see JpaCompliance#isJpaCascadeComplianceEnabled()
 	 */
-	@Deprecated( since = "6.0" )
-	SessionFactoryBuilder enableJpaListCompliance(boolean enabled);
+	@Deprecated(since = "7.0", forRemoval = true)
+	SessionFactoryBuilder enableJpaCascadeCompliance(boolean enabled);
 
 	/**
 	 * @see JpaCompliance#isJpaClosedComplianceEnabled()
@@ -696,6 +721,30 @@ public interface SessionFactoryBuilder {
 	 * @see org.hibernate.cfg.AvailableSettings#JPA_CLOSED_COMPLIANCE
 	 */
 	SessionFactoryBuilder enableJpaClosedCompliance(boolean enabled);
+
+	/**
+	 * Specifies a {@link FormatMapper format mapper} to use for serialization/deserialization of JSON properties.
+	 *
+	 * @param jsonFormatMapper The {@link FormatMapper} to use.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#JSON_FORMAT_MAPPER
+	 */
+	@Incubating
+	SessionFactoryBuilder applyJsonFormatMapper(FormatMapper jsonFormatMapper);
+
+	/**
+	 * Specifies a {@link FormatMapper format mapper} to use for serialization/deserialization of XML properties.
+	 *
+	 * @param xmlFormatMapper The {@link FormatMapper} to use.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#XML_FORMAT_MAPPER
+	 */
+	@Incubating
+	SessionFactoryBuilder applyXmlFormatMapper(FormatMapper xmlFormatMapper);
 
 	/**
 	 * After all options have been set, build the SessionFactory.

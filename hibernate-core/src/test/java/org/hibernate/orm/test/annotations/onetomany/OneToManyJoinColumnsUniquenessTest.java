@@ -1,8 +1,12 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.annotations.onetomany;
 
 import java.util.Set;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -16,7 +20,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PersistenceException;
@@ -29,13 +32,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 				OneToManyJoinColumnsUniquenessTest.EntityB.class,
 		}
 )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
-@TestForIssue(jiraKey = "HHH-15091")
+@SessionFactory(useCollectingStatementInspector = true)
+@JiraKey(value = "HHH-15091")
 public class OneToManyJoinColumnsUniquenessTest {
 
 	@Test
 	public void testInsertWithNullAssociationThrowPersistenceException(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		assertThrows(
 				PersistenceException.class, () ->
@@ -85,12 +88,8 @@ public class OneToManyJoinColumnsUniquenessTest {
 		private Long id;
 
 		@ManyToOne(fetch = FetchType.LAZY)
-		@JoinColumns(value = {
-				@JoinColumn(name = "b_to_a_1", referencedColumnName = "id_1", nullable = false)
-				,
-				@JoinColumn(name = "b_to_a_2", referencedColumnName = "id_2", nullable = false)
-		}
-		)
+		@JoinColumn(name = "b_to_a_1", referencedColumnName = "id_1", nullable = false)
+		@JoinColumn(name = "b_to_a_2", referencedColumnName = "id_2", nullable = false)
 		private EntityA entityA;
 
 		public EntityB() {

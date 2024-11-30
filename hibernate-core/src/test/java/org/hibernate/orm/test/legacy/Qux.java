@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id: Qux.java 4599 2004-09-26 05:18:27Z oneovthafew $
 package org.hibernate.orm.test.legacy;
 import java.sql.SQLException;
 import java.util.List;
@@ -43,7 +39,7 @@ public class Qux implements Lifecycle {
 		created=true;
 		try {
 			foo = new Foo();
-			session.save(foo);
+			session.persist(foo);
 		}
 		catch (Exception e) {
 			throw new CallbackException(e);
@@ -55,12 +51,12 @@ public class Qux implements Lifecycle {
 	public boolean onDelete(Session session) throws CallbackException {
 		deleted=true;
 		try {
-			session.delete(foo);
+			session.remove(foo);
 		}
 		catch (Exception e) {
 			throw new CallbackException(e);
 		}
-		//if (child!=null) session.delete(child);
+		//if (child!=null) session.remove(child);
 		return NO_VETO;
 	}
 
@@ -145,7 +141,7 @@ public class Qux implements Lifecycle {
 	public Qux getChild() throws HibernateException, SQLException {
 		store =true;
 		this.childKey = child==null ? null : child.getKey();
-		if (childKey!=null && child==null) child = (Qux) session.load(Qux.class, childKey);
+		if (childKey!=null && child==null) child = (Qux) session.getReference(Qux.class, childKey);
 		return child;
 	}
 
@@ -176,10 +172,3 @@ public class Qux implements Lifecycle {
 	}
 
 }
-
-
-
-
-
-
-

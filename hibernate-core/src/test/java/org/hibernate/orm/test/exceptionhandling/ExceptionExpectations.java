@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.exceptionhandling;
 
@@ -18,6 +16,7 @@ import org.hibernate.TransientObjectException;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.query.SemanticException;
+import org.hibernate.query.SyntaxException;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.assertThat;
@@ -34,8 +33,8 @@ interface ExceptionExpectations {
 			@Override
 			public void onConstraintViolationOnPersistAndMergeAndFlush(RuntimeException e) {
 				assertThat( e, instanceOf( PersistenceException.class ) );
-				assertThat( e.getCause(), instanceOf( ConstraintViolationException.class ) );
-				assertThat( e.getCause().getCause(), instanceOf( SQLException.class ) );
+				assertThat( e, instanceOf( ConstraintViolationException.class ) );
+				assertThat( e.getCause(), instanceOf( SQLException.class ) );
 			}
 
 			@Override
@@ -52,7 +51,7 @@ interface ExceptionExpectations {
 			@Override
 			public void onInvalidQueryExecuted(RuntimeException e) {
 				assertThat( e, instanceOf( IllegalArgumentException.class ) );
-				assertThat( e.getCause(), instanceOf( SemanticException.class ) );
+				assertThat( e.getCause(), instanceOf( SyntaxException.class ) );
 			}
 
 			@Override
@@ -79,7 +78,7 @@ interface ExceptionExpectations {
 			@Override
 			public void onIdentifierGeneratorFailure(RuntimeException e) {
 				assertThat( e, instanceOf( PersistenceException.class ) );
-				assertThat( e.getCause(), instanceOf( IdentifierGenerationException.class ) );
+				assertThat( e, instanceOf( IdentifierGenerationException.class ) );
 			}
 
 			@Override
@@ -90,21 +89,21 @@ interface ExceptionExpectations {
 			@Override
 			public void onTransactionExceptionOnPersistAndMergeAndFlush(RuntimeException e) {
 				assertThat( e, instanceOf( PersistenceException.class ) );
-				assertThat( e.getCause(), instanceOf( TransactionException.class ) );
+				assertThat( e, instanceOf( TransactionException.class ) );
 			}
 
 			@Override
 			public void onTransactionExceptionOnCommit(RuntimeException e) {
 				assertThat( e, instanceOf( RollbackException.class ) );
-				assertThat( e.getCause(), instanceOf( PersistenceException.class ) );
-				assertThat( e.getCause().getCause(), instanceOf( TransactionException.class ) );
+				assertThat( e, instanceOf( PersistenceException.class ) );
+				assertThat( e.getCause(), instanceOf( TransactionException.class ) );
 			}
 
 			@Override
 			public void onExecuteUpdateWithConstraintViolation(RuntimeException e) {
 				assertThat( e, instanceOf( PersistenceException.class ) );
-				assertThat( e.getCause(), instanceOf( ConstraintViolationException.class ) );
-				assertThat( e.getCause().getCause(), instanceOf( SQLException.class ) );
+				assertThat( e, instanceOf( ConstraintViolationException.class ) );
+				assertThat( e.getCause(), instanceOf( SQLException.class ) );
 			}
 		};
 	}
@@ -114,13 +113,13 @@ interface ExceptionExpectations {
 			@Override
 			public void onConstraintViolationOnSaveAndSaveOrUpdate(RuntimeException e) {
 				assertThat( e, instanceOf( ConstraintViolationException.class ) );
-				assertThat( e.getCause(), instanceOf( SQLException.class ) );
+				assertThat( e, instanceOf( SQLException.class ) );
 			}
 
 			@Override
 			public void onConstraintViolationOnPersistAndMergeAndFlush(RuntimeException e) {
 				assertThat( e, instanceOf( ConstraintViolationException.class ) );
-				assertThat( e.getCause(), instanceOf( SQLException.class ) );
+				assertThat( e, instanceOf( SQLException.class ) );
 			}
 
 			@Override
@@ -197,8 +196,8 @@ interface ExceptionExpectations {
 			@Override
 			public void onConstraintViolationOnPersistAndMergeAndFlush(RuntimeException e) {
 				assertThat( e, instanceOf( PersistenceException.class ) );
-				assertThat( e.getCause(), instanceOf( ConstraintViolationException.class ) );
-				assertThat( e.getCause().getCause(), instanceOf( SQLException.class ) );
+				assertThat( e, instanceOf( ConstraintViolationException.class ) );
+				assertThat( e.getCause(), instanceOf( SQLException.class ) );
 			}
 
 			@Override
@@ -215,7 +214,7 @@ interface ExceptionExpectations {
 			@Override
 			public void onInvalidQueryExecuted(RuntimeException e) {
 				assertThat( e, instanceOf( IllegalArgumentException.class ) );
-				assertThat( e.getCause(), instanceOf( SemanticException.class ) );
+				assertThat( e.getCause(), instanceOf( SyntaxException.class ) );
 			}
 
 			@Override
@@ -242,7 +241,7 @@ interface ExceptionExpectations {
 			@Override
 			public void onIdentifierGeneratorFailure(RuntimeException e) {
 				assertThat( e, instanceOf( PersistenceException.class ) );
-				assertThat( e.getCause(), instanceOf( IdentifierGenerationException.class ) );
+				assertThat( e, instanceOf( IdentifierGenerationException.class ) );
 			}
 
 			@Override
@@ -253,20 +252,20 @@ interface ExceptionExpectations {
 			@Override
 			public void onTransactionExceptionOnPersistAndMergeAndFlush(RuntimeException e) {
 				assertThat( e, instanceOf( PersistenceException.class ) );
-				assertThat( e.getCause(), instanceOf( TransactionException.class ) );
+				assertThat( e, instanceOf( TransactionException.class ) );
 			}
 
 			@Override
 			public void onTransactionExceptionOnCommit(RuntimeException e) {
 				assertThat( e, instanceOf( PersistenceException.class ) );
-				assertThat( e.getCause(), instanceOf( TransactionException.class ) );
+				assertThat( e, instanceOf( TransactionException.class ) );
 			}
 
 			@Override
 			public void onExecuteUpdateWithConstraintViolation(RuntimeException e) {
 				assertThat( e, instanceOf( PersistenceException.class ) );
-				assertThat( e.getCause(), instanceOf( ConstraintViolationException.class ) );
-				assertThat( e.getCause().getCause(), instanceOf( SQLException.class ) );
+				assertThat( e, instanceOf( ConstraintViolationException.class ) );
+				assertThat( e.getCause(), instanceOf( SQLException.class ) );
 			}
 		};
 	}

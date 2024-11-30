@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.fetch;
 
@@ -42,32 +40,7 @@ public class FetchingTest extends BaseCoreFunctionalTestCase {
 		p = (Person) s.createQuery( "from Person p where p.firstName = :name" )
 				.setParameter( "name", "Gavin" ).uniqueResult();
 		assertFalse( Hibernate.isInitialized( p.getStays() ) );
-		s.delete( p );
-		tx.commit();
-		s.close();
-	}
-
-	@Test
-	public void testExtraLazy() {
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
-		Person p = new Person( "Gavin", "King", "JBoss Inc" );
-		Stay stay = new Stay( p, new Date(), new Date(), "A380", "Blah", "Blah" );
-		p.getOrderedStay().add( stay );
-		s.persist( p );
-		tx.commit();
-		s.clear();
-		tx = s.beginTransaction();
-		p = (Person) s.createQuery( "from Person p where p.firstName = :name" )
-				.setParameter( "name", "Gavin" ).uniqueResult();
-		assertFalse( Hibernate.isInitialized( p.getOrderedStay() ) );
-		assertEquals( 1, p.getOrderedStay().size() );
-		assertFalse( Hibernate.isInitialized( p.getOrderedStay() ) );
-		assertEquals( "A380", p.getOrderedStay().get(0).getVessel() );
-		assertFalse( Hibernate.isInitialized( p.getOrderedStay() ) );
-		s.delete( p );
+		s.remove( p );
 		tx.commit();
 		s.close();
 	}
@@ -95,7 +68,7 @@ public class FetchingTest extends BaseCoreFunctionalTestCase {
 						.setParameter( "name", "Gavin" ).uniqueResult();
 				assertFalse( Hibernate.isInitialized( p.getOldStays() ) );
 				assertEquals( 1, p.getOldStays().size() );
-				assertFalse( "lazy extra is failing", Hibernate.isInitialized( p.getOldStays() ) );
+				assertTrue( Hibernate.isInitialized( p.getOldStays() ) );
 				s.clear();
 				stay = (Stay) s.get( Stay.class, stay.getId() );
 				assertTrue( !Hibernate.isInitialized( stay.getOldPerson() ) );
@@ -105,7 +78,7 @@ public class FetchingTest extends BaseCoreFunctionalTestCase {
 						"FetchMode.JOIN should overrides lazy options",
 						Hibernate.isInitialized( stay3.getVeryOldPerson() )
 				);
-				s.delete( stay3.getVeryOldPerson() );
+				s.remove( stay3.getVeryOldPerson() );
 				tx.commit();
 			}finally {
 				if ( tx.isActive() ) {

@@ -1,17 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
 import java.util.Comparator;
 import java.util.TimeZone;
 
-import org.hibernate.cache.internal.CacheKeyValueDescriptor;
-import org.hibernate.cache.internal.DefaultCacheKeyValueDescriptor;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
@@ -34,6 +29,11 @@ public class TimeZoneJavaType extends AbstractClassJavaType<TimeZone> {
 		super( TimeZone.class, ImmutableMutabilityPlan.instance(), TimeZoneComparator.INSTANCE );
 	}
 
+	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
 	public String toString(TimeZone value) {
 		return value.getID();
 	}
@@ -47,6 +47,9 @@ public class TimeZoneJavaType extends AbstractClassJavaType<TimeZone> {
 		if ( value == null ) {
 			return null;
 		}
+		if ( TimeZone.class.isAssignableFrom( type ) ) {
+			return (X) value;
+		}
 		if ( String.class.isAssignableFrom( type ) ) {
 			return (X) toString( value );
 		}
@@ -57,14 +60,13 @@ public class TimeZoneJavaType extends AbstractClassJavaType<TimeZone> {
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof CharSequence) {
+		if ( value instanceof TimeZone ) {
+			return (TimeZone) value;
+		}
+		if ( value instanceof CharSequence ) {
 			return fromString( (CharSequence) value );
 		}
 		throw unknownWrap( value.getClass() );
 	}
 
-	@Override
-	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
-		return DefaultCacheKeyValueDescriptor.INSTANCE;
-	}
 }

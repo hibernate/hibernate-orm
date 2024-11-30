@@ -1,19 +1,18 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.basic;
 
+import org.hibernate.Version;
+import org.hibernate.bytecode.enhance.spi.EnhancementInfo;
 import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.Jira;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -22,150 +21,160 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Luis Barreiro
  */
-@RunWith( BytecodeEnhancerRunner.class )
+@BytecodeEnhanced
 public class BasicEnhancementTest {
 
-    @Test
-    public void basicManagedTest() {
-        SimpleEntity entity = new SimpleEntity();
+	@Test
+	public void basicManagedTest() {
+		SimpleEntity entity = new SimpleEntity();
 
-        // Call the new ManagedEntity methods
-        assertTyping( ManagedEntity.class, entity );
-        ManagedEntity managedEntity = (ManagedEntity) entity;
-        assertSame( entity, managedEntity.$$_hibernate_getEntityInstance() );
+		// Call the new ManagedEntity methods
+		assertTyping( ManagedEntity.class, entity );
+		ManagedEntity managedEntity = (ManagedEntity) entity;
+		assertSame( entity, managedEntity.$$_hibernate_getEntityInstance() );
 
-        assertNull( managedEntity.$$_hibernate_getEntityEntry() );
-        managedEntity.$$_hibernate_setEntityEntry( EnhancerTestUtils.makeEntityEntry() );
-        assertNotNull( managedEntity.$$_hibernate_getEntityEntry() );
-        managedEntity.$$_hibernate_setEntityEntry( null );
-        assertNull( managedEntity.$$_hibernate_getEntityEntry() );
+		assertNull( managedEntity.$$_hibernate_getEntityEntry() );
+		managedEntity.$$_hibernate_setEntityEntry( EnhancerTestUtils.makeEntityEntry() );
+		assertNotNull( managedEntity.$$_hibernate_getEntityEntry() );
+		managedEntity.$$_hibernate_setEntityEntry( null );
+		assertNull( managedEntity.$$_hibernate_getEntityEntry() );
 
-        managedEntity.$$_hibernate_setNextManagedEntity( managedEntity );
-        managedEntity.$$_hibernate_setPreviousManagedEntity( managedEntity );
-        assertSame( managedEntity, managedEntity.$$_hibernate_getNextManagedEntity() );
-        assertSame( managedEntity, managedEntity.$$_hibernate_getPreviousManagedEntity() );
-    }
+		managedEntity.$$_hibernate_setNextManagedEntity( managedEntity );
+		managedEntity.$$_hibernate_setPreviousManagedEntity( managedEntity );
+		assertSame( managedEntity, managedEntity.$$_hibernate_getNextManagedEntity() );
+		assertSame( managedEntity, managedEntity.$$_hibernate_getPreviousManagedEntity() );
+	}
 
-    @Test
-    public void basicInterceptableTest() {
-        SimpleEntity entity = new SimpleEntity();
+	@Test
+	@Jira("HHH-13439")
+	public void enhancementInfoTest() {
+		EnhancementInfo info = SimpleEntity.class.getAnnotation( EnhancementInfo.class );
+		assertNotNull( info, "EnhancementInfo was not applied" );
 
-        assertTyping( PersistentAttributeInterceptable.class, entity );
-        PersistentAttributeInterceptable interceptableEntity = (PersistentAttributeInterceptable) entity;
+		assertEquals( Version.getVersionString(), info.version() );
+	}
 
-        assertNull( interceptableEntity.$$_hibernate_getInterceptor() );
-        interceptableEntity.$$_hibernate_setInterceptor( new ObjectAttributeMarkerInterceptor() );
-        assertNotNull( interceptableEntity.$$_hibernate_getInterceptor() );
+	@Test
+	public void basicInterceptableTest() {
+		SimpleEntity entity = new SimpleEntity();
 
-        assertNull( EnhancerTestUtils.getFieldByReflection( entity, "anUnspecifiedObject" ) );
-        entity.setAnObject( new Object() );
+		assertTyping( PersistentAttributeInterceptable.class, entity );
+		PersistentAttributeInterceptable interceptableEntity = (PersistentAttributeInterceptable) entity;
 
-        assertSame( ObjectAttributeMarkerInterceptor.WRITE_MARKER, EnhancerTestUtils.getFieldByReflection( entity, "anUnspecifiedObject" ) );
-        assertSame( ObjectAttributeMarkerInterceptor.READ_MARKER, entity.getAnObject() );
+		assertNull( interceptableEntity.$$_hibernate_getInterceptor() );
+		interceptableEntity.$$_hibernate_setInterceptor( new ObjectAttributeMarkerInterceptor() );
+		assertNotNull( interceptableEntity.$$_hibernate_getInterceptor() );
 
-        entity.setAnObject( null );
-        assertSame( ObjectAttributeMarkerInterceptor.WRITE_MARKER, EnhancerTestUtils.getFieldByReflection( entity, "anUnspecifiedObject" ) );
-    }
+		assertNull( EnhancerTestUtils.getFieldByReflection( entity, "anUnspecifiedObject" ) );
+		entity.setAnObject( new Object() );
 
-    @Test
-    public void basicExtendedEnhancementTest() {
-        // test uses ObjectAttributeMarkerInterceptor to ensure that field access is routed through enhanced methods
+		assertSame( ObjectAttributeMarkerInterceptor.WRITE_MARKER, EnhancerTestUtils.getFieldByReflection( entity, "anUnspecifiedObject" ) );
+		assertSame( ObjectAttributeMarkerInterceptor.READ_MARKER, entity.getAnObject() );
 
-        SimpleEntity entity = new SimpleEntity();
-        ( (PersistentAttributeInterceptable) entity ).$$_hibernate_setInterceptor( new ObjectAttributeMarkerInterceptor() );
+		entity.setAnObject( null );
+		assertSame( ObjectAttributeMarkerInterceptor.WRITE_MARKER, EnhancerTestUtils.getFieldByReflection( entity, "anUnspecifiedObject" ) );
+	}
 
-        Object decoy = new Object();
-        entity.anUnspecifiedObject = decoy;
+	@Test
+	public void basicExtendedEnhancementTest() {
+		// test uses ObjectAttributeMarkerInterceptor to ensure that field access is routed through enhanced methods
 
-        Object gotByReflection = EnhancerTestUtils.getFieldByReflection( entity, "anUnspecifiedObject" );
-        assertNotSame( decoy, gotByReflection );
-        assertSame( ObjectAttributeMarkerInterceptor.WRITE_MARKER, gotByReflection );
+		SimpleEntity entity = new SimpleEntity();
+		( (PersistentAttributeInterceptable) entity ).$$_hibernate_setInterceptor( new ObjectAttributeMarkerInterceptor() );
 
-        Object entityObject = entity.anUnspecifiedObject;
+		Object decoy = new Object();
+		entity.anUnspecifiedObject = decoy;
 
-        assertNotSame( decoy, entityObject );
-        assertSame( ObjectAttributeMarkerInterceptor.READ_MARKER, entityObject );
+		Object gotByReflection = EnhancerTestUtils.getFieldByReflection( entity, "anUnspecifiedObject" );
+		assertNotSame( decoy, gotByReflection );
+		assertSame( ObjectAttributeMarkerInterceptor.WRITE_MARKER, gotByReflection );
 
-        // do some more calls on the various types, without the interceptor
-        ( (PersistentAttributeInterceptable) entity ).$$_hibernate_setInterceptor( null );
+		Object entityObject = entity.anUnspecifiedObject;
 
-        entity.id = 1234567890L;
-        Assert.assertEquals( 1234567890L, (long) entity.getId() );
+		assertNotSame( decoy, entityObject );
+		assertSame( ObjectAttributeMarkerInterceptor.READ_MARKER, entityObject );
 
-        entity.name = "Entity Name";
-        assertSame( "Entity Name", entity.name );
+		// do some more calls on the various types, without the interceptor
+		( (PersistentAttributeInterceptable) entity ).$$_hibernate_setInterceptor( null );
 
-        entity.active = true;
-        assertTrue( entity.getActive() );
+		entity.id = 1234567890L;
+		assertEquals( 1234567890L, (long) entity.getId() );
 
-        entity.someStrings = Arrays.asList( "A", "B", "C", "D" );
-        assertArrayEquals( new String[]{"A", "B", "C", "D"}, entity.someStrings.toArray() );
-    }
+		entity.name = "Entity Name";
+		assertSame( "Entity Name", entity.name );
 
-    // --- //
+		entity.active = true;
+		assertTrue( entity.getActive() );
 
-    @Entity
-    private static class SimpleEntity {
+		entity.someStrings = Arrays.asList( "A", "B", "C", "D" );
+		assertArrayEquals( new String[]{"A", "B", "C", "D"}, entity.someStrings.toArray() );
+	}
 
-        Object anUnspecifiedObject;
+	// --- //
 
-        @Id
-        Long id;
+	@Entity
+	private static class SimpleEntity {
 
-        String name;
+		Object anUnspecifiedObject;
 
-        Boolean active;
+		@Id
+		Long id;
 
-        List<String> someStrings;
+		String name;
 
-        Long getId() {
-            return id;
-        }
+		Boolean active;
 
-        void setId(Long id) {
-            this.id = id;
-        }
+		List<String> someStrings;
 
-        String getName() {
-            return name;
-        }
+		Long getId() {
+			return id;
+		}
 
-        void setName(String name) {
-            this.name = name;
-        }
+		void setId(Long id) {
+			this.id = id;
+		}
 
-        public Boolean getActive() {
-            return active;
-        }
+		String getName() {
+			return name;
+		}
 
-        public void setActive(Boolean active) {
-            this.active = active;
-        }
+		void setName(String name) {
+			this.name = name;
+		}
 
-        Object getAnObject() {
-            return anUnspecifiedObject;
-        }
+		public Boolean getActive() {
+			return active;
+		}
 
-        void setAnObject(Object providedObject) {
-            this.anUnspecifiedObject = providedObject;
-        }
+		public void setActive(Boolean active) {
+			this.active = active;
+		}
 
-        List<String> getSomeStrings() {
-            return Collections.unmodifiableList( someStrings );
-        }
+		Object getAnObject() {
+			return anUnspecifiedObject;
+		}
 
-        void setSomeStrings(List<String> someStrings) {
-            this.someStrings = someStrings;
-        }
-    }
+		void setAnObject(Object providedObject) {
+			this.anUnspecifiedObject = providedObject;
+		}
+
+		List<String> getSomeStrings() {
+			return Collections.unmodifiableList( someStrings );
+		}
+
+		void setSomeStrings(List<String> someStrings) {
+			this.someStrings = someStrings;
+		}
+	}
 }

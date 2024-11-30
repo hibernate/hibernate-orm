@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.event;
 
@@ -11,7 +9,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.AfterEach;
@@ -38,7 +36,7 @@ public class EmbeddableCallbackTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12326")
+	@JiraKey(value = "HHH-12326")
 	public void test(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 			Employee employee = new Employee();
@@ -57,7 +55,7 @@ public class EmbeddableCallbackTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13110")
+	@JiraKey(value = "HHH-13110")
 	public void testNullEmbeddable(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 			Employee employee = new Employee();

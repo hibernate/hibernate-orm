@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.predicate;
 
@@ -13,6 +11,8 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+
+import static org.hibernate.query.sqm.internal.TypecheckUtil.assertComparable;
 
 /**
  * @author Steve Ebersole
@@ -41,9 +41,11 @@ public class SqmComparisonPredicate extends AbstractNegatableSqmPredicate {
 		this.rightHandExpression = rightHandExpression;
 		this.operator = operator;
 
+		assertComparable( leftHandExpression, rightHandExpression, nodeBuilder );
+
 		final SqmExpressible<?> expressibleType = QueryHelper.highestPrecedenceType(
-				leftHandExpression.getNodeType(),
-				rightHandExpression.getNodeType()
+				leftHandExpression.getExpressible(),
+				rightHandExpression.getExpressible()
 		);
 
 		leftHandExpression.applyInferableType( expressibleType );
@@ -55,6 +57,7 @@ public class SqmComparisonPredicate extends AbstractNegatableSqmPredicate {
 		this.leftHandExpression = affirmativeForm.leftHandExpression;
 		this.rightHandExpression = affirmativeForm.rightHandExpression;
 		this.operator = affirmativeForm.operator;
+		assertComparable( leftHandExpression, rightHandExpression, nodeBuilder() );
 	}
 
 	@Override

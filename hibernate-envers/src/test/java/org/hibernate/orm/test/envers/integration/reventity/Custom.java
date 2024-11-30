@@ -1,11 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.reventity;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -71,8 +71,16 @@ public class Custom extends BaseEnversJPAFunctionalTestCase {
 
 	@Test
 	public void testTimestamps() {
-		assert getAuditReader().getRevisionNumberForDate( new Date( timestamp2 ) ).intValue() == 1;
-		assert getAuditReader().getRevisionNumberForDate( new Date( timestamp3 ) ).intValue() == 2;
+		final Date date1 = new Date( timestamp2 );
+		final Date date2 = new Date( timestamp3 );
+
+		assert getAuditReader().getRevisionNumberForDate( date1 ).intValue() == 1;
+		assert getAuditReader().getRevisionNumberForDate( date2 ).intValue() == 2;
+
+		final LocalDateTime localDateTime1 = LocalDateTime.ofInstant( date1.toInstant(), ZoneId.systemDefault() );
+		final LocalDateTime localDateTime2 = LocalDateTime.ofInstant( date2.toInstant(), ZoneId.systemDefault() );
+		assert getAuditReader().getRevisionNumberForDate( localDateTime1 ).intValue() == 1;
+		assert getAuditReader().getRevisionNumberForDate( localDateTime2 ).intValue() == 2;
 	}
 
 	@Test

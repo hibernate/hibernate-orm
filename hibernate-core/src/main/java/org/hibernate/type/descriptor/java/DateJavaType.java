@@ -1,15 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
 import java.sql.Timestamp;
 import java.sql.Types;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -17,9 +16,7 @@ import java.util.GregorianCalendar;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.HibernateException;
-import org.hibernate.cache.internal.CacheKeyValueDescriptor;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -33,7 +30,6 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class DateJavaType extends AbstractTemporalJavaType<Date> implements VersionJavaType<Date> {
 	public static final DateJavaType INSTANCE = new DateJavaType();
-	public static final String DATE_FORMAT = "dd MMMM yyyy";
 
 	public static class DateMutabilityPlan extends MutableMutabilityPlan<Date> {
 		public static final DateMutabilityPlan INSTANCE = new DateMutabilityPlan();
@@ -42,18 +38,6 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 			return new Date( value.getTime() );
 		}
 	}
-
-	private static final CacheKeyValueDescriptor CACHE_KEY_VALUE_DESCRIPTOR = new CacheKeyValueDescriptor() {
-		@Override
-		public int getHashCode(Object key) {
-			return INSTANCE.extractHashCode( (Date) key );
-		}
-
-		@Override
-		public boolean isEqual(Object key1, Object key2) {
-			return INSTANCE.areEqual( (Date) key1, (Date) key2 );
-		}
-	};
 
 	public DateJavaType() {
 		super( Date.class, DateMutabilityPlan.INSTANCE );
@@ -66,43 +50,46 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 
 	@Override
 	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
+		// this "Date" is really a timestamp
 		return dialect.getDefaultTimestampPrecision();
 	}
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( Types.TIMESTAMP );
+		return context.getJdbcType( Types.TIMESTAMP );
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	protected <X> TemporalJavaType<X> forDatePrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
 		return (TemporalJavaType<X>) JdbcDateJavaType.INSTANCE;
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	protected <X> TemporalJavaType<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
 		return (TemporalJavaType<X>) JdbcTimestampJavaType.INSTANCE;
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	protected <X> TemporalJavaType<X> forTimePrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
 		return (TemporalJavaType<X>) JdbcTimeJavaType.INSTANCE;
 	}
 
 	@Override
 	public String toString(Date value) {
-		return new SimpleDateFormat( DATE_FORMAT ).format( value );
+		return JdbcTimestampJavaType.LITERAL_FORMATTER.format( value.toInstant() );
 	}
+
 	@Override
 	public Date fromString(CharSequence string) {
 		try {
-			return new SimpleDateFormat(DATE_FORMAT).parse( string.toString() );
+			final TemporalAccessor accessor = JdbcTimestampJavaType.LITERAL_FORMATTER.parse( string );
+			return new Date(
+					accessor.getLong( ChronoField.INSTANT_SECONDS ) * 1000L
+							+ accessor.get( ChronoField.NANO_OF_SECOND ) / 1_000_000
+			);
 		}
-		catch ( ParseException pe) {
-			throw new HibernateException( "could not parse date string" + string, pe );
+		catch ( DateTimeParseException pe) {
+			throw new HibernateException( "could not parse timestamp string" + string, pe );
 		}
 	}
 
@@ -122,11 +109,6 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 		return CalendarJavaType.INSTANCE.extractHashCode( calendar );
 	}
 
-	@Override
-	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
-		return CACHE_KEY_VALUE_DESCRIPTOR;
-	}
-
 	@SuppressWarnings("unchecked")
 	@Override
 	public <X> X unwrap(Date value, Class<X> type, WrapperOptions options) {
@@ -142,7 +124,7 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
 			final java.sql.Time rtn = value instanceof java.sql.Time
 					? ( java.sql.Time ) value
-					: new java.sql.Time( value.getTime() );
+					: new java.sql.Time( value.getTime() % 86_400_000 );
 			return (X) rtn;
 		}
 		if ( java.sql.Timestamp.class.isAssignableFrom( type ) ) {
@@ -169,16 +151,16 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof Date) {
-			return (Date) value;
+		if (value instanceof Date date) {
+			return date;
 		}
 
-		if (value instanceof Long) {
-			return new Date( (Long) value );
+		if (value instanceof Long longValue) {
+			return new Date( longValue );
 		}
 
-		if (value instanceof Calendar) {
-			return new Date( ( (Calendar) value ).getTimeInMillis() );
+		if (value instanceof Calendar calendar) {
+			return new Date( calendar.getTimeInMillis() );
 		}
 
 		throw unknownWrap( value.getClass() );
@@ -186,14 +168,10 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 
 	@Override
 	public boolean isWider(JavaType<?> javaType) {
-		switch ( javaType.getJavaType().getTypeName() ) {
-			case "java.sql.Date":
-			case "java.sql.Timestamp":
-			case "java.util.Calendar":
-				return true;
-			default:
-				return false;
-		}
+		return switch ( javaType.getTypeName() ) {
+			case "java.sql.Date", "java.sql.Timestamp", "java.util.Calendar" -> true;
+			default -> false;
+		};
 	}
 
 	@Override

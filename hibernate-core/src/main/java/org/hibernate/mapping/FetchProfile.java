@@ -1,23 +1,23 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
+
+import jakarta.persistence.FetchType;
+import org.hibernate.annotations.FetchMode;
+
 import java.util.LinkedHashSet;
 
 /**
- * A fetch profile allows a user to dynamically modify the fetching strategy used for particular associations at
- * runtime, whereas that information was historically only statically defined in the metadata.
- * <p/>
- * This class represent the data as it is defined in their metadata.
+ * A mapping model object representing a {@link org.hibernate.annotations.FetchProfile}.
  *
  * @author Steve Ebersole
  *
  * @see org.hibernate.engine.profile.FetchProfile
  */
 public class FetchProfile {
+
 	private final String name;
 	private final MetadataSource source;
 	private final LinkedHashSet<Fetch> fetches = new LinkedHashSet<>();
@@ -62,27 +62,16 @@ public class FetchProfile {
 
 	/**
 	 * Adds a fetch to this profile.
-	 *
-	 * @param entity The entity which contains the association to be fetched
-	 * @param association The association to fetch
-	 * @param style The style of fetch to apply
 	 */
-	public void addFetch(String entity, String association, String style) {
-		fetches.add( new Fetch( entity, association, style ) );
+	public void addFetch(Fetch fetch) {
+		fetches.add( fetch );
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
-			return true;
-		}
-		if ( o == null || getClass() != o.getClass() ) {
-			return false;
-		}
-
-		FetchProfile that = ( FetchProfile ) o;
-
-		return name.equals( that.name );
+	public boolean equals(Object that) {
+		return this == that
+			|| that instanceof FetchProfile profile
+				&& name.equals( profile.name );
 	}
 
 	@Override
@@ -92,17 +81,19 @@ public class FetchProfile {
 
 
 	/**
-	 * Defines an individual association fetch within the given profile.
+	 * An individual association fetch within the given profile.
 	 */
 	public static class Fetch {
 		private final String entity;
 		private final String association;
-		private final String style;
+		private final FetchMode method;
+		private final FetchType type;
 
-		public Fetch(String entity, String association, String style) {
+		public Fetch(String entity, String association, FetchMode method, FetchType type) {
 			this.entity = entity;
 			this.association = association;
-			this.style = style;
+			this.method = method;
+			this.type = type;
 		}
 
 		public String getEntity() {
@@ -113,8 +104,12 @@ public class FetchProfile {
 			return association;
 		}
 
-		public String getStyle() {
-			return style;
+		public FetchMode getMethod() {
+			return method;
+		}
+
+		public FetchType getType() {
+			return type;
 		}
 	}
 }

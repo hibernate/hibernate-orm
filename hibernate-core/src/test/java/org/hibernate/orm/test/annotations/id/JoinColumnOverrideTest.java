@@ -1,22 +1,21 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.id;
 
 import java.util.List;
 
-import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import org.hibernate.orm.test.annotations.id.entities.Bunny;
 import org.hibernate.orm.test.annotations.id.entities.PointyTooth;
@@ -33,24 +32,26 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @BaseUnitTest
 public class JoinColumnOverrideTest {
 
-	private static final String expectedSqlPointyTooth = "create table PointyTooth (id numeric(128,0) not null, " +
-			"bunny_id numeric(128,0), primary key (id))";
-	private static final String expectedSqlTwinkleToes = "create table TwinkleToes (id numeric(128,0) not null, " +
-			"bunny_id numeric(128,0), primary key (id))";
+	private static final String expectedSqlPointyTooth = "create table PointyTooth (bunny_id numeric(128,0), " +
+			"id numeric(128,0) not null, primary key (id))";
+	private static final String expectedSqlTwinkleToes = "create table TwinkleToes (bunny_id numeric(128,0), " +
+			"id numeric(128,0) not null, primary key (id))";
 
 	@Test
-	@TestForIssue(jiraKey = "ANN-748")
+	@JiraKey(value = "ANN-748")
 	public void testBlownPrecision() {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, "SQLServer" )
 				.build();
 
 		try {
-			Metadata metadata = new MetadataSources( ssr )
+			MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( Bunny.class )
 					.addAnnotatedClass( PointyTooth.class )
 					.addAnnotatedClass( TwinkleToes.class )
 					.buildMetadata();
+			metadata.orderColumns( true );
+			metadata.validate();
 
 			boolean foundPointyToothCreate = false;
 			boolean foundTwinkleToesCreate = false;

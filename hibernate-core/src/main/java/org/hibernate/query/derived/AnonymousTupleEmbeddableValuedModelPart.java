@@ -1,47 +1,47 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.derived;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.Incubating;
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
-import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -57,8 +57,14 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableResultImpl;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import jakarta.persistence.metamodel.Attribute;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static java.util.Objects.requireNonNullElse;
 
 /**
  * @author Christian Beikov
@@ -68,35 +74,89 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 
 	private static final FetchOptions FETCH_OPTIONS = FetchOptions.valueOf( FetchTiming.IMMEDIATE, FetchStyle.JOIN );
 
-	private final Map<String, ModelPart> modelParts;
+	private final Map<String, ModelPart> modelPartMap;
+	private final ModelPart[] modelParts;
 	private final DomainType<?> domainType;
 	private final String componentName;
 	private final EmbeddableValuedModelPart existingModelPartContainer;
+	private final int fetchableIndex;
 
 	public AnonymousTupleEmbeddableValuedModelPart(
-			Map<String, ModelPart> modelParts,
+			SqmExpressible<?> sqmExpressible,
+			SqlTypedMapping[] sqlTypedMappings,
+			int selectionIndex,
+			String selectionExpression,
+			Set<String> compatibleTableExpressions,
+			Set<Attribute<?, ?>> attributes,
 			DomainType<?> domainType,
 			String componentName,
-			EmbeddableValuedModelPart existingModelPartContainer) {
-		this.modelParts = modelParts;
+			EmbeddableValuedModelPart existingModelPartContainer,
+			int fetchableIndex) {
+		this.modelPartMap = createModelParts(
+				sqmExpressible,
+				sqlTypedMappings,
+				selectionIndex,
+				selectionExpression,
+				compatibleTableExpressions,
+				attributes,
+				existingModelPartContainer
+		);
+		this.modelParts = modelPartMap.values().toArray( new ModelPart[0] );
 		this.domainType = domainType;
 		this.componentName = componentName;
 		this.existingModelPartContainer = existingModelPartContainer;
+		this.fetchableIndex = fetchableIndex;
+	}
+
+	private Map<String, ModelPart> createModelParts(
+			SqmExpressible<?> sqmExpressible,
+			SqlTypedMapping[] sqlTypedMappings,
+			int selectionIndex,
+			String selectionExpression,
+			Set<String> compatibleTableExpressions,
+			Set<Attribute<?, ?>> attributes,
+			EmbeddableValuedModelPart modelPartContainer) {
+		final Map<String, ModelPart> modelParts = CollectionHelper.linkedMapOfSize( attributes.size() );
+		int index = 0;
+		for ( Attribute<?, ?> attribute : attributes ) {
+			if ( !( attribute instanceof SingularPersistentAttribute<?, ?> ) ) {
+				throw new IllegalArgumentException( "Only embeddables without collections are supported!" );
+			}
+			final DomainType<?> attributeType = ( (SingularPersistentAttribute<?, ?>) attribute ).getType();
+			final ModelPart modelPart = AnonymousTupleTableGroupProducer.createModelPart(
+					this,
+					sqmExpressible,
+					attributeType,
+					sqlTypedMappings,
+					selectionIndex,
+					selectionExpression + "_" + attribute.getName(),
+					attribute.getName(),
+					modelPartContainer.findSubPart( attribute.getName(), null ),
+					compatibleTableExpressions,
+					index++
+			);
+			modelParts.put( modelPart.getPartName(), modelPart );
+		}
+		return modelParts;
 	}
 
 	@Override
 	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
-		return modelParts.get( name );
+		return modelPartMap.get( name );
+	}
+
+	@Override
+	public void forEachSubPart(IndexedConsumer<ModelPart> consumer, EntityMappingType treatTarget) {
+		for ( int i = 0; i < modelParts.length; i++ ) {
+			consumer.accept( i, modelParts[i] );
+		}
 	}
 
 	@Override
 	public void visitSubParts(Consumer<ModelPart> consumer, EntityMappingType treatTargetType) {
-		modelParts.values().forEach( consumer );
-	}
-
-	@Override
-	public MappingType getPartMappingType() {
-		return this;
+		for ( int i = 0; i < modelParts.length; i++ ) {
+			consumer.accept( modelParts[i] );
+		}
 	}
 
 	@Override
@@ -131,11 +191,6 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 	}
 
 	@Override
-	public boolean isCreateEmptyCompositesEnabled() {
-		return false;
-	}
-
-	@Override
 	public EmbeddableMappingType createInverseMappingType(
 			EmbeddedAttributeMapping valueMapping,
 			TableGroupProducer declaringTableGroupProducer,
@@ -146,7 +201,7 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 
 	@Override
 	public int getNumberOfAttributeMappings() {
-		return modelParts.size();
+		return modelParts.length;
 	}
 
 	@Override
@@ -155,39 +210,49 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 	}
 
 	@Override
-	public List<AttributeMapping> getAttributeMappings() {
+	public AttributeMappingsList getAttributeMappings() {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void visitAttributeMappings(Consumer<? super AttributeMapping> action) {
+	public void forEachAttributeMapping(Consumer<? super AttributeMapping> action) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public <X, Y> int decompose(
+			Object domainValue,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
+			SharedSessionContractImplementor session) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Object[] getValues(Object instance) {
-		return existingModelPartContainer.getEmbeddableTypeDescriptor()
-				.getValues( instance );
+		return existingModelPartContainer.getEmbeddableTypeDescriptor().getValues( instance );
 	}
 
 	@Override
 	public Object getValue(Object instance, int position) {
-		return existingModelPartContainer.getEmbeddableTypeDescriptor()
-				.getAttributeMapping( position )
-				.getValue( instance );
+		return existingModelPartContainer.getEmbeddableTypeDescriptor().getValue( instance, position );
 	}
 
 	@Override
 	public void setValues(Object instance, Object[] resolvedValues) {
-		existingModelPartContainer.getEmbeddableTypeDescriptor()
-						.setValues( instance, resolvedValues );
+		existingModelPartContainer.getEmbeddableTypeDescriptor().setValues( instance, resolvedValues );
 	}
 
 	@Override
 	public void setValue(Object instance, int position, Object value) {
-		existingModelPartContainer.getEmbeddableTypeDescriptor()
-				.getAttributeMapping( position )
-				.setValue( instance, value );
+		existingModelPartContainer.getEmbeddableTypeDescriptor().setValue( instance, position, value );
+	}
+
+	@Override
+	public int getSelectableIndex(String selectableName) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -198,10 +263,13 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 	}
 
 	@Override
-	public List<JdbcMapping> getJdbcMappings() {
-		final List<JdbcMapping> results = new ArrayList<>();
-		forEachSelectable( (index, selection) -> results.add( selection.getJdbcMapping() ) );
-		return results;
+	public Fetchable getFetchable(int position) {
+		return (Fetchable) modelParts[position];
+	}
+
+	@Override
+	public JdbcMapping getJdbcMapping(int index) {
+		return getSelectable( index ).getJdbcMapping();
 	}
 
 	@Override
@@ -212,10 +280,20 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 	@Override
 	public int forEachSelectable(int offset, SelectableConsumer consumer) {
 		int span = 0;
-		for ( ModelPart mapping : modelParts.values() ) {
+		for ( ModelPart mapping : modelParts ) {
 			span += mapping.forEachSelectable( offset + span, consumer );
 		}
 		return span;
+	}
+
+	@Override
+	public void forEachInsertable(int offset, SelectableConsumer consumer) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void forEachUpdatable(int offset, SelectableConsumer consumer) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -231,22 +309,12 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 			SqlAstCreationState sqlAstCreationState) {
 		final List<ColumnReference> columnReferences = CollectionHelper.arrayList( getJdbcTypeCount() );
 		final NavigablePath navigablePath = tableGroup.getNavigablePath().append( componentName );
-		final TableReference tableReference = tableGroup.resolveTableReference( navigablePath, getContainingTableExpression() );
-		for ( ModelPart modelPart : modelParts.values() ) {
+		final TableReference tableReference = tableGroup.resolveTableReference( navigablePath, this, getContainingTableExpression() );
+		for ( ModelPart modelPart : modelParts ) {
 			modelPart.forEachSelectable(
 					(columnIndex, selection) -> {
 						final Expression columnReference = sqlAstCreationState.getSqlExpressionResolver()
-								.resolveSqlExpression(
-										SqlExpressionResolver.createColumnReferenceKey(
-												tableReference,
-												selection.getSelectionExpression()
-										),
-										sqlAstProcessingState -> new ColumnReference(
-												tableReference.getIdentificationVariable(),
-												selection,
-												sqlAstCreationState.getCreationContext().getSessionFactory()
-										)
-								);
+								.resolveSqlExpression( tableReference, selection );
 
 						columnReferences.add( columnReference.getColumnReference() );
 					}
@@ -275,26 +343,22 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 	public TableGroupJoin createTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAstJoinType requestedJoinType,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase explicitSqlAliasBase,
+			@Nullable SqlAstJoinType requestedJoinType,
 			boolean fetched,
 			boolean addsPredicate,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
-			FromClauseAccess fromClauseAccess,
-			SqlAstCreationContext creationContext) {
-		final SqlAstJoinType joinType = requestedJoinType == null ? SqlAstJoinType.INNER : requestedJoinType;
+			SqlAstCreationState creationState) {
+		final SqlAstJoinType joinType = requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
 		final TableGroup tableGroup = createRootTableGroupJoin(
 				navigablePath,
 				lhs,
 				explicitSourceAlias,
+				explicitSqlAliasBase,
 				requestedJoinType,
 				fetched,
 				null,
-				aliasBaseGenerator,
-				sqlExpressionResolver,
-				fromClauseAccess,
-				creationContext
+				creationState
 		);
 
 		return new TableGroupJoin( navigablePath, joinType, tableGroup );
@@ -304,20 +368,13 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 	public TableGroup createRootTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAstJoinType sqlAstJoinType,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase explicitSqlAliasBase,
+			@Nullable SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
-			Consumer<Predicate> predicateConsumer,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
-			FromClauseAccess fromClauseAccess,
-			SqlAstCreationContext creationContext) {
-		return new StandardVirtualTableGroup(
-				navigablePath,
-				this,
-				lhs,
-				fetched
-		);
+			@Nullable Consumer<Predicate> predicateConsumer,
+			SqlAstCreationState creationState) {
+		return new StandardVirtualTableGroup( navigablePath, this, lhs, fetched );
 	}
 
 	@Override
@@ -328,6 +385,11 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 	@Override
 	public String getFetchableName() {
 		return getPartName();
+	}
+
+	@Override
+	public int getFetchableKey() {
+		return fetchableIndex;
 	}
 
 	@Override
@@ -348,7 +410,7 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 
 	@Override
 	public int getNumberOfFetchables() {
-		return modelParts.size();
+		return modelParts.length;
 	}
 
 	@Override
@@ -359,6 +421,11 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 	@Override
 	public EntityMappingType findContainingEntityMapping() {
 		return null;
+	}
+
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return false;
 	}
 
 	@Override
@@ -380,7 +447,7 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		for ( ModelPart mapping : modelParts.values() ) {
+		for ( ModelPart mapping : modelParts ) {
 			mapping.applySqlSelections( navigablePath, tableGroup, creationState );
 		}
 	}
@@ -391,72 +458,111 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 			TableGroup tableGroup,
 			DomainResultCreationState creationState,
 			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
-		for ( ModelPart mapping : modelParts.values() ) {
+		for ( ModelPart mapping : modelParts ) {
 			mapping.applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
 		}
 	}
 
 	@Override
-	public void breakDownJdbcValues(
+	public <X, Y> int breakDownJdbcValues(
 			Object domainValue,
-			JdbcValueConsumer valueConsumer,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
 			SharedSessionContractImplementor session) {
-		final Object[] values = (Object[]) domainValue;
-		assert values.length == modelParts.size();
-
-		int i = 0;
-		for ( ModelPart mapping : modelParts.values() ) {
-			final Object attributeValue = values[ i ];
-			mapping.breakDownJdbcValues( attributeValue, valueConsumer, session );
-			i++;
+		int span = 0;
+		if ( domainValue == null ) {
+			for ( ModelPart mapping : modelParts ) {
+				span += mapping.breakDownJdbcValues( null, offset + span, x, y, valueConsumer, session );
+			}
 		}
+		else {
+			final Object[] values = (Object[]) domainValue;
+			assert values.length == modelParts.length;
+			for ( int i = 0; i < modelParts.length; i++ ) {
+				final Object attributeValue = values[i];
+				span += modelParts[i].breakDownJdbcValues( attributeValue, offset + span, x, y, valueConsumer, session );
+			}
+		}
+		return span;
 	}
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+		if ( value == null ) {
+			return null;
+		}
 		final Object[] values = (Object[]) value;
-		final Object[] result = new Object[ modelParts.size() ];
-		int i = 0;
-		for ( ModelPart mapping : modelParts.values() ) {
+		final Object[] result = new Object[ modelParts.length ];
+		for ( int i = 0; i < modelParts.length; i++ ) {
 			Object o = values[i];
-			result[i] = mapping.disassemble( o, session );
-			i++;
+			result[i] = modelParts[i].disassemble( o, session );
 		}
 
 		return result;
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		if ( value == null ) {
+			for ( ModelPart mapping : modelParts ) {
+				mapping.addToCacheKey( cacheKey, null, session );
+			}
+		}
+		else {
+			final Object[] values = (Object[]) value;
+			int i = 0;
+			for ( ModelPart mapping : modelParts ) {
+				mapping.addToCacheKey( cacheKey, values[i], session );
+				i++;
+			}
+		}
+	}
+
+	@Override
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		final Object[] values = (Object[]) value;
 		int span = 0;
-		int i = 0;
-		for ( ModelPart mapping : modelParts.values() ) {
-			span += mapping.forEachDisassembledJdbcValue( values[i], clause, span + offset, valuesConsumer, session );
-			i++;
+		if ( value == null ) {
+			for ( ModelPart mapping : modelParts ) {
+				span += mapping.forEachDisassembledJdbcValue( null, span + offset, x, y, valuesConsumer, session );
+			}
+		}
+		else {
+			final Object[] values = (Object[]) value;
+			for ( int i = 0; i < modelParts.length; i++ ) {
+				span += modelParts[i].forEachDisassembledJdbcValue( values[i], span + offset, x, y, valuesConsumer, session );
+			}
 		}
 		return span;
 	}
 
 	@Override
-	public int forEachJdbcValue(
+	public <X, Y> int forEachJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
-			JdbcValuesConsumer consumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> consumer,
 			SharedSessionContractImplementor session) {
-		final Object[] values = (Object[]) value;
 		int span = 0;
-		int i = 0;
-		for ( ModelPart attributeMapping : modelParts.values() ) {
-			final Object o = values[i];
-			span += attributeMapping.forEachJdbcValue( o, clause, span + offset, consumer, session );
-			i++;
+		if ( value == null ) {
+			for ( ModelPart mapping : modelParts ) {
+				span += mapping.forEachJdbcValue( null, span + offset, x, y, consumer, session );
+			}
+		}
+		else {
+			final Object[] values = (Object[]) value;
+			for ( int i = 0; i < modelParts.length; i++ ) {
+				final Object o = values[i];
+				span += modelParts[i].forEachJdbcValue( o, span + offset, x, y, consumer, session );
+			}
 		}
 		return span;
 	}
@@ -464,7 +570,7 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
 		int span = 0;
-		for ( ModelPart attributeMapping : modelParts.values() ) {
+		for ( ModelPart attributeMapping : modelParts ) {
 			span += attributeMapping.forEachJdbcType( span + offset, action );
 		}
 		return span;

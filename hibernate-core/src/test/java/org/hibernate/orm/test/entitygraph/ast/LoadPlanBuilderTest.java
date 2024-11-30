@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.entitygraph.ast;
 
@@ -54,17 +52,17 @@ public class LoadPlanBuilderTest {
 				.getMappingMetamodel()
 				.getEntityDescriptor( Message.class );
 
-		final SingleIdEntityLoaderStandardImpl<?> loader = new SingleIdEntityLoaderStandardImpl<>( entityDescriptor, sessionFactory );
+		final SingleIdEntityLoaderStandardImpl<?> loader = new SingleIdEntityLoaderStandardImpl<>( entityDescriptor, new LoadQueryInfluencers( sessionFactory ) );
 
 		final SingleIdLoadPlan<?> loadPlan = loader.resolveLoadPlan(
 				LockOptions.READ,
-				LoadQueryInfluencers.NONE,
+				new LoadQueryInfluencers( sessionFactory ),
 				sessionFactory
 		);
 
 		final List<DomainResult<?>> domainResults = loadPlan.getJdbcSelect()
 				.getJdbcValuesMappingProducer()
-				.resolve( null, sessionFactory )
+				.resolve( null, new LoadQueryInfluencers( sessionFactory ), sessionFactory )
 				.getDomainResults();
 
 		assertThat( domainResults ).hasSize( 1 );
@@ -73,12 +71,12 @@ public class LoadPlanBuilderTest {
 		final EntityResult entityResult = (EntityResult) domainResult;
 		assertThat( entityResult.getFetches() ).hasSize( 2 );
 
-		final Fetch txtFetch = entityResult.getFetches().get( 0 );
+		final Fetch txtFetch = entityResult.getFetches().get( entityDescriptor.findAttributeMapping( "msgTxt" ) );
 		assertThat( txtFetch ).isNotNull();
 		assertThat( txtFetch.getFetchedMapping().getFetchableName() ).isEqualTo( "msgTxt" );
 		assertThat( txtFetch.getTiming() ).isEqualTo( FetchTiming.IMMEDIATE );
 
-		final Fetch posterFetch = entityResult.getFetches().get( 1 );
+		final Fetch posterFetch = entityResult.getFetches().get( entityDescriptor.findAttributeMapping( "poster" ) );
 		assertThat( posterFetch ).isNotNull();
 		assertThat( posterFetch.getFetchedMapping().getFetchableName() ).isEqualTo( "poster" );
 		assertThat( posterFetch.getTiming() ).isEqualTo( FetchTiming.DELAYED );
@@ -89,9 +87,9 @@ public class LoadPlanBuilderTest {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
 		final EntityPersister entityDescriptor = (EntityPersister) sessionFactory.getRuntimeMetamodels().getEntityMappingType( Message.class );
 
-		final SingleIdEntityLoaderStandardImpl<?> loader = new SingleIdEntityLoaderStandardImpl<>( entityDescriptor, sessionFactory );
+		final SingleIdEntityLoaderStandardImpl<?> loader = new SingleIdEntityLoaderStandardImpl<>( entityDescriptor, new LoadQueryInfluencers( sessionFactory ) );
 
-		final LoadQueryInfluencers influencers = new LoadQueryInfluencers() {
+		final LoadQueryInfluencers influencers = new LoadQueryInfluencers( sessionFactory ) {
 			@Override
 			public CascadingFetchProfile getEnabledCascadingFetchProfile() {
 				return CascadingFetchProfile.MERGE;
@@ -105,7 +103,7 @@ public class LoadPlanBuilderTest {
 		);
 		final List<DomainResult<?>> domainResults = loadPlan.getJdbcSelect()
 				.getJdbcValuesMappingProducer()
-				.resolve( null, sessionFactory )
+				.resolve( null, new LoadQueryInfluencers( sessionFactory ), sessionFactory )
 				.getDomainResults();
 
 		assertThat( domainResults ).hasSize( 1 );
@@ -114,12 +112,12 @@ public class LoadPlanBuilderTest {
 		final EntityResult entityResult = (EntityResult) domainResult;
 		assertThat( entityResult.getFetches() ).hasSize( 2 );
 
-		final Fetch txtFetch = entityResult.getFetches().get( 0 );
+		final Fetch txtFetch = entityResult.getFetches().get( entityDescriptor.findAttributeMapping( "msgTxt" ) );
 		assertThat( txtFetch ).isNotNull();
 		assertThat( txtFetch.getFetchedMapping().getFetchableName() ).isEqualTo( "msgTxt" );
 		assertThat( txtFetch.getTiming() ).isEqualTo( FetchTiming.IMMEDIATE );
 
-		final Fetch posterFetch = entityResult.getFetches().get( 1 );
+		final Fetch posterFetch = entityResult.getFetches().get( entityDescriptor.findAttributeMapping( "poster" ) );
 		assertThat( posterFetch ).isNotNull();
 		assertThat( posterFetch.getFetchedMapping().getFetchableName() ).isEqualTo( "poster" );
 		assertThat( posterFetch.getTiming() ).isEqualTo( FetchTiming.IMMEDIATE );
@@ -135,7 +133,7 @@ public class LoadPlanBuilderTest {
 
 		final CollectionLoaderSingleKey loader = new CollectionLoaderSingleKey(
 				messages,
-				LoadQueryInfluencers.NONE,
+				new LoadQueryInfluencers( sessionFactory ),
 				sessionFactory
 		);
 

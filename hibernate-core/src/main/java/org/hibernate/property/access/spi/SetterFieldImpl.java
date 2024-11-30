@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.property.access.spi;
 
@@ -11,21 +9,26 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Locale;
 
+import org.hibernate.Internal;
 import org.hibernate.PropertyAccessException;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.access.internal.AbstractFieldSerialForm;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Field-based implementation of Setter
  *
  * @author Steve Ebersole
  */
+@Internal
 public class SetterFieldImpl implements Setter {
 	private final Class<?> containerClass;
 	private final String propertyName;
 	private final Field field;
-	private final Method setterMethod;
+	private final @Nullable Method setterMethod;
 
 	public SetterFieldImpl(Class<?> containerClass, String propertyName, Field field) {
 		this.containerClass = containerClass;
@@ -42,12 +45,12 @@ public class SetterFieldImpl implements Setter {
 		return propertyName;
 	}
 
-	protected Field getField() {
+	public Field getField() {
 		return field;
 	}
 
 	@Override
-	public void set(Object target, Object value) {
+	public void set(Object target, @Nullable Object value) {
 		try {
 			field.set( target, value );
 		}
@@ -68,11 +71,15 @@ public class SetterFieldImpl implements Setter {
 			}
 			else {
 				final String valueType;
-				if ( value instanceof HibernateProxy ) {
-					valueType = ( (HibernateProxy) value ).getHibernateLazyInitializer().getEntityName();
+				final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( value );
+				if ( lazyInitializer != null ) {
+					valueType = lazyInitializer.getEntityName();
+				}
+				else if ( value != null ) {
+					valueType = value.getClass().getTypeName();
 				}
 				else {
-					valueType = value.getClass().getTypeName();
+					valueType = "<unknown>";
 				}
 				throw new PropertyAccessException(
 						e,
@@ -90,12 +97,12 @@ public class SetterFieldImpl implements Setter {
 	}
 
 	@Override
-	public String getMethodName() {
+	public @Nullable String getMethodName() {
 		return setterMethod != null ? setterMethod.getName() : null;
 	}
 
 	@Override
-	public Method getMethod() {
+	public @Nullable Method getMethod() {
 		return setterMethod;
 	}
 

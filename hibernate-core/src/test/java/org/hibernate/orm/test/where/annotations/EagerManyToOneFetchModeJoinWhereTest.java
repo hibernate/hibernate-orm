@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.where.annotations;
 
@@ -23,10 +21,10 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 
 import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -47,7 +45,7 @@ public class EagerManyToOneFetchModeJoinWhereTest extends BaseNonConfigCoreFunct
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12104" )
+	@JiraKey( value = "HHH-12104" )
 	@FailureExpected( jiraKey = "HHH-12104")
 	public void testAssociatedWhereClause() {
 		Product product = new Product();
@@ -131,7 +129,7 @@ public class EagerManyToOneFetchModeJoinWhereTest extends BaseNonConfigCoreFunct
 
 	@Entity(name = "Category")
 	@Table(name = "CATEGORY")
-	@Where(clause = "inactive = 0")
+	@SQLRestriction("inactive = 0")
 	public static class Category {
 		@Id
 		@GeneratedValue

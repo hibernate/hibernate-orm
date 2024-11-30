@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast;
 
@@ -13,14 +11,13 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.FunctionTableReference;
-import org.hibernate.sql.ast.tree.from.LazyTableGroup;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.from.ValuesTableReference;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.insert.InsertStatement;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
@@ -31,20 +28,20 @@ import org.hibernate.sql.ast.tree.update.UpdateStatement;
 /**
  * Logs a debug representation of the SQL AST.
  *
- * NOTE : at the moment, we only render the from-elements
+ * @implNote At the moment, we only render the from-elements.
  *
  * @author Steve Ebersole
  */
 public class SqlTreePrinter {
 	public static void logSqlAst(Statement sqlAstStatement) {
-		if ( ! SqlAstTreeLogger.DEBUG_ENABLED ) {
+		if ( ! SqlAstTreeLogger.INSTANCE.isDebugEnabled() ) {
 			return;
 		}
 
 		final SqlTreePrinter printer = new SqlTreePrinter();
 		printer.visitStatement( sqlAstStatement );
 
-		SqlAstTreeLogger.INSTANCE.debugf( "SQL AST Tree:%n" + printer.buffer.toString() );
+		SqlAstTreeLogger.INSTANCE.debugf( "SQL AST Tree:%n%s", printer.buffer );
 	}
 
 	private final StringBuffer buffer = new StringBuffer();
@@ -79,7 +76,7 @@ public class SqlTreePrinter {
 					)
 			);
 		}
-		else if ( sqlAstStatement instanceof InsertStatement) {
+		else if ( sqlAstStatement instanceof InsertSelectStatement ) {
 			final InsertStatement insertStatement = (InsertStatement) sqlAstStatement;
 			logNode(
 					"InsertStatement",
@@ -167,8 +164,8 @@ public class SqlTreePrinter {
 				logNode(
 						"PrimaryTableReference as " + tableGroup.getPrimaryTableReference().getIdentificationVariable(),
 						() -> {
-							QueryPart queryPart = ( (QueryPartTableReference) tableGroup.getPrimaryTableReference() ).getQueryPart();
-							visitQueryPart( queryPart );
+							Statement statement = ( (QueryPartTableReference) tableGroup.getPrimaryTableReference() ).getStatement();
+							visitStatement( statement );
 						}
 				);
 			}

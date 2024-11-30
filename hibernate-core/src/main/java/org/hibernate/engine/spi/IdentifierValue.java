@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
@@ -11,6 +9,8 @@ import java.io.Serializable;
 import org.hibernate.internal.CoreLogging;
 
 import org.jboss.logging.Logger;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * A strategy for determining if an identifier value is an identifier of
@@ -23,7 +23,7 @@ import org.jboss.logging.Logger;
 public class IdentifierValue implements UnsavedValueStrategy {
 	private static final Logger LOG = CoreLogging.logger( IdentifierValue.class );
 
-	private final Object value;
+	private final @Nullable Object value;
 
 	/**
 	 * Always assume the transient instance is newly instantiated
@@ -73,13 +73,13 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	 */
 	public static final IdentifierValue NULL = new IdentifierValue() {
 		@Override
-		public Boolean isUnsaved(Object id) {
+		public Boolean isUnsaved(@Nullable Object id) {
 			LOG.trace( "ID unsaved-value strategy NULL" );
 			return id == null;
 		}
 
 		@Override
-		public Serializable getDefaultValue(Object currentValue) {
+		public @Nullable Serializable getDefaultValue(Object currentValue) {
 			return null;
 		}
 
@@ -94,13 +94,13 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	 */
 	public static final IdentifierValue UNDEFINED = new IdentifierValue() {
 		@Override
-		public Boolean isUnsaved(Object id) {
+		public @Nullable Boolean isUnsaved(Object id) {
 			LOG.trace( "ID unsaved-value strategy UNDEFINED" );
 			return null;
 		}
 
 		@Override
-		public Serializable getDefaultValue(Object currentValue) {
+		public @Nullable Serializable getDefaultValue(Object currentValue) {
 			return null;
 		}
 
@@ -126,13 +126,13 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	 * Does the given identifier belong to a new instance?
 	 */
 	@Override
-	public Boolean isUnsaved(Object id) {
+	public @Nullable Boolean isUnsaved(@Nullable Object id) {
 		LOG.tracev( "ID unsaved-value: {0}", value );
 		return id == null || id.equals( value );
 	}
 
 	@Override
-	public Object getDefaultValue(Object currentValue) {
+	public @Nullable Object getDefaultValue(@Nullable Object currentValue) {
 		return value;
 	}
 

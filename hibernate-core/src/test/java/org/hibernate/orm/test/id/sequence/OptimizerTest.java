@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id.sequence;
 
@@ -13,7 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -32,13 +30,13 @@ import static org.hamcrest.core.IsNull.notNullValue;
 public class OptimizerTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10166")
+	@JiraKey(value = "HHH-10166")
 	public void testGenerationPastBound(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					for ( int i = 0; i < 100; i++ ) {
 						TheEntity entity = new TheEntity( Integer.toString( i ) );
-						session.save( entity );
+						session.persist( entity );
 					}
 				}
 		);

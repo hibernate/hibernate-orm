@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers;
 
@@ -76,6 +74,8 @@ public abstract class BaseEnversFunctionalTestCase extends BaseNonConfigCoreFunc
 		super.addSettings( settings );
 
 		settings.put( EnversSettings.USE_REVISION_ENTITY_WITH_NATIVE_ID, "false" );
+		// Envers tests expect sequences to not skip values...
+		settings.put( EnversSettings.REVISION_SEQUENCE_NOCACHE, "true" );
 
 		if ( getAuditStrategy() != null ) {
 			settings.put( EnversSettings.AUDIT_STRATEGY, getAuditStrategy() );

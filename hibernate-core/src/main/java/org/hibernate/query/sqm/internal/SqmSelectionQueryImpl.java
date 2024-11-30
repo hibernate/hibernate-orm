@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.internal;
 
@@ -14,54 +12,58 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
-import jakarta.persistence.Tuple;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
-import org.hibernate.HibernateException;
+import org.hibernate.query.QueryFlushMode;
 import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.internal.util.collections.IdentitySet;
-import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
-import org.hibernate.jpa.internal.util.LockModeTypeHelper;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.BindableType;
-import org.hibernate.query.QueryLogging;
+import org.hibernate.query.KeyedPage;
+import org.hibernate.query.Order;
+import org.hibernate.query.Page;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.criteria.internal.NamedCriteriaQueryMementoImpl;
 import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
-import org.hibernate.query.hql.internal.QuerySplitter;
 import org.hibernate.query.internal.DelegatingDomainQueryExecutionContext;
 import org.hibernate.query.internal.ParameterMetadataImpl;
-import org.hibernate.query.internal.QueryParameterBindingsImpl;
-import org.hibernate.query.spi.AbstractSelectionQuery;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
+import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.SqmSelectionQuery;
 import org.hibernate.query.sqm.internal.SqmInterpretationsKey.InterpretationsKeySource;
+import org.hibernate.query.sqm.spi.SqmSelectionQueryImplementor;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.results.internal.TupleMetadata;
+import org.hibernate.sql.results.spi.ResultsConsumer;
+import org.hibernate.sql.results.spi.SingleResultConsumer;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;
@@ -73,101 +75,73 @@ import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_CACHE_RETRIEVE_MODE;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_CACHE_STORE_MODE;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_RETRIEVE_MODE;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_STORE_MODE;
+import static org.hibernate.query.KeyedPage.KeyInterpretation.KEY_OF_FIRST_ON_NEXT_PAGE;
 import static org.hibernate.query.spi.SqlOmittingQueryOptions.omitSqlQueryOptions;
+import static org.hibernate.query.sqm.internal.KeyBasedPagination.paginate;
+import static org.hibernate.query.sqm.internal.SqmInterpretationsKey.createInterpretationsKey;
+import static org.hibernate.query.sqm.internal.SqmUtil.isSelectionAssignableToResultType;
+import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implements SqmSelectionQuery<R>, InterpretationsKeySource {
+public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
+		implements SqmSelectionQueryImplementor<R>, InterpretationsKeySource {
 	private final String hql;
-	private final SqmSelectStatement<R> sqm;
+	private SqmSelectStatement<R> sqm;
 
 	private final ParameterMetadataImplementor parameterMetadata;
 	private final DomainParameterXref domainParameterXref;
-	private final QueryParameterBindingsImpl parameterBindings;
+	private final QueryParameterBindings parameterBindings;
 
-	private final Class<R> resultType;
+	private final Class<R> expectedResultType;
+	private final Class<?> resultType;
 	private final TupleMetadata tupleMetadata;
 
 	public SqmSelectionQueryImpl(
 			String hql,
-			HqlInterpretation hqlInterpretation,
+			HqlInterpretation<R> hqlInterpretation,
 			Class<R> expectedResultType,
 			SharedSessionContractImplementor session) {
 		super( session );
 		this.hql = hql;
 
-		//noinspection unchecked
+		SqmUtil.verifyIsSelectStatement( hqlInterpretation.getSqmStatement(), hql );
 		this.sqm = (SqmSelectStatement<R>) hqlInterpretation.getSqmStatement();
 
 		this.parameterMetadata = hqlInterpretation.getParameterMetadata();
 		this.domainParameterXref = hqlInterpretation.getDomainParameterXref();
-		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
+		this.parameterBindings = parameterMetadata.createBindings( session.getFactory() );
 
-//		visitQueryReturnType( sqm.getQueryPart(), expectedResultType, getSessionFactory() );
+
+		this.expectedResultType = expectedResultType;
 		this.resultType = determineResultType( sqm, expectedResultType );
-
-		setComment( hql );
 		this.tupleMetadata = buildTupleMetadata( sqm, expectedResultType );
-	}
 
-	private static <T> Class<T> determineResultType(SqmSelectStatement<?> sqm, Class<?> expectedResultType) {
-		if ( expectedResultType != null && expectedResultType.equals( Tuple.class ) ) {
-			//noinspection unchecked
-			return (Class<T>) Tuple.class;
-		}
-
-		if ( expectedResultType == null || ! expectedResultType.isArray() ) {
-			final List<SqmSelection<?>> selections = sqm.getQuerySpec().getSelectClause().getSelections();
-			if ( selections.size() == 1 ) {
-				final SqmSelection<?> sqmSelection = selections.get( 0 );
-				//noinspection unchecked
-				return (Class<T>) sqmSelection.getNodeJavaType().getJavaTypeClass();
-			}
-		}
-
-		//noinspection unchecked
-		return (Class<T>) Object[].class;
+		hqlInterpretation.validateResultType( resultType );
+		setComment( hql );
 	}
 
 	public SqmSelectionQueryImpl(
-			NamedHqlQueryMementoImpl memento,
+			NamedHqlQueryMementoImpl<?> memento,
 			Class<R> resultType,
 			SharedSessionContractImplementor session) {
-		super( session );
-		this.hql = memento.getHqlString();
-		this.resultType = resultType;
-
-		final SessionFactoryImplementor factory = session.getFactory();
-		final QueryEngine queryEngine = factory.getQueryEngine();
-		final QueryInterpretationCache interpretationCache = queryEngine.getInterpretationCache();
-		final HqlInterpretation hqlInterpretation = interpretationCache.resolveHqlInterpretation(
-				hql,
+		this(
+				memento.getHqlString(),
+				interpretation( memento, resultType, session ),
 				resultType,
-				(s) -> queryEngine.getHqlTranslator().translate( hql, resultType )
+				session
 		);
 
-		SqmUtil.verifyIsSelectStatement( hqlInterpretation.getSqmStatement(), hql );
-		//noinspection unchecked
-		this.sqm = (SqmSelectStatement<R>) hqlInterpretation.getSqmStatement();
-
-		this.parameterMetadata = hqlInterpretation.getParameterMetadata();
-		this.domainParameterXref = hqlInterpretation.getDomainParameterXref();
-
-		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
-
-		setComment( hql );
 		applyOptions( memento );
-
-		this.tupleMetadata = buildTupleMetadata( sqm, resultType );
 	}
 
 	public SqmSelectionQueryImpl(
-			NamedCriteriaQueryMementoImpl memento,
-			Class<R> resultType,
+			NamedCriteriaQueryMementoImpl<?> memento,
+			Class<R> expectedResultType,
 			SharedSessionContractImplementor session) {
 		//noinspection unchecked
-		this( (SqmSelectStatement<R>) memento.getSqmStatement(), resultType, session);
+		this( (SqmSelectStatement<R>) memento.getSqmStatement(), expectedResultType, session );
 		applyOptions( memento );
 	}
 
@@ -182,46 +156,178 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 		}
 		else {
 			this.sqm = criteria;
+			// Cache immutable query plans by default
+			setQueryPlanCacheable( true );
 		}
 
 		this.domainParameterXref = DomainParameterXref.from( sqm );
-		if ( ! domainParameterXref.hasParameters() ) {
-			this.parameterMetadata = ParameterMetadataImpl.EMPTY;
-		}
-		else {
-			this.parameterMetadata = new ParameterMetadataImpl( domainParameterXref.getQueryParameters() );
-		}
+		this.parameterMetadata = domainParameterXref.hasParameters()
+				? new ParameterMetadataImpl( domainParameterXref.getQueryParameters() )
+				: ParameterMetadataImpl.EMPTY;
 
-		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
+		this.parameterBindings = parameterMetadata.createBindings( session.getFactory() );
 
 		// Parameters might be created through HibernateCriteriaBuilder.value which we need to bind here
-		for ( SqmParameter<?> sqmParameter : this.domainParameterXref.getParameterResolutions().getSqmParameters() ) {
+		for ( SqmParameter<?> sqmParameter : domainParameterXref.getParameterResolutions().getSqmParameters() ) {
 			if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper<?> ) {
-				final JpaCriteriaParameter<Object> jpaCriteriaParameter = ( (SqmJpaCriteriaParameterWrapper<Object>) sqmParameter ).getJpaCriteriaParameter();
-				final Object value = jpaCriteriaParameter.getValue();
-				// We don't set a null value, unless the type is also null which is the case when using HibernateCriteriaBuilder.value
-				if ( value != null || jpaCriteriaParameter.getNodeType() == null ) {
-					// Use the anticipated type for binding the value if possible
-					getQueryParameterBindings()
-							.getBinding( jpaCriteriaParameter )
-							.setBindValue( value, jpaCriteriaParameter.getAnticipatedType() );
-				}
+				bindCriteriaParameter( (SqmJpaCriteriaParameterWrapper<?>) sqmParameter );
 			}
 		}
 
+		this.expectedResultType = expectedResultType;
 		this.resultType = determineResultType( sqm, expectedResultType );
-		visitQueryReturnType( sqm.getQueryPart(), expectedResultType, getSessionFactory() );
+
+		final SqmQueryPart<R> queryPart = sqm.getQueryPart();
+		// For criteria queries, we have to validate the fetch structure here
+		queryPart.validateQueryStructureAndFetchOwners();
+		validateCriteriaQuery( queryPart );
+		sqm.validateResultType( resultType );
 
 		setComment( hql );
 
 		this.tupleMetadata = buildTupleMetadata( sqm, expectedResultType );
 	}
 
-	@SuppressWarnings("rawtypes")
-	public SqmSelectStatement getSqmStatement() {
+	<E> SqmSelectionQueryImpl(AbstractSqmSelectionQuery<?> original, KeyedPage<E> keyedPage) {
+		super( original );
+
+		final Page page = keyedPage.getPage();
+		final List<Comparable<?>> key = keyedPage.getKey();
+		final List<Order<? super E>> keyDefinition = keyedPage.getKeyDefinition();
+		final List<Order<? super E>> appliedKeyDefinition =
+				keyedPage.getKeyInterpretation() == KEY_OF_FIRST_ON_NEXT_PAGE
+						? Order.reverse( keyDefinition ) : keyDefinition;
+
+		//noinspection unchecked
+		this.sqm = (SqmSelectStatement<R>) paginate(
+				appliedKeyDefinition,
+				key,
+				// Change the query source to CRITERIA, because we will change the query and introduce parameters
+				(SqmSelectStatement<KeyedResult<E>>) original.getSqmStatement()
+						.copy( noParamCopyContext( SqmQuerySource.CRITERIA ) ),
+				original.getSqmStatement().nodeBuilder()
+		);
+		this.hql = CRITERIA_HQL_STRING;
+
+		this.domainParameterXref = DomainParameterXref.from( sqm );
+		this.parameterMetadata = domainParameterXref.hasParameters()
+				? new ParameterMetadataImpl( domainParameterXref.getQueryParameters() )
+				: ParameterMetadataImpl.EMPTY;
+
+		// Just use the original parameter bindings since this object is never going to be mutated
+		this.parameterBindings = parameterMetadata.createBindings( original.getSession().getSessionFactory() );
+		// Don't remove this cast. This is here to work around this bug: https://bugs.openjdk.org/browse/JDK-8340443
+		(( DomainQueryExecutionContext) original ).getQueryParameterBindings().visitBindings(
+				(parameter, binding) -> {
+					//noinspection unchecked
+					final QueryParameterBinding<Object> parameterBinding =
+							(QueryParameterBinding<Object>) this.parameterBindings.getBinding( parameter );
+					//noinspection unchecked
+					final BindableType<Object> bindType = (BindableType<Object>) binding.getBindType();
+					final TemporalType explicitTemporalPrecision = binding.getExplicitTemporalPrecision();
+					if ( explicitTemporalPrecision != null ) {
+						if ( binding.isMultiValued() ) {
+							parameterBinding.setBindValues(
+									binding.getBindValues(),
+									explicitTemporalPrecision,
+									getSessionFactory().getTypeConfiguration()
+							);
+						}
+						else {
+							parameterBinding.setBindValue( binding.getBindValue(), explicitTemporalPrecision );
+						}
+					}
+					else {
+						if ( binding.isMultiValued() ) {
+							parameterBinding.setBindValues( binding.getBindValues(), bindType );
+						}
+						else {
+							parameterBinding.setBindValue( binding.getBindValue(), bindType );
+						}
+					}
+					//noinspection unchecked
+					parameterBinding.setType( (MappingModelExpressible<Object>) binding.getType() );
+				}
+		);
+
+		// Parameters might be created through HibernateCriteriaBuilder.value which we need to bind here
+		for ( SqmParameter<?> sqmParameter : domainParameterXref.getParameterResolutions().getSqmParameters() ) {
+			if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper<?> ) {
+				bindCriteriaParameter( (SqmJpaCriteriaParameterWrapper<?>) sqmParameter );
+			}
+		}
+
+		//noinspection unchecked
+		this.expectedResultType = (Class<R>) KeyedResult.class;
+		this.resultType = determineResultType( sqm, expectedResultType );
+		this.tupleMetadata = null;
+
+		setMaxResults( page.getMaxResults() + 1 );
+		if ( key == null ) {
+			setFirstResult( page.getFirstResult() );
+		}
+	}
+
+
+	private static Class<?> determineResultType(SqmSelectStatement<?> sqm, Class<?> expectedResultType) {
+		final List<SqmSelection<?>> selections = sqm.getQuerySpec().getSelectClause().getSelections();
+		if ( selections.size() == 1 ) {
+			if ( Object[].class.equals( expectedResultType ) ) {
+				// for JPA compatibility
+				return Object[].class;
+			}
+			else {
+				final SqmSelection<?> selection = selections.get( 0 );
+				if ( isSelectionAssignableToResultType( selection, expectedResultType ) ) {
+					final JavaType<?> nodeJavaType = selection.getNodeJavaType();
+					if ( nodeJavaType != null ) {
+						return nodeJavaType.getJavaTypeClass();
+					}
+				}
+				// let's assume there's some way to instantiate it
+				return expectedResultType;
+			}
+		}
+		else if ( expectedResultType != null ) {
+			// assume we can repackage the tuple as
+			// the given type (worry about how later)
+			return expectedResultType;
+		}
+		else {
+			// for JPA compatibility
+			return Object[].class;
+		}
+	}
+
+	private <T> void bindCriteriaParameter(SqmJpaCriteriaParameterWrapper<T> sqmParameter) {
+		final JpaCriteriaParameter<T> jpaCriteriaParameter = sqmParameter.getJpaCriteriaParameter();
+		final T value = jpaCriteriaParameter.getValue();
+		// We don't set a null value, unless the type is also null which
+		// is the case when using HibernateCriteriaBuilder.value
+		if ( value != null || jpaCriteriaParameter.getNodeType() == null ) {
+			// Use the anticipated type for binding the value if possible
+			getQueryParameterBindings()
+					.getBinding( jpaCriteriaParameter )
+					.setBindValue( value, jpaCriteriaParameter.getAnticipatedType() );
+		}
+	}
+
+	@Override
+	public TupleMetadata getTupleMetadata() {
+		return tupleMetadata;
+	}
+
+	@Override
+	public SqmSelectStatement<R> getSqmStatement() {
 		return sqm;
 	}
 
+	@Override
+	protected void setSqmStatement(SqmSelectStatement<R> sqm) {
+		this.sqm = sqm;
+	}
+
+	@Override
 	public DomainParameterXref getDomainParameterXref() {
 		return domainParameterXref;
 	}
@@ -241,6 +347,15 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 		return hql;
 	}
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// convenience methods
+
+//	@Override
+//	public SelectionQuery<R> setPage(int pageSize, int pageNumber) {
+//		setFirstResult( pageNumber * pageSize );
+//		setMaxResults( pageSize );
+//		return this;
+//	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// execution
@@ -251,36 +366,64 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 		resetCallback();
 	}
 
+	@Override
+	public long getResultCount() {
+		final DelegatingDomainQueryExecutionContext context = new DelegatingDomainQueryExecutionContext(this) {
+			@Override
+			public QueryOptions getQueryOptions() {
+				return QueryOptions.NONE;
+			}
+		};
+		return buildConcreteQueryPlan( getSqmStatement().createCountQuery(), Long.class, null, getQueryOptions() )
+				.executeQuery( context, SingleResultConsumer.instance() );
+	}
+
 	protected List<R> doList() {
-		getSession().prepareForQueryExecution( requiresTxn( getQueryOptions().getLockOptions().findGreatestLockMode() ) );
+		final SqmSelectStatement<?> statement = getSqmStatement();
+		final boolean containsCollectionFetches =
+				//TODO: why is this different from QuerySqmImpl.doList()?
+				statement.containsCollectionFetches();
+		final boolean hasLimit = hasLimit( statement, getQueryOptions() );
+		final boolean needsDistinct = needsDistinct( containsCollectionFetches, hasLimit, statement );
+		final List<R> list = resolveQueryPlan()
+				.performList( executionContext( hasLimit, containsCollectionFetches ) );
+		return needsDistinct ? handleDistinct( hasLimit, statement, list ) : list;
+	}
 
-		final SqmSelectStatement<?> sqmStatement = (SqmSelectStatement<?>) getSqmStatement();
-		final boolean containsCollectionFetches = sqmStatement.containsCollectionFetches();
-		final boolean hasLimit = hasLimit( sqmStatement, getQueryOptions() );
-		final boolean needsDistinct = containsCollectionFetches
-				&& ( sqmStatement.usesDistinct() || hasAppliedGraph( getQueryOptions() ) || hasLimit );
+	private List<R> handleDistinct(boolean hasLimit, SqmSelectStatement<?> statement, List<R> list) {
+		int includedCount = -1;
+		// NOTE: 'firstRow' is zero-based
+		final int first = first( hasLimit, statement );
+		final int max = max( hasLimit, statement, list );
+		final List<R> distinctList = new ArrayList<>( list.size() );
+		final IdentitySet<Object> distinction = new IdentitySet<>( list.size() );
+		for ( final R result : list) {
+			if ( distinction.add( result ) ) {
+				includedCount++;
+				if ( includedCount >= first ) {
+					distinctList.add( result );
+					// NOTE: 'max-1' because 'first' is zero-based while 'max' is not
+					if ( max >= 0 && includedCount - first >= max - 1 ) {
+						break;
+					}
+				}
+			}
+		}
+		return distinctList;
+	}
 
-		final DomainQueryExecutionContext executionContextToUse;
+	// TODO: very similar to QuerySqmImpl.executionContextForDoList()
+	private DomainQueryExecutionContext executionContext(boolean hasLimit, boolean containsCollectionFetches) {
 		if ( hasLimit && containsCollectionFetches ) {
-			boolean fail = getSessionFactory().getSessionFactoryOptions().isFailOnPaginationOverCollectionFetchEnabled();
-			if ( fail ) {
-				throw new HibernateException(
-						"firstResult/maxResults specified with collection fetch. " +
-								"In memory pagination was about to be applied. " +
-								"Failing because 'Fail on pagination over collection fetch' is enabled."
-				);
-			}
-			else {
-				QueryLogging.QUERY_MESSAGE_LOGGER.firstOrMaxResultsSpecifiedWithCollectionFetch();
-			}
+			errorOrLogForPaginationWithCollectionFetch();
 
 			final MutableQueryOptions originalQueryOptions = getQueryOptions();
 			final QueryOptions normalizedQueryOptions = omitSqlQueryOptions( originalQueryOptions, true, false );
 			if ( originalQueryOptions == normalizedQueryOptions ) {
-				executionContextToUse = this;
+				return this;
 			}
 			else {
-				executionContextToUse = new DelegatingDomainQueryExecutionContext( this ) {
+				return new DelegatingDomainQueryExecutionContext( this ) {
 					@Override
 					public QueryOptions getQueryOptions() {
 						return normalizedQueryOptions;
@@ -289,117 +432,45 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 			}
 		}
 		else {
-			executionContextToUse = this;
+			return this;
 		}
-
-		final List<R> list = resolveQueryPlan().performList( executionContextToUse );
-
-		if ( needsDistinct ) {
-			int includedCount = -1;
-			// NOTE : firstRow is zero-based
-			final int first = !hasLimit || getQueryOptions().getLimit().getFirstRow() == null
-					? getIntegerLiteral( sqmStatement.getOffset(), 0 )
-					: getQueryOptions().getLimit().getFirstRow();
-			final int max = !hasLimit || getQueryOptions().getLimit().getMaxRows() == null
-					? getMaxRows( sqmStatement, list.size() )
-					: getQueryOptions().getLimit().getMaxRows();
-			final List<R> tmp = new ArrayList<>( list.size() );
-			final IdentitySet<Object> distinction = new IdentitySet<>( list.size() );
-			for ( final R result : list ) {
-				if ( !distinction.add( result ) ) {
-					continue;
-				}
-				includedCount++;
-				if ( includedCount < first ) {
-					continue;
-				}
-				tmp.add( result );
-				// NOTE : ( max - 1 ) because first is zero-based while max is not...
-				if ( max >= 0 && ( includedCount - first ) >= ( max - 1 ) ) {
-					break;
-				}
-			}
-			return tmp;
-		}
-		return list;
 	}
 
 	@Override
 	protected ScrollableResultsImplementor<R> doScroll(ScrollMode scrollMode) {
-		getSession().prepareForQueryExecution( requiresTxn( getQueryOptions().getLockOptions().findGreatestLockMode() ) );
-
 		return resolveQueryPlan().performScroll( scrollMode, this );
 	}
 
+	@Override
+	public <T> T executeQuery(ResultsConsumer<T, R> resultsConsumer) {
+		return resolveQueryPlan().executeQuery( this, resultsConsumer );
+	}
+
+	@Override
+	public Class<R> getExpectedResultType() {
+		return expectedResultType;
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Query plan
 
 	private SelectQueryPlan<R> resolveQueryPlan() {
-		final QueryInterpretationCache.Key cacheKey = SqmInterpretationsKey.createInterpretationsKey( this );
+		final QueryInterpretationCache.Key cacheKey = createInterpretationsKey( this );
 		if ( cacheKey != null ) {
-			return getSession().getFactory().getQueryEngine().getInterpretationCache().resolveSelectQueryPlan(
-					cacheKey,
-					this::buildQueryPlan
-			);
+			return getSessionFactory().getQueryEngine().getInterpretationCache()
+					.resolveSelectQueryPlan( cacheKey, this::buildSelectQueryPlan );
 		}
 		else {
-			return buildQueryPlan();
+			return buildSelectQueryPlan();
 		}
 	}
-
-	private SelectQueryPlan<R> buildQueryPlan() {
-		final SqmSelectStatement<?>[] concreteSqmStatements = QuerySplitter.split(
-				(SqmSelectStatement<?>) getSqmStatement(),
-				getSession().getFactory()
-		);
-
-		if ( concreteSqmStatements.length > 1 ) {
-			return buildAggregatedQueryPlan( concreteSqmStatements );
-		}
-		else {
-			return buildConcreteQueryPlan( concreteSqmStatements[0], getResultType(), getQueryOptions() );
-		}
-	}
-
-	private SelectQueryPlan<R> buildAggregatedQueryPlan(SqmSelectStatement<?>[] concreteSqmStatements) {
-		//noinspection unchecked
-		final SelectQueryPlan<R>[] aggregatedQueryPlans = new SelectQueryPlan[ concreteSqmStatements.length ];
-
-		// todo (6.0) : we want to make sure that certain thing (ResultListTransformer, etc) only get applied at the aggregator-level
-
-		for ( int i = 0, x = concreteSqmStatements.length; i < x; i++ ) {
-			aggregatedQueryPlans[i] = buildConcreteQueryPlan(
-					concreteSqmStatements[i],
-					getResultType(),
-					getQueryOptions()
-			);
-		}
-
-		return new AggregatedSelectQueryPlanImpl<>( aggregatedQueryPlans );
-	}
-
-	private <T> SelectQueryPlan<T> buildConcreteQueryPlan(
-			SqmSelectStatement<?> concreteSqmStatement,
-			Class<T> resultType,
-			QueryOptions queryOptions) {
-		return new ConcreteSqmSelectQueryPlan<>(
-				concreteSqmStatement,
-				getQueryString(),
-				getDomainParameterXref(),
-				resultType,
-				tupleMetadata,
-				queryOptions
-		);
-	}
-
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// InterpretationsKeySource
 
 	@Override
-	public Class<R> getResultType() {
+	public Class<?> getResultType() {
 		return resultType;
 	}
 
@@ -415,7 +486,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 
 	protected boolean hasMultiValuedParameterBindings() {
 		return getQueryParameterBindings().hasAnyMultiValuedBindings()
-				|| getParameterMetadata().hasAnyMatching( QueryParameter::allowsMultiValuedBinding );
+			|| getParameterMetadata().hasAnyMatching( QueryParameter::allowsMultiValuedBinding );
 	}
 
 
@@ -429,19 +500,9 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 	}
 
 	@Override
-	public FlushModeType getFlushMode() {
-		return FlushModeTypeHelper.getFlushModeType( getQueryOptions().getFlushMode() );
-	}
-
-	@Override
 	public SqmSelectionQuery<R> setFlushMode(FlushModeType flushMode) {
-		setHibernateFlushMode( FlushModeTypeHelper.getFlushMode( flushMode ) );
+		super.setFlushMode( flushMode );
 		return this;
-	}
-
-	@Override
-	public LockOptions getLockOptions() {
-		return getQueryOptions().getLockOptions();
 	}
 
 	/**
@@ -451,25 +512,25 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 	 */
 	@Override
 	public SqmSelectionQuery<R> setLockMode(LockModeType lockMode) {
-		setHibernateLockMode( LockModeTypeHelper.getLockMode( lockMode ) );
+		super.setLockMode( lockMode );
 		return this;
 	}
 
 	/**
-	 * Specify the root LockMode for the query
+	 * Specify the root {@link LockMode} for the query
 	 */
 	@Override
 	public SqmSelectionQuery<R> setHibernateLockMode(LockMode lockMode) {
-		getLockOptions().setLockMode( lockMode );
+		super.setHibernateLockMode( lockMode );
 		return this;
 	}
 
 	/**
-	 * Specify a LockMode to apply to a specific alias defined in the query
+	 * Specify a {@link LockMode} to apply to a specific alias defined in the query
 	 */
 	@Override
-	public SqmSelectionQuery<R> setAliasSpecificLockMode(String alias, LockMode lockMode) {
-		getLockOptions().setAliasSpecificLockMode( alias, lockMode );
+	public SqmSelectionQuery<R> setLockMode(String alias, LockMode lockMode) {
+		super.setLockMode( alias, lockMode );
 		return this;
 	}
 
@@ -483,61 +544,60 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 	}
 
 	@Override
-	public Integer getFetchSize() {
-		return getQueryOptions().getFetchSize();
-	}
-
-	@Override
 	public SqmSelectionQuery<R> setFetchSize(int fetchSize) {
-		getQueryOptions().setFetchSize( fetchSize );
+		super.setFetchSize( fetchSize );
 		return this;
-	}
-
-	@Override
-	public boolean isReadOnly() {
-		return getQueryOptions().isReadOnly() == null
-				? getSession().isDefaultReadOnly()
-				: getQueryOptions().isReadOnly();
 	}
 
 	@Override
 	public SqmSelectionQuery<R> setReadOnly(boolean readOnly) {
-		getQueryOptions().setReadOnly( readOnly );
+		super.setReadOnly( readOnly );
 		return this;
-	}
-	@Override
-	public CacheMode getCacheMode() {
-		return getQueryOptions().getCacheMode();
 	}
 
 	@Override
 	public SqmSelectionQuery<R> setCacheMode(CacheMode cacheMode) {
-		getQueryOptions().setCacheMode( cacheMode );
+		super.setCacheMode( cacheMode );
 		return this;
 	}
 
 	@Override
-	public boolean isCacheable() {
-		return getQueryOptions().isResultCachingEnabled() == Boolean.TRUE;
+	public SqmSelectionQuery<R> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+		super.setCacheRetrieveMode( cacheRetrieveMode );
+		return this;
+	}
+
+	@Override
+	public SqmSelectionQuery<R> setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+		super.setCacheStoreMode( cacheStoreMode );
+		return this;
 	}
 
 	@Override
 	public SqmSelectionQuery<R> setCacheable(boolean cacheable) {
-		getQueryOptions().setResultCachingEnabled( cacheable );
+		super.setCacheable( cacheable );
 		return this;
-	}
-
-	@Override
-	public String getCacheRegion() {
-		return getQueryOptions().getResultCacheRegionName();
 	}
 
 	@Override
 	public SqmSelectionQuery<R> setCacheRegion(String regionName) {
-		getQueryOptions().setResultCacheRegionName( regionName );
+		super.setCacheRegion( regionName );
 		return this;
 	}
 
+	@Override
+	public SqmSelectionQuery<R> setQueryPlanCacheable(boolean queryPlanCacheable) {
+		super.setQueryPlanCacheable( queryPlanCacheable );
+		return this;
+	}
+
+	@Override
+	public boolean isQueryPlanCacheable() {
+		return CRITERIA_HQL_STRING.equals( hql )
+				// For criteria queries, query plan caching requires an explicit opt-in
+				? getQueryOptions().getQueryPlanCachingEnabled() == Boolean.TRUE
+				: super.isQueryPlanCacheable();
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// hints
@@ -578,6 +638,12 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 	@Override
 	public SqmSelectionQuery<R> setHibernateFlushMode(FlushMode flushMode) {
 		super.setHibernateFlushMode( flushMode );
+		return this;
+	}
+
+	@Override
+	public SqmSelectionQuery<R> setQueryFlushMode(QueryFlushMode queryFlushMode) {
+		super.setQueryFlushMode(queryFlushMode);
 		return this;
 	}
 
@@ -697,7 +763,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 	}
 
 	@Override
-	public SqmSelectionQuery<R> setParameterList(String name, Collection values) {
+	public SqmSelectionQuery<R> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values) {
 		super.setParameterList( name, values );
 		return this;
 	}
@@ -733,7 +799,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 	}
 
 	@Override
-	public SqmSelectionQuery<R> setParameterList(int position, Collection values) {
+	public SqmSelectionQuery<R> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values) {
 		super.setParameterList( position, values );
 		return this;
 	}
@@ -805,7 +871,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 	}
 
 	@Override
-	public SqmSelectionQuery<R> setProperties(Map map) {
+	public SqmSelectionQuery<R> setProperties(@SuppressWarnings("rawtypes") Map map) {
 		super.setProperties( map );
 		return this;
 	}

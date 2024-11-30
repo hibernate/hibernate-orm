@@ -1,17 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.idclass.xml;
 
 
+import java.util.List;
+
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -26,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		annotatedClasses = HabitatSpeciesLink.class,
 		xmlMappings = "org/hibernate/orm/test/annotations/idclass/xml/HabitatSpeciesLink.xml"
 )
+@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "'link' is not escaped even though autoQuoteKeywords is enabled" )
 @SessionFactory
 public class IdClassXmlTest {
 	@Test
@@ -38,7 +41,8 @@ public class IdClassXmlTest {
 					session.persist( link );
 
 					Query q = session.getNamedQuery( "testQuery" );
-					assertEquals( 1, q.list().size() );
+					final List<HabitatSpeciesLink> list = q.list();
+					assertEquals( 1, list.size() );
 				}
 		);
 	}

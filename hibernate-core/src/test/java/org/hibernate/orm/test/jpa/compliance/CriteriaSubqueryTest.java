@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.jpa.compliance;
 
 import java.util.List;
@@ -122,7 +126,7 @@ public class CriteriaSubqueryTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = MySQLDialect.class, matchSubTypes = true, reason = "does not support specifying in the subquery from clause the the same table used in the delete/update ")
+	@SkipForDialect( dialectClass = MySQLDialect.class, matchSubTypes = true, reason = "does not support specifying in the subquery from clause the same table used in the delete/update ")
 	public void subqueryCriteriaDeleteTest(EntityManagerFactoryScope scope) {
 
 		scope.inTransaction(
@@ -158,7 +162,7 @@ public class CriteriaSubqueryTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = MySQLDialect.class, matchSubTypes = true, reason = "does not support specifying in the subquery from clause the the same table used in the delete/update ")
+	@SkipForDialect( dialectClass = MySQLDialect.class, matchSubTypes = true, reason = "does not support specifying in the subquery from clause the same table used in the delete/update ")
 	public void subqueryCriteriaUpdateTest(EntityManagerFactoryScope scope) {
 
 		scope.inTransaction(

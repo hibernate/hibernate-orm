@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.hql;
 
@@ -11,7 +9,7 @@ import java.util.List;
 import org.hibernate.query.Query;
 import org.hibernate.Session;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -37,7 +35,7 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9342" )
+	@JiraKey( value = "HHH-9342" )
 	public void memberOfTreatTest() {
 		// prepare test data
 		Session s = openSession();
@@ -79,10 +77,10 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 		// clean up test data
 		s = openSession();
 		s.getTransaction().begin();
-		s.delete( petCat );
-		s.delete( petDog );
-		s.delete( wildDog );
-		s.delete( owner );
+		s.remove( petCat );
+		s.remove( petDog );
+		s.remove( wildDog );
+		s.remove( owner );
 		s.getTransaction().commit();
 		s.close();
 	}

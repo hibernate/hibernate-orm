@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.idgen.identity.hhh10429;
 
@@ -20,7 +18,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.junit.jupiter.api.Test;
@@ -30,7 +28,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Matthew Morrissette
  */
-@TestForIssue(jiraKey = "HHH-10429")
+@JiraKey(value = "HHH-10429")
 @DomainModel( annotatedClasses = IdentityGeneratorExtendsTest.EntityBean.class )
 public class IdentityGeneratorExtendsTest {
 
@@ -43,7 +41,7 @@ public class IdentityGeneratorExtendsTest {
 		final PersistentClass entityBinding = domainModel.getEntityBinding( EntityBean.class.getName() );
 		final KeyValue identifier = entityBinding.getIdentifier();
 
-		assertTrue( identifier.isIdentityColumn( domainModel.getMetadataBuildingOptions().getIdentifierGeneratorFactory(), dialect ) );
+		assertTrue( identifier.getColumns().get(0).isIdentity() );
 	}
 
 	@Entity(name = "EntityBean")

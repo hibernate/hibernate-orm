@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.onetomany;
 
@@ -25,12 +23,12 @@ import jakarta.persistence.ManyToOne;
 @DiscriminatorColumn(name = "DTYPE", discriminatorType= DiscriminatorType.STRING, length = 3)
 @DiscriminatorValue(value = "WPT")
 public class Comment {
-	
+
 	private Long id;
 	private Post post;
 	private String name;
 	private Forum forum;
-	
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "id", updatable = false, insertable = false)
@@ -41,7 +39,7 @@ public class Comment {
 	public void setId(Long id) {
 		this.id = id;
 	}
-	
+
 	@ManyToOne(optional=true,fetch=FetchType.LAZY)
 	@JoinColumn(name="FK_PostId", nullable=true, insertable=true,updatable=false)
 	public Post getPost() {

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.predicate;
 
@@ -16,6 +14,8 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 
 import jakarta.persistence.criteria.Expression;
+
+import static org.hibernate.query.sqm.internal.TypecheckUtil.assertComparable;
 
 /**
  * @author Steve Ebersole
@@ -40,9 +40,11 @@ public class SqmInSubQueryPredicate<T> extends AbstractNegatableSqmPredicate imp
 		this.testExpression = testExpression;
 		this.subQueryExpression = subQueryExpression;
 
+		assertComparable( testExpression, subQueryExpression, nodeBuilder );
+
 		final SqmExpressible<?> expressibleType = QueryHelper.highestPrecedenceType2(
-				testExpression.getNodeType(),
-				subQueryExpression.getNodeType()
+				testExpression.getExpressible(),
+				subQueryExpression.getExpressible()
 		);
 
 		testExpression.applyInferableType( expressibleType );

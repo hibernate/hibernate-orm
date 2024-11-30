@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.converted.converter;
 
@@ -19,7 +17,7 @@ import jakarta.persistence.Table;
 import org.hibernate.Session;
 import org.hibernate.jdbc.Work;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -35,7 +33,7 @@ public class NullHandlingTests extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-8697" )
+	@JiraKey( value = "HHH-8697" )
 	public void testNullReplacementOnBinding() {
 		TheEntity theEntity = new TheEntity( 1 );
 
@@ -43,7 +41,7 @@ public class NullHandlingTests extends BaseCoreFunctionalTestCase {
 		session.beginTransaction();
 		// at this point TheEntity.sex is null
 		// lets make sure that the converter is given a chance to adjust that to UNKNOWN...
-		session.save( theEntity );
+		session.persist( theEntity );
 		session.getTransaction().commit();
 		session.close();
 
@@ -78,13 +76,13 @@ public class NullHandlingTests extends BaseCoreFunctionalTestCase {
 
 		session = openSession();
 		session.beginTransaction();
-		session.delete( theEntity );
+		session.remove( theEntity );
 		session.getTransaction().commit();
 		session.close();
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9320" )
+	@JiraKey( value = "HHH-9320" )
 	public void testNullReplacementOnExtraction() {
 		Session session = openSession();
 		session.beginTransaction();
@@ -111,7 +109,7 @@ public class NullHandlingTests extends BaseCoreFunctionalTestCase {
 
 		session = openSession();
 		session.beginTransaction();
-		session.delete( theEntity );
+		session.remove( theEntity );
 		session.getTransaction().commit();
 		session.close();
 	}

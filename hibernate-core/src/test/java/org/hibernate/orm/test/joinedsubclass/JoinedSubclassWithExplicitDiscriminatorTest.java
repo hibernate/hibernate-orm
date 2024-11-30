@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.joinedsubclass;
 
@@ -15,13 +13,15 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Table;
 
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Steve Ebersole
  */
-@TestForIssue(jiraKey = "HHH-6911")
+@JiraKey(value = "HHH-6911")
 @DomainModel(
 		annotatedClasses = {
 				JoinedSubclassWithExplicitDiscriminatorTest.Animal.class,
@@ -44,15 +44,16 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class JoinedSubclassWithExplicitDiscriminatorTest {
 
 	@Test
+	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "'TYPE' is a keyword in Altibase and escaped here")
 	public void metadataAssertions(SessionFactoryScope scope) {
-        EntityPersister p = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(Dog.class.getName());
+		EntityPersister p = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(Dog.class.getName());
 		assertNotNull( p );
 		final JoinedSubclassEntityPersister dogPersister = assertTyping( JoinedSubclassEntityPersister.class, p );
 		assertEquals( "string", dogPersister.getDiscriminatorType().getName() );
 		assertEquals( "type", dogPersister.getDiscriminatorColumnName() );
 		assertEquals( "dog", dogPersister.getDiscriminatorValue() );
 
-        p = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(Cat.class.getName());
+		p = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(Cat.class.getName());
 		assertNotNull( p );
 		final JoinedSubclassEntityPersister catPersister = assertTyping( JoinedSubclassEntityPersister.class, p );
 		assertEquals( "string", catPersister.getDiscriminatorType().getName() );
@@ -64,8 +65,8 @@ public class JoinedSubclassWithExplicitDiscriminatorTest {
 	public void basicUsageTest(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.save( new Cat( 1 ) );
-					session.save( new Dog( 2 ) );
+					session.persist( new Cat( 1 ) );
+					session.persist( new Dog( 2 ) );
 				}
 		);
 
@@ -74,10 +75,10 @@ public class JoinedSubclassWithExplicitDiscriminatorTest {
 					session.createQuery( "from Animal" ).list();
 					Cat cat = session.get( Cat.class, 1 );
 					assertNotNull( cat );
-					session.delete( cat );
+					session.remove( cat );
 					Dog dog = session.get( Dog.class, 2 );
 					assertNotNull( dog );
-					session.delete( dog );
+					session.remove( dog );
 				}
 		);
 	}

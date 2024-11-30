@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id: Model.java 4460 2004-08-29 12:04:14Z oneovthafew $
 package org.hibernate.orm.test.batchfetch;
 
 
@@ -17,14 +13,14 @@ public class Model {
 	private String name;
 	private String description;
 	private ProductLine productLine;
-	
+
 	Model() {}
-	
+
 	public Model(ProductLine pl) {
 		this.productLine = pl;
 		pl.getModels().add(this);
 	}
-	
+
 	public String getDescription() {
 		return description;
 	}

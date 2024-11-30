@@ -1,0 +1,35 @@
+
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright: Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="3.2">
+    <persistence-unit-metadata>
+        <persistence-unit-defaults>
+            <entity-listeners>
+                <entity-listener class="org.hibernate.orm.test.boot.models.xml.globals.GlobalEntityListener">
+                    <post-persist method-name="entityCreated"/>
+                </entity-listener>
+            </entity-listeners>
+        </persistence-unit-defaults>
+    </persistence-unit-metadata>
+
+    <java-type class="java.lang.String" descriptor="org.hibernate.models.internal.StringTypeDescriptor"/>
+    <jdbc-type code="-1" descriptor="org.hibernate.type.descriptor.jdbc.ClobJdbcType"/>
+    <user-type class="java.util.UUID" descriptor="org.hibernate.orm.test.boot.models.xml.MyUserType"/>
+
+    <conversion converter="org.hibernate.type.YesNoConverter" class="boolean" auto-apply="true"/>
+    
+    <filter-def name="amount_filter">
+        <default-condition>amount = :amount</default-condition>
+        <filter-param name="amount" type="int"/>
+    </filter-def>
+    <filter-def name="name_filter">
+        <default-condition>name = :name</default-condition>
+        <filter-param name="name" type="string"/>
+    </filter-def>
+</entity-mappings>

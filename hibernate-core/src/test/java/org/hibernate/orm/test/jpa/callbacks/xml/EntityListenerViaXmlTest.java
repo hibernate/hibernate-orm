@@ -1,12 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.callbacks.xml;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
@@ -33,7 +31,7 @@ public class EntityListenerViaXmlTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9771")
+	@JiraKey(value = "HHH-9771")
 	public void testUsage(EntityManagerFactoryScope scope) {
 		JournalingListener.reset();
 

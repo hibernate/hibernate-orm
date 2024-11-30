@@ -1,19 +1,32 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.type;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.Month;
 
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
+
+import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
+import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.type.BasicType;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -26,35 +39,32 @@ import jakarta.persistence.Query;
 import jakarta.persistence.Table;
 import jakarta.persistence.TypedQuery;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
-
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
 
 /**
  * @author Jordan Gigov
  * @author Christian Beikov
  */
-@SkipForDialect(value = SybaseASEDialect.class, comment = "Sybase or the driver are trimming trailing zeros in byte arrays")
-public class TimestampArrayTest extends BaseNonConfigCoreFunctionalTestCase {
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[]{ TableWithTimestampArrays.class };
-	}
+@BootstrapServiceRegistry(
+		// Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
+		integrators = SharedDriverManagerTypeCacheClearingIntegrator.class
+)
+@DomainModel(annotatedClasses = TimestampArrayTest.TableWithTimestampArrays.class)
+@SessionFactory
+public class TimestampArrayTest {
 
 	private LocalDateTime time1;
 	private LocalDateTime time2;
 	private LocalDateTime time3;
 	private LocalDateTime time4;
 
-	public void startUp() {
-		super.startUp();
-		inTransaction( em -> {
+	private BasicType<LocalDateTime[]> arrayType;
+
+	@BeforeAll
+	public void startUp(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
+			arrayType = em.getTypeConfiguration().getBasicTypeForJavaType( LocalDateTime[].class );
 			// Unix epoch start if you're in the UK
 			time1 = LocalDateTime.of( 1970, Month.JANUARY, 1, 0, 0, 0, 0 );
 			// pre-Y2K
@@ -81,8 +91,8 @@ public class TimestampArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testById() {
-		inSession( em -> {
+	public void testById(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			TableWithTimestampArrays tableRecord;
 			tableRecord = em.find( TableWithTimestampArrays.class, 1L );
 			assertThat( tableRecord.getTheArray(), is( new LocalDateTime[]{} ) );
@@ -99,8 +109,8 @@ public class TimestampArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testQueryById() {
-		inSession( em -> {
+	public void testQueryById(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			TypedQuery<TableWithTimestampArrays> tq = em.createNamedQuery( "TableWithTimestampArrays.JPQL.getById", TableWithTimestampArrays.class );
 			tq.setParameter( "id", 2L );
 			TableWithTimestampArrays tableRecord = tq.getSingleResult();
@@ -109,9 +119,8 @@ public class TimestampArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect( value = AbstractHANADialect.class, comment = "For some reason, HANA can't intersect VARBINARY values, but funnily can do a union...")
-	public void testQuery() {
-		inSession( em -> {
+	public void testQuery(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			TypedQuery<TableWithTimestampArrays> tq = em.createNamedQuery( "TableWithTimestampArrays.JPQL.getByData", TableWithTimestampArrays.class );
 			tq.setParameter( "data", new LocalDateTime[]{} );
 			TableWithTimestampArrays tableRecord = tq.getSingleResult();
@@ -120,8 +129,8 @@ public class TimestampArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testNativeQueryById() {
-		inSession( em -> {
+	public void testNativeQueryById(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			TypedQuery<TableWithTimestampArrays> tq = em.createNamedQuery( "TableWithTimestampArrays.Native.getById", TableWithTimestampArrays.class );
 			tq.setParameter( "id", 2L );
 			TableWithTimestampArrays tableRecord = tq.getSingleResult();
@@ -130,13 +139,20 @@ public class TimestampArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect( value = HSQLDialect.class, comment = "HSQL does not like plain parameters in the distinct from predicate")
-	@SkipForDialect( value = OracleDialect.class, comment = "Oracle requires a special function to compare XML")
-	public void testNativeQuery() {
-		inSession( em -> {
-			final String op = em.getJdbcServices().getDialect().supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
+	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQL does not like plain parameters in the distinct from predicate")
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle requires a special function to compare XML")
+	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 requires a special function to compare XML")
+	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "SQL Server requires a special function to compare XML")
+	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase ASE requires a special function to compare XML")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA requires a special function to compare LOBs")
+	@SkipForDialect(dialectClass = MariaDBDialect.class, reason = "MariaDB requires a special function to compare LOBs")
+	public void testNativeQuery(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final Dialect dialect = em.getDialect();
+			final String op = dialect.supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
+			final String param = arrayType.getJdbcType().wrapWriteExpression( ":data", dialect );
 			TypedQuery<TableWithTimestampArrays> tq = em.createNativeQuery(
-					"SELECT * FROM table_with_timestamp_arrays t WHERE the_array " + op + " :data",
+					"SELECT * FROM table_with_timestamp_arrays t WHERE the_array " + op + " " + param,
 					TableWithTimestampArrays.class
 			);
 			tq.setParameter( "data", new LocalDateTime[]{ time1, time2, time3 } );
@@ -146,20 +162,33 @@ public class TimestampArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialectFeature(DialectChecks.SupportsArrayDataTypes.class)
-	public void testNativeQueryUntyped() {
-		inSession( em -> {
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTypedArrays.class)
+	public void testNativeQueryUntyped(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			Query q = em.createNamedQuery( "TableWithTimestampArrays.Native.getByIdUntyped" );
 			q.setParameter( "id", 2L );
 			Object[] tuple = (Object[]) q.getSingleResult();
-			assertThat(
-					tuple[1],
-					is( new Timestamp[] {
-							Timestamp.valueOf( time1 ),
-							Timestamp.valueOf( time2 ),
-							Timestamp.valueOf( time3 )
-					} )
-			);
+			final Dialect dialect = em.getSessionFactory().getJdbcServices().getDialect();
+			if ( dialect instanceof OracleDialect ) {
+				assertThat(
+						tuple[1],
+						is( new Object[] {
+								time1,
+								time2,
+								time3
+						} )
+				);
+			}
+			else {
+				assertThat(
+						tuple[1],
+						is( new LocalDateTime[] {
+								time1,
+								time2,
+								time3
+						} )
+				);
+			}
 		} );
 	}
 

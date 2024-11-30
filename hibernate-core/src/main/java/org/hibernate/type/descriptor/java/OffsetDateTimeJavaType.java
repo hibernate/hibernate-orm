@@ -1,37 +1,39 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
 import java.sql.Timestamp;
-import java.sql.Types;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
-import jakarta.persistence.TemporalType;
-
-import org.hibernate.TimeZoneStorageStrategy;
-import org.hibernate.cache.internal.CacheKeyValueDescriptor;
-import org.hibernate.cache.internal.DefaultCacheKeyValueDescriptor;
+import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import jakarta.persistence.TemporalType;
+
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+import static java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME;
+import static org.hibernate.internal.util.CharSequenceHelper.subSequence;
 
 /**
  * Java type descriptor for the {@link OffsetDateTime} type.
@@ -45,6 +47,18 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 	 */
 	public static final OffsetDateTimeJavaType INSTANCE = new OffsetDateTimeJavaType();
 
+	private static final DateTimeFormatter PARSE_FORMATTER;
+	static {
+		PARSE_FORMATTER = new DateTimeFormatterBuilder()
+				.parseCaseInsensitive()
+				.append(ISO_LOCAL_DATE_TIME)
+				.optionalStart()
+				.parseLenient()
+				.appendOffset( "+HH:MM:ss", "Z" )
+				.parseStrict()
+				.toFormatter();
+	}
+
 	public OffsetDateTimeJavaType() {
 		super( OffsetDateTime.class, ImmutableMutabilityPlan.instance(), OffsetDateTime.timeLineOrder() );
 	}
@@ -56,47 +70,47 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators stdIndicators) {
-		final TemporalType temporalPrecision = stdIndicators.getTemporalPrecision();
-		final JdbcTypeRegistry jdbcTypeRegistry = stdIndicators.getTypeConfiguration()
-				.getJdbcTypeRegistry();
-		if ( temporalPrecision == null || temporalPrecision == TemporalType.TIMESTAMP ) {
-			switch ( stdIndicators.getDefaultTimeZoneStorageStrategy() ) {
-				case NORMALIZE:
-					return jdbcTypeRegistry.getDescriptor( Types.TIMESTAMP );
-				case NORMALIZE_UTC:
-					return jdbcTypeRegistry.getDescriptor( SqlTypes.TIMESTAMP_UTC );
-				default:
-					return jdbcTypeRegistry.getDescriptor( Types.TIMESTAMP_WITH_TIMEZONE );
-			}
+		if ( stdIndicators.isPreferJavaTimeJdbcTypesEnabled() ) {
+			return stdIndicators.getJdbcType( SqlTypes.OFFSET_DATE_TIME );
 		}
-
-		switch ( temporalPrecision ) {
-			case TIME: {
-				return jdbcTypeRegistry.getDescriptor( Types.TIME );
-			}
-			case DATE: {
-				return jdbcTypeRegistry.getDescriptor( Types.DATE );
-			}
-			default: {
-				throw new IllegalArgumentException( "Unexpected jakarta.persistence.TemporalType : " + temporalPrecision );
-			}
-		}
+		return stdIndicators.getJdbcType( stdIndicators.getDefaultZonedTimestampSqlType() );
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	protected <X> TemporalJavaType<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
 		return (TemporalJavaType<X>) this;
 	}
 
 	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
+	@Override
 	public String toString(OffsetDateTime value) {
-		return DateTimeFormatter.ISO_OFFSET_DATE_TIME.format( value );
+		return ISO_OFFSET_DATE_TIME.format( value );
 	}
 
 	@Override
 	public OffsetDateTime fromString(CharSequence string) {
-		return OffsetDateTime.from( DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse( string ) );
+		return OffsetDateTime.from( ISO_OFFSET_DATE_TIME.parse( string ) );
+	}
+
+	@Override
+	public OffsetDateTime fromEncodedString(CharSequence charSequence, int start, int end) {
+		try {
+			final TemporalAccessor temporalAccessor = PARSE_FORMATTER.parse( subSequence( charSequence, start, end ) );
+			if ( temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
+				return OffsetDateTime.from( temporalAccessor );
+			}
+			else {
+				// For databases that don't have timezone support, we encode timestamps at UTC, so allow parsing that as well
+				return LocalDateTime.from( temporalAccessor ).atOffset( ZoneOffset.UTC );
+			}
+		}
+		catch ( DateTimeParseException pe) {
+			throw new HibernateException( "could not parse timestamp string " + subSequence( charSequence, start, end ), pe );
+		}
 	}
 
 	@Override
@@ -168,22 +182,19 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 			return null;
 		}
 
-		if (value instanceof OffsetDateTime) {
-			return (OffsetDateTime) value;
+		if (value instanceof OffsetDateTime offsetDateTime) {
+			return offsetDateTime;
 		}
 
-		if (value instanceof ZonedDateTime) {
-			ZonedDateTime zonedDateTime = (ZonedDateTime) value;
+		if (value instanceof ZonedDateTime zonedDateTime) {
 			return OffsetDateTime.of( zonedDateTime.toLocalDateTime(), zonedDateTime.getOffset() );
 		}
 
-		if (value instanceof Instant) {
-			Instant instant = (Instant) value;
+		if (value instanceof Instant instant) {
 			return instant.atOffset( ZoneOffset.UTC );
 		}
 
-		if (value instanceof Timestamp) {
-			final Timestamp ts = (Timestamp) value;
+		if (value instanceof Timestamp timestamp) {
 			/*
 			 * This works around two bugs:
 			 * - HHH-13266 (JDK-8061577): around and before 1900,
@@ -194,25 +205,23 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 			 * (on DST end), so conversion must be done using the number of milliseconds since the epoch.
 			 * - around 1905, both methods are equally valid, so we don't really care which one is used.
 			 */
-			if ( ts.getYear() < 5 ) { // Timestamp year 0 is 1900
-				return ts.toLocalDateTime().atZone( ZoneId.systemDefault() ).toOffsetDateTime();
+			if ( timestamp.getYear() < 5 ) { // Timestamp year 0 is 1900
+				return timestamp.toLocalDateTime().atZone( ZoneId.systemDefault() ).toOffsetDateTime();
 			}
 			else {
-				return OffsetDateTime.ofInstant( ts.toInstant(), ZoneId.systemDefault() );
+				return OffsetDateTime.ofInstant( timestamp.toInstant(), ZoneId.systemDefault() );
 			}
 		}
 
-		if (value instanceof Date) {
-			final Date date = (Date) value;
+		if (value instanceof Date date) {
 			return OffsetDateTime.ofInstant( date.toInstant(), ZoneId.systemDefault() );
 		}
 
-		if (value instanceof Long) {
-			return OffsetDateTime.ofInstant( Instant.ofEpochMilli( (Long) value ), ZoneId.systemDefault() );
+		if (value instanceof Long longValue) {
+			return OffsetDateTime.ofInstant( Instant.ofEpochMilli( longValue ), ZoneId.systemDefault() );
 		}
 
-		if (value instanceof Calendar) {
-			final Calendar calendar = (Calendar) value;
+		if (value instanceof Calendar calendar) {
 			return OffsetDateTime.ofInstant( calendar.toInstant(), calendar.getTimeZone().toZoneId() );
 		}
 
@@ -243,8 +252,4 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 		return OffsetDateTime.now( ClockHelper.forPrecision( precision, session ) );
 	}
 
-	@Override
-	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
-		return DefaultCacheKeyValueDescriptor.INSTANCE;
-	}
 }

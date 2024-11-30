@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.naming;
 
@@ -113,7 +111,7 @@ public class JoinNaming extends BaseEnversJPAFunctionalTestCase {
 	public void testJoinColumnName() {
 		Iterator<Selectable> columns = metadata().getEntityBinding(
 				"org.hibernate.orm.test.envers.integration.naming.JoinNamingRefIngEntity_AUD"
-		).getProperty( "reference_id" ).getColumnIterator();
+		).getProperty( "reference_id" ).getSelectables().iterator();
 		assertTrue( columns.hasNext() );
 		assertEquals( "jnree_column_reference", columns.next().getText() );
 		assertFalse( columns.hasNext() );

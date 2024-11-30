@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.cascade.multicircle.jpa.sequence;
 
@@ -147,12 +145,12 @@ public class MultiCircleJpaCascadeSequenceTest {
 					e = (E) session.merge( e );
 					f = (F) session.merge( f );
 					g = (G) session.merge( g );
-					session.delete( f );
-					session.delete( g );
-					session.delete( b );
-					session.delete( d );
-					session.delete( e );
-					session.delete( c );
+					session.remove( f );
+					session.remove( g );
+					session.remove( b );
+					session.remove( d );
+					session.remove( e );
+					session.remove( c );
 				}
 		);
 	}

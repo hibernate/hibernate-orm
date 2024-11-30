@@ -1,39 +1,36 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
-import java.io.Serializable;
+import java.util.Collection;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.HibernateException;
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.event.spi.EventEngine;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FastSessionServices;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.query.criteria.HibernateCriteriaBuilder;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.generator.Generator;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.MappingContext;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -47,27 +44,41 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public interface SessionFactoryImplementor
-		extends Mapping, SessionFactory, SqmCreationContext, SqlAstCreationContext, QueryParameterBindingTypeResolver {
+		extends MappingContext, SessionFactory, SqmCreationContext, SqlAstCreationContext,
+				QueryParameterBindingTypeResolver { //deprecated extension, use MappingMetamodel
 	/**
-	 * Get the UUID for this SessionFactory.
+	 * Get the UUID for this {@code SessionFactory}.
 	 * <p>
 	 * The value is generated as a {@link java.util.UUID}, but kept as a String.
 	 *
-	 * @return The UUID for this SessionFactory.
+	 * @return The UUID for this {@code SessionFactory}.
 	 *
 	 * @see org.hibernate.internal.SessionFactoryRegistry#getSessionFactory
 	 */
 	String getUuid();
 
 	/**
-	 * Access to the name (if one) assigned to the SessionFactory
+	 * Access to the name (if one) assigned to the {@code SessionFactory}
 	 *
-	 * @return The name for the SessionFactory
+	 * @return The name for the {@code SessionFactory}
 	 */
+	@Override
 	String getName();
 
+	/**
+	 * Overrides {@link SessionFactory#openSession()} to widen the return type:
+	 * this is useful for internal code depending on {@link SessionFactoryImplementor}
+	 * as it would otherwise need to frequently resort to casting to the internal contract.
+	 *
+	 * @return the opened {@code Session}.
+	 */
+	@Override
+	SessionImplementor openSession();
+
+	@Override
 	TypeConfiguration getTypeConfiguration();
 
+	@Override
 	default SessionFactoryImplementor getSessionFactory() {
 		return this;
 	}
@@ -77,18 +88,13 @@ public interface SessionFactoryImplementor
 		return getRuntimeMetamodels().getMappingMetamodel();
 	}
 
-	QueryEngine getQueryEngine();
-
-	@Override
-	HibernateCriteriaBuilder getCriteriaBuilder();
-
 	@Override
 	SessionBuilderImplementor withOptions();
 
 	/**
 	 * Get a non-transactional "current" session (used by hibernate-envers)
 	 */
-	Session openTemporarySession() throws HibernateException;
+	SessionImplementor openTemporarySession() throws HibernateException;
 
 	@Override
 	CacheImplementor getCache();
@@ -99,7 +105,7 @@ public interface SessionFactoryImplementor
 	RuntimeMetamodelsImplementor getRuntimeMetamodels();
 
 	/**
-	 * Access to the ServiceRegistry for this SessionFactory.
+	 * Access to the {@code ServiceRegistry} for this {@code SessionFactory}.
 	 *
 	 * @return The factory's ServiceRegistry
 	 */
@@ -120,9 +126,11 @@ public interface SessionFactoryImplementor
 
 	/**
 	 * Get the identifier generator for the hierarchy
+	 *
+	 * @deprecated Only used in one place, will be removed
 	 */
-	IdentifierGenerator getIdentifierGenerator(String rootEntityName);
-
+	@Deprecated(since = "7", forRemoval = true)
+	Generator getGenerator(String rootEntityName);
 
 	EntityNotFoundDelegate getEntityNotFoundDelegate();
 
@@ -132,49 +140,38 @@ public interface SessionFactoryImplementor
 	CustomEntityDirtinessStrategy getCustomEntityDirtinessStrategy();
 
 	//todo make a Service ?
-	CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver();
+	CurrentTenantIdentifierResolver<Object> getCurrentTenantIdentifierResolver();
 
 	/**
-	 * @return the FastSessionServices instance associated with this SessionFactory
+	 * The java type to use for a tenant identifier.
+	 *
+	 * @since 6.4
+	 */
+	JavaType<Object> getTenantIdentifierJavaType();
+
+	/**
+	 * @return the {@link FastSessionServices} instance associated with this SessionFactory
 	 */
 	FastSessionServices getFastSessionServices();
 
 	WrapperOptions getWrapperOptions();
 
-	/**
-	 * Contract for resolving this SessionFactory on deserialization
-	 */
-	interface DeserializationResolver<T extends SessionFactoryImplementor> extends Serializable {
-		T resolve();
-	}
+	@Override
+	SessionFactoryOptions getSessionFactoryOptions();
 
-	DeserializationResolver getDeserializationResolver();
+	@Override
+	FilterDefinition getFilterDefinition(String filterName);
 
+	Collection<FilterDefinition> getAutoEnabledFilters();
 
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Deprecations
-
-	/**
-	 * Get the JdbcServices.
-	 *
-	 * @return the JdbcServices
-	 */
 	JdbcServices getJdbcServices();
 
 	SqlStringGenerationContext getSqlStringGenerationContext();
 
-
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// map these to Metamodel
 
-	/**
-	 * @deprecated no longer for internal use, use {@link #getMappingMetamodel()} or {@link #getJpaMetamodel()}
-	 */
-	@Override @Deprecated
-	MetamodelImplementor getMetamodel();
-
+	@Override
 	RootGraphImplementor<?> findEntityGraphByName(String name);
 
 	/**

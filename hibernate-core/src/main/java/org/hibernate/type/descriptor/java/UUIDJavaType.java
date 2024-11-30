@@ -1,18 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
 import java.io.Serializable;
 import java.util.UUID;
 
-import org.hibernate.cache.internal.CacheKeyValueDescriptor;
-import org.hibernate.cache.internal.DefaultCacheKeyValueDescriptor;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.BytesHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -20,6 +15,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
 /**
  * Descriptor for {@link UUID} handling.
+ *
+ * @see org.hibernate.cfg.AvailableSettings#PREFERRED_UUID_JDBC_TYPE
  *
  * @author Steve Ebersole
  */
@@ -32,13 +29,20 @@ public class UUIDJavaType extends AbstractClassJavaType<UUID> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( context.getPreferredSqlTypeCodeForUuid() );
+		return context.getJdbcType( context.getPreferredSqlTypeCodeForUuid() );
 	}
 
+	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
+	@Override
 	public String toString(UUID value) {
 		return ToStringTransformer.INSTANCE.transform( value );
 	}
 
+	@Override
 	public UUID fromString(CharSequence string) {
 		return ToStringTransformer.INSTANCE.parse( string.toString() );
 	}
@@ -159,8 +163,4 @@ public class UUIDJavaType extends AbstractClassJavaType<UUID> {
 		}
 	}
 
-	@Override
-	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
-		return DefaultCacheKeyValueDescriptor.INSTANCE;
-	}
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
 
@@ -17,7 +15,6 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PersistContext;
 import org.hibernate.event.spi.PersistEvent;
 import org.hibernate.event.spi.PersistEventListener;
-import org.hibernate.id.ForeignGenerator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
@@ -50,6 +47,7 @@ public class DefaultPersistEventListener
 	 * @param event The create event to be handled.
 	 *
 	 */
+	@Override
 	public void onPersist(PersistEvent event) throws HibernateException {
 		onPersist( event, PersistContext.create() );
 	}
@@ -60,17 +58,18 @@ public class DefaultPersistEventListener
 	 * @param event The create event to be handled.
 	 *
 	 */
+	@Override
 	public void onPersist(PersistEvent event, PersistContext createCache) throws HibernateException {
 		final Object object = event.getObject();
-		if ( object instanceof HibernateProxy ) {
-			LazyInitializer li = ( (HibernateProxy) object ).getHibernateLazyInitializer();
-			if ( li.isUninitialized() ) {
-				if ( li.getSession() != event.getSession() ) {
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+		if ( lazyInitializer != null ) {
+			if ( lazyInitializer.isUninitialized() ) {
+				if ( lazyInitializer.getSession() != event.getSession() ) {
 					throw new PersistentObjectException( "uninitialized proxy passed to persist()" );
 				}
 			}
 			else {
-				persist( event, createCache, li.getImplementation() );
+				persist( event, createCache, lazyInitializer.getImplementation() );
 			}
 		}
 		else {
@@ -81,8 +80,8 @@ public class DefaultPersistEventListener
 	private void persist(PersistEvent event, PersistContext createCache, Object entity) {
 		final EventSource source = event.getSession();
 		final EntityEntry entityEntry = source.getPersistenceContextInternal().getEntry( entity );
-		final String entityName = entityName( event, entity );
-		switch ( entityState( event, entity, entityName, entityEntry ) ) {
+		final String entityName = entityName( event, entity, entityEntry );
+		switch ( getEntityState( entity, entityName, entityEntry, source, true ) ) {
 			case DETACHED:
 				throw new PersistentObjectException( "detached entity passed to persist: "
 						+ EventUtil.getLoggableName( event.getEntityName(), entity) );
@@ -107,39 +106,13 @@ public class DefaultPersistEventListener
 		}
 	}
 
-	private static EntityState entityState(PersistEvent event, Object entity, String entityName, EntityEntry entityEntry) {
-		final EventSource source = event.getSession();
-		EntityState entityState = getEntityState( entity, entityName, entityEntry, source, true );
-		if ( entityState == EntityState.DETACHED ) {
-			// JPA 2, in its version of a "foreign generated", allows the id attribute value
-			// to be manually set by the user, even though this manual value is irrelevant.
-			// The issue is that this causes problems with the Hibernate unsaved-value strategy
-			// which comes into play here in determining detached/transient state.
-			//
-			// Detect if we have this situation and if so null out the id value and calculate the
-			// entity state again.
-
-			// NOTE: entityEntry must be null to get here, so we cannot use any of its values
-			final EntityPersister persister = source.getFactory().getMappingMetamodel()
-					.getEntityDescriptor( entityName );
-			if ( persister.getIdentifierGenerator() instanceof ForeignGenerator ) {
-				if ( LOG.isDebugEnabled() && persister.getIdentifier( entity, source ) != null ) {
-					LOG.debug( "Resetting entity id attribute to null for foreign generator" );
-				}
-				persister.setIdentifier( entity, null, source );
-				entityState = getEntityState( entity, entityName, entityEntry, source, true );
-			}
-		}
-		return entityState;
-	}
-
-	private static String entityName(PersistEvent event, Object entity) {
+	private static String entityName(PersistEvent event, Object entity, EntityEntry entityEntry) {
 		if ( event.getEntityName() != null ) {
 			return event.getEntityName();
 		}
 		else {
 			// changes event.entityName by side effect!
-			final String entityName = event.getSession().bestGuessEntityName( entity );
+			final String entityName = event.getSession().bestGuessEntityName( entity, entityEntry );
 			event.setEntityName( entityName );
 			return entityName;
 		}
@@ -183,7 +156,7 @@ public class DefaultPersistEventListener
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracef(
 				"un-scheduling entity deletion [%s]",
-				MessageHelper.infoString( persister, persister.getIdentifier( entity, source ), source.getFactory() )
+				MessageHelper.infoString( persister, persister.getIdentifier( entity, source ), event.getFactory() )
 			);
 		}
 		if ( createCache.add( entity ) ) {

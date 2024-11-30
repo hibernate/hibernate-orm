@@ -1,12 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.derivedidentities.bidirectional;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -46,7 +44,7 @@ public class CompositeDerivedIdentityTest {
 
 		scope.inTransaction(
 				session -> {
-					session.save( product );
+					session.persist( product );
 				}
 		);
 
@@ -56,7 +54,7 @@ public class CompositeDerivedIdentityTest {
 
 		scope.inTransaction(
 				session -> {
-					session.save( order );
+					session.persist( order );
 				}
 		);
 
@@ -66,20 +64,20 @@ public class CompositeDerivedIdentityTest {
 				session -> {
 					Order o = session.get( Order.class, orderId );
 					assertEquals( 1, o.getLineItems().size() );
-					session.delete( o );
+					session.remove( o );
 				}
 		);
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10476")
+	@JiraKey(value = "HHH-10476")
 	public void testBidirectonalKeyManyToOneId(SessionFactoryScope scope) {
 		Product product = new Product();
 		product.setName( "Product 1" );
 
 		scope.inTransaction(
 				session ->
-						session.save( product )
+						session.persist( product )
 		);
 
 		Order order = new Order();
@@ -88,7 +86,7 @@ public class CompositeDerivedIdentityTest {
 
 		scope.inTransaction(
 				session ->
-						session.save( order )
+						session.persist( order )
 		);
 
 		scope.inTransaction(

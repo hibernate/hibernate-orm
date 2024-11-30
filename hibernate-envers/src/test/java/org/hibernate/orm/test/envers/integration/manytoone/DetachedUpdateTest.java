@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.manytoone;
 
@@ -21,7 +19,7 @@ import org.hibernate.orm.test.envers.BaseEnversFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
@@ -32,7 +30,7 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-11859")
+@JiraKey("HHH-11859")
 public class DetachedUpdateTest extends BaseEnversFunctionalTestCase {
 	private Bank bank1;
 	private Bank bank2;
@@ -50,24 +48,24 @@ public class DetachedUpdateTest extends BaseEnversFunctionalTestCase {
 		doInHibernate( this::sessionFactory, session -> {
 			bank1 = new Bank();
 			bank1.setDescription( "Bank of Italy" );
-			session.save( bank1 );
+			session.persist( bank1 );
 
 			bank2 = new Bank();
 			bank2.setDescription( "Bradesco Bank" );
-			session.save( bank2 );
+			session.persist( bank2 );
 
 			contact = new BankContact();
 			contact.setBank( bank1 );
 			contact.setPhoneNumber( "1234" );
 			contact.setName( "Test" );
-			session.save( contact );
+			session.persist( contact );
 		} );
 
 		// Revision 2
 		doInHibernate( this::sessionFactory, session -> {
 			contact.setName( "Other" );
 			contact.setBank( bank2 );
-			session.update( contact );
+			session.merge( contact );
 		} );
 
 		// Revision 3
@@ -75,8 +73,8 @@ public class DetachedUpdateTest extends BaseEnversFunctionalTestCase {
 		// within the same transaction to make sure the audit history flushes properly.
 		doInHibernate( this::sessionFactory, session -> {
 			contact.setBank( bank1 );
-			session.delete( bank2 );
-			session.update( contact );
+			session.remove( bank2 );
+			session.merge( contact );
 		} );
 	}
 

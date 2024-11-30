@@ -1,0 +1,126 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.internal;
+
+import org.hibernate.HibernateException;
+import org.hibernate.annotations.FetchMode;
+import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.engine.FetchStyle;
+import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.profile.Association;
+import org.hibernate.engine.profile.DefaultFetchProfile;
+import org.hibernate.engine.profile.Fetch;
+import org.hibernate.engine.profile.FetchProfile;
+import org.hibernate.engine.profile.internal.FetchProfileAffectee;
+import org.hibernate.metamodel.MappingMetamodel;
+import org.hibernate.metamodel.RuntimeMetamodels;
+import org.hibernate.metamodel.mapping.EntityValuedModelPart;
+import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.persister.entity.EntityPersister;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.hibernate.engine.profile.DefaultFetchProfile.HIBERNATE_DEFAULT_PROFILE;
+
+/**
+ * Create {@link FetchProfile} references from {@link org.hibernate.mapping.FetchProfile} references
+ *
+ * @author Gavin King
+ */
+public class FetchProfileHelper {
+
+	public static Map<String, FetchProfile> getFetchProfiles(
+			MetadataImplementor bootMetamodel,
+			RuntimeMetamodels runtimeMetamodels) {
+		final Map<String, FetchProfile> fetchProfiles = new HashMap<>();
+		for ( org.hibernate.mapping.FetchProfile mappingProfile : bootMetamodel.getFetchProfiles() ) {
+			final FetchProfile fetchProfile = createFetchProfile( runtimeMetamodels.getMappingMetamodel(), mappingProfile );
+			fetchProfiles.put( fetchProfile.getName(), fetchProfile );
+		}
+		fetchProfiles.put( HIBERNATE_DEFAULT_PROFILE, new DefaultFetchProfile( runtimeMetamodels ) );
+		return fetchProfiles;
+	}
+
+	private static FetchProfile createFetchProfile(
+			MappingMetamodel mappingMetamodel,
+			org.hibernate.mapping.FetchProfile mappingProfile) {
+		final String profileName = mappingProfile.getName();
+		final FetchProfile fetchProfile = new FetchProfile( profileName );
+		for ( org.hibernate.mapping.FetchProfile.Fetch mappingFetch : mappingProfile.getFetches() ) {
+			// resolve the persister owning the fetch
+			final EntityPersister owner = getEntityPersister( mappingMetamodel, fetchProfile, mappingFetch );
+			( (FetchProfileAffectee) owner ).registerAffectingFetchProfile( profileName);
+
+			final Association association = new Association( owner, mappingFetch.getAssociation() );
+			final FetchStyle fetchStyle = fetchStyle( mappingFetch.getMethod() );
+			final FetchTiming fetchTiming = FetchTiming.forType( mappingFetch.getType() );
+
+			// validate the specified association fetch
+			final ModelPart fetchablePart = owner.findByPath( association.getAssociationPath() );
+			validateFetchablePart( fetchablePart, profileName, association );
+			if ( fetchablePart instanceof FetchProfileAffectee ) {
+				( (FetchProfileAffectee) fetchablePart ).registerAffectingFetchProfile( profileName );
+			}
+
+			// then register the association with the FetchProfile
+			fetchProfile.addFetch( new Fetch( association, fetchStyle, fetchTiming ) );
+		}
+		return fetchProfile;
+	}
+
+	private static FetchStyle fetchStyle(FetchMode fetchMode) {
+		switch ( fetchMode ) {
+			case JOIN:
+				return FetchStyle.JOIN;
+			case SELECT:
+				return FetchStyle.SELECT;
+			case SUBSELECT:
+				return FetchStyle.SUBSELECT;
+			default:
+				throw new IllegalArgumentException( "Unknown FetchMode" );
+		}
+	}
+
+	private static void validateFetchablePart(ModelPart fetchablePart, String profileName, Association association) {
+		if ( fetchablePart == null ) {
+			throw new HibernateException( String.format(
+					"Fetch profile [%s] specified an association that does not exist - %s",
+					profileName,
+					association.getRole()
+			) );
+		}
+
+		if ( !isAssociation( fetchablePart ) ) {
+			throw new HibernateException( String.format(
+					"Fetch profile [%s] specified an association that is not an association - %s",
+					profileName,
+					association.getRole()
+			) );
+		}
+	}
+
+	private static boolean isAssociation(ModelPart fetchablePart) {
+		return fetchablePart instanceof EntityValuedModelPart
+			|| fetchablePart instanceof PluralAttributeMapping;
+	}
+
+	private static EntityPersister getEntityPersister(
+			MappingMetamodel mappingMetamodel,
+			FetchProfile fetchProfile,
+			org.hibernate.mapping.FetchProfile.Fetch mappingFetch) {
+		final String entityName = mappingMetamodel.getImportedName( mappingFetch.getEntity() );
+		if ( entityName != null ) {
+			final EntityPersister persister = mappingMetamodel.getEntityDescriptor( entityName );
+			if ( persister != null ) {
+				return persister;
+			}
+		}
+		throw new HibernateException( "Unable to resolve entity reference [" + mappingFetch.getEntity()
+				+ "] in fetch profile [" + fetchProfile.getName() + "]" );
+	}
+
+}

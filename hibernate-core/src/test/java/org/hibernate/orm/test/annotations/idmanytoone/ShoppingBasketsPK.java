@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$
 package org.hibernate.orm.test.annotations.idmanytoone;
 import java.io.Serializable;
 import jakarta.persistence.Basic;
@@ -15,7 +11,6 @@ import jakarta.persistence.Embeddable;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.ManyToOne;
 
 @Embeddable
@@ -48,7 +43,7 @@ public class ShoppingBasketsPK implements Serializable {
 
 	@Id
 	@ManyToOne(cascade={ CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH })
-	@JoinColumns({ @JoinColumn(name="customerID", referencedColumnName="customerID") })
+	@JoinColumn(name="customerID", referencedColumnName="customerID")
 	@Basic(fetch= FetchType.LAZY)
 	private Customers owner;
 
@@ -73,4 +68,3 @@ public class ShoppingBasketsPK implements Serializable {
 	}
 
 }
-

@@ -1,27 +1,22 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
 
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.BooleanJavaType;
 import org.hibernate.type.descriptor.java.IntegerJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
-import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
 /**
- * Handles conversion to/from Boolean as `0` (false) or `1` (true)
+ * Handles conversion to/from {@code Boolean} as {@code 0} (false) or {@code 1} (true)
  *
  * @author Steve Ebersole
  */
 @Converter
-public class NumericBooleanConverter implements AttributeConverter<Boolean, Integer>,
-		BasicValueConverter<Boolean, Integer> {
+public class NumericBooleanConverter implements StandardBooleanConverter<Integer> {
 	/**
 	 * Singleton access
 	 */

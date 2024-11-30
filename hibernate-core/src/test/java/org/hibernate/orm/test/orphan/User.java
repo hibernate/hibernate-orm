@@ -1,16 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-/*
- * User.java
- *
- * Created on May 3, 2005, 9:42 AM
- */
-
 package org.hibernate.orm.test.orphan;
 import java.util.HashSet;
 import java.util.Set;

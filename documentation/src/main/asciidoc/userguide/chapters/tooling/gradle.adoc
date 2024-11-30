@@ -1,10 +1,14 @@
 [[tooling-gradle]]
-=== Gradle Plugin
+=== Gradle
 
-For integrating with https://gradle.org[Gradle], Hibernate provides the
-https://plugins.gradle.org/plugin/org.hibernate.orm[org.hibernate.orm] plugin which
-supports bytecode enhancement and static metamodel generation but not schema tooling.
+Hibernate provides the ability to integrate both
+<<tooling-gradle-enhancement,bytecode enhancement>> and <<tooling-gradle-modelgen,metamodel generation>> capabilities into Gradle builds.
 
+[[tooling-gradle-enhancement]]
+==== Bytecode Enhancement
+
+Bytecode enhancement is incorporated into Gradle builds using Hibernate's
+https://plugins.gradle.org/plugin/org.hibernate.orm[Gradle plugin].
 To apply the plugin, use Gradle's `plugins {}` block:
 
 [source,gradle]
@@ -14,24 +18,18 @@ plugins {
 }
 ----
 
-
 Applying the plugin creates a `hibernate` extension (`HibernateOrmSpec`) to configure the plugin.
-By default, when the plugin is applied, support for both bytecode enhancement and static metamodel
-generation is enabled.
 
 [source,gradle]
 ----
 hibernate {
-    // for illustration, let's disable both
-    disableEnhancement
-    disableJpaMetamodel
+    ...
 }
 ----
 
-[[tooling-gradle-enhancement]]
-==== Bytecode Enhancement
+Enhancement is configured through the `enhancement` extension.
 
-Enhancement is configured through the `enhancement` extension:
+NOTE: `hibernate {}` and `enhancement {}` are separate to allow for schema tooling capabilities to be added later.
 
 [source,gradle]
 ----
@@ -47,13 +45,9 @@ hibernate {
 
 The extension is of type `EnhancementSpec` which exposes the following properties:
 
-
-enableLazyInitialization:: Whether to incorporate lazy loading support into the enhanced bytecode
-enableDirtyTracking:: Whether to incorporate dirty tracking into the enhanced bytecode
-enableAssociationManagement:: Whether to add bidirectional association management into the enhanced bytecode
-
-
-Which all default to false (disabled).
+enableLazyInitialization:: Whether to incorporate lazy loading support into the enhanced bytecode. Defaults to `true`. This setting is deprecated for removal without a replacement.  See <<BytecodeEnhancement-lazy-loading>>
+enableDirtyTracking:: Whether to incorporate dirty tracking into the enhanced bytecode. Defaults to `true`. This setting is deprecated for removal without a replacement.  See <<BytecodeEnhancement-dirty-tracking>>.
+enableAssociationManagement:: Whether to add bidirectional association management into the enhanced bytecode.  See <<BytecodeEnhancement-dirty-tracking-bidirectional>>.
 
 It also exposes the following method forms:
 
@@ -65,49 +59,14 @@ It also exposes the following method forms:
 [[tooling-gradle-modelgen]]
 ==== Static Metamodel Generation
 
-One approach to integrate Static Metamodel generation into a Gradle build is to
-use Gradle's support for annotation processors -
+Static metamodel generation can be incorporated into Gradle builds via the
+annotation processor provided by the `org.hibernate.orm:hibernate-processor` artifact.  Applying
+an annotation processor in Gradle is super easy -
+
 
 [source,gradle]
 ----
 dependencies {
-    annotationProcessor "org.hibernate.orm:hibernate-jpamodelgen:${hibernateVersion}"
+    annotationProcessor "org.hibernate.orm:hibernate-processor:${hibernateVersion}"
 }
 ----
-
-When the build does not need bytecode enhancement support, this is a perfectly valid solution.
-
-The plugin supports simpler configuration of the generator using the registered
-`jpaMetamodel` extension:
-
-
-[source,gradle]
-----
-hibernate {
-    jpaMetamodel {
-        applyGeneratedAnnotation false
-        suppress 'raw'
-        generationOutputDirectory "${buildDir}/generated/sources/modelgen"
-        compileOutputDirectory "${buildDir}/classes/java/modelgen"
-    }
-}
-----
-
-The extension is of type `JpaMetamodelGenerationSpec`, which exposes the following configuration properties:
-
-applyGeneratedAnnotation:: Should the `javax.annotation.processing.Generated` annotation be added to the
-generated classes.  Defaults to `true`.
-suppressions:: Suppressions to add to the generated classes.  Defaults to `['raw', 'deprecation']`
-generationOutputDirectory:: Directory where the generated metamodel classes should be created.  Defaults
-to `${buildDir}/generated/sources/jpaMetamodel`
-[[tooling-gradle-modelgen-compile-output]]
-compileOutputDirectory:: Directory where the classes compiled from the generated metamodel classes should be
-created. Defaults to `${buildDir}/classes/java/jpaMetamodel`.
-
-It also exposes the following method forms:
-
-* applyGeneratedAnnotation(boolean)
-* suppress(String)
-* generationOutputDirectory(Object)
-* compileOutputDirectory(Object)
-

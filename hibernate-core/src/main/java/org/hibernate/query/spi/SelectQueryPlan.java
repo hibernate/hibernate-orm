@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.spi;
 
@@ -11,6 +9,7 @@ import java.util.List;
 import org.hibernate.Incubating;
 import org.hibernate.ScrollMode;
 import org.hibernate.query.Query;
+import org.hibernate.sql.results.spi.ResultsConsumer;
 
 /**
  * General contract for performing execution of a query returning results.  These
@@ -32,6 +31,12 @@ import org.hibernate.query.Query;
  */
 @Incubating
 public interface SelectQueryPlan<R> extends QueryPlan {
+	/**
+	 * Execute the query
+	 *
+	 * @since 6.4
+	 */
+	<T> T executeQuery(DomainQueryExecutionContext executionContext, ResultsConsumer<T, R> resultsConsumer);
 	/**
 	 * Perform (execute) the query returning a List
 	 */

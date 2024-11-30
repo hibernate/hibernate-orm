@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
@@ -66,6 +64,8 @@ public final class BooleanDecoder {
 				return "decode(?1,1,'Y',0,'N',null)";
 			case TF_BOOLEAN:
 				return "decode(?1,'T','Y','F','N',null)";
+			case BOOLEAN:
+				return "decode(?1,true,'Y',false,'N',null)";
 			case INTEGER:
 			case LONG:
 				return "decode(abs(sign(?1)),1,'Y',0,'N',null)";
@@ -81,6 +81,8 @@ public final class BooleanDecoder {
 				return "decode(?1,1,'T',0,'F',null)";
 			case YN_BOOLEAN:
 				return "decode(?1,'Y','T','N','F',null)";
+			case BOOLEAN:
+				return "decode(?1,true,'T',false,'F',null)";
 			case INTEGER:
 			case LONG:
 				return "decode(abs(sign(?1)),1,'T',0,'F',null)";

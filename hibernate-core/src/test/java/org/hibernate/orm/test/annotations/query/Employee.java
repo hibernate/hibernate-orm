@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.query;
 
@@ -13,15 +11,15 @@ import jakarta.persistence.ManyToOne;
 
 @Entity
 public class Employee {
-    @Id
-    @GeneratedValue
-    private Long id;
+	@Id
+	@GeneratedValue
+	private Long id;
 
-    @ManyToOne
-    private Employeegroup employeegroup;
+	@ManyToOne
+	private Employeegroup employeegroup;
 
-    @ManyToOne
-    private Attrset attrset;
+	@ManyToOne
+	private Attrset attrset;
 
 	public Long getId() {
 		return id;

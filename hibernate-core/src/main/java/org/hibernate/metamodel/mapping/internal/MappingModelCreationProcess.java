@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
@@ -10,13 +8,19 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
-import org.hibernate.metamodel.mapping.MappingModelCreationLogger;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NonTransientException;
+import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.model.domain.internal.EntityPersisterConcurrentMap;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+
+import static org.hibernate.metamodel.mapping.MappingModelCreationLogging.MAPPING_MODEL_CREATION_MESSAGE_LOGGER;
 
 /**
  * @author Steve Ebersole
@@ -28,32 +32,30 @@ public class MappingModelCreationProcess {
 	 * Triggers creation of the mapping model
 	 */
 	public static void process(
-			Map<String,EntityPersister> entityPersisterMap,
-			SqmFunctionRegistry functionRegistry,
+			EntityPersisterConcurrentMap entityPersisterMap,
+			Map<String, CollectionPersister> collectionPersisterMap,
 			RuntimeModelCreationContext creationContext) {
 		final MappingModelCreationProcess process = new MappingModelCreationProcess(
 				entityPersisterMap,
-				functionRegistry,
+				collectionPersisterMap,
 				creationContext
 		);
 		process.execute();
 	}
 
-	private final Map<String,EntityPersister> entityPersisterMap;
-	private final SqmFunctionRegistry functionRegistry;
-
+	private final EntityPersisterConcurrentMap entityPersisterMap;
+	private final Map<String, CollectionPersister> collectionPersisterMap;
 	private final RuntimeModelCreationContext creationContext;
 
 	private String currentlyProcessingRole;
-
 	private List<PostInitCallbackEntry> postInitCallbacks;
 
 	private MappingModelCreationProcess(
-			Map<String, EntityPersister> entityPersisterMap,
-			SqmFunctionRegistry functionRegistry,
+			EntityPersisterConcurrentMap entityPersisterMap,
+			Map<String, CollectionPersister> collectionPersisterMap,
 			RuntimeModelCreationContext creationContext) {
 		this.entityPersisterMap = entityPersisterMap;
-		this.functionRegistry = functionRegistry;
+		this.collectionPersisterMap = collectionPersisterMap;
 		this.creationContext = creationContext;
 	}
 
@@ -66,7 +68,7 @@ public class MappingModelCreationProcess {
 	}
 
 	public SqmFunctionRegistry getSqmFunctionRegistry() {
-		return functionRegistry;
+		return creationContext.getFunctionRegistry();
 	}
 
 	/**
@@ -87,11 +89,17 @@ public class MappingModelCreationProcess {
 			}
 		}
 
+		for ( CollectionPersister collectionPersister : collectionPersisterMap.values() ) {
+			if ( collectionPersister instanceof InFlightCollectionMapping ) {
+				((InFlightCollectionMapping) collectionPersister).prepareMappingModel( this );
+			}
+		}
+
 		executePostInitCallbacks();
 	}
 
 	private void executePostInitCallbacks() {
-		MappingModelCreationLogger.LOGGER.debugf( "Starting post-init callbacks" );
+		MAPPING_MODEL_CREATION_MESSAGE_LOGGER.debugf( "Starting post-init callbacks" );
 
 		Map<PostInitCallbackEntry, Exception> exceptions = new HashMap<>();
 		while ( postInitCallbacks != null && !postInitCallbacks.isEmpty() ) {
@@ -114,7 +122,7 @@ public class MappingModelCreationProcess {
 				}
 				catch (Exception e) {
 					if ( e instanceof NonTransientException ) {
-						MappingModelCreationLogger.LOGGER.debugf(
+						MAPPING_MODEL_CREATION_MESSAGE_LOGGER.debugf(
 								"Mapping-model creation encountered non-transient error : %s",
 								e
 						);
@@ -123,11 +131,11 @@ public class MappingModelCreationProcess {
 					exceptions.put( callbackEntry, e );
 
 					final String format = "Mapping-model creation encountered (possibly) transient error : %s";
-					if ( MappingModelCreationLogger.TRACE_ENABLED ) {
-						MappingModelCreationLogger.LOGGER.tracef( e, format, e );
+					if ( MAPPING_MODEL_CREATION_MESSAGE_LOGGER.isTraceEnabled() ) {
+						MAPPING_MODEL_CREATION_MESSAGE_LOGGER.tracef( e, format, e );
 					}
 					else {
-						MappingModelCreationLogger.LOGGER.debugf( format, e );
+						MAPPING_MODEL_CREATION_MESSAGE_LOGGER.debugf( format, e );
 					}
 				}
 			}
@@ -180,6 +188,44 @@ public class MappingModelCreationProcess {
 		registerInitializationCallback( description, callback );
 	}
 
+	private final Map<NavigableRole,ForeignKeyDescriptor> keyDescriptorMap = new HashMap<>();
+	private final Map<NavigableRole,List<Consumer<ForeignKeyDescriptor>>> keyDescriptorWaitingConsumerMap = new HashMap<>();
+
+	public void withForeignKey(ModelPart keyOwner, Consumer<ForeignKeyDescriptor> consumer) {
+		withForeignKey( keyOwner.getNavigableRole(), consumer );
+	}
+
+	private void withForeignKey(NavigableRole navigableRole, Consumer<ForeignKeyDescriptor> consumer) {
+		final ForeignKeyDescriptor keyDescriptor = keyDescriptorMap.get( navigableRole );
+		if ( keyDescriptor != null ) {
+			consumer.accept( keyDescriptor );
+		}
+		else {
+			final List<Consumer<ForeignKeyDescriptor>> existingConsumers = keyDescriptorWaitingConsumerMap.get( navigableRole );
+			final List<Consumer<ForeignKeyDescriptor>> consumers;
+			if ( existingConsumers != null ) {
+				consumers = existingConsumers;
+			}
+			else {
+				consumers = new ArrayList<>();
+				keyDescriptorWaitingConsumerMap.put( navigableRole, consumers );
+			}
+			consumers.add( consumer );
+		}
+	}
+
+	public void registerForeignKey(ModelPart keyOwner, ForeignKeyDescriptor keyDescriptor) {
+		final NavigableRole navigableRole = keyOwner.getNavigableRole();
+		keyDescriptorMap.put( navigableRole, keyDescriptor );
+
+		final List<Consumer<ForeignKeyDescriptor>> waitingConsumers = keyDescriptorWaitingConsumerMap.remove( navigableRole );
+		if ( waitingConsumers != null ) {
+			for ( int i = 0; i < waitingConsumers.size(); i++ ) {
+				waitingConsumers.get( i ).accept( keyDescriptor );
+			}
+		}
+	}
+
 	@FunctionalInterface
 	public interface PostInitCallback {
 		boolean process();
@@ -203,7 +249,7 @@ public class MappingModelCreationProcess {
 		}
 
 		private boolean process() {
-			MappingModelCreationLogger.LOGGER.debugf(
+			MAPPING_MODEL_CREATION_MESSAGE_LOGGER.debugf(
 					"Starting PostInitCallbackEntry : %s",
 					description
 			);

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.spi;
 
@@ -12,7 +10,7 @@ import org.hibernate.service.Service;
 
 /**
  * An interface for factories of {@link ProxyFactory proxy factory} instances.
- * <p/>
+ * <p>
  * Currently used to abstract from the tuplizer whether we are using Byte Buddy or
  * possibly another implementation (in the future?) for lazy proxy generation.
  *
@@ -30,11 +28,11 @@ public interface ProxyFactoryFactory extends Service {
 	/**
 	 * Build a proxy factory for basic proxy concerns.  The return
 	 * should be capable of properly handling newInstance() calls.
-	 * <p/>
+	 * <p>
 	 * Should build basic proxies essentially equivalent to JDK proxies in
 	 * terms of capabilities, but should be able to deal with abstract super
 	 * classes in addition to proxy interfaces.
-	 * <p/>
+	 * <p>
 	 * Must pass in either a superClass or an interface.
 	 *
 	 * @param superClassOrInterface The abstract super class, or the

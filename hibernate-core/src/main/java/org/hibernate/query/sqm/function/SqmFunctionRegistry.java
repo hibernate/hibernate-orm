@@ -1,62 +1,92 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.function;
 
-import java.util.AbstractMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Stream;
 
+import org.hibernate.internal.util.collections.CaseInsensitiveDictionary;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.query.sqm.produce.function.NamedFunctionDescriptorBuilder;
+import org.hibernate.query.sqm.produce.function.NamedSetReturningFunctionDescriptorBuilder;
 import org.hibernate.query.sqm.produce.function.PatternFunctionDescriptorBuilder;
+import org.hibernate.query.sqm.produce.function.SetReturningFunctionTypeResolver;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
+import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
 
 /**
- * Defines a registry for {@link SqmFunctionDescriptor} instances
+ * Defines a registry for {@link SqmFunctionDescriptor} instances.
+ * <p>
+ * The {@code SqmFunctionRegistry} may be configured by a {@link org.hibernate.boot.model.FunctionContributor}.
+ *
+ * @see org.hibernate.boot.model.FunctionContributor
+ * @see org.hibernate.boot.model.FunctionContributions
  *
  * @author Steve Ebersole
  */
 public class SqmFunctionRegistry {
 	private static final Logger log = Logger.getLogger( SqmFunctionRegistry.class );
 
-	private final Map<String, SqmFunctionDescriptor> functionMap = new TreeMap<>( CASE_INSENSITIVE_ORDER );
-	private final Map<String,String> alternateKeyMap = new TreeMap<>( CASE_INSENSITIVE_ORDER );
+	private final CaseInsensitiveDictionary<SqmFunctionDescriptor> functionMap = new CaseInsensitiveDictionary<>();
+	private final CaseInsensitiveDictionary<SqmSetReturningFunctionDescriptor> setReturningFunctionMap = new CaseInsensitiveDictionary<>();
+	private final CaseInsensitiveDictionary<String> alternateKeyMap = new CaseInsensitiveDictionary<>();
 
 	public SqmFunctionRegistry() {
 		log.trace( "SqmFunctionRegistry created" );
 	}
 
-	public Map<String, SqmFunctionDescriptor> getFunctions() {
-		return functionMap;
-	}
-
-	public Stream<Map.Entry<String, SqmFunctionDescriptor>> getFunctionsByName() {
-		return Stream.concat(
-				functionMap.entrySet().stream(),
-				alternateKeyMap.entrySet().stream().map(
-						entry -> new AbstractMap.SimpleEntry<>(
-								entry.getKey(),
-								functionMap.get( entry.getValue() )
-						)
-				)
-		);
+	public Set<String> getValidFunctionKeys() {
+		return functionMap.unmodifiableKeySet();
 	}
 
 	/**
-	 * Find a SqmFunctionTemplate by name.  Returns {@code null} if
-	 * no such function is found.
+	 * Useful for diagnostics - not efficient: do not use in production code.
+	 *
+	 * @return
 	 */
-	public SqmFunctionDescriptor findFunctionDescriptor(String functionName) {
+	public Stream<Map.Entry<String, SqmFunctionDescriptor>> getFunctionsByName() {
+		final Map<String, SqmFunctionDescriptor> sortedFunctionMap = new TreeMap<>( CASE_INSENSITIVE_ORDER );
+		for ( Map.Entry<String, SqmFunctionDescriptor> e : functionMap.unmodifiableEntrySet() ) {
+			sortedFunctionMap.put( e.getKey(), e.getValue() );
+		}
+		for ( Map.Entry<String, String> e : alternateKeyMap.unmodifiableEntrySet() ) {
+			sortedFunctionMap.put( e.getKey(), functionMap.get( e.getValue() ) );
+		}
+		return sortedFunctionMap.entrySet().stream();
+	}
+
+	/**
+	 * Useful for diagnostics - not efficient: do not use in production code.
+	 *
+	 * @return
+	 */
+	public Stream<Map.Entry<String, SqmSetReturningFunctionDescriptor>> getSetReturningFunctionsByName() {
+		final Map<String, SqmSetReturningFunctionDescriptor> sortedFunctionMap = new TreeMap<>( CASE_INSENSITIVE_ORDER );
+		for ( Map.Entry<String, SqmSetReturningFunctionDescriptor> e : setReturningFunctionMap.unmodifiableEntrySet() ) {
+			sortedFunctionMap.put( e.getKey(), e.getValue() );
+		}
+		for ( Map.Entry<String, String> e : alternateKeyMap.unmodifiableEntrySet() ) {
+			sortedFunctionMap.put( e.getKey(), setReturningFunctionMap.get( e.getValue() ) );
+		}
+		return sortedFunctionMap.entrySet().stream();
+	}
+
+	/**
+	 * Find a {@link SqmFunctionDescriptor} by name.
+	 * Returns {@code null} if no such function is found.
+	 */
+	public @Nullable SqmFunctionDescriptor findFunctionDescriptor(String functionName) {
 		SqmFunctionDescriptor found = null;
 
 		final String alternateKeyResolution = alternateKeyMap.get( functionName );
@@ -72,12 +102,46 @@ public class SqmFunctionRegistry {
 	}
 
 	/**
+	 * Find a {@link SqmSetReturningFunctionDescriptor} by name.
+	 * Returns {@code null} if no such function is found.
+	 */
+	public @Nullable SqmSetReturningFunctionDescriptor findSetReturningFunctionDescriptor(String functionName) {
+		SqmSetReturningFunctionDescriptor found = null;
+
+		final String alternateKeyResolution = alternateKeyMap.get( functionName );
+		if ( alternateKeyResolution != null ) {
+			found = setReturningFunctionMap.get( alternateKeyResolution );
+		}
+
+		if ( found == null ) {
+			found = setReturningFunctionMap.get( functionName );
+		}
+
+		return found;
+	}
+
+	/**
 	 * Register a function descriptor by name
 	 */
 	public SqmFunctionDescriptor register(String registrationKey, SqmFunctionDescriptor function) {
 		final SqmFunctionDescriptor priorRegistration = functionMap.put( registrationKey, function );
 		log.debugf(
 				"Registered SqmFunctionTemplate [%s] under %s; prior registration was %s",
+				function,
+				registrationKey,
+				priorRegistration
+		);
+		alternateKeyMap.remove( registrationKey );
+		return function;
+	}
+
+	/**
+	 * Register a set returning function descriptor by name
+	 */
+	public SqmSetReturningFunctionDescriptor register(String registrationKey, SqmSetReturningFunctionDescriptor function) {
+		final SqmSetReturningFunctionDescriptor priorRegistration = setReturningFunctionMap.put( registrationKey, function );
+		log.debugf(
+				"Registered SqmSetReturningFunctionTemplate [%s] under %s; prior registration was %s",
 				function,
 				registrationKey,
 				priorRegistration
@@ -203,6 +267,22 @@ public class SqmFunctionRegistry {
 	}
 
 	/**
+	 * Get a builder for creating and registering a name-based set-returning function descriptor
+	 * using the passed name as both the registration key and underlying SQL
+	 * function name
+	 *
+	 * @param name The function name (and registration key)
+	 * @param typeResolver The type resolver to use
+	 *
+	 * @return The builder
+	 */
+	public NamedSetReturningFunctionDescriptorBuilder namedSetReturningDescriptorBuilder(
+			String name,
+			SetReturningFunctionTypeResolver typeResolver) {
+		return namedSetReturningDescriptorBuilder( name, name, typeResolver );
+	}
+
+	/**
 	 * Get a builder for creating and registering a name-based function descriptor.
 	 *
 	 * @param registrationKey The name under which the descriptor will get registered
@@ -248,6 +328,22 @@ public class SqmFunctionRegistry {
 	 */
 	public NamedFunctionDescriptorBuilder namedWindowDescriptorBuilder(String registrationKey, String name) {
 		return new NamedFunctionDescriptorBuilder( this, registrationKey, FunctionKind.WINDOW, name );
+	}
+
+	/**
+	 * Get a builder for creating and registering a name-based set-returning function descriptor.
+	 *
+	 * @param registrationKey The name under which the descriptor will get registered
+	 * @param name The underlying SQL function name to use
+	 * @param typeResolver The type resolver to use
+	 *
+	 * @return The builder
+	 */
+	public NamedSetReturningFunctionDescriptorBuilder namedSetReturningDescriptorBuilder(
+			String registrationKey,
+			String name,
+			SetReturningFunctionTypeResolver typeResolver) {
+		return new NamedSetReturningFunctionDescriptorBuilder( this, registrationKey, name, typeResolver );
 	}
 
 	public NamedFunctionDescriptorBuilder noArgsBuilder(String name) {
@@ -319,6 +415,27 @@ public class SqmFunctionRegistry {
 		);
 	}
 
+	/**
+	 * Register a unary/binary function.
+	 *
+	 * i.e. a function which accepts 1-2 arguments.
+	 */
+	public MultipatternSqmFunctionDescriptor registerUnaryBinaryPattern(
+			String name,
+			String pattern1,
+			String pattern2,
+			FunctionParameterType parameterType1,
+			FunctionParameterType parameterType2,
+			TypeConfiguration typeConfiguration) {
+		return registerPatterns(
+				name,
+				new FunctionParameterType[] { parameterType1, parameterType2 },
+				typeConfiguration,
+				null,
+				pattern1,
+				pattern2
+		);
+	}
 	/**
 	 * Register a unary/binary function.
 	 *
@@ -400,6 +517,31 @@ public class SqmFunctionRegistry {
 				pattern3,
 				pattern4
 		);
+	}
+
+	private MultipatternSqmFunctionDescriptor registerPatterns(
+			String name,
+			FunctionParameterType[] parameterTypes,
+			TypeConfiguration typeConfiguration,
+			String... patterns) {
+		SqmFunctionDescriptor[] descriptors =
+				new SqmFunctionDescriptor[patterns.length];
+		for ( int i = 0; i < patterns.length; i++ ) {
+			String pattern = patterns[i];
+			if ( pattern != null ) {
+				descriptors[i] =
+						patternDescriptorBuilder( name, pattern )
+								.setExactArgumentCount( i )
+								.setParameterTypes( parameterTypes )
+								.setReturnTypeResolver( useArgType(1) )
+								.descriptor();
+			}
+		}
+
+		MultipatternSqmFunctionDescriptor function =
+				new MultipatternSqmFunctionDescriptor( name, descriptors, typeConfiguration, parameterTypes );
+		register( name, function );
+		return function;
 	}
 
 	private MultipatternSqmFunctionDescriptor registerPatterns(

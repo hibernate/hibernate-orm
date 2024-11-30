@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.spi;
 
@@ -14,11 +12,14 @@ import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.query.NamedQueryDefinition;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractNamedQueryDefinition implements NamedQueryDefinition {
+public abstract class AbstractNamedQueryDefinition<R> implements NamedQueryDefinition<R> {
 	private final String name;
+	private final @Nullable Class<R> resultType;
 
 	private final Boolean cacheable;
 	private final String cacheRegion;
@@ -35,9 +36,11 @@ public abstract class AbstractNamedQueryDefinition implements NamedQueryDefiniti
 	private final String comment;
 
 	private final Map<String,Object> hints;
+	private final String location;
 
 	public AbstractNamedQueryDefinition(
 			String name,
+			@Nullable Class<R> resultType,
 			Boolean cacheable,
 			String cacheRegion,
 			CacheMode cacheMode,
@@ -47,8 +50,10 @@ public abstract class AbstractNamedQueryDefinition implements NamedQueryDefiniti
 			Integer timeout,
 			Integer fetchSize,
 			String comment,
-			Map<String,Object> hints) {
+			Map<String,Object> hints,
+			String location) {
 		this.name = name;
+		this.resultType = resultType;
 		this.cacheable = cacheable;
 		this.cacheRegion = cacheRegion;
 		this.cacheMode = cacheMode;
@@ -59,11 +64,22 @@ public abstract class AbstractNamedQueryDefinition implements NamedQueryDefiniti
 		this.fetchSize = fetchSize;
 		this.comment = comment;
 		this.hints = hints == null ? new HashMap<>() : new HashMap<>( hints );
+		this.location = location;
 	}
 
 	@Override
 	public String getRegistrationName() {
 		return name;
+	}
+
+	@Override
+	public @Nullable String getLocation() {
+		return location;
+	}
+
+	@Override
+	public @Nullable Class<R> getResultType() {
+		return resultType;
 	}
 
 	public Boolean getCacheable() {
@@ -102,6 +118,7 @@ public abstract class AbstractNamedQueryDefinition implements NamedQueryDefiniti
 		return comment;
 	}
 
+	@Override
 	public Map<String, Object> getHints() {
 		return hints;
 	}

@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.deleteunloaded;
 
 import jakarta.persistence.Entity;
@@ -7,21 +11,21 @@ import jakarta.persistence.ManyToOne;
 
 @Entity
 public class Child {
-    @GeneratedValue
-    @Id
-    private long id;
-    @ManyToOne
-    private Parent parent;
+	@GeneratedValue
+	@Id
+	private long id;
+	@ManyToOne
+	private Parent parent;
 
-    public long getId() {
-        return id;
-    }
+	public long getId() {
+		return id;
+	}
 
-    public Parent getParent() {
-        return parent;
-    }
+	public Parent getParent() {
+		return parent;
+	}
 
-    public void setParent(Parent parent) {
-        this.parent = parent;
-    }
+	public void setParent(Parent parent) {
+		this.parent = parent;
+	}
 }

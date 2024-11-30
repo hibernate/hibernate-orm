@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
 
@@ -17,28 +15,37 @@ import static java.lang.annotation.ElementType.METHOD;
 
 /**
  * Specifies how the time zone information of a persistent property or field should be persisted.
- * The <code>TimeZoneStorage</code> annotation may be used in conjunction with the <code>Basic</code> annotation, or in
- * conjunction with the <code>ElementCollection</code> annotation when the
- * element collection value is of basic type. If the <code>TimeZoneStorage</code> annotation is not
- * used, the <code>TimeZoneStorageType</code> value is assumed to be <code>NORMALIZED</code>.
- *
+ * This annotation may be used in conjunction with the {@link jakarta.persistence.Basic} annotation,
+ * or in conjunction with the {@link jakarta.persistence.ElementCollection} annotation when the
+ * element collection value is of basic type. If the {@code TimeZoneStorage} annotation is not used,
+ * the {@link TimeZoneStorageType} has a default value determined by the dialect and by the
+ * configuration property {@value org.hibernate.cfg.AvailableSettings#TIMEZONE_DEFAULT_STORAGE}.
+ * <p>
+ * For example:
  * <pre>
- *   Example:
+ * &#64;Entity
+ * public class Person {
  *
- *   &#064;Entity public class Person {
- *       public OffsetDateTime getBirthDateTimeNormalized() {...}
+ *     &#64;Column(name = "birth_timestamp")
+ *     &#64;TimeZoneColumn(name = "birth_zone")
+ *     &#64;TimeZoneStorage(COLUMN)
+ *     public OffsetDateTime birthDate;
  *
- *       &#064;TimeZoneStorage
- *       &#064;TimeZoneColumn(column = &#064;Column(...))
- *       public OffsetDateTime getBirthDateTimeNativeOrColumn() {...}
- *       ...
- *   }
+ *     &#64;TimeZoneStorage(NATIVE)
+ *     public OffsetDateTime registrationDate;
+ *
+ *     ...
+ * }
  * </pre>
  *
  * @author Christian Beikov
  * @author Steve Ebersole
  * @author Andrea Boriero
+ *
+ * @see TimeZoneStorageType
  * @see TimeZoneColumn
+ *
+ * @since 6.0
  */
 @Incubating
 @Retention(RetentionPolicy.RUNTIME)

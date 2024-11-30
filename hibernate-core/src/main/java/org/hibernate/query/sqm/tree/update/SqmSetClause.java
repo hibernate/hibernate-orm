@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.update;
 
@@ -46,5 +44,20 @@ public class SqmSetClause {
 
 	public <Y> void addAssignment(SqmPath<Y> targetPath, SqmExpression<? extends Y> value) {
 		addAssignment( new SqmAssignment<>( targetPath, value ) );
+	}
+
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( " set " );
+		appendAssignment( assignments.get( 0 ), sb );
+		for ( int i = 1; i < assignments.size(); i++ ) {
+			sb.append( ", " );
+			appendAssignment( assignments.get( i ), sb );
+		}
+	}
+
+	private static void appendAssignment(SqmAssignment<?> sqmAssignment, StringBuilder sb) {
+		sqmAssignment.getTargetPath().appendHqlString( sb );
+		sb.append( " = " );
+		sqmAssignment.getValue().appendHqlString( sb );
 	}
 }

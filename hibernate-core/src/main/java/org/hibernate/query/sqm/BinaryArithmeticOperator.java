@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm;
 
@@ -82,6 +80,25 @@ public enum BinaryArithmeticOperator {
 		@Override
 		public char getOperatorSqlText() {
 			return '%';
+		}
+	},
+
+	/**
+	 * "Portable" division, that is, true integer division when the
+	 * operands are integers.
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#PORTABLE_INTEGER_DIVISION
+	 * @see org.hibernate.query.spi.QueryEngineOptions#isPortableIntegerDivisionEnabled()
+	 */
+	DIVIDE_PORTABLE {
+		@Override
+		public String toLoggableText(String lhs, String rhs) {
+			return standardToLoggableText( lhs, this, rhs );
+		}
+
+		@Override
+		public char getOperatorSqlText() {
+			return '/';
 		}
 	},
 

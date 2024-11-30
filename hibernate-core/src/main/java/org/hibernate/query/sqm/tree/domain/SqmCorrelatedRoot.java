@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
@@ -14,7 +12,7 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 /**
  * @author Steve Ebersole
  */
-public class SqmCorrelatedRoot<T> extends SqmRoot<T> implements SqmPathWrapper<T,T>, SqmCorrelation<T,T> {
+public class SqmCorrelatedRoot<T> extends SqmRoot<T> implements SqmPathWrapper<T, T>, SqmCorrelation<T, T> {
 
 	private final SqmRoot<T> correlationParent;
 
@@ -80,6 +78,6 @@ public class SqmCorrelatedRoot<T> extends SqmRoot<T> implements SqmPathWrapper<T
 
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
-		return walker.visitCorrelation( this );
+		return walker.visitCorrelatedRoot( this );
 	}
 }

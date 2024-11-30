@@ -1,19 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.spi;
 
 import java.util.Set;
 
-import org.hibernate.boot.model.TruthValue;
-
 /**
  * Contract for source information pertaining to a physical column definition specific to a particular attribute
  * context.
- * <p/>
+ * <p>
  * Conceptual note: this really describes a column from the perspective of its binding to an attribute, not
  * necessarily the column itself.
  *
@@ -46,7 +42,7 @@ public interface ColumnSource extends RelationalValueSource {
 	 *
 	 * @return {@code true} indicates it is nullable; {@code false} non-nullable.
 	 */
-	TruthValue isNullable();
+	Boolean isNullable();
 
 	/**
 	 * Obtain a specified default value for the column

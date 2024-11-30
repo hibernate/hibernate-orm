@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.index.jpa;
 
@@ -33,7 +31,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 /**
- * @author <a href="mailto:stliu@hibernate.org">Strong Liu</a>
+ * @author Strong Liu
  */
 public abstract class AbstractJPAIndexTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
@@ -51,7 +49,7 @@ public abstract class AbstractJPAIndexTest extends BaseNonConfigCoreFunctionalTe
 	@Test
 	public void testTableIndex() {
 		PersistentClass entity = metadata().getEntityBinding( Car.class.getName() );
-		Iterator itr = entity.getTable().getUniqueKeyIterator();
+		Iterator itr = entity.getTable().getUniqueKeys().values().iterator();
 		assertTrue( itr.hasNext() );
 		UniqueKey uk = (UniqueKey) itr.next();
 		assertFalse( itr.hasNext() );
@@ -64,13 +62,13 @@ public abstract class AbstractJPAIndexTest extends BaseNonConfigCoreFunctionalTe
 		assertSame( entity.getTable(), uk.getTable() );
 
 
-		itr = entity.getTable().getIndexIterator();
+		itr = entity.getTable().getIndexes().values().iterator();
 		assertTrue( itr.hasNext() );
 		Index index = (Index)itr.next();
 		assertFalse( itr.hasNext() );
 		assertEquals( "Car_idx", index.getName() );
 		assertEquals( 1, index.getColumnSpan() );
-		column = index.getColumnIterator().next();
+		column = index.getColumns().iterator().next();
 		assertEquals( "since", column.getName() );
 		assertSame( entity.getTable(), index.getTable() );
 	}
@@ -79,14 +77,14 @@ public abstract class AbstractJPAIndexTest extends BaseNonConfigCoreFunctionalTe
 	public void testSecondaryTableIndex(){
 		PersistentClass entity = metadata().getEntityBinding( Car.class.getName() );
 
-		Join join = (Join)entity.getJoinIterator().next();
-		Iterator<Index> itr = join.getTable().getIndexIterator();
+		Join join = entity.getJoins().get( 0 );
+		Iterator<Index> itr = join.getTable().getIndexes().values().iterator();
 		assertTrue( itr.hasNext() );
 		Index index = itr.next();
 		assertFalse( itr.hasNext() );
 		assertTrue( "index name is not generated", StringHelper.isNotEmpty( index.getName() ) );
 		assertEquals( 2, index.getColumnSpan() );
-		Iterator<Column> columnIterator = index.getColumnIterator();
+		Iterator<Column> columnIterator = index.getColumns().iterator();
 		Column column = columnIterator.next();
 		assertEquals( "dealer_name", column.getName() );
 		column = columnIterator.next();
@@ -102,13 +100,13 @@ public abstract class AbstractJPAIndexTest extends BaseNonConfigCoreFunctionalTe
 		Set set = (Set)property.getValue();
 		Table collectionTable = set.getCollectionTable();
 
-		Iterator<Index> itr = collectionTable.getIndexIterator();
+		Iterator<Index> itr = collectionTable.getIndexes().values().iterator();
 		assertTrue( itr.hasNext() );
 		Index index = itr.next();
 		assertFalse( itr.hasNext() );
 		assertTrue( "index name is not generated", StringHelper.isNotEmpty( index.getName() ) );
 		assertEquals( 1, index.getColumnSpan() );
-		Iterator<Column> columnIterator = index.getColumnIterator();
+		Iterator<Column> columnIterator = index.getColumns().iterator();
 		Column column = columnIterator.next();
 		assertEquals( "name", column.getName() );
 		assertSame( collectionTable, index.getTable() );
@@ -122,13 +120,13 @@ public abstract class AbstractJPAIndexTest extends BaseNonConfigCoreFunctionalTe
 		Bag set = (Bag)property.getValue();
 		Table collectionTable = set.getCollectionTable();
 
-		Iterator<Index> itr = collectionTable.getIndexIterator();
+		Iterator<Index> itr = collectionTable.getIndexes().values().iterator();
 		assertTrue( itr.hasNext() );
 		Index index = itr.next();
 		assertFalse( itr.hasNext() );
 		assertTrue( "index name is not generated", StringHelper.isNotEmpty( index.getName() ) );
 		assertEquals( 1, index.getColumnSpan() );
-		Iterator<Column> columnIterator = index.getColumnIterator();
+		Iterator<Column> columnIterator = index.getColumns().iterator();
 		Column column = columnIterator.next();
 		assertEquals( "importers_id", column.getName() );
 		assertSame( collectionTable, index.getTable() );

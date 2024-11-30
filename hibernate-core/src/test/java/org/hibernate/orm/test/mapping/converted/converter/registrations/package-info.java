@@ -23,7 +23,7 @@
  *         converter advertises it converts
  *     </li>
  * </ul>
- * <p/>
+ * <p>
  * Additionally, see the following tests for various "edge case" scenarios:<ul>
  *     <li>{@link org.hibernate.orm.test.mapping.converted.converter.registrations.MatchingDuplicateRegistrationTests}</li>
  *     <li>{@link org.hibernate.orm.test.mapping.converted.converter.registrations.MismatchDuplicateRegistrationTests}</li>

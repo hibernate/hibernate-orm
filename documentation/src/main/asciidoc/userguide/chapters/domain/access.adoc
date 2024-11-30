@@ -1,6 +1,8 @@
 [[access]]
 === Access strategies
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/mapping/access
+:root-project-dir: ../../../../../../..
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-access: {core-project-dir}/src/test/java/org/hibernate/orm/test/mapping/access
 :extrasdir: extras
 
 As a Jakarta Persistence provider, Hibernate can introspect both the entity attributes (instance fields) or the accessors (instance properties).
@@ -25,7 +27,7 @@ Embeddable types inherit the access strategy from their parent entities.
 ====
 [source,java]
 ----
-include::{sourcedir}/FieldAccessTest.java[tag=access-field-mapping-example, indent=0]
+include::{example-dir-access}/FieldAccessTest.java[tag=access-field-mapping-example, indent=0]
 ----
 ====
 
@@ -49,7 +51,7 @@ With field-based access, we can simply omit the getter and the setter for this v
 ====
 [source,java]
 ----
-include::{sourcedir}/PropertyAccessTest.java[tag=access-property-mapping-example, indent=0]
+include::{example-dir-access}/PropertyAccessTest.java[tag=access-property-mapping-example, indent=0]
 ----
 ====
 
@@ -66,7 +68,7 @@ In the following example, the `@Version` attribute is accessed by its field and 
 ====
 [source,java]
 ----
-include::{sourcedir}/PropertyAccessOverrideTest.java[tag=access-property-override-mapping-example, indent=0]
+include::{example-dir-access}/PropertyAccessOverrideTest.java[tag=access-property-override-mapping-example, indent=0]
 ----
 ====
 
@@ -84,7 +86,7 @@ In the following example, the embeddable uses property-based access, no matter w
 ====
 [source,java]
 ----
-include::{sourcedir}/EmbeddableAccessTest.java[tag=access-embeddable-mapping-example, indent=0]
+include::{example-dir-access}/EmbeddableAccessTest.java[tag=access-embeddable-mapping-example, indent=0]
 ----
 ====
 
@@ -95,7 +97,7 @@ The owning entity can use field-based access while the embeddable uses property-
 ====
 [source,java]
 ----
-include::{sourcedir}/EmbeddableAccessTest.java[tag=access-embedded-mapping-example, indent=0]
+include::{example-dir-access}/EmbeddableAccessTest.java[tag=access-embedded-mapping-example, indent=0]
 ----
 ====
 
@@ -106,6 +108,6 @@ This works also for collection of embeddable types:
 ====
 [source,java]
 ----
-include::{sourcedir}/ElementCollectionAccessTest.java[tag=access-element-collection-mapping-example, indent=0]
+include::{example-dir-access}/ElementCollectionAccessTest.java[tag=access-element-collection-mapping-example, indent=0]
 ----
 ====

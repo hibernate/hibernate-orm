@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.naturalid;
 
@@ -190,8 +188,8 @@ public class CompoundNaturalIdTests {
 					final NaturalIdMultiLoadAccess<Account> loadAccess = session.byMultipleNaturalId( Account.class );
 					loadAccess.enableOrderedReturn( false );
 					final List<Account> accounts = loadAccess.multiLoad(
-							NaturalIdMultiLoadAccess.compoundValue( "system", "matrix", "username", "neo" ),
-							NaturalIdMultiLoadAccess.compoundValue( "system", "matrix", "username", "trinity" )
+							Map.of( "system", "matrix", "username", "neo" ),
+							Map.of( "system", "matrix", "username", "trinity" )
 					);
 					assertThat( accounts.size(), is( 2 ) );
 

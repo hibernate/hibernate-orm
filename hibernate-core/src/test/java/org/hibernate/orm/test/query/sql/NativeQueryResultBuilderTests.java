@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.sql;
 
@@ -13,21 +11,23 @@ import java.time.Instant;
 import java.util.List;
 
 import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
-import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
+import org.hibernate.testing.orm.domain.gambit.BasicEntity;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -60,7 +60,7 @@ public class NativeQueryResultBuilderTests {
 	public void fullyImplicitTest(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final String sql = "select theString, theInteger, id from EntityOfBasics";
+					final String sql = "select the_string, the_integer, id from EntityOfBasics";
 					final NativeQueryImplementor<?> query = session.createNativeQuery( sql );
 
 					final List<?> results = query.list();
@@ -91,7 +91,7 @@ public class NativeQueryResultBuilderTests {
 							.isNotInstanceOf( SQLServerDialect.class )
 							.isNotInstanceOf( SybaseDialect.class )
 							.isNotInstanceOf( OracleDialect.class );
-					final String sql = "select count(theString) from EntityOfBasics";
+					final String sql = "select count(the_string) from EntityOfBasics";
 					final NativeQueryImplementor<?> query = session.createNativeQuery( sql );
 
 					final List<?> results = query.list();
@@ -109,12 +109,12 @@ public class NativeQueryResultBuilderTests {
 	public void explicitOrderTest(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final String sql = "select theString, theInteger, id from EntityOfBasics";
+					final String sql = "select the_string, the_integer, id from EntityOfBasics";
 					final NativeQueryImplementor<?> query = session.createNativeQuery( sql );
 					// notice the reverse order from the select clause
 					query.addScalar( "id" );
-					query.addScalar( "theInteger" );
-					query.addScalar( "theString" );
+					query.addScalar( "the_integer" );
+					query.addScalar( "the_string" );
 
 					final List<?> results = query.list();
 					assertThat( results.size(), is( 1 ) );
@@ -279,6 +279,45 @@ public class NativeQueryResultBuilderTests {
 		);
 	}
 
+	@Test
+	@JiraKey("HHH-18629")
+	public void testNativeQueryWithResultClass(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final String sql = "select data, id from BasicEntity";
+					final NativeQueryImplementor<?> query = session.createNativeQuery( sql, BasicEntity.class );
+
+					final List<?> results = query.list();
+					assertThat( results.size(), is( 1 ) );
+
+					final BasicEntity result = (BasicEntity) results.get( 0 );
+
+					assertThat( result.getData(), is( STRING_VALUE ) );
+					assertThat( result.getId(), is( 1 ) );
+				}
+		);
+	}
+
+	@Test
+	@JiraKey("HHH-18629")
+	public void testNativeQueryWithResultClassAndPlaceholders(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final String sql = "select {be.*} from BasicEntity be";
+					final NativeQueryImplementor<?> query = session.createNativeQuery( sql, BasicEntity.class );
+					query.addEntity( "be", BasicEntity.class );
+
+					final List<?> results = query.list();
+					assertThat( results.size(), is( 1 ) );
+
+					final BasicEntity result = (BasicEntity) results.get( 0 );
+
+					assertThat( result.getData(), is( STRING_VALUE ) );
+					assertThat( result.getId(), is( 1 ) );
+				}
+		);
+	}
+
 	@BeforeAll
 	public void verifyModel(SessionFactoryScope scope) {
 		final EntityMappingType entityDescriptor = scope.getSessionFactory()
@@ -317,13 +356,16 @@ public class NativeQueryResultBuilderTests {
 					entityOfBasics.setTheInstant( Instant.EPOCH );
 
 					session.persist( entityOfBasics );
+
+					session.persist( new BasicEntity( 1, STRING_VALUE ) );
 				}
 		);
 
 		scope.inTransaction(
 				session -> {
-					final EntityOfBasics entity = session.get( EntityOfBasics.class, 1 );
-					assertThat( entity, notNullValue() );
+					assertThat( session.get( EntityOfBasics.class, 1 ), notNullValue() );
+
+					assertThat( session.get( BasicEntity.class, 1 ), notNullValue() );
 				}
 		);
 	}
@@ -331,7 +373,10 @@ public class NativeQueryResultBuilderTests {
 	@AfterEach
 	public void cleanUpData(SessionFactoryScope scope) {
 		scope.inTransaction(
-				session -> session.createQuery( "delete EntityOfBasics" ).executeUpdate()
+				session -> {
+					session.createQuery( "delete EntityOfBasics" ).executeUpdate();
+					session.createQuery( "delete BasicEntity" ).executeUpdate();
+				}
 		);
 	}
 

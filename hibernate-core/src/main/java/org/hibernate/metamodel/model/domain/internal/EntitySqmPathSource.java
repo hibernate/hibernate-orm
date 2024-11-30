@@ -1,13 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -21,37 +18,43 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
  * @author Steve Ebersole
  */
 public class EntitySqmPathSource<J> extends AbstractSqmPathSource<J> implements SqmJoinable<Object, J> {
+	private final boolean isGeneric;
+
 	public EntitySqmPathSource(
 			String localPathName,
+			SqmPathSource<J> pathModel,
 			EntityDomainType<J> domainType,
-			BindableType jpaBindableType) {
-		super( localPathName, domainType, jpaBindableType );
+			BindableType jpaBindableType,
+			boolean isGeneric) {
+		super( localPathName, pathModel, domainType, jpaBindableType );
+		this.isGeneric = isGeneric;
 	}
 
 	@Override
 	public EntityDomainType<J> getSqmPathType() {
-		//noinspection unchecked
 		return (EntityDomainType<J>) super.getSqmPathType();
 	}
 
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name) {
-		final EntityDomainType<J> sqmPathType = getSqmPathType();
-		return sqmPathType.findSubPathSource( name );
+		return getSqmPathType().findSubPathSource( name );
+	}
+
+	@Override
+	public SqmPathSource<?> findSubPathSource(String name, boolean includeSubtypes) {
+		return getSqmPathType().findSubPathSource( name, includeSubtypes );
+	}
+
+	@Override
+	public boolean isGeneric() {
+		return isGeneric;
 	}
 
 	@Override
 	public SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
-		final NavigablePath navigablePath;
-		if ( intermediatePathSource == null ) {
-			navigablePath = lhs.getNavigablePath().append( getPathName() );
-		}
-		else {
-			navigablePath = lhs.getNavigablePath().append( intermediatePathSource.getPathName() ).append( getPathName() );
-		}
 		return new SqmEntityValuedSimplePath<>(
-				navigablePath,
-				this,
+				PathHelper.append( lhs, this, intermediatePathSource ),
+				pathModel,
 				lhs,
 				lhs.nodeBuilder()
 		);
@@ -66,7 +69,7 @@ public class EntitySqmPathSource<J> extends AbstractSqmPathSource<J> implements 
 			SqmCreationState creationState) {
 		return new SqmPluralPartJoin<>(
 				lhs,
-				this,
+				pathModel,
 				alias,
 				joinType,
 				creationState.getCreationContext().getNodeBuilder()

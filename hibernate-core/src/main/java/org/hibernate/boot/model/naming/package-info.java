@@ -6,25 +6,28 @@
  */
 
 /**
- * Represents a proposed new approach to allowing hooks into the process of determining
- * the name of database objects (tables, columns, constraints, etc).  Historically this is
- * the role of the {@link org.hibernate.cfg.NamingStrategy} contract.  However, NamingStrategy
- * suffers from many design flaws that are just not addressable in any sort of backwards
- * compatible manner.  So this proposed approach is essentially a clean-room impl based
- * on lessons learned through NamingStrategy.
- * <p/>
- * Naming is split here into 2 main pieces:<ol>
+ * This API allows intervention by generic code in the process of determining the names of
+ * database objects (tables, columns, and constraints).
+ * <p>
+ * Name determination happens in two phases:
+ * <ol>
  *     <li>
- *         <b>logical</b> - Is the process of applying naming rules to determine the names
- *         of objects which were not explicitly given names in mapping.  See
+ *         <em>Logical naming</em> is the process of applying naming rules to determine the
+ *         names of objects which were not explicitly assigned names in the O/R mapping.
+ *         <p>Here, this is the responsibility of an implementation of
  *         {@link org.hibernate.boot.model.naming.ImplicitNamingStrategy}.
  *     </li>
  *     <li>
- *         <b>physical</b> - Is the process of applying naming rules to transform the logical
- *         name into the actual (physical) name that will be used in the database.  Rules here
- *         might be things like using standardized abbreviations ("NUMBER" -> "NUM"), applying
- *         identifier length shortening, etc.  See {@link org.hibernate.boot.model.naming.PhysicalNamingStrategy}.
+ *         <em>Physical naming</em> is the process of applying additional rules to transform
+ *         a logical name into an actual "physical" name that will be used in the database.
+ *         For example, the rules might include things like using standardized abbreviations,
+ *         or trimming the length of identifiers.
+ *         <p>Here, this is the responsibility of an implementation of
+ *         {@link org.hibernate.boot.model.naming.PhysicalNamingStrategy}.
  *     </li>
  * </ol>
+ *
+ * @apiNote The API defined in this package replaced the now-removed interface
+ *          {@code org.hibernate.cfg.NamingStrategy} from older versions of Hibernate.
  */
 package org.hibernate.boot.model.naming;

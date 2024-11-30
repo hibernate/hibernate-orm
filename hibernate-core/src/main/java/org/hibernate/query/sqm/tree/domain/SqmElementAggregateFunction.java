@@ -1,31 +1,76 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import java.util.List;
+
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
  */
 public class SqmElementAggregateFunction<T> extends AbstractSqmSpecificPluralPartPath<T> {
 	private final String functionName;
+	private final ReturnableType<T> returnableType;
 
 	public SqmElementAggregateFunction(SqmPath<?> pluralDomainPath, String functionName) {
 		//noinspection unchecked
 		super(
 				pluralDomainPath.getNavigablePath().getParent().append( pluralDomainPath.getNavigablePath().getLocalName(), "{" + functionName + "-element}" ),
 				pluralDomainPath,
-				(PluralPersistentAttribute<?, ?, T>) pluralDomainPath.getReferencedPathSource()
+				(PluralPersistentAttribute<?, ?, ?>) pluralDomainPath.getReferencedPathSource(),
+				( (PluralPersistentAttribute<?, ?, T>) pluralDomainPath.getReferencedPathSource() ).getElementPathSource()
 		);
 		this.functionName = functionName;
+		switch ( functionName ) {
+			case "sum":
+				//noinspection unchecked
+				this.returnableType = (ReturnableType<T>) nodeBuilder().getSumReturnTypeResolver()
+						.resolveFunctionReturnType(
+								null,
+								(SqmToSqlAstConverter) null,
+								List.of( pluralDomainPath ),
+								nodeBuilder().getTypeConfiguration()
+						);
+				break;
+			case "avg":
+				//noinspection unchecked
+				this.returnableType = (ReturnableType<T>) nodeBuilder().getAvgReturnTypeResolver()
+						.resolveFunctionReturnType(
+								null,
+								(SqmToSqlAstConverter) null,
+								List.of( pluralDomainPath ),
+								nodeBuilder().getTypeConfiguration()
+						);
+				break;
+			default:
+				this.returnableType = null;
+				break;
+		}
+	}
+
+	@Override
+	public SqmExpressible<T> getExpressible() {
+		return returnableType == null ? super.getExpressible() : returnableType;
+	}
+
+	@Override
+	public JavaType<T> getJavaTypeDescriptor() {
+		return returnableType == null ? super.getJavaTypeDescriptor() : returnableType.getExpressibleJavaType();
+	}
+
+	@Override
+	public JavaType<T> getNodeJavaType() {
+		return returnableType == null ? super.getNodeJavaType() : returnableType.getExpressibleJavaType();
 	}
 
 	@Override
@@ -55,14 +100,9 @@ public class SqmElementAggregateFunction<T> extends AbstractSqmSpecificPluralPar
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		final SqmPath<?> sqmPath = get( name );
+		final SqmPath<?> sqmPath = get( name, true );
 		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
 		return sqmPath;
-	}
-
-	@Override
-	public SqmPathSource<T> getReferencedPathSource() {
-		return getPluralAttribute().getElementPathSource();
 	}
 
 	@Override

@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id$
 package org.hibernate.orm.test.annotations.inheritance.joined;
 
 import jakarta.persistence.AttributeOverride;
@@ -19,7 +15,7 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.SecondaryTables;
 
-import org.hibernate.annotations.Tables;
+import org.hibernate.annotations.SecondaryRow;
 
 /**
  * @author Emmanuel Bernard
@@ -30,14 +26,12 @@ import org.hibernate.annotations.Tables;
 	@SecondaryTable(name="POOL_ADDRESS"),
 	@SecondaryTable(name="POOL_ADDRESS_2")
 })
-@Tables({
-	@org.hibernate.annotations.Table(appliesTo="POOL_ADDRESS", optional=true),
-	@org.hibernate.annotations.Table(appliesTo="POOL_ADDRESS_2", optional=true, inverse = true)
-})
+@SecondaryRow(table ="POOL_ADDRESS", optional=true)
+@SecondaryRow(table ="POOL_ADDRESS_2", optional=true, owned = false)
 public class Pool {
-	@Id @GeneratedValue 
+	@Id @GeneratedValue
 	private Integer id;
-	
+
 	@Embedded
 	private PoolAddress address;
 

@@ -1,10 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
+
+import java.util.Objects;
 
 /**
  * Simple version of DatabaseVersion
@@ -83,5 +83,39 @@ public class SimpleDatabaseVersion implements DatabaseVersion {
 
 	public int getMicro() {
 		return micro;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder version = new StringBuilder();
+		if ( major != NO_VERSION ) {
+			version.append( major );
+		}
+		if ( minor != NO_VERSION ) {
+			version.append( "." );
+			version.append( minor );
+			if ( micro > 0 ) {
+				version.append( "." );
+				version.append( micro );
+			}
+		}
+		return version.toString();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+		SimpleDatabaseVersion that = (SimpleDatabaseVersion) o;
+		return major == that.major && minor == that.minor && micro == that.micro;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( major, minor, micro );
 	}
 }

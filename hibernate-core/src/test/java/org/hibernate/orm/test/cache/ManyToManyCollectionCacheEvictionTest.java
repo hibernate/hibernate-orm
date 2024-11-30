@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.cache;
 
 import java.util.ArrayList;
@@ -47,10 +51,10 @@ public class ManyToManyCollectionCacheEvictionTest extends BaseCoreFunctionalTes
 	@Override
 	protected void configure(Configuration cfg) {
 		super.configure( cfg );
-		cfg.setProperty( Environment.AUTO_EVICT_COLLECTION_CACHE, "true" );
-		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "true" );
-		cfg.setProperty( Environment.USE_QUERY_CACHE, "true" );
-		cfg.setProperty( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG.name() );
+		cfg.setProperty( Environment.AUTO_EVICT_COLLECTION_CACHE, true );
+		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, true );
+		cfg.setProperty( Environment.USE_QUERY_CACHE, true );
+		cfg.setProperty( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG );
 	}
 
 	@Test
@@ -60,11 +64,11 @@ public class ManyToManyCollectionCacheEvictionTest extends BaseCoreFunctionalTes
 		s.beginTransaction();
 
 		Application application = new Application();
-		s.save( application );
+		s.persist( application );
 
 		Customer customer = new Customer();
 		customer.applications.add( application );
-		s.save( customer );
+		s.persist( customer );
 
 		s.getTransaction().commit();
 		s.close();
@@ -82,7 +86,7 @@ public class ManyToManyCollectionCacheEvictionTest extends BaseCoreFunctionalTes
 
 		Customer customer2 = new Customer();
 		customer2.applications.add( application );
-		s.save( customer2 );
+		s.persist( customer2 );
 
 		s.getTransaction().commit();
 		s.close();

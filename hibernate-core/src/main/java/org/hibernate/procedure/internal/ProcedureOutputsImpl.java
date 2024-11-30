@@ -1,13 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.procedure.internal;
 
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -39,16 +38,13 @@ public class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutput
 			ProcedureCallImpl<?> procedureCall,
 			Map<ProcedureParameter<?>, JdbcCallParameterRegistration> parameterRegistrations,
 			JdbcCallRefCursorExtractor[] refCursorParameters,
-			CallableStatement callableStatement) {
-		super( procedureCall, callableStatement );
+			CallableStatement callableStatement,
+			String sql) {
+		super( procedureCall, callableStatement, sql );
 		this.procedureCall = procedureCall;
 		this.callableStatement = callableStatement;
 		this.parameterRegistrations = parameterRegistrations;
 		this.refCursorParameters = refCursorParameters;
-		if ( procedureCall.getFunctionReturn() != null && procedureCall.getFunctionReturn().getMode() != ParameterMode.REF_CURSOR ) {
-			// Set to -1, so we can handle the function return as out parameter separately
-			this.refCursorParamIndex = -1;
-		}
 		executeStatement();
 	}
 
@@ -122,29 +118,31 @@ public class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutput
 
 		@Override
 		protected Output buildExtendedReturn() {
-			if ( ProcedureOutputsImpl.this.refCursorParamIndex == -1 ) {
-				// Handle the function return
-				ProcedureOutputsImpl.this.refCursorParamIndex = 0;
-				final Object outputParameterValue = getOutputParameterValue( procedureCall.getFunctionReturn() );
-				return buildResultSetOutput(
-						() -> {
-							if ( outputParameterValue instanceof ResultSet ) {
-								return extractResults( (ResultSet) outputParameterValue );
-							}
-							else {
-								return List.of( outputParameterValue );
-							}
-						}
-				);
-			}
-			else {
-				final JdbcCallRefCursorExtractor refCursorParam = refCursorParameters[ProcedureOutputsImpl.this.refCursorParamIndex++];
-				final ResultSet resultSet = refCursorParam.extractResultSet(
-						callableStatement,
-						procedureCall.getSession()
-				);
-				return buildResultSetOutput( () -> extractResults( resultSet ) );
-			}
+			final JdbcCallRefCursorExtractor refCursorParam = refCursorParameters[ProcedureOutputsImpl.this.refCursorParamIndex++];
+			final ResultSet resultSet = refCursorParam.extractResultSet(
+					callableStatement,
+					procedureCall.getSession()
+			);
+			return buildResultSetOutput( () -> extractResults( resultSet ) );
+		}
+
+		@Override
+		protected boolean hasFunctionReturns() {
+			return parameterRegistrations.get( procedureCall.getFunctionReturn() ) != null;
+		}
+
+		@Override
+		protected Output buildFunctionReturn() {
+			final Object result = parameterRegistrations.get( procedureCall.getFunctionReturn() )
+					.getParameterExtractor()
+					.extractValue(
+							callableStatement,
+							false,
+							procedureCall.getSession()
+					);
+			final List<Object> results = new ArrayList<>( 1 );
+			results.add( result );
+			return buildResultSetOutput( () -> results );
 		}
 	}
 

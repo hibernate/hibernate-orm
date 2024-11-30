@@ -1,13 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.transaction.spi;
 
 /**
- * SPI contract for SynchronizationRegistry implementors.
+ * SPI contract for {@link SynchronizationRegistry} implementors.
  *
  * @author Steve Ebersole
  */
@@ -18,8 +16,8 @@ public interface SynchronizationRegistryImplementor extends SynchronizationRegis
 	void notifySynchronizationsBeforeTransactionCompletion();
 
 	/**
-	 * Delegates the {@link jakarta.transaction.Synchronization#afterCompletion} call to each registered Synchronization.  Will also
-	 * clear the registered Synchronizations after all have been notified.
+	 * Delegates the {@link jakarta.transaction.Synchronization#afterCompletion} call to each registered Synchronization.
+	 * Will also clear the registered {@code Synchronization}s after all have been notified.
 	 *
 	 * @param status The transaction status, per {@link jakarta.transaction.Status} constants
 	 */

@@ -1,21 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java.spi;
 
 import java.io.Serializable;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Mutability;
-import org.hibernate.resource.beans.spi.ManagedBean;
-import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -61,19 +57,10 @@ public class RegistryHelper {
 
 		if ( javaTypeClass.isAnnotationPresent( Mutability.class ) ) {
 			final Mutability annotation = javaTypeClass.getAnnotation( Mutability.class );
-			final Class<? extends MutabilityPlan<?>> planClass = annotation.value();
-			final ManagedBeanRegistry managedBeanRegistry = typeConfiguration
-					.getServiceRegistry()
-					.getService( ManagedBeanRegistry.class );
-			final ManagedBean<? extends MutabilityPlan<?>> planBean = managedBeanRegistry.getBean( planClass );
-			return (MutabilityPlan<J>) planBean.getBeanInstance();
+			return typeConfiguration.createMutabilityPlan( annotation.value() );
 		}
 
-		if ( javaTypeClass.isEnum() ) {
-			return ImmutableMutabilityPlan.instance();
-		}
-
-		if ( javaTypeClass.isPrimitive() ) {
+		if ( javaTypeClass.isEnum() || javaTypeClass.isPrimitive() || ReflectHelper.isRecord( javaTypeClass ) ) {
 			return ImmutableMutabilityPlan.instance();
 		}
 
@@ -106,14 +93,6 @@ public class RegistryHelper {
 	}
 
 	private <J> Class<J> determineJavaTypeClass(Type javaType) {
-		final Class<J> javaTypeClass;
-		if ( javaType instanceof Class<?> ) {
-			javaTypeClass = (Class<J>) javaType;
-		}
-		else {
-			final ParameterizedType parameterizedType = (ParameterizedType) javaType;
-			javaTypeClass = (Class<J>) parameterizedType.getRawType();
-		}
-		return javaTypeClass;
+		return ReflectHelper.getClass( javaType );
 	}
 }

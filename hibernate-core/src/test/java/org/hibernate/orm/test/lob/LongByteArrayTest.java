@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.lob;
 
@@ -39,7 +37,7 @@ public abstract class LongByteArrayTest {
 		Long id = scope.fromTransaction(
 				session -> {
 					LongByteArrayHolder entity = new LongByteArrayHolder();
-					session.save( entity );
+					session.persist( entity );
 					return entity.getId();
 				}
 		);
@@ -88,7 +86,7 @@ public abstract class LongByteArrayTest {
 		scope.inTransaction(
 				session -> {
 					longByteArrayHolder.setLongByteArray( empty );
-					session.save( longByteArrayHolder );
+					session.persist( longByteArrayHolder );
 				}
 		);
 
@@ -121,7 +119,7 @@ public abstract class LongByteArrayTest {
 					LongByteArrayHolder entity = session.get( LongByteArrayHolder.class, id );
 					Assertions.assertEquals( ARRAY_SIZE, entity.getLongByteArray().length );
 					assertEquals( value, entity.getLongByteArray() );
-					session.delete( entity );
+					session.remove( entity );
 				}
 		);
 	}

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.type;
 
@@ -25,12 +23,11 @@ import java.util.function.Predicate;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.service.ServiceRegistry;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.junit4.CustomParameterized;
@@ -117,7 +114,7 @@ public abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalT
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13266")
+	@JiraKey(value = "HHH-13266")
 	public void writeThenRead() {
 		withDefaultTimeZone( () -> {
 			inTransaction( session -> {
@@ -125,16 +122,17 @@ public abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalT
 			} );
 			inTransaction( session -> {
 				T read = getActualPropertyValue( session.find( getEntityType(), 1 ) );
+				T expected = getExpectedPropertyValueAfterHibernateRead();
 				assertEquals(
 						"Writing then reading a value should return the original value",
-						getExpectedPropertyValueAfterHibernateRead(), read
+						expected, read
 				);
 			} );
 		} );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13266")
+	@JiraKey(value = "HHH-13266")
 	public void writeThenNativeRead() {
 		assumeNoJdbcTimeZone();
 
@@ -152,10 +150,10 @@ public abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalT
 						try (ResultSet resultSet = statement.getResultSet()) {
 							resultSet.next();
 							Object nativeRead = getActualJdbcValue( resultSet, 1 );
+							Object expected = getExpectedJdbcValueAfterHibernateWrite();
 							assertEquals(
 									"Values written by Hibernate ORM should match the original value (same day, hour, ...)",
-									getExpectedJdbcValueAfterHibernateWrite(),
-									nativeRead
+									expected, nativeRead
 							);
 						}
 					}
@@ -165,7 +163,7 @@ public abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalT
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13266")
+	@JiraKey(value = "HHH-13266")
 	public void nativeWriteThenRead() {
 		assumeNoJdbcTimeZone();
 
@@ -184,9 +182,10 @@ public abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalT
 			} );
 			inTransaction( session -> {
 				T read = getActualPropertyValue( session.find( getEntityType(), 1 ) );
+				T expected = getExpectedPropertyValueAfterHibernateRead();
 				assertEquals(
 						"Values written without Hibernate ORM should be read correctly by Hibernate ORM",
-						getExpectedPropertyValueAfterHibernateRead(), read
+						expected, read
 				);
 			} );
 		} );
@@ -195,8 +194,7 @@ public abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalT
 	protected final void withDefaultTimeZone(Runnable runnable) {
 		TimeZone timeZoneBefore = TimeZone.getDefault();
 		TimeZone.setDefault( toTimeZone( env.defaultJvmTimeZone ) );
-		// Clear the connection pool to avoid issues with drivers that initialize the session TZ to the system TZ
-		SharedDriverManagerConnectionProviderImpl.getInstance().reset();
+		SharedDriverManagerConnectionProviderImpl.getInstance().onDefaultTimeZoneChange();
 		/*
 		 * Run the code in a new thread, because some libraries (looking at you, h2 JDBC driver)
 		 * cache data dependent on the default timezone in thread local variables,
@@ -225,8 +223,7 @@ public abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalT
 		}
 		finally {
 			TimeZone.setDefault( timeZoneBefore );
-			// Clear the connection pool to avoid issues with drivers that initialize the session TZ to the system TZ
-			SharedDriverManagerConnectionProviderImpl.getInstance().reset();
+			SharedDriverManagerConnectionProviderImpl.getInstance().onDefaultTimeZoneChange();
 		}
 	}
 

@@ -14,3 +14,7 @@ updates:
       - gradle-plugin-portal
     schedule:
       interval: "weekly"
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: daily

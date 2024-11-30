@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java.spi;
 
@@ -15,26 +13,39 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
 /**
- * AbstractBasicTypeDescriptor adapter for cases where we do not know a proper JavaType
- * for a given Java type.
+ * {@link AbstractJavaType} adapter for cases where we do not know a proper
+ * {@link org.hibernate.type.descriptor.java.JavaType} for a given Java type.
  */
-public class UnknownBasicJavaType<T> extends AbstractJavaType<T> {
+public final class UnknownBasicJavaType<T> extends AbstractJavaType<T> {
+	private final String typeName;
+
 	public UnknownBasicJavaType(Class<T> type) {
+		this( type, type.getTypeName() );
+	}
+	public UnknownBasicJavaType(Class<T> type, String typeName) {
 		super( type );
+		this.typeName = typeName;
 	}
 
 	public UnknownBasicJavaType(Class<T> type, MutabilityPlan<T> mutabilityPlan) {
 		super( type, mutabilityPlan );
+		this.typeName = type.getTypeName();
 	}
 
 	public UnknownBasicJavaType(Type type, MutabilityPlan<T> mutabilityPlan) {
 		super( type, mutabilityPlan );
+		this.typeName = type.getTypeName();
+	}
+
+	@Override
+	public String getTypeName() {
+		return typeName;
 	}
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
 		throw new JdbcTypeRecommendationException(
-				"Could not determine recommended JdbcType for `" + getJavaType().getTypeName() + "`"
+				"Could not determine recommended JdbcType for Java type '" + getTypeName() + "'"
 		);
 	}
 
@@ -46,7 +57,7 @@ public class UnknownBasicJavaType<T> extends AbstractJavaType<T> {
 	@Override
 	public T fromString(CharSequence string) {
 		throw new UnsupportedOperationException(
-				"Conversion from String strategy not known for this Java type : " + getJavaType().getTypeName()
+				"Conversion from String strategy not known for this Java type: " + getTypeName()
 		);
 	}
 
@@ -57,7 +68,7 @@ public class UnknownBasicJavaType<T> extends AbstractJavaType<T> {
 			return (X) value;
 		}
 		throw new UnsupportedOperationException(
-				"Unwrap strategy not known for this Java type : " + getJavaType().getTypeName()
+				"Unwrap strategy not known for this Java type: " + getTypeName()
 		);
 	}
 
@@ -68,12 +79,12 @@ public class UnknownBasicJavaType<T> extends AbstractJavaType<T> {
 			return (T) value;
 		}
 		throw new UnsupportedOperationException(
-				"Wrap strategy not known for this Java type : " + getJavaType().getTypeName()
+				"Wrap strategy not known for this Java type: " + getTypeName()
 		);
 	}
 
 	@Override
 	public String toString() {
-		return "BasicJavaType(" + getJavaType().getTypeName() + ")";
+		return "BasicJavaType(" + getTypeName() + ")";
 	}
 }

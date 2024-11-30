@@ -1,22 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id$
 package org.hibernate.orm.test.annotations.manytomany;
 import java.io.Serializable;
 import java.util.Set;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
-
-import org.hibernate.annotations.ForeignKey;
 
 /**
  * Woman knowing several mens
@@ -50,9 +45,9 @@ public class Woman implements Serializable {
 			@JoinColumn(name = "manIsElder", referencedColumnName = "elder"),
 			@JoinColumn(name = "manLastName", referencedColumnName = "lastName"),
 			@JoinColumn(name = "manFirstName", referencedColumnName = "firstName")
-					}
-	)
-	@ForeignKey(name = "WM_W_FK", inverseName = "WM_M_FK")
+					},
+			foreignKey = @ForeignKey(name = "WM_W_FK")
+)
 	public Set<Man> getMens() {
 		return mens;
 	}

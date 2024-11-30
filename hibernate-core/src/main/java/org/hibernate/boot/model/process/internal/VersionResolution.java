@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.process.internal;
 
@@ -12,9 +10,10 @@ import jakarta.persistence.TemporalType;
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
@@ -36,14 +35,12 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	public static <E> VersionResolution<E> from(
 			Function<TypeConfiguration, java.lang.reflect.Type> implicitJavaTypeAccess,
-			Function<TypeConfiguration, BasicJavaType> explicitJtdAccess,
-			Function<TypeConfiguration, JdbcType> explicitStdAccess,
 			TimeZoneStorageType timeZoneStorageType,
-			TypeConfiguration typeConfiguration,
 			@SuppressWarnings("unused") MetadataBuildingContext context) {
 
 		// todo (6.0) : add support for Dialect-specific interpretation?
 
+		final TypeConfiguration typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
 		final java.lang.reflect.Type implicitJavaType = implicitJavaTypeAccess.apply( typeConfiguration );
 		final JavaType registered = typeConfiguration.getJavaTypeRegistry().resolveDescriptor( implicitJavaType );
 		final BasicJavaType jtd = (BasicJavaType) registered;
@@ -62,20 +59,18 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 					}
 
 					@Override
+					public boolean isPreferJavaTimeJdbcTypesEnabled() {
+						return context.isPreferJavaTimeJdbcTypesEnabled();
+					}
+
+					@Override
+					public boolean isPreferNativeEnumTypesEnabled() {
+						return context.isPreferNativeEnumTypesEnabled();
+					}
+
+					@Override
 					public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
-						if ( timeZoneStorageType != null ) {
-							switch ( timeZoneStorageType ) {
-								case COLUMN:
-									return TimeZoneStorageStrategy.COLUMN;
-								case NATIVE:
-									return TimeZoneStorageStrategy.NATIVE;
-								case NORMALIZE:
-									return TimeZoneStorageStrategy.NORMALIZE;
-								case NORMALIZE_UTC:
-									return TimeZoneStorageStrategy.NORMALIZE_UTC;
-							}
-						}
-						return context.getBuildingOptions().getDefaultTimeZoneStorage();
+						return BasicValue.timeZoneStorageStrategy( timeZoneStorageType, context );
 					}
 
 					@Override
@@ -102,13 +97,18 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 					public int getPreferredSqlTypeCodeForArray() {
 						return context.getPreferredSqlTypeCodeForArray();
 					}
+
+					@Override
+					public Dialect getDialect() {
+						return context.getMetadataCollector().getDatabase().getDialect();
+					}
 				}
 		);
 
 		final BasicType<?> basicType = typeConfiguration.getBasicTypeRegistry().resolve( jtd, recommendedJdbcType );
 		final BasicType legacyType = typeConfiguration.getBasicTypeRegistry().getRegisteredType( jtd.getJavaType() );
 
-		assert legacyType.getJdbcType().getJdbcTypeCode() == recommendedJdbcType.getJdbcTypeCode();
+		assert legacyType.getJdbcType().getDefaultSqlTypeCode() == recommendedJdbcType.getDefaultSqlTypeCode();
 
 		return new VersionResolution<>( jtd, recommendedJdbcType, basicType, legacyType );
 	}

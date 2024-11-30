@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.spi;
 
@@ -12,7 +10,6 @@ import java.util.Map;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedNativeQueryType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedQueryType;
 import org.hibernate.boot.model.CustomSql;
-import org.hibernate.boot.model.TruthValue;
 
 /**
  * Contract describing source of information related to mapping an entity.
@@ -66,7 +63,7 @@ public interface EntitySource extends IdentifiableTypeSource, ToolingHintContext
 
 	/**
 	 * Is the entity abstract?
-	 * <p/>
+	 * <p>
 	 * The implication is whether the entity maps to a database table.
 	 *
 	 * @return {@code true} indicates the entity is abstract; {@code false} non-abstract; {@code null}
@@ -148,7 +145,4 @@ public interface EntitySource extends IdentifiableTypeSource, ToolingHintContext
 	List<JaxbHbmNamedQueryType> getNamedQueries();
 
 	List<JaxbHbmNamedNativeQueryType> getNamedNativeQueries();
-
-	TruthValue quoteIdentifiersLocalToEntity();
-
 }

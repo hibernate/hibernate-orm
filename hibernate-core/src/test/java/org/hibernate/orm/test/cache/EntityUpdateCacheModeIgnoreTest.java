@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cache;
 
@@ -22,7 +20,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.stat.Statistics;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -36,9 +34,9 @@ public class EntityUpdateCacheModeIgnoreTest extends BaseCoreFunctionalTestCase 
 	@Override
 	protected void configure(Configuration configuration) {
 		super.configure( configuration );
-		configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "true");
-		configuration.setProperty(AvailableSettings.USE_QUERY_CACHE, "true");
-		configuration.setProperty(AvailableSettings.GENERATE_STATISTICS, "true");
+		configuration.setProperty(AvailableSettings.USE_SECOND_LEVEL_CACHE, true);
+		configuration.setProperty(AvailableSettings.USE_QUERY_CACHE, true);
+		configuration.setProperty(AvailableSettings.GENERATE_STATISTICS, true);
 	}
 
 	@Override
@@ -49,7 +47,7 @@ public class EntityUpdateCacheModeIgnoreTest extends BaseCoreFunctionalTestCase 
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH9739")
+	@JiraKey( value = "HHH9739")
 	public void testCachModeIgnore() {
 		// Test that there is no interaction with cache except for invalidation when using CacheMode.IGNORE
 		// From API Doc : CacheMode.IGNORE -> The session will never interact with the cache, except to invalidate cache items when updates occur.

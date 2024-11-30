@@ -1,18 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -30,10 +28,18 @@ import org.hibernate.sql.results.graph.FetchableContainer;
  * @author Steve Ebersole
  */
 public interface EntityValuedModelPart extends FetchableContainer {
+	/**
+	 * The descriptor of the entity that is the type for this part
+	 */
 	EntityMappingType getEntityMappingType();
 
 	default ModelPart findSubPart(String name) {
 		return getEntityMappingType().findSubPart( name, null );
+	}
+
+	@Override
+	default void forEachSubPart(IndexedConsumer<ModelPart> consumer, EntityMappingType treatTarget) {
+		getEntityMappingType().forEachSubPart( consumer, treatTarget );
 	}
 
 	@Override
@@ -94,22 +100,29 @@ public interface EntityValuedModelPart extends FetchableContainer {
 	}
 
 	@Override
-	default int forEachDisassembledJdbcValue(
-			Object value,
-			Clause clause,
-			int offset,
-			JdbcValuesConsumer valuesConsumer,
-			SharedSessionContractImplementor session) {
-		return getEntityMappingType().forEachDisassembledJdbcValue( value, clause, offset, valuesConsumer, session );
+	default void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session){
+		getEntityMappingType().addToCacheKey( cacheKey, value, session );
 	}
 
 	@Override
-	default int forEachJdbcValue(
+	default <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
-			JdbcValuesConsumer consumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return getEntityMappingType().forEachJdbcValue( value, clause, offset, consumer, session );
+		return getEntityMappingType().forEachDisassembledJdbcValue( value, offset, x, y, valuesConsumer, session );
+	}
+
+	@Override
+	default <X, Y> int forEachJdbcValue(
+			Object value,
+			int offset,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> consumer,
+			SharedSessionContractImplementor session) {
+		return getEntityMappingType().forEachJdbcValue( value, offset, x, y, consumer, session );
 	}
 }

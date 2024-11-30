@@ -1,87 +1,57 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.profile;
 
+import org.hibernate.engine.FetchStyle;
+import org.hibernate.engine.FetchTiming;
+
 /**
- * Models an individual fetch within a profile.
+ * Models an individual fetch override within a {@link FetchProfile}.
  *
  * @author Steve Ebersole
  */
 public class Fetch {
 	private final Association association;
-	private final Style style;
+	private final FetchStyle method;
+	private final FetchTiming timing;
 
 	/**
-	 * Constructs a Fetch
+	 * Constructs a {@link Fetch}.
 	 *
 	 * @param association The association to be fetched
-	 * @param style How to fetch it
+	 * @param method How to fetch it
 	 */
-	public Fetch(Association association, Style style) {
+	public Fetch(Association association, FetchStyle method, FetchTiming timing) {
 		this.association = association;
-		this.style = style;
+		this.method = method;
+		this.timing = timing;
 	}
 
+	/**
+	 * The association to which the fetch style applies.
+	 */
 	public Association getAssociation() {
 		return association;
 	}
 
-	public Style getStyle() {
-		return style;
+	/**
+	 * The fetch method to be applied to the association.
+	 */
+	public FetchStyle getMethod() {
+		return method;
 	}
 
 	/**
-	 * The type or style of fetch.  For the moment we limit this to
-	 * join and select, though technically subselect would be valid
-	 * here as well; however, to support subselect here would
-	 * require major changes to the subselect loading code (which is
-	 * needed for other things as well anyway).
+	 * The fetch timing to be applied to the association.
 	 */
-	public enum Style {
-		/**
-		 * Fetch via a join
-		 */
-		JOIN( "join" ),
-		/**
-		 * Fetch via a subsequent select
-		 */
-		SELECT( "select" );
-
-		private final String name;
-
-		Style(String name) {
-			this.name = name;
-		}
-
-		@Override
-		public String toString() {
-			return name;
-		}
-
-		/**
-		 * Parses a style given an externalized string representation
-		 *
-		 * @param name The externalized representation
-		 *
-		 * @return The style; {@link #JOIN} is returned if not recognized
-		 */
-		public static Style parse(String name) {
-			if ( SELECT.name.equals( name ) ) {
-				return SELECT;
-			}
-			else {
-				// the default...
-				return JOIN;
-			}
-		}
+	public FetchTiming getTiming() {
+		return timing;
 	}
 
 	@Override
 	public String toString() {
-		return "Fetch[" + style + "{" + association.getRole() + "}]";
+		return "Fetch[" + method + "{" + association.getRole() + "}]";
 	}
 }

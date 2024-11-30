@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -15,7 +14,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
- * SqmPathSource implementation for {@link org.hibernate.annotations.AnyDiscriminator}
+ * {@link SqmPathSource} implementation for {@link org.hibernate.annotations.AnyDiscriminator}
  *
  */
 public class AnyDiscriminatorSqmPathSource<D> extends AbstractSqmPathSource<D>
@@ -23,9 +22,10 @@ public class AnyDiscriminatorSqmPathSource<D> extends AbstractSqmPathSource<D>
 
 	public AnyDiscriminatorSqmPathSource(
 			String localPathName,
+			SqmPathSource<D> pathModel,
 			SimpleDomainType<D> domainType,
 			BindableType jpaBindableType) {
-		super( localPathName, domainType, jpaBindableType );
+		super( localPathName, pathModel, domainType, jpaBindableType );
 	}
 
 	@Override
@@ -37,7 +37,7 @@ public class AnyDiscriminatorSqmPathSource<D> extends AbstractSqmPathSource<D>
 		else {
 			navigablePath = lhs.getNavigablePath().append( intermediatePathSource.getPathName() );
 		}
-		return new AnyDiscriminatorSqmPath( navigablePath, this, lhs, lhs.nodeBuilder() );
+		return new AnyDiscriminatorSqmPath<>( navigablePath, pathModel, lhs, lhs.nodeBuilder() );
 	}
 
 	@Override
@@ -58,6 +58,11 @@ public class AnyDiscriminatorSqmPathSource<D> extends AbstractSqmPathSource<D>
 	@Override
 	public BasicType<D> getSqmPathType() {
 		return (BasicType<D>) super.getSqmPathType();
+	}
+
+	@Override
+	public DomainType<D> getSqmType() {
+		return getSqmPathType();
 	}
 
 	@Override

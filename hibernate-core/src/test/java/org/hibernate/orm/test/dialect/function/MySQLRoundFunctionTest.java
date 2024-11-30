@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.dialect.function;
 import java.math.BigDecimal;
@@ -19,7 +17,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import static org.junit.Assert.assertEquals;
 
 /**
-  @author <a href="mailto:stliu@redhat.com">Strong Liu</a>
+@author Strong Liu
  */
 @RequiresDialect( MySQLDialect.class )
 public class MySQLRoundFunctionTest extends BaseCoreFunctionalTestCase {
@@ -41,7 +39,7 @@ public class MySQLRoundFunctionTest extends BaseCoreFunctionalTestCase {
 		product.setPrice( new BigDecimal( 1.298 ) );
 		Session s=openSession();
 		Transaction tx=s.beginTransaction();
-		s.save( product );
+		s.persist( product );
 		tx.commit();
 		s.close();
 		s=openSession();
@@ -52,7 +50,7 @@ public class MySQLRoundFunctionTest extends BaseCoreFunctionalTestCase {
 		assertEquals( BigDecimal.valueOf( 1.3 ) , o );
 		tx.commit();
 		s.close();
-		
+
 	}
 
 }

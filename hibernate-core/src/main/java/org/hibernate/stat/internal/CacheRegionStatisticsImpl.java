@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.stat.internal;
 
@@ -87,15 +85,15 @@ public class CacheRegionStatisticsImpl implements CacheRegionStatistics, Seriali
 
 	@Override
 	public String toString() {
-		StringBuilder buf = new StringBuilder().append( "CacheRegionStatistics" )
-				.append( "[region=").append( region.getName() )
-				.append( ",hitCount=").append( this.hitCount )
-				.append( ",missCount=").append( this.missCount )
-				.append( ",putCount=").append( this.putCount )
-				.append( ",elementCountInMemory=" ).append( this.getElementCountInMemory() )
-				.append( ",elementCountOnDisk=" ).append( this.getElementCountOnDisk() )
-				.append( ",sizeInMemory=" ).append( this.getSizeInMemory() )
-				.append( ']' );
-		return buf.toString();
+		String buf = "CacheRegionStatistics" +
+				"[region=" + region.getName() +
+				",hitCount=" + this.hitCount +
+				",missCount=" + this.missCount +
+				",putCount=" + this.putCount +
+				",elementCountInMemory=" + this.getElementCountInMemory() +
+				",elementCountOnDisk=" + this.getElementCountOnDisk() +
+				",sizeInMemory=" + this.getSizeInMemory() +
+				']';
+		return buf;
 	}
 }

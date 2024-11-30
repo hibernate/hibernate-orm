@@ -1,13 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.exception.spi;
 
 import java.sql.SQLException;
 import java.util.function.Function;
+
+import org.hibernate.internal.util.NullnessUtil;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Extracts a violated database constraint name from an error message
@@ -25,7 +27,7 @@ public class TemplatedViolatedConstraintNameExtractor implements ViolatedConstra
 	}
 
 	@Override
-	public String extractConstraintName(SQLException sqle) {
+	public @Nullable String extractConstraintName(SQLException sqle) {
 		try {
 			String constraintName = null;
 
@@ -37,7 +39,7 @@ public class TemplatedViolatedConstraintNameExtractor implements ViolatedConstra
 					break;
 				}
 				else {
-					sqle = sqle.getNextException();
+					sqle = NullnessUtil.castNonNull( sqle.getNextException() );
 				}
 			} while (constraintName == null);
 
@@ -57,7 +59,7 @@ public class TemplatedViolatedConstraintNameExtractor implements ViolatedConstra
 	 * @param message       The templated error message containing the constraint name.
 	 * @return The found constraint name, or null.
 	 */
-	public static String extractUsingTemplate(String templateStart, String templateEnd, String message) {
+	public static @Nullable String extractUsingTemplate(String templateStart, String templateEnd, String message) {
 		int templateStartPosition = message.indexOf( templateStart );
 		if ( templateStartPosition < 0 ) {
 			return null;

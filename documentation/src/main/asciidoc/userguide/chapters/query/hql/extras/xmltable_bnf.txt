@@ -1,0 +1,12 @@
+"xmltable(" expression "passing" expression columnsClause ")"
+
+columnsClause
+    : "columns" column ("," column)*
+
+column
+    : attributeName "xml" ("path" STRING_LITERAL)? defaultClause?
+    | attributeName "for ordinality"
+    | attributeName castTarget ("path" STRING_LITERAL)? defaultClause?
+
+defaultClause
+	: "default" expression;

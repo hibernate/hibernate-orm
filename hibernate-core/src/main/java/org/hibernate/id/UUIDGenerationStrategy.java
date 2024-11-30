@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id;
 
@@ -27,9 +25,10 @@ public interface UUIDGenerationStrategy extends Serializable {
 	 * <li>4 = random numbers based</li>
 	 * <li>5 = name based (sha-1 hash)</li>
 	 * </ul>
+	 * <p>
 	 * Returning the values above should be reserved to those generators creating variants compliant with the
 	 * corresponding RFC definition; others can feel free to return other values as they see fit.
-	 * <p/>
+	 * <p>
 	 * Informational only, and not used at this time.
 	 *
 	 * @return The supported generation version

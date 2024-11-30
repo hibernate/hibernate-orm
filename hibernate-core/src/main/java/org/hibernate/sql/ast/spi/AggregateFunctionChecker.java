@@ -1,10 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.sql.ast.spi;
 
 import org.hibernate.query.sqm.tree.expression.Conversion;
@@ -17,6 +14,7 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
+import org.hibernate.sql.ast.tree.expression.EmbeddableTypeLiteral;
 import org.hibernate.sql.ast.tree.expression.EntityTypeLiteral;
 import org.hibernate.sql.ast.tree.expression.Every;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -42,10 +40,10 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.from.ValuesTableReference;
-import org.hibernate.sql.ast.tree.insert.InsertStatement;
-import org.hibernate.sql.ast.tree.insert.Values;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.ExistsPredicate;
 import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
+import org.hibernate.sql.ast.tree.predicate.InArrayPredicate;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
@@ -134,7 +132,7 @@ public class AggregateFunctionChecker extends AbstractSqlAstWalker {
 	}
 
 	@Override
-	public void visitInsertStatement(InsertStatement statement) {
+	public void visitInsertStatement(InsertSelectStatement statement) {
 	}
 
 	@Override
@@ -202,6 +200,10 @@ public class AggregateFunctionChecker extends AbstractSqlAstWalker {
 	}
 
 	@Override
+	public void visitInArrayPredicate(InArrayPredicate predicate) {
+	}
+
+	@Override
 	public void visitInSubQueryPredicate(InSubQueryPredicate inSubQueryPredicate) {
 	}
 
@@ -243,6 +245,10 @@ public class AggregateFunctionChecker extends AbstractSqlAstWalker {
 
 	@Override
 	public void visitEntityTypeLiteral(EntityTypeLiteral expression) {
+	}
+
+	@Override
+	public void visitEmbeddableTypeLiteral(EmbeddableTypeLiteral expression) {
 	}
 
 	@Override

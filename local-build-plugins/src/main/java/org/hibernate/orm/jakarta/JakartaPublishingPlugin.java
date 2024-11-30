@@ -24,7 +24,6 @@ import org.gradle.api.component.SoftwareComponentFactory;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.tasks.TaskContainer;
 import org.gradle.api.tasks.TaskProvider;
-import org.gradle.api.tasks.testing.Test;
 
 /**
  * Models a publishable Jakartafied project
@@ -168,7 +167,7 @@ public class JakartaPublishingPlugin implements Plugin<Project> {
 	}
 
 
-	private Configuration addVariant(
+	private void addVariant(
 			String configName,
 			String jarTaskName,
 			String classifier,
@@ -199,17 +198,14 @@ public class JakartaPublishingPlugin implements Plugin<Project> {
 			mainJarTask = tasks.register(
 					jarTaskName,
 					JakartaJarTransformation.class,
-
-					(jakartaficationTask) -> {
-						jakartaficationTask.setDescription( "Produces the Jakartafied main jar for `" + project.getPath() + "`" );
-					}
+					(jakartaficationTask) -> jakartaficationTask.setDescription( "Produces the Jakartafied main jar for `" + project.getPath() + "`" )
 			);
 			if ( tasks.getNames().contains( "assemble" ) ) {
 				tasks.named( "assemble" ).configure( (assembleTask) -> assembleTask.dependsOn( mainJarTask ) );
 			}
 		}
 		else {
-			mainJarTask = (TaskProvider) tasks.named( jarTaskName );
+			mainJarTask = tasks.named( jarTaskName, JakartaJarTransformation.class );
 		}
 
 		variantConfig.getOutgoing().artifact(
@@ -220,8 +216,6 @@ public class JakartaPublishingPlugin implements Plugin<Project> {
 					artifact.builtBy( jakartaJarTask );
 				}
 		);
-
-		return variantConfig;
 	}
 
 }

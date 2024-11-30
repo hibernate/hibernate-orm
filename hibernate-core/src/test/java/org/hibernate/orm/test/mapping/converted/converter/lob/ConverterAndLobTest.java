@@ -1,14 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.converted.converter.lob;
 
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -29,7 +27,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class ConverterAndLobTest {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9615" )
+	@JiraKey( value = "HHH-9615" )
 	public void basicTest(SessionFactoryScope scope) {
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -37,7 +35,7 @@ public class ConverterAndLobTest {
 		PostalAreaConverter.clearCounts();
 
 		scope.inTransaction(
-				(session) -> session.save( new Address( 1, "123 Main St.", null, PostalArea._78729 ) )
+				(session) -> session.persist( new Address( 1, "123 Main St.", null, PostalArea._78729 ) )
 		);
 
 		assertThat( PostalAreaConverter.toDatabaseCallCount, is(1) );

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id;
 
@@ -12,7 +10,7 @@ import jakarta.persistence.Table;
 
 import org.hibernate.HibernateException;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -48,12 +46,15 @@ public class NonUniqueIdTest {
 					session.createNativeQuery(
 							"create table CATEGORY( id integer not null, name varchar(255) )"
 					).executeUpdate();
+				}
+		);
 
+		scope.inTransaction(
+				session -> {
 					session.createNativeQuery( "insert into CATEGORY( id, name) VALUES( 1, 'clothes' )" )
 							.executeUpdate();
 					session.createNativeQuery( "insert into CATEGORY( id, name) VALUES( 1, 'shoes' )" )
 							.executeUpdate();
-
 				}
 		);
 	}
@@ -68,7 +69,7 @@ public class NonUniqueIdTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12802")
+	@JiraKey(value = "HHH-12802")
 	public void testLoadEntityWithNonUniqueId(SessionFactoryScope scope) {
 		try {
 			scope.inTransaction(

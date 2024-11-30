@@ -1,15 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
- */
-
-/*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.fetchmode.toone;
 
@@ -38,7 +29,6 @@ import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 @DomainModel(
@@ -47,10 +37,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 				EagerToOneWithJoinFetchModeTests.SimpleEntity.class
 		}
 )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 @ServiceRegistry(
 		settings = {
-				@Setting(name = AvailableSettings.HBM2DDL_DATABASE_ACTION, value = "create-drop")
+				@Setting(name = AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, value = "create-drop")
 		}
 )
 public class EagerToOneWithJoinFetchModeTests {
@@ -60,13 +50,13 @@ public class EagerToOneWithJoinFetchModeTests {
 		scope.inTransaction( session -> {
 			SimpleEntity manyToOneSimpleEntity = new SimpleEntity( 1, "manyToOne" );
 			SimpleEntity oneToOneSimpleEntity = new SimpleEntity( 2, "oneToOne" );
-			session.save( manyToOneSimpleEntity );
-			session.save( oneToOneSimpleEntity );
+			session.persist( manyToOneSimpleEntity );
+			session.persist( oneToOneSimpleEntity );
 
 			RootEntity rootEntity = new RootEntity( 1, "root" );
 			rootEntity.manyToOneSimpleEntity = manyToOneSimpleEntity;
 			rootEntity.oneToOneSimpleEntity = oneToOneSimpleEntity;
-			session.save( rootEntity );
+			session.persist( rootEntity );
 		} );
 	}
 
@@ -80,7 +70,7 @@ public class EagerToOneWithJoinFetchModeTests {
 
 	@Test
 	public void testFind(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				session -> {
 					sqlStatementInterceptor.clear();
@@ -104,7 +94,7 @@ public class EagerToOneWithJoinFetchModeTests {
 
 	@Test
 	public void testHql(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				session -> {
 					sqlStatementInterceptor.clear();
@@ -134,7 +124,7 @@ public class EagerToOneWithJoinFetchModeTests {
 
 	@Test
 	public void testHqlJoinManyToOne(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				session -> {
 					sqlStatementInterceptor.clear();
@@ -166,7 +156,7 @@ public class EagerToOneWithJoinFetchModeTests {
 
 	@Test
 	public void testHqlJoinOneToOne(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				session -> {
 					sqlStatementInterceptor.clear();
@@ -199,7 +189,7 @@ public class EagerToOneWithJoinFetchModeTests {
 
 	@Test
 	public void testHqlJoinFetchManyToOne(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				session -> {
 					sqlStatementInterceptor.clear();
@@ -229,7 +219,7 @@ public class EagerToOneWithJoinFetchModeTests {
 
 	@Test
 	public void testHqlJoinFetchOneToOne(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				session -> {
 					sqlStatementInterceptor.clear();
@@ -259,7 +249,7 @@ public class EagerToOneWithJoinFetchModeTests {
 
 	@Test
 	public void testHqlJoinManyToOneAndOneToOne(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				session -> {
 					sqlStatementInterceptor.clear();

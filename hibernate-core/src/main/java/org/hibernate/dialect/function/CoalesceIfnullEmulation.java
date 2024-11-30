@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
 
@@ -13,7 +11,6 @@ import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
 
@@ -35,14 +32,12 @@ public class CoalesceIfnullEmulation
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( "coalesce" )
 				.generateSqmExpression(
 						arguments,
 						impliedResultType,
-						queryEngine,
-						typeConfiguration
+						queryEngine
 				);
 	}
 }

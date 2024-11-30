@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemaupdate.derivedid;
 
@@ -16,7 +14,6 @@ import jakarta.persistence.Embeddable;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
@@ -32,6 +29,7 @@ import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -53,7 +51,7 @@ public class ColumnLengthTest extends BaseUnitTestCase {
 		outputFile = File.createTempFile( "update_script", ".sql" );
 		outputFile.deleteOnExit();
 
-		ssr = new StandardServiceRegistryBuilder()
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( Environment.HBM2DDL_AUTO, "none" )
 				.build();
 
@@ -61,6 +59,7 @@ public class ColumnLengthTest extends BaseUnitTestCase {
 				.addAnnotatedClass( Employee.class )
 				.addAnnotatedClass( Dependent.class )
 				.buildMetadata();
+		metadata.orderColumns( true );
 		metadata.validate();
 	}
 
@@ -81,7 +80,7 @@ public class ColumnLengthTest extends BaseUnitTestCase {
 
 		assertTrue( checkCommandIsGenerated(
 				commands,
-				"create table DEPENDENT (name varchar(255) not null, FK1 varchar(32) not null, FK2 varchar(10) not null, primary key (FK1, FK2, name));"
+				"create table DEPENDENT (FK2 varchar(10) not null, FK1 varchar(32) not null, name varchar(255) not null, primary key (FK1, FK2, name));"
 		) );
 
 	}
@@ -122,10 +121,8 @@ public class ColumnLengthTest extends BaseUnitTestCase {
 		@EmbeddedId
 		DependentId id;
 		@MapsId("empPK")
-		@JoinColumns({
-				@JoinColumn(name = "FK1", referencedColumnName = "first_name"),
-				@JoinColumn(name = "FK2", referencedColumnName = "last_name")
-		})
+		@JoinColumn(name = "FK1", referencedColumnName = "first_name")
+		@JoinColumn(name = "FK2", referencedColumnName = "last_name")
 		@ManyToOne
 		Employee emp;
 	}

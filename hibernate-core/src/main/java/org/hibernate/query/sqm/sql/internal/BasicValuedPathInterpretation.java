@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.sql.internal;
 
@@ -13,24 +11,29 @@ import java.util.function.Consumer;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.spi.NavigablePath;
-import org.hibernate.query.SemanticException;
-import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.StrictJpaComplianceViolation;
+import org.hibernate.query.sqm.UnknownPathException;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.update.Assignable;
+
+import static jakarta.persistence.metamodel.Type.PersistenceType.ENTITY;
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+import static org.hibernate.query.sqm.internal.SqmUtil.getTargetMappingIfNeeded;
 
 /**
  * @author Steve Ebersole
@@ -41,25 +44,34 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 	 */
 	public static <T> BasicValuedPathInterpretation<T> from(
 			SqmBasicValuedSimplePath<T> sqmPath,
-			SqlAstCreationState sqlAstCreationState,
-			SemanticQueryWalker sqmWalker,
+			SqmToSqlAstConverter sqlAstCreationState,
 			boolean jpaQueryComplianceEnabled) {
-		final FromClauseAccess fromClauseAccess = sqlAstCreationState.getFromClauseAccess();
-		final TableGroup tableGroup = fromClauseAccess.getTableGroup( sqmPath.getNavigablePath().getParent() );
-
+		final SqmPath<?> lhs = sqmPath.getLhs();
+		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup( lhs.getNavigablePath() );
 		EntityMappingType treatTarget = null;
-		if ( jpaQueryComplianceEnabled ) {
-			if ( sqmPath.getLhs() instanceof SqmTreatedPath ) {
-				final EntityDomainType treatTargetDomainType = ( (SqmTreatedPath) sqmPath.getLhs() ).getTreatTarget();
+		final ModelPartContainer modelPartContainer;
+		if ( lhs instanceof SqmTreatedPath<?, ?> && ( (SqmTreatedPath<?, ?>) lhs ).getTreatTarget().getPersistenceType() == ENTITY ) {
+			final EntityDomainType<?> treatTargetDomainType = (EntityDomainType<?>) ( (SqmTreatedPath<?, ?>) lhs ).getTreatTarget();
 
-				final MappingMetamodel mappingMetamodel = sqlAstCreationState.getCreationContext()
-						.getSessionFactory()
-						.getRuntimeMetamodels()
-						.getMappingMetamodel();
-				treatTarget = mappingMetamodel.findEntityDescriptor( treatTargetDomainType.getHibernateEntityName() );
+			final MappingMetamodel mappingMetamodel = sqlAstCreationState.getCreationContext()
+					.getSessionFactory()
+					.getRuntimeMetamodels()
+					.getMappingMetamodel();
+			final EntityPersister treatEntityDescriptor = mappingMetamodel.findEntityDescriptor( treatTargetDomainType.getHibernateEntityName() );
+			final MappingType tableGroupMappingType = tableGroup.getModelPart().getPartMappingType();
+			if ( tableGroupMappingType instanceof EntityMappingType
+					&& treatEntityDescriptor.isTypeOrSuperType( (EntityMappingType) tableGroupMappingType ) ) {
+				modelPartContainer = tableGroup.getModelPart();
+				treatTarget = treatEntityDescriptor;
 			}
-			else if ( sqmPath.getLhs().getNodeType() instanceof EntityDomainType ) {
-				final EntityDomainType entityDomainType = (EntityDomainType) sqmPath.getLhs().getNodeType();
+			else {
+				modelPartContainer = treatEntityDescriptor;
+			}
+		}
+		else {
+			modelPartContainer = tableGroup.getModelPart();
+			if ( jpaQueryComplianceEnabled && lhs.getNodeType() instanceof EntityDomainType<?> ) {
+				final EntityDomainType<?> entityDomainType = (EntityDomainType<?>) lhs.getNodeType();
 				final MappingMetamodel mappingMetamodel = sqlAstCreationState.getCreationContext()
 						.getSessionFactory()
 						.getRuntimeMetamodels()
@@ -68,12 +80,14 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 			}
 		}
 
-		final BasicValuedModelPart mapping = (BasicValuedModelPart) tableGroup.getModelPart().findSubPart(
-				sqmPath.getReferencedPathSource().getPathName(),
-				treatTarget
-		);
+		// Use the target type to find the sub part if needed, otherwise just use the container
+		final ModelPart modelPart = getTargetMappingIfNeeded(
+				sqmPath,
+				modelPartContainer,
+				sqlAstCreationState
+		).findSubPart( sqmPath.getReferencedPathSource().getPathName(), treatTarget );
 
-		if ( mapping == null ) {
+		if ( modelPart == null ) {
 			if ( jpaQueryComplianceEnabled ) {
 				// to get the better error, see if we got nothing because of treat handling
 				final ModelPart subPart = tableGroup.getModelPart().findSubPart(
@@ -85,24 +99,19 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 				}
 			}
 
-			throw new SemanticException( "`" + sqmPath.getNavigablePath() + "` did not reference a known model part" );
+			throw new UnknownPathException( "Path '" + sqmPath.getNavigablePath() + "' did not reference a known model part" );
 		}
 
+		final BasicValuedModelPart mapping = castNonNull( modelPart.asBasicValuedModelPart() );
 		final TableReference tableReference = tableGroup.resolveTableReference(
 				sqmPath.getNavigablePath(),
+				mapping,
 				mapping.getContainingTableExpression()
 		);
 
 		final Expression expression = sqlAstCreationState.getSqlExpressionResolver().resolveSqlExpression(
-				SqlExpressionResolver.createColumnReferenceKey(
-						tableReference,
-						mapping.getSelectionExpression()
-				),
-				sacs -> new ColumnReference(
-						tableReference.getIdentificationVariable(),
-						mapping,
-						sqlAstCreationState.getCreationContext().getSessionFactory()
-				)
+				tableReference,
+				mapping
 		);
 
 		final ColumnReference columnReference;
@@ -138,6 +147,11 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 
 	@Override
 	public Expression getSqlExpression() {
+		return columnReference;
+	}
+
+	@Override
+	public ColumnReference getColumnReference() {
 		return columnReference;
 	}
 

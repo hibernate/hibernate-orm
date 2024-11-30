@@ -1,9 +1,13 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.query.criteria;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
@@ -31,7 +35,7 @@ import jakarta.validation.constraints.NotNull;
 public class SubqueryJoinTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-15260")
+	@JiraKey(value = "HHH-15260")
 	public void subqueryJoinTest(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {
@@ -54,7 +58,7 @@ public class SubqueryJoinTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-15260")
+	@JiraKey(value = "HHH-15260")
 	public void subqueryJoinTest2(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {
@@ -78,7 +82,7 @@ public class SubqueryJoinTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-15260")
+	@JiraKey(value = "HHH-15260")
 	public void subqueryJoinTest3(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {

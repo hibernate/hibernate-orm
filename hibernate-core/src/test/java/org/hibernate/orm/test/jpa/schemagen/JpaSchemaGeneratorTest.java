@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.schemagen;
 
@@ -17,7 +15,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.Assert;
@@ -46,62 +44,62 @@ public class JpaSchemaGeneratorTest extends EntityManagerFactoryBasedFunctionalT
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8271")
+	@JiraKey(value = "HHH-8271")
 	public void testSqlLoadScriptSourceClasspath() {
 		Map<Object, Object> settings = buildSettings();
-		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, "create-drop" );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "create-drop" );
 		settings.put( AvailableSettings.HBM2DDL_LOAD_SCRIPT_SOURCE, getLoadSqlScript() );
 		doTest( settings );
 	}
 
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8271")
+	@JiraKey(value = "HHH-8271")
 	public void testSqlLoadScriptSourceUrl() {
 		Map<Object, Object> settings = buildSettings();
-		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, "create-drop" );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "create-drop" );
 		settings.put( AvailableSettings.HBM2DDL_LOAD_SCRIPT_SOURCE, getResourceUrlString( getLoadSqlScript() ) );
 		doTest( settings );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8271")
+	@JiraKey(value = "HHH-8271")
 	public void testSqlCreateScriptSourceClasspath() {
 		Map<Object, Object> settings = buildSettings();
-		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, "create-drop" );
-		settings.put( AvailableSettings.HBM2DDL_CREATE_SOURCE, "metadata-then-script" );
-		settings.put( AvailableSettings.HBM2DDL_CREATE_SCRIPT_SOURCE, getCreateSqlScript() );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "create-drop" );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SOURCE, "metadata-then-script" );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE, getCreateSqlScript() );
 		doTest( settings );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8271")
+	@JiraKey(value = "HHH-8271")
 	public void testSqlCreateScriptSourceUrl() {
 		Map<Object, Object> settings = buildSettings();
-		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, "create-drop" );
-		settings.put( AvailableSettings.HBM2DDL_CREATE_SOURCE, "metadata-then-script" );
-		settings.put( AvailableSettings.HBM2DDL_CREATE_SCRIPT_SOURCE, getResourceUrlString( getCreateSqlScript() ) );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "create-drop" );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SOURCE, "metadata-then-script" );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE, getResourceUrlString( getCreateSqlScript() ) );
 		doTest( settings );
 	}
 
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8271")
+	@JiraKey(value = "HHH-8271")
 	public void testSqlDropScriptSourceClasspath() {
 		Map<Object, Object> settings = buildSettings();
-		settings.put( AvailableSettings.HBM2DDL_DROP_SOURCE, "metadata-then-script" );
-		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, "drop" );
-		settings.put( AvailableSettings.HBM2DDL_DROP_SCRIPT_SOURCE, getDropSqlScript() );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DROP_SOURCE, "metadata-then-script" );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "drop" );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE, getDropSqlScript() );
 		doTest( settings );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8271")
+	@JiraKey(value = "HHH-8271")
 	public void testSqlDropScriptSourceUrl() {
 		Map<Object, Object> settings = buildSettings();
-		settings.put( AvailableSettings.HBM2DDL_DROP_SOURCE, "metadata-then-script" );
-		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, "drop" );
-		settings.put( AvailableSettings.HBM2DDL_DROP_SCRIPT_SOURCE, getResourceUrlString( getDropSqlScript() ) );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DROP_SOURCE, "metadata-then-script" );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "drop" );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE, getResourceUrlString( getDropSqlScript() ) );
 		doTest( settings );
 	}
 
@@ -150,7 +148,7 @@ public class JpaSchemaGeneratorTest extends EntityManagerFactoryBasedFunctionalT
 		// We want a fresh db after emf close
 		// Unfortunately we have to use this dirty hack because the db seems not to be closed otherwise
 		settings.put( "hibernate.connection.url", "jdbc:h2:mem:db-schemagen" + schemagenNumber++
-				+ ";LOCK_TIMEOUT=10000" );
+				+ ";DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE" );
 		EntityManagerFactoryBuilder emfb = Bootstrap.getEntityManagerFactoryBuilder(
 				buildPersistenceUnitDescriptor(),
 				settings

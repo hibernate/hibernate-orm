@@ -1,15 +1,20 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.where.annotations;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
+
+import org.hibernate.annotations.SQLJoinTableRestriction;
+import org.hibernate.annotations.SQLRestriction;
+
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.junit.Test;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -20,14 +25,6 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
-import org.hibernate.annotations.Where;
-import org.hibernate.annotations.WhereJoinTable;
-import org.hibernate.cfg.AvailableSettings;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
-
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -35,24 +32,17 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Tests association collections with AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS = true
- *
  * @author Gail Badner
  */
 public class EagerToManyWhereUseClassWhereTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
-	protected Class[] getAnnotatedClasses() {
+	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { Product.class, Category.class };
 	}
 
-	@Override
-	protected void addSettings(Map<String,Object> settings) {
-		settings.put( AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS, "true" );
-	}
-
 	@Test
-	@TestForIssue( jiraKey = "HHH-13011" )
+	@JiraKey("HHH-13011")
 	public void testAssociatedWhereClause() {
 
 		Product product = new Product();
@@ -178,7 +168,7 @@ public class EagerToManyWhereUseClassWhereTest extends BaseNonConfigCoreFunction
 
 		@OneToMany(fetch = FetchType.EAGER)
 		@JoinColumn
-		@Where( clause = "description is not null" )
+		@SQLRestriction( "description is not null" )
 		private Set<Category> categoriesWithDescOneToMany = new HashSet<>();
 
 		@ManyToMany(fetch = FetchType.EAGER)
@@ -187,19 +177,19 @@ public class EagerToManyWhereUseClassWhereTest extends BaseNonConfigCoreFunction
 
 		@ManyToMany(fetch = FetchType.EAGER)
 		@JoinTable(name = "categoriesWithDescManyToMany", inverseJoinColumns = { @JoinColumn( name = "categoryId" )})
-		@Where( clause = "description is not null" )
+		@SQLRestriction( "description is not null" )
 		private Set<Category> categoriesWithDescManyToMany = new HashSet<>();
 
 		@ManyToMany(fetch = FetchType.EAGER)
 		@JoinTable(name = "categoriesWithDescIdLt4MToM", inverseJoinColumns = { @JoinColumn( name = "categoryId" )})
-		@Where( clause = "description is not null" )
-		@WhereJoinTable( clause = "categoryId < 4")
+		@SQLRestriction( "description is not null" )
+		@SQLJoinTableRestriction("categoryId < 4")
 		private Set<Category> categoriesWithDescIdLt4ManyToMany = new HashSet<>();
 	}
 
 	@Entity(name = "Category")
 	@Table(name = "CATEGORY")
-	@Where(clause = "inactive = 0")
+	@SQLRestriction("inactive = 0")
 	public static class Category {
 		@Id
 		private int id;

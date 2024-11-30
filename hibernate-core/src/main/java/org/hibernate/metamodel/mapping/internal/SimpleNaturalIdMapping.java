@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
@@ -13,13 +11,18 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 
 import org.hibernate.HibernateException;
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.loader.ast.internal.MultiNaturalIdLoaderStandard;
+import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.loader.ast.internal.MultiNaturalIdLoaderArrayParam;
+import org.hibernate.loader.ast.internal.MultiNaturalIdLoaderInPredicate;
 import org.hibernate.loader.ast.internal.SimpleNaturalIdLoader;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
-import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
@@ -27,7 +30,6 @@ import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -35,11 +37,15 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.supportsSqlArrayType;
+
 /**
  * Single-attribute NaturalIdMapping implementation
  */
-public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements JavaType.CoercionContext {
+public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements JavaType.CoercionContext,
+		BasicValuedMapping {
 	private final SingularAttributeMapping attribute;
+	private final SessionFactoryImplementor sessionFactory;
 	private final TypeConfiguration typeConfiguration;
 
 	public SimpleNaturalIdMapping(
@@ -48,18 +54,25 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 			MappingModelCreationProcess creationProcess) {
 		super(
 				declaringType,
-				attribute.getAttributeMetadataAccess().resolveAttributeMetadata( declaringType ).isUpdatable()
+				attribute.getAttributeMetadata().isUpdatable()
 		);
 		this.attribute = attribute;
 
-		typeConfiguration = creationProcess.getCreationContext()
-				.getSessionFactory()
-				.getTypeConfiguration();
+		this.sessionFactory = creationProcess.getCreationContext().getSessionFactory();
+		this.typeConfiguration = creationProcess.getCreationContext().getTypeConfiguration();
 
 	}
 
+	public SingularAttributeMapping getAttribute() {
+		return attribute;
+	}
+
 	@Override
-	public void verifyFlushState(Object id, Object[] currentState, Object[] loadedState, SharedSessionContractImplementor session) {
+	public void verifyFlushState(
+			Object id,
+			Object[] currentState,
+			Object[] loadedState,
+			SharedSessionContractImplementor session) {
 		if ( isMutable() ) {
 			// EARLY EXIT!!!
 			// the natural id is mutable (!immutable), no need to do the checks
@@ -69,12 +82,12 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final EntityPersister persister = getDeclaringType().getEntityPersister();
 
-		final Object naturalId = extractNaturalIdFromEntityState( currentState, session );
+		final Object naturalId = extractNaturalIdFromEntityState( currentState );
 		final Object snapshot = loadedState == null
 				? persistenceContext.getNaturalIdSnapshot( id, persister )
-				: persister.getNaturalIdMapping().extractNaturalIdFromEntityState( loadedState, session );
+				: persister.getNaturalIdMapping().extractNaturalIdFromEntityState( loadedState );
 
-		if ( ! areEqual( naturalId, snapshot, session ) ) {
+		if ( !areEqual( naturalId, snapshot, session ) ) {
 			throw new HibernateException(
 					String.format(
 							"An immutable natural identifier of entity %s was altered from `%s` to `%s`",
@@ -87,7 +100,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 	}
 
 	@Override
-	public Object extractNaturalIdFromEntityState(Object[] state, SharedSessionContractImplementor session) {
+	public Object extractNaturalIdFromEntityState(Object[] state) {
 		if ( state == null ) {
 			return null;
 		}
@@ -96,21 +109,22 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 			return state[0];
 		}
 
-		return state[ attribute.getStateArrayPosition() ];
+		return state[attribute.getStateArrayPosition()];
 	}
 
 	@Override
-	public Object extractNaturalIdFromEntity(Object entity, SharedSessionContractImplementor session) {
+	public Object extractNaturalIdFromEntity(Object entity) {
 		return attribute.getPropertyAccess().getGetter().get( entity );
 	}
 
 	@Override
-	public void validateInternalForm(Object naturalIdValue, SharedSessionContractImplementor session) {
+	public void validateInternalForm(Object naturalIdValue) {
 		if ( naturalIdValue == null ) {
 			return;
 		}
 
-		if ( naturalIdValue.getClass().isArray() ) {
+		final Class<?> naturalIdValueClass = naturalIdValue.getClass();
+		if ( naturalIdValueClass.isArray() && !naturalIdValueClass.getComponentType().isPrimitive() ) {
 			// be flexible
 			final Object[] values = (Object[]) naturalIdValue;
 			if ( values.length == 1 ) {
@@ -118,31 +132,31 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 			}
 		}
 
-		if ( ! getJavaType().getJavaTypeClass().isInstance( naturalIdValue ) ) {
+		if ( !getJavaType().getJavaTypeClass().isInstance( naturalIdValue ) ) {
 			throw new IllegalArgumentException(
 					String.format(
 							Locale.ROOT,
 							"Incoming natural-id value [%s (`%s`)] is not of expected type [`%s`] and could not be coerced",
 							naturalIdValue,
-							naturalIdValue.getClass().getName(),
-							getJavaType().getJavaType().getTypeName()
+							naturalIdValueClass.getName(),
+							getJavaType().getTypeName()
 					)
 			);
 		}
 	}
 
 	@Override
-	public int calculateHashCode(Object value, SharedSessionContractImplementor session) {
+	public int calculateHashCode(Object value) {
 		//noinspection unchecked
 		return value == null ? 0 : ( (JavaType<Object>) getJavaType() ).extractHashCode( value );
 	}
 
 	@Override
-	public Object normalizeInput(Object incoming, SharedSessionContractImplementor session) {
+	public Object normalizeInput(Object incoming) {
 		return normalizeIncomingValue( incoming );
 	}
 
-	@SuppressWarnings( "rawtypes" )
+	@SuppressWarnings("rawtypes")
 	public Object normalizeIncomingValue(Object naturalIdToLoad) {
 		final Object normalizedValue;
 		if ( naturalIdToLoad instanceof Map ) {
@@ -160,14 +174,10 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 			normalizedValue = naturalIdToLoad;
 		}
 
-		if ( getTypeConfiguration().getSessionFactory().getJpaMetamodel().getJpaCompliance().isLoadByIdComplianceEnabled() ) {
+		if ( getTypeConfiguration().getJpaCompliance().isLoadByIdComplianceEnabled() ) {
 			return normalizedValue;
 		}
 		return getJavaType().coerce( normalizedValue, this );
-	}
-
-	public SingularAttributeMapping getAttribute() {
-		return attribute;
 	}
 
 	@Override
@@ -195,7 +205,10 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 	}
 
 	@Override
-	public void applySqlSelections(NavigablePath navigablePath, TableGroup tableGroup, DomainResultCreationState creationState) {
+	public void applySqlSelections(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState) {
 		attribute.applySqlSelections( navigablePath, tableGroup, creationState );
 	}
 
@@ -219,8 +232,18 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 	}
 
 	@Override
-	public List<JdbcMapping> getJdbcMappings() {
-		return attribute.getJdbcMappings();
+	public JdbcMapping getJdbcMapping(int index) {
+		return attribute.getJdbcMapping( index );
+	}
+
+	@Override
+	public JdbcMapping getSingleJdbcMapping() {
+		return attribute.getSingleJdbcMapping();
+	}
+
+	@Override
+	public JdbcMapping getJdbcMapping() {
+		return attribute.getSingleJdbcMapping();
 	}
 
 	@Override
@@ -234,28 +257,41 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 	}
 
 	@Override
-	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		attribute.breakDownJdbcValues( domainValue, valueConsumer, session );
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		attribute.addToCacheKey( cacheKey, value, session );
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
-			Object value,
-			Clause clause,
+	public <X, Y> int breakDownJdbcValues(
+			Object domainValue,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
 			SharedSessionContractImplementor session) {
-		return attribute.forEachDisassembledJdbcValue( value, clause, offset, valuesConsumer, session );
+		return attribute.breakDownJdbcValues( domainValue, offset, x, y, valueConsumer, session );
 	}
 
 	@Override
-	public int forEachJdbcValue(
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return attribute.forEachJdbcValue( value, clause, offset, valuesConsumer, session );
+		return attribute.forEachDisassembledJdbcValue( value, offset, x, y, valuesConsumer, session );
+	}
+
+	@Override
+	public <X, Y> int forEachJdbcValue(
+			Object value,
+			int offset,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			SharedSessionContractImplementor session) {
+		return attribute.forEachJdbcValue( value, offset, x, y, valuesConsumer, session );
 	}
 
 	@Override
@@ -265,11 +301,30 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 
 	@Override
 	public MultiNaturalIdLoader<?> makeMultiLoader(EntityMappingType entityDescriptor) {
-		return new MultiNaturalIdLoaderStandard<>( entityDescriptor );
+		boolean supportsSqlArrayType = supportsSqlArrayType( sessionFactory.getFastSessionServices().jdbcServices.getDialect() );
+		if ( supportsSqlArrayType && attribute instanceof BasicAttributeMapping ) {
+			return new MultiNaturalIdLoaderArrayParam<>( entityDescriptor );
+		}
+		return new MultiNaturalIdLoaderInPredicate<>( entityDescriptor );
 	}
 
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return typeConfiguration;
+	}
+
+	@Override
+	public AttributeMapping asAttributeMapping() {
+		return getAttribute();
+	}
+
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return attribute.hasPartitionedSelectionMapping();
+	}
+
+	@Override
+	public MappingType getMappedType() {
+		return attribute.getMappedType();
 	}
 }

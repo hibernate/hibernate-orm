@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.ops;
 
@@ -17,7 +15,7 @@ import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.FailureExpected;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
 
@@ -30,12 +28,12 @@ import org.junit.jupiter.api.Test;
 		annotatedClasses = {
 				RemoveOrderingTest.Person.class, RemoveOrderingTest.Company.class
 		},
-		integrationSettings = { @Setting(name = AvailableSettings.JPA_VALIDATION_MODE, value = "NONE") }
+		integrationSettings = { @Setting(name = AvailableSettings.JAKARTA_VALIDATION_MODE, value = "NONE") }
 )
 public class RemoveOrderingTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8550")
+	@JiraKey(value = "HHH-8550")
 	@FailureExpected(jiraKey = "HHH-8550")
 	public void testManyToOne(EntityManagerFactoryScope scope) {
 		scope.inTransaction(

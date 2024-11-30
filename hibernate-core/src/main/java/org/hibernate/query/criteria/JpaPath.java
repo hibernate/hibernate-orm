@@ -1,14 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.criteria;
 
 import java.util.Collection;
 import java.util.Map;
 
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.PluralAttribute;
@@ -36,13 +35,12 @@ public interface JpaPath<T> extends JpaExpression<T>, Path<T> {
 	/**
 	 * Support for JPA's explicit (TREAT) down-casting.
 	 */
-	<S extends T> JpaPath<S> treatAs(Class<S> treatJavaType);
+	<S extends T> JpaTreatedPath<T,S> treatAs(Class<S> treatJavaType);
 
 	/**
 	 * Support for JPA's explicit (TREAT) down-casting.
 	 */
 	<S extends T> JpaPath<S> treatAs(EntityDomainType<S> treatJavaType);
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides
@@ -56,10 +54,10 @@ public interface JpaPath<T> extends JpaExpression<T>, Path<T> {
 	<Y> JpaPath<Y> get(SingularAttribute<? super T, Y> attribute);
 
 	@Override
-	<E, C extends Collection<E>> JpaExpression<C> get(PluralAttribute<T, C, E> collection);
+	<E, C extends Collection<E>> Expression<C> get(PluralAttribute<? super T, C, E> collection);
 
 	@Override
-	<K, V, M extends Map<K, V>> JpaExpression<M> get(MapAttribute<T, K, V> map);
+	<K, V, M extends Map<K, V>> Expression<M> get(MapAttribute<? super T, K, V> map);
 
 	@Override
 	JpaExpression<Class<? extends T>> type();

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
@@ -30,13 +28,23 @@ public class ObjectArrayJavaType extends AbstractClassJavaType<Object[]> {
 	public String toString(Object[] value) {
 		final StringBuilder sb = new StringBuilder();
 		sb.append( '(' );
-		sb.append( components[0].toString( value[0] ) );
+		append( sb, components, value, 0 );
 		for ( int i = 1; i < components.length; i++ ) {
 			sb.append( ", " );
-			sb.append( components[i].toString( value[i] ) );
+			append( sb, components, value, i );
 		}
 		sb.append( ')' );
 		return sb.toString();
+	}
+
+	private void append(StringBuilder sb, JavaType[] components, Object[] value, int i) {
+		final Object o = value[i];
+		if (o == null ) {
+			sb.append( "null" );
+		}
+		else {
+			sb.append( components[i].toString( o ) );
+		}
 	}
 
 	@Override
@@ -81,8 +89,8 @@ public class ObjectArrayJavaType extends AbstractClassJavaType<Object[]> {
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof Object[]) {
-			return (Object[]) value;
+		if (value instanceof Object[] objects) {
+			return objects;
 		}
 		throw unknownWrap( value.getClass() );
 	}

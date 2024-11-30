@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.components.dynamic;
 
@@ -40,14 +38,14 @@ public class SanityCheckTest extends BaseEnversFunctionalTestCase {
 
 		PlainEntity plainEntity = getPlainEntity( manyToOne, manyToMany, oneToOne );
 
-		session.save( manyToMany );
-		session.save( manyToOne );
-		session.save( oneToOne );
-		session.save( plainEntity );
+		session.persist( manyToMany );
+		session.persist( manyToOne );
+		session.persist( oneToOne );
+		session.persist( plainEntity );
 
 		session.getTransaction().commit();
 		session.getTransaction().begin();
-		PlainEntity load = (PlainEntity) session.load( PlainEntity.class, 1L );
+		PlainEntity load = (PlainEntity) session.getReference( PlainEntity.class, 1L );
 
 		Assert.assertEquals( plainEntity, load );
 		session.getTransaction().commit();

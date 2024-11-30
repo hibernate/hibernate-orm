@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.internal;
 
@@ -18,7 +16,6 @@ import org.hibernate.type.descriptor.JdbcExtractingLogging;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -73,12 +70,12 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 	}
 
 	@Override
-	public <T> BasicJavaType<T> getJdbcRecommendedJavaTypeMapping(
+	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
 		//noinspection unchecked
-		return (BasicJavaType<T>) jtd;
+		return (JavaType<T>) jtd;
 	}
 
 	@Override
@@ -137,7 +134,7 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 		}
 
 		private void logExtracted(int paramIndex, J extracted) {
-			if ( ! JdbcExtractingLogging.TRACE_ENABLED ) {
+			if ( ! JdbcExtractingLogging.LOGGER.isTraceEnabled() ) {
 				return;
 			}
 
@@ -150,7 +147,7 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 		}
 
 		private void logExtracted(String paramName, J extracted) {
-			if ( ! JdbcExtractingLogging.TRACE_ENABLED ) {
+			if ( ! JdbcExtractingLogging.LOGGER.isTraceEnabled() ) {
 				return;
 			}
 
@@ -172,7 +169,7 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 
 		@Override
 		public void bind(PreparedStatement st, J value, int index, WrapperOptions options) throws SQLException {
-			if ( JdbcBindingLogging.TRACE_ENABLED ) {
+			if ( JdbcBindingLogging.LOGGER.isTraceEnabled() ) {
 				if ( value == null ) {
 					JdbcBindingLogging.logNullBinding( index, userType.getSqlType() );
 				}

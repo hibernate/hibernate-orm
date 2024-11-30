@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.detached;
 
@@ -11,15 +9,15 @@ import java.util.List;
 
 import org.hibernate.Hibernate;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.testing.transaction.TransactionUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -33,28 +31,26 @@ import jakarta.persistence.OneToMany;
 /**
  * @author Christian Beikov
  */
-@TestForIssue(jiraKey = "HHH-14387")
-@RunWith( BytecodeEnhancerRunner.class )
+@JiraKey(value = "HHH-14387")
+@DomainModel(
+		annotatedClasses = {
+				RemoveUninitializedLazyCollectionTest.Parent.class,
+				RemoveUninitializedLazyCollectionTest.Child1.class,
+				RemoveUninitializedLazyCollectionTest.Child2.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @EnhancementOptions(
 		lazyLoading = true,
 		inlineDirtyChecking = true,
 		biDirectionalAssociationManagement = true
 )
-public class RemoveUninitializedLazyCollectionTest extends BaseCoreFunctionalTestCase {
+public class RemoveUninitializedLazyCollectionTest {
 
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[]{
-				Parent.class,
-				Child1.class,
-				Child2.class
-		};
-	}
-
-	@After
-	public void tearDown() {
-		TransactionUtil.doInJPA(
-				this::sessionFactory,
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "delete from Child1" ).executeUpdate();
 					session.createQuery( "delete from Child2" ).executeUpdate();
@@ -63,11 +59,10 @@ public class RemoveUninitializedLazyCollectionTest extends BaseCoreFunctionalTes
 		);
 	}
 
-	@Before
-	public void setup() {
+	@BeforeEach
+	public void setup(SessionFactoryScope scope) {
 		Parent parent = new Parent( 1L, "test" );
-		TransactionUtil.doInJPA(
-				this::sessionFactory,
+		scope.inTransaction(
 				entityManager -> {
 					entityManager.persist( parent );
 					entityManager.persist( new Child2( 1L, "child2", parent ) );
@@ -76,8 +71,8 @@ public class RemoveUninitializedLazyCollectionTest extends BaseCoreFunctionalTes
 	}
 
 	@Test
-	public void testDeleteParentWithBidirOrphanDeleteCollectionBasedOnPropertyRef() {
-		EntityManager em = sessionFactory().createEntityManager();
+	public void testDeleteParentWithBidirOrphanDeleteCollectionBasedOnPropertyRef(SessionFactoryScope scope) {
+		EntityManager em = scope.getSessionFactory().createEntityManager();
 		try {
 			// Lazily initialize the child1 collection
 			List<Child1> child1 = em.find( Parent.class, 1L ).getChild1();

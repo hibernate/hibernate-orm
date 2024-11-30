@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.spatial.integration;
 
@@ -12,6 +10,8 @@ import org.hibernate.service.Service;
 import org.hibernate.spatial.HSMessageLogger;
 
 import org.jboss.logging.Logger;
+
+import java.lang.invoke.MethodHandles;
 
 /**
  * Central service for spatial integration
@@ -27,6 +27,7 @@ public class SpatialService implements Service {
 	public static final String INTEGRATION_ENABLED = "hibernate.integration.spatial.enabled";
 
 	private static final HSMessageLogger log = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			HSMessageLogger.class,
 			SpatialService.class.getName()
 	);

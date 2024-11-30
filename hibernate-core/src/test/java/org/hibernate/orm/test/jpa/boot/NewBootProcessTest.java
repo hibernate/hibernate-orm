@@ -1,19 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.boot;
 
 import jakarta.persistence.EntityManagerFactory;
 import java.net.URL;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.orm.test.jpa.xml.versions.JpaXsdVersionsTest;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -22,7 +20,7 @@ import org.junit.jupiter.api.Test;
 public class NewBootProcessTest {
 	@Test
 	public void basicNewBootProcessTest() {
-		Map settings = new HashMap();
+		Map settings = ServiceRegistryUtil.createBaseSettings();
 
 		HibernatePersistenceProvider persistenceProvider = new HibernatePersistenceProvider();
 		final EntityManagerFactory emf = persistenceProvider.createContainerEntityManagerFactory(

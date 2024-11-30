@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph;
 
@@ -19,14 +17,14 @@ public interface DatabaseSnapshotContributor extends Fetchable {
 
 	/**
 	 * Create a DomainResult to be used when selecting snapshots from the database.
-	 * <p/>
+	 * <p>
 	 * By default, simply use {@link #createDomainResult}
 	 */
 	default <T> DomainResult<T> createSnapshotDomainResult(
 			NavigablePath navigablePath,
-			TableGroup tableGroup,
+			TableGroup parentTableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		return createDomainResult( navigablePath, tableGroup, null, creationState );
+		return createDomainResult( navigablePath, parentTableGroup, null, creationState );
 	}
 }

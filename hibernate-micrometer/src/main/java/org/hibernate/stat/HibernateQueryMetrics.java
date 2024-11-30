@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.stat;
 
@@ -85,8 +83,7 @@ public class HibernateQueryMetrics implements MeterBinder {
 	@Override
 	public void bindTo(MeterRegistry meterRegistry) {
 		if ( sessionFactory instanceof SessionFactoryImplementor ) {
-			EventListenerRegistry eventListenerRegistry = ( (SessionFactoryImplementor) sessionFactory ).getServiceRegistry()
-					.getService( EventListenerRegistry.class );
+			EventListenerRegistry eventListenerRegistry = ( (SessionFactoryImplementor) sessionFactory ).getEventEngine().getListenerRegistry();
 			MetricsEventHandler metricsEventHandler = new MetricsEventHandler( meterRegistry );
 			eventListenerRegistry.appendListeners( EventType.POST_LOAD, metricsEventHandler );
 		}
@@ -102,7 +99,7 @@ public class HibernateQueryMetrics implements MeterBinder {
 
 		@Override
 		public void onPostLoad(PostLoadEvent event) {
-			registerQueryMetric( event.getSession().getFactory().getStatistics() );
+			registerQueryMetric( event.getFactory().getStatistics() );
 		}
 
 		void registerQueryMetric(Statistics statistics) {

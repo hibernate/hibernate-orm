@@ -1,4 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.group;
+
+import org.hibernate.annotations.LazyGroup;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
@@ -13,10 +19,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-
-import org.hibernate.annotations.LazyGroup;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
 
 /**
  * Source of a LazyToOne - relationship with FK on the other side
@@ -39,7 +41,6 @@ public class LGMB_From {
 
 	// Lazy-Association with mappdedBy in own LazyGroup
 	@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "fromRelation", optional = true)
-	@LazyToOne(LazyToOneOption.NO_PROXY)
 	@LazyGroup(value = "toRelationLazyGroup")
 	private LGMB_To toRelation;
 

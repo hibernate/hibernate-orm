@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.temptable;
 
@@ -10,6 +8,7 @@ import java.util.function.Function;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 
 /**
  * @author Steve Ebersole
@@ -43,9 +42,9 @@ public class StandardTemporaryTableExporter implements TemporaryTableExporter {
 		buffer.append( temporaryTable.getQualifiedTableName() );
 		buffer.append( '(' );
 
-		for ( TemporaryTableColumn column : temporaryTable.getColumns() ) {
+		for ( TemporaryTableColumn column : temporaryTable.getColumnsForExport() ) {
 			buffer.append( column.getColumnName() ).append( ' ' );
-			final int sqlTypeCode = column.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode();
+			final int sqlTypeCode = column.getJdbcMapping().getJdbcType().getDdlTypeCode();
 			final String databaseTypeName = column.getSqlTypeDefinition();
 
 			buffer.append( databaseTypeName );
@@ -68,7 +67,7 @@ public class StandardTemporaryTableExporter implements TemporaryTableExporter {
 		}
 		if ( dialect.supportsTemporaryTablePrimaryKey() ) {
 			buffer.append( "primary key (" );
-			for ( TemporaryTableColumn column : temporaryTable.getColumns() ) {
+			for ( TemporaryTableColumn column : temporaryTable.getColumnsForExport() ) {
 				if ( column.isPrimaryKey() ) {
 					buffer.append( column.getColumnName() );
 					buffer.append( ", " );
@@ -101,10 +100,11 @@ public class StandardTemporaryTableExporter implements TemporaryTableExporter {
 			Function<SharedSessionContractImplementor, String> sessionUidAccess,
 			SharedSessionContractImplementor session) {
 		if ( idTable.getSessionUidColumn() != null ) {
-			assert sessionUidAccess != null;
-			final String uid = sessionUidAccess.apply( session );
+			final ParameterMarkerStrategy parameterMarkerStrategy = session.getSessionFactory()
+					.getFastSessionServices().parameterMarkerStrategy;
 			return getTruncateTableCommand() + " " + idTable.getQualifiedTableName()
-					+ " where " + idTable.getSessionUidColumn().getColumnName() + " = " + uid;
+					+ " where " + idTable.getSessionUidColumn().getColumnName() + " = "
+					+ parameterMarkerStrategy.createMarker( 1, null );
 		}
 		else {
 			return getTruncateTableCommand() + " " + idTable.getQualifiedTableName();

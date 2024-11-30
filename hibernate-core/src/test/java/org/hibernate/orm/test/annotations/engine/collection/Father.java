@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.engine.collection;
 import java.util.ArrayList;
@@ -33,8 +31,8 @@ public class Father {
 	@OneToMany
 	@OrderColumn(name = "son_arriv")
 	@JoinColumn(name = "father_id", nullable = false)
-	@Cascade({ CascadeType.SAVE_UPDATE })
+	@Cascade({ CascadeType.PERSIST, CascadeType.MERGE })
 	public List<Son> getOrderedSons() { return orderedSons; }
 	public void setOrderedSons(List<Son> orderedSons) {  this.orderedSons = orderedSons; }
-	private List<Son> orderedSons = new ArrayList<Son>( );
+	private List<Son> orderedSons = new ArrayList<>( );
 }

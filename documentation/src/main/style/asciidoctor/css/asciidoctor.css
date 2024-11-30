@@ -349,8 +349,8 @@ span.icon>.fa{cursor:default}
 .admonitionblock td.icon .icon-warning:before{content:"\f071";color:#bf6900}
 .admonitionblock td.icon .icon-caution:before{content:"\f06d";color:#bf3400}
 .admonitionblock td.icon .icon-important:before{content:"\f06a";color:#bf0000}
-.conum[data-value]{display:inline-block;color:#fff!important;background-color:rgba(0,0,0,.8);-webkit-border-radius:100px;border-radius:100px;text-align:center;font-size:.75em;width:1.67em;height:1.67em;line-height:1.67em;font-family:"Open Sans","DejaVu Sans",sans-serif;font-style:normal;font-weight:bold}
-.conum[data-value] *{color:#fff!important}
+.conum[data-value]{display:inline-block;color:black!important;background-color:white;-webkit-border-radius:100px;border-radius:100px;text-align:center;font-size:.75em;width:1.67em;height:1.67em;line-height:1.67em;font-family:"Open Sans","DejaVu Sans",sans-serif;font-style:normal;font-weight:bold}
+.conum[data-value] *{color:black!important}
 .conum[data-value]+b{display:none}
 .conum[data-value]:after{content:attr(data-value)}
 pre .conum[data-value]{position:relative;top:-.125em}

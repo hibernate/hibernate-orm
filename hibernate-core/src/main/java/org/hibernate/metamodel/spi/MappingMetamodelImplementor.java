@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.spi;
 
@@ -11,11 +9,14 @@ import java.util.Set;
 
 import org.hibernate.EntityNameResolver;
 import org.hibernate.metamodel.MappingMetamodel;
+import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 
 /**
  * @author Steve Ebersole
  */
-public interface MappingMetamodelImplementor extends MappingMetamodel {
+public interface MappingMetamodelImplementor extends MappingMetamodel, QueryParameterBindingTypeResolver {
 
 	/**
 	 * Retrieves a set of all the collection roles in which the given entity is a participant, as either an
@@ -33,6 +34,25 @@ public interface MappingMetamodelImplementor extends MappingMetamodel {
 	 */
 	Collection<EntityNameResolver> getEntityNameResolvers();
 
+	/**
+	 * Get the names of all entities known to this Metamodel
+	 *
+	 * @return All the entity names
+	 */
+	default String[] getAllEntityNames() {
+		return streamEntityDescriptors()
+				.map( EntityPersister::getEntityName )
+				.toArray( String[]::new );
+	}
 
-
+	/**
+	 * Get the names of all collections known to this Metamodel
+	 *
+	 * @return All the entity names
+	 */
+	default String[] getAllCollectionRoles(){
+		return streamCollectionDescriptors()
+				.map( CollectionPersister::getRole )
+				.toArray( String[]::new );
+	}
 }

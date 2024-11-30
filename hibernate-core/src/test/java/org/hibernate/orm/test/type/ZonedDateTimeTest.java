@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.type;
 
@@ -22,6 +20,9 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
+import org.hibernate.annotations.TimeZoneStorageType;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.query.Query;
 import org.hibernate.dialect.MariaDBDialect;
@@ -29,7 +30,7 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.type.StandardBasicTypes;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 import org.junit.runners.Parameterized;
 
@@ -39,8 +40,14 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-10372")
+@JiraKey(value = "HHH-10372")
 public class ZonedDateTimeTest extends AbstractJavaTimeTypeTest<ZonedDateTime, ZonedDateTimeTest.EntityWithZonedDateTime> {
+
+	@Override
+	protected void configure(Configuration configuration) {
+		super.configure(configuration);
+		configuration.setProperty( AvailableSettings.TIMEZONE_DEFAULT_STORAGE, TimeZoneStorageType.NORMALIZE );
+	}
 
 	private static class ParametersBuilder extends AbstractParametersBuilder<ParametersBuilder> {
 		public ParametersBuilder add(int year, int month, int day,

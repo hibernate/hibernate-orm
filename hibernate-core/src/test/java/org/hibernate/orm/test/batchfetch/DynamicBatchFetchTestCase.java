@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.batchfetch;
 
@@ -11,7 +9,7 @@ import java.util.stream.IntStream;
 
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -35,7 +33,7 @@ import static org.junit.Assert.assertNotNull;
 public class DynamicBatchFetchTestCase {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12835")
+	@JiraKey(value = "HHH-12835")
 	public void batchFetchTest(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			// Having DEFAULT_BATCH_FETCH_SIZE=15
@@ -46,8 +44,8 @@ public class DynamicBatchFetchTestCase {
 
 			IntStream.range( 0, numberOfCountries ).forEach( i -> {
 				Country c = new Country( "Country " + i );
-				session.save( c );
-				session.save( new City( "City " + i, c ) );
+				session.persist( c );
+				session.persist( new City( "City " + i, c ) );
 			} );
 		} );
 

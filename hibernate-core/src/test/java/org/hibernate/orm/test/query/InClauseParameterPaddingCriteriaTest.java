@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query;
 
@@ -11,13 +9,11 @@ import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
-import org.hibernate.testing.orm.jdbc.DefaultSQLStatementInspectorSettingProvider;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
-import org.hibernate.testing.orm.junit.SettingProvider;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -35,19 +31,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-13108")
+@JiraKey(value = "HHH-13108")
 @Jpa(
 		annotatedClasses = InClauseParameterPaddingCriteriaTest.Document.class,
 		integrationSettings = {
 				@Setting(name = AvailableSettings.USE_SQL_COMMENTS, value = "true"),
 				@Setting(name = AvailableSettings.IN_CLAUSE_PARAMETER_PADDING, value = "true"),
+				@Setting(name = AvailableSettings.DIALECT_NATIVE_PARAM_MARKERS, value = "false"),
+				@Setting(name = AvailableSettings.CRITERIA_VALUE_HANDLING_MODE, value = "bind")
 		},
-		settingProviders = {
-				@SettingProvider(
-						settingName = AvailableSettings.STATEMENT_INSPECTOR,
-						provider = DefaultSQLStatementInspectorSettingProvider.class
-				)
-		}
+		useCollectingStatementInspector = true
 )
 public class InClauseParameterPaddingCriteriaTest {
 
@@ -62,7 +55,7 @@ public class InClauseParameterPaddingCriteriaTest {
 
 	@Test
 	public void testInClauseParameterPadding(EntityManagerFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getStatementInspector( SQLStatementInspector.class );
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
 		scope.inTransaction( entityManager -> {
@@ -81,12 +74,12 @@ public class InClauseParameterPaddingCriteriaTest {
 			assertEquals( 1, ids.size() );
 		} );
 
-		assertTrue( statementInspector.getSqlQueries().get( 0 ).endsWith( "in(?,?,?,?,?,?,?,?)" ) );
+		assertTrue( statementInspector.getSqlQueries().get( 0 ).endsWith( "in (?,?,?,?,?,?,?,?)" ) );
 	}
 
 	@Test
 	public void testInClauseParameterPaddingForExpressions(EntityManagerFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getStatementInspector( SQLStatementInspector.class );
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
 		scope.inTransaction( entityManager -> {
@@ -108,7 +101,31 @@ public class InClauseParameterPaddingCriteriaTest {
 			assertEquals( 1, ids.size() );
 		} );
 
-		assertTrue( statementInspector.getSqlQueries().get( 0 ).endsWith( "in(d1_0.id,d1_0.id,d1_0.id)" ) );
+		assertTrue( statementInspector.getSqlQueries().get( 0 ).endsWith( "in (d1_0.id,d1_0.id,d1_0.id)" ) );
+	}
+
+
+	@Test @JiraKey("HHH-14119")
+	public void testInClauseParameterBindingPadding(EntityManagerFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+
+		scope.inTransaction( entityManager -> {
+			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+			CriteriaQuery<Integer> query = cb.createQuery( Integer.class );
+			Root<Document> document = query.from( Document.class );
+
+			query
+					.select( document.get( "id" ) )
+					.where( document.get( "id" ).in( Arrays.asList( 1, 2, 3, 4, 5 ) ) );
+
+
+			List<Integer> ids = entityManager.createQuery( query ).getResultList();
+			assertEquals( 1, ids.size() );
+		} );
+
+		assertTrue( statementInspector.getSqlQueries().get( 0 ).endsWith( "in (?,?,?,?,?,?,?,?)" ) );
+
 	}
 
 	@Entity(name = "Document")

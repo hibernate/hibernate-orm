@@ -1,33 +1,50 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm;
 
 import java.util.List;
 
+import org.hibernate.metamodel.model.domain.DiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
-import org.hibernate.query.sqm.sql.internal.SelfInterpretingSqmPath;
 import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.NonAggregatedCompositeSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmAnyValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmBagJoin;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedBagJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedCrossJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedEntityJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedListJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedMapJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedPluralPartJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedRoot;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedRootJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedSetJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedSingularJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
+import org.hibernate.query.sqm.tree.domain.SqmCteRoot;
 import org.hibernate.query.sqm.tree.domain.SqmDerivedRoot;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmFkExpression;
+import org.hibernate.query.sqm.tree.domain.SqmFunctionPath;
+import org.hibernate.query.sqm.tree.domain.SqmFunctionRoot;
 import org.hibernate.query.sqm.tree.domain.SqmIndexedCollectionAccessPath;
+import org.hibernate.query.sqm.tree.domain.SqmListJoin;
 import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
 import org.hibernate.query.sqm.tree.domain.SqmElementAggregateFunction;
 import org.hibernate.query.sqm.tree.domain.SqmIndexAggregateFunction;
+import org.hibernate.query.sqm.tree.domain.SqmMapJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPluralPartJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
+import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
+import org.hibernate.query.sqm.tree.expression.AsWrapperSqmExpression;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmAny;
 import org.hibernate.query.sqm.tree.expression.SqmAnyDiscriminatorValue;
@@ -48,26 +65,34 @@ import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
+import org.hibernate.query.sqm.tree.expression.SqmHqlNumericLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralEmbeddableType;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
+import org.hibernate.query.sqm.tree.expression.SqmNamedExpression;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmOver;
 import org.hibernate.query.sqm.tree.expression.SqmOverflow;
 import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
+import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
 import org.hibernate.query.sqm.tree.expression.SqmStar;
 import org.hibernate.query.sqm.tree.expression.SqmSummarization;
 import org.hibernate.query.sqm.tree.expression.SqmToDuration;
 import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
+import org.hibernate.query.sqm.tree.expression.SqmWindow;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
+import org.hibernate.query.sqm.tree.from.SqmCteJoin;
 import org.hibernate.query.sqm.tree.from.SqmDerivedJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
+import org.hibernate.query.sqm.tree.from.SqmFunctionJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.insert.SqmConflictClause;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
 import org.hibernate.query.sqm.tree.insert.SqmValues;
@@ -85,6 +110,7 @@ import org.hibernate.query.sqm.tree.predicate.SqmMemberOfPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNegatedPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNullnessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmTruthnessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmJpaCompoundSelection;
@@ -116,6 +142,8 @@ public interface SemanticQueryWalker<T> {
 
 	T visitInsertValuesStatement(SqmInsertValuesStatement<?> statement);
 
+	T visitConflictClause(SqmConflictClause<?> sqmConflictClause);
+
 	T visitDeleteStatement(SqmDeleteStatement<?> statement);
 
 	T visitSelectStatement(SqmSelectStatement<?> statement);
@@ -134,15 +162,75 @@ public interface SemanticQueryWalker<T> {
 
 	T visitRootDerived(SqmDerivedRoot<?> sqmRoot);
 
+	T visitRootFunction(SqmFunctionRoot<?> sqmRoot);
+
+	T visitRootCte(SqmCteRoot<?> sqmRoot);
+
 	T visitCrossJoin(SqmCrossJoin<?> joinedFromElement);
 
 	T visitPluralPartJoin(SqmPluralPartJoin<?, ?> joinedFromElement);
 
-	T visitQualifiedEntityJoin(SqmEntityJoin<?> joinedFromElement);
+	T visitQualifiedEntityJoin(SqmEntityJoin<?,?> joinedFromElement);
 
 	T visitQualifiedAttributeJoin(SqmAttributeJoin<?, ?> joinedFromElement);
 
+	default T visitCorrelatedCrossJoin(SqmCorrelatedCrossJoin<?> join) {
+		return visitCrossJoin( join );
+	}
+
+	default T visitCorrelatedEntityJoin(SqmCorrelatedEntityJoin<?,?> join) {
+		return visitQualifiedEntityJoin( join );
+	}
+
+	default T visitCorrelatedPluralPartJoin(SqmCorrelatedPluralPartJoin<?, ?> join) {
+		return visitPluralPartJoin( join );
+	}
+
+	default T visitBagJoin(SqmBagJoin<?,?> join){
+		return visitQualifiedAttributeJoin( join );
+	}
+
+	default T visitCorrelatedBagJoin(SqmCorrelatedBagJoin<?, ?> join) {
+		return visitQualifiedAttributeJoin( join );
+	}
+
+	default T visitCorrelatedListJoin(SqmCorrelatedListJoin<?, ?> join) {
+		return visitQualifiedAttributeJoin( join );
+	}
+
+	default T visitCorrelatedMapJoin(SqmCorrelatedMapJoin<?, ?, ?> join) {
+		return visitQualifiedAttributeJoin( join );
+	}
+
+	default T visitCorrelatedSetJoin(SqmCorrelatedSetJoin<?, ?> join) {
+		return visitQualifiedAttributeJoin( join );
+	}
+
+	default T visitCorrelatedSingularJoin(SqmCorrelatedSingularJoin<?, ?> join) {
+		return visitQualifiedAttributeJoin( join );
+	}
+
+	default T visitListJoin(SqmListJoin<?, ?> join) {
+		return visitQualifiedAttributeJoin( join );
+	}
+
+	default T visitMapJoin(SqmMapJoin<?, ?, ?> join) {
+		return visitQualifiedAttributeJoin( join );
+	}
+
+	default T visitSetJoin(SqmSetJoin<?, ?> join) {
+		return visitQualifiedAttributeJoin( join );
+	}
+
+	default T visitSingularJoin(SqmSingularJoin<?, ?> join) {
+		return visitQualifiedAttributeJoin( join );
+	}
+
 	T visitQualifiedDerivedJoin(SqmDerivedJoin<?> joinedFromElement);
+
+	T visitQualifiedFunctionJoin(SqmFunctionJoin<?> joinedFromElement);
+
+	T visitQualifiedCteJoin(SqmCteJoin<?> joinedFromElement);
 
 	T visitBasicValuedPath(SqmBasicValuedSimplePath<?> path);
 
@@ -158,18 +246,27 @@ public interface SemanticQueryWalker<T> {
 
 	T visitFkExpression(SqmFkExpression<?> fkExpression);
 
-	T visitSelfInterpretingSqmPath(SelfInterpretingSqmPath<?> sqmPath);
-	
+	T visitDiscriminatorPath(DiscriminatorSqmPath<?> sqmPath);
+
 	T visitIndexedPluralAccessPath(SqmIndexedCollectionAccessPath<?> path);
 
 	T visitElementAggregateFunction(SqmElementAggregateFunction<?> path);
 
 	T visitIndexAggregateFunction(SqmIndexAggregateFunction<?> path);
 
+	T visitFunctionPath(SqmFunctionPath<?> functionPath);
+
 	T visitTreatedPath(SqmTreatedPath<?, ?> sqmTreatedPath);
 
 	T visitCorrelation(SqmCorrelation<?, ?> correlation);
 
+	default T visitCorrelatedRootJoin(SqmCorrelatedRootJoin<?> correlatedRootJoin){
+		return visitCorrelation( correlatedRootJoin );
+	}
+
+	default T visitCorrelatedRoot(SqmCorrelatedRoot<?> correlatedRoot){
+		return visitCorrelation( correlatedRoot );
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Query spec
@@ -201,6 +298,8 @@ public interface SemanticQueryWalker<T> {
 
 	T visitFieldLiteral(SqmFieldLiteral<?> sqmFieldLiteral);
 
+	<N extends Number> T visitHqlNumericLiteral(SqmHqlNumericLiteral<N> numericLiteral);
+
 	T visitTuple(SqmTuple<?> sqmTuple);
 
 	T visitCollation(SqmCollation sqmCollate);
@@ -229,15 +328,19 @@ public interface SemanticQueryWalker<T> {
 
 	T visitEntityTypeLiteralExpression(SqmLiteralEntityType<?> expression);
 
-	T visitAnyDiscriminatorTypeExpression(AnyDiscriminatorSqmPath expression);
+	T visitEmbeddableTypeLiteralExpression(SqmLiteralEmbeddableType<?> expression);
 
-	T visitAnyDiscriminatorTypeValueExpression(SqmAnyDiscriminatorValue expression);
+	T visitAnyDiscriminatorTypeExpression(AnyDiscriminatorSqmPath<?> expression);
+
+	T visitAnyDiscriminatorTypeValueExpression(SqmAnyDiscriminatorValue<?> expression);
 
 	T visitParameterizedEntityTypeExpression(SqmParameterizedEntityType<?> expression);
 
 	T visitUnaryOperationExpression(SqmUnaryOperation<?> expression);
 
 	T visitFunction(SqmFunction<?> tSqmFunction);
+
+	T visitSetReturningFunction(SqmSetReturningFunction<?> tSqmFunction);
 
 	T visitExtractUnit(SqmExtractUnit<?> extractUnit);
 
@@ -252,6 +355,8 @@ public interface SemanticQueryWalker<T> {
 	T visitStar(SqmStar sqmStar);
 
 	T visitOver(SqmOver<?> over);
+
+	T visitWindow(SqmWindow widow);
 
 	T visitOverflow(SqmOverflow<?> sqmOverflow);
 
@@ -277,6 +382,8 @@ public interface SemanticQueryWalker<T> {
 	T visitIsEmptyPredicate(SqmEmptinessPredicate predicate);
 
 	T visitIsNullPredicate(SqmNullnessPredicate predicate);
+
+	T visitIsTruePredicate(SqmTruthnessPredicate predicate);
 
 	T visitBetweenPredicate(SqmBetweenPredicate predicate);
 
@@ -319,4 +426,8 @@ public interface SemanticQueryWalker<T> {
 	T visitMapEntryFunction(SqmMapEntryReference<?, ?> function);
 
 	T visitFullyQualifiedClass(Class<?> namedClass);
+
+	T visitAsWrapperExpression(AsWrapperSqmExpression<?> expression);
+
+	T visitNamedExpression(SqmNamedExpression<?> expression);
 }

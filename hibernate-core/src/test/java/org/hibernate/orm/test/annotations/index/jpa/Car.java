@@ -1,15 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.index.jpa;
 
 import java.util.List;
 import java.util.Set;
 import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
@@ -24,12 +21,12 @@ import jakarta.persistence.Table;
 
 
 /**
- * @author <a href="mailto:stliu@hibernate.org">Strong Liu</a>
+ * @author Strong Liu
  */
 @Entity
 @Table(indexes = {
-		@Index(unique = true, columnList = "brand, producer")
-		, @Index(name = "Car_idx", columnList = "since DESC")
+		@Index(unique = true, columnList = "brand, producer"),
+		@Index(name = "Car_idx", columnList = "since DESC")
 })
 @SecondaryTable(name = "T_DEALER", indexes = @Index(columnList = "dealer_name ASC, rate DESC"))
 public class Car {
@@ -38,10 +35,8 @@ public class Car {
 	private String brand;
 	private String producer;
 	private long since;
-	@AttributeOverrides({
-			@AttributeOverride(name = "name", column = @Column(name = "dealer_name", table = "T_DEALER")),
-			@AttributeOverride(name = "rate", column = @Column(table = "T_DEALER"))
-	})
+	@AttributeOverride(name = "name", column = @Column(name = "dealer_name", table = "T_DEALER"))
+	@AttributeOverride(name = "rate", column = @Column(table = "T_DEALER"))
 	@Embedded
 	private Dealer dealer;
 

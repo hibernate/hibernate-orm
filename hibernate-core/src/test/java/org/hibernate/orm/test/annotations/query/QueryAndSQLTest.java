@@ -1,12 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id$
-
 package org.hibernate.orm.test.annotations.query;
 
 import java.util.Calendar;
@@ -19,7 +14,7 @@ import org.hibernate.MappingException;
 import org.hibernate.Transaction;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.NativeQuery;
@@ -27,7 +22,7 @@ import org.hibernate.query.Query;
 import org.hibernate.stat.Statistics;
 import org.hibernate.type.StandardBasicTypes;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -94,15 +89,15 @@ public class QueryAndSQLTest {
 
 	@Test
 	public void testNativeQueryWithFormulaAttribute(SessionFactoryScope scope) {
-        final String dateFunctionRendered = scope.getSessionFactory().getJdbcServices().getDialect()
+		final String dateFunctionRendered = scope.getSessionFactory().getJdbcServices().getDialect()
 				.currentDate();
 
 		String sql = String.format(
-				"select t.TABLE_NAME as {t.tableName}, %s as {t.daysOld} from ALL_TABLES t where t.TABLE_NAME = 'AUDIT_ACTIONS' ",
+				"select t.table_name as {t.tableName}, %s as {t.daysOld} from ALL_TABLES t where t.table_name = 'AUDIT_ACTIONS' ",
 				dateFunctionRendered
 		);
 		String sql2 = String.format(
-				"select TABLE_NAME as t_name, %s as t_time from ALL_TABLES where TABLE_NAME = 'AUDIT_ACTIONS' ",
+				"select table_name as t_name, %s as t_time from ALL_TABLES where table_name = 'AUDIT_ACTIONS' ",
 				dateFunctionRendered
 		);
 
@@ -124,19 +119,19 @@ public class QueryAndSQLTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "invalid name of function or procedure: SYSDATE")
+	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "invalid name of function or procedure: SYSDATE")
 	public void testNativeQueryWithFormulaAttributeWithoutAlias(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-                    String sql = "select TABLE_NAME , " + scope.getSessionFactory().getJdbcServices().getDialect()
-							.currentDate() + " as daysOld from ALL_TABLES  where TABLE_NAME = 'AUDIT_ACTIONS' ";
+					String sql = "select table_name , " + scope.getSessionFactory().getJdbcServices().getDialect()
+							.currentDate() + " as days_old from ALL_TABLES  where table_name = 'AUDIT_ACTIONS' ";
 					session.createNativeQuery( sql ).addEntity( "t", AllTables.class ).list();
 				}
 		);
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10161")
+	@JiraKey(value = "HHH-10161")
 	public void testQueryWithNullParameter(SessionFactoryScope scope) {
 		Chaos c0 = new Chaos();
 		c0.setId( 0L );
@@ -180,7 +175,7 @@ public class QueryAndSQLTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10161")
+	@JiraKey(value = "HHH-10161")
 	public void testQueryWithNullParameterTyped(SessionFactoryScope scope) {
 		Chaos c0 = new Chaos();
 		c0.setId( 0L );
@@ -224,7 +219,7 @@ public class QueryAndSQLTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10161")
+	@JiraKey(value = "HHH-10161")
 	public void testNativeQueryWithNullParameter(SessionFactoryScope scope) {
 		Chaos c0 = new Chaos();
 		c0.setId( 0L );
@@ -269,7 +264,7 @@ public class QueryAndSQLTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10161")
+	@JiraKey(value = "HHH-10161")
 	public void testNativeQueryWithNullParameterTyped(SessionFactoryScope scope) {
 		Chaos c0 = new Chaos();
 		c0.setId( 0L );
@@ -321,7 +316,7 @@ public class QueryAndSQLTest {
 					session.persist( p );
 					Query q = session.getNamedQuery( "plane.getAll" );
 					assertEquals( 1, q.list().size() );
-					session.delete( q.list().get( 0 ) );
+					session.remove( q.list().get( 0 ) );
 				}
 		);
 	}
@@ -361,7 +356,7 @@ public class QueryAndSQLTest {
 					assertEquals( 1, stats.getQueryCachePutCount() );
 					q = session.getNamedQuery( "night.duration" );
 					q.setParameter( "duration", 14l );
-					session.delete( q.list().get( 0 ) );
+					session.remove( q.list().get( 0 ) );
 					assertEquals( 1, stats.getQueryCacheHitCount() );
 				}
 		);
@@ -401,8 +396,8 @@ public class QueryAndSQLTest {
 						List areas = session.getNamedQuery( "getAreaByNative" ).list();
 						assertTrue( 1 == areas.size() );
 						assertEquals( area.getName(), ( (Area) areas.get( 0 ) ).getName() );
-						session.delete( areas.get( 0 ) );
-						session.delete( n2 );
+						session.remove( areas.get( 0 ) );
+						session.remove( n2 );
 						tx.commit();
 					}
 					finally {
@@ -476,8 +471,8 @@ public class QueryAndSQLTest {
 					assertEquals( 1, stats.getQueryCacheHitCount() );
 					Night n2 = (Night) ( (Object[]) result.get( 0 ) )[0];
 					assertEquals( n2.getDuration(), n.getDuration() );
-					session.delete( n2.getArea() );
-					session.delete( n2 );
+					session.remove( n2.getArea() );
+					session.remove( n2 );
 				}
 		);
 
@@ -503,7 +498,7 @@ public class QueryAndSQLTest {
 						List result = q.list();
 						assertEquals( 1, result.size() );
 						assertEquals( ship.getModel(), ( (SpaceShip) result.get( 0 ) ).getModel() );
-						session.delete( result.get( 0 ) );
+						session.remove( result.get( 0 ) );
 						tx.commit();
 					}
 					finally {
@@ -551,8 +546,8 @@ public class QueryAndSQLTest {
 						//FIXME vary depending on databases
 						assertTrue( row[1].toString().startsWith( "50" ) );
 						assertTrue( row[2].toString().startsWith( "500" ) );
-						session.delete( spaceShip.getCaptain() );
-						session.delete( spaceShip );
+						session.remove( spaceShip.getCaptain() );
+						session.remove( spaceShip );
 						tx.commit();
 					}
 					finally {
@@ -587,8 +582,8 @@ public class QueryAndSQLTest {
 								results.get( 0 ) instanceof SynonymousDictionary
 										|| results.get( 1 ) instanceof SynonymousDictionary
 						);
-						session.delete( results.get( 0 ) );
-						session.delete( results.get( 1 ) );
+						session.remove( results.get( 0 ) );
+						session.remove( results.get( 1 ) );
 						tx.commit();
 					}
 					finally {
@@ -629,7 +624,7 @@ public class QueryAndSQLTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( session.get( Plane.class, plane.getId() ) )
+						session.remove( session.get( Plane.class, plane.getId() ) )
 		);
 	}
 
@@ -652,7 +647,7 @@ public class QueryAndSQLTest {
 					session.clear();
 					session.getSessionFactory().getCache().evictEntityData( Chaos.class );
 
-					Chaos resultChaos = session.load( Chaos.class, chaos.getId() );
+					Chaos resultChaos = session.getReference( Chaos.class, chaos.getId() );
 					assertEquals( upperName, resultChaos.getName() );
 					assertEquals( "nickname", resultChaos.getNickname() );
 				}
@@ -686,14 +681,14 @@ public class QueryAndSQLTest {
 					session.clear();
 					session.getSessionFactory().getCache().evictEntityData( Chaos.class );
 
-					Chaos resultChaos = session.load( Chaos.class, chaos.getId() );
+					Chaos resultChaos = session.getReference( Chaos.class, chaos.getId() );
 					assertEquals( 2, resultChaos.getParticles().size() );
 					resultChaos.getParticles().remove( resultChaos.getParticles().iterator().next() );
 					resultChaos.getParticles().remove( resultChaos.getParticles().iterator().next() );
 					session.flush();
 
 					session.clear();
-					resultChaos = session.load( Chaos.class, chaos.getId() );
+					resultChaos = session.getReference( Chaos.class, chaos.getId() );
 					assertEquals( 0, resultChaos.getParticles().size() );
 				}
 		);

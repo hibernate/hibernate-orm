@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.event.service.internal;
 
 import java.util.ArrayList;
@@ -10,7 +14,7 @@ import org.hibernate.event.spi.ClearEvent;
 import org.hibernate.event.spi.ClearEventListener;
 import org.hibernate.event.spi.EventType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * Note: I'm using ClearEvent for the tests because it's the simpler one I've found.
  * </p>
  */
-@TestForIssue(jiraKey = "HHH-13831")
+@JiraKey(value = "HHH-13831")
 public class EventListenerDuplicationStrategyTest {
 
 	Tracker tracker = new Tracker();
@@ -33,13 +37,13 @@ public class EventListenerDuplicationStrategyTest {
 	public void testListenersIterator() {
 		listenerGroup.addDuplicationStrategy( ReplaceOriginalStrategy.INSTANCE );
 		listenerGroup.appendListener( new OriginalListener( tracker ) );
-		listenerGroup.listeners().forEach( listener -> listener.onClear( event ) );
+		listenerGroup.fireEventOnEachListener( event, ClearEventListener::onClear );
 
 		assertThat( tracker.callers ).containsExactly( OriginalListener.class );
 
 		tracker.reset();
 		listenerGroup.appendListener( new ExpectedListener( tracker ) );
-		listenerGroup.listeners().forEach( listener -> listener.onClear( event ) );
+		listenerGroup.fireEventOnEachListener( event, ClearEventListener::onClear );
 
 		assertThat( tracker.callers ).containsExactly( ExpectedListener.class );
 	}
@@ -79,7 +83,7 @@ public class EventListenerDuplicationStrategyTest {
 		listenerGroup.appendListener( new OriginalListener( tracker ) );
 		listenerGroup.appendListener( new ExpectedListener( tracker ) );
 		listenerGroup.appendListener( new ExtraListener( tracker ) );
-		listenerGroup.listeners().forEach( listener -> listener.onClear( event ) );
+		listenerGroup.fireEventOnEachListener( event, ClearEventListener::onClear );
 
 		assertThat( tracker.callers ).containsExactly(
 				OriginalListener.class,
@@ -122,7 +126,7 @@ public class EventListenerDuplicationStrategyTest {
 		listenerGroup.appendListener( new OriginalListener( tracker ) );
 		listenerGroup.appendListener( new ExpectedListener( tracker ) );
 		listenerGroup.appendListener( new ExtraListener( tracker ) );
-		listenerGroup.listeners().forEach( listener -> listener.onClear( event ) );
+		listenerGroup.fireEventOnEachListener( event, ClearEventListener::onClear );
 
 		assertThat( tracker.callers ).containsExactly( ExpectedListener.class, ExtraListener.class );
 	}
@@ -155,7 +159,7 @@ public class EventListenerDuplicationStrategyTest {
 		listenerGroup.appendListener( new OriginalListener( tracker ) );
 		listenerGroup.appendListener( new ExpectedListener( tracker ) );
 		listenerGroup.appendListener( new ExtraListener( tracker ) );
-		listenerGroup.listeners().forEach( listener -> listener.onClear( event ) );
+		listenerGroup.fireEventOnEachListener( event, ClearEventListener::onClear );
 
 		assertThat( tracker.callers ).containsExactly( OriginalListener.class, ExtraListener.class );
 	}

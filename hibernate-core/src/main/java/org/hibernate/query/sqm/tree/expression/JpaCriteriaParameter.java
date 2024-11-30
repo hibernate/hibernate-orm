@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
@@ -20,8 +18,8 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 /**
  * {@link JpaParameterExpression} created via JPA {@link jakarta.persistence.criteria.CriteriaBuilder}.
- *
- * Each occurrence of a JpaParameterExpression results in a unique SqmParameter
+ * <p>
+ * Each occurrence of a {@code JpaParameterExpression} results in a unique {@link SqmParameter}.
  *
  * @see ParameterMetadata
  * @see NodeBuilder#parameter
@@ -36,7 +34,7 @@ public class JpaCriteriaParameter<T>
 
 	public JpaCriteriaParameter(
 			String name,
-			BindableType<T> type,
+			BindableType<? super T> type,
 			boolean allowsMultiValuedBinding,
 			NodeBuilder nodeBuilder) {
 		super( toSqmType( type, nodeBuilder ), nodeBuilder );
@@ -54,9 +52,7 @@ public class JpaCriteriaParameter<T>
 		if ( type == null ) {
 			return null;
 		}
-		return type.resolveExpressible(
-				nodeBuilder.getQueryEngine().getTypeConfiguration().getSessionFactory()
-		);
+		return type.resolveExpressible( nodeBuilder );
 	}
 
 	@Override
@@ -77,6 +73,12 @@ public class JpaCriteriaParameter<T>
 	@Override
 	public Integer getPosition() {
 		// for criteria anyway, these cannot be positional
+		return null;
+	}
+
+	@Override
+	public Integer getTupleLength() {
+		// TODO: we should be able to do much better than this!
 		return null;
 	}
 
@@ -118,12 +120,13 @@ public class JpaCriteriaParameter<T>
 
 	@Override
 	public BindableType<T> getHibernateType() {
-		return this.getNodeType();
+		return getNodeType();
 	}
 
 	@Override
 	public Class<T> getParameterType() {
-		return this.getNodeType().getExpressibleJavaType().getJavaTypeClass();
+		final SqmExpressible<T> nodeType = getNodeType();
+		return nodeType == null ? null : nodeType.getExpressibleJavaType().getJavaTypeClass();
 	}
 
 	@Override
@@ -165,5 +168,12 @@ public class JpaCriteriaParameter<T>
 			return super.hashCode();
 		}
 		return Objects.hash( name );
+	}
+
+	@Override
+	public int compareTo(SqmParameter anotherParameter) {
+		return anotherParameter instanceof JpaCriteriaParameter
+				? Integer.compare( hashCode(), anotherParameter.hashCode() )
+				: 1;
 	}
 }

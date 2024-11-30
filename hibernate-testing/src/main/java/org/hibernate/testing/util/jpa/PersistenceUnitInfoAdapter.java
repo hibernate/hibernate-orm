@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.util.jpa;
 
@@ -41,6 +39,16 @@ public class PersistenceUnitInfoAdapter implements PersistenceUnitInfo {
 	}
 
 	@Override
+	public String getScopeAnnotationName() {
+		return null;
+	}
+
+	@Override
+	public List<String> getQualifierAnnotationNames() {
+		return List.of();
+	}
+
+	@Override @SuppressWarnings("removal")
 	public PersistenceUnitTransactionType getTransactionType() {
 		return PersistenceUnitTransactionType.RESOURCE_LOCAL;
 	}
@@ -107,7 +115,6 @@ public class PersistenceUnitInfoAdapter implements PersistenceUnitInfo {
 
 	@Override
 	public void addTransformer(ClassTransformer transformer) {
-		throw new UnsupportedOperationException();
 	}
 
 	@Override

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.onetoone.formula;
 
@@ -21,7 +19,7 @@ import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -96,7 +94,7 @@ public class OneToOneFormulaTest extends BaseSessionFactoryFunctionalTest {
 	@AfterEach
 	protected void cleanupTest() {
 		inTransaction( session -> {
-			session.delete( person );
+			session.remove( person );
 		} );
 	}
 
@@ -177,7 +175,7 @@ public class OneToOneFormulaTest extends BaseSessionFactoryFunctionalTest {
 
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5757")
+	@JiraKey(value = "HHH-5757")
 	public void testQuery() {
 		inTransaction( session -> {
 			Person p = (Person) session.createQuery( "from Person p where p.address = :address" ).setParameter(
@@ -203,7 +201,7 @@ public class OneToOneFormulaTest extends BaseSessionFactoryFunctionalTest {
 			Address a = new Address();
 			a.setType( "HOME" );
 			a.setPerson( person );
-			a = session.load( Address.class, a );
+			a = session.getReference( Address.class, a );
 			assertFalse( Hibernate.isInitialized( a ) );
 			a.getPerson();
 			a.getType();
@@ -223,8 +221,8 @@ public class OneToOneFormulaTest extends BaseSessionFactoryFunctionalTest {
 		} );
 
 
-//		s.delete(a2);
-//		s.delete( s.get( Person.class, p.getName() ) ); //this is certainly undesirable! oh well...
+//		s.remove(a2);
+//		s.remove( s.get( Person.class, p.getName() ) ); //this is certainly undesirable! oh well...
 //
 //		t.commit();
 //		s.close();

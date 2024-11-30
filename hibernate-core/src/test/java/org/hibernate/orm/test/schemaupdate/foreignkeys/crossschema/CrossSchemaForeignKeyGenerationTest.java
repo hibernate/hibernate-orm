@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemaupdate.foreignkeys.crossschema;
 
@@ -33,12 +31,11 @@ import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
 import org.hibernate.tool.schema.internal.GroupedSchemaMigratorImpl;
 import org.hibernate.tool.schema.internal.SchemaDropperImpl;
 import org.hibernate.tool.schema.internal.IndividuallySchemaMigratorImpl;
-import org.hibernate.tool.schema.internal.exec.GenerationTarget;
+import org.hibernate.tool.schema.spi.GenerationTarget;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToStdout;
 import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
-import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.ScriptSourceInput;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
@@ -47,8 +44,10 @@ import org.hibernate.tool.schema.spi.TargetDescriptor;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+
 import org.hibernate.orm.test.tool.schema.TargetDatabaseImpl;
 
 import org.junit.After;
@@ -70,7 +69,8 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 	public void setUp() throws IOException {
 		output = File.createTempFile( "update_script", ".sql" );
 		output.deleteOnExit();
-		ssr = new StandardServiceRegistryBuilder().applySetting( AvailableSettings.HBM2DDL_CREATE_SCHEMAS, "true" )
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
+				.applySetting( AvailableSettings.HBM2DDL_CREATE_SCHEMAS, "true" )
 				.build();
 	}
 
@@ -80,13 +80,14 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10420")
+	@JiraKey(value = "HHH-10420")
 	public void testSchemaExportForeignKeysAreGeneratedAfterAllTheTablesAreCreated() throws Exception {
 		final MetadataSources metadataSources = new MetadataSources( ssr );
 		metadataSources.addAnnotatedClass( SchemaOneEntity.class );
 		metadataSources.addAnnotatedClass( SchemaTwoEntity.class );
 
 		MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 
 		new SchemaExport().setHaltOnError( true )
@@ -103,13 +104,14 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10802")
+	@JiraKey(value = "HHH-10802")
 	public void testSchemaUpdateDoesNotFailResolvingCrossSchemaForeignKey() throws Exception {
 		final MetadataSources metadataSources = new MetadataSources( ssr );
 		metadataSources.addAnnotatedClass( SchemaOneEntity.class );
 		metadataSources.addAnnotatedClass( SchemaTwoEntity.class );
 
 		MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 
 		new SchemaExport()
@@ -129,19 +131,20 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10420")
+	@JiraKey(value = "HHH-10420")
 	public void testSchemaMigrationForeignKeysAreGeneratedAfterAllTheTablesAreCreated() throws Exception {
 		final MetadataSources metadataSources = new MetadataSources( ssr );
 		metadataSources.addAnnotatedClass( SchemaOneEntity.class );
 		metadataSources.addAnnotatedClass( SchemaTwoEntity.class );
 
 		MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 
 		final Database database = metadata.getDatabase();
 		final HibernateSchemaManagementTool tool = (HibernateSchemaManagementTool) ssr.getService( SchemaManagementTool.class );
 
-		final Map configurationValues = ssr.getService( ConfigurationService.class ).getSettings();
+		final Map<String,Object> configurationValues = ssr.requireService( ConfigurationService.class ).getSettings();
 		final ExecutionOptions options = new ExecutionOptions() {
 			@Override
 			public boolean shouldManageNamespaces() {
@@ -149,18 +152,13 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 			}
 
 			@Override
-			public Map getConfigurationValues() {
+			public Map<String,Object> getConfigurationValues() {
 				return configurationValues;
 			}
 
 			@Override
 			public ExceptionHandler getExceptionHandler() {
 				return ExceptionHandlerLoggedImpl.INSTANCE;
-			}
-
-			@Override
-			public SchemaFilter getSchemaFilter() {
-				return SchemaFilter.ALL;
 			}
 		};
 
@@ -198,18 +196,19 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10420")
+	@JiraKey(value = "HHH-10420")
 	public void testImprovedSchemaMigrationForeignKeysAreGeneratedAfterAllTheTablesAreCreated() throws Exception {
 		final MetadataSources metadataSources = new MetadataSources( ssr );
 		metadataSources.addAnnotatedClass( SchemaOneEntity.class );
 		metadataSources.addAnnotatedClass( SchemaTwoEntity.class );
 
 		MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 
 		final HibernateSchemaManagementTool tool = (HibernateSchemaManagementTool) ssr.getService( SchemaManagementTool.class );
 
-		final Map configurationValues = ssr.getService( ConfigurationService.class ).getSettings();
+		final Map<String,Object> configurationValues = ssr.requireService( ConfigurationService.class ).getSettings();
 		final ExecutionOptions options = new ExecutionOptions() {
 			@Override
 			public boolean shouldManageNamespaces() {
@@ -217,18 +216,13 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 			}
 
 			@Override
-			public Map getConfigurationValues() {
+			public Map<String,Object> getConfigurationValues() {
 				return configurationValues;
 			}
 
 			@Override
 			public ExceptionHandler getExceptionHandler() {
 				return ExceptionHandlerLoggedImpl.INSTANCE;
-			}
-
-			@Override
-			public SchemaFilter getSchemaFilter() {
-				return SchemaFilter.ALL;
 			}
 		};
 

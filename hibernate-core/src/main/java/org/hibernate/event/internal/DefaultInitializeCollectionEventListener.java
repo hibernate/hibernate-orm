@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
 
@@ -19,10 +17,12 @@ import org.hibernate.event.spi.InitializeCollectionEvent;
 import org.hibernate.event.spi.InitializeCollectionEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.results.internal.ResultsHelper;
 import org.hibernate.stat.spi.StatisticsImplementor;
+
+import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 
 /**
  * @author Gavin King
@@ -33,36 +33,28 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 	/**
 	 * called by a collection that wants to initialize itself
 	 */
+	@Override
 	public void onInitializeCollection(InitializeCollectionEvent event) throws HibernateException {
-		PersistentCollection<?> collection = event.getCollection();
-		SessionImplementor source = event.getSession();
+		final PersistentCollection<?> collection = event.getCollection();
+		final SessionImplementor source = event.getSession();
 
-		CollectionEntry ce = source.getPersistenceContextInternal().getCollectionEntry( collection );
+		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+		final CollectionEntry ce = persistenceContext.getCollectionEntry( collection );
 		if ( ce == null ) {
 			throw new HibernateException( "collection was evicted" );
 		}
 		if ( !collection.wasInitialized() ) {
-			final CollectionPersister ceLoadedPersister = ce.getLoadedPersister();
+			final CollectionPersister loadedPersister = ce.getLoadedPersister();
+			final Object loadedKey = ce.getLoadedKey();
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(
 						"Initializing collection {0}",
-						MessageHelper.collectionInfoString(
-								ceLoadedPersister,
-								collection,
-								ce.getLoadedKey(),
-								source
-						)
+						collectionInfoString( loadedPersister, collection, loadedKey, source )
 				);
 				LOG.trace( "Checking second-level cache" );
 			}
 
-			final boolean foundInCache = initializeCollectionFromCache(
-					ce.getLoadedKey(),
-					ceLoadedPersister,
-					collection,
-					source
-			);
-
+			final boolean foundInCache = initializeCollectionFromCache( loadedKey, loadedPersister, collection, source );
 			if ( foundInCache ) {
 				if ( LOG.isTraceEnabled() ) {
 					LOG.trace( "Collection initialized from cache" );
@@ -72,34 +64,32 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 				if ( LOG.isTraceEnabled() ) {
 					LOG.trace( "Collection not cached" );
 				}
-				ceLoadedPersister.initialize( ce.getLoadedKey(), source );
-				handlePotentiallyEmptyCollection( collection, source, ce, ceLoadedPersister );
+				loadedPersister.initialize( loadedKey, source );
+				handlePotentiallyEmptyCollection( collection, persistenceContext, loadedKey, loadedPersister );
 				if ( LOG.isTraceEnabled() ) {
 					LOG.trace( "Collection initialized" );
 				}
 
 				final StatisticsImplementor statistics = source.getFactory().getStatistics();
 				if ( statistics.isStatisticsEnabled() ) {
-					statistics.fetchCollection(
-							ceLoadedPersister.getRole()
-					);
+					statistics.fetchCollection( loadedPersister.getRole() );
 				}
 			}
 		}
 	}
 
-	private void handlePotentiallyEmptyCollection(
+	public static void handlePotentiallyEmptyCollection(
 			PersistentCollection<?> collection,
-			SessionImplementor source,
-			CollectionEntry ce,
-			CollectionPersister ceLoadedPersister) {
+			PersistenceContext persistenceContext,
+			Object loadedKey,
+			CollectionPersister loadedPersister) {
 		if ( !collection.wasInitialized() ) {
-			collection.initializeEmptyCollection( ceLoadedPersister );
+			collection.initializeEmptyCollection( loadedPersister );
 			ResultsHelper.finalizeCollectionLoading(
-					source.getPersistenceContext(),
-					ceLoadedPersister,
+					persistenceContext,
+					loadedPersister,
 					collection,
-					ce.getLoadedKey(),
+					loadedKey,
 					true
 			);
 		}
@@ -128,44 +118,40 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 			return false;
 		}
 
-		final boolean useCache = persister.hasCache() && source.getCacheMode().isGetEnabled();
+		if ( persister.hasCache() && source.getCacheMode().isGetEnabled() ) {
+			final SessionFactoryImplementor factory = source.getFactory();
+			final CollectionDataAccess cacheAccessStrategy = persister.getCacheAccessStrategy();
+			final Object ck = cacheAccessStrategy.generateCacheKey( id, persister, factory, source.getTenantIdentifier() );
+			final Object ce = CacheHelper.fromSharedCache( source, ck, persister, cacheAccessStrategy );
 
-		if ( !useCache ) {
-			return false;
-		}
+			final StatisticsImplementor statistics = factory.getStatistics();
+			if ( statistics.isStatisticsEnabled() ) {
+				final NavigableRole navigableRole = persister.getNavigableRole();
+				final String regionName = cacheAccessStrategy.getRegion().getName();
+				if ( ce == null ) {
+					statistics.collectionCacheMiss( navigableRole, regionName );
+				}
+				else {
+					statistics.collectionCacheHit( navigableRole, regionName );
+				}
+			}
 
-		final SessionFactoryImplementor factory = source.getFactory();
-		final CollectionDataAccess cacheAccessStrategy = persister.getCacheAccessStrategy();
-		final Object ck = cacheAccessStrategy.generateCacheKey( id, persister, factory, source.getTenantIdentifier() );
-		final Object ce = CacheHelper.fromSharedCache( source, ck, cacheAccessStrategy );
-
-		final StatisticsImplementor statistics = factory.getStatistics();
-		if ( statistics.isStatisticsEnabled() ) {
 			if ( ce == null ) {
-				statistics.collectionCacheMiss(
-						persister.getNavigableRole(),
-						cacheAccessStrategy.getRegion().getName()
-				);
+				return false;
 			}
 			else {
-				statistics.collectionCacheHit(
-						persister.getNavigableRole(),
-						cacheAccessStrategy.getRegion().getName()
-				);
+				final CollectionCacheEntry cacheEntry = (CollectionCacheEntry)
+						persister.getCacheEntryStructure().destructure( ce, factory );
+				final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+				cacheEntry.assemble( collection, persister, persistenceContext.getCollectionOwner( id, persister ) );
+				persistenceContext.getCollectionEntry( collection ).postInitialize( collection, source );
+				// addInitializedCollection(collection, persister, id);
+				return true;
 			}
 		}
-
-		if ( ce == null ) {
+		else {
 			return false;
 		}
 
-		CollectionCacheEntry cacheEntry = (CollectionCacheEntry)
-				persister.getCacheEntryStructure().destructure( ce, factory );
-
-		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
-		cacheEntry.assemble( collection, persister, persistenceContext.getCollectionOwner( id, persister ) );
-		persistenceContext.getCollectionEntry( collection ).postInitialize( collection );
-		// addInitializedCollection(collection, persister, id);
-		return true;
 	}
 }

@@ -1,17 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.spi;
 
+import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
+
 /**
- * Contract for things that need to be aware of JPA {@code orm.xml}-defined persistence-unit-defaults.  Only
- * MetadataBuildingOptions are supported to implement this contract.
- * <p/>
- * NOTE: it is expected that this contract will go away as we migrate to Jandex for annotation processing
- * and move to the annotation binding constructs done on the metamodel branch.
+ * Contract for things that need to be aware of JPA {@code orm.xml}-defined persistence-unit-defaults.
+ * Only {@link MetadataBuildingOptions} are supported to implement this contract.
  *
  * @since 5.0
  *
@@ -33,4 +30,6 @@ public interface JpaOrmXmlPersistenceUnitDefaultAware {
 	 * @param jpaOrmXmlPersistenceUnitDefaults The {@code persistence-unit-defaults} values
 	 */
 	void apply(JpaOrmXmlPersistenceUnitDefaults jpaOrmXmlPersistenceUnitDefaults);
+
+	void apply(PersistenceUnitMetadata persistenceUnitMetadata);
 }

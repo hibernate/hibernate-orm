@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.fetch.subselect;
 
@@ -28,9 +26,9 @@ import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Root;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Gavin King
@@ -66,8 +64,8 @@ public class SubselectFetchTest {
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			session.delete( session.load( Parent.class, "foo" ) );
-			session.delete( session.load( Parent.class, "bar" ) );
+			session.remove( session.getReference( Parent.class, "foo" ) );
+			session.remove( session.getReference( Parent.class, "bar" ) );
 		} );
 	}
 
@@ -277,7 +275,7 @@ public class SubselectFetchTest {
 		}
 		finally {
 			scope.inTransaction( (session) -> {
-				session.remove( session.load( Parent.class, "aaa" ) );
+				session.remove( session.getReference( Parent.class, "aaa" ) );
 			} );
 		}
 	}
@@ -305,7 +303,7 @@ public class SubselectFetchTest {
 
 	@Test
 	public void testSubselectFetchCriteria(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getStatementInspector( SQLStatementInspector.class );
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
 		scope.inTransaction(
@@ -361,4 +359,3 @@ public class SubselectFetchTest {
 	}
 
 }
-

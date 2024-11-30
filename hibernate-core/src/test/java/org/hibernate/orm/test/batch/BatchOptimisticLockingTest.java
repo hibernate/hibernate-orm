@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.batch;
 
@@ -11,26 +9,28 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.OptimisticLockException;
-import jakarta.persistence.Version;
 
+import jakarta.persistence.RollbackException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.CockroachDialect;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.OptimisticLockException;
+import jakarta.persistence.Version;
+
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
  * @author Vlad Mihalcea
  */
-public class BatchOptimisticLockingTest extends
+public class  BatchOptimisticLockingTest extends
 		BaseNonConfigCoreFunctionalTestCase {
 
 	private final ExecutorService executorService = Executors.newSingleThreadExecutor();
@@ -45,6 +45,7 @@ public class BatchOptimisticLockingTest extends
 	@Override
 	protected void addSettings(Map<String,Object> settings) {
 		settings.put( AvailableSettings.STATEMENT_BATCH_SIZE, String.valueOf( 2 ) );
+		settings.put( AvailableSettings.DIALECT_NATIVE_PARAM_MARKERS, Boolean.FALSE );
 	}
 
 	@Test
@@ -68,8 +69,10 @@ public class BatchOptimisticLockingTest extends
 		} );
 
 		try {
-			doInHibernate( this::sessionFactory, session -> {
-				List<Person> persons = session.createQuery( "select p from Person p").getResultList();
+			inTransaction( (session) -> {
+				List<Person> persons = session
+						.createSelectionQuery( "select p from Person p", Person.class )
+						.getResultList();
 
 				for ( int i = 0; i < persons.size(); i++ ) {
 					Person person = persons.get( i );
@@ -92,19 +95,21 @@ public class BatchOptimisticLockingTest extends
 			} );
 		}
 		catch (Exception expected) {
-			assertEquals( OptimisticLockException.class, expected.getClass() );
 			if ( getDialect() instanceof CockroachDialect ) {
 				// CockroachDB always runs in SERIALIZABLE isolation, and uses SQL state 40001 to indicate
-				// serialization failure.
+				// serialization failure. The failure is mapped to a RollbackException.
+				assertEquals( RollbackException.class, expected.getClass() );
+				var msg = "could not execute batch";
 				assertEquals(
-						"org.hibernate.exception.LockAcquisitionException: could not execute batch",
-						expected.getMessage()
+						msg,
+						expected.getMessage().substring( 0, msg.length() )
 				);
 			}
 			else {
-				assertEquals(
-						"Batch update returned unexpected row count from update [1]; actual row count: 0; expected: 1; statement executed: update Person set name=?, version=? where id=? and version=?",
+				assertEquals( OptimisticLockException.class, expected.getClass() );
+				assertTrue(
 						expected.getMessage()
+								.startsWith("Batch update returned unexpected row count from update 1 (expected row count 1 but was 0) [update Person set name=?,version=? where id=? and version=?]")
 				);
 			}
 		}
@@ -122,4 +127,3 @@ public class BatchOptimisticLockingTest extends
 		private long version;
 	}
 }
-

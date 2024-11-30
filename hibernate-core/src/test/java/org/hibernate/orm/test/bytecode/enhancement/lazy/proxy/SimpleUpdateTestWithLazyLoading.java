@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy;
 
@@ -19,10 +17,6 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 import org.hibernate.Hibernate;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.EntityEntry;
@@ -31,54 +25,57 @@ import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.hamcrest.MatcherAssert;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.core.Is.is;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-11147")
-@RunWith(BytecodeEnhancerRunner.class)
+@JiraKey("HHH-11147")
+@DomainModel(
+		annotatedClasses = {
+				SimpleUpdateTestWithLazyLoading.Parent.class,
+				SimpleUpdateTestWithLazyLoading.Child.class,
+				SimpleUpdateTestWithLazyLoading.Person.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.FORMAT_SQL, value = "false" ),
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+				@Setting( name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "true" ),
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @EnhancementOptions(lazyLoading = true)
-public class SimpleUpdateTestWithLazyLoading extends BaseNonConfigCoreFunctionalTestCase {
-
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.FORMAT_SQL, "false" );
-		ssrb.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
-		ssrb.applySetting( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
-		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
-	}
+public class SimpleUpdateTestWithLazyLoading  {
 
 	private static final int CHILDREN_SIZE = 10;
 	private Long lastChildID;
 
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Parent.class, Child.class, Person.class };
-	}
-
-	@Before
-	public void prepare() {
-		doInHibernate( this::sessionFactory, s -> {
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			Parent parent = new Parent();
 			for ( int i = 0; i < CHILDREN_SIZE; i++ ) {
 				Child child = new Child();
@@ -99,29 +96,29 @@ public class SimpleUpdateTestWithLazyLoading extends BaseNonConfigCoreFunctional
 	}
 
 
-	@After
-	public void tearDown() {
-		doInHibernate( this::sessionFactory, s -> {
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			s.createQuery( "delete from Child" ).executeUpdate();
 			s.createQuery( "delete from Parent" ).executeUpdate();
 		} );
 	}
 
 	@Test
-	public void updateSimpleField() {
-		final Statistics stats = sessionFactory().getStatistics();
+	public void updateSimpleField(SessionFactoryScope scope) {
+		final Statistics stats = scope.getSessionFactory().getStatistics();
 		stats.clear();
 
 		final String updatedName = "Barrabas_";
 
-		final EntityPersister childPersister = sessionFactory().getRuntimeMetamodels()
+		final EntityPersister childPersister = scope.getSessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( Child.class.getName() );
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					stats.clear();
-					Child loadedChild = session.load( Child.class, lastChildID );
+					Child loadedChild = session.getReference( Child.class, lastChildID );
 
 					final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) loadedChild;
 					final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
@@ -151,9 +148,9 @@ public class SimpleUpdateTestWithLazyLoading extends BaseNonConfigCoreFunctional
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
-					Child loadedChild = session.load( Child.class, lastChildID );
+					Child loadedChild = session.getReference( Child.class, lastChildID );
 					assertThat( loadedChild.getName(), is( updatedName ) );
 
 					assertFalse( Hibernate.isInitialized( loadedChild.getRelatives() ) );
@@ -163,13 +160,13 @@ public class SimpleUpdateTestWithLazyLoading extends BaseNonConfigCoreFunctional
 	}
 
 	@Test
-	public void testUpdateAssociation() {
+	public void testUpdateAssociation(SessionFactoryScope scope) {
 		String updatedName = "Barrabas_";
 		String parentName = "Yodit";
-		doInHibernate( this::sessionFactory, s -> {
-			final Statistics stats = sessionFactory().getStatistics();
+		scope.inTransaction( s -> {
+			final Statistics stats = scope.getSessionFactory().getStatistics();
 			stats.clear();
-			Child loadedChild = s.load( Child.class, lastChildID );
+			Child loadedChild = s.getReference( Child.class, lastChildID );
 
 			loadedChild.setName( updatedName );
 
@@ -181,11 +178,11 @@ public class SimpleUpdateTestWithLazyLoading extends BaseNonConfigCoreFunctional
 			assertEquals( 1, stats.getPrepareStatementCount() );
 			assertThat( loadedChild.getParent().getName(), is( parentName ) );
 			assertEquals( 1, stats.getPrepareStatementCount() );
-			s.save( parent );
+			s.persist( parent );
 		} );
 
-		doInHibernate( this::sessionFactory, s -> {
-			Child loadedChild = s.load( Child.class, lastChildID );
+		scope.inTransaction( s -> {
+			Child loadedChild = s.getReference( Child.class, lastChildID );
 			assertThat( Hibernate.isInitialized( loadedChild ), is( false ) );
 			assertThat( loadedChild.getName(), is( updatedName ) );
 			assertThat( Hibernate.isInitialized( loadedChild ), is( true ) );
@@ -196,11 +193,11 @@ public class SimpleUpdateTestWithLazyLoading extends BaseNonConfigCoreFunctional
 	}
 
 	@Test
-	public void testUpdateCollection() {
-		doInHibernate( this::sessionFactory, s -> {
-			final Statistics stats = sessionFactory().getStatistics();
+	public void testUpdateCollection(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			final Statistics stats = scope.getSessionFactory().getStatistics();
 			stats.clear();
-			Child loadedChild = s.load( Child.class, lastChildID );
+			Child loadedChild = s.getReference( Child.class, lastChildID );
 
 
 			assertEquals( 0, stats.getPrepareStatementCount() );
@@ -213,15 +210,15 @@ public class SimpleUpdateTestWithLazyLoading extends BaseNonConfigCoreFunctional
 			s.persist( relative );
 		} );
 
-		doInHibernate( this::sessionFactory, s -> {
-			Child loadedChild = s.load( Child.class, lastChildID );
+		scope.inTransaction( s -> {
+			Child loadedChild = s.getReference( Child.class, lastChildID );
 			assertThat( loadedChild.getRelatives().size(), is( 2 ) );
 		} );
 	}
 
 	@Entity(name = "Parent")
 	@Table(name = "PARENT")
-	private static class Parent {
+	static class Parent {
 
 		String name;
 
@@ -247,7 +244,7 @@ public class SimpleUpdateTestWithLazyLoading extends BaseNonConfigCoreFunctional
 
 	@Entity(name = "Person")
 	@Table(name = "Person")
-	private static class Person {
+	static class Person {
 		@Id
 		@GeneratedValue(strategy = GenerationType.AUTO)
 		Long id;
@@ -265,7 +262,7 @@ public class SimpleUpdateTestWithLazyLoading extends BaseNonConfigCoreFunctional
 
 	@Entity(name = "Child")
 	@Table(name = "CHILD")
-	private static class Child {
+	static class Child {
 
 		@Id
 		@GeneratedValue(strategy = GenerationType.AUTO)

@@ -1,18 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import org.hibernate.cache.internal.CacheKeyValueDescriptor;
-import org.hibernate.cache.internal.DefaultCacheKeyValueDescriptor;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -32,6 +27,11 @@ public class InetAddressJavaType extends AbstractClassJavaType<InetAddress> {
 	}
 
 	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
+	@Override
 	public String toString(InetAddress value) {
 		return value == null ? null : value.toString();
 	}
@@ -48,7 +48,7 @@ public class InetAddressJavaType extends AbstractClassJavaType<InetAddress> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators indicators) {
-		return indicators.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( SqlTypes.INET );
+		return indicators.getJdbcType( SqlTypes.INET );
 	}
 
 	@SuppressWarnings("unchecked")
@@ -74,20 +74,20 @@ public class InetAddressJavaType extends AbstractClassJavaType<InetAddress> {
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof InetAddress) {
-			return (InetAddress) value;
+		if (value instanceof InetAddress inetAddress) {
+			return inetAddress;
 		}
-		if (value instanceof byte[]) {
+		if (value instanceof byte[] bytes) {
 			try {
-				return InetAddress.getByAddress( (byte[]) value );
+				return InetAddress.getByAddress( bytes );
 			}
 			catch (UnknownHostException e) {
 				throw new IllegalArgumentException( e );
 			}
 		}
-		if (value instanceof String) {
+		if (value instanceof String string) {
 			try {
-				return InetAddress.getByName( (String) value );
+				return InetAddress.getByName( string );
 			}
 			catch (UnknownHostException e) {
 				throw new IllegalArgumentException( e );
@@ -99,11 +99,6 @@ public class InetAddressJavaType extends AbstractClassJavaType<InetAddress> {
 	@Override
 	public long getDefaultSqlLength(Dialect dialect, JdbcType jdbcType) {
 		return 19;
-	}
-
-	@Override
-	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
-		return DefaultCacheKeyValueDescriptor.INSTANCE;
 	}
 
 }

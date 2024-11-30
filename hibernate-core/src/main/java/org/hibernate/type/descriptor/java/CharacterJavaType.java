@@ -1,16 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
-import org.hibernate.HibernateException;
-import org.hibernate.cache.internal.CacheKeyValueDescriptor;
-import org.hibernate.cache.internal.DefaultCacheKeyValueDescriptor;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -27,6 +21,12 @@ public class CharacterJavaType extends AbstractClassJavaType<Character> implemen
 	public CharacterJavaType() {
 		super( Character.class );
 	}
+
+	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
 	@Override
 	public String toString(Character value) {
 		return value.toString();
@@ -35,7 +35,7 @@ public class CharacterJavaType extends AbstractClassJavaType<Character> implemen
 	@Override
 	public Character fromString(CharSequence string) {
 		if ( string.length() != 1 ) {
-			throw new HibernateException( "multiple or zero characters found parsing string" );
+			throw new CoercionException( "value must contain exactly one character: '" + string + "'" );
 		}
 		return string.charAt( 0 );
 	}
@@ -46,41 +46,53 @@ public class CharacterJavaType extends AbstractClassJavaType<Character> implemen
 		if ( value == null ) {
 			return null;
 		}
-		if ( Character.class.isAssignableFrom( type ) ) {
+		if ( Character.class.isAssignableFrom( type ) || type == Object.class ) {
 			return (X) value;
 		}
 		if ( String.class.isAssignableFrom( type ) ) {
 			return (X) value.toString();
 		}
 		if ( Number.class.isAssignableFrom( type ) ) {
-			return (X) Short.valueOf( (short)value.charValue() );
+			return (X) Short.valueOf( (short) value.charValue() );
 		}
 		throw unknownUnwrap( type );
 	}
+
 	@Override
 	public <X> Character wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof Character) {
-			return (Character) value;
+		else if (value instanceof Character character) {
+			return character;
 		}
-		if ( value instanceof String ) {
-			if ( value.equals( "" ) ) {
-				return ' ';
+		else if (value instanceof String string) {
+			switch ( string.length() ) {
+				case 1:
+					return string.charAt( 0 );
+				case 0:
+					if ( options.getDialect().stripsTrailingSpacesFromChar() ) {
+						// we previously stored char values in char(1) columns on MySQL
+						// but MySQL strips trailing spaces from the value when read
+						return ' ';
+					}
+					else {
+						throw new CoercionException( "value does not contain a character: '" + string + "'" );
+					}
+				default:
+					throw new CoercionException( "value contains more than one character: '" + string + "'" );
 			}
-			final String str = (String) value;
-			return str.charAt( 0 );
 		}
-		if (value instanceof Number) {
-			final Number nbr = (Number) value;
-			return (char) nbr.shortValue();
+		else if (value instanceof Number number) {
+			return (char) number.shortValue();
 		}
-		throw unknownWrap( value.getClass() );
+		else {
+			throw unknownWrap( value.getClass() );
+		}
 	}
 
 	@Override
-	public Class getPrimitiveClass() {
+	public Class<?> getPrimitiveClass() {
 		return char.class;
 	}
 
@@ -114,8 +126,4 @@ public class CharacterJavaType extends AbstractClassJavaType<Character> implemen
 		return 0;
 	}
 
-	@Override
-	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
-		return DefaultCacheKeyValueDescriptor.INSTANCE;
-	}
 }

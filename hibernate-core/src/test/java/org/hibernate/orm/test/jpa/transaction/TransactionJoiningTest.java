@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.transaction;
 
@@ -22,7 +20,7 @@ import org.hibernate.internal.SessionImpl;
 import org.hibernate.orm.test.jpa.txn.JtaTransactionJoiningTest;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.ExtraAssertions;
@@ -129,7 +127,7 @@ public class TransactionJoiningTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10807")
+	@JiraKey(value = "HHH-10807")
 	public void testIsJoinedAfterMarkedForRollbackImplicit(EntityManagerFactoryScope scope) throws Exception {
 		EntityManager entityManager = null;
 		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
@@ -166,7 +164,7 @@ public class TransactionJoiningTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10807")
+	@JiraKey(value = "HHH-10807")
 	public void testIsJoinedAfterMarkedForRollbackExplicit(EntityManagerFactoryScope scope) throws Exception {
 		EntityManager entityManager = null;
 		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
@@ -273,7 +271,7 @@ public class TransactionJoiningTest {
 	 * See HHH-7910
 	 */
 	@Test
-	@TestForIssue(jiraKey = "HHH-7910")
+	@JiraKey(value = "HHH-7910")
 	public void testMultiThreadTransactionTimeout(EntityManagerFactoryScope scope) throws Exception {
 		EntityManager em = null;
 		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
@@ -300,7 +298,7 @@ public class TransactionJoiningTest {
 				em.persist( new Book( "The Book of Foo", 1 ) );
 			}
 			catch (PersistenceException e) {
-				caught = e.getCause().getClass().equals( HibernateException.class );
+				caught = e.getClass().equals( HibernateException.class );
 			}
 			assertTrue( caught );
 

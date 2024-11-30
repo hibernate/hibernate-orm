@@ -13,7 +13,7 @@
   <class name="org.hibernate.orm.test.cache.hhh13179.JoinedSubclassPerson" table="JOINED_SUBCLASS_PERSON">
     <cache usage="read-write"/>
 
-    <id name="oid" column="PERSON_ID" type="long" unsaved-value="null">
+    <id name="oid" column="PERSON_ID" type="long" unsaved-value="undefined">
       <generator class="org.hibernate.id.Assigned"/>
     </id>
 

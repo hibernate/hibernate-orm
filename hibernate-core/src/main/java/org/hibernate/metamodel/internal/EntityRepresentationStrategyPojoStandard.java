@@ -1,19 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.internal;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -21,10 +16,7 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.bytecode.spi.ReflectionOptimizer.InstantiationOptimizer;
-import org.hibernate.cfg.Environment;
 import org.hibernate.classic.Lifecycle;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
@@ -41,7 +33,6 @@ import org.hibernate.metamodel.spi.EntityInstantiator;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.property.access.internal.PropertyAccessBasicImpl;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.property.access.internal.PropertyAccessStrategyIndexBackRefImpl;
 import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
@@ -55,6 +46,8 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.CompositeTypeImplementor;
+
+import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptableType;
 
 /**
  * @author Steve Ebersole
@@ -76,16 +69,14 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 
 	private final String identifierPropertyName;
 	private final PropertyAccess identifierPropertyAccess;
-	private final Map<String, PropertyAccess> propertyAccessMap = new ConcurrentHashMap<>();
+	private final Map<String, PropertyAccess> propertyAccessMap;
 	private final EmbeddableRepresentationStrategyPojo mapsIdRepresentationStrategy;
 
 	public EntityRepresentationStrategyPojoStandard(
 			PersistentClass bootDescriptor,
 			EntityPersister runtimeDescriptor,
 			RuntimeModelCreationContext creationContext) {
-		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
-		final JavaTypeRegistry jtdRegistry = creationContext.getTypeConfiguration()
-				.getJavaTypeRegistry();
+		final JavaTypeRegistry jtdRegistry = creationContext.getTypeConfiguration().getJavaTypeRegistry();
 
 		final Class<?> mappedJavaType = bootDescriptor.getMappedClass();
 		this.mappedJtd = jtdRegistry.resolveEntityTypeDescriptor( mappedJavaType );
@@ -99,8 +90,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		}
 
 		this.lifecycleImplementor = Lifecycle.class.isAssignableFrom( mappedJavaType );
-		this.isBytecodeEnhanced = PersistentAttributeInterceptable.class.isAssignableFrom( mappedJavaType );
-
+		this.isBytecodeEnhanced = isPersistentAttributeInterceptableType( mappedJavaType );
 
 		final Property identifierProperty = bootDescriptor.getIdentifierProperty();
 		if ( identifierProperty == null ) {
@@ -146,25 +136,60 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			identifierPropertyAccess = makePropertyAccess( identifierProperty );
 		}
 
-//		final BytecodeProvider bytecodeProvider = creationContext.getBootstrapContext().getBytecodeProvider();
-		final BytecodeProvider bytecodeProvider = Environment.getBytecodeProvider();
+		this.strategySelector = creationContext.getServiceRegistry().getService( StrategySelector.class );
 
-		final EntityMetamodel entityMetamodel = runtimeDescriptor.getEntityMetamodel();
-		ProxyFactory proxyFactory = null;
+		final BytecodeProvider bytecodeProvider = creationContext.getBootstrapContext().getServiceRegistry().requireService( BytecodeProvider.class );
+
+		this.proxyFactory = resolveProxyFactory(
+				bootDescriptor,
+				runtimeDescriptor,
+				proxyJtd,
+				bytecodeProvider,
+				creationContext
+		);
+
+		this.propertyAccessMap = buildPropertyAccessMap( bootDescriptor );
+		this.reflectionOptimizer = resolveReflectionOptimizer( bytecodeProvider );
+
+		this.instantiator = determineInstantiator( bootDescriptor, runtimeDescriptor.getEntityMetamodel() );
+	}
+
+	@SuppressWarnings("removal")
+	private ProxyFactory resolveProxyFactory(
+			PersistentClass bootDescriptor,
+			EntityPersister entityPersister,
+			JavaType<?> proxyJtd,
+			BytecodeProvider bytecodeProvider,
+			RuntimeModelCreationContext creationContext) {
+		final EntityMetamodel entityMetamodel = entityPersister.getEntityMetamodel();
+		final boolean enhancedForLazyLoading = entityPersister.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
+
+		// todo : `@ConcreteProxy` handling
+		if ( enhancedForLazyLoading
+				&& bootDescriptor.getRootClass() == bootDescriptor
+				&& !bootDescriptor.hasSubclasses() ) {
+			// the entity is bytecode enhanced for lazy loading and is not part of an inheritance hierarchy,
+			// so no need for a ProxyFactory
+			return null;
+		}
+
 		if ( proxyJtd != null && entityMetamodel.isLazy() ) {
-			proxyFactory = createProxyFactory( bootDescriptor, bytecodeProvider, creationContext );
+			final ProxyFactory proxyFactory = createProxyFactory( bootDescriptor, bytecodeProvider, creationContext );
 			if ( proxyFactory == null ) {
 				entityMetamodel.setLazy( false );
 			}
+			return proxyFactory;
 		}
-		this.proxyFactory = proxyFactory;
 
-		// resolveReflectionOptimizer may lead to a makePropertyAccess call which requires strategySelector
-		this.strategySelector = sessionFactory.getServiceRegistry().getService( StrategySelector.class );
+		return null;
+	}
 
-		this.reflectionOptimizer = resolveReflectionOptimizer( bootDescriptor, bytecodeProvider, sessionFactory );
-
-		this.instantiator = determineInstantiator( bootDescriptor, entityMetamodel );
+	private Map<String, PropertyAccess> buildPropertyAccessMap(PersistentClass bootDescriptor) {
+		final Map<String, PropertyAccess> propertyAccessMap = new LinkedHashMap<>();
+		for ( Property property : bootDescriptor.getPropertyClosure() ) {
+			propertyAccessMap.put( property.getName(), makePropertyAccess( property ) );
+		}
+		return propertyAccessMap;
 	}
 
 	private EntityInstantiator determineInstantiator(PersistentClass bootDescriptor, EntityMetamodel entityMetamodel) {
@@ -186,7 +211,11 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			BytecodeProvider bytecodeProvider,
 			RuntimeModelCreationContext creationContext) {
 
-		final Set<Class<?>> proxyInterfaces = new java.util.HashSet<>();
+		// HHH-17578 - We need to preserve the order of the interfaces to ensure
+		// that the most general @Proxy declared interface at the top of a class
+		// hierarchy will be used first when a HibernateProxy decides what it
+		// should implement.
+		final Set<Class<?>> proxyInterfaces = new java.util.LinkedHashSet<>();
 
 		final Class<?> mappedClass = mappedJtd.getJavaTypeClass();
 		Class<?> proxyInterface;
@@ -268,9 +297,10 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 				? null
 				: ReflectHelper.getMethod( proxyInterface, idSetterMethod );
 
-		ProxyFactory pf = bytecodeProvider.getProxyFactoryFactory().buildProxyFactory( creationContext.getSessionFactory() );
+		final ProxyFactory proxyFactory = bytecodeProvider.getProxyFactoryFactory()
+				.buildProxyFactory( creationContext.getSessionFactory() );
 		try {
-			pf.postInstantiate(
+			proxyFactory.postInstantiate(
 					bootDescriptor.getEntityName(),
 					mappedClass,
 					proxyInterfaces,
@@ -281,7 +311,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 							null
 			);
 
-			return pf;
+			return proxyFactory;
 		}
 		catch (HibernateException he) {
 			LOG.unableToCreateProxyFactory( bootDescriptor.getEntityName(), he );
@@ -289,52 +319,10 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		}
 	}
 
-	private ReflectionOptimizer resolveReflectionOptimizer(
-			PersistentClass bootType,
-			BytecodeProvider bytecodeProvider,
-			SessionFactoryImplementor sessionFactory) {
-		final Class<?> javaTypeToReflect;
-		if ( proxyFactory != null ) {
-			assert proxyJtd != null;
-			javaTypeToReflect = proxyJtd.getJavaTypeClass();
-		}
-		else {
-			javaTypeToReflect = mappedJtd.getJavaTypeClass();
-		}
-
-		final List<String> getterNames = new ArrayList<>();
-		final List<String> setterNames = new ArrayList<>();
-		final List<Class<?>> getterTypes = new ArrayList<>();
-
-		boolean foundCustomAccessor = false;
-
-		final Iterator<Property> itr = bootType.getPropertyClosureIterator();
-		while ( itr.hasNext() ) {
-			//TODO: redesign how PropertyAccessors are acquired...
-			final Property property = itr.next();
-			final PropertyAccess propertyAccess = makePropertyAccess( property );
-
-			propertyAccessMap.put( property.getName(), propertyAccess );
-
-			if ( ! (propertyAccess instanceof PropertyAccessBasicImpl) ) {
-				foundCustomAccessor = true;
-			}
-
-			getterNames.add( propertyAccess.getGetter().getMethodName() );
-			getterTypes.add( propertyAccess.getGetter().getReturnTypeClass() );
-
-			setterNames.add( propertyAccess.getSetter().getMethodName() );
-		}
-
-		if ( foundCustomAccessor || ! Environment.useReflectionOptimizer() ) {
-			return null;
-		}
-
+	private ReflectionOptimizer resolveReflectionOptimizer(BytecodeProvider bytecodeProvider) {
 		return bytecodeProvider.getReflectionOptimizer(
-				javaTypeToReflect,
-				getterNames.toArray( new String[0] ),
-				setterNames.toArray( new String[0] ),
-				getterTypes.toArray( new Class[0] )
+				mappedJtd.getJavaTypeClass(),
+				propertyAccessMap
 		);
 	}
 
@@ -372,7 +360,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 					String.format(
 							Locale.ROOT,
 							"Could not resolve PropertyAccess for attribute `%s#%s`",
-							mappedJtd.getJavaType().getTypeName(),
+							mappedJtd.getTypeName(),
 							bootAttributeDescriptor.getName()
 					)
 			);

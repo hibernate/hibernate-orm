@@ -6,29 +6,25 @@
  */
 
 /**
- * Package intended for simplifying the worked needed to implement
- * a caching provider.  Centers around the concept of
+ * This package provides a framework intended to reduce the work needed to implement
+ * a caching provider. It takes care of most of the "grunt work" associated with the
+ * implementation, leaving the integrator to implement the interfaces
  * {@link org.hibernate.cache.spi.support.StorageAccess} and
- * {@link org.hibernate.cache.spi.support.DomainDataStorageAccess}
- * too implement most of the "grunt work" associated with the
- * implementation.
- *
- * Most integrations would just:
- *
- * 		1. implement a custom StorageAccess/DomainDataStorageAccess
- * 		2. implement a custom RegionFactoryTemplate, implementing specifically:
- * 			a. `RegionFactoryTemplate#createDomainDataStorageAccess`
- * 			b. `RegionFactoryTemplate#createQueryResultsRegionStorageAccess`
- * 			c. `RegionFactoryTemplate#createTimestampsRegionStorageAccess`
- *
- * Voila.. functioning cache provider
- *
- * The preferred approach to "provide a integration" is through a custom
- * {@link org.hibernate.boot.registry.selector.StrategyRegistrationProvider}
- *
- * Both `hibernate-testing` (`org.hibernate.testing.cache.CachingRegionFactory`)
- * and `hibernate-jcache` (`org.hibernate.cache.jcache.internal.JCacheRegionFactory`)
- * provide examples of using this support package to implement a caching
- * provider.
+ * {@link org.hibernate.cache.spi.support.DomainDataStorageAccess}.
+ * <p>
+ * A typical integration would provide:
+ * <ol>
+ * <li>a custom {@code StorageAccess} or {@code DomainDataStorageAccess}, along with
+ * <li>a custom {@link org.hibernate.cache.spi.support.RegionFactoryTemplate}.
+ * </ol>
+ * <p>
+ * The preferred way to register these implementations to Hibernate is via a custom
+ * {@link org.hibernate.boot.registry.selector.StrategyRegistrationProvider}.
+ * <p>
+ * Examples of using this support package to implement a caching provider include:
+ * <ul>
+ * <li>{@code org.hibernate.testing.cache.CachingRegionFactory} in {@code hibernate-testing}, and
+ * <li>{@code org.hibernate.cache.jcache.internal.JCacheRegionFactory} in {@code hibernate-jcache}.
+ * </ul>
  */
 package org.hibernate.cache.spi.support;

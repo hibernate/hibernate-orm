@@ -1,23 +1,20 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query;
 
 import java.util.function.Consumer;
 
+import org.hibernate.query.common.JoinType;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaDerivedJoin;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.spi.QueryImplementor;
-import org.hibernate.query.sqm.tree.SqmJoinType;
-import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -47,7 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  */
 @DomainModel(annotatedClasses = SubQueryInFromEmbeddedIdTests.Contact.class)
 @SessionFactory
-@TestForIssue( jiraKey = "HHH-")
+@JiraKey( value = "HHH-")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInCorrelatedSubquery.class)
 public class SubQueryInFromEmbeddedIdTests {
@@ -67,7 +64,7 @@ public class SubQueryInFromEmbeddedIdTests {
 					subquery.orderBy( cb.asc( alternativeContact.get( "name" ).get( "first" ) ) );
 					subquery.fetch( 1 );
 
-					final JpaDerivedJoin<Tuple> a = root.joinLateral( subquery, SqmJoinType.LEFT );
+					final JpaDerivedJoin<Tuple> a = root.joinLateral( subquery, JoinType.LEFT );
 
 					cq.multiselect( root.get( "name" ), a.get( "contact" ).get( "id" ) );
 					cq.orderBy( cb.asc( root.get( "id" ) ) );
@@ -117,8 +114,8 @@ public class SubQueryInFromEmbeddedIdTests {
 					subquery.orderBy( cb.desc( alternativeContact.get( "name" ).get( "first" ) ) );
 					subquery.fetch( 1 );
 
-					final JpaDerivedJoin<Tuple> a = root.joinLateral( subquery, SqmJoinType.LEFT );
-					final SqmAttributeJoin<Object, Object> alt = a.join( "contact" );
+					final JpaDerivedJoin<Tuple> a = root.joinLateral( subquery, JoinType.LEFT );
+					final Join<Object, Object> alt = a.join( "contact" );
 
 					cq.multiselect( root.get( "name" ), alt.get( "name" ) );
 					cq.orderBy( cb.asc( root.get( "id" ) ) );
@@ -165,7 +162,7 @@ public class SubQueryInFromEmbeddedIdTests {
 					subquery.orderBy( cb.desc( alternativeContact.get( "name" ).get( "first" ) ) );
 					subquery.fetch( 1 );
 
-					final JpaDerivedJoin<Tuple> a = root.joinLateral( subquery, SqmJoinType.LEFT );
+					final JpaDerivedJoin<Tuple> a = root.joinLateral( subquery, JoinType.LEFT );
 
 					cq.multiselect( root.get( "name" ), a.get( "contact" ).get( "name" ) );
 					cq.orderBy( cb.asc( root.get( "id" ) ) );

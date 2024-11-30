@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
 
@@ -39,10 +37,10 @@ public @interface ConverterRegistration {
 	 * The domain type to which this converter should be applied.  This allows
 	 * refining the domain type associated with the converter e.g. to apply to
 	 * a subtype.
-	 * <p/>
+	 * <p>
 	 * With {@link #autoApply()} set to true, this will effectively override converters
 	 * defined with {@link Converter#autoApply()} set to {@code false} and auto-apply them.
-	 * <p/>
+	 * <p>
 	 * With {@link #autoApply()} set to false, this will effectively override converters
 	 * defined with {@link Converter#autoApply()} set to {@code true} and disable auto-apply
 	 * for them.
@@ -52,7 +50,7 @@ public @interface ConverterRegistration {
 	/**
 	 * Should the registered converter be auto applied for
 	 * converting values of its reported domain type?
-	 * <p/>
+	 * <p>
 	 * Defaults to true as that is the more common use case for this annotation.
 	 */
 	boolean autoApply() default true;

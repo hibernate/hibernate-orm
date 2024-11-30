@@ -1,26 +1,51 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping;
 
-import java.util.Collections;
-import java.util.List;
-
 import org.hibernate.Incubating;
-import org.hibernate.mapping.IndexedConsumer;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
- * Models the type of a thing that can be used as an expression in a SQL query
+ * Describes the mapping for things which can be expressed in a SQL query.
+ * <p>
+ * Generally speaking this models a column.  However, it can also model SQL
+ * tuples as well
+ * <p>
+ * This includes details such as
+ * <ul>
+ *     <li>
+ *         the {@linkplain #getJavaTypeDescriptor() Java type} of the mapping
+ *     </li>
+ *     <li>
+ *         the {@linkplain #getJdbcType() JDBC type} of the mapping
+ *     </li>
+ *     <li>
+ *         how to {@linkplain #getJdbcValueExtractor() read} values
+ *         from {@linkplain java.sql.ResultSet result-sets}
+ *         as well as {@linkplain java.sql.CallableStatement callable parameters}
+ *     </li>
+ *     <li>
+ *         how to {@linkplain #getJdbcValueBinder() write} values to
+ *         {@linkplain java.sql.PreparedStatement JDBC statements}
+ *     </li>
+ * </ul>
+ * <p>
+ * Some mappings will have an associated {@linkplain #getValueConverter() value converter}.
+ * The {@linkplain #getJdbcValueExtractor() readers} and {@linkplain #getJdbcValueBinder() writers}
+ * for such mappings will already incorporate those conversions
+ * <p>
+ * Some mappings support usage as SQL literals.  Such mappings will return a non-null
+ * {@linkplain #getJdbcLiteralFormatter literal formatter} which handles formatting
+ * values as a SQL literal
  *
  * @author Steve Ebersole
  */
@@ -37,10 +62,6 @@ public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 	 */
 	JdbcType getJdbcType();
 
-	default CastType getCastType() {
-		return getJdbcType().getCastType();
-	}
-
 	/**
 	 * The strategy for extracting values of this expressible
 	 * type from JDBC ResultSets, CallableStatements, etc
@@ -52,6 +73,10 @@ public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 	 * JDBC {@code PreparedStatement}s and {@code CallableStatement}s.
 	 */
 	ValueBinder getJdbcValueBinder();
+
+	default CastType getCastType() {
+		return getJdbcType().getCastType();
+	}
 
 	/**
 	 * The strategy for formatting values of this expressible type to
@@ -81,14 +106,37 @@ public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 		return null;
 	}
 
+	//TODO: would it be better to just give JdbcMapping a
+	//      noop converter by default, instead of having
+	//      to deal with null here?
+	@SuppressWarnings({"rawtypes", "unchecked"})
+	default Object convertToRelationalValue(Object value) {
+		BasicValueConverter valueConverter = getValueConverter();
+		return valueConverter == null ? value : valueConverter.toRelationalValue( value );
+	}
+
+	default Object convertToDomainValue(Object value) {
+		BasicValueConverter valueConverter = getValueConverter();
+		return valueConverter == null ? value : valueConverter.toDomainValue( value );
+	}
+
+
 	@Override
 	default int getJdbcTypeCount() {
 		return 1;
 	}
 
 	@Override
-	default List<JdbcMapping> getJdbcMappings() {
-		return Collections.singletonList( this );
+	default JdbcMapping getJdbcMapping(int index) {
+		if ( index != 0 ) {
+			throw new IndexOutOfBoundsException( index );
+		}
+		return this;
+	}
+
+	@Override
+	default JdbcMapping getSingleJdbcMapping() {
+		return this;
 	}
 
 	@Override

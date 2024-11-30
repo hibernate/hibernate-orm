@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id$
 package org.hibernate.orm.test.annotations.manytomany;
 import java.util.Collection;
 import jakarta.persistence.CascadeType;
@@ -18,8 +14,8 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterJoinTable;
-import org.hibernate.annotations.Where;
-import org.hibernate.annotations.WhereJoinTable;
+import org.hibernate.annotations.SQLJoinTableRestriction;
+import org.hibernate.annotations.SQLRestriction;
 
 /**
  * @author Emmanuel Bernard
@@ -42,8 +38,8 @@ public class Group {
 
 	@ManyToMany(cascade = CascadeType.PERSIST)
 	@OrderBy("expirationDate")
-	@Where(clause = "1=1")
-	@WhereJoinTable(clause = "2=2")
+	@SQLRestriction("1=1")
+	@SQLJoinTableRestriction("2=2")
 	@Filter(name="Groupfilter", condition = "3=3")
 	@FilterJoinTable(name="Groupfilter", condition = "4=4")
 	public Collection<Permission> getPermissions() {

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cache;
 
@@ -52,9 +50,9 @@ public class CollectionCacheEvictionWithoutMappedByTest extends BaseCoreFunction
 
 	@Override
 	protected void configure(Configuration cfg) {
-		cfg.setProperty( Environment.AUTO_EVICT_COLLECTION_CACHE, "true" );
-		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "true" );
-		cfg.setProperty( Environment.USE_QUERY_CACHE, "true" );
+		cfg.setProperty( Environment.AUTO_EVICT_COLLECTION_CACHE, true );
+		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, true );
+		cfg.setProperty( Environment.USE_QUERY_CACHE, true );
 	}
 
 	private People createPeople() {
@@ -89,7 +87,7 @@ public class CollectionCacheEvictionWithoutMappedByTest extends BaseCoreFunction
 
 		people = session.get( People.class, people.id );
 		Person person = new Person();
-		session.save( person );
+		session.persist( person );
 		people.people.add( person );
 
 		session.getTransaction().commit();
@@ -113,7 +111,7 @@ public class CollectionCacheEvictionWithoutMappedByTest extends BaseCoreFunction
 
 		people = session.get( People.class, people.id );
 		Person person = people.people.remove( 0 );
-		session.delete( person );
+		session.remove( person );
 
 		session.getTransaction().commit();
 		session.close();

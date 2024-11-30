@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.lob;
 
@@ -12,7 +10,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -70,7 +68,7 @@ public class VersionedLobTest extends AbstractLobTest<VersionedBook, VersionedCo
 		assertEquals( loadedBook.getVersion(), Integer.valueOf( 0 ) );
 		s.flush();
 		assertEquals( loadedBook.getVersion(), Integer.valueOf( 0 ) );
-		s.delete( loadedBook );
+		s.remove( loadedBook );
 		tx.commit();
 		s.close();
 
@@ -97,7 +95,7 @@ public class VersionedLobTest extends AbstractLobTest<VersionedBook, VersionedCo
 		assertEquals( b2.getVersion(), Integer.valueOf( 0 ) );
 		s.flush();
 		assertEquals( b2.getVersion(), Integer.valueOf( 0 ) );
-		s.delete( b2 );
+		s.remove( b2 );
 		tx.commit();
 		s.close();
 	}
@@ -123,13 +121,13 @@ public class VersionedLobTest extends AbstractLobTest<VersionedBook, VersionedCo
 		assertEquals( b2.getVersion(), Integer.valueOf( 0 ) );
 		s.flush();
 		assertEquals( b2.getVersion(), Integer.valueOf( 0 ) );
-		s.delete( b2 );
+		s.remove( b2 );
 		tx.commit();
 		s.close();
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-5811")
+	@JiraKey( value = "HHH-5811")
 	public void testVersionUnchangedByteArray() throws Exception {
 		Session s;
 		Transaction tx;
@@ -150,7 +148,7 @@ public class VersionedLobTest extends AbstractLobTest<VersionedBook, VersionedCo
 		assertEquals( recompiled.getVersion(), Integer.valueOf( 0 ) );
 		s.flush();
 		assertEquals( recompiled.getVersion(), Integer.valueOf( 0 ) );
-		s.delete( recompiled );
+		s.remove( recompiled );
 		tx.commit();
 		s.close();
 	}
@@ -178,7 +176,7 @@ public class VersionedLobTest extends AbstractLobTest<VersionedBook, VersionedCo
 		assertEquals( recompiled.getVersion(), Integer.valueOf( 0 ) );
 		s.flush();
 		assertEquals( recompiled.getVersion(), Integer.valueOf( 0 ) );
-		s.delete( recompiled );
+		s.remove( recompiled );
 		tx.commit();
 		s.close();
 	}

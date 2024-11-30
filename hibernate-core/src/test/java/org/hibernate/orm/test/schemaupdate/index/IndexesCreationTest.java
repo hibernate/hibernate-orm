@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.schemaupdate.index;
 
 import java.util.List;
@@ -17,15 +21,16 @@ import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
 
-@TestForIssue(jiraKey = "HHH-11913")
+@JiraKey(value = "HHH-11913")
 @RequiresDialect(H2Dialect.class)
 @RequiresDialect(PostgreSQLDialect.class)
 @RequiresDialect(MySQLDialect.class)
@@ -35,7 +40,7 @@ public class IndexesCreationTest extends BaseUnitTestCase {
 
 	@Before
 	public void setUp() {
-		ssr = new StandardServiceRegistryBuilder().build();
+		ssr = ServiceRegistryUtil.serviceRegistry();
 		metadata = new MetadataSources( ssr )
 				.addAnnotatedClass( TestEntity.class )
 				.buildMetadata();

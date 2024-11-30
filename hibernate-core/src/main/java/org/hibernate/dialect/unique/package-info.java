@@ -6,6 +6,8 @@
  */
 
 /**
- * Support for Dialect-specific unique constraint definition
+ * Support for {@link org.hibernate.dialect.Dialect}-specific unique constraint definition.
+ *
+ * @see org.hibernate.dialect.unique.UniqueDelegate
  */
 package org.hibernate.dialect.unique;

@@ -1,13 +1,11 @@
-Hibernate ORM is a library providing Object/Relational Mapping (ORM) support
-to applications, libraries, and frameworks.
+Hibernate ORM is a powerful object/relational mapping solution for Java, and makes it easy to develop persistence logic for applications, libraries, and frameworks.
 
-It also provides an implementation of the JPA specification, which is the standard Java specification for ORM.
+Hibernate implements JPA, the standard API for object/relational persistence in Java, but also offers an extensive set of features and APIs which go beyond the specification.
 
-This is the repository of its source code; see https://hibernate.org/orm/[Hibernate.org] for additional information.
+See https://hibernate.org/orm/[Hibernate.org] for more information.
 
-image:https://ci.hibernate.org/job/hibernate-orm-main-h2-main/badge/icon[Build Status,link=https://ci.hibernate.org/job/hibernate-orm-main-h2-main/]
-image:https://img.shields.io/lgtm/grade/java/g/hibernate/hibernate-orm.svg?logo=lgtm&logoWidth=18[Language grade: Java,link=https://lgtm.com/projects/g/hibernate/hibernate-orm/context:java]
-image:https://img.shields.io/badge/Revved%20up%20by-Gradle%20Enterprise-06A0CE?logo=Gradle&labelColor=02303A[link=https://ge.hibernate.org/scans]
+image:https://ci.hibernate.org/job/hibernate-orm-pipeline/job/main/badge/icon[Build Status,link=https://ci.hibernate.org/job/hibernate-orm-pipeline/job/main/]
+image:https://img.shields.io/badge/Revved%20up%20by-Develocity-06A0CE?logo=Gradle&labelColor=02303A[link=https://ge.hibernate.org/scans]
 
 == Continuous Integration
 
@@ -19,7 +17,7 @@ for its CI needs. See
 
 == Building from sources
 
-The build requires at least Java 11 JDK.
+The build requires at least Java 11 and at most Java 17.
 
 Hibernate uses https://gradle.org[Gradle] as its build tool. See the _Gradle Primer_ section below if you are new to
 Gradle.
@@ -161,49 +159,25 @@ The following table illustrates a list of commands for various databases that ca
 |-
 |`./gradlew test -Pdb=derby`
 
-|MySQL 5.7
+|MySQL
 |`./docker_db.sh mysql`
-|`./gradlew test -Pdb=mysql_ci`
-
-|MySQL 8.0
-|`./docker_db.sh mysql_8_0`
 |`./gradlew test -Pdb=mysql_ci`
 
 |MariaDB
 |`./docker_db.sh mariadb`
 |`./gradlew test -Pdb=mariadb_ci`
 
-|PostgreSQL 10
+|PostgreSQL
 |`./docker_db.sh postgresql`
-|`./gradlew test -Pdb=pgsql_ci`
-
-|PostgreSQL 14
-|`./docker_db.sh postgresql_14`
 |`./gradlew test -Pdb=pgsql_ci`
 
 |EnterpriseDB
 |`./docker_db.sh edb`
 |`./gradlew test -Pdb=edb_ci`
 
-|Oracle XE
+|Oracle
 |`./docker_db.sh oracle`
 |`./gradlew test -Pdb=oracle_ci`
-
-|Oracle 11g
-|`./docker_db.sh oracle_11`
-|`./gradlew test -Pdb=oracle_ci`
-
-|Oracle XE 18
-|`./docker_db.sh oracle_18`
-|`./gradlew test -Pdb=oracle_ci`
-
-|Oracle XE 21
-|`./docker_db.sh oracle_21`
-|`./gradlew test -Pdb=oracle_ci`
-
-|Oracle EE
-|`./docker_db.sh oracle_ee`
-|`./gradlew test -Pdb=oracle_docker`
 
 |DB2
 |`./docker_db.sh db2`
@@ -213,9 +187,13 @@ The following table illustrates a list of commands for various databases that ca
 |`./docker_db.sh mssql`
 |`./gradlew test -Pdb=mssql_ci`
 
-|Sybase ASE
+|Sybase ASE (jTDS)
 |`./docker_db.sh sybase`
 |`./gradlew test -Pdb=sybase_ci`
+
+|Sybase ASE (jConnect)
+|`./docker_db.sh sybase`
+|`./gradlew test -Pdb=sybase_jconn_ci`
 
 |SAP HANA
 |`./docker_db.sh hana`
@@ -224,4 +202,28 @@ The following table illustrates a list of commands for various databases that ca
 |CockroachDB
 |`./docker_db.sh cockroachdb`
 |`./gradlew test -Pdb=cockroachdb`
+
+|TiDB
+|`./docker_db.sh tidb`
+|`./gradlew test -Pdb=tidb`
+
+|Informix
+|`./docker_db.sh informix`
+|`./gradlew test -Pdb=informix`
 |===
+
+To stop a container started by `docker`, use the command
+
+[source]
+----
+docker stop $container_name
+----
+
+NOTE:: Substitute `podman` command for `docker` if using `podman`
+
+E.g., to stop the mariadb container
+
+[source]
+----
+docker stop mariadb
+----

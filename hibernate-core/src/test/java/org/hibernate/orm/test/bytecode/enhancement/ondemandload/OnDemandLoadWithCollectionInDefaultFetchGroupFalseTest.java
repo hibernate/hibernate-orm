@@ -1,18 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.orm.test.bytecode.enhancement.ondemandload;
 
 import static org.hibernate.Hibernate.isPropertyInitialized;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.hibernate.orm.test.bytecode.enhancement.ondemandload.OnDemandLoadWithCollectionInDefaultFetchGroupFalseTest.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -20,21 +17,18 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.boot.internal.SessionFactoryBuilderImpl;
-import org.hibernate.boot.internal.SessionFactoryOptionsBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.SessionFactoryBuilderService;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.orm.test.bytecode.enhancement.lazy.proxy.SimpleUpdateTestWithLazyLoading;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -55,270 +49,258 @@ import jakarta.persistence.Version;
  *
  * @author Luis Barreiro
  */
-@TestForIssue( jiraKey = "HHH-10055" )
-@RunWith( BytecodeEnhancerRunner.class )
-public class OnDemandLoadWithCollectionInDefaultFetchGroupFalseTest extends BaseCoreFunctionalTestCase {
+@JiraKey( "HHH-10055" )
+@DomainModel(
+		annotatedClasses = {
+			Store.class, Inventory.class, Product.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+				@Setting( name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "true" ),
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+		}
+)
+@SessionFactory(
+		// We want to test with this setting set to false explicitly,
+		// because another test already takes care of the default.
+		applyCollectionsInDefaultFetchGroup = false
+)
+@BytecodeEnhanced
+public class OnDemandLoadWithCollectionInDefaultFetchGroupFalseTest {
 
-    @Override
-    public Class[] getAnnotatedClasses() {
-        return new Class[]{Store.class, Inventory.class, Product.class};
-    }
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			Store store = new Store( 1L ).setName( "Acme Super Outlet" );
+			s.persist( store );
 
-    @Override
-    protected void configure(Configuration configuration) {
-        configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
-        configuration.setProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
-        configuration.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
-    }
+			Product product = new Product( "007" ).setName( "widget" ).setDescription( "FooBar" );
+			s.persist( product );
 
-    @Override
-    protected void prepareBasicRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
-        serviceRegistryBuilder.addService(
-                SessionFactoryBuilderService.class,
-                (SessionFactoryBuilderService) (metadata, bootstrapContext) -> {
-                    SessionFactoryOptionsBuilder optionsBuilder = new SessionFactoryOptionsBuilder(
-                            metadata.getMetadataBuildingOptions().getServiceRegistry(),
-                            bootstrapContext
-                    );
-                    // We want to test with this setting set to false explicitly,
-                    // because another test already takes care of the default.
-                    optionsBuilder.enableCollectionInDefaultFetchGroup( false );
-                    return new SessionFactoryBuilderImpl( metadata, optionsBuilder );
-                }
-        );
-    }
+			store.addInventoryProduct( product ).setQuantity( 10L ).setStorePrice( new BigDecimal( 500 ) );
+		} );
+	}
 
-    @Before
-    public void prepare() {
-        doInHibernate( this::sessionFactory, s -> {
-            Store store = new Store( 1L ).setName( "Acme Super Outlet" );
-            s.persist( store );
+	@Test
+	public void testClosedSession(SessionFactoryScope scope) {
+		scope.getSessionFactory().getStatistics().clear();
+		Store[] store = new Store[1];
 
-            Product product = new Product( "007" ).setName( "widget" ).setDescription( "FooBar" );
-            s.persist( product );
+		scope.inTransaction( s -> {
+			// first load the store, making sure it is not initialized
+			store[0] = s.getReference( Store.class, 1L );
+			assertNotNull( store[0] );
+			assertFalse( isPropertyInitialized( store[0], "inventories" ) );
 
-            store.addInventoryProduct( product ).setQuantity( 10L ).setStorePrice( new BigDecimal( 500 ) );
-        } );
-    }
+			assertEquals( 1, scope.getSessionFactory().getStatistics().getSessionOpenCount() );
+			assertEquals( 0, scope.getSessionFactory().getStatistics().getSessionCloseCount() );
+		} );
 
-    @Test
-    public void testClosedSession() {
-        sessionFactory().getStatistics().clear();
-        Store[] store = new Store[1];
+		assertEquals( 1, scope.getSessionFactory().getStatistics().getSessionOpenCount() );
+		assertEquals( 1, scope.getSessionFactory().getStatistics().getSessionCloseCount() );
 
-        doInHibernate( this::sessionFactory, s -> {
-            // first load the store, making sure it is not initialized
-            store[0] = s.load( Store.class, 1L );
-            assertNotNull( store[0] );
-            assertFalse( isPropertyInitialized( store[0], "inventories" ) );
+		store[0].getInventories();
+		assertTrue( isPropertyInitialized( store[0], "inventories" ) );
 
-            assertEquals( 1, sessionFactory().getStatistics().getSessionOpenCount() );
-            assertEquals( 0, sessionFactory().getStatistics().getSessionCloseCount() );
-        } );
+		assertEquals( 2, scope.getSessionFactory().getStatistics().getSessionOpenCount() );
+		assertEquals( 2, scope.getSessionFactory().getStatistics().getSessionCloseCount() );
+	}
 
-        assertEquals( 1, sessionFactory().getStatistics().getSessionOpenCount() );
-        assertEquals( 1, sessionFactory().getStatistics().getSessionCloseCount() );
+	@Test
+	public void testClearedSession(SessionFactoryScope scope) {
+		scope.getSessionFactory().getStatistics().clear();
 
-        store[0].getInventories();
-        assertTrue( isPropertyInitialized( store[0], "inventories" ) );
+		scope.inTransaction( s -> {
+			// first load the store, making sure collection is not initialized
+			Store store = s.get( Store.class, 1L );
+			assertNotNull( store );
+			assertFalse( isPropertyInitialized( store, "inventories" ) );
+			assertEquals( 1, scope.getSessionFactory().getStatistics().getSessionOpenCount() );
+			assertEquals( 0, scope.getSessionFactory().getStatistics().getSessionCloseCount() );
 
-        assertEquals( 2, sessionFactory().getStatistics().getSessionOpenCount() );
-        assertEquals( 2, sessionFactory().getStatistics().getSessionCloseCount() );
-    }
+			// then clear session and try to initialize collection
+			s.clear();
+			assertNotNull( store );
+			assertFalse( isPropertyInitialized( store, "inventories" ) );
+			store.getInventories().size();
+			assertTrue( isPropertyInitialized( store, "inventories" ) );
 
-    @Test
-    public void testClearedSession() {
-        sessionFactory().getStatistics().clear();
+			// the extra Sessions are the temp Sessions needed to perform the init:
+			// first the entity, then the collection (since it's lazy)
+			assertEquals( 3, scope.getSessionFactory().getStatistics().getSessionOpenCount() );
+			assertEquals( 2, scope.getSessionFactory().getStatistics().getSessionCloseCount() );
 
-        doInHibernate( this::sessionFactory, s -> {
-            // first load the store, making sure collection is not initialized
-            Store store = s.get( Store.class, 1L );
-            assertNotNull( store );
-            assertFalse( isPropertyInitialized( store, "inventories" ) );
-            assertEquals( 1, sessionFactory().getStatistics().getSessionOpenCount() );
-            assertEquals( 0, sessionFactory().getStatistics().getSessionCloseCount() );
+			// clear Session again.  The collection should still be recognized as initialized from above
+			s.clear();
+			assertNotNull( store );
+			assertTrue( isPropertyInitialized( store, "inventories" ) );
+			assertEquals( 3, scope.getSessionFactory().getStatistics().getSessionOpenCount() );
+			assertEquals( 2, scope.getSessionFactory().getStatistics().getSessionCloseCount() );
 
-            // then clear session and try to initialize collection
-            s.clear();
-            assertNotNull( store );
-            assertFalse( isPropertyInitialized( store, "inventories" ) );
-            store.getInventories().size();
-            assertTrue( isPropertyInitialized( store, "inventories" ) );
+			// lets clear the Session again and this time reload the Store
+			s.clear();
+			store = s.get( Store.class, 1L );
+			s.clear();
+			assertNotNull( store );
 
-            // the extra Sessions are the temp Sessions needed to perform the init:
-            // first the entity, then the collection (since it's lazy)
-            assertEquals( 3, sessionFactory().getStatistics().getSessionOpenCount() );
-            assertEquals( 2, sessionFactory().getStatistics().getSessionCloseCount() );
+			// collection should be back to uninitialized since we have a new entity instance
+			assertFalse( isPropertyInitialized( store, "inventories" ) );
+			assertEquals( 3, scope.getSessionFactory().getStatistics().getSessionOpenCount() );
+			assertEquals( 2, scope.getSessionFactory().getStatistics().getSessionCloseCount() );
+			store.getInventories().size();
+			assertTrue( isPropertyInitialized( store, "inventories" ) );
 
-            // clear Session again.  The collection should still be recognized as initialized from above
-            s.clear();
-            assertNotNull( store );
-            assertTrue( isPropertyInitialized( store, "inventories" ) );
-            assertEquals( 3, sessionFactory().getStatistics().getSessionOpenCount() );
-            assertEquals( 2, sessionFactory().getStatistics().getSessionCloseCount() );
+			// the extra Sessions are the temp Sessions needed to perform the init:
+			// first the entity, then the collection (since it's lazy)
+			assertEquals( 5, scope.getSessionFactory().getStatistics().getSessionOpenCount() );
+			assertEquals( 4, scope.getSessionFactory().getStatistics().getSessionCloseCount() );
 
-            // lets clear the Session again and this time reload the Store
-            s.clear();
-            store = s.get( Store.class, 1L );
-            s.clear();
-            assertNotNull( store );
+			// clear Session again.  The collection should still be recognized as initialized from above
+			s.clear();
+			assertNotNull( store );
+			assertTrue( isPropertyInitialized( store, "inventories" ) );
+			assertEquals( 5, scope.getSessionFactory().getStatistics().getSessionOpenCount() );
+			assertEquals( 4, scope.getSessionFactory().getStatistics().getSessionCloseCount() );
+		} );
+	}
 
-            // collection should be back to uninitialized since we have a new entity instance
-            assertFalse( isPropertyInitialized( store, "inventories" ) );
-            assertEquals( 3, sessionFactory().getStatistics().getSessionOpenCount() );
-            assertEquals( 2, sessionFactory().getStatistics().getSessionCloseCount() );
-            store.getInventories().size();
-            assertTrue( isPropertyInitialized( store, "inventories" ) );
+	@AfterEach
+	public void cleanup(SessionFactoryScope scope) throws Exception {
+		scope.inTransaction( s -> {
+			Store store = s.find( Store.class, 1L );
+			s.remove( store );
 
-            // the extra Sessions are the temp Sessions needed to perform the init:
-            // first the entity, then the collection (since it's lazy)
-            assertEquals( 5, sessionFactory().getStatistics().getSessionOpenCount() );
-            assertEquals( 4, sessionFactory().getStatistics().getSessionCloseCount() );
+			Product product= s.find( Product.class, "007" );
+			s.remove( product );
+		} );
+	}
 
-            // clear Session again.  The collection should still be recognized as initialized from above
-            s.clear();
-            assertNotNull( store );
-            assertTrue( isPropertyInitialized( store, "inventories" ) );
-            assertEquals( 5, sessionFactory().getStatistics().getSessionOpenCount() );
-            assertEquals( 4, sessionFactory().getStatistics().getSessionCloseCount() );
-        } );
-    }
+	// --- //
 
-    @After
-    public void cleanup() throws Exception {
-        doInHibernate( this::sessionFactory, s -> {
-            Store store = s.find( Store.class, 1L );
-            s.delete( store );
+	@Entity
+	@Table( name = "STORE" )
+	static class Store {
+		@Id
+		Long id;
 
-            Product product= s.find( Product.class, "007" );
-            s.delete( product );
-        } );
-    }
+		String name;
 
-    // --- //
+		@OneToMany( mappedBy = "store", cascade = CascadeType.ALL, fetch = FetchType.LAZY )
+		List<Inventory> inventories = new ArrayList<>();
 
-    @Entity
-    @Table( name = "STORE" )
-    private static class Store {
-        @Id
-        Long id;
+		@Version
+		Integer version;
 
-        String name;
+		Store() {
+		}
 
-        @OneToMany( mappedBy = "store", cascade = CascadeType.ALL, fetch = FetchType.LAZY )
-        List<Inventory> inventories = new ArrayList<>();
+		Store(long id) {
+			this.id = id;
+		}
 
-        @Version
-        Integer version;
+		Store setName(String name) {
+			this.name = name;
+			return this;
+		}
 
-        Store() {
-        }
+		Inventory addInventoryProduct(Product product) {
+			Inventory inventory = new Inventory( this, product );
+			inventories.add( inventory );
+			return inventory;
+		}
 
-        Store(long id) {
-            this.id = id;
-        }
+		public List<Inventory> getInventories() {
+			return Collections.unmodifiableList( inventories );
+		}
+	}
 
-        Store setName(String name) {
-            this.name = name;
-            return this;
-        }
+	@Entity
+	@Table( name = "INVENTORY" )
+	static class Inventory {
 
-        Inventory addInventoryProduct(Product product) {
-            Inventory inventory = new Inventory( this, product );
-            inventories.add( inventory );
-            return inventory;
-        }
+		@Id
+		@GeneratedValue
+		@GenericGenerator( name = "increment", strategy = "increment" )
+		Long id = -1L;
 
-        public List<Inventory> getInventories() {
-            return Collections.unmodifiableList( inventories );
-        }
-    }
+		@ManyToOne
+		@JoinColumn( name = "STORE_ID" )
+		Store store;
 
-    @Entity
-    @Table( name = "INVENTORY" )
-    private static class Inventory {
+		@ManyToOne
+		@JoinColumn( name = "PRODUCT_ID" )
+		Product product;
 
-        @Id
-        @GeneratedValue
-        @GenericGenerator( name = "increment", strategy = "increment" )
-        Long id = -1L;
+		Long quantity;
 
-        @ManyToOne
-        @JoinColumn( name = "STORE_ID" )
-        Store store;
+		BigDecimal storePrice;
 
-        @ManyToOne
-        @JoinColumn( name = "PRODUCT_ID" )
-        Product product;
+		public Inventory() {
+		}
 
-        Long quantity;
+		public Inventory(Store store, Product product) {
+			this.store = store;
+			this.product = product;
+		}
 
-        BigDecimal storePrice;
+		Inventory setStore(Store store) {
+			this.store = store;
+			return this;
+		}
 
-        public Inventory() {
-        }
+		Inventory setProduct(Product product) {
+			this.product = product;
+			return this;
+		}
 
-        public Inventory(Store store, Product product) {
-            this.store = store;
-            this.product = product;
-        }
+		Inventory setQuantity(Long quantity) {
+			this.quantity = quantity;
+			return this;
+		}
 
-        Inventory setStore(Store store) {
-            this.store = store;
-            return this;
-        }
+		Inventory setStorePrice(BigDecimal storePrice) {
+			this.storePrice = storePrice;
+			return this;
+		}
+	}
 
-        Inventory setProduct(Product product) {
-            this.product = product;
-            return this;
-        }
+	@Entity
+	@Table( name = "PRODUCT" )
+	static class Product {
+		@Id
+		String id;
 
-        Inventory setQuantity(Long quantity) {
-            this.quantity = quantity;
-            return this;
-        }
+		String name;
 
-        Inventory setStorePrice(BigDecimal storePrice) {
-            this.storePrice = storePrice;
-            return this;
-        }
-    }
+		String description;
 
-    @Entity
-    @Table( name = "PRODUCT" )
-    private static class Product {
-        @Id
-        String id;
+		BigDecimal msrp;
 
-        String name;
+		@Version
+		Long version;
 
-        String description;
+		Product() {
+		}
 
-        BigDecimal msrp;
+		Product(String id) {
+			this.id = id;
+		}
 
-        @Version
-        Long version;
+		Product setName(String name) {
+			this.name = name;
+			return this;
+		}
 
-        Product() {
-        }
+		Product setDescription(String description) {
+			this.description = description;
+			return this;
+		}
 
-        Product(String id) {
-            this.id = id;
-        }
-
-        Product setName(String name) {
-            this.name = name;
-            return this;
-        }
-
-        Product setDescription(String description) {
-            this.description = description;
-            return this;
-        }
-
-        Product setMsrp(BigDecimal msrp) {
-            this.msrp = msrp;
-            return this;
-        }
-    }
+		Product setMsrp(BigDecimal msrp) {
+			this.msrp = msrp;
+			return this;
+		}
+	}
 }

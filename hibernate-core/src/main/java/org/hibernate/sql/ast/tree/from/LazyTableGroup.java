@@ -1,21 +1,18 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.from;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
-import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 
@@ -37,7 +34,7 @@ public class LazyTableGroup extends DelegatingTableGroup {
 	private final SqlAliasBase sqlAliasBase;
 	private final Supplier<TableGroup> tableGroupSupplier;
 	private final TableGroup parentTableGroup;
-	private final BiPredicate<NavigablePath, String> navigablePathChecker;
+	private final ParentTableGroupUseChecker parentTableGroupUseChecker;
 	private List<TableGroupJoin> tableGroupJoins;
 	private List<TableGroupJoin> nestedTableGroupJoins;
 	private Consumer<TableGroup> tableGroupConsumer;
@@ -48,7 +45,7 @@ public class LazyTableGroup extends DelegatingTableGroup {
 			NavigablePath navigablePath,
 			boolean fetched,
 			Supplier<TableGroup> tableGroupSupplier,
-			BiPredicate<NavigablePath, String> navigablePathChecker,
+			ParentTableGroupUseChecker parentTableGroupUseChecker,
 			TableGroupProducer tableGroupProducer,
 			String sourceAlias,
 			SqlAliasBase sqlAliasBase,
@@ -61,7 +58,7 @@ public class LazyTableGroup extends DelegatingTableGroup {
 		this.sourceAlias = sourceAlias;
 		this.sqlAliasBase = sqlAliasBase;
 		this.tableGroupSupplier = tableGroupSupplier;
-		this.navigablePathChecker = navigablePathChecker;
+		this.parentTableGroupUseChecker = parentTableGroupUseChecker;
 		this.parentTableGroup = parentTableGroup;
 	}
 
@@ -105,7 +102,16 @@ public class LazyTableGroup extends DelegatingTableGroup {
 			tableGroupConsumer.accept( tableGroup );
 		}
 		else {
-			this.tableGroupConsumer = tableGroupConsumer;
+			final Consumer<TableGroup> previousConsumer = this.tableGroupConsumer;
+			if (previousConsumer != null ) {
+				this.tableGroupConsumer = tg -> {
+					previousConsumer.accept( tg );
+					tableGroupConsumer.accept( tg );
+				};
+			}
+			else {
+				this.tableGroupConsumer = tableGroupConsumer;
+			}
 		}
 	}
 
@@ -237,60 +243,34 @@ public class LazyTableGroup extends DelegatingTableGroup {
 	}
 
 	@Override
-	public TableReference resolveTableReference(
+	public TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization) {
-		assert tableExpression != null;
-
-		final TableReference tableReference = getTableReferenceInternal(
-				navigablePath,
-				tableExpression,
-				allowFkOptimization,
-				true
-		);
-
-		if ( tableReference == null ) {
-			throw new UnknownTableReferenceException(
-					tableExpression,
-					String.format(
-							Locale.ROOT,
-							"Unable to determine TableReference (`%s`) for `%s`",
-							tableExpression,
-							navigablePath
-					)
-			);
-		}
-
-		return tableReference;
+			boolean resolve) {
+		return getTableGroup().getTableReference( navigablePath, tableExpression, resolve );
 	}
 
 	@Override
 	public TableReference getTableReference(
 			NavigablePath navigablePath,
+			ValuedModelPart modelPart,
 			String tableExpression,
-			boolean allowFkOptimization,
 			boolean resolve) {
-		return getTableReferenceInternal( navigablePath, tableExpression, allowFkOptimization, resolve );
-	}
-
-	protected TableReference getTableReferenceInternal(
-			NavigablePath navigablePath,
-			String tableExpression,
-			boolean allowFkOptimization,
-			boolean resolve) {
-		if ( allowFkOptimization && ( navigablePath == null || navigablePathChecker.test( navigablePath, tableExpression ) ) ) {
+		if ( parentTableGroupUseChecker.canUseParentTableGroup( producer, navigablePath, modelPart ) ) {
 			final TableReference reference = parentTableGroup.getTableReference(
 					navigablePath,
+					(ValuedModelPart) producer,
 					tableExpression,
-					allowFkOptimization,
 					resolve
 			);
 			if ( reference != null ) {
 				return reference;
 			}
 		}
-		return getTableGroup().getTableReference( navigablePath, tableExpression, allowFkOptimization, resolve );
+		return getTableGroup().getTableReference( navigablePath, modelPart, tableExpression, resolve );
 	}
 
+	public static interface ParentTableGroupUseChecker {
+		boolean canUseParentTableGroup(TableGroupProducer producer, NavigablePath navigablePath, ValuedModelPart valuedModelPart);
+	}
 }

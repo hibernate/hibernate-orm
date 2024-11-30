@@ -1,32 +1,30 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id$
 package org.hibernate.orm.test.annotations.backquotes;
 import java.util.List;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 
-import org.hibernate.annotations.Index;
+import jakarta.persistence.Table;
 
 @Entity
-public class Bug 
+@Table(indexes = @Index(name="`titleindex`", columnList = "`title`"))
+public class Bug
 {
 	@Id
 	@Column(name="`bug_id`")
 	private int id;
-	
+
 	@Column(name="`title`")
-	@Index(name="`titleindex`")
+
 	private String title;
-	
+
 	@ManyToMany
 	@JoinTable(name="`bug_category`")
 	private List<Category> categories;

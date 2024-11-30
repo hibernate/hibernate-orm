@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cache.cid;
 
@@ -13,8 +11,9 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 /**
@@ -23,11 +22,11 @@ import org.junit.Test;
 public class NonAggregatedCompositeIdCachingTest extends BaseUnitTestCase {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9913" )
+	@JiraKey( value = "HHH-9913" )
 	public void testNonAggregatedCompositeId() {
 		// HHH-9913 reports a NPE when bootstrapping a SF with non-aggregated composite identifiers
 		// in org.hibernate.cache.internal.CacheDataDescriptionImpl#decode
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, true )
 				.build();
 
@@ -45,11 +44,11 @@ public class NonAggregatedCompositeIdCachingTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9913" )
+	@JiraKey( value = "HHH-9913" )
 	public void testNonAggregatedCompositeIdWithPkClass() {
 		// HHH-9913 reports a NPE when bootstrapping a SF with non-aggregated composite identifiers
 		// in org.hibernate.cache.internal.CacheDataDescriptionImpl#decode
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
 			new MetadataSources( ssr )

@@ -1,10 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.spatial.dialect.oracle;
 
 import org.hibernate.boot.model.FunctionContributions;
@@ -38,7 +35,7 @@ public class OracleDialectContributor implements ContributorImplementor {
 	}
 
 	@Override
-	public void contributeJdbcTypes(TypeContributions typeContributions) {
+	public void contributeJdbcTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		HSMessageLogger.SPATIAL_MSG_LOGGER.typeContributions( this.getClass().getCanonicalName() );
 		final ConfigurationService cfgService = getServiceRegistry().getService( ConfigurationService.class );
 		final StrategySelector strategySelector = getServiceRegistry().getService( StrategySelector.class );

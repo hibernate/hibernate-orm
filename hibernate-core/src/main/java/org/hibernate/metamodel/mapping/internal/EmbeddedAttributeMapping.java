@@ -1,41 +1,35 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
-import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PropertyBasedMapping;
-import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBasicImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
-import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -52,9 +46,14 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
+import org.hibernate.sql.results.graph.embeddable.internal.AggregateEmbeddableFetchImpl;
+import org.hibernate.sql.results.graph.embeddable.internal.AggregateEmbeddableResultImpl;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableFetchImpl;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableResultImpl;
-import org.hibernate.tuple.ValueGeneration;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static java.util.Objects.requireNonNullElse;
 
 /**
  * @author Steve Ebersole
@@ -67,33 +66,34 @@ public class EmbeddedAttributeMapping
 	private final String tableExpression;
 	private final EmbeddableMappingType embeddableMappingType;
 	private final PropertyAccess parentInjectionAttributePropertyAccess;
+	private final boolean selectable;
 
 	public EmbeddedAttributeMapping(
 			String name,
 			NavigableRole navigableRole,
 			int stateArrayPosition,
+			int fetchableIndex,
 			String tableExpression,
-			AttributeMetadataAccess attributeMetadataAccess,
+			AttributeMetadata attributeMetadata,
 			String parentInjectionAttributeName,
 			FetchTiming mappedFetchTiming,
 			FetchStyle mappedFetchStyle,
 			EmbeddableMappingType embeddableMappingType,
 			ManagedMappingType declaringType,
-			PropertyAccess propertyAccess,
-			ValueGeneration valueGeneration) {
+			PropertyAccess propertyAccess) {
 		this(
 			name,
 			navigableRole,
 			stateArrayPosition,
+			fetchableIndex,
 			tableExpression,
-			attributeMetadataAccess,
+			attributeMetadata,
 			getPropertyAccess( parentInjectionAttributeName, embeddableMappingType ),
 			mappedFetchTiming,
 			mappedFetchStyle,
 			embeddableMappingType,
 			declaringType,
-			propertyAccess,
-			valueGeneration
+			propertyAccess
 		);
 	}
 
@@ -101,24 +101,24 @@ public class EmbeddedAttributeMapping
 			String name,
 			NavigableRole navigableRole,
 			int stateArrayPosition,
+			int fetchableIndex,
 			String tableExpression,
-			AttributeMetadataAccess attributeMetadataAccess,
+			AttributeMetadata attributeMetadata,
 			PropertyAccess parentInjectionAttributePropertyAccess,
 			FetchTiming mappedFetchTiming,
 			FetchStyle mappedFetchStyle,
 			EmbeddableMappingType embeddableMappingType,
 			ManagedMappingType declaringType,
-			PropertyAccess propertyAccess,
-			ValueGeneration valueGeneration) {
+			PropertyAccess propertyAccess) {
 		super(
 				name,
 				stateArrayPosition,
-				attributeMetadataAccess,
+				fetchableIndex,
+				attributeMetadata,
 				mappedFetchTiming,
 				mappedFetchStyle,
 				declaringType,
-				propertyAccess,
-				valueGeneration
+				propertyAccess
 		);
 		this.navigableRole = navigableRole;
 
@@ -127,6 +127,12 @@ public class EmbeddedAttributeMapping
 
 		this.embeddableMappingType = embeddableMappingType;
 
+		if ( getAttributeName().equals( NavigablePath.IDENTIFIER_MAPPER_PROPERTY ) ) {
+			selectable = false;
+		}
+		else {
+			selectable = attributeMetadata.isSelectable();
+		}
 	}
 
 	// Constructor is only used for creating the inverse attribute mapping
@@ -139,14 +145,18 @@ public class EmbeddedAttributeMapping
 			MappingModelCreationProcess creationProcess) {
 		super(
 				inverseModelPart.getFetchableName(),
-				-1,
-				null,
+				inverseModelPart.asAttributeMapping() != null
+						? inverseModelPart.asAttributeMapping().getStateArrayPosition()
+						: -1,
+				inverseModelPart.getFetchableKey(),
+				inverseModelPart.asAttributeMapping() != null
+						? inverseModelPart.asAttributeMapping().getAttributeMetadata()
+						: null,
 				inverseModelPart.getMappedFetchOptions(),
 				keyDeclaringType,
-				inverseModelPart instanceof PropertyBasedMapping ?
-						( (PropertyBasedMapping) inverseModelPart ).getPropertyAccess() :
-						null,
-				null
+				inverseModelPart instanceof PropertyBasedMapping
+						? ( (PropertyBasedMapping) inverseModelPart ).getPropertyAccess()
+						: null
 		);
 
 		this.navigableRole = inverseModelPart.getNavigableRole().getParent().append( inverseModelPart.getFetchableName() );
@@ -159,6 +169,19 @@ public class EmbeddedAttributeMapping
 				creationProcess
 		);
 		this.parentInjectionAttributePropertyAccess = null;
+
+		if ( getAttributeName().equals( NavigablePath.IDENTIFIER_MAPPER_PROPERTY ) ) {
+			selectable = false;
+		}
+		else {
+			AttributeMapping attributeMapping = inverseModelPart.asAttributeMapping();
+			if ( attributeMapping != null ) {
+				selectable = attributeMapping.isSelectable();
+			}
+			else {
+				selectable = true;
+			}
+		}
 	}
 
 	@Override
@@ -182,21 +205,19 @@ public class EmbeddedAttributeMapping
 	}
 
 	@Override
-	public int forEachSelectable(int offset, SelectableConsumer consumer) {
-		return getEmbeddableTypeDescriptor().forEachSelectable( offset, consumer );
-	}
-
-	@Override
-	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		getEmbeddableTypeDescriptor().breakDownJdbcValues( domainValue, valueConsumer, session );
-	}
-
-	@Override
 	public <T> DomainResult<T> createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
+		if ( embeddableMappingType.shouldSelectAggregateMapping() ) {
+			return new AggregateEmbeddableResultImpl<>(
+					navigablePath,
+					this,
+					resultVariable,
+					creationState
+			);
+		}
 		return new EmbeddableResultImpl<>(
 				navigablePath,
 				this,
@@ -235,6 +256,16 @@ public class EmbeddedAttributeMapping
 			boolean selected,
 			String resultVariable,
 			DomainResultCreationState creationState) {
+		if ( embeddableMappingType.shouldSelectAggregateMapping() ) {
+			return new AggregateEmbeddableFetchImpl(
+					fetchablePath,
+					this,
+					fetchParent,
+					fetchTiming,
+					selected,
+					creationState
+			);
+		}
 		return new EmbeddableFetchImpl(
 				fetchablePath,
 				this,
@@ -251,24 +282,31 @@ public class EmbeddedAttributeMapping
 			Clause clause,
 			SqmToSqlAstConverter walker,
 			SqlAstCreationState sqlAstCreationState) {
+		if ( embeddableMappingType.getAggregateMapping() != null ) {
+			final SelectableMapping selection = embeddableMappingType.getAggregateMapping();
+			final NavigablePath navigablePath = tableGroup.getNavigablePath().append( getNavigableRole().getNavigableName() );
+			final TableReference tableReference = tableGroup.resolveTableReference( navigablePath, getContainingTableExpression() );
+			return new SqlTuple(
+					Collections.singletonList(
+							sqlAstCreationState.getSqlExpressionResolver().resolveSqlExpression(
+									tableReference,
+									selection
+							)
+					),
+					this
+			);
+		}
 		final List<ColumnReference> columnReferences = CollectionHelper.arrayList( embeddableMappingType.getJdbcTypeCount() );
 		final NavigablePath navigablePath = tableGroup.getNavigablePath().append( getNavigableRole().getNavigableName() );
-		final TableReference defaultTableReference = tableGroup.resolveTableReference( navigablePath, getContainingTableExpression() );
+		final TableReference defaultTableReference = tableGroup.resolveTableReference( navigablePath, this, getContainingTableExpression() );
 		getEmbeddableTypeDescriptor().forEachSelectable(
 				(columnIndex, selection) -> {
 					final TableReference tableReference = getContainingTableExpression().equals( selection.getContainingTableExpression() )
 							? defaultTableReference
-							: tableGroup.resolveTableReference( navigablePath, selection.getContainingTableExpression() );
+							: tableGroup.resolveTableReference( navigablePath, this, selection.getContainingTableExpression() );
 					final Expression columnReference = sqlAstCreationState.getSqlExpressionResolver().resolveSqlExpression(
-							SqlExpressionResolver.createColumnReferenceKey(
-									tableReference,
-									selection.getSelectionExpression()
-							),
-							sqlAstProcessingState -> new ColumnReference(
-									tableReference.getIdentificationVariable(),
-									selection,
-									sqlAstCreationState.getCreationContext().getSessionFactory()
-							)
+							tableReference,
+							selection
 					);
 
 					columnReferences.add( columnReference.getColumnReference() );
@@ -279,43 +317,25 @@ public class EmbeddedAttributeMapping
 	}
 
 	@Override
-	public ModelPart findSubPart(
-			String name,
-			EntityMappingType treatTargetType) {
-		return getMappedType().findSubPart( name, treatTargetType );
-	}
-
-	@Override
-	public void visitSubParts(
-			Consumer<ModelPart> consumer,
-			EntityMappingType treatTargetType) {
-		getMappedType().visitSubParts( consumer, treatTargetType );
-	}
-
-	@Override
 	public TableGroupJoin createTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAstJoinType requestedJoinType,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase explicitSqlAliasBase,
+			@Nullable SqlAstJoinType requestedJoinType,
 			boolean fetched,
 			boolean addsPredicate,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
-			FromClauseAccess fromClauseAccess,
-			SqlAstCreationContext creationContext) {
-		final SqlAstJoinType joinType = requestedJoinType == null ? SqlAstJoinType.INNER : requestedJoinType;
+			SqlAstCreationState creationState) {
+		final SqlAstJoinType joinType = requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
 		final TableGroup tableGroup = createRootTableGroupJoin(
 				navigablePath,
 				lhs,
 				explicitSourceAlias,
+				explicitSqlAliasBase,
 				requestedJoinType,
 				fetched,
 				null,
-				aliasBaseGenerator,
-				sqlExpressionResolver,
-				fromClauseAccess,
-				creationContext
+				creationState
 		);
 
 		return new TableGroupJoin( navigablePath, joinType, tableGroup );
@@ -325,30 +345,18 @@ public class EmbeddedAttributeMapping
 	public TableGroup createRootTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAstJoinType requestedJoinType,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase explicitSqlAliasBase,
+			@Nullable SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
-			Consumer<Predicate> predicateConsumer,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
-			FromClauseAccess fromClauseAccess,
-			SqlAstCreationContext creationContext) {
-		return new StandardVirtualTableGroup(
-				navigablePath,
-				this,
-				lhs,
-				fetched
-		);
+			@Nullable Consumer<Predicate> predicateConsumer,
+			SqlAstCreationState creationState) {
+		return new StandardVirtualTableGroup( navigablePath, this, lhs, fetched );
 	}
 
 	@Override
 	public String getSqlAliasStem() {
 		return getAttributeName();
-	}
-
-	@Override
-	public int getNumberOfFetchables() {
-		return getEmbeddableTypeDescriptor().getNumberOfAttributeMappings();
 	}
 
 	@Override
@@ -370,5 +378,38 @@ public class EmbeddedAttributeMapping
 			parentInjectionAttributePropertyAccess = null;
 		}
 		return parentInjectionAttributePropertyAccess;
+	}
+
+	@Override
+	public EmbeddedAttributeMapping asEmbeddedAttributeMapping() {
+		return this;
+	}
+
+	@Override
+	public boolean isEmbeddedAttributeMapping() {
+		return true;
+	}
+
+	@Override
+	public boolean isSelectable() {
+		return selectable;
+	}
+
+	@Override
+	public boolean containsTableReference(String tableExpression) {
+		final ManagedMappingType declaringType = getDeclaringType();
+		final TableGroupProducer producer;
+		if ( declaringType instanceof TableGroupProducer ) {
+			producer = (TableGroupProducer) declaringType;
+		}
+		else {
+			producer = ( (EmbeddableMappingType) declaringType ).getEmbeddedValueMapping();
+		}
+		return producer.containsTableReference( tableExpression );
+	}
+
+	@Override
+	public int compare(Object value1, Object value2) {
+		return embeddableMappingType.compare( value1, value2 );
 	}
 }

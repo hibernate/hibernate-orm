@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -13,7 +11,6 @@ import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
@@ -94,16 +91,6 @@ public class IngresSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	}
 
 	@Override
-	protected void renderSearchClause(CteStatement cte) {
-		// Ingres does not support this, but it's just a hint anyway
-	}
-
-	@Override
-	protected void renderCycleClause(CteStatement cte) {
-		// Ingres does not support this, but it can be emulated
-	}
-
-	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		renderComparisonEmulateIntersect( lhs, operator, rhs );
 	}
@@ -146,17 +133,6 @@ public class IngresSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	@Override
 	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
 		return false;
-	}
-
-	@Override
-	protected String getFromDual() {
-		//this is only necessary if the query has a where clause
-		return " from (select 0) dual";
-	}
-
-	@Override
-	protected String getFromDualForSelectOnly() {
-		return getFromDual();
 	}
 
 	@Override

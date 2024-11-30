@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.exceptionhandling;
 
@@ -19,10 +17,10 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
-@TestForIssue(jiraKey = "HHH-12666")
+@JiraKey(value = "HHH-12666")
 @RequiresDialect(H2Dialect.class)
 public class ConstraintViolationExceptionHandlingTest extends BaseExceptionHandlingTest {
 
@@ -51,31 +49,7 @@ public class ConstraintViolationExceptionHandlingTest extends BaseExceptionHandl
 		try {
 			AInfo anotherAInfo = new AInfo();
 			anotherAInfo.uniqueString = "unique";
-			s.save( anotherAInfo );
-			fail( "should have thrown an exception" );
-		}
-		catch (RuntimeException expected) {
-			exceptionExpectations.onConstraintViolationOnSaveAndSaveOrUpdate( expected );
-		}
-		finally {
-			tx.rollback();
-			s.close();
-		}
-	}
-
-	@Test
-	public void testConstraintViolationOnSaveOrUpdate() {
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		AInfo aInfo = new AInfo();
-		aInfo.uniqueString = "unique";
-		s.persist( aInfo );
-		s.flush();
-		s.clear();
-		try {
-			AInfo anotherAInfo = new AInfo();
-			anotherAInfo.uniqueString = "unique";
-			s.saveOrUpdate( anotherAInfo );
+			s.persist( anotherAInfo );
 			fail( "should have thrown an exception" );
 		}
 		catch (RuntimeException expected) {

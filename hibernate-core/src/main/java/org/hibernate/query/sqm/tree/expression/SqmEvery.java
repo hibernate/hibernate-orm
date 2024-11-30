@@ -1,15 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Gavin King
@@ -21,6 +22,16 @@ public class SqmEvery<T> extends AbstractSqmExpression<T> {
 	public SqmEvery(SqmSubQuery<T> subquery, NodeBuilder criteriaBuilder) {
 		super( subquery.getNodeType(), criteriaBuilder );
 		this.subquery = subquery;
+	}
+
+	@Override
+	public @Nullable SqmExpressible<T> getNodeType() {
+		return subquery.getNodeType();
+	}
+
+	@Override
+	public Integer getTupleLength() {
+		return subquery.getTupleLength();
 	}
 
 	@Override

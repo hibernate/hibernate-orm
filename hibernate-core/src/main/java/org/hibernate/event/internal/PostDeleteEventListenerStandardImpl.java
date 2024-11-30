@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
 
@@ -16,16 +14,18 @@ import org.hibernate.persister.entity.EntityPersister;
 /**
  * The standard PostDeleteEventListener implementation
  *
- * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
+ * @author Kabir Khan
  * @author Steve Ebersole
  */
 public class PostDeleteEventListenerStandardImpl implements PostDeleteEventListener, CallbackRegistryConsumer {
 	private CallbackRegistry callbackRegistry;
 
+	@Override
 	public void injectCallbackRegistry(CallbackRegistry callbackRegistry) {
 		this.callbackRegistry = callbackRegistry;
 	}
 
+	@Override
 	public void onPostDelete(PostDeleteEvent event) {
 		Object entity = event.getEntity();
 		callbackRegistry.postRemove( entity );

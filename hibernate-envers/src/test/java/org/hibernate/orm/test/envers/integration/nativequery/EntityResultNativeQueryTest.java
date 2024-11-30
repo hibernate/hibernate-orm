@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.nativequery;
 
@@ -12,7 +10,7 @@ import jakarta.persistence.Query;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hamcrest.core.Is.is;
@@ -38,7 +36,7 @@ public class EntityResultNativeQueryTest extends BaseEnversJPAFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12776")
+	@JiraKey(value = "HHH-12776")
 	public void testNativeQueryResultHandling() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Query query = entityManager.createNativeQuery( "select * from SimpleEntity", SimpleEntity.class );
@@ -49,4 +47,3 @@ public class EntityResultNativeQueryTest extends BaseEnversJPAFunctionalTestCase
 	}
 
 }
-

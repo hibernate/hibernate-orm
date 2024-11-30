@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.idgen.enhanced.table;
 
@@ -26,19 +24,19 @@ public class BasicTableTest {
 
 	@Test
 	public void testNormalBoundary(SessionFactoryScope scope) {
-        final EntityPersister persister = scope.getSessionFactory()
+		final EntityPersister persister = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor(Entity.class.getName());
-		assertThat( persister.getIdentifierGenerator(), instanceOf( TableGenerator.class ) );
+		assertThat( persister.getGenerator(), instanceOf( TableGenerator.class ) );
 
-		final TableGenerator generator = ( TableGenerator ) persister.getIdentifierGenerator();
+		final TableGenerator generator = ( TableGenerator ) persister.getGenerator();
 
 		scope.inTransaction(
 				(s) -> {
 					int count = 5;
 					for ( int i = 0; i < count; i++ ) {
 						final Entity entity = new Entity( "" + ( i + 1 ) );
-						s.save( entity );
+						s.persist( entity );
 						long expectedId = i + 1;
 						assertEquals( expectedId, entity.getId().longValue() );
 						assertEquals( expectedId, generator.getTableAccessCount() );

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.dialect;
 
@@ -16,7 +14,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -39,7 +37,7 @@ public class DB2DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-6866")
+	@JiraKey(value = "HHH-6866")
 	public void testGetDefaultBinaryTypeName() {
 		String actual = typeConfiguration.getDdlTypeRegistry().getTypeName( Types.BINARY, dialect );
 		assertEquals(
@@ -50,7 +48,7 @@ public class DB2DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-6866")
+	@JiraKey(value = "HHH-6866")
 	public void testGetExplicitBinaryTypeName() {
 		// lower bound
 		String actual = typeConfiguration.getDdlTypeRegistry().getTypeName( Types.BINARY, Size.length( 1) );
@@ -78,7 +76,7 @@ public class DB2DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12369")
+	@JiraKey(value = "HHH-12369")
 	public void testIntegerOverflowForMaxResults() {
 		Limit rowSelection = new Limit();
 		rowSelection.setFirstRow(1);

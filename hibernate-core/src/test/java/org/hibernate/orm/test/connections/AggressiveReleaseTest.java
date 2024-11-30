@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-// $Id: AggressiveReleaseTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.orm.test.connections;
 
 import java.sql.Connection;
@@ -79,7 +75,7 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 		try {
 			Session s = getSessionUnderTest();
 			Silly silly = new Silly( "silly" );
-			s.save( silly );
+			s.persist( silly );
 
 			// this should cause the CM to obtain a connection, and then release it
 			s.flush();
@@ -87,7 +83,7 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 			// We should be able to serialize the session at this point...
 			SerializationHelper.serialize( s );
 
-			s.delete( silly );
+			s.remove( silly );
 			s.flush();
 
 			release( s );
@@ -103,7 +99,7 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 		Session s = getSessionUnderTest();
 
 		Silly silly = new Silly( "silly" );
-		s.save( silly );
+		s.persist( silly );
 
 		// this should cause the CM to obtain a connection, and then release it
 		s.flush();
@@ -111,27 +107,27 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 		// both scroll() and iterate() cause batching to hold on
 		// to resources, which should make aggressive-release not release
 		// the connection (and thus cause serialization to fail)
-		ScrollableResults sr = s.createQuery( "from Silly" ).scroll();
-		sr.next();
+		try (ScrollableResults sr = s.createQuery( "from Silly" ).scroll()) {
+			sr.next();
 
-		try {
-			SerializationHelper.serialize( s );
-			fail( "Serialization allowed on connected session; or aggressive release released connection with open resources" );
+			try {
+				SerializationHelper.serialize( s );
+				fail( "Serialization allowed on connected session; or aggressive release released connection with open resources" );
+			}
+			catch (IllegalStateException e) {
+				// expected behavior
+			}
+
+			// getting the first row only because SybaseASE15Dialect throws NullPointerException
+			// if data is not read before closing the ResultSet
+			sr.next();
+
+			// Closing the ScrollableResults does currently force batching to
+			// aggressively release the connection
 		}
-		catch( IllegalStateException e ) {
-			// expected behavior
-		}
-
-		// getting the first row only because SybaseASE15Dialect throws NullPointerException
-		// if data is not read before closing the ResultSet
-		sr.next();
-
-		// Closing the ScrollableResults does currently force batching to
-		// aggressively release the connection
-		sr.close();
 		SerializationHelper.serialize( s );
 
-		s.delete( silly );
+		s.remove( silly );
 		s.flush();
 
 		release( s );
@@ -143,27 +139,24 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 		prepare();
 		Session s = getSessionUnderTest();
 		Silly silly = new Silly( "silly" );
-		s.save( silly );
+		s.persist( silly );
 		s.flush();
 
-		ScrollableResults sr = s.createQuery( "from Silly" ).scroll();
-		assertTrue( sr.next() );
-		Silly silly2 = ( Silly ) sr.get();
-		assertEquals( silly, silly2 );
-		sr.close();
+		try (ScrollableResults sr = s.createQuery( "from Silly" ).scroll()) {
+			assertTrue( sr.next() );
+			Silly silly2 = (Silly) sr.get();
+			assertEquals( silly, silly2 );
+		}
 
-		sr = s.createQuery( "from Silly" ).scroll();
-		ScrollableResults sr2 = s.createQuery( "from Silly where name = 'silly'" ).scroll();
+		try (ScrollableResults sr = s.createQuery( "from Silly" ).scroll();
+			ScrollableResults sr2 = s.createQuery( "from Silly where name = 'silly'" ).scroll()) {
+			assertTrue( sr.next() );
+			assertEquals( silly, sr.get() );
+			assertTrue( sr2.next() );
+			assertEquals( silly, sr2.get() );
+		}
 
-		assertTrue( sr.next() );
-		assertEquals( silly, sr.get() );
-		assertTrue( sr2.next() );
-		assertEquals( silly, sr2.get() );
-
-		sr.close();
-		sr2.close();
-
-		s.delete( silly );
+		s.remove( silly );
 		s.flush();
 
 		release( s );
@@ -178,14 +171,14 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 		Session session = sessionFactory().withOptions().connection( originalConnection ).openSession();
 
 		Silly silly = new Silly( "silly" );
-		session.save( silly );
+		session.persist( silly );
 
 		// this will cause the connection manager to cycle through the aggressive release logic;
 		// it should not release the connection since we explicitly suplied it ourselves.
 		session.flush();
 		assertTrue( session.isConnected() );
 
-		session.delete( silly );
+		session.remove( silly );
 		session.flush();
 
 		release( session );
@@ -205,7 +198,7 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 			Other other = new Other( "other-" + i );
 			Silly silly = new Silly( "silly-" + i, other );
 			entities.add( silly );
-			s.save( silly );
+			s.persist( silly );
 		}
 		s.flush();
 

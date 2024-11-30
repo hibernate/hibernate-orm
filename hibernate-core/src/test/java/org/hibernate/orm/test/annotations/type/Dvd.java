@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id$
 package org.hibernate.orm.test.annotations.type;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
@@ -25,7 +21,7 @@ public class Dvd {
 
 	@EmbeddedId
 	@GeneratedValue(generator = "custom-id")
-	@GenericGenerator(name = "custom-id", strategy = "org.hibernate.orm.test.annotations.type.MyOidGenerator")
+	@GenericGenerator(name = "custom-id", type = MyOidGenerator.class)
 	@AttributeOverride(name = "aHigh", column = @Column(name = "high"))
 	@AttributeOverride(name = "aMiddle", column = @Column(name = "middle"))
 	@AttributeOverride(name = "aLow", column = @Column(name = "low"))

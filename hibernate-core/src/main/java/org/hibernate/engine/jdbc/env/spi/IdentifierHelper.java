@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.env.spi;
 
@@ -28,7 +26,7 @@ public interface IdentifierHelper {
 	/**
 	 * Generate an Identifier instance from its simple name as obtained from mapping
 	 * information.
-	 * <p/>
+	 * <p>
 	 * Note that Identifiers returned from here may be implicitly quoted based on
 	 * 'globally quoted identifiers' or based on reserved words.
 	 *
@@ -42,7 +40,7 @@ public interface IdentifierHelper {
 	 * Generate an Identifier instance from its simple name as obtained from mapping
 	 * information.  Additionally, this form takes a boolean indicating whether to
 	 * explicitly quote the Identifier.
-	 * <p/>
+	 * <p>
 	 * Note that Identifiers returned from here may be implicitly quoted based on
 	 * 'globally quoted identifiers' or based on reserved words.
 	 *
@@ -58,7 +56,7 @@ public interface IdentifierHelper {
 	 * as defined by {@link jakarta.persistence.Column#columnDefinition()},
 	 * {@link jakarta.persistence.JoinColumn#columnDefinition}, etc.  This method should not
 	 * be called in any other scenario.
-	 * <p/>
+	 * <p>
 	 * This method is needed to account for that fact that the JPA spec says that {@code column-definition}
 	 * should be quoted of global-identifier-quoting is requested.  Again, this is needed for spec
 	 * compliance.  TBH, I can not think of a argument why column-definitions should ever be *globally* quoted,

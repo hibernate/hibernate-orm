@@ -1,54 +1,87 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.select;
 
-import org.hibernate.query.sqm.NullPrecedence;
-import org.hibernate.query.sqm.SortOrder;
+import java.util.Objects;
+
+import org.hibernate.query.NullPrecedence;
+import org.hibernate.query.SortDirection;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
+import jakarta.persistence.criteria.Nulls;
+
 /**
  * @author Steve Ebersole
  */
 public class SqmSortSpecification implements JpaOrder {
+	@SuppressWarnings("rawtypes")
 	private final SqmExpression sortExpression;
-	private final SortOrder sortOrder;
-
-	private NullPrecedence nullPrecedence;
+	private final SortDirection sortOrder;
+	private final boolean ignoreCase;
+	private Nulls nullPrecedence;
 
 	public SqmSortSpecification(
-			SqmExpression sortExpression,
-			SortOrder sortOrder,
-			NullPrecedence nullPrecedence) {
+			@SuppressWarnings("rawtypes") SqmExpression sortExpression,
+			SortDirection sortOrder,
+			Nulls nullPrecedence) {
+		this( sortExpression, sortOrder, nullPrecedence, false );
+	}
+
+	public SqmSortSpecification(
+				SqmExpression sortExpression,
+				SortDirection sortOrder,
+				Nulls nullPrecedence,
+				boolean ignoreCase) {
+		assert sortExpression != null;
+		assert sortOrder != null;
+		assert nullPrecedence != null;
 		this.sortExpression = sortExpression;
 		this.sortOrder = sortOrder;
 		this.nullPrecedence = nullPrecedence;
+		this.ignoreCase = ignoreCase;
 	}
 
+	/**
+	 * @deprecated Use {@link SqmSortSpecification#SqmSortSpecification(SqmExpression, SortDirection, Nulls)} instead
+	 */
+	@Deprecated
+	public SqmSortSpecification(
+			@SuppressWarnings("rawtypes") SqmExpression sortExpression,
+			SortDirection sortOrder,
+			NullPrecedence nullPrecedence) {
+		this( sortExpression, sortOrder, nullPrecedence.getJpaValue() );
+	}
+
+	@SuppressWarnings("rawtypes")
 	public SqmSortSpecification(SqmExpression sortExpression) {
-		this( sortExpression, SortOrder.ASCENDING, null );
+		this( sortExpression, SortDirection.ASCENDING, Nulls.NONE );
 	}
 
-	public SqmSortSpecification(SqmExpression sortExpression, SortOrder sortOrder) {
-		this( sortExpression, sortOrder, null );
+	@SuppressWarnings("rawtypes")
+	public SqmSortSpecification(SqmExpression sortExpression, SortDirection sortOrder) {
+		this( sortExpression, sortOrder, Nulls.NONE );
 	}
 
 	public SqmSortSpecification copy(SqmCopyContext context) {
-		return new SqmSortSpecification( sortExpression.copy( context ), sortOrder, nullPrecedence );
+		return new SqmSortSpecification( sortExpression.copy( context ), sortOrder, nullPrecedence, ignoreCase );
 	}
 
-	public SqmExpression getSortExpression() {
+	public SqmExpression<?> getSortExpression() {
 		return sortExpression;
 	}
 
-	public SortOrder getSortOrder() {
+	@Override
+	public SortDirection getSortDirection() {
 		return sortOrder;
+	}
+
+	public boolean isIgnoreCase() {
+		return ignoreCase;
 	}
 
 
@@ -56,20 +89,20 @@ public class SqmSortSpecification implements JpaOrder {
 	// JPA
 
 	@Override
-	public JpaOrder nullPrecedence(NullPrecedence nullPrecedence) {
+	public JpaOrder nullPrecedence(Nulls nullPrecedence) {
 		this.nullPrecedence = nullPrecedence;
 		return this;
 	}
 
 	@Override
-	public NullPrecedence getNullPrecedence() {
+	public Nulls getNullPrecedence() {
 		return nullPrecedence;
 	}
 
 	@Override
 	public JpaOrder reverse() {
-		SortOrder newSortOrder = this.sortOrder == null ? SortOrder.DESCENDING : sortOrder.reverse();
-		return new SqmSortSpecification( sortExpression, newSortOrder, nullPrecedence );
+		SortDirection newSortOrder = this.sortOrder == null ? SortDirection.DESCENDING : sortOrder.reverse();
+		return new SqmSortSpecification( sortExpression, newSortOrder, nullPrecedence, ignoreCase );
 	}
 
 	@Override
@@ -79,15 +112,15 @@ public class SqmSortSpecification implements JpaOrder {
 
 	@Override
 	public boolean isAscending() {
-		return sortOrder == SortOrder.ASCENDING;
+		return sortOrder == SortDirection.ASCENDING;
 	}
 
 	public void appendHqlString(StringBuilder sb) {
 		sortExpression.appendHqlString( sb );
-		if ( sortOrder == SortOrder.DESCENDING ) {
+		if ( sortOrder == SortDirection.DESCENDING ) {
 			sb.append( " desc" );
 			if ( nullPrecedence != null ) {
-				if ( nullPrecedence == NullPrecedence.FIRST ) {
+				if ( nullPrecedence == Nulls.FIRST ) {
 					sb.append( " nulls first" );
 				}
 				else {
@@ -97,12 +130,34 @@ public class SqmSortSpecification implements JpaOrder {
 		}
 		else if ( nullPrecedence != null ) {
 			sb.append( " asc" );
-			if ( nullPrecedence == NullPrecedence.FIRST ) {
+			if ( nullPrecedence == Nulls.FIRST ) {
 				sb.append( " nulls first" );
 			}
 			else {
 				sb.append( " nulls last" );
 			}
 		}
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		else if ( !(o instanceof SqmSortSpecification) ) {
+			return false;
+		}
+		else {
+			// used in SqmInterpretationsKey.equals()
+			SqmSortSpecification that = (SqmSortSpecification) o;
+			return Objects.equals( sortExpression, that.sortExpression )
+				&& sortOrder == that.sortOrder
+				&& nullPrecedence == that.nullPrecedence;
+		}
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( sortExpression, sortOrder, nullPrecedence );
 	}
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.action.internal;
 
@@ -13,9 +11,9 @@ import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCommitDeleteEventListener;
 import org.hibernate.event.spi.PostDeleteEvent;
 import org.hibernate.event.spi.PostDeleteEventListener;
@@ -55,7 +53,7 @@ public class EntityDeleteAction extends EntityAction {
 			final Object instance,
 			final EntityPersister persister,
 			final boolean isCascadeDeleteEnabled,
-			final SessionImplementor session) {
+			final EventSource session) {
 		super( session, id, instance, persister );
 		this.version = version;
 		this.isCascadeDeleteEnabled = isCascadeDeleteEnabled;
@@ -66,7 +64,7 @@ public class EntityDeleteAction extends EntityAction {
 			naturalIdValues = session.getPersistenceContextInternal().getNaturalIdResolutions()
 					.removeLocalResolution(
 							getId(),
-							naturalIdMapping.extractNaturalIdFromEntityState( state, session ),
+							naturalIdMapping.extractNaturalIdFromEntityState( state ),
 							getPersister()
 					);
 		}
@@ -79,7 +77,7 @@ public class EntityDeleteAction extends EntityAction {
 	 * @param persister The entity persister
 	 * @param session The session
 	 */
-	public EntityDeleteAction(final Object id, final EntityPersister persister, final SessionImplementor session) {
+	public EntityDeleteAction(final Object id, final EntityPersister persister, final EventSource session) {
 		super( session, id, null, persister );
 		version = null;
 		isCascadeDeleteEnabled = false;
@@ -128,7 +126,7 @@ public class EntityDeleteAction extends EntityAction {
 		final Object ck = lockCacheItem();
 
 		if ( !isCascadeDeleteEnabled && !veto ) {
-			persister.delete( id, version, instance, session );
+			persister.getDeleteCoordinator().delete( instance, id, version, session );
 		}
 
 		if ( isInstanceLoaded() ) {
@@ -145,7 +143,7 @@ public class EntityDeleteAction extends EntityAction {
 		}
 	}
 
-	private Object getCurrentVersion() {
+	protected Object getCurrentVersion() {
 		return getPersister().isVersionPropertyGenerated()
 						// skip if we're deleting an unloaded proxy, no need for the version
 						&& isInstanceLoaded()
@@ -156,7 +154,7 @@ public class EntityDeleteAction extends EntityAction {
 				: version;
 	}
 
-	private void postDeleteLoaded(
+	protected void postDeleteLoaded(
 			Object id,
 			EntityPersister persister,
 			SharedSessionContractImplementor session,
@@ -171,17 +169,16 @@ public class EntityDeleteAction extends EntityAction {
 			throw new AssertionFailure( "possible non-threadsafe access to session" );
 		}
 		entry.postDelete();
-		EntityKey key = entry.getEntityKey();
-		persistenceContext.removeEntity( key );
-		persistenceContext.removeProxy( key );
+		final EntityKey key = entry.getEntityKey();
+		persistenceContext.removeEntityHolder( key );
 		removeCacheItem( ck );
-		persistenceContext.getNaturalIdResolutions().removeSharedResolution( id, naturalIdValues, persister );
+		persistenceContext.getNaturalIdResolutions().removeSharedResolution( id, naturalIdValues, persister, true);
 		postDelete();
 	}
 
-	private void postDeleteUnloaded(Object id, EntityPersister persister, SharedSessionContractImplementor session, Object ck) {
+	protected void postDeleteUnloaded(Object id, EntityPersister persister, SharedSessionContractImplementor session, Object ck) {
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		EntityKey key = session.generateEntityKey( id, persister );
+		final EntityKey key = session.generateEntityKey( id, persister );
 		if ( !persistenceContext.containsDeletedUnloadedEntityKey( key ) ) {
 			throw new AssertionFailure( "deleted proxy should be for an unloaded entity: " + key );
 		}
@@ -257,12 +254,17 @@ public class EntityDeleteAction extends EntityAction {
 		return false;
 	}
 
-	private Object lockCacheItem() {
+	protected Object lockCacheItem() {
 		final EntityPersister persister = getPersister();
 		if ( persister.canWriteToCache() ) {
 			final EntityDataAccess cache = persister.getCacheAccessStrategy();
 			final SharedSessionContractImplementor session = getSession();
-			Object ck = cache.generateCacheKey( getId(), persister, session.getFactory(), session.getTenantIdentifier() );
+			final Object ck = cache.generateCacheKey(
+					getId(),
+					persister,
+					session.getFactory(),
+					session.getTenantIdentifier()
+			);
 			lock = cache.lockItem( session, ck, getCurrentVersion() );
 			return ck;
 		}
@@ -271,7 +273,7 @@ public class EntityDeleteAction extends EntityAction {
 		}
 	}
 
-	private void unlockCacheItem() {
+	protected void unlockCacheItem() {
 		final EntityPersister persister = getPersister();
 		if ( persister.canWriteToCache() ) {
 			final EntityDataAccess cache = persister.getCacheAccessStrategy();
@@ -286,7 +288,7 @@ public class EntityDeleteAction extends EntityAction {
 		}
 	}
 
-	private void removeCacheItem(Object ck) {
+	protected void removeCacheItem(Object ck) {
 		final EntityPersister persister = getPersister();
 		if ( persister.canWriteToCache() ) {
 			persister.getCacheAccessStrategy().remove( getSession(), ck );

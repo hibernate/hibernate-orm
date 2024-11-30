@@ -1,13 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.spi;
 
 import org.hibernate.LockOptions;
-import org.hibernate.sql.exec.spi.JdbcSelect;
+import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
 /**
@@ -37,7 +35,7 @@ public class SqlOmittingQueryOptions extends DelegatingQueryOptions {
 		return omitSqlQueryOptions( originalOptions, true, true );
 	}
 
-	public static QueryOptions omitSqlQueryOptions(QueryOptions originalOptions, JdbcSelect select) {
+	public static QueryOptions omitSqlQueryOptions(QueryOptions originalOptions, JdbcOperationQuerySelect select) {
 		return omitSqlQueryOptions( originalOptions, !select.usesLimitParameters(), false );
 	}
 
@@ -111,7 +109,7 @@ public class SqlOmittingQueryOptions extends DelegatingQueryOptions {
 
 	@Override
 	public boolean hasLimit() {
-		return omitLimit ? false : super.hasLimit();
+		return !omitLimit && super.hasLimit();
 	}
 
 	@Override

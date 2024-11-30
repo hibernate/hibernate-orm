@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
@@ -15,8 +13,7 @@ import org.hibernate.type.IdentifierBagType;
 import org.hibernate.usertype.UserCollectionType;
 
 /**
- * An {@code IdentifierBag} has a primary key consisting of
- * just the identifier column
+ * A bag with a generated (surrogate) key. Its primary key is just the identifier column.
  */
 public class IdentifierBag extends IdentifierCollection {
 
@@ -49,5 +46,5 @@ public class IdentifierBag extends IdentifierCollection {
 
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
-	}	
+	}
 }

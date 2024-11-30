@@ -1,24 +1,22 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
+import java.lang.invoke.MethodHandles;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
-import org.hibernate.dialect.BooleanDecoder;
-import org.hibernate.dialect.DatabaseVersion;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.OracleDialect;
-import org.hibernate.dialect.SimpleDatabaseVersion;
+import org.hibernate.boot.model.FunctionContributions;
+import org.hibernate.dialect.*;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.TrimFunction;
 import org.hibernate.dialect.identity.HSQLIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -36,12 +34,16 @@ import org.hibernate.dialect.sequence.HSQLSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
+import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
+import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.CoreMessageLogger;
@@ -49,14 +51,13 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.entity.Lockable;
-import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.NullOrdering;
-import org.hibernate.query.sqm.TemporalUnit;
-import org.hibernate.query.sqm.mutation.internal.temptable.AfterUseAction;
-import org.hibernate.query.sqm.mutation.internal.temptable.BeforeUseAction;
+import org.hibernate.dialect.NullOrdering;
+import org.hibernate.query.common.TemporalUnit;
+import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
+import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
@@ -94,12 +95,16 @@ import static org.hibernate.type.SqlTypes.NUMERIC;
  */
 public class HSQLLegacyDialect extends Dialect {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			org.hibernate.community.dialect.HSQLLegacyDialect.class.getName()
 	);
+	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate( this );
+	private final HSQLIdentityColumnSupport identityColumnSupport;
 
 	public HSQLLegacyDialect(DialectResolutionInfo info) {
 		super( info );
+		this.identityColumnSupport = new HSQLIdentityColumnSupport( getVersion() );
 	}
 
 	public HSQLLegacyDialect() {
@@ -108,6 +113,7 @@ public class HSQLLegacyDialect extends Dialect {
 
 	public HSQLLegacyDialect(DatabaseVersion version) {
 		super( version.isSame( 1, 8 ) ? reflectedVersion( version ) : version );
+		this.identityColumnSupport = new HSQLIdentityColumnSupport( getVersion() );
 	}
 
 	@Override
@@ -183,10 +189,10 @@ public class HSQLLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry(functionContributions);
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory( queryEngine);
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 
 		// AVG by default uses the input type, so we possibly need to cast the argument type, hence a special function
 		functionFactory.avg_castingNonDoubleArguments( this, SqlAstNodeRenderingMode.DEFAULT );
@@ -196,8 +202,7 @@ public class HSQLLegacyDialect extends Dialect {
 		functionFactory.degrees();
 		functionFactory.log10();
 		functionFactory.rand();
-		functionFactory.trunc();
-		functionFactory.truncate();
+		functionFactory.trunc_dateTrunc_trunc();
 		functionFactory.pi();
 		functionFactory.soundex();
 		functionFactory.reverse();
@@ -246,6 +251,57 @@ public class HSQLLegacyDialect extends Dialect {
 			functionFactory.rownum();
 		}
 		functionFactory.listagg_groupConcat();
+		functionFactory.array_hsql();
+		functionFactory.arrayAggregate();
+		functionFactory.arrayPosition_hsql();
+		functionFactory.arrayPositions_hsql();
+		functionFactory.arrayLength_cardinality();
+		functionFactory.arrayConcat_operator();
+		functionFactory.arrayPrepend_operator();
+		functionFactory.arrayAppend_operator();
+		functionFactory.arrayContains_hsql();
+		functionFactory.arrayIntersects_hsql();
+		functionFactory.arrayGet_unnest();
+		functionFactory.arraySet_hsql();
+		functionFactory.arrayRemove_hsql();
+		functionFactory.arrayRemoveIndex_unnest( false );
+		functionFactory.arraySlice_unnest();
+		functionFactory.arrayReplace_unnest();
+		functionFactory.arrayTrim_trim_array();
+		functionFactory.arrayFill_hsql();
+		functionFactory.arrayToString_hsql();
+
+		if ( getVersion().isSameOrAfter( 2, 7 ) ) {
+			functionFactory.jsonObject_hsqldb();
+			functionFactory.jsonArray_hsqldb();
+			functionFactory.jsonArrayAgg_hsqldb();
+			functionFactory.jsonObjectAgg_h2();
+		}
+
+		functionFactory.unnest( "c1", "c2" );
+		functionFactory.generateSeries_recursive( getMaximumSeriesSize(), true, false );
+
+		//trim() requires parameters to be cast when used as trim character
+		functionContributions.getFunctionRegistry().register( "trim", new TrimFunction(
+				this,
+				functionContributions.getTypeConfiguration(),
+				SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER
+		) );
+	}
+
+	/**
+	 * HSQLDB doesn't support the {@code generate_series} function or {@code lateral} recursive CTEs,
+	 * so it has to be emulated with a top level recursive CTE which requires an upper bound on the amount
+	 * of elements that the series can return.
+	 */
+	protected int getMaximumSeriesSize() {
+		// The maximum recursion depth of HSQLDB
+		return 258;
+	}
+
+	@Override
+	public @Nullable String getDefaultOrdinalityColumnName() {
+		return "c2";
 	}
 
 	@Override
@@ -285,25 +341,33 @@ public class HSQLLegacyDialect extends Dialect {
 				}
 				break;
 			case BOOLEAN:
-				result = BooleanDecoder.toBoolean( from );
+				result = from == CastType.STRING
+						? buildStringToBooleanCastDecode( "true", "false" )
+						: BooleanDecoder.toBoolean( from );
 				if ( result != null ) {
 					return result;
 				}
 				break;
 			case INTEGER_BOOLEAN:
-				result = BooleanDecoder.toIntegerBoolean( from );
+				result = from == CastType.STRING
+						? buildStringToBooleanCastDecode( "1", "0" )
+						: BooleanDecoder.toIntegerBoolean( from );
 				if ( result != null ) {
 					return result;
 				}
 				break;
 			case YN_BOOLEAN:
-				result = BooleanDecoder.toYesNoBoolean( from );
+				result = from == CastType.STRING
+						? buildStringToBooleanCastDecode( "'Y'", "'N'" )
+						: BooleanDecoder.toYesNoBoolean( from );
 				if ( result != null ) {
 					return result;
 				}
 				break;
 			case TF_BOOLEAN:
-				result = BooleanDecoder.toTrueFalseBoolean( from );
+				result = from == CastType.STRING
+						? buildStringToBooleanCastDecode( "'T'", "'F'" )
+						: BooleanDecoder.toTrueFalseBoolean( from );
 				if ( result != null ) {
 					return result;
 				}
@@ -402,7 +466,7 @@ public class HSQLLegacyDialect extends Dialect {
 	@Override
 	public LimitHandler getLimitHandler() {
 		return getVersion().isBefore( 2 ) ? LegacyHSQLLimitHandler.INSTANCE
-				: getVersion().isBefore( 2, 5 ) ? LimitOffsetLimitHandler.INSTANCE
+				: getVersion().isBefore( 2, 5 ) ? LimitOffsetLimitHandler.OFFSET_ONLY_INSTANCE
 				: OffsetFetchLimitHandler.INSTANCE;
 	}
 
@@ -476,6 +540,29 @@ public class HSQLLegacyDialect extends Dialect {
 				}
 				return null;
 			} );
+
+	@Override
+	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
+		return (sqlException, message, sql) -> {
+			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
+			final String constraintName;
+
+			switch ( errorCode ) {
+				case -104:
+					// Unique constraint violation
+					constraintName = getViolatedConstraintNameExtractor().extractConstraintName(sqlException);
+					return new ConstraintViolationException(
+							message,
+							sqlException,
+							sql,
+							ConstraintViolationException.ConstraintKind.UNIQUE,
+							constraintName
+					);
+			}
+
+			return null;
+		};
+	}
 
 	/**
 	 * HSQLDB 2.0 messages have changed
@@ -652,7 +739,7 @@ public class HSQLLegacyDialect extends Dialect {
 	 * be treated as a callable statement. It is equivalent to
 	 * "select current_timestamp from dual" in some databases.
 	 * HSQLDB 2.0 also supports VALUES CURRENT_TIMESTAMP
-	 * <p/>
+	 * <p>
 	 * {@inheritDoc}
 	 */
 	@Override
@@ -670,14 +757,20 @@ public class HSQLLegacyDialect extends Dialect {
 		return "call current_timestamp";
 	}
 
+	@Override
+	public boolean doesRoundTemporalOnOverflow() {
+		// HSQLDB does truncation
+		return false;
+	}
+
 	/**
 	 * For HSQLDB 2.0, this is a copy of the base class implementation.
 	 * For HSQLDB 1.8, only READ_UNCOMMITTED is supported.
-	 * <p/>
+	 * <p>
 	 * {@inheritDoc}
 	 */
 	@Override
-	public LockingStrategy getLockingStrategy(Lockable lockable, LockMode lockMode) {
+	public LockingStrategy getLockingStrategy(EntityPersister lockable, LockMode lockMode) {
 		switch (lockMode) {
 			case PESSIMISTIC_FORCE_INCREMENT:
 				return new PessimisticForceIncrementLockingStrategy( lockable, lockMode);
@@ -699,12 +792,12 @@ public class HSQLLegacyDialect extends Dialect {
 	}
 
 	private static class ReadUncommittedLockingStrategy extends SelectLockingStrategy {
-		private ReadUncommittedLockingStrategy(Lockable lockable, LockMode lockMode) {
+		private ReadUncommittedLockingStrategy(EntityPersister lockable, LockMode lockMode) {
 			super( lockable, lockMode );
 		}
 
 		@Override
-		public void lock(Object id, Object version, Object object, int timeout, SharedSessionContractImplementor session)
+		public void lock(Object id, Object version, Object object, int timeout, EventSource session)
 				throws StaleObjectStateException, JDBCException {
 			if ( getLockMode().greaterThan( LockMode.READ ) ) {
 				LOG.hsqldbSupportsOnlyReadCommittedIsolation();
@@ -767,8 +860,13 @@ public class HSQLLegacyDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsValuesList() {
+		return true;
+	}
+
+	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return new HSQLIdentityColumnSupport( this.getVersion() );
+		return identityColumnSupport;
 	}
 
 	@Override
@@ -779,6 +877,11 @@ public class HSQLLegacyDialect extends Dialect {
 	@Override
 	public boolean supportsNamedParameters(DatabaseMetaData databaseMetaData) {
 		return false;
+	}
+
+	@Override
+	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
+		return FunctionalDependencyAnalysisSupportImpl.TABLE_REFERENCE;
 	}
 
 	// Do not drop constraints explicitly, just do this by cascading instead.
@@ -824,6 +927,22 @@ public class HSQLLegacyDialect extends Dialect {
 	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
 			throws SQLException {
 		builder.setAutoQuoteInitialUnderscore(true);
+		builder.setAutoQuoteDollar(true);
 		return super.buildIdentifierHelper(builder, dbMetaData);
+	}
+
+	@Override
+	public UniqueDelegate getUniqueDelegate() {
+		return uniqueDelegate;
+	}
+
+	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+	}
+
+	@Override
+	public String getFromDualForSelectOnly() {
+		return " from " + getDual();
 	}
 }

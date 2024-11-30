@@ -1,27 +1,23 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
 import java.util.function.BiConsumer;
 
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.metamodel.mapping.DiscriminatorConverter;
+import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.persister.entity.DiscriminatorType;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -36,38 +32,41 @@ import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @implNote `discriminatorType` represents the mapping to Class, whereas `discriminatorType.getUnderlyingType()`
- * represents the "raw" JDBC mapping (String, Integer, etc)
+ * represents the "raw" JDBC mapping (String, Integer, etc.)
  *
  * @author Steve Ebersole
  */
 public abstract class AbstractDiscriminatorMapping implements EntityDiscriminatorMapping {
 	private final NavigableRole role;
 
-	private final EntityPersister entityDescriptor;
-	private final DiscriminatorType<?> discriminatorType;
-	private final SessionFactoryImplementor sessionFactory;
+	private final BasicType<Object> underlyingJdbcMapping;
+	private final DiscriminatorType<Object> discriminatorType;
+	private final ManagedMappingType mappingType;
 
 	public AbstractDiscriminatorMapping(
-			EntityPersister entityDescriptor,
-			DiscriminatorType<?> discriminatorType,
-			MappingModelCreationProcess creationProcess) {
-		this.entityDescriptor = entityDescriptor;
+			ManagedMappingType mappingType,
+			DiscriminatorType<Object> discriminatorType,
+			BasicType<Object> underlyingJdbcMapping) {
+		this.underlyingJdbcMapping = underlyingJdbcMapping;
+		this.mappingType = mappingType;
+
+		this.role = mappingType.getNavigableRole().append( DISCRIMINATOR_ROLE_NAME );
+
 		this.discriminatorType = discriminatorType;
-
-		role = entityDescriptor.getNavigableRole().append( EntityDiscriminatorMapping.ROLE_NAME );
-		sessionFactory = creationProcess.getCreationContext().getSessionFactory();
 	}
 
-	public EntityPersister getEntityDescriptor() {
-		return entityDescriptor;
+	public EntityMappingType getEntityDescriptor() {
+		return mappingType.asEntityMappingType();
 	}
 
-	public BasicType<?> getUnderlyingJdbcMappingType() {
-		return discriminatorType.getUnderlyingType();
+	@Override
+	public BasicType<?> getUnderlyingJdbcMapping() {
+		return discriminatorType.getUnderlyingJdbcMapping();
 	}
 
-	public SessionFactoryImplementor getSessionFactory() {
-		return sessionFactory;
+	@Override
+	public DiscriminatorConverter<?, ?> getValueConverter() {
+		return discriminatorType.getValueConverter();
 	}
 
 
@@ -85,13 +84,8 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 	}
 
 	@Override
-	public String getConcreteEntityNameForDiscriminatorValue(Object value) {
-		return getEntityDescriptor().getSubclassForDiscriminatorValue( value );
-	}
-
-	@Override
 	public EntityMappingType findContainingEntityMapping() {
-		return entityDescriptor;
+		return mappingType.findContainingEntityMapping();
 	}
 
 	@Override
@@ -104,25 +98,31 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 		return getJdbcMapping().getJavaTypeDescriptor();
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public <T> DomainResult<T> createDomainResult(
+	public DomainResult createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
+		// create a SqlSelection based on the underlying JdbcMapping
 		final SqlSelection sqlSelection = resolveSqlSelection(
 				navigablePath,
-				getUnderlyingJdbcMappingType(),
+				underlyingJdbcMapping,
 				tableGroup,
 				null,
 				creationState.getSqlAstCreationState()
 		);
 
-		return new BasicResult<>(
+		// return a BasicResult with conversion the entity class or entity-name
+		return new BasicResult(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				discriminatorType,
-				navigablePath
+				discriminatorType.getJavaTypeDescriptor(),
+				discriminatorType.getValueConverter(),
+				navigablePath,
+				false,
+				!sqlSelection.isVirtual()
 		);
 	}
 
@@ -142,7 +142,7 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 	}
 
 	@Override
-	public BasicFetch generateFetch(
+	public BasicFetch<?> generateFetch(
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,
 			FetchTiming fetchTiming,
@@ -156,21 +156,27 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 
 		assert tableGroup != null;
 
+		// create a SqlSelection based on the underlying JdbcMapping
 		final SqlSelection sqlSelection = resolveSqlSelection(
 				fetchablePath,
-				getUnderlyingJdbcMappingType(),
+				underlyingJdbcMapping,
 				tableGroup,
 				fetchParent,
 				creationState.getSqlAstCreationState()
 		);
 
+		// return a BasicFetch with conversion the entity class or entity-name
 		return new BasicFetch<>(
 				sqlSelection.getValuesArrayPosition(),
 				fetchParent,
 				fetchablePath,
 				this,
+				discriminatorType.getValueConverter(),
 				fetchTiming,
-				creationState
+				true,
+				creationState,
+				false,
+				!sqlSelection.isVirtual()
 		);
 	}
 
@@ -179,7 +185,13 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		resolveSqlSelection( navigablePath, getUnderlyingJdbcMappingType(), tableGroup, null, creationState.getSqlAstCreationState() );
+		resolveSqlSelection(
+				navigablePath,
+				underlyingJdbcMapping,
+				tableGroup,
+				null,
+				creationState.getSqlAstCreationState()
+		);
 	}
 
 	@Override
@@ -189,42 +201,44 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 			DomainResultCreationState creationState,
 			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 		selectionConsumer.accept(
-				resolveSqlSelection( navigablePath, getUnderlyingJdbcMappingType(), tableGroup, null, creationState.getSqlAstCreationState() ),
+				resolveSqlSelection( navigablePath, underlyingJdbcMapping, tableGroup, null, creationState.getSqlAstCreationState() ),
 				getJdbcMapping()
 		);
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		valuesConsumer.consume( offset, value, getJdbcMapping() );
+		valuesConsumer.consume( offset, x, y, value, underlyingJdbcMapping );
 		return getJdbcTypeCount();
 	}
 
 	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
-		action.accept( offset, getJdbcMapping() );
+		action.accept( offset, underlyingJdbcMapping );
 		return getJdbcTypeCount();
 	}
 
 	@Override
-	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		valueConsumer.consume( disassemble( domainValue, session ), this );
+	public <X, Y> int breakDownJdbcValues(
+			Object domainValue,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
+			SharedSessionContractImplementor session) {
+		valueConsumer.consume( offset, x, y, disassemble( domainValue, session ), this );
+		return getJdbcTypeCount();
 	}
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return value;
-	}
-
-	@Override
-	public int forEachSelectable(int offset, SelectableConsumer consumer) {
-		consumer.accept( offset, this );
-		return getJdbcTypeCount();
 	}
 
 }

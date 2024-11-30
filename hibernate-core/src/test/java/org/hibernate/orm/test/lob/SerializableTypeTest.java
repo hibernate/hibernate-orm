@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.lob;
 
@@ -30,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 public class SerializableTypeTest {
 
 	@Test
-	@SkipForDialect(dialectClass = SybaseASEDialect.class, majorVersion = 15, matchSubTypes = true, reason = "HHH-6425")
+	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "HHH-6425")
 	public void testNewSerializableType(SessionFactoryScope scope) {
 		final String initialPayloadText = "Initial payload";
 		final String changedPayloadText = "Changed payload";
@@ -39,7 +37,7 @@ public class SerializableTypeTest {
 		SerializableHolder serializableHolder = scope.fromTransaction(
 				session -> {
 					SerializableHolder holder = new SerializableHolder();
-					session.save( holder );
+					session.persist( holder );
 					return holder;
 				}
 		);
@@ -85,7 +83,7 @@ public class SerializableTypeTest {
 					SerializableHolder holder = session.get( SerializableHolder.class, id );
 					SerializableData serialData = (SerializableData) holder.getSerialData();
 					assertEquals( empty, serialData.getPayload() );
-					session.delete( holder );
+					session.remove( holder );
 				}
 		);
 	}

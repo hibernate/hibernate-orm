@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
@@ -12,38 +10,47 @@ import java.util.Locale;
 import java.util.function.BiConsumer;
 import java.util.function.IntFunction;
 
+import org.hibernate.Hibernate;
+import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.internal.CacheHelper;
+import org.hibernate.engine.internal.ManagedTypeHelper;
+import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PropertyBasedMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.from.OneToManyTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.UnknownTableReferenceException;
+import org.hibernate.sql.ast.tree.from.VirtualTableGroup;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -53,6 +60,8 @@ import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 
 /**
  * @author Steve Ebersole
@@ -71,30 +80,34 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			PropertyAccess keyPropertyAccess,
 			SelectableMapping keySelectableMapping,
 			BasicValuedModelPart targetModelPart,
+			boolean insertable,
+			boolean updateable,
 			boolean refersToPrimaryKey,
 			boolean hasConstraint) {
-		this( keyDeclaringType, keyModelPart, keyPropertyAccess, keySelectableMapping, targetModelPart, refersToPrimaryKey, hasConstraint, false );
+		this(
+				BasicAttributeMapping.withSelectableMapping(
+						keyDeclaringType,
+						keyModelPart,
+						keyPropertyAccess,
+						insertable,
+						updateable,
+						keySelectableMapping
+				),
+				targetModelPart,
+				refersToPrimaryKey,
+				hasConstraint,
+				false
+		);
 	}
 
 	public SimpleForeignKeyDescriptor(
-			ManagedMappingType keyDeclaringType,
 			BasicValuedModelPart keyModelPart,
-			PropertyAccess keyPropertyAccess,
-			SelectableMapping keySelectableMapping,
 			BasicValuedModelPart targetModelPart,
 			boolean refersToPrimaryKey,
 			boolean hasConstraint,
 			boolean swapDirection) {
-		assert keySelectableMapping != null;
 		assert targetModelPart != null;
 
-		keyModelPart = BasicAttributeMapping.withSelectableMapping(
-				keyDeclaringType,
-				keyModelPart,
-				keyPropertyAccess,
-				NoValueGeneration.INSTANCE,
-				keySelectableMapping
-		);
 		if ( swapDirection ) {
 			this.keySide = new SimpleForeignKeyDescriptorSide( Nature.KEY, targetModelPart );
 			this.targetSide = new SimpleForeignKeyDescriptorSide( Nature.TARGET, keyModelPart );
@@ -103,8 +116,65 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			this.keySide = new SimpleForeignKeyDescriptorSide( Nature.KEY, keyModelPart );
 			this.targetSide = new SimpleForeignKeyDescriptorSide( Nature.TARGET, targetModelPart );
 		}
+
 		this.refersToPrimaryKey = refersToPrimaryKey;
 		this.hasConstraint = hasConstraint;
+	}
+
+	public SimpleForeignKeyDescriptor(
+			ManagedMappingType keyDeclaringType,
+			SelectableMapping keySelectableMapping,
+			BasicValuedModelPart targetModelPart,
+			boolean refersToPrimaryKey,
+			boolean hasConstraint) {
+		this(
+				keyDeclaringType,
+				keySelectableMapping,
+				( (PropertyBasedMapping) targetModelPart ).getPropertyAccess(),
+				targetModelPart,
+				refersToPrimaryKey,
+				hasConstraint,
+				false
+		);
+	}
+
+	/**
+	 *
+	 */
+	public SimpleForeignKeyDescriptor(
+			ManagedMappingType keyDeclaringType,
+			SelectableMapping keySelectableMapping,
+			PropertyAccess valueAccess,
+			BasicValuedModelPart targetModelPart,
+			boolean refersToPrimaryKey,
+			boolean hasConstraint,
+			boolean swapDirection) {
+		this(
+				BasicAttributeMapping.withSelectableMapping(
+						keyDeclaringType,
+						targetModelPart,
+						valueAccess,
+						keySelectableMapping.isInsertable(),
+						keySelectableMapping.isUpdateable(),
+						keySelectableMapping
+				),
+				targetModelPart,
+				refersToPrimaryKey,
+				hasConstraint,
+				swapDirection
+		);
+	}
+
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	@SuppressWarnings("unused")
+	protected SimpleForeignKeyDescriptor(SimpleForeignKeyDescriptor original) {
+		keySide = original.keySide;
+		targetSide = original.targetSide;
+		refersToPrimaryKey = original.refersToPrimaryKey;
+		hasConstraint = original.hasConstraint;
+		associationKey = original.associationKey;
 	}
 
 	@Override
@@ -128,6 +198,11 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
+	public boolean isKeyPart(ValuedModelPart modelPart) {
+		return this == modelPart || keySide.getModelPart() == modelPart;
+	}
+
+	@Override
 	public Side getKeySide() {
 		return keySide;
 	}
@@ -138,31 +213,71 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
+	public int compare(Object key1, Object key2) {
+		//noinspection unchecked,rawtypes
+		return ( (JavaType) keySide.getModelPart().getJavaType() ).getComparator().compare( key1, key2 );
+	}
+
+	@Override
 	public ForeignKeyDescriptor withKeySelectionMapping(
 			ManagedMappingType declaringType,
 			TableGroupProducer declaringTableGroupProducer,
 			IntFunction<SelectableMapping> selectableMappingAccess,
 			MappingModelCreationProcess creationProcess) {
+		final SelectableMapping selectableMapping = selectableMappingAccess.apply( 0 );
 		return new SimpleForeignKeyDescriptor(
 				declaringType,
 				keySide.getModelPart(),
 				( (PropertyBasedMapping) keySide.getModelPart() ).getPropertyAccess(),
-				selectableMappingAccess.apply( 0 ),
+				selectableMapping,
 				targetSide.getModelPart(),
+				selectableMapping.isInsertable(),
+				selectableMapping.isUpdateable(),
 				refersToPrimaryKey,
 				hasConstraint
 		);
 	}
 
 	@Override
+	public ForeignKeyDescriptor withTargetPart(ValuedModelPart targetPart) {
+		return new SimpleForeignKeyDescriptor(
+				keySide.getModelPart(),
+				targetPart.asBasicValuedModelPart(),
+				refersToPrimaryKey,
+				hasConstraint,
+				false
+		);
+	}
+
+	@Override
 	public DomainResult<?> createKeyDomainResult(
 			NavigablePath navigablePath,
-			TableGroup tableGroup,
+			TableGroup targetTableGroup,
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
+		assert isTargetTableGroup( targetTableGroup );
 		return createDomainResult(
-				navigablePath,
-				tableGroup,
+				navigablePath.append( ForeignKeyDescriptor.PART_NAME ),
+				targetTableGroup,
+				keySide.getModelPart(),
+				fetchParent,
+				creationState
+		);
+	}
+
+	@Override
+	public DomainResult<?> createKeyDomainResult(
+			NavigablePath navigablePath,
+			TableGroup targetTableGroup,
+			Nature fromSide,
+			FetchParent fetchParent,
+			DomainResultCreationState creationState) {
+		assert fromSide == Nature.TARGET
+				? targetTableGroup.getTableReference( navigablePath, associationKey.getTable(), false ) != null
+				: isTargetTableGroup( targetTableGroup );
+		return createDomainResult(
+				navigablePath.append( ForeignKeyDescriptor.PART_NAME ),
+				targetTableGroup,
 				keySide.getModelPart(),
 				fetchParent,
 				creationState
@@ -172,12 +287,13 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	@Override
 	public DomainResult<?> createTargetDomainResult(
 			NavigablePath navigablePath,
-			TableGroup tableGroup,
+			TableGroup targetTableGroup,
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
+		assert isTargetTableGroup( targetTableGroup );
 		return createDomainResult(
-				navigablePath,
-				tableGroup,
+				navigablePath.append( ForeignKeyDescriptor.TARGET_PART_NAME ),
+				targetTableGroup,
 				targetSide.getModelPart(),
 				fetchParent,
 				creationState
@@ -185,26 +301,39 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
-	public DomainResult<?> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			Nature side,
-			FetchParent fetchParent, DomainResultCreationState creationState) {
-		if ( side == Nature.KEY ) {
-			return createDomainResult( navigablePath, tableGroup, keySide.getModelPart(), fetchParent, creationState );
-		}
-		else {
-			return createDomainResult( navigablePath, tableGroup, targetSide.getModelPart(), fetchParent, creationState );
-		}
-	}
-
-	@Override
 	public <T> DomainResult<T> createDomainResult(
 			NavigablePath navigablePath,
-			TableGroup tableGroup,
+			TableGroup targetTableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		return createDomainResult( navigablePath, tableGroup, keySide.getModelPart(), null, creationState );
+		assert isTargetTableGroup( targetTableGroup );
+		return createDomainResult(
+				navigablePath.append( ForeignKeyDescriptor.PART_NAME ),
+				targetTableGroup,
+				keySide.getModelPart(),
+				null,
+				creationState
+		);
+	}
+
+	private boolean isTargetTableGroup(TableGroup tableGroup) {
+		tableGroup = getUnderlyingTableGroup( tableGroup );
+		final TableGroupProducer tableGroupProducer;
+		if ( tableGroup instanceof OneToManyTableGroup ) {
+			tableGroupProducer = (TableGroupProducer) ( (OneToManyTableGroup) tableGroup ).getElementTableGroup()
+					.getModelPart();
+		}
+		else {
+			tableGroupProducer = (TableGroupProducer) tableGroup.getModelPart();
+		}
+		return tableGroupProducer.containsTableReference( targetSide.getModelPart().getContainingTableExpression() );
+	}
+
+	private static TableGroup getUnderlyingTableGroup(TableGroup tableGroup) {
+		if ( tableGroup.isVirtual() ) {
+			tableGroup = getUnderlyingTableGroup( ( (VirtualTableGroup) tableGroup ).getUnderlyingTableGroup() );
+		}
+		return tableGroup;
 	}
 
 	@Override
@@ -227,23 +356,16 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	private <T> DomainResult<T> createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
-			SelectableMapping selectableMapping,
+			BasicValuedModelPart selectableMapping,
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
-
-		final NavigablePath resultNavigablePath;
-		if ( selectableMapping == keySide.getModelPart() ) {
-			resultNavigablePath = navigablePath.append( ForeignKeyDescriptor.PART_NAME );
-		}
-		else {
-			resultNavigablePath = navigablePath.append( ForeignKeyDescriptor.TARGET_PART_NAME );
-		}
 		final TableReference tableReference;
 		try {
 			tableReference = tableGroup.resolveTableReference(
-					resultNavigablePath,
+					navigablePath,
+					selectableMapping,
 					selectableMapping.getContainingTableExpression()
 			);
 		}
@@ -259,30 +381,23 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			);
 		}
 
-		final String identificationVariable = tableReference.getIdentificationVariable();
-
+		final JavaType<?> javaType = selectableMapping.getJdbcMapping().getJdbcJavaType();
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
-				sqlExpressionResolver.resolveSqlExpression(
-						SqlExpressionResolver.createColumnReferenceKey(
-								tableReference,
-								selectableMapping.getSelectionExpression()
-						),
-						s ->
-								new ColumnReference(
-										identificationVariable,
-										selectableMapping,
-										creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
-								)
-				),
-				selectableMapping.getJdbcMapping().getJdbcJavaType(),
+				sqlExpressionResolver.resolveSqlExpression( tableReference, selectableMapping ),
+				javaType,
 				fetchParent,
 				sqlAstCreationState.getCreationContext().getSessionFactory().getTypeConfiguration()
 		);
 
+		final JdbcMappingContainer selectionType = sqlSelection.getExpressionType();
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				null,
-				selectableMapping.getJdbcMapping()
+				selectableMapping.getJdbcMapping(),
+				navigablePath,
+				// if the expression type is different that the expected type coerce the value
+				selectionType != null && selectionType.getSingleJdbcMapping().getJdbcJavaType() != javaType,
+				!sqlSelection.isVirtual()
 		);
 	}
 
@@ -290,20 +405,11 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	public Predicate generateJoinPredicate(
 			TableReference targetSideReference,
 			TableReference keySideReference,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext) {
+			SqlAstCreationState creationState) {
 		return new ComparisonPredicate(
-				new ColumnReference(
-						targetSideReference,
-						targetSide.getModelPart(),
-						creationContext.getSessionFactory()
-				),
+				new ColumnReference( targetSideReference, targetSide.getModelPart() ),
 				ComparisonOperator.EQUAL,
-				new ColumnReference(
-						keySideReference,
-						keySide.getModelPart(),
-						creationContext.getSessionFactory()
-				)
+				new ColumnReference( keySideReference, keySide.getModelPart() )
 		);
 	}
 
@@ -311,25 +417,17 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	public Predicate generateJoinPredicate(
 			TableGroup targetSideTableGroup,
 			TableGroup keySideTableGroup,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext) {
+			SqlAstCreationState creationState) {
 		final TableReference lhsTableReference = targetSideTableGroup.resolveTableReference(
 				targetSideTableGroup.getNavigablePath(),
-				targetSide.getModelPart().getContainingTableExpression(),
-				false
+				targetSide.getModelPart().getContainingTableExpression()
 		);
 		final TableReference rhsTableKeyReference = keySideTableGroup.resolveTableReference(
 				null,
-				keySide.getModelPart().getContainingTableExpression(),
-				false
+				keySide.getModelPart().getContainingTableExpression()
 		);
 
-		return generateJoinPredicate(
-				lhsTableReference,
-				rhsTableKeyReference,
-				sqlExpressionResolver,
-				creationContext
-		);
+		return generateJoinPredicate( lhsTableReference, rhsTableKeyReference, creationState );
 	}
 
 	@Override
@@ -360,6 +458,12 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
+	public int forEachSelectable(int offset, SelectableConsumer consumer) {
+		consumer.accept( offset, this );
+		return 1;
+	}
+
+	@Override
 	public JavaType<?> getJavaType() {
 		return targetSide.getModelPart().getJdbcMapping().getJavaTypeDescriptor();
 	}
@@ -376,47 +480,69 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		return value;
+		return getJdbcMapping().convertToRelationalValue( value );
+	}
+
+	@Override
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		CacheHelper.addBasicValueToCacheKey( cacheKey, value, getJdbcMapping(), session );
 	}
 
 	@Override
 	public Object getAssociationKeyFromSide(
 			Object targetObject,
-			Nature nature,
+			ForeignKeyDescriptor.Side side,
 			SharedSessionContractImplementor session) {
 		if ( targetObject == null ) {
 			return null;
 		}
-		if ( refersToPrimaryKey && targetObject instanceof HibernateProxy ) {
-			return ( (HibernateProxy) targetObject ).getHibernateLazyInitializer().getIdentifier();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( targetObject );
+		if ( lazyInitializer != null ) {
+			if ( refersToPrimaryKey ) {
+				return lazyInitializer.getIdentifier();
+			}
+			else {
+				targetObject = lazyInitializer.getImplementation();
+			}
 		}
-		final ModelPart modelPart;
-		if ( nature == Nature.KEY ) {
-			modelPart = keySide.getModelPart();
-		}
-		else {
-			modelPart = targetSide.getModelPart();
-		}
-		if ( modelPart instanceof EntityIdentifierMapping ) {
+		final ModelPart modelPart = side.getModelPart();
+		if ( modelPart.isEntityIdentifierMapping() ) {
 			return ( (EntityIdentifierMapping) modelPart ).getIdentifierIfNotUnsaved( targetObject, session );
 		}
+
+		if ( lazyInitializer == null && ManagedTypeHelper.isPersistentAttributeInterceptable( targetObject ) ) {
+			final PersistentAttributeInterceptor interceptor =
+					asPersistentAttributeInterceptable( targetObject ).$$_hibernate_getInterceptor();
+			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor && !( (EnhancementAsProxyLazinessInterceptor) interceptor ).isInitialized() ) {
+				Hibernate.initialize( targetObject );
+			}
+		}
+
 		return ( (PropertyBasedMapping) modelPart ).getPropertyAccess().getGetter().get( targetObject );
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		valuesConsumer.consume( offset, value, getJdbcMapping() );
-		return 1;
+		valuesConsumer.consume( offset, x, y, value, getJdbcMapping() );
+		return getJdbcTypeCount();
 	}
 
 	@Override
-	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		valueConsumer.consume( domainValue, keySide.getModelPart() );
+	public <X, Y> int breakDownJdbcValues(
+			Object domainValue,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
+			SharedSessionContractImplementor session) {
+		valueConsumer.consume( offset, x, y, disassemble( domainValue, session ), keySide.getModelPart() );
+		return getJdbcTypeCount();
 	}
 
 	@Override
@@ -446,8 +572,15 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
-	public List<JdbcMapping> getJdbcMappings() {
-		return Collections.singletonList( targetSide.getModelPart().getJdbcMapping() );
+	public JdbcMapping getJdbcMapping(int index) {
+		if ( index != 0 ) {
+			throw new IndexOutOfBoundsException( index );
+		}
+		return targetSide.getModelPart().getJdbcMapping();
+	}
+	@Override
+	public JdbcMapping getSingleJdbcMapping() {
+		return targetSide.getModelPart().getJdbcMapping();
 	}
 
 	@Override
@@ -457,13 +590,14 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
-	public int forEachJdbcValue(
+	public <X, Y> int forEachJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		valuesConsumer.consume( offset, value, targetSide.getModelPart().getJdbcMapping() );
+		valuesConsumer.consume( offset, x, y, disassemble( value, session ), targetSide.getModelPart().getJdbcMapping() );
 		return getJdbcTypeCount();
 	}
 
@@ -479,8 +613,33 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
+	public SelectableMapping getSelectable(int columnIndex) {
+		return keySide.getModelPart();
+	}
+
+	@Override
 	public boolean isFormula() {
 		return keySide.getModelPart().isFormula();
+	}
+
+	@Override
+	public boolean isNullable() {
+		return keySide.getModelPart().isNullable();
+	}
+
+	@Override
+	public boolean isInsertable() {
+		return keySide.getModelPart().isInsertable();
+	}
+
+	@Override
+	public boolean isUpdateable() {
+		return keySide.getModelPart().isUpdateable();
+	}
+
+	@Override
+	public boolean isPartitioned() {
+		return keySide.getModelPart().isPartitioned();
 	}
 
 	@Override
@@ -514,8 +673,18 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
+	public Integer getTemporalPrecision() {
+		return keySide.getModelPart().getTemporalPrecision();
+	}
+
+	@Override
 	public String getFetchableName() {
 		return PART_NAME;
+	}
+
+	@Override
+	public int getFetchableKey() {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -563,5 +732,10 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 				targetSide.getModelPart().getContainingTableExpression(),
 				targetSide.getModelPart().getSelectionExpression()
 		);
+	}
+
+	@Override
+	public boolean isEmbedded() {
+		return false;
 	}
 }

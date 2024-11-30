@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
@@ -19,6 +17,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.Supplier;
 
+import jakarta.persistence.metamodel.Attribute;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.collection.spi.PersistentBag;
@@ -28,7 +27,6 @@ import org.hibernate.collection.spi.PersistentSet;
 import org.hibernate.collection.spi.PersistentSortedMap;
 import org.hibernate.collection.spi.PersistentSortedSet;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
@@ -36,15 +34,60 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.collection.spi.LazyInitializable;
 
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
+
 /**
  * Various utility functions for working with proxies and lazy collection references.
  * <p>
  * Operations like {@link #isInitialized(Object)} and {@link #initialize(Object)} are
  * of general purpose. But {@link #createDetachedProxy(SessionFactory, Class, Object)}
- * and {@link CollectionInterface#createDetachedProxy(SessionFactory, Class, Object)}
- * are intended for use by generic code that must materialize an "amputated" graph of
- * Hibernate entities. (For example, a library which deserializes entities from JSON.)
+ * and {@link CollectionInterface#createDetachedInstance()} are intended for use by
+ * generic code that must materialize an "amputated" graph of Hibernate entities.
+ * (For example, a library which deserializes entities from JSON.)
  * <p>
+ * Lazy fetching of a {@linkplain jakarta.persistence.OneToOne one to one} or
+ * {@linkplain jakarta.persistence.ManyToOne many to one} association requires special
+ * bytecode tricks. The tricks used depend on whether build-time bytecode enhancement
+ * is enabled.
+ * <p>
+ * When bytecode enhancement is <em>not</em> used, an unfetched lazy association is
+ * represented by a <em>proxy object</em> which holds the identifier (foreign key) of
+ * the associated entity instance.
+ * <ul>
+ * <li>The identifier property of the proxy object is set when the proxy is instantiated.
+ *     The program may obtain the entity identifier value of an unfetched proxy, without
+ *     triggering lazy fetching, by calling the corresponding getter method.
+ *     (It's even possible to set an association to reference an unfetched proxy.)
+ * <li>A delegate entity instance is lazily fetched when any other method of the proxy
+ *     is called. Once fetched, the proxy delegates all method invocations to the
+ *     delegate.
+ * <li>The proxy does not have the same concrete type as the proxied delegate, and so
+ *     {@link #getClass(Object)} must be used in place of {@link Object#getClass()},
+ *     and this method fetches the entity by side-effect.
+ * <li>For a polymorphic association, the concrete type of the associated entity is
+ *     not known until the delegate is fetched from the database, and so
+ *     {@link #unproxy(Object, Class)}} must be used to perform typecasts, and
+ *     {@link #getClass(Object)} must be used instead of the Java {@code instanceof}
+ *     operator.
+ * </ul>
+ * When bytecode enhancement <em>is</em> used, there is no such indirection, but the
+ * associated entity instance is initially in an unloaded state, with only its
+ * identifier field set.
+ * <ul>
+ * <li>The identifier field of an unloaded entity instance is set when the unloaded
+ *     instance is instantiated. The program may obtain the identifier of an unloaded
+ *     entity, without triggering lazy loading, by accessing the field containing the
+ *     identifier.
+ * <li>The remaining non-lazy state of the entity instance is loaded lazily when any
+ *     other field is accessed.
+ * <li>Typecasts, the Java {@code instanceof} operator, and {@link Object#getClass()}
+ *     may be used as normal.
+ * </ul>
+ * As an exception to the above rules, <em>polymorphic</em> associations always work
+ * as if bytecode enhancement was not enabled.
+ *<p>
  * Graphs of Hibernate entities obtained from a {@link Session} are usually in an
  * amputated form, with associations and collections replaced by proxies and lazy
  * collections. (That is, by instances of the internal types {@link HibernateProxy}
@@ -79,41 +122,45 @@ public final class Hibernate {
 	 * for example, if the {@code Session} was closed
 	 */
 	public static void initialize(Object proxy) throws HibernateException {
-		if ( proxy == null ) {
-			return;
-		}
-
-		if ( proxy instanceof HibernateProxy ) {
-			( (HibernateProxy) proxy ).getHibernateLazyInitializer().initialize();
-		}
-		else if ( proxy instanceof LazyInitializable ) {
-			( (LazyInitializable) proxy ).forceInitialization();
-		}
-		else if ( proxy instanceof PersistentAttributeInterceptable ) {
-			final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) proxy;
-			final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
-			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-				( (EnhancementAsProxyLazinessInterceptor) interceptor ).forceInitialize( proxy, null );
+		if ( proxy != null ) {
+			final LazyInitializer lazyInitializer = extractLazyInitializer( proxy );
+			if ( lazyInitializer != null ) {
+				lazyInitializer.initialize();
+			}
+			else if ( proxy instanceof LazyInitializable lazyInitializable ) {
+				lazyInitializable.forceInitialization();
+			}
+			else if ( isPersistentAttributeInterceptable( proxy ) ) {
+				if ( getAttributeInterceptor( proxy )
+						instanceof EnhancementAsProxyLazinessInterceptor enhancementInterceptor ) {
+					enhancementInterceptor.forceInitialize( proxy, null );
+				}
 			}
 		}
 	}
 
 	/**
-	 * Check if the proxy or persistent collection is initialized.
+	 * Determines if the given proxy or persistent collection is initialized.
+	 * <p>
+	 * This operation is equivalent to {@link jakarta.persistence.PersistenceUtil#isLoaded(Object)}.
 	 *
 	 * @param proxy a persistable object, proxy, persistent collection or {@code null}
 	 * @return true if the argument is already initialized, or is not a proxy or collection
 	 */
 	public static boolean isInitialized(Object proxy) {
-		if ( proxy instanceof HibernateProxy ) {
-			return !( (HibernateProxy) proxy ).getHibernateLazyInitializer().isUninitialized();
+		final LazyInitializer lazyInitializer = extractLazyInitializer( proxy );
+		if ( lazyInitializer != null ) {
+			return !lazyInitializer.isUninitialized();
 		}
-		else if ( proxy instanceof PersistentAttributeInterceptable ) {
-			final PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) proxy ).$$_hibernate_getInterceptor();
-			return !(interceptor instanceof EnhancementAsProxyLazinessInterceptor);
+		else if ( isPersistentAttributeInterceptable( proxy ) ) {
+			final boolean uninitialized =
+					getAttributeInterceptor( proxy )
+							instanceof EnhancementAsProxyLazinessInterceptor enhancementInterceptor
+					&& !enhancementInterceptor.isInitialized();
+			return !uninitialized;
 		}
-		else if ( proxy instanceof LazyInitializable ) {
-			return ( (LazyInitializable) proxy ).wasInitialized();
+		else if ( proxy instanceof LazyInitializable lazyInitializable ) {
+			return lazyInitializable.wasInitialized();
 		}
 		else {
 			return true;
@@ -130,9 +177,24 @@ public final class Hibernate {
 	 * @since 6.1.1
 	 */
 	public static int size(Collection<?> collection) {
-		return collection instanceof PersistentCollection
-				? ((PersistentCollection<?>) collection).getSize()
+		return collection instanceof PersistentCollection<?> persistentCollection
+				? persistentCollection.getSize()
 				: collection.size();
+	}
+
+	/**
+	 * Determine is the given persistent collection is {@linkplain Collection#isEmpty() empty},
+	 * without fetching its state from the database.
+	 *
+	 * @param collection a persistent collection associated with an open session
+	 * @return {@code true} if the collection is empty
+	 *
+	 * @since 7.0
+	 */
+	public static boolean isEmpty(Collection<?> collection) {
+		return collection instanceof PersistentCollection<?> persistentCollection
+				? persistentCollection.getSize() == 0
+				: collection.isEmpty();
 	}
 
 	/**
@@ -145,9 +207,9 @@ public final class Hibernate {
 	 * @since 6.1.1
 	 */
 	public static <T> boolean contains(Collection<? super T> collection, T element) {
-		return collection instanceof PersistentCollection
-				? ((PersistentCollection<?>) collection).elementExists(element)
-				: collection.contains(element);
+		return collection instanceof PersistentCollection<?> persistentCollection
+				? persistentCollection.elementExists( element )
+				: collection.contains( element );
 	}
 
 	/**
@@ -160,10 +222,11 @@ public final class Hibernate {
 	 *
 	 * @since 6.1.1
 	 */
+	@SuppressWarnings("unchecked")
 	public static <K,V> V get(Map<? super K, V> map, K key) {
-		return map instanceof PersistentCollection
-				? (V) ((PersistentCollection<?>) map).elementByIndex(key)
-				: map.get(key);
+		return map instanceof PersistentCollection<?> persistentCollection
+				? (V) persistentCollection.elementByIndex( key )
+				: map.get( key );
 	}
 
 	/**
@@ -176,69 +239,132 @@ public final class Hibernate {
 	 *
 	 * @since 6.1.1
 	 */
+	@SuppressWarnings("unchecked")
 	public static <T> T get(List<T> list, int key) {
-		return list instanceof PersistentCollection
-				? (T) ((PersistentCollection<?>) list).elementByIndex(key)
-				: list.get(key);
+		return list instanceof PersistentCollection<?> persistentCollection
+				? (T) persistentCollection.elementByIndex( key )
+				: list.get( key );
 	}
 
 	/**
-	 * Get the true, underlying class of a proxied persistent class. This operation
-	 * will initialize a proxy by side effect.
+	 * Get the true, underlying class of a proxied entity. This operation will
+	 * initialize a proxy by side effect.
 	 *
 	 * @param proxy an entity instance or proxy
 	 * @return the true class of the instance
 	 */
 	@SuppressWarnings("unchecked")
 	public static <T> Class<? extends T> getClass(T proxy) {
-		Class<?> result;
-		if ( proxy instanceof HibernateProxy ) {
-			result = ( (HibernateProxy) proxy ).getHibernateLazyInitializer()
-					.getImplementation()
-					.getClass();
-		}
-		else {
-			result = proxy.getClass();
-		}
+		final LazyInitializer lazyInitializer = extractLazyInitializer( proxy );
+		final Class<?> result =
+				lazyInitializer != null
+						? lazyInitializer.getImplementation().getClass()
+						: proxy.getClass();
 		return (Class<? extends T>) result;
 	}
 
 	/**
-	 * Check if the property is initialized. If the named property does not exist or
-	 * is not persistent, this method always returns {@code true}.
+	 * Get the true, underlying class of a proxied entity.
+	 * <p/>
+	 * Like {@link #getClass}, this operation might initialize a proxy by side effect.
+	 * However, here the initialization is avoided if possible.  If the entity type is
+	 * defined with subclasses, the proxy will need to be initialized to properly
+	 * determine the class.
 	 *
-	 * @param proxy The potential proxy
-	 * @param propertyName the name of a persistent attribute of the object
+	 * @param proxy an entity instance or proxy
+	 * @return the true class of the instance
+	 *
+	 * @since 6.3
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T> Class<? extends T> getClassLazy(T proxy) {
+		final LazyInitializer lazyInitializer = extractLazyInitializer( proxy );
+		final Class<?> result =
+				lazyInitializer != null
+						? lazyInitializer.getImplementationClass()
+						: proxy.getClass();
+		return (Class<? extends T>) result;
+	}
+
+	/**
+	 * Determine if the true, underlying class of the proxied entity is assignable
+	 * to the given class. This operation will initialize a proxy by side effect.
+	 *
+	 * @param proxy an entity instance or proxy
+	 * @return {@code true} if the entity is an instance of the given class
+	 *
+	 * @since 6.2
+	 */
+	public static boolean isInstance(Object proxy, Class<?> entityClass) {
+		return entityClass.isInstance( proxy )
+			|| entityClass.isAssignableFrom( getClass( proxy ) );
+	}
+
+	/**
+	 * Determines if the given attribute of the given entity instance is initialized.
+	 *
+	 * @param entity The entity instance or proxy
+	 * @param attribute A persistent attribute of the entity
 	 * @return true if the named property of the object is not listed as uninitialized;
 	 *         false otherwise
 	 */
-	public static boolean isPropertyInitialized(Object proxy, String propertyName) {
+	public <E> boolean isPropertyInitialized(E entity, Attribute<? super E, ?> attribute) {
+		return isPropertyInitialized( entity, attribute.getName() );
+	}
+
+	/**
+	 * Determines if the property with the given name of the given entity instance is
+	 * initialized. If the named property does not exist or is not persistent, this
+	 * method always returns {@code true}.
+	 * <p>
+	 * This operation is equivalent to {@link jakarta.persistence.PersistenceUtil#isLoaded(Object, String)}.
+	 *
+	 * @param proxy The entity instance or proxy
+	 * @param attributeName the name of a persistent attribute of the object
+	 * @return true if the named property of the object is not listed as uninitialized;
+	 *         false otherwise
+	 */
+	public static boolean isPropertyInitialized(Object proxy, String attributeName) {
 		final Object entity;
-		if ( proxy instanceof HibernateProxy ) {
-			final LazyInitializer li = ( (HibernateProxy) proxy ).getHibernateLazyInitializer();
-			if ( li.isUninitialized() ) {
+		final LazyInitializer lazyInitializer = extractLazyInitializer( proxy );
+		if ( lazyInitializer != null ) {
+			if ( lazyInitializer.isUninitialized() ) {
 				return false;
 			}
 			else {
-				entity = li.getImplementation();
+				entity = lazyInitializer.getImplementation();
 			}
 		}
 		else {
 			entity = proxy;
 		}
 
-		if ( entity instanceof PersistentAttributeInterceptable ) {
-			PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) entity ).$$_hibernate_getInterceptor();
-			if ( interceptor instanceof BytecodeLazyAttributeInterceptor ) {
-				return ( (BytecodeLazyAttributeInterceptor) interceptor ).isAttributeLoaded( propertyName );
-			}
-		}
-
-		return true;
+		final boolean attributeUnloaded =
+				isPersistentAttributeInterceptable( entity )
+						&& getAttributeInterceptor( entity )
+								instanceof BytecodeLazyAttributeInterceptor lazyAttributeInterceptor
+						&& !lazyAttributeInterceptor.isAttributeLoaded( attributeName );
+		return !attributeUnloaded;
 	}
 
-    /**
-     * If the given object is not a proxy, return it. But, if it is a proxy, ensure
+	/**
+	 * Initializes the property with the given name of the given entity instance.
+	 * <p>
+	 * This operation is equivalent to {@link jakarta.persistence.PersistenceUnitUtil#load(Object, String)}.
+	 *
+	 * @param proxy The entity instance or proxy
+	 * @param attributeName the name of a persistent attribute of the object
+	 */
+	public static void initializeProperty(Object proxy, String attributeName) {
+		final LazyInitializer lazyInitializer = extractLazyInitializer( proxy );
+		final Object entity = lazyInitializer != null ? lazyInitializer.getImplementation() : proxy;
+		if ( isPersistentAttributeInterceptable( entity ) ) {
+			getAttributeInterceptor( entity ).readObject( entity, attributeName, null );
+		}
+	}
+
+	/**
+	 * If the given object is not a proxy, return it. But, if it is a proxy, ensure
 	 * that the proxy is initialized, and return a direct reference to its proxied
 	 * entity object.
 	 *
@@ -247,16 +373,10 @@ public final class Hibernate {
 	 *
 	 * @throws LazyInitializationException if this operation is called on an
 	 * uninitialized proxy that is not associated with an open session.
-     */
+	 */
 	public static Object unproxy(Object proxy) {
-		if ( proxy instanceof HibernateProxy ) {
-			HibernateProxy hibernateProxy = (HibernateProxy) proxy;
-			LazyInitializer initializer = hibernateProxy.getHibernateLazyInitializer();
-			return initializer.getImplementation();
-		}
-		else {
-			return proxy;
-		}
+		final LazyInitializer lazyInitializer = extractLazyInitializer( proxy );
+		return lazyInitializer != null ? lazyInitializer.getImplementation() : proxy;
 	}
 
 	/**
@@ -278,7 +398,7 @@ public final class Hibernate {
 	/**
 	 * Obtain a detached, uninitialized reference (a proxy) for a persistent entity with
 	 * the given identifier.
-	 *
+	 * <p>
 	 * The returned proxy is not associated with any session, and cannot be initialized
 	 * by calling {@link #initialize(Object)}. It can be used to represent a reference to
 	 * the entity when working with a detached object graph.
@@ -293,14 +413,14 @@ public final class Hibernate {
 	 */
 	@SuppressWarnings("unchecked")
 	public static <E> E createDetachedProxy(SessionFactory sessionFactory, Class<E> entityClass, Object id) {
-		final EntityPersister persister = sessionFactory.unwrap(SessionFactoryImplementor.class)
-				.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.findEntityDescriptor(entityClass);
-		if (persister==null) {
+		final EntityPersister persister =
+				sessionFactory.unwrap( SessionFactoryImplementor.class )
+						.getMappingMetamodel()
+						.findEntityDescriptor( entityClass );
+		if ( persister == null ) {
 			throw new UnknownEntityTypeException("unknown entity type");
 		}
-		return (E) persister.createProxy(id, null);
+		return (E) persister.createProxy( id, null );
 	}
 
 	/**
@@ -322,7 +442,7 @@ public final class Hibernate {
 		/**
 		 * Obtain a detached, uninitialized persistent collection of the type represented
 		 * by this object.
-		 *
+		 * <p>
 		 * The returned wrapper object is not associated with any session, and cannot be
 		 * initialized by calling {@link #initialize(Object)}. It can be used to represent
 		 * an uninitialized collection when working with a detached object graph.
@@ -448,5 +568,9 @@ public final class Hibernate {
 		else {
 			throw new IllegalArgumentException("illegal collection interface type");
 		}
+	}
+
+	private static PersistentAttributeInterceptor getAttributeInterceptor(Object entity) {
+		return asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
 	}
 }

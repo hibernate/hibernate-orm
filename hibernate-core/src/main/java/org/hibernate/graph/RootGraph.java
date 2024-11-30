@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.graph;
 
@@ -15,18 +13,14 @@ import jakarta.persistence.metamodel.Attribute;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 
 /**
- * Hibernate extension to the JPA {@link EntityGraph} contract.
+ * Extends the JPA-defined {@link EntityGraph} with additional operations.
  *
  * @author Steve Ebersole
  * @author Andrea Boriero
+ *
+ * @see SubGraph
  */
 public interface RootGraph<J> extends Graph<J>, EntityGraph<J> {
-
-	// todo (6.0) : do we want to consolidate this functionality on AttributeNodeContainer?
-
-	boolean appliesTo(String entityName);
-
-	boolean appliesTo(Class entityType);
 
 	@Override
 	RootGraph<J> makeRootGraph(String name, boolean mutable);
@@ -37,44 +31,28 @@ public interface RootGraph<J> extends Graph<J>, EntityGraph<J> {
 	<T1> SubGraph<? extends T1> addSubclassSubgraph(Class<? extends T1> type);
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	default List<AttributeNode<?>> getAttributeNodes() {
 		return (List) getAttributeNodeList();
 	}
 
 	@Override
 	default void addAttributeNodes(String... names) {
-		if ( names == null ) {
-			return;
-		}
-
-		for ( String name : names ) {
-			addAttributeNode( name );
+		if ( names != null ) {
+			for ( String name : names ) {
+				addAttributeNode( name );
+			}
 		}
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	default void addAttributeNodes(Attribute<J, ?>... attributes) {
-		if ( attributes == null ) {
-			return;
-		}
-
-		for ( Attribute<J, ?> attribute : attributes ) {
-			addAttributeNode( (PersistentAttribute) attribute );
-		}
+	default <X> SubGraph<X> addSubgraph(Attribute<? super J, X> attribute) {
+		return addSubGraph( (PersistentAttribute<? super J,X>)  attribute );
 	}
 
 	@Override
-	default <X> SubGraph<X> addSubgraph(Attribute<J, X> attribute) {
-		//noinspection unchecked
-		return addSubGraph( (PersistentAttribute) attribute );
-	}
-
-	@Override
-	default <X> SubGraph<? extends X> addSubgraph(Attribute<J, X> attribute, Class<? extends X> type) {
-		//noinspection unchecked
-		return addSubGraph( (PersistentAttribute) attribute, type );
+	default <X> Subgraph<? extends X> addSubgraph(Attribute<? super J, X> attribute, Class<? extends X> type) {
+		return addSubGraph( (PersistentAttribute<? super J,X>) attribute, type );
 	}
 
 	@Override
@@ -88,15 +66,13 @@ public interface RootGraph<J> extends Graph<J>, EntityGraph<J> {
 	}
 
 	@Override
-	default <X> SubGraph<X> addKeySubgraph(Attribute<J, X> attribute) {
-		//noinspection unchecked
-		return addKeySubGraph( (PersistentAttribute) attribute );
+	default <X> SubGraph<X> addKeySubgraph(Attribute<? super J, X> attribute) {
+		return addKeySubGraph( (PersistentAttribute<? super J,X>) attribute );
 	}
 
 	@Override
-	default <X> SubGraph<? extends X> addKeySubgraph(Attribute<J, X> attribute, Class<? extends X> type) {
-		//noinspection unchecked
-		return addKeySubGraph( (PersistentAttribute) attribute, type );
+	default <X> SubGraph<? extends X> addKeySubgraph(Attribute<? super J, X> attribute, Class<? extends X> type) {
+		return addKeySubGraph( (PersistentAttribute<? super J,X>) attribute, type );
 	}
 
 	@Override

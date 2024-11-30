@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemaupdate.uniqueconstraint;
 
@@ -18,13 +16,17 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.unique.AlterTableUniqueDelegate;
+import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
+import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
+import org.hibernate.dialect.unique.SkipNullableUniqueDelegate;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,12 +46,13 @@ public class UniqueConstraintGenerationTest {
 	public void setUp() throws Exception {
 		output = File.createTempFile( "update_script", ".sql" );
 		output.deleteOnExit();
-		ssr = new StandardServiceRegistryBuilder()
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( Environment.HBM2DDL_AUTO, "none" )
 				.build();
 		metadata = (MetadataImplementor) new MetadataSources( ssr )
 				.addResource( "org/hibernate/orm/test/schemaupdate/uniqueconstraint/TestEntity.hbm.xml" )
 				.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 	}
 
@@ -59,32 +62,34 @@ public class UniqueConstraintGenerationTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11101")
+	@JiraKey(value = "HHH-11101")
 	public void testUniqueConstraintIsGenerated() throws Exception {
 		new SchemaExport()
 				.setOutputFile( output.getAbsolutePath() )
 				.create( EnumSet.of( TargetType.SCRIPT ), metadata );
 
-		if ( getDialect() instanceof DB2Dialect) {
-			assertThat(
-					"The test_entity_item table unique constraint has not been generated",
-					isCreateUniqueIndexGenerated("test_entity_item", "item"),
-					is(true)
-			);
-		}
-		else {
-			assertThat(
-					"The test_entity_item table unique constraint has not been generated",
-					isUniqueConstraintGenerated("test_entity_item", "item"),
-					is(true)
-			);
-		}
+		if ( !(getDialect().getUniqueDelegate() instanceof SkipNullableUniqueDelegate) ) {
+			if ( getDialect().getUniqueDelegate() instanceof AlterTableUniqueIndexDelegate ) {
+				assertThat(
+						"The test_entity_item table unique constraint has not been generated",
+						isCreateUniqueIndexGenerated("test_entity_item", "item"),
+						is(true)
+				);
+			}
+			else {
+				assertThat(
+						"The test_entity_item table unique constraint has not been generated",
+						isUniqueConstraintGenerated("test_entity_item", "item"),
+						is(true)
+				);
+			}
 
-		assertThat(
-				"The test_entity_children table unique constraint has not been generated",
-				isUniqueConstraintGenerated( "test_entity_children", "child" ),
-				is( true )
-		);
+			assertThat(
+					"The test_entity_children table unique constraint has not been generated",
+					isUniqueConstraintGenerated( "test_entity_children", "child" ),
+					is( true )
+			);
+		}
 	}
 
 	private Dialect getDialect() {
@@ -92,34 +97,41 @@ public class UniqueConstraintGenerationTest {
 	}
 
 	private boolean isUniqueConstraintGenerated(String tableName, String columnName) throws IOException {
-		boolean matches = false;
-		final String regex = getDialect().getAlterTableString( tableName ) + " add constraint uk_(.)* unique \\(" + columnName + "\\);";
+		final String regex;
+		Dialect dialect = getDialect();
+		if ( dialect.getUniqueDelegate() instanceof CreateTableUniqueDelegate ) {
+			regex = dialect.getCreateTableString() + " " + tableName + " .* " + columnName + " .+ unique.*\\)"
+					+ dialect.getTableTypeString().toLowerCase() + ";";
+		}
+		else if ( dialect.getUniqueDelegate() instanceof AlterTableUniqueDelegate) {
+			regex = dialect.getAlterTableString( tableName ) + " add constraint uk.* unique \\(" + columnName + "\\);";
+		}
+		else {
+			return true;
+		}
 
 		final String fileContent = new String( Files.readAllBytes( output.toPath() ) ).toLowerCase();
 		final String[] split = fileContent.split( System.lineSeparator() );
-		Pattern p = Pattern.compile( regex );
 		for ( String line : split ) {
-			final Matcher matcher = p.matcher( line );
-			if ( matcher.matches() ) {
-				matches = true;
+			if ( line.matches(regex) ) {
+				return true;
 			}
 		}
-		return matches;
+		return false;
 	}
 
 	private boolean isCreateUniqueIndexGenerated(String tableName, String columnName) throws IOException {
-		boolean matches = false;
-		String regex = "create unique index uk_(.)* on " + tableName + " \\(" + columnName + "\\);";
-
+		String regex = "create unique (nonclustered )?index uk.* on " + tableName
+				+ " \\(" + columnName + "\\)( where .*| exclude null keys)?;";
 		final String fileContent = new String( Files.readAllBytes( output.toPath() ) ).toLowerCase();
 		final String[] split = fileContent.split( System.lineSeparator() );
 		Pattern p = Pattern.compile( regex );
 		for ( String line : split ) {
 			final Matcher matcher = p.matcher( line );
 			if ( matcher.matches() ) {
-				matches = true;
+				return true;
 			}
 		}
-		return matches;
+		return false;
 	}
 }

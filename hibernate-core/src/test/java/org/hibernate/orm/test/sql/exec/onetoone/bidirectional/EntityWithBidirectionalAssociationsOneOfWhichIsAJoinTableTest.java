@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql.exec.onetoone.bidirectional;
 
@@ -45,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		}
 )
 @ServiceRegistry
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 public class EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest {
 
 	@BeforeEach
@@ -60,9 +58,9 @@ public class EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest {
 					Female daughter = new Female( 3, parent );
 					daughter.setName( "Fab" );
 
-					session.save( parent );
-					session.save( son );
-					session.save( daughter );
+					session.persist( parent );
+					session.persist( son );
+					session.persist( daughter );
 				} );
 	}
 
@@ -78,7 +76,7 @@ public class EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest {
 
 	@Test
 	public void testGetParent(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
@@ -108,7 +106,7 @@ public class EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest {
 
 	@Test
 	public void testGetChild(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction( session -> {
 			final Male son = session.get( Male.class, 2 );
@@ -142,7 +140,7 @@ public class EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest {
 
 	@Test
 	public void testHqlSelectSon(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
@@ -168,7 +166,7 @@ public class EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest {
 	public void testHqlSelectParent(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+					SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 					statementInspector.clear();
 					final Parent parent = session.createQuery(
 							"SELECT p FROM Parent p JOIN p.son WHERE p.id = :id",
@@ -177,7 +175,7 @@ public class EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest {
 							.setParameter( "id", 1 )
 							.getSingleResult();
 					statementInspector.assertExecutedCount( 2 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 2 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 1 );
 					statementInspector.assertNumberOfOccurrenceInQuery( 1, "join", 3 );
 					Male son = parent.getSon();
 					assertThat( son, CoreMatchers.notNullValue() );

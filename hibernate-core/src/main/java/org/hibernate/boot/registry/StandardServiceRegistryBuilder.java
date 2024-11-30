@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.registry;
 
@@ -37,7 +35,7 @@ import static org.hibernate.boot.cfgxml.spi.CfgXmlAccessService.LOADED_CONFIG_KE
  * Configuration properties are enumerated by {@link AvailableSettings}.
  *
  * @author Steve Ebersole
- * 
+ *
  * @see StandardServiceRegistryImpl
  * @see BootstrapServiceRegistryBuilder
  */
@@ -299,8 +297,9 @@ public class StandardServiceRegistryBuilder {
 	/**
 	 * Discard all the settings applied so far.
 	 */
-	public void clearSettings() {
+	public StandardServiceRegistryBuilder clearSettings() {
 		settings.clear();
+		return this;
 	}
 
 	/**
@@ -332,7 +331,7 @@ public class StandardServiceRegistryBuilder {
 	 * By default, when a {@link ServiceRegistry} is no longer referenced by any
 	 * other registries as a parent it will be closed. Some applications that
 	 * explicitly build "shared registries" may need to circumvent that behavior.
-	 * <p/>
+	 * <p>
 	 * This method indicates that the registry being built should not be
 	 * automatically closed. The caller takes responsibility for closing it.
 	 *
@@ -365,7 +364,7 @@ public class StandardServiceRegistryBuilder {
 		settingsCopy.put( LOADED_CONFIG_KEY, aggregatedCfgXml );
 		ConfigurationHelper.resolvePlaceHolders( settingsCopy );
 
-		return new StandardServiceRegistryImpl(
+		return StandardServiceRegistryImpl.create(
 				autoCloseRegistry,
 				bootstrapServiceRegistry,
 				initiators,
@@ -376,7 +375,7 @@ public class StandardServiceRegistryBuilder {
 
 	private void applyServiceContributors() {
 		final Iterable<ServiceContributor> serviceContributors =
-				bootstrapServiceRegistry.getService( ClassLoaderService.class )
+				bootstrapServiceRegistry.requireService( ClassLoaderService.class )
 						.loadJavaServices( ServiceContributor.class );
 
 		for ( ServiceContributor serviceContributor : serviceContributors ) {

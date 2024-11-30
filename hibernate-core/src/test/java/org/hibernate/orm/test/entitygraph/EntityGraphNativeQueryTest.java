@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.entitygraph;
 
@@ -11,7 +9,7 @@ import java.util.Set;
 
 import org.hibernate.graph.GraphSemantic;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -42,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 		}
 )
 @SessionFactory
-@TestForIssue( jiraKey = "HHH-12476" )
+@JiraKey( value = "HHH-12476" )
 public class EntityGraphNativeQueryTest {
 
 	@BeforeEach
@@ -142,8 +140,8 @@ public class EntityGraphNativeQueryTest {
 		);
 	}
 
-    @Entity(name = "Foo")
-    public static class Foo {
+	@Entity(name = "Foo")
+	public static class Foo {
 
 		@Id
 		@GeneratedValue
@@ -163,19 +161,19 @@ public class EntityGraphNativeQueryTest {
 		@GeneratedValue
 		public Integer id;
 
-        @OneToMany(mappedBy = "bar")
-        public Set<Foo> foos = new HashSet<>();
+		@OneToMany(mappedBy = "bar")
+		public Set<Foo> foos = new HashSet<>();
 	}
 
 	@Entity(name = "Baz")
-    public static class Baz {
+	public static class Baz {
 
 		@Id
 		@GeneratedValue
-        public Integer id;
+		public Integer id;
 
-        @OneToMany(mappedBy = "baz")
-        public Set<Foo> foos = new HashSet<>();
+		@OneToMany(mappedBy = "baz")
+		public Set<Foo> foos = new HashSet<>();
 
 	}
 

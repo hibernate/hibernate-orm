@@ -1,23 +1,22 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.inheritance.joined;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -113,7 +112,7 @@ public class JoinedSubclassTest {
 		scope.inTransaction(
 				session -> {
 					Sweater toDelete = session.get( Sweater.class, sw.getId() );
-					session.delete( toDelete );
+					session.remove( toDelete );
 				}
 		);
 	}
@@ -142,7 +141,7 @@ public class JoinedSubclassTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-4250")
+	@JiraKey(value = "HHH-4250")
 	public void testManyToOneWithJoinTable(SessionFactoryScope scope) {
 		//HHH-4250 : @ManyToOne - @OneToMany doesn't work with @Inheritance(strategy= InheritanceType.JOINED)
 		scope.inTransaction(
@@ -166,13 +165,13 @@ public class JoinedSubclassTest {
 					session.flush();
 					session.clear();
 
-					c1 = session.load( Client.class, c1.getId() );
+					c1 = session.getReference( Client.class, c1.getId() );
 					assertEquals( 5000.0, c1.getAccount().getBalance(), 0.01 );
 
 					session.flush();
 					session.clear();
 
-					a1 = session.load( Account.class, a1.getId() );
+					a1 = session.getReference( Account.class, a1.getId() );
 					Set<Client> clients = a1.getClients();
 					assertEquals( 1, clients.size() );
 					Iterator<Client> it = clients.iterator();
@@ -183,7 +182,7 @@ public class JoinedSubclassTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-4240")
+	@JiraKey(value = "HHH-4240")
 	public void testSecondaryTables(SessionFactoryScope scope) {
 		// HHH-4240 - SecondaryTables not recognized when using JOINED inheritance
 		Company company = new Company();
@@ -224,32 +223,32 @@ public class JoinedSubclassTest {
 		scope.inTransaction(
 				session -> {
 					session.createQuery( "from Customer" ).list().forEach(
-							customer -> session.delete( customer )
+							customer -> session.remove( customer )
 					);
 
 					session.createQuery( "from Client" ).list().forEach(
-							client -> session.delete( client )
+							client -> session.remove( client )
 					);
 
 					session.createQuery( "from Account" ).list().forEach(
-							account -> session.delete( account )
+							account -> session.remove( account )
 					);
 
 					session.createQuery( "from ProgramExecution" ).list().forEach(
-							programExecution -> session.delete( programExecution )
+							programExecution -> session.remove( programExecution )
 					);
 
 					session.createQuery( "from Alarm" ).list().forEach(
-							alarm -> session.delete( alarm )
+							alarm -> session.remove( alarm )
 					);
 
 					session.createQuery( "from EventInformation" ).list().forEach(
-							eventInformation -> session.delete( eventInformation )
+							eventInformation -> session.remove( eventInformation )
 					);
 
 
 					session.createQuery( "from File" ).list().forEach(
-							file -> session.delete( file )
+							file -> session.remove( file )
 					);
 				}
 		);

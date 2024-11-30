@@ -1,28 +1,39 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
 import org.hibernate.query.Query;
 
 /**
- * Thrown when the application calls {@link Query#uniqueResult()}
- * and the query returned more than one result.  Unlike all other Hibernate exceptions,
+ * Thrown when the application calls {@link Query#getSingleResult()} or
+ * {@link Query#uniqueResult()} and the query returns more than one row
+ * from the database. Unlike every other exception thrown by Hibernate,
  * this one is recoverable!
  *
  * @author Gavin King
  */
 public class NonUniqueResultException extends HibernateException {
+
+	private final int resultCount;
+
 	/**
-	 * Constructs a NonUniqueResultException.
+	 * Constructs a {@code NonUniqueResultException}.
 	 *
 	 * @param resultCount The number of actual results.
 	 */
 	public NonUniqueResultException(int resultCount) {
-		super( "query did not return a unique result: " + resultCount );
+		super( "Query did not return a unique result: " + resultCount + " results were returned" );
+		this.resultCount = resultCount;
+	}
+
+	/**
+	 * Get the number of actual results.
+	 * @return number of actual results
+	 */
+	public int getResultCount() {
+		return this.resultCount;
 	}
 
 }

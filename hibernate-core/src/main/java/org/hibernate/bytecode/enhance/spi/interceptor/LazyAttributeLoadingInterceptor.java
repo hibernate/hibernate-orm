@@ -1,10 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.bytecode.enhance.spi.interceptor;
 
 import java.util.Collection;
@@ -21,6 +18,9 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.persister.entity.EntityPersister;
 
+import static org.hibernate.engine.internal.ManagedTypeHelper.asSelfDirtinessTracker;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isSelfDirtinessTracker;
+
 /**
  * Interceptor that loads attributes lazily
  *
@@ -31,8 +31,9 @@ public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor
 	private final Object identifier;
 
 	//N.B. this Set needs to be treated as immutable
-	private final Set<String> lazyFields;
+	private Set<String> lazyFields;
 	private Set<String> initializedLazyFields;
+	private Set<String> mutableLazyFields;
 
 	public LazyAttributeLoadingInterceptor(
 			String entityName,
@@ -156,13 +157,14 @@ public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor
 	}
 
 	private void takeCollectionSizeSnapshot(Object target, String fieldName, Object value) {
-		if ( value instanceof Collection && target instanceof SelfDirtinessTracker ) {
+		if ( value instanceof Collection && isSelfDirtinessTracker( target ) ) {
 			// This must be called first, so that we remember that there is a collection out there,
 			// even if we don't know its size (see below).
-			CollectionTracker tracker = ( (SelfDirtinessTracker) target ).$$_hibernate_getCollectionTracker();
+			final SelfDirtinessTracker targetSDT = asSelfDirtinessTracker( target );
+			CollectionTracker tracker = targetSDT.$$_hibernate_getCollectionTracker();
 			if ( tracker == null ) {
-				( (SelfDirtinessTracker) target ).$$_hibernate_clearDirtyAttributes();
-				tracker = ( (SelfDirtinessTracker) target ).$$_hibernate_getCollectionTracker();
+				targetSDT.$$_hibernate_clearDirtyAttributes();
+				tracker = targetSDT.$$_hibernate_getCollectionTracker();
 			}
 
 			if ( value instanceof PersistentCollection && !( (PersistentCollection<?>) value ).wasInitialized() ) {
@@ -189,4 +191,11 @@ public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor
 		return initializedLazyFields == null ? Collections.emptySet() : initializedLazyFields;
 	}
 
+	public void addLazyFieldByGraph(String fieldName) {
+		if ( mutableLazyFields == null ) {
+			mutableLazyFields = new HashSet<>( lazyFields );
+			lazyFields = mutableLazyFields;
+		}
+		mutableLazyFields.add( fieldName );
+	}
 }

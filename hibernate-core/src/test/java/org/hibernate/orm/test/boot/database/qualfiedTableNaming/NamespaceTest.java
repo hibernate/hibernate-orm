@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.boot.database.qualfiedTableNaming;
 
@@ -12,7 +10,7 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -24,7 +22,7 @@ import static org.mockito.Mockito.when;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-11625")
+@JiraKey(value = "HHH-11625")
 public class NamespaceTest {
 
 	private static final String EXPECTED_CATALOG_PHYSICAL_NAME = "catalog";

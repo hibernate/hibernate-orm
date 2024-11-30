@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.manytomany.batchload;
 
@@ -44,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ServiceRegistry(
 		settings = {
 				@Setting(name = Environment.USE_SECOND_LEVEL_CACHE, value = "false"),
-				@Setting(name = Environment.BATCH_STRATEGY, value = "org.hibernate.test.manytomany.batchload.TestingBatchBuilder"),
+				@Setting(name = Environment.STATEMENT_BATCH_SIZE, value = "-1"),
 		}
 )
 public class BatchedManyToManyTest {
@@ -66,8 +64,8 @@ public class BatchedManyToManyTest {
 
 		scope.inTransaction(
 				session -> {
-					session.save( me );
-					session.save( you );
+					session.persist( me );
+					session.persist( you );
 				}
 		);
 	}
@@ -80,7 +78,7 @@ public class BatchedManyToManyTest {
 					// User is the non-inverse side...
 					List<User> users = session.createQuery( "from User" ).list();
 					for ( User user : users ) {
-						session.delete( user );
+						session.remove( user );
 					}
 					session.flush();
 					session.createQuery( "delete Group" ).executeUpdate();

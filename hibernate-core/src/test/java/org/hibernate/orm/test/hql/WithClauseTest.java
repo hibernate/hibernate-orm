@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.hql;
 
@@ -12,10 +10,10 @@ import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -80,29 +78,29 @@ public class WithClauseTest {
 		scope.inTransaction(
 				(session) -> {
 					// one-to-many
-					List list = session.createQuery( "from Human h inner join h.offspring as o with o.bodyWeight < :someLimit" )
+					List list = session.createQuery( "from Human h inner join h.offspring as o with o.bodyWeight < :someLimit", Human.class )
 							.setParameter( "someLimit", 1 )
 							.list();
 					assertTrue( list.isEmpty(), "ad-hoc on did not take effect" );
 
 					// many-to-one
-					list = session.createQuery( "from Animal a inner join a.mother as m with m.bodyWeight < :someLimit" )
+					list = session.createQuery( "from Animal a inner join a.mother as m with m.bodyWeight < :someLimit", Animal.class )
 							.setParameter( "someLimit", 1 )
 							.list();
 					assertTrue( list.isEmpty(), "ad-hoc on did not take effect" );
 
-					list = session.createQuery( "from Human h inner join h.friends f with f.bodyWeight < :someLimit" )
+					list = session.createQuery( "from Human h inner join h.friends f with f.bodyWeight < :someLimit", Human.class )
 							.setParameter( "someLimit", 25 )
 							.list();
 					assertTrue( !list.isEmpty(), "ad-hoc on did take effect" );
 
 					// many-to-many
-					list = session.createQuery( "from Human h inner join h.friends as f with f.nickName like 'bubba'" )
+					list = session.createQuery( "from Human h inner join h.friends as f with f.nickName like 'bubba'", Human.class )
 							.list();
 					assertTrue( list.isEmpty(), "ad-hoc on did not take effect" );
 
 					// http://opensource.atlassian.com/projects/hibernate/browse/HHH-1930
-					list = session.createQuery( "from Human h inner join h.nickNames as nicknames with nicknames = 'abc'" )
+					list = session.createQuery( "from Human h inner join h.nickNames as nicknames with nicknames = 'abc'", Human.class )
 							.list();
 					assertTrue( list.isEmpty(), "ad-hoc on did not take effect" );
 
@@ -114,16 +112,16 @@ public class WithClauseTest {
 	public void testWithClauseWithImplicitJoin(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
-					List list = session.createQuery( "from Human h inner join h.offspring o with o.mother.father = :cousin" )
-							.setParameter( "cousin", session.load( Human.class, Long.valueOf( "123" ) ) )
+					List list = session.createQuery( "from Human h inner join h.offspring o with o.mother.father = :cousin", Object[].class )
+							.setParameter( "cousin", session.getReference( Human.class, Long.valueOf( "123" ) ) )
 							.list();
 					assertTrue( list.isEmpty(), "ad-hoc did take effect" );
 				}
 		);
 	}
-	
+
 	@Test
-	@TestForIssue(jiraKey = "HHH-2772")
+	@JiraKey(value = "HHH-2772")
 	public void testWithJoinRHS(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -161,13 +159,13 @@ public class WithClauseTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9329")
+	@JiraKey(value = "HHH-9329")
 	public void testWithClauseAsSubquery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
 					// Since friends has a join table, we will first left join all friends and then do the WITH clause on the target entity table join
 					// Normally this produces 2 results which is wrong and can only be circumvented by converting the join table and target entity table join to a subquery
-					List list = session.createQuery( "from Human h left join h.friends as f with f.nickName like 'bubba' where h.description = 'father'" )
+					List list = session.createQuery( "from Human h left join h.friends as f with f.nickName like 'bubba' where h.description = 'father'", Object[].class )
 							.list();
 					assertEquals( 1, list.size(), "subquery rewriting of join table did not take effect" );
 				}
@@ -175,12 +173,12 @@ public class WithClauseTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11230")
+	@JiraKey(value = "HHH-11230")
 	public void testWithClauseAsSubqueryWithEqualOperator(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
 					// Like testWithClauseAsSubquery but uses equal operator since it render differently in SQL
-					List list = session.createQuery( "from Human h left join h.friends as f with f.nickName = 'bubba' where h.description = 'father'" )
+					List list = session.createQuery( "from Human h left join h.friends as f with f.nickName = 'bubba' where h.description = 'father'", Object[].class )
 							.list();
 					assertEquals( 1, list.size(), "subquery rewriting of join table did not take effect" );
 				}
@@ -188,13 +186,13 @@ public class WithClauseTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9329")
+	@JiraKey(value = "HHH-9329")
 	public void testWithClauseAsSubqueryWithKey(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
 					// Since family has a join table, we will first left join all family members and then do the WITH clause on the target entity table join
 					// Normally this produces 2 results which is wrong and can only be circumvented by converting the join table and target entity table join to a subquery
-					List list = session.createQuery( "from Human h left join h.family as f with key(f) like 'son1' where h.description = 'father'" )
+					List list = session.createQuery( "from Human h left join h.family as f with key(f) like 'son1' where h.description = 'father'", Object[].class )
 							.list();
 					assertEquals( 1, list.size(), "subquery rewriting of join table did not take effect" );
 				}
@@ -202,7 +200,7 @@ public class WithClauseTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11401")
+	@JiraKey(value = "HHH-11401")
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby does not support cast from INTEGER to VARCHAR")
 	public void testWithClauseAsSubqueryWithKeyAndOtherJoinReference(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -259,12 +257,12 @@ public class WithClauseTest {
 						father.getFriends().add( friend );
 						father.getFriends().add( friend2 );
 
-						session.save( mother );
-						session.save( father );
-						session.save( child1 );
-						session.save( child2 );
-						session.save( friend );
-						session.save( friend2 );
+						session.persist( mother );
+						session.persist( father );
+						session.persist( child1 );
+						session.persist( child2 );
+						session.persist( friend );
+						session.persist( friend2 );
 
 						father.setFamily( new HashMap() );
 						father.getFamily().put( "son1", child1 );
@@ -282,12 +280,12 @@ public class WithClauseTest {
 							father.getFamily().clear();
 							session.flush();
 						}
-						session.delete( session.createQuery( "from Human where description = 'friend2'" ).uniqueResult() );
-						session.delete( session.createQuery( "from Human where description = 'friend'" ).uniqueResult() );
-						session.delete( session.createQuery( "from Human where description = 'child1'" ).uniqueResult() );
-						session.delete( session.createQuery( "from Human where description = 'child2'" ).uniqueResult() );
-						session.delete( session.createQuery( "from Human where description = 'mother'" ).uniqueResult() );
-						session.delete( father );
+						session.remove( session.createQuery( "from Human where description = 'friend2'" ).uniqueResult() );
+						session.remove( session.createQuery( "from Human where description = 'friend'" ).uniqueResult() );
+						session.remove( session.createQuery( "from Human where description = 'child1'" ).uniqueResult() );
+						session.remove( session.createQuery( "from Human where description = 'child2'" ).uniqueResult() );
+						session.remove( session.createQuery( "from Human where description = 'mother'" ).uniqueResult() );
+						session.remove( father );
 						session.createQuery( "delete Animal" ).executeUpdate();
 						session.createQuery( "delete SimpleAssociatedEntity" ).executeUpdate();
 						session.createQuery( "delete SimpleEntityWithAssociation" ).executeUpdate();

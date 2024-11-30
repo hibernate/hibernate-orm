@@ -1,15 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.naturalid;
 
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.OracleDialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.orm.test.jpa.model.AbstractJPATest;
 
@@ -23,8 +22,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @SkipForDialect(dialectClass = OracleDialect.class, matchSubTypes = true,
 		reason = "Oracle do not support identity key generation")
-@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true,
+@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true,
 		reason = "Hana do not support identity key generation")
+@SkipForDialect(dialectClass = AltibaseDialect.class,
+		reason = "Altibase do not support identity key generation")
 public class MutableNaturalIdTest extends AbstractJPATest {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -60,13 +61,13 @@ public class MutableNaturalIdTest extends AbstractJPATest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7304")
+	@JiraKey(value = "HHH-7304")
 	public void testInLineSynchWithIdentityColumn() {
 		inTransaction(
 				session -> {
 					ClassWithIdentityColumn e = new ClassWithIdentityColumn();
 					e.setName( "Dampf" );
-					session.save( e );
+					session.persist( e );
 					e.setName( "Klein" );
 					assertNotNull( session.bySimpleNaturalId( ClassWithIdentityColumn.class ).load( "Klein" ) );
 				}

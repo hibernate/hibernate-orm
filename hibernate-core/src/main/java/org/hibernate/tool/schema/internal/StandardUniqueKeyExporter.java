@@ -1,25 +1,21 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.tool.schema.spi.Exporter;
 
 /**
- * Unique constraint Exporter.  Note that it's parameterized for Constraint, rather than UniqueKey.  This is
- * to allow Dialects to decide whether or not to create unique constraints for unique indexes.
- * 
+ * An {@link Exporter} for {@linkplain UniqueKey unique constraints}.
+ *
  * @author Brett Meyer
  */
-public class StandardUniqueKeyExporter implements Exporter<Constraint> {
+public class StandardUniqueKeyExporter implements Exporter<UniqueKey> {
 	private final Dialect dialect;
 
 	public StandardUniqueKeyExporter(Dialect dialect) {
@@ -27,26 +23,14 @@ public class StandardUniqueKeyExporter implements Exporter<Constraint> {
 	}
 
 	@Override
-	public String[] getSqlCreateStrings(Constraint constraint, Metadata metadata,
-			SqlStringGenerationContext context) {
-		return new String[] {
-				dialect.getUniqueDelegate().getAlterTableToAddUniqueKeyCommand(
-						(UniqueKey) constraint,
-						metadata,
-						context
-				)
-		};
+	public String[] getSqlCreateStrings(UniqueKey constraint, Metadata metadata, SqlStringGenerationContext context) {
+		return new String[] { dialect.getUniqueDelegate()
+				.getAlterTableToAddUniqueKeyCommand( constraint, metadata, context ) };
 	}
 
 	@Override
-	public String[] getSqlDropStrings(Constraint constraint, Metadata metadata,
-			SqlStringGenerationContext context) {
-		return new String[] {
-				dialect.getUniqueDelegate().getAlterTableToDropUniqueKeyCommand(
-						(UniqueKey) constraint,
-						metadata,
-						context
-				)
-		};
+	public String[] getSqlDropStrings(UniqueKey constraint, Metadata metadata, SqlStringGenerationContext context) {
+		return new String[] { dialect.getUniqueDelegate()
+				.getAlterTableToDropUniqueKeyCommand( constraint, metadata, context ) };
 	}
 }

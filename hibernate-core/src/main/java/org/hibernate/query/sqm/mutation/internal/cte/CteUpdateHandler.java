@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.mutation.internal.cte;
 
@@ -12,20 +10,18 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Joinable;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.results.TableGroupImpl;
+import org.hibernate.query.results.internal.TableGroupImpl;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.mutation.internal.UpdateHandler;
-import org.hibernate.query.sqm.tree.cte.SqmCteTable;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.update.SqmSetClause;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
@@ -43,7 +39,7 @@ import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
-import org.hibernate.sql.ast.tree.insert.InsertStatement;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.ExistsPredicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -62,7 +58,7 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 	private static final String INSERT_RESULT_TABLE_NAME_PREFIX = "insert_cte_";
 
 	public CteUpdateHandler(
-			SqmCteTable cteTable,
+			CteTable cteTable,
 			SqmUpdateStatement<?> sqmStatement,
 			DomainParameterXref domainParameterXref,
 			CteMutationStrategy strategy,
@@ -81,13 +77,13 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 		final SqmUpdateStatement<?> updateStatement = (SqmUpdateStatement<?>) getSqmDeleteOrUpdateStatement();
 		final EntityMappingType entityDescriptor = getEntityDescriptor();
 
-		final AbstractEntityPersister entityPersister = (AbstractEntityPersister) entityDescriptor.getEntityPersister();
+		final EntityPersister entityPersister = entityDescriptor.getEntityPersister();
 		final String rootEntityName = entityPersister.getRootEntityName();
 		final EntityPersister rootEntityDescriptor = factory.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( rootEntityName );
 
-		final String hierarchyRootTableName = ( (Joinable) rootEntityDescriptor ).getTableName();
+		final String hierarchyRootTableName = rootEntityDescriptor.getTableName();
 		final TableReference hierarchyRootTableReference = updatingTableGroup.resolveTableReference(
 				updatingTableGroup.getNavigablePath(),
 				hierarchyRootTableName
@@ -98,15 +94,10 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 		// visit the set-clause using our special converter, collecting
 		// information about the assignments
 		final SqmSetClause setClause = updateStatement.getSetClause();
-		final List<Assignment> assignments = new ArrayList<>( setClause.getAssignments().size() );
-
-		sqmConverter.visitSetClause(
-				setClause,
-				assignments::add,
-				(sqmParam, mappingType, jdbcParameters) -> {
-					parameterResolutions.put( sqmParam, jdbcParameters );
-				}
-		);
+		final List<Assignment> assignments = sqmConverter.visitSetClause( setClause );
+		for ( Map.Entry<SqmParameter<?>, List<List<JdbcParameter>>> entry : sqmConverter.getJdbcParamsBySqmParam().entrySet() ) {
+			parameterResolutions.put( entry.getKey(), entry.getValue().get( entry.getValue().size() - 1 ) );
+		}
 		sqmConverter.addVersionedAssignment( assignments::add, updateStatement );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -160,7 +151,6 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 				final TableReference updatingTableReference = updatingTableGroup.getTableReference(
 						updatingTableGroup.getNavigablePath(),
 						tableExpression,
-						true,
 						true
 				);
 				final List<Assignment> assignmentList = assignmentsByTable.get( updatingTableReference );
@@ -174,8 +164,7 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 				}
 				final CteTable dmlResultCte = new CteTable(
 						insertCteTableName,
-						idSelectCte.getCteTable().getCteColumns(),
-						factory
+						idSelectCte.getCteTable().getCteColumns()
 				);
 				final NamedTableReference dmlTableReference = resolveUnionTableReference(
 						updatingTableReference,
@@ -183,9 +172,7 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 				);
 				final NamedTableReference existsTableReference = new NamedTableReference(
 						tableExpression,
-						"dml_",
-						false,
-						factory
+						"dml_"
 				);
 				final List<ColumnReference> existsKeyColumns = new ArrayList<>( idSelectCte.getCteTable().getCteColumns().size() );
 				final String[] keyColumns = entityPersister.getKeyColumns( i );
@@ -195,8 +182,7 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 									new ColumnReference(
 											existsTableReference,
 											keyColumns[selectionIndex],
-											selectableMapping.getJdbcMapping(),
-											factory
+											selectableMapping.getJdbcMapping()
 									)
 							);
 						}
@@ -209,8 +195,6 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 				final QuerySpec existsQuerySpec = new QuerySpec( false );
 				existsQuerySpec.getSelectClause().addSqlSelection(
 						new SqlSelectionImpl(
-								-1,
-								0,
 								new QueryLiteral<>(
 										1,
 										factory.getTypeConfiguration().getBasicTypeForJavaType( Integer.class )
@@ -249,14 +233,12 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 					targetColumnReferences.addAll( assignment.getAssignable().getColumnReferences() );
 					querySpec.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl(
-									0,
-									-1,
 									assignment.getAssignedValue()
 							)
 					);
 				}
 
-				final InsertStatement dmlStatement = new InsertStatement( dmlTableReference, existsKeyColumns );
+				final InsertSelectStatement dmlStatement = new InsertSelectStatement( dmlTableReference, existsKeyColumns );
 				dmlStatement.addTargetColumnReferences( targetColumnReferences.toArray( new ColumnReference[0] ) );
 				dmlStatement.setSourceSelectStatement( querySpec );
 				statement.addCteStatement( new CteStatement( dmlResultCte, dmlStatement ) );
@@ -272,13 +254,11 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 					}
 					final CteTable dmlResultCte = new CteTable(
 							cteTableName,
-							idSelectCte.getCteTable().getCteColumns(),
-							factory
+							idSelectCte.getCteTable().getCteColumns()
 					);
 					final TableReference updatingTableReference = updatingTableGroup.getTableReference(
 							updatingTableGroup.getNavigablePath(),
 							tableExpression,
-							true,
 							true
 					);
 					final List<Assignment> assignmentList = assignmentsByTable.get( updatingTableReference );
@@ -294,8 +274,7 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 							(index, selectable) -> columnReferences.add(
 									new ColumnReference(
 											dmlTableReference,
-											selectable,
-											factory
+											selectable
 									)
 							)
 					);
@@ -337,7 +316,7 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 	protected String getCteTableName(String tableExpression) {
 		final Dialect dialect = getSessionFactory().getJdbcServices().getDialect();
 		if ( Identifier.isQuoted( tableExpression ) ) {
-			tableExpression = tableExpression.substring( 1, tableExpression.length() - 1 );
+			tableExpression = QualifiedNameParser.INSTANCE.parse( tableExpression ).getObjectName().getText();
 		}
 		return Identifier.toIdentifier( UPDATE_RESULT_TABLE_NAME_PREFIX + tableExpression ).render( dialect );
 	}

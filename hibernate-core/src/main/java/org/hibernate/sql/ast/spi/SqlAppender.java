@@ -1,20 +1,21 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.spi;
+
+import org.hibernate.internal.util.QuotingHelper;
 
 /**
  * Access to appending SQL fragments to an in-flight buffer
  *
  * @author Steve Ebersole
  */
+@FunctionalInterface
 public interface SqlAppender extends Appendable {
 	String NO_SEPARATOR = "";
-	String COMA_SEPARATOR = ",";
-	char COMA_SEPARATOR_CHAR = ',';
+	String COMMA_SEPARATOR = ",";
+	char COMMA_SEPARATOR_CHAR = ',';
 	char WHITESPACE = ' ';
 
 	char OPEN_PARENTHESIS = '(';
@@ -43,6 +44,18 @@ public interface SqlAppender extends Appendable {
 
 	default void appendSql(boolean value) {
 		appendSql( String.valueOf( value ) );
+	}
+
+	default void appendDoubleQuoteEscapedString(String value) {
+		final StringBuilder sb = new StringBuilder( value.length() + 2 );
+		QuotingHelper.appendDoubleQuoteEscapedString( sb, value );
+		appendSql( sb.toString() );
+	}
+
+	default void appendSingleQuoteEscapedString(String value) {
+		final StringBuilder sb = new StringBuilder( value.length() + 2 );
+		QuotingHelper.appendSingleQuoteEscapedString( sb, value );
+		appendSql( sb.toString() );
 	}
 
 	default Appendable append(CharSequence csq) {

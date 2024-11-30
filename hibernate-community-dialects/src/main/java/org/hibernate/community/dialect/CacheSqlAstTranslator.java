@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -13,7 +11,6 @@ import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
@@ -78,16 +75,6 @@ public class CacheSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 		if ( !queryPart.isRoot() && queryPart.getOffsetClauseExpression() != null ) {
 			throw new IllegalArgumentException( "Can't emulate offset clause in subquery" );
 		}
-	}
-
-	@Override
-	protected void renderSearchClause(CteStatement cte) {
-		// Cache does not support this, but it's just a hint anyway
-	}
-
-	@Override
-	protected void renderCycleClause(CteStatement cte) {
-		// Cache does not support this, but it can be emulated
 	}
 
 	@Override

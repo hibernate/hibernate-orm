@@ -1,14 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java.spi;
 
-import org.hibernate.cache.internal.CacheKeyValueDescriptor;
-import org.hibernate.cache.internal.DefaultCacheKeyValueDescriptor;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractClassJavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
@@ -16,8 +11,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
 /**
- * AbstractBasicTypeDescriptor adapter for cases where we do not know a proper JavaType
- * for a given Java type.
+ * {@link AbstractClassJavaType} for cases where we do not know a proper
+ * {@link org.hibernate.type.descriptor.java.JavaType} for a given Java type.
  *
  * @author Steve Ebersole
  */
@@ -33,8 +28,13 @@ public class JavaTypeBasicAdaptor<T> extends AbstractClassJavaType<T> {
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
 		throw new JdbcTypeRecommendationException(
-				"Could not determine recommended JdbcType for `" + getJavaType().getTypeName() + "`"
+				"Could not determine recommended JdbcType for '" + getTypeName() + "'"
 		);
+	}
+
+	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
 	}
 
 	@Override
@@ -45,31 +45,26 @@ public class JavaTypeBasicAdaptor<T> extends AbstractClassJavaType<T> {
 	@Override
 	public T fromString(CharSequence string) {
 		throw new UnsupportedOperationException(
-				"Conversion from String strategy not known for this Java type : " + getJavaType().getTypeName()
+				"Conversion from String strategy not known for this Java type: " + getTypeName()
 		);
 	}
 
 	@Override
 	public <X> X unwrap(T value, Class<X> type, WrapperOptions options) {
 		throw new UnsupportedOperationException(
-				"Unwrap strategy not known for this Java type : " + getJavaType().getTypeName()
+				"Unwrap strategy not known for this Java type: " + getTypeName()
 		);
 	}
 
 	@Override
 	public <X> T wrap(X value, WrapperOptions options) {
 		throw new UnsupportedOperationException(
-				"Wrap strategy not known for this Java type : " + getJavaType().getTypeName()
+				"Wrap strategy not known for this Java type: " + getTypeName()
 		);
 	}
 
 	@Override
-	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
-		return DefaultCacheKeyValueDescriptor.INSTANCE;
-	}
-
-	@Override
 	public String toString() {
-		return "JavaTypeBasicAdaptor(" + getJavaType().getTypeName() + ")";
+		return "JavaTypeBasicAdaptor(" + getTypeName() + ")";
 	}
 }

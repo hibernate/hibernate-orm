@@ -1,18 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.exec.internal;
 
 import java.sql.CallableStatement;
 import java.sql.SQLException;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.BindableType;
-import org.hibernate.metamodel.model.domain.BasicDomainType;
+import org.hibernate.query.OutputableType;
 import org.hibernate.sql.exec.spi.JdbcCallParameterExtractor;
 
 /**
@@ -24,23 +20,17 @@ public class JdbcCallParameterExtractorImpl<T> implements JdbcCallParameterExtra
 	private final String callableName;
 	private final String parameterName;
 	private final int parameterPosition;
-	private final BasicDomainType ormType;
+	private final OutputableType<T> ormType;
 
 	public JdbcCallParameterExtractorImpl(
 			String callableName,
 			String parameterName,
 			int parameterPosition,
-			BindableType ormType) {
-		if ( ! (ormType instanceof BasicDomainType ) ) {
-			throw new NotYetImplementedFor6Exception(
-					"Support for JDBC CallableStatement parameter extraction not yet supported for non-basic types"
-			);
-		}
-
+			OutputableType<T> ormType) {
 		this.callableName = callableName;
 		this.parameterName = parameterName;
 		this.parameterPosition = parameterPosition;
-		this.ormType = (BasicDomainType) ormType;
+		this.ormType = ormType;
 	}
 
 	@Override
@@ -54,25 +44,12 @@ public class JdbcCallParameterExtractorImpl<T> implements JdbcCallParameterExtra
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public T extractValue(
 			CallableStatement callableStatement,
 			boolean shouldUseJdbcNamedParameters,
 			SharedSessionContractImplementor session) {
-
-		final boolean useNamed = shouldUseJdbcNamedParameters
-				&& parameterName != null;
-
-		// todo (6.0) : we should just ask BasicValuedExpressibleType for the JdbcValueExtractor...
-
-
 		try {
-			if ( useNamed ) {
-				return (T) ormType.extract( callableStatement, parameterName, session );
-			}
-			else {
-				return (T) ormType.extract( callableStatement, parameterPosition, session );
-			}
+			return ormType.extract( callableStatement, parameterPosition, session );
 		}
 		catch (SQLException e) {
 			throw session.getJdbcServices().getSqlExceptionHelper().convert(

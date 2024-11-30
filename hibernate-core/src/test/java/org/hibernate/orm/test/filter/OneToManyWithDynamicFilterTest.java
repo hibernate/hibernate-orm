@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.filter;
 
@@ -10,6 +8,9 @@ import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -21,20 +22,21 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
+import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ParamDef;
 import org.hibernate.query.Query;
-import org.hibernate.type.NumericBooleanConverter;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -49,10 +51,10 @@ import static org.junit.Assert.assertThat;
 		}
 )
 @SessionFactory
-public class OneToManyWithDynamicFilterTest {
+public class OneToManyWithDynamicFilterTest extends AbstractStatefulStatelessFilterTest {
 
 	@BeforeEach
-	void setUp(SessionFactoryScope scope) {
+	void setUp() {
 		scope.inTransaction( session -> {
 			final ArticleTrading articleTrading = new ArticleTrading();
 			articleTrading.setClassifier( "no_classification" );
@@ -64,29 +66,30 @@ public class OneToManyWithDynamicFilterTest {
 			revision.addArticleTradings( articleTrading );
 			revision.setDeletionTimestamp( Timestamp.valueOf( "9999-12-31 00:00:00" ) );
 			revision.setDeleted( true );
-			session.save( revision );
+			session.persist( revision );
 		} );
 	}
 
 	@AfterEach
-	void tearDown(SessionFactoryScope scope) {
+	void tearDown() {
 		scope.inTransaction( session -> {
 			session.createQuery( "DELETE FROM ArticleTrading" ).executeUpdate();
 			session.createQuery( "DELETE FROM ArticleRevision" ).executeUpdate();
 		} );
 	}
 
-	@Test
-	void testForIssue(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
+	@ParameterizedTest
+	@MethodSource("transactionKind")
+	void testForIssue(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
+		inTransaction.accept(scope, session -> {
 			final org.hibernate.Filter enableFilter = session.enableFilter( "aliveOnly" );
 			enableFilter.setParameter( "aliveTimestamp", Timestamp.valueOf( "9999-12-31 00:00:00" ) );
 			enableFilter.setParameter( "deleted", true );
 			enableFilter.validate();
 
 			final Query<Long> query = session.createQuery( "select a.id from ArticleRevision as a " +
-															 "left join a.articleTradings as t " +
-															 "with ( (t.partyId = :p_0)  and  (t.classifier = :p_1) )", Long.class );
+															"left join a.articleTradings as t " +
+															"with ( (t.partyId = :p_0)  and  (t.classifier = :p_1) )", Long.class );
 			query.setParameter( "p_0", 1L );
 			query.setParameter( "p_1", "no_classification" );
 			final List<Long> list = query.getResultList();

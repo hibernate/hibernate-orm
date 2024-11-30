@@ -1,15 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy.inlinedirtychecking;
 
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -19,54 +16,47 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Query;
 import jakarta.persistence.Table;
 
+import org.hibernate.bytecode.internal.BytecodeProviderInitiator;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
-@TestForIssue(jiraKey = "HHH-14549")
-@RunWith(BytecodeEnhancerRunner.class)
+@JiraKey("HHH-14549")
+@DomainModel(
+		annotatedClasses = {
+				LoadUninitializedCollectionTest.Bank.class,
+				LoadUninitializedCollectionTest.BankAccount.class,
+				LoadUninitializedCollectionTest.BankDepartment.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @CustomEnhancementContext({ DirtyCheckEnhancementContext.class, NoDirtyCheckEnhancementContext.class })
-public class LoadUninitializedCollectionTest extends BaseEntityManagerFunctionalTestCase {
+public class LoadUninitializedCollectionTest {
 
-	boolean skipTest;
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				Bank.class,
-				BankAccount.class,
-				BankDepartment.class
-		};
-	}
-
-	@Override
-	protected void addMappings(Map settings) {
+	@BeforeAll
+	static void beforeAll() {
 		String byteCodeProvider = Environment.getProperties().getProperty( AvailableSettings.BYTECODE_PROVIDER );
-		if ( byteCodeProvider != null && !Environment.BYTECODE_PROVIDER_NAME_BYTEBUDDY.equals( byteCodeProvider ) ) {
-			// skip the test if the bytecode provider is Javassist
-			skipTest = true;
-		}
+		assumeFalse( byteCodeProvider != null && !BytecodeProviderInitiator.BYTECODE_PROVIDER_NAME_BYTEBUDDY.equals(
+				byteCodeProvider ) );
 	}
 
-
-	@Before
-	public void setUp() {
-		if ( skipTest ) {
-			return;
-		}
-		doInJPA(
-				this::entityManagerFactory, entityManager -> {
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 					Bank bank = new Bank( 1L, "International" );
 					BankAccount bankAccount = new BankAccount( 1L, bank, "1234567890" );
 					BankDepartment bankDepartmentA = new BankDepartment( 1L, "A" );
@@ -87,60 +77,52 @@ public class LoadUninitializedCollectionTest extends BaseEntityManagerFunctional
 	}
 
 	@Test
-	public void testLoadAfterNativeQueryExecution() {
-		if ( skipTest ) {
-			return;
-		}
-		doInJPA( this::entityManagerFactory, entityManager -> {
-					 BankAccount account = entityManager.find( BankAccount.class, 1L );
+	public void testLoadAfterNativeQueryExecution(SessionFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+					BankAccount account = entityManager.find( BankAccount.class, 1L );
 
-					 Query nativeQuery = entityManager.createNativeQuery( "SELECT ID FROM BANK" );
-					 nativeQuery.getResultList();
+					Query nativeQuery = entityManager.createNativeQuery( "SELECT ID FROM BANK" );
+					nativeQuery.getResultList();
 
-					 Bank bank = account.getBank();
-					 List<BankDepartment> deps = bank.getDepartments();
+					Bank bank = account.getBank();
+					List<BankDepartment> deps = bank.getDepartments();
 
-					 assertEquals( deps.size(), 3 );
-				 }
+					assertEquals( deps.size(), 3 );
+				}
 		);
 	}
 
 	@Test
-	public void testLoadAfterFlush() {
-		if ( skipTest ) {
-			return;
-		}
-		doInJPA( this::entityManagerFactory, entityManager -> {
-					 BankAccount account = entityManager.find( BankAccount.class, 1L );
+	public void testLoadAfterFlush(SessionFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+					BankAccount account = entityManager.find( BankAccount.class, 1L );
 
-					 entityManager.flush();
+					entityManager.flush();
 
-					 Bank bank = account.getBank();
-					 List<BankDepartment> deps = bank.getDepartments();
+					Bank bank = account.getBank();
+					List<BankDepartment> deps = bank.getDepartments();
 
-					 assertEquals( deps.size(), 3 );
-				 }
+					assertEquals( deps.size(), 3 );
+				}
 		);
 	}
 
-	@After
-	public void tearDown() {
-		if ( skipTest ) {
-			return;
-		}
-		doInJPA( this::entityManagerFactory, entityManager -> {
-					 Bank bank = entityManager.find( Bank.class, 1L );
-					 bank.getDepartments().forEach(
-							 department -> entityManager.remove( department )
-					 );
-					 List<BankAccount> accounts = entityManager.createQuery( "from BankAccount" ).getResultList();
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+					Bank bank = entityManager.find( Bank.class, 1L );
+					bank.getDepartments().forEach(
+							department -> entityManager.remove( department )
+					);
+					bank.getDepartments().clear();
+					List<BankAccount> accounts = entityManager.createQuery( "from BankAccount" ).getResultList();
 
-					 accounts.forEach(
-							 account -> entityManager.remove( account )
-					 );
+					accounts.forEach(
+							account -> entityManager.remove( account )
+					);
 
-					 entityManager.remove( bank );
-				 }
+					entityManager.remove( bank );
+				}
 		);
 	}
 

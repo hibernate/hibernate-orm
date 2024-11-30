@@ -1,23 +1,22 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.NaturalIdResolutions;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.ResolveNaturalIdEvent;
 import org.hibernate.event.spi.ResolveNaturalIdEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.pretty.MessageHelper;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
  * Defines the default load event listeners used by hibernate for loading entities
@@ -26,9 +25,7 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
  * @author Eric Dalquist
  * @author Steve Ebersole
  */
-public class DefaultResolveNaturalIdEventListener
-		extends AbstractLockUpgradeEventListener
-		implements ResolveNaturalIdEventListener {
+public class DefaultResolveNaturalIdEventListener implements ResolveNaturalIdEventListener {
 
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultResolveNaturalIdEventListener.class );
 
@@ -53,17 +50,17 @@ public class DefaultResolveNaturalIdEventListener
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev(
 					"Attempting to resolve: {0}#{1}",
-					MessageHelper.infoString( persister ),
+					infoString( persister ),
 					event.getNaturalIdValues()
 			);
 		}
 
-		Object entityId = resolveFromCache( event );
+		final Object entityId = resolveFromCache( event );
 		if ( entityId != null ) {
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(
 						"Resolved object in cache: {0}#{1}",
-						MessageHelper.infoString( persister ),
+						infoString( persister ),
 						event.getNaturalIdValues()
 				);
 			}
@@ -73,7 +70,7 @@ public class DefaultResolveNaturalIdEventListener
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev(
 					"Object not resolved in any cache: {0}#{1}",
-					MessageHelper.infoString( persister ),
+					infoString( persister ),
 					event.getNaturalIdValues()
 			);
 		}
@@ -88,9 +85,8 @@ public class DefaultResolveNaturalIdEventListener
 	 *
 	 * @return The entity from the cache, or null.
 	 */
-	protected Object resolveFromCache(final ResolveNaturalIdEvent event) {
-		return event.getSession().getPersistenceContextInternal()
-				.getNaturalIdResolutions()
+	protected Object resolveFromCache(ResolveNaturalIdEvent event) {
+		return getNaturalIdResolutions( event)
 				.findCachedIdByNaturalId( event.getOrderedNaturalIdValues(), event.getEntityPersister() );
 	}
 
@@ -102,16 +98,14 @@ public class DefaultResolveNaturalIdEventListener
 	 *
 	 * @return The object loaded from the datasource, or null if not found.
 	 */
-	protected Object loadFromDatasource(final ResolveNaturalIdEvent event) {
+	protected Object loadFromDatasource(ResolveNaturalIdEvent event) {
 		final EventSource session = event.getSession();
-		final StatisticsImplementor statistics = session.getFactory().getStatistics();
+		final EntityPersister entityPersister = event.getEntityPersister();
+		final StatisticsImplementor statistics = event.getFactory().getStatistics();
 		final boolean statisticsEnabled = statistics.isStatisticsEnabled();
-		long startTime = 0;
-		if ( statisticsEnabled ) {
-			startTime = System.nanoTime();
-		}
+		final long startTime = statisticsEnabled ? System.nanoTime() : 0;
 
-		final Object pk = event.getEntityPersister().loadEntityIdByNaturalId(
+		final Object pk = entityPersister.loadEntityIdByNaturalId(
 				event.getOrderedNaturalIdValues(),
 				event.getLockOptions(),
 				session
@@ -120,15 +114,18 @@ public class DefaultResolveNaturalIdEventListener
 		if ( statisticsEnabled ) {
 			final long endTime = System.nanoTime();
 			final long milliseconds = MILLISECONDS.convert( endTime - startTime, NANOSECONDS );
-			statistics.naturalIdQueryExecuted( event.getEntityPersister().getRootEntityName(), milliseconds );
+			statistics.naturalIdQueryExecuted( entityPersister.getRootEntityName(), milliseconds );
 		}
 
 		//PK can be null if the entity doesn't exist
 		if ( pk != null ) {
-			session.getPersistenceContextInternal()
-					.getNaturalIdResolutions()
-					.cacheResolutionFromLoad( pk, event.getOrderedNaturalIdValues(), event.getEntityPersister() );
+			getNaturalIdResolutions( event )
+					.cacheResolutionFromLoad( pk, event.getOrderedNaturalIdValues(), entityPersister );
 		}
 		return pk;
+	}
+
+	private static NaturalIdResolutions getNaturalIdResolutions(ResolveNaturalIdEvent event) {
+		return event.getSession().getPersistenceContextInternal().getNaturalIdResolutions();
 	}
 }

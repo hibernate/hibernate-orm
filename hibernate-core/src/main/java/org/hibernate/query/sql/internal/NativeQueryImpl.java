@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sql.internal;
 
@@ -10,8 +8,8 @@ import java.io.Serializable;
 import java.time.Instant;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -20,16 +18,25 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.jpa.spi.NativeQueryConstructorTransformer;
+import org.hibernate.jpa.spi.NativeQueryListTransformer;
+import org.hibernate.jpa.spi.NativeQueryMapTransformer;
+import org.hibernate.metamodel.mapping.EntityAssociationMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
+import org.hibernate.query.QueryFlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.MappingException;
-import org.hibernate.QueryException;
 import org.hibernate.ScrollMode;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.query.spi.NativeQueryInterpreter;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -38,37 +45,43 @@ import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.AbstractSharedSessionContract;
 import org.hibernate.internal.util.MathHelper;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.spi.NativeQueryTupleTransformer;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.BindableType;
+import org.hibernate.query.KeyedPage;
+import org.hibernate.query.KeyedResultList;
 import org.hibernate.query.NativeQuery;
+import org.hibernate.query.Order;
 import org.hibernate.query.ParameterMetadata;
+import org.hibernate.query.PathException;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
+import org.hibernate.query.internal.DelegatingDomainQueryExecutionContext;
 import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.query.internal.QueryOptionsImpl;
-import org.hibernate.query.internal.QueryParameterBindingsImpl;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
+import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
-import org.hibernate.query.results.Builders;
+import org.hibernate.query.results.internal.Builders;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultSetMapping;
-import org.hibernate.query.results.ResultSetMappingImpl;
-import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
-import org.hibernate.query.results.dynamic.DynamicResultBuilderEntityStandard;
-import org.hibernate.query.results.dynamic.DynamicResultBuilderInstantiation;
+import org.hibernate.query.results.internal.ResultSetMappingImpl;
+import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.query.results.internal.dynamic.DynamicResultBuilderBasicStandard;
+import org.hibernate.query.results.internal.dynamic.DynamicResultBuilderEntityCalculated;
+import org.hibernate.query.results.internal.dynamic.DynamicResultBuilderEntityStandard;
+import org.hibernate.query.results.internal.dynamic.DynamicResultBuilderInstantiation;
+import org.hibernate.query.results.internal.implicit.ImplicitModelPartResultBuilderEntity;
+import org.hibernate.query.results.internal.implicit.ImplicitResultClassBuilder;
 import org.hibernate.query.spi.AbstractQuery;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryInterpretationCache;
+import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
@@ -84,12 +97,15 @@ import org.hibernate.query.sql.spi.ParameterOccurrence;
 import org.hibernate.query.sql.spi.SelectInterpretationsKey;
 import org.hibernate.sql.exec.internal.CallbackImpl;
 import org.hibernate.sql.exec.spi.Callback;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
+import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.spi.SingleResultConsumer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeReference;
 
 import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.FlushModeType;
@@ -98,9 +114,24 @@ import jakarta.persistence.Parameter;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Tuple;
+import jakarta.persistence.TypedQuery;
 import jakarta.persistence.metamodel.SingularAttribute;
+import org.hibernate.type.BasicTypeRegistry;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
+import org.hibernate.type.spi.TypeConfiguration;
 
+import static java.lang.Character.isWhitespace;
+import static java.util.Collections.addAll;
+import static org.hibernate.internal.util.ReflectHelper.isClass;
+import static org.hibernate.internal.util.StringHelper.unqualify;
+import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
+import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
+import static org.hibernate.internal.util.collections.CollectionHelper.makeCopy;
 import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_LOCK_MODE;
+import static org.hibernate.query.results.internal.Builders.resultClassBuilder;
+import static org.hibernate.query.results.ResultSetMapping.resolveResultSetMapping;
+import static org.hibernate.query.sqm.internal.SqmUtil.isResultTypeAlwaysAllowed;
 
 /**
  * @author Steve Ebersole
@@ -109,13 +140,15 @@ public class NativeQueryImpl<R>
 		extends AbstractQuery<R>
 		implements NativeQueryImplementor<R>, DomainQueryExecutionContext, ResultSetMappingResolutionContext {
 	private final String sqlString;
-
+	private final String originalSqlString;
 	private final ParameterMetadataImplementor parameterMetadata;
 	private final List<ParameterOccurrence> parameterOccurrences;
 	private final QueryParameterBindings parameterBindings;
 
-	private final ResultSetMappingImpl resultSetMapping;
+	private final Class<R> resultType;
+	private final ResultSetMapping resultSetMapping;
 	private final boolean resultMappingSuppliedToCtor;
+	private final HashMap<String, EntityMappingType> entityMappingTypeByTableAlias = new HashMap<>();
 
 	private final QueryOptionsImpl queryOptions = new QueryOptionsImpl();
 
@@ -127,189 +160,167 @@ public class NativeQueryImpl<R>
 	 * Constructs a NativeQueryImpl given a sql query defined in the mappings.
 	 */
 	public NativeQueryImpl(
-			NamedNativeQueryMemento memento,
+			NamedNativeQueryMemento<?> memento,
 			SharedSessionContractImplementor session) {
 		this(
 				memento,
-				() -> {
-					if ( memento.getResultMappingName() != null ) {
-						return new ResultSetMappingImpl( memento.getResultMappingName() );
-					}
-					else if ( memento.getResultMappingClass() != null ) {
-						return new ResultSetMappingImpl( memento.getResultMappingClass().getName() );
-					}
-
-					return new ResultSetMappingImpl( memento.getSqlString() );
-				},
+				() -> buildResultSetMapping( getResultSetMappingName( memento ), false, session ),
 				(resultSetMapping, querySpaceConsumer, context ) -> {
 					if ( memento.getResultMappingName() != null ) {
-						final NamedResultSetMappingMemento resultSetMappingMemento = session.getFactory()
-								.getQueryEngine()
-								.getNamedObjectRepository()
-								.getResultSetMappingMemento( memento.getResultMappingName() );
+						final NamedResultSetMappingMemento resultSetMappingMemento =
+								getNamedObjectRepository( session )
+										.getResultSetMappingMemento( memento.getResultMappingName() );
 						if ( resultSetMappingMemento != null ) {
 							resultSetMappingMemento.resolve( resultSetMapping, querySpaceConsumer, context );
 							return true;
 						}
 					}
 
-					if ( memento.getResultMappingClass() != null ) {
-						resultSetMapping.addResultBuilder(
-								Builders.implicitEntityResultBuilder(
-										memento.getResultMappingClass(),
-										context
-								)
-						);
+					if ( memento.getResultType() != null ) {
+						resultSetMapping.addResultBuilder( resultClassBuilder( memento.getResultType(), context ) );
 						return true;
 					}
-
-					return false;
+					else {
+						return false;
+					}
 				},
+				null,
 				session
 		);
 	}
 
-	@FunctionalInterface
-	private interface ResultSetMappingHandler {
-		boolean resolveResultSetMapping(
-				ResultSetMappingImpl resultSetMapping,
-				Consumer<String> querySpaceConsumer,
-				ResultSetMappingResolutionContext context);
+	private static NamedObjectRepository getNamedObjectRepository(SharedSessionContractImplementor session) {
+		return session.getFactory().getQueryEngine().getNamedObjectRepository();
 	}
 
-	public NativeQueryImpl(
-			NamedNativeQueryMemento memento,
-			Supplier<ResultSetMappingImpl> resultSetMappingCreator,
-			ResultSetMappingHandler resultSetMappingHandler,
-			SharedSessionContractImplementor session) {
-		super( session );
-
-		final String mementoSqlString = memento.getSqlString();
-		final ParameterInterpretation parameterInterpretation = resolveParameterInterpretation( mementoSqlString, session );
-
-		this.sqlString = parameterInterpretation.getAdjustedSqlString();
-		this.parameterMetadata = parameterInterpretation.toParameterMetadata( session );
-		this.parameterOccurrences = parameterInterpretation.getOrderedParameterOccurrences();
-		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
-		this.querySpaces = new HashSet<>();
-
-		this.resultSetMapping = resultSetMappingCreator.get();
-
-		//noinspection UnnecessaryLocalVariable
-		final boolean appliedAnyResults = resultSetMappingHandler.resolveResultSetMapping(
-				resultSetMapping,
-				querySpaces::add,
-				this
-		);
-
-		this.resultMappingSuppliedToCtor = appliedAnyResults;
-
-		applyOptions( memento );
+	private static String getResultSetMappingName(NamedNativeQueryMemento<?> memento) {
+		if ( memento.getResultMappingName() != null ) {
+			return memento.getResultMappingName();
+		}
+		else if ( memento.getResultType() != null ) {
+			return memento.getResultType().getName();
+		}
+		else {
+			return memento.getSqlString();
+		}
 	}
 
 	/**
 	 * Constructs a NativeQueryImpl given a sql query defined in the mappings.
 	 */
 	public NativeQueryImpl(
-			NamedNativeQueryMemento memento,
+			NamedNativeQueryMemento<?> memento,
 			Class<R> resultJavaType,
 			SharedSessionContractImplementor session) {
 		this(
 				memento,
 				() -> {
 					final String mappingIdentifier = resultJavaType != null ? resultJavaType.getName() : null;
-					return new ResultSetMappingImpl( mappingIdentifier );
+					return buildResultSetMapping( mappingIdentifier, false, session );
 				},
 				(resultSetMapping, querySpaceConsumer, context) -> {
 					if ( memento.getResultMappingName() != null ) {
-						final NamedResultSetMappingMemento resultSetMappingMemento = session.getFactory()
-								.getQueryEngine()
-								.getNamedObjectRepository()
-								.getResultSetMappingMemento( memento.getResultMappingName() );
+						final NamedResultSetMappingMemento resultSetMappingMemento =
+								getNamedObjectRepository( session )
+										.getResultSetMappingMemento( memento.getResultMappingName() );
 						if ( resultSetMappingMemento != null ) {
 							resultSetMappingMemento.resolve( resultSetMapping, querySpaceConsumer, context );
 							return true;
 						}
 					}
 
-					if ( memento.getResultMappingClass() != null ) {
-						resultSetMapping.addResultBuilder(
-								Builders.implicitEntityResultBuilder(
-										memento.getResultMappingClass(),
-										context
-								)
-						);
+					if ( memento.getResultType() != null ) {
+						resultSetMapping.addResultBuilder( resultClassBuilder( memento.getResultType(), context ) );
 						return true;
 					}
-//					if ( resultJavaType != null && resultJavaType != Tuple.class ) {
-						// todo (6.0): in 5.x we didn't add implicit result builders and by doing so,
-						//  the result type check at the end of the constructor will fail like in 5.x
-//						final JpaMetamodel jpaMetamodel = context.getSessionFactory().getJpaMetamodel();
-//						if ( jpaMetamodel.findEntityType( resultJavaType ) != null ) {
-//							resultSetMapping.addResultBuilder(
-//									Builders.implicitEntityResultBuilder( resultJavaType, context )
-//							);
-//						}
-//						else {
-//							resultSetMapping.addResultBuilder(
-//									Builders.scalar(
-//											1,
-//											context.getSessionFactory()
-//													.getTypeConfiguration()
-//													.getBasicTypeForJavaType( resultJavaType )
-//									)
-//							);
-//						}
-//
-//						return true;
-//					}
-
-					return false;
+					else {
+						return false;
+					}
 				},
+				resultJavaType,
 				session
 		);
-
-		if ( resultJavaType == Tuple.class ) {
-			setTupleTransformer( new NativeQueryTupleTransformer() );
-		}
-		else if ( resultJavaType != null && resultJavaType != Object[].class ) {
-			switch ( resultSetMapping.getNumberOfResultBuilders() ) {
-				case 0:
-					throw new IllegalArgumentException( "Named query exists but its result type is not compatible" );
-				case 1:
-					final Class<?> actualResultJavaType = resultSetMapping.getResultBuilders().get( 0 ).getJavaType();
-					if ( actualResultJavaType != null && !resultJavaType.isAssignableFrom( actualResultJavaType ) ) {
-						throw buildIncompatibleException( resultJavaType, actualResultJavaType );
-					}
-					break;
-				default:
-					throw new IllegalArgumentException( "Cannot create TypedQuery for query with more than one return" );
-			}
-		}
 	}
 
 	/**
 	 * Constructs a NativeQueryImpl given a sql query defined in the mappings.
 	 */
 	public NativeQueryImpl(
-			NamedNativeQueryMemento memento,
+			NamedNativeQueryMemento<?> memento,
 			String resultSetMappingName,
 			SharedSessionContractImplementor session) {
 		this(
 				memento,
-				() -> new ResultSetMappingImpl( resultSetMappingName ),
+				() -> buildResultSetMapping( resultSetMappingName, false, session ),
 				(resultSetMapping, querySpaceConsumer, context) -> {
-					final NamedResultSetMappingMemento mappingMemento = session.getFactory()
-							.getQueryEngine()
-							.getNamedObjectRepository()
-							.getResultSetMappingMemento( resultSetMappingName );
+					final NamedResultSetMappingMemento mappingMemento =
+							getNamedObjectRepository( session )
+									.getResultSetMappingMemento( resultSetMappingName );
 					assert mappingMemento != null;
 					mappingMemento.resolve( resultSetMapping, querySpaceConsumer, context );
 					return true;
 				},
+				null,
 				session
 		);
 
+	}
+
+	public NativeQueryImpl(
+			NamedNativeQueryMemento<?> memento,
+			Supplier<ResultSetMapping> resultSetMappingCreator,
+			ResultSetMappingHandler resultSetMappingHandler,
+			SharedSessionContractImplementor session) {
+		this( memento, resultSetMappingCreator, resultSetMappingHandler, null, session );
+	}
+
+	public NativeQueryImpl(
+			NamedNativeQueryMemento<?> memento,
+			Supplier<ResultSetMapping> resultSetMappingCreator,
+			ResultSetMappingHandler resultSetMappingHandler,
+			@Nullable Class<R> resultType,
+			SharedSessionContractImplementor session) {
+		super( session );
+
+		this.originalSqlString = memento.getOriginalSqlString();
+
+		final ParameterInterpretation parameterInterpretation =
+				resolveParameterInterpretation( originalSqlString, session );
+
+		this.sqlString = parameterInterpretation.getAdjustedSqlString();
+		this.parameterMetadata = parameterInterpretation.toParameterMetadata( session );
+		this.parameterOccurrences = parameterInterpretation.getOrderedParameterOccurrences();
+		this.parameterBindings = parameterMetadata.createBindings( session.getFactory() );
+		this.resultType = resultType;
+		this.querySpaces = new HashSet<>();
+
+		this.resultSetMapping = resultSetMappingCreator.get();
+
+		this.resultMappingSuppliedToCtor =
+				resultSetMappingHandler.resolveResultSetMapping( resultSetMapping, querySpaces::add, this );
+
+		if ( resultType != null ) {
+			if ( !isResultTypeAlwaysAllowed( resultType ) ) {
+				switch ( resultSetMapping.getNumberOfResultBuilders() ) {
+					case 0:
+						throw new IllegalArgumentException( "Named query exists, but did not specify a resultClass" );
+					case 1:
+						final Class<?> actualResultJavaType = resultSetMapping.getResultBuilders().get( 0 )
+								.getJavaType();
+						if ( actualResultJavaType != null && !resultType.isAssignableFrom( actualResultJavaType ) ) {
+							throw buildIncompatibleException( resultType, actualResultJavaType );
+						}
+						break;
+					default:
+						throw new IllegalArgumentException(
+								"Cannot create TypedQuery for query with more than one return" );
+				}
+			}
+			else {
+				setTupleTransformerForResultType( resultType );
+			}
+		}
+		applyOptions( memento );
 	}
 
 	public NativeQueryImpl(
@@ -318,46 +329,112 @@ public class NativeQueryImpl<R>
 			AbstractSharedSessionContract session) {
 		super( session );
 
+		this.originalSqlString = sqlString;
 		final ParameterInterpretation parameterInterpretation = resolveParameterInterpretation( sqlString, session );
-
 		this.sqlString = parameterInterpretation.getAdjustedSqlString();
 		this.parameterMetadata = parameterInterpretation.toParameterMetadata( session );
 		this.parameterOccurrences = parameterInterpretation.getOrderedParameterOccurrences();
-		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
+		this.parameterBindings = parameterMetadata.createBindings( session.getFactory() );
+		this.resultType = null;
 		this.querySpaces = new HashSet<>();
 
-		this.resultSetMapping = new ResultSetMappingImpl( resultSetMappingMemento.getName() );
-		resultSetMappingMemento.resolve(
-				resultSetMapping,
-				this::addSynchronizedQuerySpace,
-				this
-		);
+		this.resultSetMapping = buildResultSetMapping( resultSetMappingMemento.getName(), false, session );
+		resultSetMappingMemento.resolve( resultSetMapping, this::addSynchronizedQuerySpace, this );
 
 		this.resultMappingSuppliedToCtor = true;
 	}
 
-	private ParameterInterpretation resolveParameterInterpretation(
-			String sqlString,
-			SharedSessionContractImplementor session) {
-		final SessionFactoryImplementor sessionFactory = session.getFactory();
-		final QueryEngine queryEngine = sessionFactory.getQueryEngine();
-		final QueryInterpretationCache interpretationCache = queryEngine.getInterpretationCache();
-
-		return interpretationCache.resolveNativeQueryParameters(
-					sqlString,
-					s -> {
-						final ParameterRecognizerImpl parameterRecognizer = new ParameterRecognizerImpl();
-
-						session.getFactory().getServiceRegistry()
-								.getService( NativeQueryInterpreter.class )
-								.recognizeParameters( sqlString, parameterRecognizer );
-
-						return new ParameterInterpretationImpl( parameterRecognizer );
-					}
-			);
+	public NativeQueryImpl(String sqlString, SharedSessionContractImplementor session) {
+		this( sqlString, null, session );
 	}
 
-	protected void applyOptions(NamedNativeQueryMemento memento) {
+	public NativeQueryImpl(String sqlString, @Nullable Class<R> resultType, SharedSessionContractImplementor session) {
+		super( session );
+
+		this.querySpaces = new HashSet<>();
+
+		this.originalSqlString = sqlString;
+		final ParameterInterpretation parameterInterpretation = resolveParameterInterpretation( sqlString, session );
+		this.sqlString = parameterInterpretation.getAdjustedSqlString();
+		this.parameterMetadata = parameterInterpretation.toParameterMetadata( session );
+		this.parameterOccurrences = parameterInterpretation.getOrderedParameterOccurrences();
+		this.parameterBindings = parameterMetadata.createBindings( session.getFactory() );
+		this.resultType = resultType;
+		if ( resultType != null ) {
+			setTupleTransformerForResultType( resultType );
+		}
+
+		this.resultSetMapping = resolveResultSetMapping( sqlString, true, session.getFactory() );
+		this.resultMappingSuppliedToCtor = false;
+	}
+
+	protected <T> void setTupleTransformerForResultType(Class<T> resultClass) {
+		final TupleTransformer<?> tupleTransformer = determineTupleTransformerForResultType( resultClass );
+		if ( tupleTransformer != null ) {
+			setTupleTransformer( tupleTransformer );
+		}
+	}
+
+	protected @Nullable TupleTransformer<?> determineTupleTransformerForResultType(Class<?> resultClass) {
+		if ( Tuple.class.equals( resultClass ) ) {
+			return NativeQueryTupleTransformer.INSTANCE;
+		}
+		else if ( Map.class.equals( resultClass ) ) {
+			return NativeQueryMapTransformer.INSTANCE;
+		}
+		else if ( List.class.equals( resultClass ) ) {
+			return NativeQueryListTransformer.INSTANCE;
+		}
+		else if ( resultClass != Object.class && resultClass != Object[].class ) {
+			if ( isClass( resultClass ) && !hasJavaTypeDescriptor( resultClass ) ) {
+				// not a basic type
+				return new NativeQueryConstructorTransformer<>( resultClass );
+			}
+		}
+		return null;
+	}
+
+	private <T> boolean hasJavaTypeDescriptor(Class<T> resultClass) {
+		final JavaType<Object> descriptor = getTypeConfiguration().getJavaTypeRegistry().findDescriptor( resultClass );
+		return descriptor != null && descriptor.getClass() != UnknownBasicJavaType.class;
+	}
+
+	@FunctionalInterface
+	private interface ResultSetMappingHandler {
+		boolean resolveResultSetMapping(
+				ResultSetMapping resultSetMapping,
+				Consumer<String> querySpaceConsumer,
+				ResultSetMappingResolutionContext context);
+	}
+
+	private static ResultSetMapping buildResultSetMapping(
+			String registeredName,
+			boolean isDynamic,
+			SharedSessionContractImplementor session) {
+		return resolveResultSetMapping( registeredName, isDynamic, session.getFactory() );
+	}
+
+	public List<ParameterOccurrence> getParameterOccurrences() {
+		return parameterOccurrences;
+	}
+
+	private ParameterInterpretation resolveParameterInterpretation(
+			String sqlString, SharedSessionContractImplementor session) {
+		return session.getFactory().getQueryEngine().getInterpretationCache()
+				.resolveNativeQueryParameters( sqlString,
+						s -> parameterInterpretation( sqlString, session ) );
+	}
+
+	private static ParameterInterpretationImpl parameterInterpretation(
+			String sqlString, SharedSessionContractImplementor session) {
+		final ParameterRecognizerImpl parameterRecognizer = new ParameterRecognizerImpl();
+		session.getFactory().getServiceRegistry()
+				.requireService( NativeQueryInterpreter.class )
+				.recognizeParameters( sqlString, parameterRecognizer );
+		return new ParameterInterpretationImpl( parameterRecognizer );
+	}
+
+	protected void applyOptions(NamedNativeQueryMemento<?> memento) {
 		super.applyOptions( memento );
 
 		if ( memento.getMaxResults() != null ) {
@@ -367,28 +444,12 @@ public class NativeQueryImpl<R>
 			setFirstResult( memento.getFirstResult() );
 		}
 
-		final Set<String> copy = CollectionHelper.makeCopy( memento.getQuerySpaces() );
+		final Set<String> copy = makeCopy( memento.getQuerySpaces() );
 		if ( copy != null ) {
 			this.querySpaces = copy;
 		}
 
 		// todo (6.0) : query returns
-	}
-
-	public NativeQueryImpl(String sqlString, SharedSessionContractImplementor session) {
-		super( session );
-
-		this.querySpaces = new HashSet<>();
-
-		final ParameterInterpretation parameterInterpretation = resolveParameterInterpretation( sqlString, session );
-
-		this.sqlString = parameterInterpretation.getAdjustedSqlString();
-		this.parameterMetadata = parameterInterpretation.toParameterMetadata( session );
-		this.parameterOccurrences = parameterInterpretation.getOrderedParameterOccurrences();
-		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
-
-		this.resultSetMapping = new ResultSetMappingImpl( sqlString, true );
-		this.resultMappingSuppliedToCtor = false;
 	}
 
 	private IllegalArgumentException buildIncompatibleException(Class<?> resultClass, Class<?> actualResultClass) {
@@ -434,8 +495,9 @@ public class NativeQueryImpl<R>
 		return callback;
 	}
 
-	public SessionFactoryImplementor getSessionFactory() {
-		return getSession().getFactory();
+	@Override
+	public boolean hasCallbackActions() {
+		return callback != null && callback.hasAfterLoadActions();
 	}
 
 	@Override
@@ -449,29 +511,50 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public NamedNativeQueryMemento toMemento(String name) {
-		return new NamedNativeQueryMementoImpl(
+	public Class<R> getResultType() {
+		return resultType;
+	}
+
+	@Override
+	public NamedNativeQueryMemento<?> toMemento(String name) {
+		return new NamedNativeQueryMementoImpl<>(
 				name,
+				resultType != null ? resultType : extractResultClass( resultSetMapping ),
 				sqlString,
+				originalSqlString,
 				resultSetMapping.getMappingIdentifier(),
-				null,
 				querySpaces,
 				isCacheable(),
 				getCacheRegion(),
 				getCacheMode(),
-				getHibernateFlushMode(),
+				getQueryOptions().getFlushMode(),
 				isReadOnly(),
 				getTimeout(),
 				getFetchSize(),
 				getComment(),
-				getFirstResult(),
-				getMaxResults(),
+				getQueryOptions().getLimit().getFirstRow(),
+				getQueryOptions().getLimit().getMaxRows(),
 				getHints()
 		);
 	}
 
+	private Class<R> extractResultClass(ResultSetMapping resultSetMapping) {
+		final List<ResultBuilder> resultBuilders = resultSetMapping.getResultBuilders();
+		if ( resultBuilders.size() == 1 ) {
+			final ResultBuilder resultBuilder = resultBuilders.get( 0 );
+			if ( resultBuilder instanceof ImplicitResultClassBuilder
+					|| resultBuilder instanceof ImplicitModelPartResultBuilderEntity
+					|| resultBuilder instanceof DynamicResultBuilderEntityCalculated ) {
+				return (Class<R>) resultBuilder.getJavaType();
+			}
+		}
+		return null;
+	}
+
 	@Override
 	public LockModeType getLockMode() {
+		// the JPA spec requires IllegalStateException here, even
+		// though it's logically an UnsupportedOperationException
 		throw new IllegalStateException( "Illegal attempt to get lock mode on a native-query" );
 	}
 
@@ -482,14 +565,22 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setLockMode(String alias, LockMode lockMode) {
-		super.setLockMode( alias, lockMode );
+	public NativeQueryImplementor<R> setHibernateLockMode(LockMode lockMode) {
+		super.setHibernateLockMode( lockMode );
 		return this;
 	}
 
 	@Override
+	public NativeQueryImplementor<R> setLockMode(String alias, LockMode lockMode) {
+		// throw IllegalStateException here for consistency with JPA
+		throw new IllegalStateException( "Illegal attempt to set lock mode for a native query" );
+	}
+
+	@Override
 	public NativeQueryImplementor<R> setLockMode(LockModeType lockModeType) {
-		throw new IllegalStateException( "Illegal attempt to set lock mode on a native-query" );
+		// the JPA spec requires IllegalStateException here, even
+		// though it's logically an UnsupportedOperationException
+		throw new IllegalStateException( "Illegal attempt to set lock mode for a native query" );
 	}
 
 	@Override
@@ -526,16 +617,14 @@ public class NativeQueryImpl<R>
 	public Boolean isSelectQuery() {
 		if ( resultMappingSuppliedToCtor
 				|| resultSetMapping.getNumberOfResultBuilders() > 0
-				|| isReadOnly() ) {
+				|| isReadOnly()
+				// as a last resort, see if the SQL starts with "select"
+				|| startsWithSelect() ) {
 			return true;
 		}
-
-		if ( startsWithSelect() ) {
-			// as a last resort, see if the SQL starts with "select"
-			return true;
+		else {
+			return null;
 		}
-
-		return null;
 	}
 
 	private boolean startsWithSelect() {
@@ -574,21 +663,16 @@ public class NativeQueryImpl<R>
 
 	private boolean shouldFlush() {
 		if ( getSession().isTransactionInProgress() ) {
-			FlushMode effectiveFlushMode = getHibernateFlushMode();
-			if ( effectiveFlushMode == null ) {
-				effectiveFlushMode = getSession().getHibernateFlushMode();
-			}
-
-			if ( effectiveFlushMode == FlushMode.ALWAYS ) {
-				return true;
-			}
-
-			if ( effectiveFlushMode == FlushMode.AUTO ) {
-				return getSession().getFactory().getSessionFactoryOptions().isJpaBootstrap();
-			}
+			final FlushMode flushMode = getQueryOptions().getFlushMode();
+			return switch ( flushMode == null ? getSession().getHibernateFlushMode() : flushMode ) {
+				case AUTO -> getSession().getFactory().getSessionFactoryOptions().isJpaBootstrap();
+				case ALWAYS -> true;
+				default -> false;
+			};
 		}
-
-		return false;
+		else {
+			return false;
+		}
 	}
 
 	@Override
@@ -596,22 +680,49 @@ public class NativeQueryImpl<R>
 		return resolveSelectQueryPlan().performList( this );
 	}
 
-	private SelectQueryPlan<R> resolveSelectQueryPlan() {
-		final QueryInterpretationCache.Key cacheKey = generateSelectInterpretationsKey( resultSetMapping );
-		if ( cacheKey != null ) {
-			return getSession().getFactory().getQueryEngine().getInterpretationCache().resolveSelectQueryPlan(
-					cacheKey,
-					() -> createQueryPlan( resultSetMapping )
-			);
+	@Override
+	public long getResultCount() {
+		final DelegatingDomainQueryExecutionContext context = new DelegatingDomainQueryExecutionContext(this) {
+			@Override
+			public QueryOptions getQueryOptions() {
+				return QueryOptions.NONE;
+			}
+		};
+		return createCountQueryPlan().executeQuery( context, SingleResultConsumer.instance() );
+	}
+
+	@Override
+	public KeyedResultList<R> getKeyedResultList(KeyedPage<R> page) {
+		throw new UnsupportedOperationException("native queries do not support key-based pagination");
+	}
+
+	protected SelectQueryPlan<R> resolveSelectQueryPlan() {
+		final ResultSetMapping mapping;
+		if ( resultType != null && resultSetMapping.isDynamic() && resultSetMapping.getNumberOfResultBuilders() == 0 ) {
+			mapping = ResultSetMapping.resolveResultSetMapping( originalSqlString, true, getSessionFactory() );
+
+			if ( getSessionFactory().getMappingMetamodel().isEntityClass( resultType ) ) {
+				mapping.addResultBuilder(
+						Builders.entityCalculated( unqualify( resultType.getName() ), resultType.getName(),
+								LockMode.READ, getSessionFactory() ) );
+			}
+			else if ( !isResultTypeAlwaysAllowed( resultType )
+					&& (!isClass( resultType ) || hasJavaTypeDescriptor( resultType )) ) {
+				mapping.addResultBuilder( Builders.resultClassBuilder( resultType, getSessionFactory() ) );
+			}
 		}
 		else {
-			return createQueryPlan( resultSetMapping );
+			mapping = resultSetMapping;
 		}
+		return isCacheableQuery()
+				? getInterpretationCache().resolveSelectQueryPlan( selectInterpretationsKey( mapping ), () -> createQueryPlan( mapping ) )
+				: createQueryPlan( mapping );
 	}
 
 	private NativeSelectQueryPlan<R> createQueryPlan(ResultSetMapping resultSetMapping) {
-		final String sqlString = expandParameterLists();
 		final NativeSelectQueryDefinition<R> queryDefinition = new NativeSelectQueryDefinition<>() {
+			final String sqlString = expandParameterLists();
+
 			@Override
 			public String getSqlString() {
 				return sqlString;
@@ -624,7 +735,7 @@ public class NativeQueryImpl<R>
 
 			@Override
 			public List<ParameterOccurrence> getQueryParameterOccurrences() {
-				return NativeQueryImpl.this.parameterOccurrences;
+				return parameterOccurrences;
 			}
 
 			@Override
@@ -637,20 +748,64 @@ public class NativeQueryImpl<R>
 				return querySpaces;
 			}
 		};
-
-		return getSessionFactory().getQueryEngine()
-				.getNativeQueryInterpreter()
-				.createQueryPlan( queryDefinition, getSessionFactory() );
+		return getNativeQueryInterpreter().createQueryPlan( queryDefinition, getSessionFactory() );
 	}
 
-	private String expandParameterLists() {
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected NativeSelectQueryPlan<Long> createCountQueryPlan() {
+		final NativeSelectQueryDefinition<Long> queryDefinition = new NativeSelectQueryDefinition<>() {
+			final BasicType<Long> longType = getTypeConfiguration().getBasicTypeForJavaType(Long.class);
+			final String sqlString = expandParameterLists();
+
+			@Override
+			public String getSqlString() {
+				return "select count(*) from (" + sqlString + ") a_";
+			}
+
+			@Override
+			public boolean isCallable() {
+				return false;
+			}
+
+			@Override
+			public List<ParameterOccurrence> getQueryParameterOccurrences() {
+				return parameterOccurrences;
+			}
+
+			@Override
+			public ResultSetMapping getResultSetMapping() {
+				final ResultSetMappingImpl mapping = new ResultSetMappingImpl( "", true );
+				mapping.addResultBuilder( new DynamicResultBuilderBasicStandard( 1, longType ) );
+				return mapping;
+			}
+
+			@Override
+			public Set<String> getAffectedTableNames() {
+				return querySpaces;
+			}
+		};
+		return getNativeQueryInterpreter().createQueryPlan( queryDefinition, getSessionFactory() );
+	}
+
+	private TypeConfiguration getTypeConfiguration() {
+		return getSessionFactory().getTypeConfiguration();
+	}
+
+	private NativeQueryInterpreter getNativeQueryInterpreter() {
+		return getSessionFactory().getQueryEngine().getNativeQueryInterpreter();
+	}
+
+	protected String expandParameterLists() {
 		if ( parameterOccurrences == null || parameterOccurrences.isEmpty() ) {
 			return sqlString;
 		}
 		// HHH-1123
 		// Some DBs limit number of IN expressions.  For now, warn...
-		final Dialect dialect = getSessionFactory().getServiceRegistry().getService( JdbcServices.class ).getJdbcEnvironment().getDialect();
-		final boolean paddingEnabled = getSessionFactory().getSessionFactoryOptions().inClauseParameterPaddingEnabled();
+		final SessionFactoryImplementor sessionFactory = getSessionFactory();
+		final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
+		final boolean paddingEnabled = sessionFactory.getSessionFactoryOptions().inClauseParameterPaddingEnabled();
 		final int inExprLimit = dialect.getInExpressionCountLimit();
 
 		StringBuilder sb = null;
@@ -665,8 +820,8 @@ public class NativeQueryImpl<R>
 			}
 			final Collection<?> bindValues = binding.getBindValues();
 
-			int bindValueCount = bindValues.size();
-			int bindValueMaxCount = determineBindValueMaxCount( paddingEnabled, inExprLimit, bindValueCount );
+			final int bindValueCount = bindValues.size();
+			final int bindValueMaxCount = determineBindValueMaxCount( paddingEnabled, inExprLimit, bindValueCount );
 
 			if ( inExprLimit > 0 && bindValueCount > inExprLimit ) {
 				log.tooManyInExpressions(
@@ -689,7 +844,7 @@ public class NativeQueryImpl<R>
 			boolean isEnclosedInParens = true;
 			for ( int i = sourcePosition - 1; i >= 0; i-- ) {
 				final char ch = sqlString.charAt( i );
-				if ( !Character.isWhitespace( ch ) ) {
+				if ( !isWhitespace( ch ) ) {
 					isEnclosedInParens = ch == '(';
 					break;
 				}
@@ -697,7 +852,7 @@ public class NativeQueryImpl<R>
 			if ( isEnclosedInParens ) {
 				for ( int i = sourcePosition + 1; i < sqlString.length(); i++ ) {
 					final char ch = sqlString.charAt( i );
-					if ( !Character.isWhitespace( ch ) ) {
+					if ( !isWhitespace( ch ) ) {
 						isEnclosedInParens = ch == ')';
 						break;
 					}
@@ -718,16 +873,11 @@ public class NativeQueryImpl<R>
 			final String expansionListAsString;
 			// HHH-8901
 			if ( bindValueMaxCount == 0 ) {
-				if ( isEnclosedInParens ) {
-					expansionListAsString = "null";
-				}
-				else {
-					expansionListAsString = "(null)";
-				}
+				expansionListAsString = isEnclosedInParens ? "null" : "(null)";
 			}
 			else {
 				// Shift 1 bit instead of multiplication by 2
-				char[] chars;
+				final char[] chars;
 				if ( isEnclosedInParens ) {
 					chars = new char[( bindValueMaxCount << 1 ) - 1];
 					chars[0] = '?';
@@ -779,11 +929,7 @@ public class NativeQueryImpl<R>
 		return bindValueMaxCount;
 	}
 
-	private SelectInterpretationsKey generateSelectInterpretationsKey(JdbcValuesMappingProducer resultSetMapping) {
-		if ( !isCacheable( this ) ) {
-			return null;
-		}
-
+	private SelectInterpretationsKey selectInterpretationsKey(ResultSetMapping resultSetMapping) {
 		return new SelectInterpretationsKey(
 				getQueryString(),
 				resultSetMapping,
@@ -793,7 +939,7 @@ public class NativeQueryImpl<R>
 		);
 	}
 
-	private static boolean isCacheable(NativeQueryImpl<?> query) {
+	private boolean isCacheableQuery() {
 		// todo (6.0): unless we move the limit rendering from DeferredResultSetAccess to NativeSelectQueryPlanImpl
 		//  we don't need to consider the limit here at all because that is applied on demand.
 		//  It certainly is better for performance to include the limit early, but then we might trash the cache
@@ -802,7 +948,7 @@ public class NativeQueryImpl<R>
 //		}
 
 		// For now, don't cache plans that have parameter lists
-		return !query.parameterBindings.hasAnyMultiValuedBindings();
+		return !parameterBindings.hasAnyMultiValuedBindings();
 	}
 
 	@Override
@@ -814,36 +960,44 @@ public class NativeQueryImpl<R>
 		return resolveNonSelectQueryPlan().executeUpdate( this );
 	}
 
+	private BasicTypeRegistry getBasicTypeRegistry() {
+		return getTypeConfiguration().getBasicTypeRegistry();
+	}
+
+	private QueryInterpretationCache getInterpretationCache() {
+		return getSession().getFactory().getQueryEngine().getInterpretationCache();
+	}
+
 	private NonSelectQueryPlan resolveNonSelectQueryPlan() {
 		NonSelectQueryPlan queryPlan = null;
 
 		final QueryInterpretationCache.Key cacheKey = generateNonSelectInterpretationsKey();
 		if ( cacheKey != null ) {
-			queryPlan = getSession().getFactory().getQueryEngine().getInterpretationCache().getNonSelectQueryPlan( cacheKey );
+			queryPlan = getInterpretationCache().getNonSelectQueryPlan( cacheKey );
 		}
 
 		if ( queryPlan == null ) {
 			final String sqlString = expandParameterLists();
 			queryPlan = new NativeNonSelectQueryPlanImpl( sqlString, querySpaces, parameterOccurrences );
 			if ( cacheKey != null ) {
-				getSession().getFactory().getQueryEngine().getInterpretationCache().cacheNonSelectQueryPlan( cacheKey, queryPlan );
+				getInterpretationCache().cacheNonSelectQueryPlan( cacheKey, queryPlan );
 			}
 		}
 
 		return queryPlan;
 	}
 
-
 	protected NonSelectInterpretationsKey generateNonSelectInterpretationsKey() {
-		if ( !isCacheable( this ) ) {
-			return null;
-		}
+		// todo (6.0) - should this account for query spaces in determining "cacheable"?
+		return isCacheableQuery()
+				? new NonSelectInterpretationsKey( getQueryString(), getSynchronizedQuerySpaces() )
+				: null;
+	}
 
-		// todo (6.0) - should this account for query-spaces in determining "cacheable"?
-		return new NonSelectInterpretationsKey(
-				getQueryString(),
-				getSynchronizedQuerySpaces()
-		);
+	@Override
+	public void addResultTypeClass(Class<?> resultClass) {
+		assert resultSetMapping.getNumberOfResultBuilders() == 0;
+		registerBuilder( Builders.resultClassBuilder( resultClass, getSessionFactory() ) );
 	}
 
 	@Override
@@ -852,12 +1006,7 @@ public class NativeQueryImpl<R>
 	}
 
 	public NativeQueryImplementor<R> addScalar(int position, Class<?> type) {
-		return registerBuilder(
-				Builders.scalar(
-						position,
-						getSessionFactory().getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( type )
-				)
-		);
+		return registerBuilder( Builders.scalar( position, getBasicTypeRegistry().getRegisteredType( type ) ) );
 	}
 
 	protected NativeQueryImplementor<R> registerBuilder(ResultBuilder builder) {
@@ -867,12 +1016,8 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public NativeQuery<R> addScalar(String columnAlias, @SuppressWarnings("rawtypes") BasicTypeReference type) {
-		return registerBuilder(
-				Builders.scalar(
-						columnAlias,
-						getSessionFactory().getTypeConfiguration().getBasicTypeRegistry().resolve( type )
-				)
-		);
+		return registerBuilder( Builders.scalar( columnAlias,
+				getBasicTypeRegistry().resolve( (BasicTypeReference<?>) type ) ) );
 	}
 
 	@Override
@@ -921,10 +1066,8 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public <J> InstantiationResultNode<J> addInstantiation(Class<J> targetJavaType) {
-		final DynamicResultBuilderInstantiation<J> builder = Builders.instantiation(
-				targetJavaType,
-				getSessionFactory()
-		);
+		final DynamicResultBuilderInstantiation<J> builder =
+				Builders.instantiation( targetJavaType, getSessionFactory() );
 		registerBuilder( builder );
 		return builder;
 	}
@@ -956,12 +1099,10 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public DynamicResultBuilderEntityStandard addRoot(String tableAlias, String entityName) {
-		final DynamicResultBuilderEntityStandard resultBuilder = Builders.entity(
-				tableAlias,
-				entityName,
-				getSessionFactory()
-		);
+		final DynamicResultBuilderEntityStandard resultBuilder =
+				Builders.entity( tableAlias, entityName, getSessionFactory() );
 		resultSetMapping.addResultBuilder( resultBuilder );
+		entityMappingTypeByTableAlias.put( tableAlias, resultBuilder.getEntityMapping() );
 		return resultBuilder;
 	}
 
@@ -972,24 +1113,35 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public NativeQueryImplementor<R> addEntity(String entityName) {
-		return addEntity( StringHelper.unqualify( entityName ), entityName );
+		return addEntity( unqualify( entityName ), entityName );
 	}
 
 	@Override
 	public NativeQueryImplementor<R> addEntity(String tableAlias, String entityName) {
-		registerBuilder( Builders.entityCalculated( tableAlias, entityName, getSessionFactory() ) );
+		final DynamicResultBuilderEntityCalculated builder = Builders.entityCalculated( tableAlias, entityName,
+				getSessionFactory() );
+		entityMappingTypeByTableAlias.put( tableAlias, builder.getEntityMapping() );
+		registerBuilder( builder );
 		return this;
 	}
 
 	@Override
 	public NativeQueryImplementor<R> addEntity(String tableAlias, String entityName, LockMode lockMode) {
-		registerBuilder( Builders.entityCalculated( tableAlias, entityName, lockMode, getSessionFactory() ) );
+		final DynamicResultBuilderEntityCalculated builder = Builders.entityCalculated( tableAlias, entityName, lockMode,
+				getSessionFactory() );
+		entityMappingTypeByTableAlias.put( tableAlias, builder.getEntityMapping() );
+		registerBuilder( builder );
 		return this;
 	}
 
 	@Override
 	public NativeQueryImplementor<R> addEntity(@SuppressWarnings("rawtypes") Class entityType) {
 		return addEntity( entityType.getName() );
+	}
+
+	@Override
+	public NativeQueryImplementor<R> addEntity(Class<R> entityType, LockMode lockMode) {
+		return addEntity( unqualify( entityType.getName() ), entityType.getName(), lockMode);
 	}
 
 	@Override
@@ -1004,9 +1156,27 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public FetchReturn addFetch(String tableAlias, String ownerTableAlias, String joinPropertyName) {
-		final DynamicFetchBuilderLegacy fetchBuilder = Builders.fetch( tableAlias, ownerTableAlias, joinPropertyName );
+		final ModelPart subPart = entityMappingTypeByTableAlias.get( ownerTableAlias ).findSubPart( joinPropertyName );
+		addEntityMappingType( tableAlias, subPart );
+		final DynamicFetchBuilderLegacy fetchBuilder = Builders.fetch( tableAlias, ownerTableAlias, (Fetchable) subPart );
 		resultSetMapping.addLegacyFetchBuilder( fetchBuilder );
 		return fetchBuilder;
+	}
+
+	private void addEntityMappingType(String tableAlias, ModelPart part) {
+		if ( part instanceof PluralAttributeMapping pluralAttributeMapping ) {
+			final MappingType partMappingType = pluralAttributeMapping.getElementDescriptor()
+					.getPartMappingType();
+			if ( partMappingType instanceof EntityMappingType entityMappingType ) {
+				entityMappingTypeByTableAlias.put( tableAlias, entityMappingType );
+			}
+		}
+		else if ( part instanceof EntityAssociationMapping entityAssociationMapping ) {
+			entityMappingTypeByTableAlias.put( tableAlias, entityAssociationMapping.asEntityMappingType() );
+		}
+		else if ( part instanceof EmbeddedAttributeMapping ) {
+			throw new UnsupportedOperationException();
+		}
 	}
 
 	@Override
@@ -1016,9 +1186,9 @@ public class NativeQueryImpl<R>
 	}
 
 	private FetchReturn createFetchJoin(String tableAlias, String path) {
-		int loc = path.indexOf( '.' );
+		final int loc = path.indexOf( '.' );
 		if ( loc < 0 ) {
-			throw new QueryException( "not a property path: " + path );
+			throw new PathException( "Not a property path '" + path + "'" );
 		}
 		final String ownerTableAlias = path.substring( 0, loc );
 		final String joinedPropertyName = path.substring( loc + 1 );
@@ -1054,7 +1224,7 @@ public class NativeQueryImpl<R>
 			if ( querySpaces == null ) {
 				querySpaces = new HashSet<>();
 			}
-			Collections.addAll( querySpaces, spaces );
+			addAll( querySpaces, spaces );
 		}
 	}
 
@@ -1063,31 +1233,35 @@ public class NativeQueryImpl<R>
 			if ( querySpaces == null ) {
 				querySpaces = new HashSet<>();
 			}
-			Collections.addAll( querySpaces, (String[]) spaces );
+			addAll( querySpaces, (String[]) spaces );
 		}
 	}
 
+	private MappingMetamodelImplementor getMappingMetamodel() {
+		return getSession().getFactory().getRuntimeMetamodels().getMappingMetamodel();
+	}
+
 	@Override
-	public NativeQueryImplementor<R> addSynchronizedEntityName(String entityName) throws MappingException {
-		final EntityPersister entityDescriptor = getSession().getFactory().getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( entityName );
-		addQuerySpaces( entityDescriptor.getQuerySpaces() );
+	public NativeQueryImplementor<R> addSynchronizedEntityName(String entityName) {
+		addQuerySpaces( getMappingMetamodel().getEntityDescriptor( entityName ).getQuerySpaces() );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<R> addSynchronizedEntityClass(@SuppressWarnings("rawtypes") Class entityClass) throws MappingException {
-		final EntityPersister entityDescriptor = getSession().getFactory().getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( entityClass );
-		addQuerySpaces( entityDescriptor.getQuerySpaces() );
+	public NativeQueryImplementor<R> addSynchronizedEntityClass(@SuppressWarnings("rawtypes") Class entityClass) {
+		addQuerySpaces( getMappingMetamodel().getEntityDescriptor( entityClass ).getQuerySpaces() );
 		return this;
 	}
 
 	@Override
 	public NativeQueryImplementor<R> setHibernateFlushMode(FlushMode flushMode) {
 		super.setHibernateFlushMode( flushMode );
+		return this;
+	}
+
+	@Override
+	public NativeQueryImplementor<R> setQueryFlushMode(QueryFlushMode queryFlushMode) {
+		super.setQueryFlushMode(queryFlushMode);
 		return this;
 	}
 
@@ -1104,6 +1278,27 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
+	public NativeQueryImplementor<R> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+		super.setCacheRetrieveMode( cacheRetrieveMode );
+		return this;
+	}
+
+	@Override
+	public NativeQueryImplementor<R> setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+		super.setCacheStoreMode( cacheStoreMode );
+		return this;
+	}
+
+	@Override
+	public TypedQuery<R> setTimeout(Integer timeout) {
+		if ( timeout == null ) {
+			timeout = -1;
+		}
+		super.setTimeout( (int) timeout );
+		return this;
+	}
+
+	@Override
 	public NativeQueryImplementor<R> setCacheable(boolean cacheable) {
 		super.setCacheable( cacheable );
 		return this;
@@ -1112,6 +1307,12 @@ public class NativeQueryImpl<R>
 	@Override
 	public NativeQueryImplementor<R> setCacheRegion(String cacheRegion) {
 		super.setCacheRegion( cacheRegion );
+		return this;
+	}
+
+	@Override
+	public NativeQueryImplementor<R> setQueryPlanCacheable(boolean queryPlanCacheable) {
+		super.setQueryPlanCacheable( queryPlanCacheable );
 		return this;
 	}
 
@@ -1183,29 +1384,19 @@ public class NativeQueryImpl<R>
 	}
 
 	protected void applySynchronizeSpace(Object value) {
-		if ( value instanceof String ) {
-			addSynchronizedQuerySpace( (String) value );
+		if ( value instanceof String string ) {
+			addSynchronizedQuerySpace( string );
 		}
-		else if ( value instanceof String[] ) {
-			for (String string : (String[]) value) {
-				addSynchronizedQuerySpace( string );
+		else if ( value instanceof Class<?> clazz ) {
+			addSynchronizedEntityClass( clazz );
+		}
+		else if ( value instanceof Object[] array ) {
+			for ( Object element : array ) {
+				applySynchronizeSpace( element );
 			}
 		}
-		else if ( value instanceof Class ) {
-			addSynchronizedEntityClass( (Class<?>) value );
-		}
-		else if ( value instanceof Class[] ) {
-			for (Class<?> aClass : (Class<?>[]) value) {
-				addSynchronizedEntityClass( aClass );
-			}
-		}
-		else if ( value instanceof List ) {
-			final List<?> list = (List<?>) value;
-			list.forEach( this::applySynchronizeSpace );
-		}
-		else if ( value instanceof Collection ) {
-			final Collection<?> values = (Collection<?>) value;
-			for ( Object element : values ) {
+		else if ( value instanceof Iterable<?> iterable ) {
+			for ( Object element : iterable ) {
 				applySynchronizeSpace( element );
 			}
 		}
@@ -1364,9 +1555,6 @@ public class NativeQueryImpl<R>
 		return this;
 	}
 
-
-
-
 	@Override
 	public NativeQueryImplementor<R> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values) {
 		super.setParameterList( position, values );
@@ -1453,7 +1641,7 @@ public class NativeQueryImpl<R>
 		return this;
 	}
 
-	@Override @Deprecated
+	@Override @Deprecated @SuppressWarnings("deprecation")
 	public <S> NativeQueryImplementor<S> setResultTransformer(ResultTransformer<S> transformer) {
 		return setTupleTransformer( transformer ).setResultListTransformer( transformer );
 	}
@@ -1470,7 +1658,15 @@ public class NativeQueryImpl<R>
 		return this;
 	}
 
+	@Override
+	public Query<R> setOrder(List<? extends Order<? super R>> orderList) {
+		throw new UnsupportedOperationException("Ordering not currently supported for native queries");
+	}
 
+	@Override
+	public Query<R> setOrder(Order<? super R> order) {
+		throw new UnsupportedOperationException("Ordering not currently supported for native queries");
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Hints
@@ -1502,7 +1698,9 @@ public class NativeQueryImpl<R>
 
 		@Override
 		public ParameterMetadataImplementor toParameterMetadata(SharedSessionContractImplementor session1) {
-			return new ParameterMetadataImpl( positionalParameters, namedParameters );
+			return isEmpty( positionalParameters ) && isEmpty( namedParameters )
+					? ParameterMetadataImpl.EMPTY
+					: new ParameterMetadataImpl( positionalParameters, namedParameters );
 		}
 
 		@Override
@@ -1512,17 +1710,17 @@ public class NativeQueryImpl<R>
 
 		@Override
 		public String toString() {
-			final StringBuilder buffer = new StringBuilder( "ParameterInterpretationImpl (" )
-					.append( sqlString )
-					.append( ") : {" );
+			final StringBuilder buffer =
+					new StringBuilder( "ParameterInterpretationImpl (" )
+							.append( sqlString )
+							.append( ") : {" );
 			final String lineSeparator = System.lineSeparator();
-			if ( CollectionHelper.isNotEmpty( parameterList ) ) {
+			if ( isNotEmpty( parameterList ) ) {
 				for ( int i = 0, size = parameterList.size(); i < size; i++ ) {
 					buffer.append( lineSeparator ).append( "    ," );
 				}
 				buffer.setLength( buffer.length() - 1 );
 			}
-
 			return buffer.append( lineSeparator ).append( "}" ).toString();
 		}
 	}

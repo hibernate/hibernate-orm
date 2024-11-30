@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
@@ -16,14 +14,15 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
 /**
- * A many-to-one association mapping
+ * A mapping model object representing a {@linkplain jakarta.persistence.ManyToOne many-to-one association}.
+ *
  * @author Gavin King
  */
 public class ManyToOne extends ToOne {
 	private boolean isLogicalOneToOne;
 	private NotFoundAction notFoundAction;
 
-	private Type resolvedType;
+	private transient Type resolvedType;
 
 	public ManyToOne(MetadataBuildingContext buildingContext, Table table) {
 		super( buildingContext, table );
@@ -58,58 +57,62 @@ public class ManyToOne extends ToOne {
 		return resolvedType;
 	}
 
-	public void createForeignKey() {
-		// Ensure properties are sorted before we create a foreign key
-		sortProperties();
-		// the case of a foreign key to something other than the pk is handled in createPropertyRefConstraints
-		if ( isForeignKeyEnabled() && referencedPropertyName==null && !hasFormula() ) {
-			createForeignKeyOfEntity( ( (EntityType) getType() ).getAssociatedEntityName() );
-		} 
-	}
-
 	@Override
-	public void createUniqueKey() {
+	public void createUniqueKey(MetadataBuildingContext context) {
 		if ( !hasFormula() ) {
-			getTable().createUniqueKey( getConstraintColumns() );
+			getTable().createUniqueKey( getConstraintColumns(), context );
 		}
 	}
 
+	/**
+	 * Creates a {@linkplain ForeignKey foreign key constraint} in the
+	 * case that the foreign key of this association does not reference
+	 * the primary key of the referenced table, but instead some other
+	 * unique key.
+	 * <p>
+	 * We depend here on having a property of the referenced entity
+	 * that does hold the referenced unique key. We might have created
+	 * a "synthetic" composite property for this purpose.
+	 */
 	public void createPropertyRefConstraints(Map<String, PersistentClass> persistentClasses) {
-		if (referencedPropertyName!=null) {
+		if ( referencedPropertyName != null ) {
 			// Ensure properties are sorted before we create a foreign key
 			sortProperties();
-			PersistentClass pc = persistentClasses.get(getReferencedEntityName() );
-			
-			Property property = pc.getReferencedProperty( getReferencedPropertyName() );
-			
-			if (property==null) {
-				throw new MappingException(
-						"Could not find property " + 
-						getReferencedPropertyName() + 
-						" on " + 
-						getReferencedEntityName() 
-					);
-			} 
+
+			final String referencedEntityName = getReferencedEntityName();
+			final String referencedPropertyName = getReferencedPropertyName();
+			final PersistentClass referencedClass = persistentClasses.get( referencedEntityName );
+			if ( referencedClass == null ) {
+				throw new MappingException( "Referenced entity '" + referencedEntityName + "' does not exist" );
+
+			}
+			final Property property = referencedClass.getReferencedProperty( referencedPropertyName );
+			if ( property==null ) {
+				throw new MappingException( "Referenced entity '" + referencedEntityName
+						+ "' has no property named '" + referencedPropertyName + "'" );
+			}
 			else {
 				// Make sure synthetic properties are sorted
-				if ( property.getValue() instanceof Component ) {
-					( (Component) property.getValue() ).sortProperties();
+				if ( property.getValue() instanceof Component component ) {
+					component.sortProperties();
 				}
 				// todo : if "none" another option is to create the ForeignKey object still	but to set its #disableCreation flag
 				if ( isForeignKeyEnabled() && !hasFormula() ) {
-					ForeignKey fk = getTable().createForeignKey( 
-							getForeignKeyName(), 
-							getConstraintColumns(), 
-							( (EntityType) getType() ).getAssociatedEntityName(), 
+					final ForeignKey foreignKey = getTable().createForeignKey(
+							getForeignKeyName(),
+							getConstraintColumns(),
+							( (EntityType) getType() ).getAssociatedEntityName(),
 							getForeignKeyDefinition(),
+							getForeignKeyOptions(),
 							new ArrayList<>( property.getColumns() )
 					);
-					fk.setCascadeDeleteEnabled(isCascadeDeleteEnabled() );
+					foreignKey.setReferencedTable( property.getValue().getTable() );
+					foreignKey.setOnDeleteAction( getOnDeleteAction() );
 				}
 			}
 		}
 	}
-	
+
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}
@@ -138,5 +141,10 @@ public class ManyToOne extends ToOne {
 
 	public boolean isLogicalOneToOne() {
 		return isLogicalOneToOne;
+	}
+
+	@Override
+	public boolean isNullable() {
+		return getReferencedPropertyName() != null || super.isNullable();
 	}
 }

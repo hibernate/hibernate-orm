@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.collection.basic;
 
@@ -53,11 +51,13 @@ public class CollectionSizeTest {
 		scope.inTransaction(
 				session -> {
 					Contact cont = session.get(Contact.class, contact.getId());
+
 					Set<EmailAddress> addresses = cont.getEmailAddresses();
 					assertEquals( Hibernate.size(addresses), 3 );
 					assertTrue( Hibernate.contains( addresses, new EmailAddress( "test1@test.com" ) ) );
 					assertFalse( Hibernate.contains( addresses, new EmailAddress( "test9@test.com" ) ) );
 					assertFalse( Hibernate.isInitialized(addresses) );
+
 					Map<EmailAddress, Contact> contactsByEmail = cont.getContactsByEmail();
 					assertEquals( cont, Hibernate.get(contactsByEmail, new EmailAddress( "test1@test.com" ) ) );
 					assertNull( Hibernate.get(contactsByEmail, new EmailAddress( "test9@test.com" ) ) );

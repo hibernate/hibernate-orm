@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -11,34 +9,30 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.Length;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.QueryTimeoutException;
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.community.dialect.sequence.PostgreSQLLegacySequenceSupport;
-import org.hibernate.dialect.DatabaseVersion;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.NationalizationSupport;
-import org.hibernate.dialect.OracleDialect;
-import org.hibernate.dialect.PostgreSQLDriverKind;
-import org.hibernate.dialect.PostgreSQLInetJdbcType;
-import org.hibernate.dialect.PostgreSQLIntervalSecondJdbcType;
-import org.hibernate.dialect.PostgreSQLJsonbJdbcType;
-import org.hibernate.dialect.PostgreSQLPGObjectJdbcType;
-import org.hibernate.dialect.Replacer;
-import org.hibernate.dialect.RowLockStrategy;
-import org.hibernate.dialect.SelectItemReferenceStrategy;
-import org.hibernate.dialect.TimeZoneSupport;
+import org.hibernate.dialect.*;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.PostgreSQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.PostgreSQLMinMaxFunction;
+import org.hibernate.dialect.function.PostgreSQLTruncFunction;
+import org.hibernate.dialect.function.PostgreSQLTruncRoundFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.PostgreSQLIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -46,31 +40,36 @@ import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
+import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.mapping.AggregateColumn;
+import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.procedure.internal.PostgresCallableStatementSupport;
+import org.hibernate.procedure.internal.PostgreSQLCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.sqm.CastType;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.mutation.internal.cte.CteInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.cte.CteMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -78,31 +77,33 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
+import org.hibernate.tool.schema.internal.StandardTableExporter;
+import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
-import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
-import org.hibernate.type.descriptor.jdbc.InstantAsTimestampWithTimeZoneJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
-import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
+import org.hibernate.type.descriptor.jdbc.SqlTypedJdbcType;
 import org.hibernate.type.descriptor.jdbc.XmlJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.descriptor.sql.internal.ArrayDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NamedNativeEnumDdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NamedNativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
-import static org.hibernate.query.sqm.TemporalUnit.DAY;
-import static org.hibernate.query.sqm.TemporalUnit.EPOCH;
-import static org.hibernate.query.sqm.TemporalUnit.MONTH;
-import static org.hibernate.query.sqm.TemporalUnit.QUARTER;
-import static org.hibernate.query.sqm.TemporalUnit.YEAR;
+import static org.hibernate.query.common.TemporalUnit.DAY;
+import static org.hibernate.query.common.TemporalUnit.EPOCH;
 import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
@@ -121,15 +122,21 @@ import static org.hibernate.type.SqlTypes.NCLOB;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
 import static org.hibernate.type.SqlTypes.OTHER;
 import static org.hibernate.type.SqlTypes.SQLXML;
+import static org.hibernate.type.SqlTypes.STRUCT;
+import static org.hibernate.type.SqlTypes.TIME;
+import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TIME_UTC;
 import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
 /**
  * A {@linkplain Dialect SQL dialect} for PostgreSQL 8 and above.
@@ -138,9 +145,19 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  */
 public class PostgreSQLLegacyDialect extends Dialect {
 
-	private static final PostgreSQLIdentityColumnSupport IDENTITY_COLUMN_SUPPORT = new PostgreSQLIdentityColumnSupport();
-
-	private final PostgreSQLDriverKind driverKind;
+	protected final PostgreSQLDriverKind driverKind;
+	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
+	private final StandardTableExporter postgresqlTableExporter = new StandardTableExporter( this ) {
+		@Override
+		protected void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn) {
+			final JdbcType jdbcType = aggregateColumn.getType().getJdbcType();
+			if ( jdbcType.isXml() ) {
+				// Requires the use of xmltable which is not supported in check constraints
+				return;
+			}
+			super.applyAggregateColumnCheck( buf, aggregateColumn );
+		}
+	};
 
 	public PostgreSQLLegacyDialect() {
 		this( DatabaseVersion.make( 8, 0 ) );
@@ -196,10 +213,16 @@ public class PostgreSQLLegacyDialect extends Dialect {
 			case LONG32VARBINARY:
 				return "bytea";
 
+			// We do not use the time with timezone type because PG deprecated it and it lacks certain operations like subtraction
+//			case TIME_UTC:
+//				return columnType( TIME_WITH_TIMEZONE );
+
 			case TIMESTAMP_UTC:
 				return columnType( TIMESTAMP_WITH_TIMEZONE );
+
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override
@@ -225,6 +248,9 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
+		// We need to configure that the array type uses the raw element type for casts
+		ddlTypeRegistry.addDescriptor( new ArrayDdlTypeImpl( this, true ) );
+
 		// Register this type to be able to support Float[]
 		// The issue is that the JDBC driver can't handle createArrayOf( "float(24)", ... )
 		// It requires the use of "real" or "float4"
@@ -239,23 +265,22 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		if ( getVersion().isSameOrAfter( 8, 2 ) ) {
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
 		}
-		if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
-			// The following DDL types require that the PGobject class is usable/visible
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INET, "inet", this ) );
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
-			ddlTypeRegistry.addDescriptor( new Scale6IntervalSecondDdlType( this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INET, "inet", this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
+		ddlTypeRegistry.addDescriptor( new Scale6IntervalSecondDdlType( this ) );
 
-			if ( getVersion().isSameOrAfter( 9, 2 ) ) {
-				// Prefer jsonb if possible
-				if ( getVersion().isSameOrAfter( 9, 4 ) ) {
-					ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
-				}
-				else {
-					ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
-				}
+		if ( getVersion().isSameOrAfter( 9, 2 ) ) {
+			// Prefer jsonb if possible
+			if ( getVersion().isSameOrAfter( 9, 4 ) ) {
+				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
+			}
+			else {
+				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
 			}
 		}
+		ddlTypeRegistry.addDescriptor( new NamedNativeEnumDdlTypeImpl( this ) );
+		ddlTypeRegistry.addDescriptor( new NamedNativeOrdinalEnumDdlTypeImpl( this ) );
 	}
 
 	@Override
@@ -264,9 +289,15 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	}
 
 	@Override
+	public int getMaxVarcharCapacity() {
+		// 1GB according to PostgreSQL docs
+		return 1_073_741_824;
+	}
+
+	@Override
 	public int getMaxVarbinaryLength() {
 		//postgres has no varbinary-like type
-		return Integer.MAX_VALUE;
+		return Length.LONG32;
 	}
 
 	@Override
@@ -305,24 +336,49 @@ public class PostgreSQLLegacyDialect extends Dialect {
 						break;
 				}
 				break;
+			case TIME:
+				// The PostgreSQL JDBC driver reports TIME for timetz, but we use it only for mapping OffsetTime to UTC
+				if ( "timetz".equals( columnTypeName ) ) {
+					jdbcTypeCode = TIME_UTC;
+				}
+				break;
+			case TIMESTAMP:
+				// The PostgreSQL JDBC driver reports TIMESTAMP for timestamptz, but we use it only for mapping Instant
+				if ( "timestamptz".equals( columnTypeName ) ) {
+					jdbcTypeCode = TIMESTAMP_UTC;
+				}
+				break;
 			case ARRAY:
-				final JdbcType jdbcType = jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
 				// PostgreSQL names array types by prepending an underscore to the base name
-				if ( jdbcType instanceof ArrayJdbcType && columnTypeName.charAt( 0 ) == '_' ) {
+				if ( columnTypeName.charAt( 0 ) == '_' ) {
 					final String componentTypeName = columnTypeName.substring( 1 );
 					final Integer sqlTypeCode = resolveSqlTypeCode( componentTypeName, jdbcTypeRegistry.getTypeConfiguration() );
 					if ( sqlTypeCode != null ) {
-						return ( (ArrayJdbcType) jdbcType ).resolveType(
-								jdbcTypeRegistry.getTypeConfiguration(),
-								jdbcTypeRegistry.getTypeConfiguration().getServiceRegistry()
-										.getService( JdbcServices.class )
-										.getDialect(),
+						return jdbcTypeRegistry.resolveTypeConstructorDescriptor(
+								jdbcTypeCode,
 								jdbcTypeRegistry.getDescriptor( sqlTypeCode ),
-								null
+								ColumnTypeInformation.EMPTY
+						);
+					}
+					final SqlTypedJdbcType elementDescriptor = jdbcTypeRegistry.findSqlTypedDescriptor( componentTypeName );
+					if ( elementDescriptor != null ) {
+						return jdbcTypeRegistry.resolveTypeConstructorDescriptor(
+								jdbcTypeCode,
+								elementDescriptor,
+								ColumnTypeInformation.EMPTY
 						);
 					}
 				}
-				return jdbcType;
+				break;
+			case STRUCT:
+				final SqlTypedJdbcType descriptor = jdbcTypeRegistry.findSqlTypedDescriptor(
+						// Skip the schema
+						columnTypeName.substring( columnTypeName.indexOf( '.' ) + 1 )
+				);
+				if ( descriptor != null ) {
+					return descriptor;
+				}
+				break;
 		}
 		return jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
 	}
@@ -378,6 +434,16 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		}
 	}
 
+	@Override
+	public String castPattern(CastType from, CastType to) {
+		if ( from == CastType.STRING && to == CastType.BOOLEAN ) {
+			return "cast(?1 as ?2)";
+		}
+		else {
+			return super.castPattern( from, to );
+		}
+	}
+
 	/**
 	 * {@code microsecond} is the smallest unit for an {@code interval},
 	 * and the highest precision for a {@code timestamp}, so we could
@@ -415,36 +481,31 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		if ( unit == null ) {
 			return "(?3-?2)";
 		}
-		if ( toTemporalType != TemporalType.TIMESTAMP && fromTemporalType != TemporalType.TIMESTAMP && unit == DAY ) {
+		if ( toTemporalType == TemporalType.DATE && fromTemporalType == TemporalType.DATE ) {
 			// special case: subtraction of two dates
 			// results in an integer number of days
 			// instead of an INTERVAL
-			return "(?3-?2)";
-		}
-		else {
-			StringBuilder pattern = new StringBuilder();
 			switch ( unit ) {
 				case YEAR:
-					extractField( pattern, YEAR, fromTemporalType, toTemporalType, unit );
-					break;
-				case QUARTER:
-					pattern.append( "(" );
-					extractField( pattern, YEAR, fromTemporalType, toTemporalType, unit );
-					pattern.append( "+" );
-					extractField( pattern, QUARTER, fromTemporalType, toTemporalType, unit );
-					pattern.append( ")" );
-					break;
 				case MONTH:
-					pattern.append( "(" );
-					extractField( pattern, YEAR, fromTemporalType, toTemporalType, unit );
-					pattern.append( "+" );
-					extractField( pattern, MONTH, fromTemporalType, toTemporalType, unit );
-					pattern.append( ")" );
-					break;
+				case QUARTER:
+					return "extract(" + translateDurationField( unit ) + " from age(?3,?2))";
+				default:
+					return "(?3-?2)" + DAY.conversionFactor( unit, this );
+			}
+		}
+		else {
+			switch ( unit ) {
+				case YEAR:
+					return "extract(year from ?3-?2)";
+				case QUARTER:
+					return "(extract(year from ?3-?2)*4+extract(month from ?3-?2)/3)";
+				case MONTH:
+					return "(extract(year from ?3-?2)*12+extract(month from ?3-?2))";
 				case WEEK: //week is not supported by extract() when the argument is a duration
+					return "(extract(day from ?3-?2)/7)";
 				case DAY:
-					extractField( pattern, DAY, fromTemporalType, toTemporalType, unit );
-					break;
+					return "extract(day from ?3-?2)";
 				//in order to avoid multiple calls to extract(),
 				//we use extract(epoch from x - y) * factor for
 				//all the following units:
@@ -453,15 +514,14 @@ public class PostgreSQLLegacyDialect extends Dialect {
 				case SECOND:
 				case NANOSECOND:
 				case NATIVE:
-					extractField( pattern, EPOCH, fromTemporalType, toTemporalType, unit );
-					break;
+					return "extract(epoch from ?3-?2)" + EPOCH.conversionFactor( unit, this );
 				default:
 					throw new SemanticException( "unrecognized field: " + unit );
 			}
-			return pattern.toString();
 		}
 	}
 
+	@Deprecated
 	protected void extractField(
 			StringBuilder pattern,
 			TemporalUnit unit,
@@ -471,7 +531,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		pattern.append( "extract(" );
 		pattern.append( translateDurationField( unit ) );
 		pattern.append( " from " );
-		if ( toTimestamp != TemporalType.TIMESTAMP && fromTimestamp != TemporalType.TIMESTAMP ) {
+		if ( toTimestamp == TemporalType.DATE && fromTimestamp == TemporalType.DATE ) {
 			// special case subtraction of two
 			// dates results in an integer not
 			// an Interval
@@ -504,24 +564,28 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry(functionContributions);
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 
-		functionFactory.round_floor(); //Postgres round(x,n) does not accept double
 		functionFactory.cot();
 		functionFactory.radians();
 		functionFactory.degrees();
-		functionFactory.trunc();
 		functionFactory.log();
-		if ( getVersion().isSameOrAfter(12) ) {
+		functionFactory.mod_operator();
+		if ( getVersion().isSameOrAfter( 12 ) ) {
 			functionFactory.log10();
+			functionFactory.tanh();
+			functionFactory.sinh();
+			functionFactory.cosh();
+			functionFactory.moreHyperbolic();
 		}
 		else {
-			queryEngine.getSqmFunctionRegistry().registerAlternateKey( "log10", "log" );
+			functionContributions.getFunctionRegistry().registerAlternateKey( "log10", "log" );
 		}
 		functionFactory.cbrt();
+		functionFactory.pi();
 		functionFactory.trim2();
 		functionFactory.repeat();
 		functionFactory.md5();
@@ -533,7 +597,6 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		functionFactory.toCharNumberDateTimestamp();
 		functionFactory.concat_pipeOperator( "convert_from(lo_get(?1),pg_client_encoding())" );
 		functionFactory.localtimeLocaltimestamp();
-		functionFactory.dateTrunc();
 		functionFactory.length_characterLength_pattern( "length(lo_get(?1),pg_client_encoding())" );
 		functionFactory.bitLength_pattern( "bit_length(?1)", "length(lo_get(?1))*8" );
 		functionFactory.octetLength_pattern( "octet_length(?1)", "length(lo_get(?1))" );
@@ -558,6 +621,79 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		functionFactory.locate_positionSubstring();
 		functionFactory.windowFunctions();
 		functionFactory.listagg_stringAgg( "varchar" );
+		functionFactory.array_postgresql();
+		functionFactory.arrayAggregate();
+		functionFactory.arrayPosition_postgresql();
+		functionFactory.arrayPositions_postgresql();
+		functionFactory.arrayLength_cardinality();
+		functionFactory.arrayConcat_postgresql();
+		functionFactory.arrayPrepend_postgresql();
+		functionFactory.arrayAppend_postgresql();
+		functionFactory.arrayContains_postgresql();
+		functionFactory.arrayIntersects_postgresql();
+		functionFactory.arrayGet_bracket();
+		functionFactory.arraySet_unnest();
+		functionFactory.arrayRemove();
+		functionFactory.arrayRemoveIndex_unnest( true );
+		functionFactory.arraySlice_operator();
+		functionFactory.arrayReplace();
+		if ( getVersion().isSameOrAfter( 14 ) ) {
+			functionFactory.arrayTrim_trim_array();
+		}
+		else {
+			functionFactory.arrayTrim_unnest();
+		}
+		functionFactory.arrayFill_postgresql();
+		functionFactory.arrayToString_postgresql();
+
+		if ( getVersion().isSameOrAfter( 17 ) ) {
+			functionFactory.jsonValue();
+			functionFactory.jsonQuery();
+			functionFactory.jsonExists();
+			functionFactory.jsonObject();
+			functionFactory.jsonArray();
+			functionFactory.jsonArrayAgg_postgresql( true );
+			functionFactory.jsonObjectAgg_postgresql( true );
+			functionFactory.jsonTable();
+		}
+		else {
+			functionFactory.jsonValue_postgresql();
+			functionFactory.jsonQuery_postgresql();
+			functionFactory.jsonExists_postgresql();
+			if ( getVersion().isSameOrAfter( 16 ) ) {
+				functionFactory.jsonObject();
+				functionFactory.jsonArray();
+				functionFactory.jsonArrayAgg_postgresql( true );
+				functionFactory.jsonObjectAgg_postgresql( true );
+			}
+			else {
+				functionFactory.jsonObject_postgresql();
+				functionFactory.jsonArray_postgresql();
+				functionFactory.jsonArrayAgg_postgresql( false );
+				functionFactory.jsonObjectAgg_postgresql( false );
+			}
+			functionFactory.jsonTable_postgresql();
+		}
+		functionFactory.jsonSet_postgresql();
+		functionFactory.jsonRemove_postgresql();
+		functionFactory.jsonReplace_postgresql();
+		functionFactory.jsonInsert_postgresql();
+		if ( getVersion().isSameOrAfter( 13 ) ) {
+			// Requires support for WITH clause in subquery which only 13+ provides
+			functionFactory.jsonMergepatch_postgresql();
+		}
+		functionFactory.jsonArrayAppend_postgresql( getVersion().isSameOrAfter( 13 ) );
+		functionFactory.jsonArrayInsert_postgresql();
+
+		functionFactory.xmlelement();
+		functionFactory.xmlcomment();
+		functionFactory.xmlforest();
+		functionFactory.xmlconcat();
+		functionFactory.xmlpi();
+		functionFactory.xmlquery_postgresql();
+		functionFactory.xmlexists();
+		functionFactory.xmlagg();
+		functionFactory.xmltable( true );
 
 		if ( getVersion().isSameOrAfter( 9, 4 ) ) {
 			functionFactory.makeDateTimeTimestamp();
@@ -565,6 +701,89 @@ public class PostgreSQLLegacyDialect extends Dialect {
 			functionFactory.inverseDistributionOrderedSetAggregates();
 			functionFactory.hypotheticalOrderedSetAggregates();
 		}
+
+		if ( !supportsMinMaxOnUuid() ) {
+			functionContributions.getFunctionRegistry().register( "min", new PostgreSQLMinMaxFunction( "min" ) );
+			functionContributions.getFunctionRegistry().register( "max", new PostgreSQLMinMaxFunction( "max" ) );
+		}
+
+		// Postgres uses # instead of ^ for XOR
+		functionContributions.getFunctionRegistry().patternDescriptorBuilder( "bitxor", "(?1#?2)" )
+				.setExactArgumentCount( 2 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.register();
+
+		functionContributions.getFunctionRegistry().register(
+				"round", new PostgreSQLTruncRoundFunction( "round", true )
+		);
+		functionContributions.getFunctionRegistry().register(
+				"trunc",
+				new PostgreSQLTruncFunction( true, functionContributions.getTypeConfiguration() )
+		);
+		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
+		functionFactory.dateTrunc();
+
+		if ( getVersion().isSameOrAfter( 17 ) ) {
+			functionFactory.unnest( null, "ordinality" );
+		}
+		else {
+			functionFactory.unnest_postgresql();
+		}
+		functionFactory.generateSeries( null, "ordinality", false );
+	}
+
+	@Override
+	public @Nullable String getDefaultOrdinalityColumnName() {
+		return "ordinality";
+	}
+
+	/**
+	 * Whether PostgreSQL supports `min(uuid)`/`max(uuid)` which it doesn't by default.
+	 * Since the emulation is not very performant, this can be overridden by users which
+	 * make sure that an aggregate function for uuid exists on their database.
+	 *
+	 * The following definitions can be used for this purpose:
+	 *
+	 * <code>
+	 * create or replace function min(uuid, uuid)
+	 *     returns uuid
+	 *     immutable parallel safe
+	 *     language plpgsql as
+	 * $$
+	 * begin
+	 *     return least($1, $2);
+	 * end
+	 * $$;
+	 *
+	 * create aggregate min(uuid) (
+	 *     sfunc = min,
+	 *     stype = uuid,
+	 *     combinefunc = min,
+	 *     parallel = safe,
+	 *     sortop = operator (&lt;)
+	 *     );
+	 *
+	 * create or replace function max(uuid, uuid)
+	 *     returns uuid
+	 *     immutable parallel safe
+	 *     language plpgsql as
+	 * $$
+	 * begin
+	 *     return greatest($1, $2);
+	 * end
+	 * $$;
+	 *
+	 * create aggregate max(uuid) (
+	 *     sfunc = max,
+	 *     stype = uuid,
+	 *     combinefunc = max,
+	 *     parallel = safe,
+	 *     sortop = operator (&gt;)
+	 *     );
+	 * </code>
+	 */
+	protected boolean supportsMinMaxOnUuid() {
+		return false;
 	}
 
 	@Override
@@ -586,6 +805,11 @@ public class PostgreSQLLegacyDialect extends Dialect {
 
 	@Override
 	public boolean supportsIfExistsBeforeTableName() {
+		return getVersion().isSameOrAfter( 8, 2 );
+	}
+
+	@Override
+	public boolean supportsIfExistsBeforeTypeName() {
 		return getVersion().isSameOrAfter( 8, 2 );
 	}
 
@@ -615,6 +839,11 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsConflictClauseForInsertCTE() {
+		return getVersion().isSameOrAfter( 9, 5 );
+	}
+
+	@Override
 	public SequenceSupport getSequenceSupport() {
 		return getVersion().isBefore( 8, 2 )
 				? PostgreSQLLegacySequenceSupport.LEGACY_INSTANCE
@@ -634,7 +863,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	@Override
 	public LimitHandler getLimitHandler() {
 		return getVersion().isBefore( 8, 4 )
-				? LimitOffsetLimitHandler.INSTANCE
+				? LimitOffsetLimitHandler.OFFSET_ONLY_INSTANCE
 				: OffsetFetchLimitHandler.INSTANCE;
 	}
 
@@ -645,17 +874,12 @@ public class PostgreSQLLegacyDialect extends Dialect {
 
 	@Override
 	public String getForUpdateString(String aliases, LockOptions lockOptions) {
-		/*
-		 * Parent's implementation for (aliases, lockOptions) ignores aliases.
-		 */
+		// parent's implementation for (aliases, lockOptions) ignores aliases
 		if ( aliases.isEmpty() ) {
 			LockMode lockMode = lockOptions.getLockMode();
-			final Iterator<Map.Entry<String, LockMode>> itr = lockOptions.getAliasLockIterator();
-			while ( itr.hasNext() ) {
+			for ( Map.Entry<String, LockMode> entry : lockOptions.getAliasSpecificLocks() ) {
 				// seek the highest lock mode
-				final Map.Entry<String, LockMode> entry = itr.next();
-				final LockMode lm = entry.getValue();
-				if ( lm.greaterThan( lockMode ) ) {
+				if ( entry.getValue().greaterThan(lockMode) ) {
 					aliases = entry.getKey();
 				}
 			}
@@ -700,8 +924,8 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public String getNativeIdentifierGeneratorStrategy() {
-		return "sequence";
+	public GenerationType getNativeValueGenerationStrategy() {
+		return GenerationType.SEQUENCE;
 	}
 
 	@Override
@@ -715,9 +939,14 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	}
 
 	@Override
+	public boolean useConnectionToCreateLob() {
+		return false;
+	}
+
+	@Override
 	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
 		// Workaround for postgres bug #1453
-		return "null::" + typeConfiguration.getDdlTypeRegistry().getDescriptor( sqlType ).getRawTypeName();
+		return "cast(null as " + typeConfiguration.getDdlTypeRegistry().getDescriptor( sqlType ).getRawTypeName() + ")";
 	}
 
 	@Override
@@ -803,44 +1032,54 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	 */
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
 			new TemplatedViolatedConstraintNameExtractor( sqle -> {
-				switch ( Integer.parseInt( JdbcExceptionHelper.extractSqlState( sqle ) ) ) {
-					// CHECK VIOLATION
-					case 23514:
-						return extractUsingTemplate( "violates check constraint \"","\"", sqle.getMessage() );
-					// UNIQUE VIOLATION
-					case 23505:
-						return extractUsingTemplate( "violates unique constraint \"","\"", sqle.getMessage() );
-					// FOREIGN KEY VIOLATION
-					case 23503:
-						return extractUsingTemplate( "violates foreign key constraint \"","\"", sqle.getMessage() );
-					// NOT NULL VIOLATION
-					case 23502:
-						return extractUsingTemplate( "null value in column \"","\" violates not-null constraint", sqle.getMessage() );
-					// TODO: RESTRICT VIOLATION
-					case 23001:
-						return null;
-					// ALL OTHER
-					default:
-						return null;
+				final String sqlState = JdbcExceptionHelper.extractSqlState( sqle );
+				if ( sqlState != null ) {
+					switch ( Integer.parseInt( sqlState ) ) {
+						// CHECK VIOLATION
+						case 23514:
+							return extractUsingTemplate( "violates check constraint \"", "\"", sqle.getMessage() );
+						// UNIQUE VIOLATION
+						case 23505:
+							return extractUsingTemplate( "violates unique constraint \"", "\"", sqle.getMessage() );
+						// FOREIGN KEY VIOLATION
+						case 23503:
+							return extractUsingTemplate(
+									"violates foreign key constraint \"",
+									"\"",
+									sqle.getMessage()
+							);
+						// NOT NULL VIOLATION
+						case 23502:
+							return extractUsingTemplate(
+									"null value in column \"",
+									"\" violates not-null constraint",
+									sqle.getMessage()
+							);
+						// TODO: RESTRICT VIOLATION
+						case 23001:
+							return null;
+					}
 				}
+				return null;
 			} );
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
-			switch ( JdbcExceptionHelper.extractSqlState( sqlException ) ) {
-				case "40P01":
-					// DEADLOCK DETECTED
-					return new LockAcquisitionException(message, sqlException, sql);
-				case "55P03":
-					// LOCK NOT AVAILABLE
-					return new PessimisticLockException(message, sqlException, sql);
-				case "57014":
-					return new QueryTimeoutException( message, sqlException, sql );
-				default:
-					// returning null allows other delegates to operate
-					return null;
+			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
+			if ( sqlState != null ) {
+				switch ( sqlState ) {
+					case "40P01":
+						// DEADLOCK DETECTED
+						return new LockAcquisitionException( message, sqlException, sql );
+					case "55P03":
+						// LOCK NOT AVAILABLE
+						return new PessimisticLockException( message, sqlException, sql );
+					case "57014":
+						return new QueryTimeoutException( message, sqlException, sql );
+				}
 			}
+			return null;
 		};
 	}
 
@@ -874,9 +1113,10 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		return SelectItemReferenceStrategy.POSITION;
 	}
 
+
 	@Override
 	public CallableStatementSupport getCallableStatementSupport() {
-		return PostgresCallableStatementSupport.INSTANCE;
+		return getVersion().isSameOrAfter( 11 ) ? PostgreSQLCallableStatementSupport.INSTANCE : PostgreSQLCallableStatementSupport.V10_INSTANCE;
 	}
 
 	@Override
@@ -899,7 +1139,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return IDENTITY_COLUMN_SUPPORT;
+		return PostgreSQLIdentityColumnSupport.INSTANCE;
 	}
 
 	@Override
@@ -920,6 +1160,18 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	@Override
 	public boolean supportsJdbcConnectionLobCreation(DatabaseMetaData databaseMetaData) {
 		return false;
+	}
+
+	@Override
+	public boolean supportsMaterializedLobAccess() {
+		// Prefer using text and bytea over oid (LOB), because oid is very restricted.
+		// If someone really wants a type bigger than 1GB, they should ask for it by using @Lob explicitly
+		return false;
+	}
+
+	@Override
+	public boolean supportsTemporalLiteralOffset() {
+		return true;
 	}
 
 	@Override
@@ -959,6 +1211,11 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	}
 
 	@Override
+	public AggregateSupport getAggregateSupport() {
+		return PostgreSQLAggregateSupport.valueOf( this );
+	}
+
+	@Override
 	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
 		appender.appendSql( "bytea '\\x" );
 		PrimitiveByteArrayJavaType.INSTANCE.appendString( appender, bytes );
@@ -978,14 +1235,27 @@ public class PostgreSQLLegacyDialect extends Dialect {
 				appender.appendSql( '\'' );
 				break;
 			case TIME:
-				appender.appendSql( "time '" );
-				appendAsTime( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				if ( supportsTemporalLiteralOffset() && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
+					appender.appendSql( "time with time zone '" );
+					appendAsTime( appender, temporalAccessor, true, jdbcTimeZone );
+				}
+				else {
+					appender.appendSql( "time '" );
+					appendAsLocalTime( appender, temporalAccessor );
+				}
 				appender.appendSql( '\'' );
 				break;
 			case TIMESTAMP:
-				appender.appendSql( "timestamp with time zone '" );
-				appendAsTimestampWithMicros( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
-				appender.appendSql( '\'' );
+				if ( supportsTemporalLiteralOffset() && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
+					appender.appendSql( "timestamp with time zone '" );
+					appendAsTimestampWithMicros( appender, temporalAccessor, true, jdbcTimeZone );
+					appender.appendSql( '\'' );
+				}
+				else {
+					appender.appendSql( "timestamp '" );
+					appendAsTimestampWithMicros( appender, temporalAccessor, false, jdbcTimeZone );
+					appender.appendSql( '\'' );
+				}
 				break;
 			default:
 				throw new IllegalArgumentException();
@@ -1001,8 +1271,8 @@ public class PostgreSQLLegacyDialect extends Dialect {
 				appender.appendSql( '\'' );
 				break;
 			case TIME:
-				appender.appendSql( "time '" );
-				appendAsTime( appender, date );
+				appender.appendSql( "time with time zone '" );
+				appendAsTime( appender, date, jdbcTimeZone );
 				appender.appendSql( '\'' );
 				break;
 			case TIMESTAMP:
@@ -1028,13 +1298,13 @@ public class PostgreSQLLegacyDialect extends Dialect {
 				appender.appendSql( '\'' );
 				break;
 			case TIME:
-				appender.appendSql( "time '" );
-				appendAsTime( appender, calendar );
+				appender.appendSql( "time with time zone '" );
+				appendAsTime( appender, calendar, jdbcTimeZone );
 				appender.appendSql( '\'' );
 				break;
 			case TIMESTAMP:
 				appender.appendSql( "timestamp with time zone '" );
-				appendAsTimestampWithMicros( appender, calendar, jdbcTimeZone );
+				appendAsTimestampWithMillis( appender, calendar, jdbcTimeZone );
 				appender.appendSql( '\'' );
 				break;
 			default:
@@ -1132,6 +1402,11 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsRecursiveCTE() {
+		return true;
+	}
+
+	@Override
 	public boolean supportsFetchClause(FetchClauseType type) {
 		switch ( type ) {
 			case ROWS_ONLY:
@@ -1146,6 +1421,11 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	}
 
 	@Override
+	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
+		return FunctionalDependencyAnalysisSupportImpl.TABLE_REFERENCE;
+	}
+
+	@Override
 	public RowLockStrategy getWriteRowLockStrategy() {
 		return RowLockStrategy.TABLE;
 	}
@@ -1157,7 +1437,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 			tableTypesList.add( "MATERIALIZED VIEW" );
 
 			/*
-			 	PostgreSQL 10 and later adds support for Partition table.
+				PostgreSQL 10 and later adds support for Partition table.
 			 */
 			if ( getVersion().isSameOrAfter( 10 ) ) {
 				tableTypesList.add( "PARTITIONED TABLE" );
@@ -1167,8 +1447,11 @@ public class PostgreSQLLegacyDialect extends Dialect {
 
 	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		super.contributeTypes(typeContributions, serviceRegistry);
+		super.contributeTypes( typeContributions, serviceRegistry );
+		contributePostgreSQLTypes( typeContributions, serviceRegistry );
+	}
 
+	protected void contributePostgreSQLTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
 		// For discussion of BLOB support in Postgres, as of 8.4, have a peek at
@@ -1181,21 +1464,66 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		// dialect uses oid for Blobs, byte arrays cannot be used.
 		jdbcTypeRegistry.addDescriptor( Types.BLOB, BlobJdbcType.BLOB_BINDING );
 		jdbcTypeRegistry.addDescriptor( Types.CLOB, ClobJdbcType.CLOB_BINDING );
-		jdbcTypeRegistry.addDescriptor( TIMESTAMP_UTC, InstantAsTimestampWithTimeZoneJdbcType.INSTANCE );
+		// Don't use this type due to https://github.com/pgjdbc/pgjdbc/issues/2862
+		//jdbcTypeRegistry.addDescriptor( TimestampUtcAsOffsetDateTimeJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( XmlJdbcType.INSTANCE );
 
 		if ( driverKind == PostgreSQLDriverKind.PG_JDBC ) {
-			if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLInetJdbcType.INSTANCE );
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLIntervalSecondJdbcType.INSTANCE );
+			if ( PgJdbcHelper.isUsable( serviceRegistry ) ) {
+				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getInetJdbcType( serviceRegistry ) );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getIntervalJdbcType( serviceRegistry ) );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getStructJdbcType( serviceRegistry ) );
+			}
+			else {
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingInetJdbcType.INSTANCE );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingIntervalSecondJdbcType.INSTANCE );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLStructCastingJdbcType.INSTANCE );
 			}
 
+			jdbcTypeRegistry.addDescriptor( PostgreSQLEnumJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( PostgreSQLOrdinalEnumJdbcType.INSTANCE );
 			if ( getVersion().isSameOrAfter( 8, 2 ) ) {
-				// HHH-9562
-				jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
+				// HHH-9562 / HHH-14358
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLUUIDJdbcType.INSTANCE );
 				if ( getVersion().isSameOrAfter( 9, 2 ) ) {
-					if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
-						jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJsonbJdbcType.INSTANCE );
+					if ( getVersion().isSameOrAfter( 9, 4 ) ) {
+						if ( PgJdbcHelper.isUsable( serviceRegistry ) ) {
+							jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getJsonbJdbcType( serviceRegistry ) );
+							jdbcTypeRegistry.addTypeConstructorIfAbsent( PgJdbcHelper.getJsonbArrayJdbcType( serviceRegistry ) );
+						}
+						else {
+							jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
+							jdbcTypeRegistry.addTypeConstructorIfAbsent( PostgreSQLCastingJsonArrayJdbcTypeConstructor.JSONB_INSTANCE );
+						}
+					}
+					else {
+						if ( PgJdbcHelper.isUsable( serviceRegistry ) ) {
+							jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getJsonJdbcType( serviceRegistry ) );
+							jdbcTypeRegistry.addTypeConstructorIfAbsent( PgJdbcHelper.getJsonArrayJdbcType( serviceRegistry ) );
+						}
+						else {
+							jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSON_INSTANCE );
+							jdbcTypeRegistry.addTypeConstructorIfAbsent( PostgreSQLCastingJsonArrayJdbcTypeConstructor.JSON_INSTANCE );
+						}
+					}
+				}
+			}
+		}
+		else {
+			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingInetJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingIntervalSecondJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLStructCastingJdbcType.INSTANCE );
+
+			if ( getVersion().isSameOrAfter( 8, 2 ) ) {
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLUUIDJdbcType.INSTANCE );
+				if ( getVersion().isSameOrAfter( 9, 2 ) ) {
+					if ( getVersion().isSameOrAfter( 9, 4 ) ) {
+						jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
+						jdbcTypeRegistry.addTypeConstructorIfAbsent( PostgreSQLCastingJsonArrayJdbcTypeConstructor.JSONB_INSTANCE );
+					}
+					else {
+						jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSON_INSTANCE );
+						jdbcTypeRegistry.addTypeConstructorIfAbsent( PostgreSQLCastingJsonArrayJdbcTypeConstructor.JSON_INSTANCE );
 					}
 				}
 			}
@@ -1213,5 +1541,72 @@ public class PostgreSQLLegacyDialect extends Dialect {
 								.getDescriptor( Object.class )
 				)
 		);
+
+		// Replace the standard array constructor
+		jdbcTypeRegistry.addTypeConstructor( PostgreSQLArrayJdbcTypeConstructor.INSTANCE );
+	}
+
+	@Override
+	public UniqueDelegate getUniqueDelegate() {
+		return uniqueDelegate;
+	}
+
+	@Override
+	public Exporter<Table> getTableExporter() {
+		return postgresqlTableExporter;
+	}
+
+	/**
+	 * @return {@code true}, but only because we can "batch" truncate
+	 */
+	@Override
+	public boolean canBatchTruncate() {
+		return true;
+	}
+
+	// disabled foreign key constraints still prevent 'truncate table'
+	// (these would help if we used 'delete' instead of 'truncate')
+
+	@Override
+	public String rowId(String rowId) {
+		return "ctid";
+	}
+
+	@Override
+	public int rowIdSqlType() {
+		return OTHER;
+	}
+
+	@Override
+	public String getQueryHintString(String sql, String hints) {
+		return "/*+ " + hints + " */ " + sql;
+	}
+
+	@Override
+	public String addSqlHintOrComment(String sql, QueryOptions queryOptions, boolean commentsEnabled) {
+		// PostgreSQL's extension pg_hint_plan needs the hint to be the first comment
+		if ( commentsEnabled && queryOptions.getComment() != null ) {
+			sql = prependComment( sql, queryOptions.getComment() );
+		}
+		if ( queryOptions.getDatabaseHints() != null && queryOptions.getDatabaseHints().size() > 0 ) {
+			sql = getQueryHintString( sql, queryOptions.getDatabaseHints() );
+		}
+		return sql;
+	}
+
+	@Override
+	public int getDefaultIntervalSecondScale() {
+		// The maximum scale for `interval second` is 6 unfortunately
+		return 6;
+	}
+
+	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+	}
+
+	@Override
+	public boolean supportsFromClauseInUpdate() {
+		return true;
 	}
 }

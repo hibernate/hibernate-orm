@@ -1,15 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
- */
-
-/*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.onetoone;
 
@@ -32,7 +23,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.H2Dialect;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Test;
@@ -40,7 +31,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-@TestForIssue(jiraKey = "HHH-13959")
+@JiraKey(value = "HHH-13959")
 public class OneToOneJoinTableUniquenessTest extends BaseCoreFunctionalTestCase {
 	File output;
 
@@ -60,9 +51,9 @@ public class OneToOneJoinTableUniquenessTest extends BaseCoreFunctionalTestCase 
 			fail( e.getMessage() );
 		}
 		String value = output.toPath().toString();
-		configuration.setProperty( AvailableSettings.HBM2DDL_SCRIPTS_CREATE_TARGET, value );
-		configuration.setProperty( AvailableSettings.HBM2DDL_SCRIPTS_ACTION, "create" );
-		configuration.setProperty( AvailableSettings.HBM2DDL_DATABASE_ACTION, "create-drop" );
+		configuration.setProperty( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET, value );
+		configuration.setProperty( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION, "create" );
+		configuration.setProperty( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "create-drop" );
 		configuration.setProperty( AvailableSettings.FORMAT_SQL, "false" );
 	}
 

@@ -1,29 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.transaction.batch;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import jakarta.persistence.FlushModeType;
-import jakarta.transaction.Status;
-import jakarta.transaction.TransactionManager;
-
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.jdbc.batch.internal.BatchBuilderImpl;
-import org.hibernate.engine.jdbc.batch.internal.BatchBuilderInitiator;
-import org.hibernate.engine.jdbc.batch.internal.BatchingBatch;
-import org.hibernate.engine.jdbc.batch.spi.Batch;
-import org.hibernate.engine.jdbc.batch.spi.BatchKey;
-import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
+import org.hibernate.cfg.BatchSettings;
 import org.hibernate.orm.test.jpa.transaction.JtaPlatformSettingProvider;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -31,20 +16,20 @@ import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SettingProvider;
-
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNot.not;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import jakarta.persistence.FlushModeType;
+import jakarta.transaction.Status;
+import jakarta.transaction.TransactionManager;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Gail Badner
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-13050")
+@JiraKey(value = "HHH-13050")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 @Jpa(
 		annotatedClasses = {
@@ -54,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 		integrationSettings = {
 				@Setting(name = AvailableSettings.JPA_TRANSACTION_TYPE, value = "JTA"),
 				@Setting(name = AvailableSettings.JPA_TRANSACTION_COMPLIANCE, value = "true"),
+				@Setting(name = AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT, value = "true"),
 				@Setting(name = AvailableSettings.STATEMENT_BATCH_SIZE, value = "50")
 		},
 		settingProviders = {
@@ -66,14 +52,12 @@ import static org.junit.jupiter.api.Assertions.fail;
 						provider = JtaPlatformSettingProvider.class
 				),
 				@SettingProvider(
-						settingName = BatchBuilderInitiator.BUILDER,
-						provider = JtaWithFailingBatchTest.BatchBuilderSettingProvider.class
+						settingName = BatchSettings.BUILDER,
+						provider = AbstractBatchingTest.ErrorBatch2BuilderSettingProvider.class
 				)
 		}
 )
 public class JtaWithFailingBatchTest extends AbstractJtaBatchTest {
-
-	private static TestBatch testBatch;
 
 	@Test
 	public void testAllStatementsAreClosedInCaseOfBatchExecutionFailure(EntityManagerFactoryScope scope) {
@@ -117,87 +101,14 @@ public class JtaWithFailingBatchTest extends AbstractJtaBatchTest {
 						}
 					}
 
-					assertThat(
-							"AbstractBatchImpl#releaseStatements() has not been callled",
-							testBatch.calledReleaseStatements,
-							is( true )
-					);
-					assertAllStatementsAreClosed( testBatch.createdStatements );
-					assertStatementsListIsCleared();
+					assertThat( wasReleaseCalled ).isTrue();
+					assertThat( numberOfStatementsBeforeRelease ).isEqualTo( 1 );
+					assertThat( numberOfStatementsAfterRelease ).isEqualTo( 0 );
 
-					assertFalse(
-							triggerable.wasTriggered(),
-							"HHH000352: Unable to release batch statement... has been thrown"
-					);
+					assertThat( triggerable.wasTriggered() )
+							.describedAs( "HHH000352: Unable to release batch statement... has been thrown" )
+							.isFalse();
 				}
 		);
-	}
-
-	private void assertStatementsListIsCleared() {
-		assertThat( testBatch.createdStatements.size(), not( 0 ) );
-		assertThat(
-				"Not all PreparedStatements have been released",
-				testBatch.numberOfStatementsAfterReleasing,
-				is( 0 )
-		);
-	}
-
-	public static class BatchBuilderSettingProvider implements SettingProvider.Provider<String> {
-		@Override
-		public String getSetting() {
-			return TestBatchBuilder.class.getName();
-		}
-	}
-
-	public static class TestBatch extends BatchingBatch {
-		private int numberOfStatementsAfterReleasing;
-		private final List<PreparedStatement> createdStatements = new ArrayList<>();
-		private boolean calledReleaseStatements;
-
-		private String currentStatementSql;
-
-		public TestBatch(BatchKey key, JdbcCoordinator jdbcCoordinator, int batchSize) {
-			super( key, jdbcCoordinator, batchSize );
-		}
-
-		@Override
-		public PreparedStatement getBatchStatement(String sql, boolean callable) {
-			currentStatementSql = sql;
-			PreparedStatement batchStatement = super.getBatchStatement( sql, callable );
-			createdStatements.add( batchStatement );
-			return batchStatement;
-		}
-
-		@Override
-		public void addToBatch() {
-			// Implementations really should call abortBatch() before throwing an exception.
-			// Purposely skipping the call to abortBatch() to ensure that Hibernate works properly when
-			// a legacy implementation does not call abortBatch().
-			throw sqlExceptionHelper().convert(
-					new SQLException( "fake SQLException" ),
-					"could not perform addBatch",
-					currentStatementSql
-			);
-		}
-
-		@Override
-		protected void releaseStatements() {
-			super.releaseStatements();
-			calledReleaseStatements = true;
-			numberOfStatementsAfterReleasing += getStatements().size();
-		}
-	}
-
-	public static class TestBatchBuilder extends BatchBuilderImpl {
-
-		@Override
-		public Batch buildBatch(BatchKey key, JdbcCoordinator jdbcCoordinator) {
-			return buildBatchTest( key, jdbcCoordinator, getJdbcBatchSize() );
-		}
-
-		protected BatchingBatch buildBatchTest(BatchKey key, JdbcCoordinator jdbcCoordinator, int jdbcBatchSize) {
-			testBatch = new TestBatch( key, jdbcCoordinator, jdbcBatchSize );
-			return testBatch;
-		}
 	}
 }

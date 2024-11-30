@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhance.internal.bytebuddy;
 
@@ -16,15 +14,15 @@ import jakarta.persistence.Id;
 import org.hibernate.bytecode.enhance.internal.tracker.CompositeOwnerTracker;
 import org.hibernate.bytecode.enhance.internal.tracker.SimpleFieldTracker;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.junit.jupiter.api.Test;
 
 import org.assertj.core.api.Assertions;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.extractor.Extractors.resultOf;
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.ENTITY_ENTRY_FIELD_NAME;
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.ENTITY_ENTRY_GETTER_NAME;
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.ENTITY_INSTANCE_GETTER_NAME;
@@ -45,8 +43,8 @@ import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.TRACKER_GET_N
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.TRACKER_HAS_CHANGED_NAME;
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.TRACKER_SUSPEND_NAME;
 
-@TestForIssue(jiraKey = "HHH-13764")
-@RunWith(BytecodeEnhancerRunner.class)
+@JiraKey("HHH-13764")
+@BytecodeEnhanced
 @EnhancementOptions(inlineDirtyChecking = true)
 public class DirtyCheckingWithEmbeddedOnGetterTest {
 
@@ -93,8 +91,8 @@ public class DirtyCheckingWithEmbeddedOnGetterTest {
 		assertThat( entity.getFirstPlayerToken() )
 				.extracting( TRACKER_COMPOSITE_FIELD_NAME ).isInstanceOf( CompositeOwnerTracker.class );
 
-		assertThat( entity ).extracting( TRACKER_HAS_CHANGED_NAME ).isEqualTo( true );
-		assertThat( entity ).extracting( TRACKER_GET_NAME )
+		assertThat( entity ).extracting( resultOf( TRACKER_HAS_CHANGED_NAME ) ).isEqualTo( true );
+		assertThat( entity ).extracting( resultOf( TRACKER_GET_NAME ) )
 				.isEqualTo( new String[] { "name", "firstPlayerToken" } );
 		assertThat( entity.getFirstPlayerToken() ).extracting( TRACKER_COMPOSITE_FIELD_NAME + ".names" )
 				.isEqualTo( new String[] { "firstPlayerToken" } );
@@ -107,8 +105,8 @@ public class DirtyCheckingWithEmbeddedOnGetterTest {
 		Method trackerClearMethod = CardGame.class.getMethod( TRACKER_CLEAR_NAME );
 		trackerClearMethod.invoke( entity );
 
-		assertThat( entity ).extracting( TRACKER_HAS_CHANGED_NAME ).isEqualTo( false );
-		assertThat( entity ).extracting( TRACKER_GET_NAME ).isEqualTo( new String[0] );
+		assertThat( entity ).extracting( resultOf( TRACKER_HAS_CHANGED_NAME ) ).isEqualTo( false );
+		assertThat( entity ).extracting( resultOf( TRACKER_GET_NAME ) ).isEqualTo( new String[0] );
 	}
 
 	@Test
@@ -121,14 +119,14 @@ public class DirtyCheckingWithEmbeddedOnGetterTest {
 
 		entity.setName( "Splendor: Cities of Splendor" );
 
-		assertThat( entity ).extracting( TRACKER_HAS_CHANGED_NAME ).isEqualTo( true );
-		assertThat( entity ).extracting( TRACKER_GET_NAME )
+		assertThat( entity ).extracting( resultOf( TRACKER_HAS_CHANGED_NAME ) ).isEqualTo( true );
+		assertThat( entity ).extracting( resultOf( TRACKER_GET_NAME ) )
 				.isEqualTo( new String[] { "name", "firstPlayerToken" } );
 
 		trackerClearMethod.invoke( entity );
 
 		entity.setFirstPlayerToken( new Component( "FIRST PLAYER!!!!!!!!" ) );
-		assertThat( entity ).extracting( TRACKER_GET_NAME )
+		assertThat( entity ).extracting( resultOf( TRACKER_GET_NAME ) )
 				.isEqualTo( new String[] { "firstPlayerToken" } );
 
 		assertThat( entity.getFirstPlayerToken() ).extracting( TRACKER_COMPOSITE_FIELD_NAME + ".names" )

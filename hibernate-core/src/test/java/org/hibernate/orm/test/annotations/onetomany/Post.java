@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.onetomany;
 
@@ -16,17 +14,13 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
 
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
-
 @Entity(name = "Post")
 @DiscriminatorValue(value = "WCT")
 public class Post extends Comment{
 
-	protected List<Comment> comments = new ArrayList<Comment>();
+	protected List<Comment> comments = new ArrayList<>();
 
 	@OneToMany(mappedBy = "post", cascade = CascadeType.ALL , orphanRemoval = false, fetch = FetchType.LAZY)
-	@LazyCollection(LazyCollectionOption.EXTRA)
 	@OrderColumn(name = "idx")
 	public List<Comment> getComments() {
 		return comments;

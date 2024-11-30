@@ -1,24 +1,21 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.Arrays;
 import java.util.List;
 
-import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
-import org.hibernate.query.ReturnableType;
 import org.hibernate.metamodel.model.domain.TupleType;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.SqmExpressible;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.ObjectArrayJavaType;
 
@@ -92,21 +89,32 @@ public class ArrayTupleType implements TupleType<Object[]>,
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public JdbcMapping getJdbcMapping(int index) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 }

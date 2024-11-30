@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.from;
 
@@ -14,6 +12,10 @@ import java.util.function.Function;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.internal.util.StringHelper.isEmpty;
 
 /**
  * Represents a reference to a table (derived or physical) in a query's from clause.
@@ -55,7 +57,7 @@ public interface TableReference extends SqlAstNode, ColumnReferenceQualifier {
 	}
 
 	default boolean containsAffectedTableName(String requestedName) {
-		return visitAffectedTableNames( requestedName::equals );
+		return isEmpty( requestedName ) || Boolean.TRUE.equals( visitAffectedTableNames( requestedName::equals ) );
 	}
 
 	Boolean visitAffectedTableNames(Function<String, Boolean> nameCollector);
@@ -63,13 +65,19 @@ public interface TableReference extends SqlAstNode, ColumnReferenceQualifier {
 	@Override
 	TableReference resolveTableReference(
 			NavigablePath navigablePath,
-			String tableExpression,
-			boolean allowFkOptimization);
+			String tableExpression);
 
 	@Override
 	TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization,
 			boolean resolve);
+
+	default boolean isEmbeddableFunctionTableReference() {
+		return false;
+	}
+
+	default @Nullable EmbeddableFunctionTableReference asEmbeddableFunctionTableReference() {
+		return null;
+	}
 }

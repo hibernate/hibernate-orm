@@ -1,12 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.onetoone.bidirectional.primarykeyjoincolumn;
 
 import java.io.Serializable;
+
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Parameter;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -14,21 +16,16 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Parameter;
-import org.hibernate.annotations.Proxy;
-
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @Entity
-@Proxy(lazy = false)
 public class NotAuditedNoProxyPerson implements Serializable {
 	@Id
 	@Column(name = "PERSON_ID")
 	@GeneratedValue(generator = "NotAuditedNoProxyKeyGenerator")
 	@GenericGenerator(name = "NotAuditedNoProxyKeyGenerator", strategy = "foreign",
-					  parameters = {@Parameter(name = "property", value = "account")})
+					parameters = {@Parameter(name = "property", value = "account")})
 	private Long personId;
 
 	private String name;

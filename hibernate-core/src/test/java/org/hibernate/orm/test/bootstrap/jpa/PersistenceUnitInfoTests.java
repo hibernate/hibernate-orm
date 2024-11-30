@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bootstrap.jpa;
 
@@ -13,14 +11,16 @@ import jakarta.persistence.spi.PersistenceProvider;
 import javax.sql.DataSource;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.HibernatePersistenceProvider;
+
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.jdbc.DataSourceStub;
 
-import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.jpa.PersistenceUnitInfoAdapter;
 import org.junit.Test;
@@ -33,9 +33,10 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Steve Ebersole
  */
+@RequiresDialect( H2Dialect.class )
 public class PersistenceUnitInfoTests extends BaseUnitTestCase {
 	@Test
-	@TestForIssue( jiraKey = "HHH-13432" )
+	@JiraKey( value = "HHH-13432" )
 	public void testNonJtaDataExposedAsProperty() {
 		final DataSource puDataSource = new DataSourceStub( "puDataSource" );
 		final PersistenceUnitInfoAdapter info = new PersistenceUnitInfoAdapter() {
@@ -69,7 +70,7 @@ public class PersistenceUnitInfoTests extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-13432" )
+	@JiraKey( value = "HHH-13432" )
 	public void testJtaDataExposedAsProperty() {
 		final DataSource puDataSource = new DataSourceStub( "puDataSource" );
 		final PersistenceUnitInfoAdapter info = new PersistenceUnitInfoAdapter() {

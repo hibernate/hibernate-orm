@@ -1,13 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id.uuid.sqlrep.sqlchar;
 
 import java.sql.Types;
-import java.util.List;
 import java.util.UUID;
 
 import org.hibernate.annotations.JdbcTypeCode;
@@ -30,7 +27,6 @@ import jakarta.persistence.ManyToOne;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasSize;
 
 /**
  * @author Steve Ebersole
@@ -54,18 +50,16 @@ public class UuidAsCharAnnotationTest {
 	public void testUsage(SessionFactoryScope scope) {
 		final MappingMetamodel domainModel = scope.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel();
 		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( Node.class );
-		final List<JdbcMapping> identifierJdbcMappings = entityDescriptor.getIdentifierMapping().getJdbcMappings();
-		assertThat( identifierJdbcMappings, hasSize( 1 ) );
-		final JdbcMapping jdbcMapping = identifierJdbcMappings.get( 0 );
+		final JdbcMapping jdbcMapping = entityDescriptor.getIdentifierMapping().getSingleJdbcMapping();
 		assertThat( jdbcMapping.getJdbcType().isString(), is( true ) );
 
 		final UUIDPair uuidPair = scope.fromTransaction( session -> {
 			final Node root = new Node( "root" );
-			session.save( root );
+			session.persist( root );
 			assertThat( root.id, notNullValue());
 
 			final Node child = new Node( "child", root );
-			session.save( child );
+			session.persist( child );
 			assertThat( child.id, notNullValue() );
 
 			return new UUIDPair( root.id, child.id );

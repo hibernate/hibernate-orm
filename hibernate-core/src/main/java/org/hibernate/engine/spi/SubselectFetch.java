@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
@@ -12,14 +10,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.metamodel.mapping.EntityValuedModelPart;
+import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
+import org.hibernate.sql.results.graph.entity.EntityInitializer;
 
 /**
  * Encapsulates details related to entities which contain sub-select-fetchable
@@ -27,21 +25,18 @@ import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
  * be sub-select fetched later during initialization
  */
 public class SubselectFetch {
-	private final EntityValuedModelPart entityModelPart;
 	private final QuerySpec loadingSqlAst;
 	private final TableGroup ownerTableGroup;
-	private final List<JdbcParameter> loadingJdbcParameters;
+	private final JdbcParametersList loadingJdbcParameters;
 	private final JdbcParameterBindings loadingJdbcParameterBindings;
 	private final Set<EntityKey> resultingEntityKeys;
 
 	public SubselectFetch(
-			EntityValuedModelPart entityModelPart,
 			QuerySpec loadingSqlAst,
 			TableGroup ownerTableGroup,
-			List<JdbcParameter> loadingJdbcParameters,
+			JdbcParametersList loadingJdbcParameters,
 			JdbcParameterBindings loadingJdbcParameterBindings,
 			Set<EntityKey> resultingEntityKeys) {
-		this.entityModelPart = entityModelPart;
 		this.loadingSqlAst = loadingSqlAst;
 		this.ownerTableGroup = ownerTableGroup;
 		this.loadingJdbcParameters = loadingJdbcParameters;
@@ -49,11 +44,7 @@ public class SubselectFetch {
 		this.resultingEntityKeys = resultingEntityKeys;
 	}
 
-	public EntityValuedModelPart getEntityModelPart() {
-		return entityModelPart;
-	}
-
-	public List<JdbcParameter> getLoadingJdbcParameters() {
+	public JdbcParametersList getLoadingJdbcParameters() {
 		// todo (6.0) : do not believe this is needed
 		// 		- see org.hibernate.loader.ast.internal.LoaderSelectBuilder.generateSelect(org.hibernate.engine.spi.SubselectFetch)
 		return loadingJdbcParameters;
@@ -83,7 +74,7 @@ public class SubselectFetch {
 
 	/**
 	 *The entity-keys of all owners loaded from a particular execution
-	 *
+	 * <p>
 	 * Used for "empty collection" handling mostly
 	 */
 	public Set<EntityKey> getResultingEntityKeys() {
@@ -92,19 +83,19 @@ public class SubselectFetch {
 
 	@Override
 	public String toString() {
-		return "SubselectFetch(" + entityModelPart.getEntityMappingType().getEntityName() + ")";
+		return "SubselectFetch(" + ownerTableGroup.getNavigablePath() + ")";
 	}
 
 	public static RegistrationHandler createRegistrationHandler(
 			BatchFetchQueue batchFetchQueue,
 			SelectStatement sqlAst,
 			TableGroup tableGroup,
-			List<JdbcParameter> jdbcParameters,
+			JdbcParametersList jdbcParameters,
 			JdbcParameterBindings jdbcParameterBindings) {
 
 		return new StandardRegistrationHandler(
 				batchFetchQueue,
-				sqlAst.getQuerySpec(),
+				sqlAst,
 				tableGroup,
 				jdbcParameters,
 				jdbcParameterBindings
@@ -114,7 +105,7 @@ public class SubselectFetch {
 	public static RegistrationHandler createRegistrationHandler(
 			BatchFetchQueue batchFetchQueue,
 			SelectStatement sqlAst,
-			List<JdbcParameter> jdbcParameters,
+			JdbcParametersList jdbcParameters,
 			JdbcParameterBindings jdbcParameterBindings) {
 		final List<TableGroup> roots = sqlAst.getQuerySpec().getFromClause().getRoots();
 		if ( roots.isEmpty() ) {
@@ -126,53 +117,54 @@ public class SubselectFetch {
 	}
 
 	public interface RegistrationHandler {
-		void addKey(EntityKey key, LoadingEntityEntry entry);
+		void addKey(EntityHolder holder);
 	}
 
 	private static final RegistrationHandler NO_OP_REG_HANDLER = new RegistrationHandler() {
 		@Override
-		public void addKey(EntityKey key, LoadingEntityEntry entry) {
+		public void addKey(EntityHolder holder) {
 		}
 	} ;
 
 	public static class StandardRegistrationHandler implements RegistrationHandler {
 		private final BatchFetchQueue batchFetchQueue;
-		private final QuerySpec loadingSqlAst;
-		private final TableGroup ownerTableGroup;
-		private final List<JdbcParameter> loadingJdbcParameters;
+		private final SelectStatement loadingSqlAst;
+		private final JdbcParametersList loadingJdbcParameters;
 		private final JdbcParameterBindings loadingJdbcParameterBindings;
 		private final Map<NavigablePath, SubselectFetch> subselectFetches = new HashMap<>();
 
 		private StandardRegistrationHandler(
 				BatchFetchQueue batchFetchQueue,
-				QuerySpec loadingSqlAst,
+				SelectStatement loadingSqlAst,
 				TableGroup ownerTableGroup,
-				List<JdbcParameter> loadingJdbcParameters,
+				JdbcParametersList loadingJdbcParameters,
 				JdbcParameterBindings loadingJdbcParameterBindings) {
 			this.batchFetchQueue = batchFetchQueue;
 			this.loadingSqlAst = loadingSqlAst;
-			this.ownerTableGroup = ownerTableGroup;
 			this.loadingJdbcParameters = loadingJdbcParameters;
 			this.loadingJdbcParameterBindings = loadingJdbcParameterBindings;
 		}
 
-		public void addKey(EntityKey key, LoadingEntityEntry entry) {
-			if ( !entry.getDescriptor().hasSubselectLoadableCollections() ) {
-				return;
+		@Override
+		public void addKey(EntityHolder holder) {
+			if ( batchFetchQueue.getSession().getLoadQueryInfluencers()
+					.hasSubselectLoadableCollections( holder.getDescriptor() ) ) {
+				final EntityInitializer<?> entityInitializer = NullnessUtil.castNonNull( holder.getEntityInitializer() );
+				final SubselectFetch subselectFetch = subselectFetches.computeIfAbsent(
+						entityInitializer.getNavigablePath(),
+						navigablePath -> new SubselectFetch(
+								loadingSqlAst.getQuerySpec(),
+								loadingSqlAst.getQuerySpec()
+										.getFromClause()
+										.findTableGroup( entityInitializer.getNavigablePath() ),
+								loadingJdbcParameters,
+								loadingJdbcParameterBindings,
+								new HashSet<>()
+						)
+				);
+				subselectFetch.resultingEntityKeys.add( holder.getEntityKey() );
+				batchFetchQueue.addSubselect( holder.getEntityKey(), subselectFetch );
 			}
-			final SubselectFetch subselectFetch = subselectFetches.computeIfAbsent(
-					entry.getEntityInitializer().getNavigablePath(),
-					navigablePath -> new SubselectFetch(
-						null,
-						loadingSqlAst,
-						ownerTableGroup,
-						loadingJdbcParameters,
-						loadingJdbcParameterBindings,
-						new HashSet<>()
-				)
-			);
-			subselectFetch.resultingEntityKeys.add( key );
-			batchFetchQueue.addSubselect( key, subselectFetch );
 		}
 	}
 }

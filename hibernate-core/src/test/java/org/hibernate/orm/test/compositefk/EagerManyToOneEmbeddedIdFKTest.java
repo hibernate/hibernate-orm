@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.compositefk;
 
@@ -17,7 +15,6 @@ import jakarta.persistence.Table;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -37,7 +34,7 @@ import static org.hamcrest.core.IsNull.notNullValue;
 				EagerManyToOneEmbeddedIdFKTest.SystemUser.class
 		}
 )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 public class EagerManyToOneEmbeddedIdFKTest {
 
 	@BeforeEach
@@ -50,8 +47,8 @@ public class EagerManyToOneEmbeddedIdFKTest {
 					System system = new System( 1, "sub1" );
 					system.setUser( user );
 
-					session.save( user );
-					session.save( system );
+					session.persist( user );
+					session.persist( system );
 				}
 		);
 	}
@@ -68,7 +65,7 @@ public class EagerManyToOneEmbeddedIdFKTest {
 
 	@Test
 	public void testGet(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
@@ -84,7 +81,7 @@ public class EagerManyToOneEmbeddedIdFKTest {
 
 	@Test
 	public void testHql(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {

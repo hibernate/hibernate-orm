@@ -1,16 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.orphan.onetomany;
 
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.Jpa;
 
 import org.junit.jupiter.api.AfterEach;
@@ -55,8 +52,8 @@ public class DeleteOneToManyOrphansTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9568")
-	@FailureExpected( jiraKey = "HHH-9568" )
+	@JiraKey( value = "HHH-9568")
+//	@FailureExpected( jiraKey = "HHH-9568" )
 	public void testOrphanedWhileManaged(EntityManagerFactoryScope scope) {
 		Long productId = scope.fromTransaction(
 				entityManager -> {
@@ -84,8 +81,8 @@ public class DeleteOneToManyOrphansTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9568")
-	@FailureExpected( jiraKey = "HHH-9568" )
+	@JiraKey( value = "HHH-9568")
+//	@FailureExpected( jiraKey = "HHH-9568" )
 	public void testOrphanedWhileManagedMergeOwner(EntityManagerFactoryScope scope) {
 		Long productId = scope.fromTransaction(
 				entityManager -> {
@@ -114,8 +111,8 @@ public class DeleteOneToManyOrphansTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9568")
-	@FailureExpected( jiraKey = "HHH-9568" )
+	@JiraKey( value = "HHH-9568")
+//	@FailureExpected( jiraKey = "HHH-9568" )
 	public void testReplacedWhileManaged(EntityManagerFactoryScope scope) {
 		Long featureNewId = scope.fromTransaction(
 				entityManager -> {

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model;
 
@@ -19,18 +17,19 @@ import org.hibernate.boot.model.process.internal.UserTypeResolution;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
-import org.hibernate.resource.beans.internal.Helper;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
+import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.SerializableType;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
@@ -40,15 +39,17 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;
 import org.hibernate.usertype.UserType;
 
+import static org.hibernate.boot.model.process.internal.InferredBasicValueResolver.resolveSqlTypeIndicators;
 import static org.hibernate.mapping.MappingHelper.injectParameters;
 
 /**
- * Models the information pertaining to a custom type definition supplied by the user.  Used
- * to delay instantiation of the actual {@link Type} instance.
- *
+ * Models the information pertaining to a custom type definition supplied by the user.
+ * Used to delay instantiation of the actual {@link Type} instance.
+ * <p>
  * Generally speaking this information would come from annotations
- * ({@link org.hibernate.annotations.Type}) or XML mappings.  An alternative form of
- * supplying custom types is programmatically via one of:<ul>
+ * ({@link org.hibernate.annotations.Type}) or XML mappings. An alternative way to
+ * supply custom types is programmatically, via one of:
+ * <ul>
  *     <li>{@link org.hibernate.boot.MetadataBuilder#applyBasicType(BasicType)}</li>
  *     <li>{@link org.hibernate.boot.MetadataBuilder#applyBasicType(UserType, String[])}</li>
  *     <li>{@link org.hibernate.boot.MetadataBuilder#applyTypes(TypeContributor)}</li>
@@ -57,27 +58,25 @@ import static org.hibernate.mapping.MappingHelper.injectParameters;
  * @author Steve Ebersole
  * @author John Verhaeg
  */
-@SuppressWarnings({"rawtypes", "unchecked"})
 public class TypeDefinition implements Serializable {
 	public static final AtomicInteger NAME_COUNTER = new AtomicInteger();
 
 	private final String name;
-	private final Class typeImplementorClass;
+	private final Class<?> typeImplementorClass;
 	private final String[] registrationKeys;
-	private final Properties parameters;
+	private final Map<String,String> parameters;
 
 	private BasicValue.Resolution<?> reusableResolution;
 
 
 	public TypeDefinition(
 			String name,
-			Class typeImplementorClass,
+			Class<?> typeImplementorClass,
 			String[] registrationKeys,
-			Properties parameters,
-			TypeConfiguration typeConfiguration) {
+			Map<String,String> parameters) {
 		this.name = name;
 		this.typeImplementorClass = typeImplementorClass;
-		this.registrationKeys= registrationKeys;
+		this.registrationKeys = registrationKeys;
 		this.parameters = parameters;
 	}
 
@@ -85,7 +84,7 @@ public class TypeDefinition implements Serializable {
 		return name;
 	}
 
-	public Class getTypeImplementorClass() {
+	public Class<?> getTypeImplementorClass() {
 		return typeImplementorClass;
 	}
 
@@ -93,13 +92,13 @@ public class TypeDefinition implements Serializable {
 		return registrationKeys;
 	}
 
-	public Properties getParameters() {
+	public Map<String,String> getParameters() {
 		return parameters;
 	}
 
 	public BasicValue.Resolution<?> resolve(
-			Map localConfigParameters,
-			MutabilityPlan explicitMutabilityPlan,
+			Map<?,?> localConfigParameters,
+			MutabilityPlan<?> explicitMutabilityPlan,
 			MetadataBuildingContext context,
 			JdbcTypeIndicators indicators) {
 		if ( CollectionHelper.isEmpty( localConfigParameters ) ) {
@@ -107,7 +106,6 @@ public class TypeDefinition implements Serializable {
 			if ( reusableResolution == null ) {
 				reusableResolution = createResolution( name, Collections.emptyMap(), indicators, context );
 			}
-
 			return reusableResolution;
 		}
 		else {
@@ -131,57 +129,58 @@ public class TypeDefinition implements Serializable {
 		);
 	}
 
-	private static BasicValue.Resolution<?> createResolution(
+	private static <T> BasicValue.Resolution<T> createResolution(
 			String name,
-			Class<?> typeImplementorClass,
-			Properties parameters,
+			Class<T> typeImplementorClass,
+			Map<?,?> parameters,
 			Map<?,?> usageSiteProperties,
 			JdbcTypeIndicators indicators,
 			MetadataBuildingContext context) {
 		final BootstrapContext bootstrapContext = context.getBootstrapContext();
 		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
-		final BeanInstanceProducer instanceProducer = bootstrapContext.getBeanInstanceProducer();
-		final boolean isKnownType = Type.class.isAssignableFrom( typeImplementorClass )
+		final BeanInstanceProducer instanceProducer = bootstrapContext.getCustomTypeProducer();
+		final boolean isKnownType =
+				Type.class.isAssignableFrom( typeImplementorClass )
 				|| UserType.class.isAssignableFrom( typeImplementorClass );
 
 		// support for AttributeConverter would be nice too
 		if ( isKnownType ) {
-			final Object typeInstance = instantiateType( bootstrapContext.getServiceRegistry(),
-					name, typeImplementorClass, instanceProducer );
+			final T typeInstance = instantiateType( bootstrapContext.getServiceRegistry(),
+					context.getBuildingOptions(), name, typeImplementorClass, instanceProducer );
 
 			if ( typeInstance instanceof TypeConfigurationAware ) {
-				( (TypeConfigurationAware) typeInstance ).setTypeConfiguration( typeConfiguration );
+				final TypeConfigurationAware configurationAware = (TypeConfigurationAware) typeInstance;
+				configurationAware.setTypeConfiguration( typeConfiguration );
 			}
 
-			final Properties combinedTypeParameters;
-
-			if ( CollectionHelper.isNotEmpty( usageSiteProperties ) ) {
-				combinedTypeParameters = new Properties( parameters );
+			final Properties combinedTypeParameters = new Properties();
+			if ( parameters!=null ) {
+				combinedTypeParameters.putAll( parameters );
+			}
+			if ( usageSiteProperties!=null ) {
 				combinedTypeParameters.putAll( usageSiteProperties );
-			}
-			else {
-				combinedTypeParameters = parameters;
 			}
 
 			injectParameters( typeInstance, combinedTypeParameters );
 
 			if ( typeInstance instanceof UserType ) {
-				final UserType<Object> userType = (UserType<Object>) typeInstance;
-				final CustomType<Object> customType = new CustomType<>( userType, typeConfiguration );
-
-				return new UserTypeResolution( customType, null, combinedTypeParameters );
+				@SuppressWarnings("unchecked")
+				final UserType<T> userType = (UserType<T>) typeInstance;
+				final CustomType<T> customType = new CustomType<>( userType, typeConfiguration );
+				return new UserTypeResolution<>( customType, null, combinedTypeParameters );
 			}
 
 			if ( typeInstance instanceof BasicType ) {
-				final BasicType resolvedBasicType = (BasicType) typeInstance;
-				return new BasicValue.Resolution<Object>() {
+				@SuppressWarnings("unchecked")
+				final BasicType<T> resolvedBasicType = (BasicType<T>) typeInstance;
+				return new BasicValue.Resolution<>() {
 					@Override
 					public JdbcMapping getJdbcMapping() {
 						return resolvedBasicType;
 					}
 
 					@Override
-					public BasicType getLegacyResolvedBasicType() {
+					public BasicType<T> getLegacyResolvedBasicType() {
 						return resolvedBasicType;
 					}
 
@@ -191,7 +190,7 @@ public class TypeDefinition implements Serializable {
 					}
 
 					@Override
-					public JavaType<Object> getDomainJavaType() {
+					public JavaType<T> getDomainJavaType() {
 						return resolvedBasicType.getMappedJavaType();
 					}
 
@@ -206,12 +205,12 @@ public class TypeDefinition implements Serializable {
 					}
 
 					@Override
-					public BasicValueConverter getValueConverter() {
+					public BasicValueConverter<T,?> getValueConverter() {
 						return resolvedBasicType.getValueConverter();
 					}
 
 					@Override
-					public MutabilityPlan<Object> getMutabilityPlan() {
+					public MutabilityPlan<T> getMutabilityPlan() {
 						// a TypeDefinition does not explicitly provide a MutabilityPlan (yet?)
 						return resolvedBasicType.isMutable()
 								? getDomainJavaType().getMutabilityPlan()
@@ -222,106 +221,108 @@ public class TypeDefinition implements Serializable {
 		}
 
 		// Series of backward compatible special cases
-
-		if ( Serializable.class.isAssignableFrom( typeImplementorClass ) ) {
-			final JavaType<Serializable> jtd = typeConfiguration
-					.getJavaTypeRegistry()
-					.resolveDescriptor( typeImplementorClass );
-			final JdbcType jdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( Types.VARBINARY );
-			final BasicType<Serializable> resolved = typeConfiguration.getBasicTypeRegistry().resolve( jtd, jdbcType );
-			final SerializableType legacyType = new SerializableType( typeImplementorClass );
-
-			return new BasicValue.Resolution<Object>() {
-				@Override
-				public JdbcMapping getJdbcMapping() {
-					return resolved;
-				}
-
-				@Override
-				public BasicType getLegacyResolvedBasicType() {
-					return legacyType;
-				}
-
-				@Override
-				public JavaType<Object> getDomainJavaType() {
-					return (JavaType) resolved.getMappedJavaType();
-				}
-
-				@Override
-				public JavaType<?> getRelationalJavaType() {
-					return resolved.getMappedJavaType();
-				}
-
-				@Override
-				public JdbcType getJdbcType() {
-					return resolved.getJdbcType();
-				}
-
-				@Override
-				public BasicValueConverter getValueConverter() {
-					return resolved.getValueConverter();
-				}
-
-				@Override
-				public MutabilityPlan<Object> getMutabilityPlan() {
-					// a TypeDefinition does not explicitly provide a MutabilityPlan (yet?)
-					return resolved.isMutable()
-							? getDomainJavaType().getMutabilityPlan()
-							: ImmutableMutabilityPlan.instance();
-				}
-			};
-		}
-
-		throw new IllegalArgumentException(
-				"Named type [" + typeImplementorClass + "] did not implement BasicType nor UserType"
-		);
+		return resolveLegacyCases( typeImplementorClass, indicators, typeConfiguration );
 	}
 
-	private static Object instantiateType(StandardServiceRegistry serviceRegistry,
-			String name, Class<?> typeImplementorClass,
-			BeanInstanceProducer instanceProducer) {
-		if ( Helper.INSTANCE.shouldIgnoreBeanContainer( serviceRegistry ) ) {
-			if ( name != null ) {
-				return instanceProducer.produceBeanInstance( name, typeImplementorClass );
-			}
-			else {
-				return instanceProducer.produceBeanInstance( typeImplementorClass );
-			}
+	private static <T> BasicValue.Resolution<T> resolveLegacyCases(
+			Class<T> typeImplementorClass, JdbcTypeIndicators indicators, TypeConfiguration typeConfiguration) {
+		final BasicType<T> legacyType;
+		if ( Serializable.class.isAssignableFrom( typeImplementorClass ) ) {
+			legacyType = new SerializableType( typeImplementorClass );
+		}
+		else if ( typeImplementorClass.isInterface() ) {
+			legacyType = (BasicType<T>) new JavaObjectType();
 		}
 		else {
-			final ManagedBean typeBean;
-			if ( name != null ) {
-				typeBean = serviceRegistry.getService( ManagedBeanRegistry.class )
-						.getBean( name, typeImplementorClass, instanceProducer );
-			}
-			else {
-				typeBean = serviceRegistry.getService( ManagedBeanRegistry.class )
-						.getBean( typeImplementorClass, instanceProducer );
+			throw new IllegalArgumentException( "Named type [" + typeImplementorClass
+					+ "] did not implement BasicType nor UserType" );
+		}
+
+		return createBasicTypeResolution( legacyType, typeImplementorClass, indicators, typeConfiguration );
+	}
+
+	private static <T> BasicValue.Resolution<T> createBasicTypeResolution(
+			BasicType<T> type,
+			Class<? extends T> typeImplementorClass,
+			JdbcTypeIndicators indicators,
+			TypeConfiguration typeConfiguration) {
+		final JavaType<T> jtd = typeConfiguration.getJavaTypeRegistry().resolveDescriptor( typeImplementorClass );
+		final JdbcType jdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( Types.VARBINARY );
+		final BasicType<T> basicType = typeConfiguration.getBasicTypeRegistry().resolve( jtd, jdbcType );
+		final BasicType<T> resolved = resolveSqlTypeIndicators( indicators, basicType, jtd );
+
+		return new BasicValue.Resolution<>() {
+			@Override
+			public JdbcMapping getJdbcMapping() {
+				return resolved;
 			}
 
+			@Override
+			public BasicType<T> getLegacyResolvedBasicType() {
+				return type;
+			}
+
+			@Override
+			public JavaType<T> getDomainJavaType() {
+				return resolved.getMappedJavaType();
+			}
+
+			@Override
+			public JavaType<?> getRelationalJavaType() {
+				return resolved.getMappedJavaType();
+			}
+
+			@Override
+			public JdbcType getJdbcType() {
+				return resolved.getJdbcType();
+			}
+
+			@Override
+			public BasicValueConverter<T,?> getValueConverter() {
+				return resolved.getValueConverter();
+			}
+
+			@Override
+			public MutabilityPlan<T> getMutabilityPlan() {
+				// a TypeDefinition does not explicitly provide a MutabilityPlan (yet?)
+				return resolved.isMutable()
+						? getDomainJavaType().getMutabilityPlan()
+						: ImmutableMutabilityPlan.instance();
+			}
+		};
+	}
+
+	private static <T> T instantiateType(
+			StandardServiceRegistry serviceRegistry,
+			MetadataBuildingOptions buildingOptions,
+			String name,
+			Class<T> typeImplementorClass,
+			BeanInstanceProducer instanceProducer) {
+		if ( !buildingOptions.isAllowExtensionsInCdi() ) {
+			return name != null
+					? instanceProducer.produceBeanInstance( name, typeImplementorClass )
+					: instanceProducer.produceBeanInstance( typeImplementorClass );
+		}
+		else {
+			final ManagedBeanRegistry beanRegistry = serviceRegistry.requireService( ManagedBeanRegistry.class );
+			final ManagedBean<T> typeBean = name != null
+					? beanRegistry.getBean( name, typeImplementorClass, instanceProducer )
+					: beanRegistry.getBean( typeImplementorClass, instanceProducer );
 			return typeBean.getBeanInstance();
 		}
 	}
 
 	public static BasicValue.Resolution<?> createLocalResolution(
 			String name,
-			Class typeImplementorClass,
-			MutabilityPlan explicitMutabilityPlan,
-			Map localTypeParams,
+			Class<?> typeImplementorClass,
+			Map<?,?> localTypeParams,
 			MetadataBuildingContext buildingContext) {
-		name = name + ':' + NAME_COUNTER.getAndIncrement();
-
-		final Properties properties = new Properties();
-		properties.putAll( localTypeParams );
-
-		final TypeConfiguration typeConfiguration = buildingContext.getBootstrapContext().getTypeConfiguration();
-
 		return createResolution(
-				name,
+				name + ':' + NAME_COUNTER.getAndIncrement(),
 				typeImplementorClass,
-				properties,
+				localTypeParams,
 				null,
-				typeConfiguration.getCurrentBaseSqlTypeIndicators(),
+				buildingContext.getBootstrapContext().getTypeConfiguration().getCurrentBaseSqlTypeIndicators(),
 				buildingContext
 		);
 	}

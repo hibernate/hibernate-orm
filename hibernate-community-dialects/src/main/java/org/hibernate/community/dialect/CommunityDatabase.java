@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -82,7 +80,8 @@ public enum CommunityDatabase {
 		}
 		@Override
 		public String getUrlPrefix() {
-			return "jdbc:firebirdsql:";
+			// Jaybird 4 and higher support jdbc:firebird: and jdbc:firebirdsql: as JDBC protocol
+			return "jdbc:firebird";
 		}
 	},
 
@@ -109,6 +108,21 @@ public enum CommunityDatabase {
 		@Override
 		public String getDriverClassName(String jdbcUrl) {
 			return "cubrid.jdbc.driver.CUBRIDDriver";
+		}
+	},
+
+	ALTIBASE {
+		@Override
+		public Dialect createDialect(DialectResolutionInfo info) {
+			return new AltibaseDialect( info );
+		}
+		@Override
+		public boolean productNameMatches(String databaseName) {
+			return "Altibase".equalsIgnoreCase( databaseName );
+		}
+		@Override
+		public String getDriverClassName(String jdbcUrl) {
+			return "Altibase.jdbc.driver.AltibaseDriver";
 		}
 	},
 
@@ -194,6 +208,23 @@ public enum CommunityDatabase {
 		@Override
 		public boolean productNameMatches(String databaseName) {
 			return databaseName.toLowerCase().startsWith( "timesten" );
+		}
+	},
+
+	SINGLESTORE {
+		@Override
+		public Dialect createDialect(DialectResolutionInfo info) {
+			return new SingleStoreDialect( info );
+		}
+
+		@Override
+		public boolean productNameMatches(String databaseName) {
+			return databaseName.toLowerCase().startsWith( "singlestore" );
+		}
+
+		@Override
+		public String getDriverClassName(String jdbcUrl) {
+			return "com.singlestore.jdbc.Driver";
 		}
 	};
 

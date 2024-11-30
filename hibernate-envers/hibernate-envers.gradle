@@ -7,20 +7,22 @@
 
 description = 'Hibernate\'s entity version (audit/history) support'
 
-apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+apply from: rootProject.file( 'gradle/relocated-published-java-module.gradle' )
 apply plugin: 'org.hibernate.matrix-test'
 
 dependencies {
     api project( ':hibernate-core' )
 
+    implementation libs.hibernateModels
     implementation jakartaLibs.jaxbApi
     implementation jakartaLibs.jaxb
-    implementation libs.hcann
     implementation libs.jandex
+    implementation libs.hibernateModels
 
     compileOnly libs.ant
 
-    annotationProcessor project( ':hibernate-jpamodelgen' )
+    annotationProcessor project( ':hibernate-processor' )
+    compileOnly jakartaLibs.annotation
 
     testImplementation project( ':hibernate-testing' )
 }
@@ -47,6 +49,13 @@ sourceSets {
 configurations {
     tests {
         description = 'Configuration for the produced test jar'
+    }
+}
+
+tasks.withType( Test.class ).each { test ->
+    if ( project.db == "h2" || project.db == "hsqldb" ) {
+        // Parallel test runs when running with in-memory databases
+        test.maxParallelForks = Runtime.runtime.availableProcessors().intdiv( 2 ) ?: 1
     }
 }
 

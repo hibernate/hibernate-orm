@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.query;
 
@@ -22,14 +20,12 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
-import org.hibernate.testing.orm.jdbc.DefaultSQLStatementInspectorSettingProvider;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.Setting;
-import org.hibernate.testing.orm.junit.SettingProvider;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -43,16 +39,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @Jpa(
 		annotatedClasses = { NamedQueryCommentTest.Game.class },
 		integrationSettings = {
-				@Setting( name = AvailableSettings.USE_SQL_COMMENTS, value = "true" )
+				@Setting( name = AvailableSettings.USE_SQL_COMMENTS, value = "true" ),
+				@Setting( name = AvailableSettings.DIALECT_NATIVE_PARAM_MARKERS, value = "false" )
 		},
-		settingProviders = {
-				@SettingProvider(
-						settingName = AvailableSettings.STATEMENT_INSPECTOR,
-						provider = DefaultSQLStatementInspectorSettingProvider.class
-				)
-		}
+		useCollectingStatementInspector = true
 )
-@TestForIssue(jiraKey = "HHH-11640")
+@JiraKey(value = "HHH-11640")
 public class NamedQueryCommentTest {
 
 	private static SQLStatementInspector statementInspector;
@@ -62,7 +54,7 @@ public class NamedQueryCommentTest {
 	@BeforeAll
 	public void setUp(EntityManagerFactoryScope scope) {
 
-		statementInspector = scope.getStatementInspector( SQLStatementInspector.class );
+		statementInspector = scope.getCollectingStatementInspector();
 
 		scope.inTransaction(
 				entityManager -> {

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
@@ -11,14 +9,14 @@ import org.hibernate.bytecode.enhance.spi.CollectionTracker;
 /**
  * Contract for an entity to report that it tracks the dirtiness of its own state,
  * as opposed to needing Hibernate to perform state-diff dirty calculations.
- * <p/>
+ * <p>
  * Entity classes are free to implement this contract themselves.  This contract is
  * also introduced into the entity when using bytecode enhancement and requesting
  * that entities track their own dirtiness.
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Ståle W. Pedersen
  */
-public interface SelfDirtinessTracker {
+public interface SelfDirtinessTracker extends PrimeAmongSecondarySupertypes {
 	/**
 	 * Have any of the entity's persistent attributes changed?
 	 *
@@ -53,4 +51,15 @@ public interface SelfDirtinessTracker {
 	 * Get access to the CollectionTracker
 	 */
 	CollectionTracker $$_hibernate_getCollectionTracker();
+
+	/**
+	 * Special internal contract to optimize type checking
+	 * @see PrimeAmongSecondarySupertypes
+	 * @return this same instance
+	 */
+	@Override
+	default SelfDirtinessTracker asSelfDirtinessTracker() {
+		return this;
+	}
+
 }

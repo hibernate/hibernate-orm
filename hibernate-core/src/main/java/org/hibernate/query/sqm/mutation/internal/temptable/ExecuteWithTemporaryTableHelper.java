@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.mutation.internal.temptable;
 
+import java.util.UUID;
 import java.util.function.Function;
 
 import org.hibernate.LockMode;
@@ -19,28 +18,29 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.engine.transaction.spi.IsolationDelegate;
+import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
+import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
+import org.hibernate.resource.transaction.spi.IsolationDelegate;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.insert.InsertStatement;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcInsert;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 
@@ -67,11 +67,9 @@ public final class ExecuteWithTemporaryTableHelper {
 
 		final NamedTableReference idTableReference = new NamedTableReference(
 				idTable.getTableExpression(),
-				InsertStatement.DEFAULT_ALIAS,
-				false,
-				factory
+				InsertSelectStatement.DEFAULT_ALIAS
 		);
-		final InsertStatement idTableInsert = new InsertStatement( idTableReference );
+		final InsertSelectStatement idTableInsert = new InsertSelectStatement( idTableReference );
 
 		for ( int i = 0; i < idTable.getColumns().size(); i++ ) {
 			final TemporaryTableColumn column = idTable.getColumns().get( i );
@@ -82,9 +80,7 @@ public final class ExecuteWithTemporaryTableHelper {
 							// id columns cannot be formulas and cannot have custom read and write expressions
 							false,
 							null,
-							null,
-							column.getJdbcMapping(),
-							factory
+							column.getJdbcMapping()
 					)
 			);
 		}
@@ -95,25 +91,17 @@ public final class ExecuteWithTemporaryTableHelper {
 		matchingIdSelection.getFromClause().addRoot( mutatingTableGroup );
 
 		mutatingEntityDescriptor.getIdentifierMapping().forEachSelectable(
-				(jdbcPosition, selection) -> {
+				(selectionIndex, selection) -> {
 					final TableReference tableReference = mutatingTableGroup.resolveTableReference(
 							mutatingTableGroup.getNavigablePath(),
 							selection.getContainingTableExpression()
 					);
 					matchingIdSelection.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl(
-									jdbcPosition,
-									jdbcPosition + 1,
+									selectionIndex,
 									sqmConverter.getSqlExpressionResolver().resolveSqlExpression(
-											SqlExpressionResolver.createColumnReferenceKey(
-													tableReference,
-													selection.getSelectionExpression()
-											),
-											sqlAstProcessingState -> new ColumnReference(
-													tableReference,
-													selection,
-													factory
-											)
+											tableReference,
+											selection
 									)
 							)
 					);
@@ -125,9 +113,8 @@ public final class ExecuteWithTemporaryTableHelper {
 			matchingIdSelection.getSelectClause().addSqlSelection(
 					new SqlSelectionImpl(
 							jdbcPosition,
-							jdbcPosition + 1,
 							new QueryLiteral<>(
-									sessionUidAccess.apply( executionContext.getSession() ),
+									UUID.fromString( sessionUidAccess.apply( executionContext.getSession() ) ),
 									(BasicValuedMapping) idTable.getSessionUidColumn().getJdbcMapping()
 							)
 					)
@@ -139,7 +126,7 @@ public final class ExecuteWithTemporaryTableHelper {
 	}
 
 	public static int saveIntoTemporaryTable(
-			InsertStatement temporaryTableInsert,
+			InsertSelectStatement temporaryTableInsert,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext) {
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
@@ -157,7 +144,7 @@ public final class ExecuteWithTemporaryTableHelper {
 					querySpec -> {
 						querySpec.getFromClause().visitTableJoins(
 								tableJoin -> {
-									if ( tableJoin.getJoinType() != SqlAstJoinType.INNER ) {
+									if ( tableJoin.isInitialized() && tableJoin.getJoinType() != SqlAstJoinType.INNER ) {
 										lockOptions.setLockMode( lockMode );
 									}
 								}
@@ -165,7 +152,7 @@ public final class ExecuteWithTemporaryTableHelper {
 					}
 			);
 		}
-		final JdbcInsert jdbcInsert = sqlAstTranslatorFactory.buildInsertTranslator( factory, temporaryTableInsert )
+		final JdbcOperationQueryMutation jdbcInsert = sqlAstTranslatorFactory.buildMutationTranslator( factory, temporaryTableInsert )
 				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 		lockOptions.setLockMode( lockMode );
 
@@ -200,8 +187,7 @@ public final class ExecuteWithTemporaryTableHelper {
 		final NamedTableReference idTableReference = new NamedTableReference(
 				idTable.getTableExpression(),
 				TemporaryTable.DEFAULT_ALIAS,
-				true,
-				executionContext.getSession().getFactory()
+				true
 		);
 		final TableGroup idTableGroup = new StandardTableGroup(
 				true,
@@ -234,16 +220,13 @@ public final class ExecuteWithTemporaryTableHelper {
 				if ( temporaryTableColumn != idTable.getSessionUidColumn() ) {
 					querySpec.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl(
-									i + 1,
 									i,
 									new ColumnReference(
 											tableReference,
 											temporaryTableColumn.getColumnName(),
 											false,
 											null,
-											null,
-											temporaryTableColumn.getJdbcMapping(),
-											executionContext.getSession().getFactory()
+											temporaryTableColumn.getJdbcMapping()
 									)
 							)
 					);
@@ -255,16 +238,13 @@ public final class ExecuteWithTemporaryTableHelper {
 					(i, selectableMapping) -> {
 						querySpec.getSelectClause().addSqlSelection(
 								new SqlSelectionImpl(
-										i + 1,
 										i,
 										new ColumnReference(
 												tableReference,
 												selectableMapping.getSelectionExpression(),
 												false,
 												null,
-												null,
-												selectableMapping.getJdbcMapping(),
-												executionContext.getSession().getFactory()
+												selectableMapping.getJdbcMapping()
 										)
 								)
 						);
@@ -287,13 +267,11 @@ public final class ExecuteWithTemporaryTableHelper {
 									idTable.getSessionUidColumn().getColumnName(),
 									false,
 									null,
-									null,
-									idTable.getSessionUidColumn().getJdbcMapping(),
-									executionContext.getSession().getFactory()
+									idTable.getSessionUidColumn().getJdbcMapping()
 							),
 							ComparisonOperator.EQUAL,
 							new QueryLiteral<>(
-									sessionUidAccess.apply( executionContext.getSession() ),
+									UUID.fromString( sessionUidAccess.apply( executionContext.getSession() ) ),
 									(BasicValuedMapping) idTable.getSessionUidColumn().getJdbcMapping()
 							)
 					)

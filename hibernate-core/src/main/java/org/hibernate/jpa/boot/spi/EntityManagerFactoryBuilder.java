@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.boot.spi;
 
@@ -13,15 +11,15 @@ import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.spi.MetadataImplementor;
 
 /**
- * Represents a 2-phase JPA bootstrap process for building a Hibernate EntityManagerFactory.
- *
- * The first phase is the process of instantiating this builder.  During the first phase, loading of Class references
- * is highly discouraged.
- *
- * The second phase is building the EntityManagerFactory instance via {@link #build}.
- *
- * If anything goes wrong during either phase and the bootstrap process needs to be aborted, {@link #cancel()} should
- * be called.
+ * Represents a two-phase JPA bootstrap process for building a Hibernate {@link EntityManagerFactory}.
+ * <p>
+ * The first phase is the process of instantiating this builder.  During the first phase, loading of
+ * Class references is highly discouraged.
+ * <p>
+ * The second phase is building the {@code EntityManagerFactory} instance via {@link #build}.
+ * <p>
+ * If anything goes wrong during either phase and the bootstrap process needs to be aborted,
+ * {@link #cancel()} should be called.
  *
  * @author Steve Ebersole
  * @author Scott Marlow

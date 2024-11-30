@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.loading;
 
@@ -36,6 +34,7 @@ import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -72,7 +71,7 @@ public class MappedFetchTests {
 				rootEntityDescriptor.getIdentifierMapping(),
 				null,
 				1,
-				LoadQueryInfluencers.NONE,
+				new LoadQueryInfluencers( sessionFactory ),
 				LockOptions.NONE,
 				jdbcParameter -> {
 				},
@@ -85,22 +84,22 @@ public class MappedFetchTests {
 		assertThat( domainResult, instanceOf( EntityResult.class ) );
 
 		final EntityResult entityResult = (EntityResult) domainResult;
-		final List<Fetch> fetches = entityResult.getFetches();
+		final ImmutableFetchList fetches = entityResult.getFetches();
 
 		// name + both lists
 		assertThat( fetches.size(), is( 3 ) );
 
 		// order is alphabetical...
 
-		final Fetch nameFetch = fetches.get( 0 );
+		final Fetch nameFetch = fetches.get( rootEntityDescriptor.findAttributeMapping( "name" ) );
 		assertThat( nameFetch.getFetchedMapping().getFetchableName(), is( "name" ) );
 		assertThat( nameFetch, instanceOf( BasicFetch.class ) );
 
-		final Fetch nickNamesFetch = fetches.get( 1 );
+		final Fetch nickNamesFetch = fetches.get( rootEntityDescriptor.findAttributeMapping( "nickNames" ) );
 		assertThat( nickNamesFetch.getFetchedMapping().getFetchableName(), is( "nickNames" ) );
 		assertThat( nickNamesFetch, instanceOf( EagerCollectionFetch.class ) );
 
-		final Fetch simpleEntitiesFetch = fetches.get( 2 );
+		final Fetch simpleEntitiesFetch = fetches.get( rootEntityDescriptor.findAttributeMapping( "simpleEntities" ) );
 		assertThat( simpleEntitiesFetch.getFetchedMapping().getFetchableName(), is( "simpleEntities" ) );
 		assertThat( simpleEntitiesFetch, instanceOf( DelayedCollectionFetch.class ) );
 
@@ -148,12 +147,12 @@ public class MappedFetchTests {
 					final RootEntity root1 = new RootEntity( 1, "first" );
 					root1.addNickName( "1st" );
 					root1.addNickName( "primo" );
-					session.save( root1 );
+					session.persist( root1 );
 
 					final RootEntity root2 = new RootEntity( 2, "second" );
 					root2.addNickName( "2nd" );
 					root2.addNickName( "first loser" );
-					session.save( root2 );
+					session.persist( root2 );
 				}
 		);
 	}

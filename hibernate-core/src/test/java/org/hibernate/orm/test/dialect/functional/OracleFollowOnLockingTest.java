@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.dialect.functional;
 
@@ -17,21 +15,25 @@ import org.hibernate.jpa.AvailableHints;
 import org.hibernate.query.IllegalQueryOperationException;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInterceptor;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Before;
 import org.junit.Test;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.LockModeType;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.QueryHint;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -39,8 +41,8 @@ import static org.junit.Assert.fail;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(value = { OracleDialect.class })
-@TestForIssue(jiraKey = "HHH-9486")
+@RequiresDialect(OracleDialect.class)
+@JiraKey(value = "HHH-9486")
 public class OracleFollowOnLockingTest extends
 		BaseNonConfigCoreFunctionalTestCase {
 
@@ -111,7 +113,7 @@ public class OracleFollowOnLockingTest extends
 	}
 
 	@Test
-	public void testPessimisticLockWithFirstResultsThenFollowOnLocking() {
+	public void testPessimisticLockWithFirstResultThenFollowOnLocking() {
 
 		final Session session = openSession();
 		session.beginTransaction();
@@ -121,6 +123,29 @@ public class OracleFollowOnLockingTest extends
 		List<Product> products =
 				session.createQuery(
 						"select p from Product p", Product.class )
+						.setLockOptions( new LockOptions( LockMode.PESSIMISTIC_WRITE ) )
+						.setFirstResult( 40 )
+						.setMaxResults( 10 )
+						.getResultList();
+
+		assertEquals( 10, products.size() );
+		assertEquals( 1, sqlStatementInterceptor.getSqlQueries().size() );
+
+		session.getTransaction().commit();
+		session.close();
+	}
+
+	@Test
+	public void testPessimisticLockWithFirstResultAndJoinThenFollowOnLocking() {
+
+		final Session session = openSession();
+		session.beginTransaction();
+
+		sqlStatementInterceptor.getSqlQueries().clear();
+
+		List<Product> products =
+				session.createQuery(
+								"select p from Product p left join p.vehicle v on v.id is null", Product.class )
 						.setLockOptions( new LockOptions( LockMode.PESSIMISTIC_WRITE ) )
 						.setFirstResult( 40 )
 						.setMaxResults( 10 )
@@ -173,7 +198,29 @@ public class OracleFollowOnLockingTest extends
 	}
 
 	@Test
-	public void testPessimisticLockWithFirstResultsWhileExplicitlyDisablingFollowOnLockingThenFails() {
+	public void testPessimisticLockWithFirstResultWhileExplicitlyDisablingFollowOnLockingThenFails() {
+
+		final Session session = openSession();
+		session.beginTransaction();
+
+		sqlStatementInterceptor.getSqlQueries().clear();
+
+		List<Product> products = session.createQuery( "select p from Product p", Product.class )
+				.setLockOptions( new LockOptions( LockMode.PESSIMISTIC_WRITE )
+										.setFollowOnLocking( false ) )
+				.setFirstResult( 40 )
+				.setMaxResults( 10 )
+				.getResultList();
+
+		assertEquals( 10, products.size() );
+		assertEquals( 1, sqlStatementInterceptor.getSqlQueries().size() );
+
+		session.getTransaction().commit();
+		session.close();
+	}
+
+	@Test
+	public void testPessimisticLockWithFirstResultAndJoinWhileExplicitlyDisablingFollowOnLockingThenFails() {
 
 		final Session session = openSession();
 		session.beginTransaction();
@@ -183,9 +230,9 @@ public class OracleFollowOnLockingTest extends
 		try {
 			List<Product> products =
 					session.createQuery(
-							"select p from Product p", Product.class )
+									"select p from Product p left join p.vehicle v on v.id is null", Product.class )
 							.setLockOptions( new LockOptions( LockMode.PESSIMISTIC_WRITE )
-													 .setFollowOnLocking( false ) )
+													.setFollowOnLocking( false ) )
 							.setFirstResult( 40 )
 							.setMaxResults( 10 )
 							.getResultList();
@@ -196,10 +243,9 @@ public class OracleFollowOnLockingTest extends
 					IllegalQueryOperationException.class,
 					expected.getCause().getClass()
 			);
-			assertTrue(
-					expected.getCause().getMessage().contains(
-							"Locking with OFFSET is not supported"
-					)
+			assertThat(
+					expected.getCause().getMessage(),
+					containsString( "Locking with OFFSET/FETCH is not supported" )
 			);
 		}
 	}
@@ -216,7 +262,7 @@ public class OracleFollowOnLockingTest extends
 				session.createQuery(
 						"select p from Product p", Product.class )
 						.setLockOptions( new LockOptions( LockMode.PESSIMISTIC_WRITE )
-												 .setFollowOnLocking( true ) )
+												.setFollowOnLocking( true ) )
 						.setFirstResult( 40 )
 						.setMaxResults( 10 )
 						.getResultList();
@@ -230,7 +276,29 @@ public class OracleFollowOnLockingTest extends
 
 
 	@Test
-	public void testPessimisticLockWithMaxResultsAndOrderByThenFollowOnLocking() {
+	@JiraKey(value = "HHH-16433")
+	public void testPessimisticLockWithOrderByThenNoFollowOnLocking() {
+
+		final Session session = openSession();
+		session.beginTransaction();
+
+		sqlStatementInterceptor.getSqlQueries().clear();
+
+		List<Product> products =
+				session.createQuery(
+						"select p from Product p order by p.id", Product.class )
+						.setLockOptions( new LockOptions( LockMode.PESSIMISTIC_WRITE ) )
+						.getResultList();
+
+		assertTrue( products.size() > 1 );
+		assertEquals( 1, sqlStatementInterceptor.getSqlQueries().size() );
+
+		session.getTransaction().commit();
+		session.close();
+	}
+
+	@Test
+	public void testPessimisticLockWithMaxResultsAndOrderByThenNoFollowOnLocking() {
 
 		final Session session = openSession();
 		session.beginTransaction();
@@ -245,43 +313,31 @@ public class OracleFollowOnLockingTest extends
 						.getResultList();
 
 		assertEquals( 10, products.size() );
-		assertEquals( 11, sqlStatementInterceptor.getSqlQueries().size() );
+		assertEquals( 1, sqlStatementInterceptor.getSqlQueries().size() );
 
 		session.getTransaction().commit();
 		session.close();
 	}
 
 	@Test
-	public void testPessimisticLockWithMaxResultsAndOrderByWhileExplicitlyDisablingFollowOnLockingThenFails() {
+	public void testPessimisticLockWithMaxResultsAndOrderByWhileExplicitlyDisablingFollowOnLocking() {
 
 		final Session session = openSession();
 		session.beginTransaction();
 
 		sqlStatementInterceptor.getSqlQueries().clear();
 
-		try {
-			List<Product> products =
-					session.createQuery(
-							"select p from Product p order by p.id",
-							Product.class
-					)
-							.setLockOptions( new LockOptions( LockMode.PESSIMISTIC_WRITE )
-													 .setFollowOnLocking( false ) )
-							.setMaxResults( 10 )
-							.getResultList();
-			fail( "Should throw exception since Oracle does not support ORDER BY if follow on locking is disabled" );
-		}
-		catch ( IllegalStateException expected ) {
-			assertEquals(
-					IllegalQueryOperationException.class,
-					expected.getCause().getClass()
-			);
-			assertTrue(
-					expected.getCause().getMessage().contains(
-							"Locking with ORDER BY is not supported"
-					)
-			);
-		}
+		List<Product> products =
+				session.createQuery(
+						"select p from Product p order by p.id",
+						Product.class
+				)
+						.setLockOptions( new LockOptions( LockMode.PESSIMISTIC_WRITE )
+												.setFollowOnLocking( false ) )
+						.setMaxResults( 10 )
+						.getResultList();
+		assertEquals( 10, products.size() );
+		assertEquals( 1, sqlStatementInterceptor.getSqlQueries().size() );
 	}
 
 	@Test
@@ -296,7 +352,7 @@ public class OracleFollowOnLockingTest extends
 				session.createQuery(
 						"select p from Product p order by p.id", Product.class )
 						.setLockOptions( new LockOptions( LockMode.PESSIMISTIC_WRITE )
-												 .setFollowOnLocking( true ) )
+												.setFollowOnLocking( true ) )
 						.setMaxResults( 10 )
 						.getResultList();
 
@@ -345,7 +401,7 @@ public class OracleFollowOnLockingTest extends
 							Product.class
 					)
 							.setLockOptions( new LockOptions( LockMode.PESSIMISTIC_WRITE )
-													 .setFollowOnLocking( false ) )
+													.setFollowOnLocking( false ) )
 							.getResultList();
 			fail( "Should throw exception since Oracle does not support DISTINCT if follow on locking is disabled" );
 		}
@@ -374,7 +430,7 @@ public class OracleFollowOnLockingTest extends
 				session.createQuery(
 						"select distinct p from Product p where p.id > 40" )
 						.setLockOptions( new LockOptions( LockMode.PESSIMISTIC_WRITE )
-												 .setFollowOnLocking( true ) )
+												.setFollowOnLocking( true ) )
 						.setMaxResults( 10 )
 						.getResultList();
 
@@ -397,7 +453,7 @@ public class OracleFollowOnLockingTest extends
 				session.createQuery(
 						"select count(p), p " +
 								"from Product p " +
-								"group by p.id, p.name " )
+								"group by p.id, p.name, p.vehicle.id " )
 						.setLockOptions( new LockOptions( LockMode.PESSIMISTIC_WRITE ) )
 						.getResultList();
 
@@ -421,9 +477,9 @@ public class OracleFollowOnLockingTest extends
 					session.createQuery(
 							"select count(p), p " +
 									"from Product p " +
-									"group by p.id, p.name " )
+									"group by p.id, p.name, p.vehicle.id " )
 							.setLockOptions( new LockOptions( LockMode.PESSIMISTIC_WRITE )
-													 .setFollowOnLocking( false ) )
+													.setFollowOnLocking( false ) )
 							.getResultList();
 			fail( "Should throw exception since Oracle does not support GROUP BY if follow on locking is disabled" );
 		}
@@ -452,9 +508,9 @@ public class OracleFollowOnLockingTest extends
 				session.createQuery(
 						"select count(p), p " +
 								"from Product p " +
-								"group by p.id, p.name " )
+								"group by p.id, p.name, p.vehicle.id " )
 						.setLockOptions( new LockOptions( LockMode.PESSIMISTIC_WRITE )
-												 .setFollowOnLocking( true ) )
+												.setFollowOnLocking( true ) )
 						.getResultList();
 
 		assertEquals( 50, products.size() );
@@ -525,6 +581,9 @@ public class OracleFollowOnLockingTest extends
 		private Long id;
 
 		private String name;
+
+		@ManyToOne(fetch = FetchType.LAZY)
+		private Vehicle vehicle;
 	}
 
 	@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)

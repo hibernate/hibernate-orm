@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.annotations.fetchprofile;
 
 import org.hibernate.Hibernate;
@@ -5,13 +9,13 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.orm.test.annotations.fetchprofile.mappedby.Address;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
 
-@TestForIssue( jiraKey = "HHH-14071" )
+@JiraKey( value = "HHH-14071" )
 public class MappedByFetchProfileFunctionTest extends BaseCoreFunctionalTestCase {
 
 	@Test
@@ -34,8 +38,8 @@ public class MappedByFetchProfileFunctionTest extends BaseCoreFunctionalTestCase
 
 		address = session.get(Address.class, address.getId());
 		assertTrue(Hibernate.isInitialized(address.getCustomer()));
-		session.delete(address.getCustomer());
-		session.delete(address);
+		session.remove(address.getCustomer());
+		session.remove(address);
 
 		transaction.commit();
 		session.close();

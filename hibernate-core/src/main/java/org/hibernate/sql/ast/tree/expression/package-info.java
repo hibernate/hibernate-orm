@@ -6,6 +6,6 @@
  */
 
 /**
- * Contracts related to expressions in a SQL tree
+ * AST nodes representing expressions in a SQL tree.
  */
 package org.hibernate.sql.ast.tree.expression;

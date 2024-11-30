@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.jaxb.internal.stax;
 
@@ -77,7 +75,10 @@ public class LocalXmlResourceResolverTest {
 			"https://hibernate.org/dtd/hibernate-configuration,org/hibernate/hibernate-configuration-3.0.dtd",
 
 			"http://hibernate.sourceforge.net/hibernate-configuration,org/hibernate/hibernate-configuration-3.0.dtd",
-			"https://hibernate.sourceforge.net/hibernate-configuration,org/hibernate/hibernate-configuration-3.0.dtd"
+			"https://hibernate.sourceforge.net/hibernate-configuration,org/hibernate/hibernate-configuration-3.0.dtd",
+
+			"http://hibernate.org/dtd/hibernate-mapping-3.0.dtd,org/hibernate/hibernate-mapping-3.0.dtd",
+			"https://hibernate.org/dtd/hibernate-mapping-3.0.dtd,org/hibernate/hibernate-mapping-3.0.dtd"
 	})
 	void resolve_dtd_localResource(String id, String expectedLocalResource) throws XMLStreamException {
 		// publicId

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.immutable;
 
@@ -19,7 +17,7 @@ import org.hibernate.annotations.Immutable;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.query.Query;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -31,7 +29,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue( jiraKey = "HHH-12387" )
+@JiraKey( value = "HHH-12387" )
 public class ImmutableEntityUpdateQueryHandlingModeExceptionTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
@@ -57,19 +55,15 @@ public class ImmutableEntityUpdateQueryHandlingModeExceptionTest extends BaseNon
 
 		try {
 			doInHibernate( this::sessionFactory, session -> {
-				session.createQuery(
-					"update Country " +
-					"set name = :name" )
-				.setParameter( "name", "N/A" )
-				.executeUpdate();
+				session.createQuery("update Country set name = :name" );
 			} );
 			fail("Should throw PersistenceException");
 		}
 		catch (PersistenceException e) {
-			assertTrue( e.getCause() instanceof HibernateException );
+			assertTrue( e instanceof HibernateException );
 			assertEquals(
-					"The query: [update Country set name = :name] attempts to update an immutable entity: [Country]",
-					e.getCause().getMessage()
+					"Error interpreting query [The query attempts to update an immutable entity: [Country]] [update Country set name = :name]",
+					e.getMessage()
 			);
 		}
 
@@ -80,7 +74,7 @@ public class ImmutableEntityUpdateQueryHandlingModeExceptionTest extends BaseNon
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12927" )
+	@JiraKey( value = "HHH-12927" )
 	public void testUpdateMutableWithImmutableSubSelect() {
 		doInHibernate(this::sessionFactory, session -> {
 			String selector = "foo";
@@ -108,7 +102,7 @@ public class ImmutableEntityUpdateQueryHandlingModeExceptionTest extends BaseNon
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12927" )
+	@JiraKey( value = "HHH-12927" )
 	public void testUpdateImmutableWithMutableSubSelect() {
 		doInHibernate(this::sessionFactory, session -> {
 			String selector = "foo";

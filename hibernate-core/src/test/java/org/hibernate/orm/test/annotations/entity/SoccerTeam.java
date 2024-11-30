@@ -1,10 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.orm.test.annotations.entity;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -17,7 +14,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 public class SoccerTeam {
@@ -26,9 +23,9 @@ public class SoccerTeam {
 	private int id;
 
 	String name;
-	
+
 	@OneToMany
-	@Where(clause = "activeLicense = true")
+	@SQLRestriction("activeLicense = true")
 	private List<Doctor> physiologists = new ArrayList<Doctor>();
 
 	@OneToMany(mappedBy="team",
@@ -81,7 +78,7 @@ public class SoccerTeam {
 	public void setPhysiologists(List<Doctor> physiologists) {
 		this.physiologists = physiologists;
 	}
-	
-	
-	
+
+
+
 }

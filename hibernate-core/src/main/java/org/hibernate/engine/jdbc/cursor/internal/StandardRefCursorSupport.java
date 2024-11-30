@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.cursor.internal;
 
@@ -15,114 +13,60 @@ import java.sql.Types;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.service.spi.InjectService;
 
 import org.jboss.logging.Logger;
 
 /**
- * Standard implementation of RefCursorSupport
+ * Standard implementation of {@link RefCursorSupport}
  *
  * @author Steve Ebersole
  */
 public class StandardRefCursorSupport implements RefCursorSupport {
 	private static final Logger log = Logger.getLogger( StandardRefCursorSupport.class );
 
-	private JdbcServices jdbcServices;
+	private final JdbcServices jdbcServices;
 
-	/**
-	 * Hook for service registry to be able to inject JdbcServices
-	 *
-	 * @param jdbcServices The JdbcServices service
-	 */
-	@InjectService
-	@SuppressWarnings("UnusedDeclaration")
-	public void injectJdbcServices(JdbcServices jdbcServices) {
+	public StandardRefCursorSupport(JdbcServices jdbcServices) {
 		this.jdbcServices = jdbcServices;
 	}
 
 	@Override
 	public void registerRefCursorParameter(CallableStatement statement, int position) {
-		if ( jdbcServices.getExtractedMetaDataSupport().supportsRefCursors() ) {
-			try {
-				statement.registerOutParameter( position, refCursorTypeCode() );
-			}
-			catch (SQLException e) {
-				throw jdbcServices.getSqlExceptionHelper().convert( e, "Error registering REF_CURSOR parameter [" + position + "]" );
-			}
+		try {
+			statement.registerOutParameter( position, refCursorTypeCode() );
 		}
-		else {
-			try {
-				jdbcServices.getDialect().registerResultSetOutParameter( statement, position );
-			}
-			catch (SQLException e) {
-				throw jdbcServices.getSqlExceptionHelper().convert( e, "Error asking dialect to register ref cursor parameter [" + position + "]" );
-			}
+		catch (SQLException e) {
+			throw jdbcServices.getSqlExceptionHelper().convert( e, "Error registering REF_CURSOR parameter [" + position + "]" );
 		}
 	}
 
 	@Override
 	public void registerRefCursorParameter(CallableStatement statement, String name) {
-		if ( jdbcServices.getExtractedMetaDataSupport().supportsRefCursors() ) {
-			try {
-				statement.registerOutParameter( name, refCursorTypeCode() );
-			}
-			catch (SQLException e) {
-				throw jdbcServices.getSqlExceptionHelper().convert( e, "Error registering REF_CURSOR parameter [" + name + "]" );
-			}
+		try {
+			statement.registerOutParameter( name, refCursorTypeCode() );
 		}
-		else {
-			try {
-				jdbcServices.getDialect().registerResultSetOutParameter( statement, name );
-			}
-			catch (SQLException e) {
-				throw jdbcServices.getSqlExceptionHelper().convert( e, "Error asking dialect to register ref cursor parameter [" + name + "]" );
-			}
+		catch (SQLException e) {
+			throw jdbcServices.getSqlExceptionHelper().convert( e, "Error registering REF_CURSOR parameter [" + name + "]" );
 		}
 	}
 
 	@Override
 	public ResultSet getResultSet(CallableStatement statement, int position) {
-		if ( jdbcServices.getExtractedMetaDataSupport().supportsRefCursors() ) {
-			try {
-				return statement.getObject( position, ResultSet.class );
-			}
-			catch (Exception e) {
-				throw new HibernateException( "Unexpected error extracting REF_CURSOR parameter [" + position + "]", e );
-			}
+		try {
+			return statement.getObject( position, ResultSet.class );
 		}
-		else {
-			try {
-				return jdbcServices.getDialect().getResultSet( statement, position );
-			}
-			catch (SQLException e) {
-				throw jdbcServices.getSqlExceptionHelper().convert(
-						e,
-						"Error asking dialect to extract ResultSet from CallableStatement parameter [" + position + "]"
-				);
-			}
+		catch (Exception e) {
+			throw new HibernateException( "Unexpected error extracting REF_CURSOR parameter [" + position + "]", e );
 		}
 	}
 
 	@Override
 	public ResultSet getResultSet(CallableStatement statement, String name) {
-		if ( jdbcServices.getExtractedMetaDataSupport().supportsRefCursors() ) {
-			try {
-				return statement.getObject( name, ResultSet.class );
-			}
-			catch (Exception e) {
-				throw new HibernateException( "Unexpected error extracting REF_CURSOR parameter [" + name + "]", e );
-			}
+		try {
+			return statement.getObject( name, ResultSet.class );
 		}
-		else {
-			try {
-				return jdbcServices.getDialect().getResultSet( statement, name );
-			}
-			catch (SQLException e) {
-				throw jdbcServices.getSqlExceptionHelper().convert(
-						e,
-						"Error asking dialect to extract ResultSet from CallableStatement parameter [" + name + "]"
-				);
-			}
+		catch (Exception e) {
+			throw new HibernateException( "Unexpected error extracting REF_CURSOR parameter [" + name + "]", e );
 		}
 	}
 

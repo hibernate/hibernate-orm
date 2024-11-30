@@ -1,27 +1,25 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.exec.internal;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
-import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.internal.FilterJdbcParameter;
-import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.exec.spi.JdbcCall;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcCallFunctionReturn;
 import org.hibernate.sql.exec.spi.JdbcCallParameterExtractor;
 import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
 import org.hibernate.sql.exec.spi.JdbcCallRefCursorExtractor;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryCall;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
+import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 
@@ -30,7 +28,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
  *
  * @author Steve Ebersole
  */
-public class JdbcCallImpl implements JdbcCall {
+public class JdbcCallImpl implements JdbcOperationQueryCall {
 	private final String callableName;
 
 	private final JdbcCallFunctionReturn functionReturn;
@@ -40,26 +38,57 @@ public class JdbcCallImpl implements JdbcCall {
 	private final List<JdbcCallRefCursorExtractor> refCursorExtractors;
 
 	public JdbcCallImpl(Builder builder) {
-		this.callableName = builder.callableName;
+		this(
+				builder.callableName,
+				builder.functionReturn,
+				builder.parameterRegistrations == null
+						? Collections.emptyList()
+						: Collections.unmodifiableList( builder.parameterRegistrations ),
+				builder.parameterBinders == null
+						? Collections.emptyList()
+						: Collections.unmodifiableList( builder.parameterBinders ),
+				builder.parameterExtractors == null
+						? Collections.emptyList()
+						: Collections.unmodifiableList( builder.parameterExtractors ),
+				builder.refCursorExtractors == null
+						? Collections.emptyList()
+						: Collections.unmodifiableList( builder.refCursorExtractors )
+		);
+	}
 
-		this.functionReturn = builder.functionReturn;
+	protected JdbcCallImpl(
+			String callableName,
+			JdbcCallFunctionReturn functionReturn,
+			List<JdbcCallParameterRegistration> parameterRegistrations,
+			List<JdbcParameterBinder> parameterBinders,
+			List<JdbcCallParameterExtractor> parameterExtractors,
+			List<JdbcCallRefCursorExtractor> refCursorExtractors) {
+		this.callableName = callableName;
+		this.functionReturn = functionReturn;
+		this.parameterRegistrations = parameterRegistrations;
+		this.parameterBinders = parameterBinders;
+		this.parameterExtractors = parameterExtractors;
+		this.refCursorExtractors = refCursorExtractors;
+	}
 
-		this.parameterRegistrations = builder.parameterRegistrations == null
-				? Collections.emptyList()
-				: Collections.unmodifiableList( builder.parameterRegistrations );
-		this.parameterBinders = builder.parameterBinders == null
-				? Collections.emptyList()
-				: Collections.unmodifiableList( builder.parameterBinders );
-		this.parameterExtractors = builder.parameterExtractors == null
-				? Collections.emptyList()
-				: Collections.unmodifiableList( builder.parameterExtractors );
-		this.refCursorExtractors = builder.refCursorExtractors == null
-				? Collections.emptyList()
-				: Collections.unmodifiableList( builder.refCursorExtractors );
+	protected JdbcCallImpl(
+			String callableName,
+			JdbcCallFunctionReturn functionReturn,
+			List<JdbcCallParameterRegistration> parameterRegistrations,
+			List<JdbcParameterBinder> parameterBinders,
+			List<JdbcCallParameterExtractor> parameterExtractors) {
+		this(
+				callableName,
+				functionReturn,
+				parameterRegistrations,
+				parameterBinders,
+				parameterExtractors,
+				null
+		);
 	}
 
 	@Override
-	public String getSql() {
+	public String getSqlString() {
 		return callableName;
 	}
 
@@ -80,17 +109,17 @@ public class JdbcCallImpl implements JdbcCall {
 
 	@Override
 	public Set<String> getAffectedTableNames() {
-		throw new NotYetImplementedFor6Exception();
-	}
-
-	@Override
-	public Set<FilterJdbcParameter> getFilterJdbcParameters() {
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public boolean dependsOnParameterBindings() {
 		return false;
+	}
+
+	@Override
+	public Map<JdbcParameter, JdbcParameterBinding> getAppliedParameters() {
+		return Collections.emptyMap();
 	}
 
 	@Override
@@ -115,21 +144,18 @@ public class JdbcCallImpl implements JdbcCall {
 	}
 
 	public static class Builder {
-		private final ParameterStrategy parameterStrategy;
-
 		private String callableName;
 		private JdbcCallFunctionReturn functionReturn;
 
 		private List<JdbcCallParameterRegistration> parameterRegistrations;
 		private List<JdbcParameterBinder> parameterBinders;
-		private List<JdbcCallParameterExtractor> parameterExtractors;
+		private List<JdbcCallParameterExtractor<?>> parameterExtractors;
 		private List<JdbcCallRefCursorExtractor> refCursorExtractors;
 
-		public Builder(ParameterStrategy parameterStrategy) {
-			this.parameterStrategy = parameterStrategy;
+		public Builder() {
 		}
 
-		public JdbcCall buildJdbcCall() {
+		public JdbcOperationQueryCall buildJdbcCall() {
 			return new JdbcCallImpl( this );
 		}
 
@@ -183,7 +209,7 @@ public class JdbcCallImpl implements JdbcCall {
 			parameterBinders.add( binder );
 		}
 
-		private void addParameterExtractor(JdbcCallParameterExtractor extractor) {
+		private void addParameterExtractor(JdbcCallParameterExtractor<?> extractor) {
 			if ( parameterExtractors == null ) {
 				parameterExtractors = new ArrayList<>();
 			}

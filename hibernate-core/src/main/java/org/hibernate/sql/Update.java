@@ -1,53 +1,44 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 
 /**
- * An SQL {@code UPDATE} statement
+ * A SQL {@code UPDATE} statement.
  *
  * @author Gavin King
  */
 @Internal
-public class Update {
-
+public class Update implements RestrictionRenderingContext {
 	protected String tableName;
-	protected String versionColumnName;
-	protected String where;
-	protected String assignments;
 	protected String comment;
+	protected Map<String,String> assignments = new LinkedHashMap<>();
+	protected List<Restriction> restrictions = new ArrayList<>();
 
-	protected Map<String,String> primaryKeyColumns = new LinkedHashMap<>();
-	protected Map<String,String> columns = new LinkedHashMap<>();
-	protected Map<String,String> whereColumns = new LinkedHashMap<>();
-	
-	private Dialect dialect;
-	
-	public Update(Dialect dialect) {
-		this.dialect = dialect;
+	private final ParameterMarkerStrategy parameterMarkerStrategy;
+	private int parameterCount;
+
+	public Update(SessionFactoryImplementor factory) {
+		this( factory.getFastSessionServices().parameterMarkerStrategy );
+	}
+
+	public Update(ParameterMarkerStrategy parameterMarkerStrategy) {
+		this.parameterMarkerStrategy = parameterMarkerStrategy;
 	}
 
 	public String getTableName() {
 		return tableName;
-	}
-
-	public Update appendAssignmentFragment(String fragment) {
-		if ( assignments == null ) {
-			assignments = fragment;
-		}
-		else {
-			assignments += ", " + fragment;
-		}
-		return this;
 	}
 
 	public Update setTableName(String tableName) {
@@ -55,170 +46,121 @@ public class Update {
 		return this;
 	}
 
-	public Update setPrimaryKeyColumnNames(String[] columnNames) {
-		this.primaryKeyColumns.clear();
-		addPrimaryKeyColumns(columnNames);
-		return this;
-	}	
-	
-	public Update addPrimaryKeyColumns(String[] columnNames) {
-		for ( String columnName : columnNames ) {
-			addPrimaryKeyColumn( columnName, "?" );
-		}
-		return this;
-	}
-	
-	public Update addPrimaryKeyColumns(String[] columnNames, boolean[] includeColumns, String[] valueExpressions) {
-		for ( int i=0; i<columnNames.length; i++ ) {
-			if( includeColumns[i] ) {
-				addPrimaryKeyColumn( columnNames[i], valueExpressions[i] );
-			}
-		}
-		return this;
-	}
-	
-	public Update addPrimaryKeyColumns(String[] columnNames, String[] valueExpressions) {
-		for ( int i=0; i<columnNames.length; i++ ) {
-			addPrimaryKeyColumn( columnNames[i], valueExpressions[i] );
-		}
-		return this;
-	}	
-
-	public Update addPrimaryKeyColumn(String columnName, String valueExpression) {
-		this.primaryKeyColumns.put(columnName, valueExpression);
-		return this;
-	}
-	
-	public Update setVersionColumnName(String versionColumnName) {
-		this.versionColumnName = versionColumnName;
-		return this;
-	}
-
-
 	public Update setComment(String comment) {
 		this.comment = comment;
 		return this;
 	}
-	
-	public Update addColumns(String[] columnNames) {
+
+	public Update addAssignments(String... columnNames) {
 		for ( String columnName : columnNames ) {
-			addColumn( columnName );
+			addAssignment( columnName );
 		}
 		return this;
 	}
 
-	public Update addColumns(String[] columnNames, boolean[] updateable, String[] valueExpressions) {
-		for ( int i=0; i<columnNames.length; i++ ) {
-			if ( updateable[i] ) {
-				addColumn( columnNames[i], valueExpressions[i] );
+	public Update addAssignment(String columnName) {
+		return addAssignment( columnName, "?" );
+	}
+
+	public Update addAssignment(String columnName, String valueExpression) {
+		assignments.put( columnName, valueExpression );
+		return this;
+	}
+
+	public Update addRestriction(String column) {
+		restrictions.add( new ComparisonRestriction( column ) );
+		return this;
+	}
+
+	public Update addRestriction(String... columns) {
+		for ( int i = 0; i < columns.length; i++ ) {
+			final String columnName = columns[ i ];
+			if ( columnName != null ) {
+				addRestriction( columnName );
 			}
 		}
 		return this;
 	}
 
-	public Update addColumns(String[] columnNames, String valueExpression) {
-		for ( String columnName : columnNames ) {
-			addColumn( columnName, valueExpression );
-		}
+	public Update addRestriction(String column, String value) {
+		restrictions.add( new ComparisonRestriction( column, value ) );
 		return this;
 	}
 
-	public Update addColumn(String columnName) {
-		return addColumn(columnName, "?");
-	}
-
-	public Update addColumn(String columnName, String valueExpression) {
-		columns.put(columnName, valueExpression);
+	public Update addRestriction(String column, ComparisonRestriction.Operator op, String value) {
+		restrictions.add( new ComparisonRestriction( column, op, value ) );
 		return this;
 	}
 
-	public Update addWhereColumns(String[] columnNames) {
-		for ( String columnName : columnNames ) {
-			addWhereColumn( columnName );
-		}
+	private String normalizeExpressionFragment(String rhs) {
+		return rhs.equals( "?" )
+				? parameterMarkerStrategy.createMarker( ++parameterCount, null )
+				: rhs;
+	}
+
+	@SuppressWarnings("UnusedReturnValue")
+	public Update addColumnIsNullRestriction(String columnName) {
+		restrictions.add( new NullnessRestriction( columnName ) );
 		return this;
 	}
 
-	public Update addWhereColumns(String[] columnNames, String valueExpression) {
-		for ( String columnName : columnNames ) {
-			addWhereColumn( columnName, valueExpression );
-		}
-		return this;
-	}
-
-	public Update addWhereColumn(String columnName) {
-		return addWhereColumn(columnName, "=?");
-	}
-
-	public Update addWhereColumn(String columnName, String valueExpression) {
-		whereColumns.put(columnName, valueExpression);
-		return this;
-	}
-
-	public Update setWhere(String where) {
-		this.where=where;
+	@SuppressWarnings("UnusedReturnValue")
+	public Update addColumnIsNotNullRestriction(String columnName) {
+		restrictions.add( new NullnessRestriction( columnName, false ) );
 		return this;
 	}
 
 	public String toStatementString() {
-		StringBuilder buf = new StringBuilder( (columns.size() * 15) + tableName.length() + 10 );
-		if ( comment!=null ) {
-			buf.append( "/* " ).append( Dialect.escapeComment( comment ) ).append( " */ " );
-		}
-		buf.append( "update " ).append( tableName ).append( " set " );
-		boolean assignmentsAppended = false;
-		Iterator<Map.Entry<String,String>> iter = columns.entrySet().iterator();
-		while ( iter.hasNext() ) {
-			Map.Entry<String,String> e = iter.next();
-			buf.append( e.getKey() ).append( '=' ).append( e.getValue() );
-			if ( iter.hasNext() ) {
-				buf.append( ", " );
-			}
-			assignmentsAppended = true;
-		}
-		if ( assignments != null ) {
-			if ( assignmentsAppended ) {
-				buf.append( ", " );
-			}
-			buf.append( assignments );
-		}
+		final StringBuilder buf = new StringBuilder( ( assignments.size() * 15) + tableName.length() + 10 );
 
-		boolean conditionsAppended = false;
-		if ( !primaryKeyColumns.isEmpty() || where != null || !whereColumns.isEmpty() || versionColumnName != null ) {
-			buf.append( " where " );
-		}
-		iter = primaryKeyColumns.entrySet().iterator();
-		while ( iter.hasNext() ) {
-			Map.Entry<String,String> e = iter.next();
-			buf.append( e.getKey() ).append( '=' ).append( e.getValue() );
-			if ( iter.hasNext() ) {
-				buf.append( " and " );
-			}
-			conditionsAppended = true;
-		}
-		if ( where != null ) {
-			if ( conditionsAppended ) {
-				buf.append( " and " );
-			}
-			buf.append( where );
-			conditionsAppended = true;
-		}
-		iter = whereColumns.entrySet().iterator();
-		while ( iter.hasNext() ) {
-			final Map.Entry<String,String> e = iter.next();
-			if ( conditionsAppended ) {
-				buf.append( " and " );
-			}
-			buf.append( e.getKey() ).append( e.getValue() );
-			conditionsAppended = true;
-		}
-		if ( versionColumnName != null ) {
-			if ( conditionsAppended ) {
-				buf.append( " and " );
-			}
-			buf.append( versionColumnName ).append( "=?" );
-		}
+		applyComment( buf );
+		buf.append( "update " ).append( tableName );
+		applyAssignments( buf );
+		applyRestrictions( buf );
 
 		return buf.toString();
+	}
+
+	private void applyComment(StringBuilder buf) {
+		if ( comment != null ) {
+			buf.append( "/* " ).append( Dialect.escapeComment( comment ) ).append( " */ " );
+		}
+	}
+
+	private void applyAssignments(StringBuilder buf) {
+		buf.append( " set " );
+
+		final Iterator<Map.Entry<String,String>> entries = assignments.entrySet().iterator();
+		while ( entries.hasNext() ) {
+			final Map.Entry<String,String> entry = entries.next();
+			buf.append( entry.getKey() )
+					.append( '=' )
+					.append( normalizeExpressionFragment( entry.getValue() ) );
+			if ( entries.hasNext() ) {
+				buf.append( ", " );
+			}
+		}
+	}
+
+	private void applyRestrictions(StringBuilder buf) {
+		if ( restrictions.isEmpty() ) {
+			return;
+		}
+
+		buf.append( " where " );
+
+		for ( int i = 0; i < restrictions.size(); i++ ) {
+			if ( i > 0 ) {
+				buf.append( " and " );
+			}
+
+			final Restriction restriction = restrictions.get( i );
+			restriction.render( buf, this );
+		}
+	}
+
+	@Override
+	public String makeParameterMarker() {
+		return parameterMarkerStrategy.createMarker( ++parameterCount, null );
 	}
 }

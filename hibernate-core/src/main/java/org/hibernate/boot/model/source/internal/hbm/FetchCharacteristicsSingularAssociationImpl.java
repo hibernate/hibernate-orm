@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
@@ -11,7 +9,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmLazyEnum;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmLazyWithNoProxyEnum;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmOuterJoinEnum;
 import org.hibernate.boot.model.source.spi.FetchCharacteristicsSingularAssociation;
-import org.hibernate.boot.spi.MappingDefaults;
+import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.internal.log.DeprecationLogger;
@@ -60,7 +58,7 @@ public class FetchCharacteristicsSingularAssociationImpl implements FetchCharact
 		private boolean unwrapProxies;
 
 		@SuppressWarnings("UnusedParameters")
-		public Builder(MappingDefaults mappingDefaults) {
+		public Builder(EffectiveMappingDefaults mappingDefaults) {
 			//
 			// todo : may need to add back a concept of DEFAULT fetch style / timing.
 			// 		one option I like is adding a fetchTiming / fetchStyle and
@@ -96,7 +94,7 @@ public class FetchCharacteristicsSingularAssociationImpl implements FetchCharact
 	// Static builder methods
 
 	public static FetchCharacteristicsSingularAssociationImpl interpretManyToOne(
-			MappingDefaults mappingDefaults,
+			EffectiveMappingDefaults mappingDefaults,
 			JaxbHbmFetchStyleEnum fetchMapping,
 			JaxbHbmOuterJoinEnum outerJoinMapping,
 			JaxbHbmLazyWithNoProxyEnum lazyMapping) {
@@ -155,7 +153,7 @@ public class FetchCharacteristicsSingularAssociationImpl implements FetchCharact
 
 
 	public static FetchCharacteristicsSingularAssociationImpl interpretManyToManyElement(
-			MappingDefaults mappingDefaults,
+			EffectiveMappingDefaults mappingDefaults,
 			JaxbHbmFetchStyleEnum fetchMapping,
 			JaxbHbmOuterJoinEnum outerJoinMapping,
 			JaxbHbmLazyEnum lazyMapping) {
@@ -196,7 +194,7 @@ public class FetchCharacteristicsSingularAssociationImpl implements FetchCharact
 	}
 
 	public static FetchCharacteristicsSingularAssociationImpl interpretOneToOne(
-			MappingDefaults mappingDefaults,
+			EffectiveMappingDefaults mappingDefaults,
 			JaxbHbmFetchStyleEnum fetchMapping,
 			JaxbHbmOuterJoinEnum outerJoinMapping,
 			JaxbHbmLazyWithNoProxyEnum lazyMapping,

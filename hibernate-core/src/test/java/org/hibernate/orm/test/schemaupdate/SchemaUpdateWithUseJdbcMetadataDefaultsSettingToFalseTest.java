@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemaupdate;
 
@@ -26,7 +24,8 @@ import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
 import org.hibernate.tool.schema.TargetType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -37,7 +36,7 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-13788")
+@JiraKey(value = "HHH-13788")
 public class SchemaUpdateWithUseJdbcMetadataDefaultsSettingToFalseTest {
 
 	private File updateOutputFile;
@@ -50,7 +49,7 @@ public class SchemaUpdateWithUseJdbcMetadataDefaultsSettingToFalseTest {
 		createOutputFile.deleteOnExit();
 		updateOutputFile = File.createTempFile( "update_script", ".sql" );
 		updateOutputFile.deleteOnExit();
-		ssr = new StandardServiceRegistryBuilder()
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( "hibernate.temp.use_jdbc_metadata_defaults", "false" )
 				.applySetting( AvailableSettings.SHOW_SQL, "true" )
 				.applySetting(
@@ -63,6 +62,7 @@ public class SchemaUpdateWithUseJdbcMetadataDefaultsSettingToFalseTest {
 		metadataSources.addAnnotatedClass( TestEntity.class );
 
 		metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 	}
 

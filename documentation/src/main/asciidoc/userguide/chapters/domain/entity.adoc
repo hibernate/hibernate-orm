@@ -1,9 +1,11 @@
 ﻿[[entity]]
 === Entity types
-:sourcedir-locking: ../../../../../test/java/org/hibernate/userguide/locking
-:sourcedir-mapping: ../../../../../test/java/org/hibernate/userguide/mapping
-:sourcedir-proxy: ../../../../../test/java/org/hibernate/userguide/proxy
-:sourcedir-persister: ../../../../../test/java/org/hibernate/userguide/persister
+:root-project-dir: ../../../../../../..
+:core-project-dir: {root-project-dir}/hibernate-core
+:core-test-base: {core-project-dir}/src/test/java/org/hibernate/orm/test
+:example-dir-mapping: {core-test-base}/mapping
+:example-dir-proxy: {core-test-base}/proxy
+:example-dir-persister: {core-test-base}/persister
 :extrasdir: extras
 
 .Usage of the word _entity_
@@ -65,7 +67,7 @@ See the <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,Bytecode Enha
 The entity class should have a no-argument constructor. Both Hibernate and Jakarta Persistence require this.
 
 Jakarta Persistence requires that this constructor be defined as public or protected.
-Hibernate, for the most part, does not care about the constructor visibility, as long as the system SecurityManager allows overriding the visibility setting.
+Hibernate, for the most part, does not care about the constructor visibility, and will override the visibility setting.
 That said, the constructor should be defined with at least package visibility if you wish to leverage runtime proxy generation.
 
 [[entity-pojo-accessors]]
@@ -105,7 +107,7 @@ The placement of the `@Id` annotation marks the <<chapters/domain/access.adoc#ac
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-identifier-mapping-example, indent=0]
+include::{example-dir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-identifier-mapping-example, indent=0]
 ----
 ====
 
@@ -134,7 +136,7 @@ In the following example, the entity name (e.g. `Book`) is given by the unqualif
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/identifier/Book.java[tag=entity-pojo-mapping-implicit-name-example, indent=0]
+include::{example-dir-mapping}/identifier/Book.java[tag=entity-pojo-mapping-implicit-name-example, indent=0]
 ----
 ====
 
@@ -145,7 +147,7 @@ However, the entity name can also be set explicitly as illustrated by the follow
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-mapping-example, indent=0]
+include::{example-dir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-mapping-example, indent=0]
 ----
 ====
 
@@ -159,7 +161,7 @@ To explicitly give the name of the table or to specify other information about t
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/identifier/SimpleEntityTableTest.java[tag=entity-pojo-table-mapping-example, indent=0]
+include::{example-dir-mapping}/identifier/SimpleEntityTableTest.java[tag=entity-pojo-table-mapping-example, indent=0]
 ----
 ====
 
@@ -189,7 +191,7 @@ Now, to map the `Book` entity to the `book` table in the `public` catalog we can
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/identifier/EntityTableCatalogTest.java[tag=mapping-entity-table-catalog-mysql-example, indent=0]
+include::{example-dir-mapping}/identifier/EntityTableCatalogTest.java[tag=mapping-entity-table-catalog-mysql-example, indent=0]
 ----
 ====
 
@@ -219,7 +221,7 @@ Now, to map the `Book` entity to the `book` table in the `library` schema we can
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/identifier/EntityTableSchemaTest.java[tag=mapping-entity-table-schema-postgresql-example, indent=0]
+include::{example-dir-mapping}/identifier/EntityTableSchemaTest.java[tag=mapping-entity-table-schema-postgresql-example, indent=0]
 ----
 ====
 
@@ -261,7 +263,7 @@ So if we ask a Hibernate `Session` to load that specific Person multiple times w
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-identity-scope-example, indent=0]
+include::{example-dir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-identity-scope-example, indent=0]
 ----
 ====
 
@@ -272,7 +274,7 @@ Consider we have a `Library` parent entity which contains a `java.util.Set` of `
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-set-mapping-example, indent=0]
+include::{example-dir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-set-mapping-example, indent=0]
 ----
 ====
 
@@ -281,7 +283,7 @@ include::{sourcedir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-se
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-set-identity-scope-example, indent=0]
+include::{example-dir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-set-identity-scope-example, indent=0]
 ----
 ====
 
@@ -292,12 +294,12 @@ However, the semantic changes when we mix instances loaded from different Sessio
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-multi-session-identity-scope-example, indent=0]
+include::{example-dir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-multi-session-identity-scope-example, indent=0]
 ----
 
 [source,java]
 ----
-include::{sourcedir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-multi-session-set-identity-scope-example, indent=0]
+include::{example-dir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-multi-session-set-identity-scope-example, indent=0]
 ----
 ====
 
@@ -314,7 +316,7 @@ Consider yet another case:
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-transient-set-identity-scope-example, indent=0]
+include::{example-dir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-transient-set-identity-scope-example, indent=0]
 ----
 ====
 
@@ -329,7 +331,7 @@ A common initial approach is to use the entity's identifier attribute as the bas
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/identifier/NaiveEqualsHashCodeEntityTest.java[tag=entity-pojo-naive-equals-hashcode-example, indent=0]
+include::{example-dir-mapping}/identifier/NaiveEqualsHashCodeEntityTest.java[tag=entity-pojo-naive-equals-hashcode-example, indent=0]
 ----
 ====
 
@@ -340,7 +342,7 @@ It turns out that this still breaks when adding transient instance of `Book` to 
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/identifier/NaiveEqualsHashCodeEntityTest.java[tag=entity-pojo-naive-equals-hashcode-persist-example, indent=0]
+include::{example-dir-mapping}/identifier/NaiveEqualsHashCodeEntityTest.java[tag=entity-pojo-naive-equals-hashcode-persist-example, indent=0]
 ----
 ====
 
@@ -358,7 +360,7 @@ Another option is to force the identifier to be generated and set prior to addin
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/identifier/NaiveEqualsHashCodeEntityTest.java[tag=entity-pojo-naive-equals-hashcode-persist-force-flush-example, indent=0]
+include::{example-dir-mapping}/identifier/NaiveEqualsHashCodeEntityTest.java[tag=entity-pojo-naive-equals-hashcode-persist-force-flush-example, indent=0]
 ----
 ====
 
@@ -371,7 +373,7 @@ The final approach is to use a "better" equals/hashCode implementation, making u
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/identifier/NaturalIdEqualsHashCodeEntityTest.java[tag=entity-pojo-natural-id-equals-hashcode-example, indent=0]
+include::{example-dir-mapping}/identifier/NaturalIdEqualsHashCodeEntityTest.java[tag=entity-pojo-natural-id-equals-hashcode-example, indent=0]
 ----
 ====
 
@@ -382,7 +384,7 @@ This time, when adding a `Book` to the `Library` `Set`, you can retrieve the `Bo
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/identifier/NaturalIdEqualsHashCodeEntityTest.java[tag=entity-pojo-natural-id-equals-hashcode-persist-example, indent=0]
+include::{example-dir-mapping}/identifier/NaturalIdEqualsHashCodeEntityTest.java[tag=entity-pojo-natural-id-equals-hashcode-persist-example, indent=0]
 ----
 ====
 
@@ -410,7 +412,7 @@ You can map an entity to a SQL query using the https://docs.jboss.org/hibernate/
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/basic/SubselectTest.java[tag=mapping-Subselect-example,indent=0]
+include::{example-dir-mapping}/basic/SubselectTest.java[tag=mapping-Subselect-example,indent=0]
 ----
 ====
 
@@ -426,8 +428,14 @@ So, if we have the following `AccountTransaction` record, the `AccountSummary` b
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/basic/SubselectTest.java[tag=mapping-Subselect-entity-find-example,indent=0]
+include::{example-dir-mapping}/basic/SubselectTest.java[tag=mapping-Subselect-entity-find-example,indent=0]
 ----
+====
+
+[NOTE]
+====
+The underlying `@Subselect` SQL query supports standard Hibernate placeholders ( see <<chapters/query/native/Native.adoc#sql-global-catalog-schema,Catalog and schema in SQL queries>> ).
+Global settings can be overridden using the `schema` or `catalog` attributes of the `@Table` annotation.
 ====
 
 If we add a new `AccountTransaction` entity and refresh the `AccountSummary` entity, the balance is updated accordingly:
@@ -437,7 +445,7 @@ If we add a new `AccountTransaction` entity and refresh the `AccountSummary` ent
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/basic/SubselectTest.java[tag=mapping-Subselect-entity-refresh-example,indent=0]
+include::{example-dir-mapping}/basic/SubselectTest.java[tag=mapping-Subselect-entity-refresh-example,indent=0]
 ----
 ====
 
@@ -451,68 +459,58 @@ when executing an HQL or JPQL which selects from the `AccountSummary` entity,
 Hibernate will trigger a Persistence Context flush if there are pending `Account`, `Client` or `AccountTransaction` entity state transitions.
 ====
 
-[[entity-proxy]]
-==== Define a custom entity proxy
+[[concrete-proxy]]
+==== Create proxies that resolve their inheritance subtype
 
-By default, when it needs to use a proxy instead of the actual POJO, Hibernate is going to use a Bytecode manipulation library like
-https://bytebuddy.net/[Byte Buddy].
+When working with lazy associations or entity references for types that define and inheritance hierarchy Hibernate often creates proxies starting from the root class, with no information about the actual subtype that's referenced by the lazy instance. This can be a problem when using `instanceof` to check the type of said lazy entity references or when trying to cast to the concrete subtype.
 
-However, if the entity class is final, a proxy will not be created; you will get a POJO even when you only need a proxy reference.
-In this case, you could proxy an interface that this particular entity implements, as illustrated by the following example.
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ConcreteProxy.html[`@ConcreteProxy`] annotation can be used on an entity hierarchy root mapping to specify that Hibernate should always try to resolve the actual subtype corresponding to the proxy instance created. This effectively means that proxies for that entity hierarchy will always be created from the correct subclass, allowing to preserve laziness and enable using type checks and casts.
 
-[[entity-proxy-interface-mapping]]
-.Final entity class implementing the `Identifiable` interface
+[[entity-concrete-proxy-mapping]]
+.Root entity class annotated with `@ConcreteProxy`
 ====
 [source,java]
 ----
-include::{sourcedir-proxy}/ProxyInterfaceTest.java[tag=entity-proxy-interface-mapping,indent=0]
+include::{example-dir-proxy}/concrete/AbstractConcreteProxyTest.java[tag=entity-concrete-proxy-mapping,indent=0]
 ----
 ====
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Proxy.html[`@Proxy`]
-annotation is used to specify a custom proxy implementation for the current annotated entity.
+In the following example we load the parent's lazy association and resolve to the concrete `SingleSubChild1` type:
 
-When loading the `Book` entity proxy, Hibernate is going to proxy the `Identifiable` interface instead as illustrated by the following example:
-
-[[entity-proxy-persist-mapping]]
-.Proxying the final entity class implementing the `Identifiable` interface
+[[entity-concrete-proxy-find]]
+.Loading parent entity with lazy association
 ====
 [source,java]
 ----
-include::{sourcedir-proxy}/ProxyInterfaceTest.java[tag=entity-proxy-persist-mapping,indent=0]
+include::{example-dir-proxy}/concrete/AbstractConcreteProxyTest.java[tag=entity-concrete-proxy-find,indent=0]
 ----
 
 [source,sql]
 ----
-include::{extrasdir}/entity/entity-proxy-persist-mapping.sql[]
+include::{extrasdir}/entity/entity-concrete-proxy-find.sql[]
 ----
 ====
 
-As you can see in the associated SQL snippet, Hibernate issues no SQL SELECT query since the proxy can be
-constructed without needing to fetch the actual entity POJO.
+IMPORTANT: This added functionality does not come free: in order to determine the concrete type to use when creating the Proxy instance, Hibernate might need to access the association target's table(s) to discover the actual subtype corresponding to a specific identifier value.
 
-[[entity-persister]]
-==== Define a custom entity persister
+The concrete type will be determined:
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Persister.html[`@Persister`] annotation is used to specify a custom entity or collection persister.
+* With *single table* inheritance, the discriminator column value will be left joined when fetching associations or simply read from the entity table when getting references.
+* When using *joined* inheritance, all subtype tables will need to be left joined to determine the concrete type. Note however that when using an explicit discriminator column, the behavior is the same as for single-table inheritance.
+* Finally, for *table-per-class* inheritance, all subtype tables will need to be (union) queried to determine the concrete type.
 
-For entities, the custom persister must implement the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/persister/entity/EntityPersister.html[`EntityPersister`] interface.
+In the following example, you can see how Hibernate issues a query to resolve the concrete proxy type for an entity reference:
 
-For collections, the custom persister must implement the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/persister/collection/CollectionPersister.html[`CollectionPersister`] interface.
-
-[[entity-persister-mapping]]
-.Entity persister mapping
+[[entity-concrete-proxy-reference]]
+.Resolving the concrete proxy type for `getReference()`:
 ====
 [source,java]
 ----
-include::{sourcedir-persister}/Author.java[tag=entity-persister-mapping,indent=0]
+include::{example-dir-proxy}/concrete/AbstractConcreteProxyTest.java[tag=entity-concrete-proxy-reference,indent=0]
 ----
 
-[source,java]
+[source,sql]
 ----
-include::{sourcedir-persister}/Book.java[tag=entity-persister-mapping,indent=0]
+include::{extrasdir}/entity/entity-concrete-proxy-reference.sql[]
 ----
 ====
-
-By providing your own `EntityPersister` and `CollectionPersister` implementations,
-you can control how entities and collections are persisted into the database.

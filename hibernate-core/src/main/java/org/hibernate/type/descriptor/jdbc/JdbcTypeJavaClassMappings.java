@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
 
@@ -26,6 +24,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.UUID;
@@ -38,20 +37,20 @@ import org.jboss.logging.Logger;
 
 /**
  * Maintains the JDBC recommended mappings for JDBC type-code to/from Java Class
- * as defined in _Appendix B : Data Type Conversion Tables_ of the _JDBC 4.0 Specification_
- *
- * Eventually, the plan is to have {@link org.hibernate.dialect.Dialect} and
- * {@link java.sql.DatabaseMetaData#getTypeInfo()} contribute this information.
+ * as defined in <em>Appendix B: Data Type Conversion Tables</em> of the JDBC
+ * Specification.
  *
  * @author Steve Ebersole
  */
+//TODO: Eventually, the plan is to have {@link org.hibernate.dialect.Dialect} and
+//      {@link java.sql.DatabaseMetaData#getTypeInfo()} contribute this information.
 public class JdbcTypeJavaClassMappings {
 	private static final Logger log = Logger.getLogger( JdbcTypeJavaClassMappings.class );
 
 	public static final JdbcTypeJavaClassMappings INSTANCE = new JdbcTypeJavaClassMappings();
 
-	private final ConcurrentHashMap<Class, Integer> javaClassToJdbcTypeCodeMap;
-	private final ConcurrentHashMap<Integer, Class> jdbcTypeCodeToJavaClassMap;
+	private final ConcurrentHashMap<Class<?>, Integer> javaClassToJdbcTypeCodeMap;
+	private final ConcurrentHashMap<Integer, Class<?>> jdbcTypeCodeToJavaClassMap;
 
 	private JdbcTypeJavaClassMappings() {
 		javaClassToJdbcTypeCodeMap = buildJavaClassToJdbcTypeCodeMappings();
@@ -60,12 +59,12 @@ public class JdbcTypeJavaClassMappings {
 
 	/**
 	 * For the given Java type, determine the JDBC recommended JDBC type.
-	 *
-	 * This includes the mappings defined in <i>TABLE B-2 - Java Types Mapped to JDBC Types</i>
-	 * as well as some additional "common sense" mappings for things like BigDecimal, BigInteger,
-	 * etc.
+	 * <p>
+	 * This includes the mappings defined in <em>TABLE B-2: Java Types Mapped to JDBC Types</em>
+	 * and <em>TABLE B-4: Java Object Types Mapped to JDBC Types</em>, as well as some additional
+	 * "common sense" mappings.
 	 */
-	public int determineJdbcTypeCodeForJavaClass(Class cls) {
+	public int determineJdbcTypeCodeForJavaClass(Class<?> cls) {
 		Integer typeCode = javaClassToJdbcTypeCodeMap.get( cls );
 		if ( typeCode != null ) {
 			return typeCode;
@@ -79,11 +78,12 @@ public class JdbcTypeJavaClassMappings {
 	}
 
 	/**
-	 * For the given JDBC type, determine the JDBC recommended Java type.  These mappings
-	 * are defined by <i>TABLE B-1 - JDBC Types Mapped to Java Types</i>
+	 * For the given JDBC type, determine the JDBC recommended Java type.
+	 * <p>
+	 * These mappings are defined by <em>TABLE B-1: JDBC Types Mapped to Java Types</em>.
 	 */
-	public Class determineJavaClassForJdbcTypeCode(Integer typeCode) {
-		Class cls = jdbcTypeCodeToJavaClassMap.get( typeCode );
+	public Class<?> determineJavaClassForJdbcTypeCode(Integer typeCode) {
+		Class<?> cls = jdbcTypeCodeToJavaClassMap.get( typeCode );
 		if ( cls != null ) {
 			return cls;
 		}
@@ -98,15 +98,15 @@ public class JdbcTypeJavaClassMappings {
 	/**
 	 * @see #determineJavaClassForJdbcTypeCode(Integer)
 	 */
-	public Class determineJavaClassForJdbcTypeCode(int typeCode) {
+	public Class<?> determineJavaClassForJdbcTypeCode(int typeCode) {
 		return determineJavaClassForJdbcTypeCode( Integer.valueOf( typeCode ) );
 	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private static ConcurrentHashMap<Class, Integer> buildJavaClassToJdbcTypeCodeMappings() {
-		final ConcurrentHashMap<Class, Integer> workMap = new ConcurrentHashMap<>();
+	private static ConcurrentHashMap<Class<?>, Integer> buildJavaClassToJdbcTypeCodeMappings() {
+		final ConcurrentHashMap<Class<?>, Integer> workMap = new ConcurrentHashMap<>();
 
 		// these mappings are the ones outlined specifically in the spec
 		workMap.put( String.class, SqlTypes.VARCHAR );
@@ -124,6 +124,7 @@ public class JdbcTypeJavaClassMappings {
 		workMap.put( Time.class, SqlTypes.TIME );
 		workMap.put( Timestamp.class, SqlTypes.TIMESTAMP );
 		workMap.put( LocalTime.class, SqlTypes.TIME );
+		workMap.put( OffsetTime.class, SqlTypes.TIME_WITH_TIMEZONE );
 		workMap.put( LocalDate.class, SqlTypes.DATE );
 		workMap.put( LocalDateTime.class, SqlTypes.TIMESTAMP );
 		workMap.put( OffsetDateTime.class, SqlTypes.TIMESTAMP_WITH_TIMEZONE );
@@ -147,16 +148,16 @@ public class JdbcTypeJavaClassMappings {
 		// additional "common sense" registrations
 		workMap.put( Character.class, SqlTypes.CHAR );
 		workMap.put( char[].class, SqlTypes.VARCHAR );
-		workMap.put( Character[].class, SqlTypes.VARCHAR );
-		workMap.put( Byte[].class, SqlTypes.VARBINARY );
+//		workMap.put( Character[].class, SqlTypes.VARCHAR );
+//		workMap.put( Byte[].class, SqlTypes.VARBINARY );
 		workMap.put( java.util.Date.class, SqlTypes.TIMESTAMP );
 		workMap.put( Calendar.class, SqlTypes.TIMESTAMP );
 
 		return workMap;
 	}
 
-	private static ConcurrentHashMap<Integer, Class> buildJdbcTypeCodeToJavaClassMappings() {
-		final ConcurrentHashMap<Integer, Class> workMap = new ConcurrentHashMap<>();
+	private static ConcurrentHashMap<Integer, Class<?>> buildJdbcTypeCodeToJavaClassMappings() {
+		final ConcurrentHashMap<Integer, Class<?>> workMap = new ConcurrentHashMap<>();
 
 		workMap.put( SqlTypes.CHAR, String.class );
 		workMap.put( SqlTypes.VARCHAR, String.class );
@@ -181,16 +182,19 @@ public class JdbcTypeJavaClassMappings {
 		workMap.put( SqlTypes.DATE, java.sql.Date.class );
 		workMap.put( SqlTypes.TIME, Time.class );
 		workMap.put( SqlTypes.TIMESTAMP, Timestamp.class );
+		workMap.put( SqlTypes.TIME_WITH_TIMEZONE, OffsetTime.class );
+		workMap.put( SqlTypes.TIMESTAMP_WITH_TIMEZONE, OffsetDateTime.class );
 		workMap.put( SqlTypes.BLOB, Blob.class );
 		workMap.put( SqlTypes.CLOB, Clob.class );
 		workMap.put( SqlTypes.NCLOB, NClob.class );
 		workMap.put( SqlTypes.ARRAY, Array.class );
 		workMap.put( SqlTypes.STRUCT, Struct.class );
 		workMap.put( SqlTypes.REF, Ref.class );
-		workMap.put( SqlTypes.JAVA_OBJECT, Class.class );
+		workMap.put( SqlTypes.JAVA_OBJECT, Object.class );
 		workMap.put( SqlTypes.ROWID, RowId.class );
 		workMap.put( SqlTypes.SQLXML, SQLXML.class );
 		workMap.put( SqlTypes.UUID, UUID.class );
+		workMap.put( SqlTypes.JSON, String.class );
 		workMap.put( SqlTypes.INET, InetAddress.class );
 		workMap.put( SqlTypes.TIMESTAMP_UTC, Instant.class );
 		workMap.put( SqlTypes.INTERVAL_SECOND, Duration.class );

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
@@ -16,12 +14,13 @@ import org.hibernate.type.ListType;
 import org.hibernate.usertype.UserCollectionType;
 
 /**
+ * A mapping model object representing a collection of type {@link java.util.List}.
  * A list mapping has a primary key consisting of the key columns + index column.
  *
  * @author Gavin King
  */
 public class List extends IndexedCollection {
-	
+
 	private int baseIndex;
 
 	/**
@@ -55,7 +54,7 @@ public class List extends IndexedCollection {
 	public CollectionType getDefaultCollectionType() throws MappingException {
 		return new ListType( getRole(), getReferencedPropertyName() );
 	}
-	
+
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}
@@ -63,7 +62,7 @@ public class List extends IndexedCollection {
 	public int getBaseIndex() {
 		return baseIndex;
 	}
-	
+
 	public void setBaseIndex(int baseIndex) {
 		this.baseIndex = baseIndex;
 	}

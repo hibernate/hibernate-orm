@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
@@ -11,6 +9,8 @@ import java.util.Set;
 
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmBasicAttributeType;
 import org.hibernate.boot.model.source.spi.SizeSource;
+
+import static org.hibernate.internal.util.StringHelper.splitAtCommas;
 
 /**
  * ColumnAndFormulaSource implementation handling basic attribute mappings.
@@ -69,7 +69,7 @@ public class BasicAttributeColumnsAndFormulasSource
 
 	@Override
 	public Set<String> getIndexConstraintNames() {
-		return CommaSeparatedStringHelper.split( basicAttributeMapping.getIndex() );
+		return Set.of( splitAtCommas( basicAttributeMapping.getIndex() ) );
 	}
 
 	@Override
@@ -79,6 +79,6 @@ public class BasicAttributeColumnsAndFormulasSource
 
 	@Override
 	public Set<String> getUniqueKeyConstraintNames() {
-		return CommaSeparatedStringHelper.split( basicAttributeMapping.getUniqueKey() );
+		return Set.of( splitAtCommas( basicAttributeMapping.getUniqueKey() ) );
 	}
 }

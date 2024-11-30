@@ -1,21 +1,18 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.attrorder;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.RuntimeMetamodels;
-import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 
@@ -59,24 +56,22 @@ public class AttributeOrderingTests {
 	}
 
 	public void verifyBootModel(DomainModelScope modelScope) {
-		final Consumer<Iterator<Property>> alphabeticOrderChecker = (properties) -> {
+		final Consumer<Iterator<Property>> alphabeticOrderChecker = properties -> {
 			String last = null;
 			while ( properties.hasNext() ) {
 				final String current = properties.next().getName();
-				if ( last != null ) {
-					assert last.compareTo( current ) < 0 : "not alphabetical : " + last + " -> " + current;
-				}
+				assert last == null || last.compareTo( current ) < 0 : "not alphabetical : " + last + " -> " + current;
 
 				last = current;
 			}
 		};
 
 		modelScope.getDomainModel().getEntityBindings().forEach(
-				(binding) -> alphabeticOrderChecker.accept( binding.getPropertyClosureIterator() )
+				binding -> alphabeticOrderChecker.accept( binding.getPropertyClosure().iterator() )
 		);
 
 		modelScope.getDomainModel().visitRegisteredComponents(
-				(binding) -> alphabeticOrderChecker.accept( binding.getPropertyIterator() )
+				binding -> alphabeticOrderChecker.accept( binding.getProperties().iterator() )
 		);
 	}
 
@@ -87,7 +82,7 @@ public class AttributeOrderingTests {
 		assertThat( naturalIdMapping.getNaturalIdAttributes().get( 0 ).getAttributeName(), is( "assignment" ) );
 		assertThat( naturalIdMapping.getNaturalIdAttributes().get( 1 ).getAttributeName(), is( "userCode" ) );
 
-		final ArrayList<AttributeMapping> attributeMappings = new ArrayList<>( entityMappingType.getAttributeMappings() );
+		final AttributeMappingsList attributeMappings = entityMappingType.getAttributeMappings();
 		assertThat( attributeMappings.size(), is( 5 ) );
 
 		assertThat( attributeMappings.get( 0 ).getAttributeName(), is( "assignment" ) );
@@ -101,7 +96,7 @@ public class AttributeOrderingTests {
 		assertThat( entityMappingType.getEntityPersister().getPropertyNames()[ 2 ], is( "theComponent" ) );
 
 		final EmbeddableMappingType embeddable = theComponentAttrMapping.getMappedType();
-		final ArrayList<AttributeMapping> embeddableAttributeMappings = new ArrayList<>( embeddable.getAttributeMappings() );
+		final AttributeMappingsList embeddableAttributeMappings = embeddable.getAttributeMappings();
 		assertThat( embeddableAttributeMappings.get( 0 ).getAttributeName(), is( "nestedAnything" ) );
 		assertThat( embeddableAttributeMappings.get( 1 ).getAttributeName(), is( "nestedName" ) );
 

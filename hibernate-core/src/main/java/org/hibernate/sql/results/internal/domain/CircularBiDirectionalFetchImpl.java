@@ -1,82 +1,54 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.internal.domain;
 
-import java.util.function.BiConsumer;
+import java.util.BitSet;
 
-import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.spi.CollectionKey;
-import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.EntityUniqueKey;
-import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.mapping.IndexedConsumer;
-import org.hibernate.metamodel.mapping.Association;
-import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
-import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
-import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.BiDirectionalFetch;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.FetchParentAccess;
-import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.Initializer;
-import org.hibernate.sql.results.graph.collection.CollectionInitializer;
+import org.hibernate.sql.results.graph.InitializerData;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Andrea Boriero
  */
-public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Association {
-	private final FetchTiming timing;
+public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch {
 	private final NavigablePath navigablePath;
-	private final ToOneAttributeMapping fetchable;
-
+	private final ToOneAttributeMapping fetchedModelPart;
 	private final FetchParent fetchParent;
-	private final LockMode lockMode;
+	private final @Nullable DomainResult<?> keyResult;
+	private final FetchTiming timing;
 	private final NavigablePath referencedNavigablePath;
-	private final DomainResult<?> keyDomainResult;
 
 	public CircularBiDirectionalFetchImpl(
 			FetchTiming timing,
 			NavigablePath navigablePath,
 			FetchParent fetchParent,
-			ToOneAttributeMapping fetchable,
-			LockMode lockMode,
+			ToOneAttributeMapping referencedModelPart,
 			NavigablePath referencedNavigablePath,
-			DomainResult<?> keyDomainResult) {
-		this.timing = timing;
-		this.fetchParent = fetchParent;
+			@Nullable DomainResult<?> keyResult) {
 		this.navigablePath = navigablePath;
-		this.fetchable = fetchable;
-		this.lockMode = lockMode;
+		this.fetchedModelPart = referencedModelPart;
+		this.fetchParent = fetchParent;
+		this.keyResult = keyResult;
+		this.timing = timing;
 		this.referencedNavigablePath = referencedNavigablePath;
-		this.keyDomainResult = keyDomainResult;
 	}
 
 	@Override
@@ -85,8 +57,13 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 	}
 
 	@Override
-	public NavigablePath getReferencedPath() {
-		return referencedNavigablePath;
+	public ToOneAttributeMapping getFetchedMapping() {
+		return fetchedModelPart;
+	}
+
+	@Override
+	public JavaType<?> getResultJavaType() {
+		return fetchedModelPart.getJavaType();
 	}
 
 	@Override
@@ -95,25 +72,8 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 	}
 
 	@Override
-	public Fetchable getFetchedMapping() {
-		return fetchable;
-	}
-
-	@Override
-	public JavaType<?> getResultJavaType() {
-		return fetchable.getJavaType();
-	}
-
-	@Override
-	public DomainResultAssembler createAssembler(
-			FetchParentAccess parentAccess,
-			AssemblerCreationState creationState) {
-		return new CircularFetchAssembler(
-				fetchable,
-				getReferencedPath(),
-				fetchable.getJavaType(),
-				keyDomainResult == null ? null : keyDomainResult.createResultAssembler( parentAccess, creationState )
-		);
+	public NavigablePath getReferencedPath() {
+		return referencedNavigablePath;
 	}
 
 	@Override
@@ -127,251 +87,88 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 	}
 
 	@Override
-	public String getFetchableName() {
-		return fetchable.getFetchableName();
+	public void collectValueIndexesToCache(BitSet valueIndexes) {
+		if ( keyResult != null ) {
+			keyResult.collectValueIndexesToCache( valueIndexes );
+		}
 	}
 
 	@Override
-	public String getPartName() {
-		return fetchable.getFetchableName();
+	public DomainResultAssembler createAssembler(InitializerParent<?> parent, AssemblerCreationState creationState) {
+		return new CircularBiDirectionalFetchAssembler(
+				getResultJavaType(),
+				keyResult == null ? null : keyResult.createResultAssembler( parent, creationState ),
+				resolveCircularInitializer( parent )
+		);
 	}
 
-	@Override
-	public NavigableRole getNavigableRole() {
-		return fetchable.getNavigableRole();
+	private EntityInitializer<?> resolveCircularInitializer(InitializerParent<?> parent) {
+		while (parent != null && getReferencedPath().isParent( parent.getNavigablePath() ) ) {
+			parent = parent.getParent();
+		}
+		assert parent instanceof EntityInitializer && parent.getNavigablePath().equals( getReferencedPath() );
+		return parent.asEntityInitializer();
 	}
 
-	@Override
-	public EntityMappingType findContainingEntityMapping() {
-		return fetchable.findContainingEntityMapping();
-	}
+	private static class CircularBiDirectionalFetchAssembler implements DomainResultAssembler<Object> {
+		private final JavaType<Object> javaType;
+		private final @Nullable DomainResultAssembler<?> keyDomainResultAssembler;
+		private final EntityInitializer<InitializerData> initializer;
 
-	@Override
-	public MappingType getPartMappingType() {
-		return fetchable.getPartMappingType();
-	}
-
-	@Override
-	public JavaType<?> getJavaType() {
-		return fetchable.getJavaType();
-	}
-
-	@Override
-	public FetchOptions getMappedFetchOptions() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public ForeignKeyDescriptor getForeignKeyDescriptor() {
-		return ( (Association) fetchParent ).getForeignKeyDescriptor();
-	}
-
-	@Override
-	public ForeignKeyDescriptor.Nature getSideNature() {
-		return ( (Association) fetchParent ).getSideNature();
-	}
-
-	@Override
-	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		fetchable.breakDownJdbcValues( domainValue, valueConsumer, session );
-	}
-
-	@Override
-	public Fetch generateFetch(
-			FetchParent fetchParent,
-			NavigablePath fetchablePath,
-			FetchTiming fetchTiming,
-			boolean selected,
-			String resultVariable,
-			DomainResultCreationState creationState) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public int forEachDisassembledJdbcValue(
-			Object value,
-			Clause clause,
-			int offset,
-			JdbcValuesConsumer valuesConsumer,
-			SharedSessionContractImplementor session) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
-		throw new UnsupportedOperationException();
-	}
-
-	private static class CircularFetchAssembler implements DomainResultAssembler<Object> {
-		private final NavigablePath circularPath;
-		private final JavaType<?> javaType;
-		private final ToOneAttributeMapping fetchable;
-		private final DomainResultAssembler<?> keyDomainResultAssembler;
-
-		public CircularFetchAssembler(
-				ToOneAttributeMapping fetchable,
-				NavigablePath circularPath,
+		public CircularBiDirectionalFetchAssembler(
 				JavaType<?> javaType,
-				DomainResultAssembler<?> keyDomainResultAssembler) {
-			this.fetchable = fetchable;
-			this.circularPath = circularPath;
-			this.javaType = javaType;
+				@Nullable DomainResultAssembler<?> keyDomainResultAssembler,
+				EntityInitializer<?> initializer) {
+			//noinspection unchecked
+			this.javaType = (JavaType<Object>) javaType;
 			this.keyDomainResultAssembler = keyDomainResultAssembler;
+			this.initializer = (EntityInitializer<InitializerData>) initializer;
 		}
 
 		@Override
-		public Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
+		public Object assemble(RowProcessingState rowProcessingState) {
 			if ( keyDomainResultAssembler != null ) {
-				final Object foreignKey = keyDomainResultAssembler.assemble( rowProcessingState, options );
+				final Object foreignKey = keyDomainResultAssembler.assemble( rowProcessingState );
 				if ( foreignKey == null ) {
 					return null;
 				}
 			}
-			EntityInitializer initializer = resolveCircularInitializer( rowProcessingState );
-			if ( initializer == null ) {
-				if ( circularPath.getParent() != null ) {
-					NavigablePath path = circularPath.getParent();
-					Initializer parentInitializer = rowProcessingState.resolveInitializer( path );
-					while ( !( parentInitializer instanceof EntityInitializer ) && path.getParent() != null ) {
-						path = path.getParent();
-						parentInitializer = rowProcessingState.resolveInitializer( path );
-					}
-					initializer = (EntityInitializer) parentInitializer;
-				}
-				else {
-					final Initializer parentInitializer = rowProcessingState.resolveInitializer( circularPath );
-					assert parentInitializer instanceof CollectionInitializer;
-					final CollectionInitializer circ = (CollectionInitializer) parentInitializer;
-					final EntityPersister entityPersister = (EntityPersister) ( (AttributeMapping) fetchable ).getMappedType();
-					final CollectionKey collectionKey = circ.resolveCollectionKey( rowProcessingState );
-					final Object key = collectionKey.getKey();
-					final SharedSessionContractImplementor session = rowProcessingState.getJdbcValuesSourceProcessingState()
-							.getSession();
-					final PersistenceContext persistenceContext = session.getPersistenceContext();
-					if ( fetchable.getReferencedPropertyName() != null ) {
-						return loadByUniqueKey( entityPersister, key, session, persistenceContext );
-					}
-					else {
-						final EntityKey entityKey = new EntityKey( key, entityPersister );
-
-						final Object proxy = persistenceContext.getProxy( entityKey );
-						// it is conceivable there is a proxy, so check that first
-						if ( proxy == null || !( proxy.getClass()
-								.isAssignableFrom( javaType.getJavaTypeClass() ) ) ) {
-							// otherwise look for an initialized version
-							return persistenceContext.getEntity( entityKey );
-						}
-						return proxy;
-					}
-				}
+			final InitializerData data = initializer.getData( rowProcessingState );
+			final Initializer.State state = data.getState();
+			if ( state == Initializer.State.KEY_RESOLVED ) {
+				initializer.resolveInstance( data );
 			}
-			if ( initializer.getInitializedInstance() == null ) {
-				initializer.resolveKey( rowProcessingState );
-				initializer.resolveInstance( rowProcessingState );
-			}
-			final Object initializedInstance = initializer.getInitializedInstance();
-			if ( initializedInstance instanceof HibernateProxy ) {
-				if ( initializedInstance.getClass().isAssignableFrom( javaType.getJavaTypeClass() ) ) {
+			final Object initializedInstance = initializer.getResolvedInstance( data );
+			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( initializedInstance );
+			if ( lazyInitializer != null ) {
+				final Class<?> concreteProxyClass = initializer.getConcreteDescriptor( data ).getConcreteProxyClass();
+				if ( concreteProxyClass.isInstance( initializedInstance ) ) {
 					return initializedInstance;
 				}
-				initializer.initializeInstance( rowProcessingState );
-				return ( (HibernateProxy) initializedInstance ).getHibernateLazyInitializer().getImplementation();
+				else {
+					initializer.initializeInstance( rowProcessingState );
+					return lazyInitializer.getImplementation();
+				}
 			}
 			return initializedInstance;
 		}
 
-		private Object loadByUniqueKey(
-				EntityPersister entityPersister,
-				Object key,
-				SharedSessionContractImplementor session,
-				PersistenceContext persistenceContext) {
-			final String uniqueKeyPropertyName = fetchable.getReferencedPropertyName();
-			final EntityUniqueKey euk = new EntityUniqueKey(
-					entityPersister.getEntityName(),
-					uniqueKeyPropertyName,
-					key,
-					entityPersister.getIdentifierType(),
-					session.getFactory()
-			);
-			Object entityInstance = persistenceContext.getEntity( euk );
-			if ( entityInstance == null ) {
-				entityInstance = ( (UniqueKeyLoadable) entityPersister ).loadByUniqueKey(
-						uniqueKeyPropertyName,
-						key,
-						session
-				);
-
-				// If the entity was not in the Persistence Context, but was found now,
-				// add it to the Persistence Context
-				if ( entityInstance != null ) {
-					persistenceContext.addEntity( euk, entityInstance );
-				}
+		@Override
+		public void resolveState(RowProcessingState rowProcessingState) {
+			if ( keyDomainResultAssembler != null ) {
+				keyDomainResultAssembler.resolveState( rowProcessingState );
 			}
-			return entityInstance;
-		}
-
-		private EntityInitializer resolveCircularInitializer(RowProcessingState rowProcessingState) {
-			final Initializer initializer = rowProcessingState.resolveInitializer( circularPath );
-			if ( initializer instanceof EntityInitializer ) {
-				return (EntityInitializer) initializer;
-			}
-			if ( initializer instanceof CollectionInitializer ) {
-				return null;
-			}
-			final ModelPart initializedPart = initializer.getInitializedPart();
-
-			if ( initializedPart instanceof EntityInitializer ) {
-				return (EntityInitializer) initializedPart;
-			}
-
-			NavigablePath path = circularPath.getParent();
-			Initializer parentInitializer = rowProcessingState.resolveInitializer( path );
-			while ( !( parentInitializer instanceof EntityInitializer ) && path.getParent() != null ) {
-				path = path.getParent();
-				parentInitializer = rowProcessingState.resolveInitializer( path );
-			}
-
-			if ( !( parentInitializer instanceof EntityInitializer ) ) {
-				return null;
-			}
-
-			return (EntityInitializer) parentInitializer;
 		}
 
 		@Override
-		public JavaType getAssembledJavaType() {
+		public @Nullable Initializer<?> getInitializer() {
+			return keyDomainResultAssembler == null ? null : keyDomainResultAssembler.getInitializer();
+		}
+
+		@Override
+		public JavaType<Object> getAssembledJavaType() {
 			return javaType;
 		}
 	}
 
-	@Override
-	public <T> DomainResult<T> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
-		return fetchable.createDomainResult( navigablePath, tableGroup, resultVariable, creationState );
-	}
-
-	@Override
-	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState) {
-		fetchable.applySqlSelections( navigablePath, tableGroup, creationState );
-	}
-
-	@Override
-	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState,
-			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
-		fetchable.applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
-	}
 }

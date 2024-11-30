@@ -1,13 +1,29 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.formula;
 
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
+
+import org.hibernate.annotations.JoinColumnOrFormula;
+import org.hibernate.annotations.JoinFormula;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.boot.model.internal.ToOneBinder;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.logger.LoggerInspectionRule;
+import org.hibernate.testing.logger.Triggerable;
+import org.junit.Rule;
+import org.junit.Test;
+
+import org.jboss.logging.Logger;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -17,38 +33,20 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
-import org.hibernate.annotations.JoinColumnOrFormula;
-import org.hibernate.annotations.JoinFormula;
-import org.hibernate.annotations.NotFound;
-import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.cfg.AnnotationBinder;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.logger.LoggerInspectionRule;
-import org.hibernate.testing.logger.Triggerable;
-import org.junit.Rule;
-import org.junit.Test;
-
-import org.jboss.logging.Logger;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
 
-@TestForIssue(jiraKey = "HHH-12770")
+@JiraKey(value = "HHH-12770")
 public class JoinFormulaManyToOneNotIgnoreLazyFetchingTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( CoreMessageLogger.class, AnnotationBinder.class.getName() )
+			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, ToOneBinder.class.getName() )
 	);
 
-	private Triggerable triggerable = logInspection.watchForLogMessages( "HHH000491" );
+	private final Triggerable triggerable = logInspection.watchForLogMessages( "HHH000491" );
 
 
 	@Override

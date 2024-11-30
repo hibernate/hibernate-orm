@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.schemagen;
 
@@ -23,8 +21,9 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -62,7 +61,7 @@ public class SchemaScriptFileGenerationTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "10601")
+	@JiraKey(value = "10601")
 	public void testGenerateSchemaDoesNotProduceTheSameStatementTwice() throws Exception {
 
 		entityManagerFactoryBuilder.generateSchema();
@@ -108,9 +107,10 @@ public class SchemaScriptFileGenerationTest {
 
 	private Map getConfig() {
 		final Map<Object, Object> config = Environment.getProperties();
-		config.put( AvailableSettings.HBM2DDL_SCRIPTS_CREATE_TARGET, createSchema.toPath() );
-		config.put( AvailableSettings.HBM2DDL_SCRIPTS_DROP_TARGET, dropSchema.toPath() );
-		config.put( AvailableSettings.HBM2DDL_SCRIPTS_ACTION, "drop-and-create" );
+		ServiceRegistryUtil.applySettings( config );
+		config.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET, createSchema.toPath() );
+		config.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_DROP_TARGET, dropSchema.toPath() );
+		config.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION, "drop-and-create" );
 		ArrayList<Class> classes = new ArrayList<Class>();
 
 		classes.addAll( Arrays.asList( new Class[] {TestEntity.class} ) );

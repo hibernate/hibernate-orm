@@ -1,10 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.spatial.contributor;
 
 import org.hibernate.boot.model.FunctionContributions;
@@ -18,7 +15,7 @@ import org.hibernate.spatial.JTSGeometryJavaType;
  */
 public interface ContributorImplementor {
 
-	default void contributeJavaTypes(TypeContributions typeContributions) {
+	default void contributeJavaTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		typeContributions.contributeJavaType( GeolatteGeometryJavaType.GEOMETRY_INSTANCE );
 		typeContributions.contributeJavaType( GeolatteGeometryJavaType.POINT_INSTANCE );
 		typeContributions.contributeJavaType( GeolatteGeometryJavaType.LINESTRING_INSTANCE );
@@ -40,7 +37,7 @@ public interface ContributorImplementor {
 
 	}
 
-	void contributeJdbcTypes(TypeContributions typeContributions);
+	void contributeJdbcTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry);
 
 	void contributeFunctions(FunctionContributions functionContributions);
 

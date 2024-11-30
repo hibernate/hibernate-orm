@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql.exec;
 
@@ -11,6 +9,7 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.testing.orm.domain.gambit.EmbeddedIdEntity;
 import org.hibernate.testing.orm.domain.gambit.EmbeddedIdEntity.EmbeddedIdEntityId;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -45,7 +44,7 @@ public class EmbeddedIdEntityTest {
 				session -> {
 					entity.setId( entityId );
 					entity.setData( "test" );
-					session.save( entity );
+					session.persist( entity );
 				}
 		);
 	}
@@ -118,6 +117,38 @@ public class EmbeddedIdEntityTest {
 					assertThat( loaded.getData(), is( "test" ) );
 				}
 		);
+		assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17499" )
+	public void testNamedParameterComparison(SessionFactoryScope scope) {
+		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+		statistics.clear();
+		scope.inTransaction( session -> {
+			final EmbeddedIdEntity loaded = session.createQuery(
+					"select e FROM EmbeddedIdEntity e WHERE e.id = :id",
+					EmbeddedIdEntity.class
+			).setParameter( "id", entityId ).getSingleResult();
+			assertThat( loaded.getData(), is( "test" ) );
+			assertThat( loaded.getId(), equalTo( entityId ) );
+		} );
+		assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17499" )
+	public void testPositionalParameterComparison(SessionFactoryScope scope) {
+		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+		statistics.clear();
+		scope.inTransaction( session -> {
+			final EmbeddedIdEntity loaded = session.createQuery(
+					"select e FROM EmbeddedIdEntity e WHERE e.id = ?1",
+					EmbeddedIdEntity.class
+			).setParameter( 1, entityId ).getSingleResult();
+			assertThat( loaded.getData(), is( "test" ) );
+			assertThat( loaded.getId(), equalTo( entityId ) );
+		} );
 		assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
 	}
 }

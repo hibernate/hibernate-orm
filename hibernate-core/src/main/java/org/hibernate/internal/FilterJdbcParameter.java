@@ -1,75 +1,55 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal;
 
-import java.util.Objects;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
-import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
-import org.hibernate.sql.exec.internal.JdbcParameterImpl;
+import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
-import org.hibernate.sql.exec.spi.JdbcParameterBinding;
-import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
 /**
  * @author Nathan Xu
  */
-public class FilterJdbcParameter {
-	private final JdbcParameter parameter;
+public class FilterJdbcParameter implements JdbcParameter, JdbcParameterBinder {
 	private final JdbcMapping jdbcMapping;
 	private final Object jdbcParameterValue;
 
 	public FilterJdbcParameter(JdbcMapping jdbcMapping, Object jdbcParameterValue) {
-		this.parameter = new JdbcParameterImpl( jdbcMapping );
 		this.jdbcMapping = jdbcMapping;
 		this.jdbcParameterValue = jdbcParameterValue;
 	}
 
-	public JdbcParameter getParameter() {
-		return parameter;
-	}
-
-	public JdbcParameterBinder getBinder() {
-		return parameter.getParameterBinder();
-	}
-
-	public JdbcParameterBinding getBinding() {
-		final BasicValueConverter valueConverter = jdbcMapping.getValueConverter();
-		if ( valueConverter == null ) {
-			return new JdbcParameterBindingImpl( jdbcMapping, jdbcParameterValue );
-		}
-		return new JdbcParameterBindingImpl( jdbcMapping, valueConverter.toRelationalValue( jdbcParameterValue ) );
+	@Override
+	public JdbcParameterBinder getParameterBinder() {
+		return this;
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
-			return true;
-		}
-		if ( o == null || getClass() != o.getClass() ) {
-			return false;
-		}
-		FilterJdbcParameter that = (FilterJdbcParameter) o;
-		return Objects.equals( parameter, that.parameter ) &&
-				Objects.equals( jdbcMapping, that.jdbcMapping ) &&
-				( (JavaType<Object>) jdbcMapping.getMappedJavaType() ).areEqual(
-						jdbcParameterValue,
-						that.jdbcParameterValue
-				);
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(
-				parameter,
-				jdbcMapping,
-				( (JavaType<Object>) jdbcMapping.getMappedJavaType() ).extractHashCode( jdbcParameterValue )
+	public void bindParameterValue(PreparedStatement statement, int startPosition, JdbcParameterBindings jdbcParameterBindings, ExecutionContext executionContext) throws SQLException {
+		jdbcMapping.getJdbcValueBinder().bind(
+				statement,
+				jdbcMapping.convertToRelationalValue( jdbcParameterValue ),
+				startPosition,
+				executionContext.getSession()
 		);
+
+	}
+
+	@Override
+	public JdbcMappingContainer getExpressionType() {
+		return jdbcMapping;
+	}
+
+	@Override
+	public void accept(SqlAstWalker sqlTreeWalker) {
+		throw new IllegalStateException(  );
 	}
 }

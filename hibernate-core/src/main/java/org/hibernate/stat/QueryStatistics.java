@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.stat;
 
@@ -11,7 +9,7 @@ import java.io.Serializable;
 /**
  * Statistics relating to a particular query written in HQL or SQL.
  * <p>
- * Note that for a cached query, the number of cache missed is the
+ * Note that for a cached query, the number of cache misses is the
  * same as the number of queries actually executed against the
  * database.
  *

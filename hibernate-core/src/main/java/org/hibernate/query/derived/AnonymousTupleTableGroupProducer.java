@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.derived;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -14,9 +13,10 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.Incubating;
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -28,19 +28,18 @@ import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
-import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.query.sqm.SqmExpressible;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.LazyTableGroup;
@@ -49,6 +48,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.metamodel.Attribute;
@@ -72,7 +72,7 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 	public AnonymousTupleTableGroupProducer(
 			AnonymousTupleType<?> tupleType,
 			String aliasStem,
-			List<SqlSelection> sqlSelections,
+			SqlTypedMapping[] sqlTypedMappings,
 			FromClauseAccess fromClauseAccess) {
 		this.aliasStem = aliasStem;
 		this.javaTypeDescriptor = tupleType.getExpressibleJavaType();
@@ -83,33 +83,45 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 		final int componentCount = tupleType.componentCount();
 		final Map<String, ModelPart> modelParts = CollectionHelper.linkedMapOfSize( componentCount );
 		int selectionIndex = 0;
-		for ( int i = 0; i < componentCount; i++ ) {
-			final SqmSelectableNode<?> selectableNode = tupleType.getSelectableNode( i );
+		for ( int i = 0; i < componentCount && selectionIndex < sqlTypedMappings.length; i++ ) {
+			final SqmExpressible<?> expressible = tupleType.get( i );
+			final DomainType<?> sqmType = expressible.getSqmType();
 			final String partName = tupleType.getComponentName( i );
-			final SqlSelection sqlSelection = sqlSelections.get( i );
 			final ModelPart modelPart;
-			if ( selectableNode instanceof SqmPath<?> ) {
-				final SqmPath<?> sqmPath = (SqmPath<?>) selectableNode;
-				final TableGroup tableGroup = fromClauseAccess.findTableGroup( sqmPath.getNavigablePath() );
+			if ( expressible instanceof PluralPersistentAttribute<?, ?, ?>
+					|| !( sqmType instanceof BasicType<?> ) ) {
+				final TableGroup tableGroup = fromClauseAccess.findTableGroup( tupleType.getComponentSourcePath( i ) );
 				modelPart = createModelPart(
-						selectableNode.getExpressible(),
-						sqmPath.getNodeType().getSqmPathType(),
-						sqlSelections,
+						this,
+						expressible,
+						sqmType,
+						sqlTypedMappings,
 						selectionIndex,
 						partName,
 						partName,
 						tableGroup == null ? null : getModelPart( tableGroup ),
-						compatibleTableExpressions
+						compatibleTableExpressions,
+						modelParts.size()
 				);
+			}
+			else if ( sqlTypedMappings[selectionIndex] instanceof SelectableMapping selectable ) {
+				modelPart = new AnonymousTupleBasicValuedModelPart(
+						this,
+						partName,
+						selectable,
+						expressible,
+						modelParts.size()
+				);
+				compatibleTableExpressions.add( selectable.getContainingTableExpression() );
 			}
 			else {
 				modelPart = new AnonymousTupleBasicValuedModelPart(
+						this,
 						partName,
 						partName,
-						selectableNode.getExpressible(),
-						sqlSelection.getExpressionType()
-								.getJdbcMappings()
-								.get( 0 )
+						expressible,
+						sqlTypedMappings[selectionIndex].getJdbcMapping(),
+						modelParts.size()
 				);
 			}
 			modelParts.put( partName, modelPart );
@@ -129,59 +141,52 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 		return tableGroup.getModelPart();
 	}
 
-	private ModelPart createModelPart(
+	public static ModelPart createModelPart(
+			MappingType mappingType,
 			SqmExpressible<?> sqmExpressible,
 			DomainType<?> domainType,
-			List<SqlSelection> sqlSelections,
+			SqlTypedMapping[] sqlTypedMappings,
 			int selectionIndex,
 			String selectionExpression,
 			String partName,
 			ModelPart existingModelPart,
-			Set<String> compatibleTableExpressions) {
+			Set<String> compatibleTableExpressions,
+			int fetchableIndex) {
 		if ( domainType instanceof EntityDomainType<?> ) {
 			final EntityValuedModelPart existingModelPartContainer = (EntityValuedModelPart) existingModelPart;
 			final EntityIdentifierMapping identifierMapping = existingModelPartContainer.getEntityMappingType()
 					.getIdentifierMapping();
 			final EntityIdentifierMapping newIdentifierMapping;
 			if ( identifierMapping instanceof SingleAttributeIdentifierMapping ) {
-				final String attributeName = ( (SingleAttributeIdentifierMapping) identifierMapping ).getAttributeName();
 				if ( identifierMapping.getPartMappingType() instanceof ManagedMappingType ) {
 					//noinspection unchecked
 					final Set<Attribute<?, ?>> attributes = (Set<Attribute<?, ?>>) ( (ManagedDomainType<?>) ( (EntityDomainType<?>) domainType ).getIdentifierDescriptor().getSqmPathType() ).getAttributes();
-					final Map<String, ModelPart> modelParts = CollectionHelper.linkedMapOfSize( attributes.size() );
-					final EmbeddableValuedModelPart modelPartContainer = (EmbeddableValuedModelPart) identifierMapping;
-					for ( Attribute<?, ?> attribute : attributes ) {
-						if ( !( attribute instanceof SingularPersistentAttribute<?, ?> ) ) {
-							throw new IllegalArgumentException( "Only embeddables without collections are supported!" );
-						}
-						final DomainType<?> attributeType = ( (SingularPersistentAttribute<?, ?>) attribute ).getType();
-						final ModelPart modelPart = createModelPart(
-								sqmExpressible,
-								attributeType,
-								sqlSelections,
-								selectionIndex,
-								selectionExpression + "_" + attributeName + "_" + attribute.getName(),
-								attribute.getName(),
-								modelPartContainer.findSubPart( attribute.getName(), null ),
-								compatibleTableExpressions
-						);
-						modelParts.put( modelPart.getPartName(), modelPart );
-					}
 					newIdentifierMapping = new AnonymousTupleEmbeddedEntityIdentifierMapping(
-							modelParts,
+							sqmExpressible,
+							sqlTypedMappings,
+							selectionIndex,
+							selectionExpression + "_" + identifierMapping.getAttributeName(),
+							compatibleTableExpressions,
+							attributes,
 							domainType,
-							attributeName,
 							(CompositeIdentifierMapping) identifierMapping
 					);
 				}
+				else if ( sqlTypedMappings[selectionIndex] instanceof SelectableMapping selectable ) {
+					newIdentifierMapping = new AnonymousTupleBasicEntityIdentifierMapping(
+							mappingType,
+							selectable,
+							sqmExpressible,
+							(BasicEntityIdentifierMapping) identifierMapping
+					);
+					compatibleTableExpressions.add( selectable.getContainingTableExpression() );
+				}
 				else {
 					newIdentifierMapping = new AnonymousTupleBasicEntityIdentifierMapping(
-							selectionExpression + "_" + attributeName,
+							mappingType,
+							selectionExpression + "_" + identifierMapping.getAttributeName(),
 							sqmExpressible,
-							sqlSelections.get( selectionIndex )
-									.getExpressionType()
-									.getJdbcMappings()
-									.get( 0 ),
+							sqlTypedMappings[selectionIndex].getJdbcMapping(),
 							(BasicEntityIdentifierMapping) identifierMapping
 					);
 				}
@@ -189,27 +194,13 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 			else {
 				//noinspection unchecked
 				final Set<Attribute<?, ?>> attributes = (Set<Attribute<?, ?>>) ( (ManagedDomainType<?>) ( (EntityDomainType<?>) domainType ).getIdentifierDescriptor().getSqmPathType() ).getAttributes();
-				final Map<String, ModelPart> modelParts = CollectionHelper.linkedMapOfSize( attributes.size() );
-				final EmbeddableValuedModelPart modelPartContainer = (EmbeddableValuedModelPart) identifierMapping;
-				for ( Attribute<?, ?> attribute : attributes ) {
-					if ( !( attribute instanceof SingularPersistentAttribute<?, ?> ) ) {
-						throw new IllegalArgumentException( "Only embeddables without collections are supported!" );
-					}
-					final DomainType<?> attributeType = ( (SingularPersistentAttribute<?, ?>) attribute ).getType();
-					final ModelPart modelPart = createModelPart(
-							sqmExpressible,
-							attributeType,
-							sqlSelections,
-							selectionIndex,
-							selectionExpression + "_" + attribute.getName(),
-							attribute.getName(),
-							modelPartContainer.findSubPart( attribute.getName(), null ),
-							compatibleTableExpressions
-					);
-					modelParts.put( modelPart.getPartName(), modelPart );
-				}
 				newIdentifierMapping = new AnonymousTupleNonAggregatedEntityIdentifierMapping(
-						modelParts,
+						sqmExpressible,
+						sqlTypedMappings,
+						selectionIndex,
+						selectionExpression,
+						compatibleTableExpressions,
+						attributes,
 						domainType,
 						selectionExpression,
 						(NonAggregatedIdentifierMapping) identifierMapping
@@ -222,45 +213,52 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 			return new AnonymousTupleEntityValuedModelPart(
 					newIdentifierMapping,
 					domainType,
-					selectionExpression,
-					existingModelPartContainer
+					existingModelPartContainer,
+					fetchableIndex
 			);
 		}
 		else if ( domainType instanceof ManagedDomainType<?> ) {
 			//noinspection unchecked
 			final Set<Attribute<?, ?>> attributes = (Set<Attribute<?, ?>>) ( (ManagedDomainType<?>) domainType ).getAttributes();
-			final Map<String, ModelPart> modelParts = CollectionHelper.linkedMapOfSize( attributes.size() );
-			final EmbeddableValuedModelPart modelPartContainer = (EmbeddableValuedModelPart) existingModelPart;
-			for ( Attribute<?, ?> attribute : attributes ) {
-				if ( !( attribute instanceof SingularPersistentAttribute<?, ?> ) ) {
-					throw new IllegalArgumentException( "Only embeddables without collections are supported" );
-				}
-				final DomainType<?> attributeType = ( (SingularPersistentAttribute<?, ?>) attribute ).getType();
-				final ModelPart modelPart = createModelPart(
-						sqmExpressible,
-						attributeType,
-						sqlSelections,
-						selectionIndex,
-						selectionExpression + "_" + attribute.getName(),
-						attribute.getName(),
-						modelPartContainer.findSubPart( attribute.getName(), null ),
-						compatibleTableExpressions
-				);
-				modelParts.put( modelPart.getPartName(), modelPart );
-			}
-			return new AnonymousTupleEmbeddableValuedModelPart( modelParts, domainType, selectionExpression, modelPartContainer );
+			return new AnonymousTupleEmbeddableValuedModelPart(
+					sqmExpressible,
+					sqlTypedMappings,
+					selectionIndex,
+					selectionExpression,
+					compatibleTableExpressions,
+					attributes,
+					domainType,
+					selectionExpression,
+					(EmbeddableValuedModelPart) existingModelPart,
+					fetchableIndex
+			);
+		}
+		else if ( sqlTypedMappings[selectionIndex] instanceof SelectableMapping selectable ) {
+			compatibleTableExpressions.add( selectable.getContainingTableExpression() );
+			return new AnonymousTupleBasicValuedModelPart(
+					mappingType,
+					partName,
+					selectable,
+					sqmExpressible,
+					fetchableIndex
+			);
 		}
 		else {
 			return new AnonymousTupleBasicValuedModelPart(
+					mappingType,
 					partName,
 					selectionExpression,
 					sqmExpressible,
-					sqlSelections.get( selectionIndex )
-							.getExpressionType()
-							.getJdbcMappings()
-							.get( 0 )
+					sqlTypedMappings[selectionIndex].getJdbcMapping(),
+					fetchableIndex
 			);
 		}
+	}
+
+	public List<String> getColumnNames() {
+		final ArrayList<String> columnNames = new ArrayList<>( modelParts.size() );
+		forEachSelectable( (index, selectableMapping) -> columnNames.add( selectableMapping.getSelectionExpression() ) );
+		return columnNames;
 	}
 
 	public Set<String> getCompatibleTableExpressions() {
@@ -298,10 +296,22 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 	}
 
 	@Override
+	public void forEachSubPart(IndexedConsumer<ModelPart> consumer, EntityMappingType treatTarget) {
+		int i = 0;
+		for ( Map.Entry<String, ModelPart> entry : modelParts.entrySet() ) {
+			consumer.accept( i++, entry.getValue() );
+		}
+	}
+
+	@Override
 	public void visitSubParts(Consumer<ModelPart> consumer, EntityMappingType treatTargetType) {
 		for ( ModelPart modelPart : modelParts.values() ) {
 			consumer.accept( modelPart );
 		}
+	}
+
+	public Map<String, ModelPart> getModelParts() {
+		return modelParts;
 	}
 
 	@Override
@@ -312,6 +322,21 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 	@Override
 	public JavaType<?> getJavaType() {
 		return javaTypeDescriptor;
+	}
+
+	@Override
+	public int forEachSelectable(int offset, SelectableConsumer consumer) {
+		final int originalOffset = offset;
+		for ( ModelPart modelPart : modelParts.values() ) {
+			offset += modelPart.forEachSelectable( offset, consumer );
+		}
+
+		return offset - originalOffset;
+	}
+
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return false;
 	}
 
 	//--------------------------------
@@ -345,9 +370,12 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 	}
 
 	@Override
-	public void breakDownJdbcValues(
+	public <X, Y> int breakDownJdbcValues(
 			Object domainValue,
-			JdbcValueConsumer valueConsumer,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
 			SharedSessionContractImplementor session) {
 		throw new UnsupportedOperationException( "Not yet implemented" );
 	}
@@ -358,12 +386,23 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
+
+	@Override
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
+		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
+
+	@Override
+	public JdbcMapping getJdbcMapping(int index) {
 		throw new UnsupportedOperationException( "Not yet implemented" );
 	}
 
@@ -371,5 +410,4 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
 		throw new UnsupportedOperationException( "Not yet implemented" );
 	}
-
 }

@@ -1,10 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.orm.test.annotations.derivedidentities.e1.b.specjmapid.lazy;
 
 import java.io.Serializable;
@@ -179,7 +176,7 @@ public class CustomerTwo implements Serializable{
 		this.ytdPayment = ytdPayment;
 	}
 
-	
+
 	public List<CustomerInventoryTwo> getInventories() {
 		if ( this.customerInventories == null ) {
 			this.customerInventories = new ArrayList<CustomerInventoryTwo>();
@@ -188,7 +185,7 @@ public class CustomerTwo implements Serializable{
 	}
 
 	public CustomerInventoryTwo addInventory(Item item, int quantity,
-										  BigDecimal totalValue) {
+										BigDecimal totalValue) {
 
 		CustomerInventoryTwo inventory = new CustomerInventoryTwo(
 				this, item,

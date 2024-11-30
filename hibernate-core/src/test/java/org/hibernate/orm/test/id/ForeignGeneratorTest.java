@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.id;
 
 import jakarta.persistence.Entity;
@@ -6,7 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -25,7 +29,7 @@ import org.junit.jupiter.api.Test;
 public class ForeignGeneratorTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13456")
+	@JiraKey(value = "HHH-13456")
 	public void testForeignGeneratorInStatelessSession(SessionFactoryScope scope) {
 		scope.inStatelessTransaction( statelessSession -> {
 

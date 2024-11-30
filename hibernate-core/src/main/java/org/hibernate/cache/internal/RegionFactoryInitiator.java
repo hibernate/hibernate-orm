@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.internal;
 
@@ -25,7 +23,7 @@ import static java.lang.Boolean.TRUE;
 
 /**
  * Initiator for the {@link RegionFactory} service.
- * 
+ *
  * @author Hardy Ferentschik
  * @author Brett Meyer
  */
@@ -46,7 +44,12 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 	public RegionFactory initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		final RegionFactory regionFactory = resolveRegionFactory( configurationValues, registry );
 
-		LOG.debugf( "Cache region factory : %s", regionFactory.getClass().getName() );
+		if ( regionFactory instanceof NoCachingRegionFactory ) {
+			LOG.noRegionFactory();
+		}
+		else {
+			LOG.regionFactory( regionFactory.getClass().getTypeName() );
+		}
 
 		return regionFactory;
 	}
@@ -78,7 +81,7 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 
 		final Object setting = configurationValues.get( AvailableSettings.CACHE_REGION_FACTORY );
 
-		final StrategySelector selector = registry.getService( StrategySelector.class );
+		final StrategySelector selector = registry.requireService( StrategySelector.class );
 		final Collection<Class<? extends RegionFactory>> implementors = selector.getRegisteredStrategyImplementors( RegionFactory.class );
 
 		if ( setting == null && implementors.size() != 1 ) {
@@ -88,7 +91,7 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 			}
 		}
 
-		final RegionFactory regionFactory = registry.getService( StrategySelector.class ).resolveStrategy(
+		final RegionFactory regionFactory = registry.requireService( StrategySelector.class ).resolveStrategy(
 				RegionFactory.class,
 				setting,
 				(RegionFactory) null,

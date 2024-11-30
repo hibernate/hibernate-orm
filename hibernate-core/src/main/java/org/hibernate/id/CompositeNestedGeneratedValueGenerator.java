@@ -1,31 +1,28 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.id.factory.spi.StandardGenerator;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.Type;
+import org.hibernate.property.access.spi.Setter;
+import org.hibernate.type.CompositeType;
 
 /**
  * For composite identifiers, defines a number of "nested" generations that
  * need to happen to "fill" the identifier property(s).
- * <p/>
+ * <p>
  * This generator is used implicitly for all composite identifier scenarios if an
- * explicit generator is not in place.  So it make sense to discuss the various 
+ * explicit generator is not in place.  So it make sense to discuss the various
  * potential scenarios:<ul>
  * <li>
  * <i>"embedded" composite identifier</i> - this is possible only in HBM mappings
@@ -45,13 +42,14 @@ import org.hibernate.type.Type;
  * and is only possible in annotations
  * </li>
  * </ul>
- * <p/>
+ * <p>
  * Most of the grunt work is done in {@link org.hibernate.mapping.Component}.
  *
  * @author Steve Ebersole
  */
+@Internal
 public class CompositeNestedGeneratedValueGenerator
-		implements StandardGenerator, IdentifierGeneratorAggregator, Serializable {
+		implements IdentifierGenerator, IdentifierGeneratorAggregator, Serializable {
 	/**
 	 * Contract for declaring how to locate the context for sub-value injection.
 	 */
@@ -88,16 +86,35 @@ public class CompositeNestedGeneratedValueGenerator
 		 *
 		 * @param session The current session
 		 * @param incomingObject The entity for which we are generating id
-		 * @param injectionContext The context into which the generated value can be injected
 		 */
-		void execute(SharedSessionContractImplementor session, Object incomingObject, Object injectionContext);
+		Object execute(SharedSessionContractImplementor session, Object incomingObject);
+
+		/**
+		 * Returns the {@link Setter injector} for the generated property.
+		 * Used when the {@link CompositeType} is {@linkplain CompositeType#isMutable() mutable}.
+		 *
+		 * @see #getPropertyIndex()
+		 */
+		Setter getInjector();
+
+		/**
+		 * Returns the index of the generated property.
+		 * Used when the {@link CompositeType} is not {@linkplain CompositeType#isMutable() mutable}.
+		 *
+		 * @see #getInjector()
+		 */
+		int getPropertyIndex();
 	}
 
 	private final GenerationContextLocator generationContextLocator;
-	private List<GenerationPlan> generationPlans = new ArrayList<>();
+	private final CompositeType compositeType;
+	private final List<GenerationPlan> generationPlans = new ArrayList<>();
 
-	public CompositeNestedGeneratedValueGenerator(GenerationContextLocator generationContextLocator) {
+	public CompositeNestedGeneratedValueGenerator(
+			GenerationContextLocator generationContextLocator,
+			CompositeType compositeType) {
 		this.generationContextLocator = generationContextLocator;
+		this.compositeType = compositeType;
 	}
 
 	public void addGeneratedValuePlan(GenerationPlan plan) {
@@ -108,24 +125,41 @@ public class CompositeNestedGeneratedValueGenerator
 	public Object generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
 		final Object context = generationContextLocator.locateGenerationContext( session, object );
 
-		for ( Object generationPlan : generationPlans ) {
-			final GenerationPlan plan = (GenerationPlan) generationPlan;
-			plan.execute( session, object, context );
+		final List<Object> generatedValues = compositeType.isMutable() ?
+				null :
+				new ArrayList<>( generationPlans.size() );
+		for ( GenerationPlan generationPlan : generationPlans ) {
+			final Object generated = generationPlan.execute( session, object );
+			if ( generatedValues != null ) {
+				generatedValues.add( generated );
+			}
+			else {
+				generationPlan.getInjector().set( context, generated );
+			}
 		}
 
-		return context;
+		if ( generatedValues != null) {
+			final Object[] values = compositeType.getPropertyValues( context );
+			for ( int i = 0; i < generatedValues.size(); i++ ) {
+				values[generationPlans.get( i ).getPropertyIndex()] = generatedValues.get( i );
+			}
+			return compositeType.replacePropertyValues( context, values, session );
+		}
+		else {
+			return context;
+		}
 	}
 
 	@Override
 	public void registerExportables(Database database) {
-		for (GenerationPlan plan : generationPlans) {
+		for ( GenerationPlan plan : generationPlans ) {
 			plan.registerExportables( database );
 		}
 	}
 
 	@Override
 	public void initialize(SqlStringGenerationContext context) {
-		for (GenerationPlan plan : generationPlans) {
+		for ( GenerationPlan plan : generationPlans ) {
 			plan.initialize( context );
 		}
 	}

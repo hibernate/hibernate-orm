@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.spi;
 
@@ -11,11 +9,16 @@ import java.sql.Statement;
 
 import org.hibernate.ScrollMode;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
- * Contracting for preparing SQL statements
+ * Interface to the object that prepares JDBC {@link Statement}s and {@link PreparedStatement}s
+ * on behalf of a {@link JdbcCoordinator}.
  *
  * @author Steve Ebersole
  * @author Brett Meyer
+ *
+ * @see JdbcCoordinator#getStatementPreparer()
  */
 public interface StatementPreparer {
 	/**
@@ -24,7 +27,7 @@ public interface StatementPreparer {
 	 * @return the statement
 	 */
 	Statement createStatement();
-	
+
 	/**
 	 * Prepare a statement.
 	 *
@@ -46,10 +49,12 @@ public interface StatementPreparer {
 
 	/**
 	 * Prepare an INSERT statement, specifying how auto-generated (by the database) keys should be handled.  Really this
-	 * is a boolean, but JDBC opted to define it instead using 2 int constants:<ul>
+	 * is a boolean, but JDBC opted to define it instead using 2 int constants:
+	 * <ul>
 	 *     <li>{@link PreparedStatement#RETURN_GENERATED_KEYS}</li>
 	 *     <li>{@link PreparedStatement#NO_GENERATED_KEYS}</li>
 	 * </ul>
+	 * <p>
 	 * Generated keys are accessed afterwards via {@link PreparedStatement#getGeneratedKeys}
 	 *
 	 * @param sql The INSERT SQL
@@ -84,5 +89,5 @@ public interface StatementPreparer {
 	 *
 	 * @return the prepared statement
 	 */
-	PreparedStatement prepareQueryStatement(String sql, boolean isCallable, ScrollMode scrollMode);
+	PreparedStatement prepareQueryStatement(String sql, boolean isCallable, @Nullable ScrollMode scrollMode);
 }

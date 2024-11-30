@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.event.collection.detached;
 
@@ -17,7 +15,7 @@ import org.hibernate.event.spi.PreCollectionRemoveEvent;
 import org.hibernate.event.spi.PreCollectionUpdateEvent;
 import org.hibernate.orm.test.event.collection.Entity;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -28,10 +26,10 @@ import static org.junit.Assert.assertSame;
 /**
  * Test HHH-6361: Collection events may contain wrong stored snapshot after
  * merging a detached entity into the persistencecontext.
- * 
+ *
  * @author Erik-Berndt Scheper
  */
-@TestForIssue( jiraKey = "HHH-6361" )
+@JiraKey( value = "HHH-6361" )
 public class DetachedMultipleCollectionChangeTest extends BaseCoreFunctionalTestCase {
 
 	@Override
@@ -74,7 +72,7 @@ public class DetachedMultipleCollectionChangeTest extends BaseCoreFunctionalTest
 		MultipleCollectionEntity mce = new MultipleCollectionEntity();
 		mce.setText("MultipleCollectionEntity-1");
 
-		s.save(mce);
+		s.persist(mce);
 		s.getTransaction().commit();
 
 		checkListener(listeners, listeners.getPreCollectionRecreateListener(),

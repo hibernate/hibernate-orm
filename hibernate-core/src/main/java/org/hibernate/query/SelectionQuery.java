@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query;
 
@@ -15,6 +13,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.EntityGraph;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
@@ -25,16 +26,92 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.UnknownProfileException;
 import org.hibernate.dialect.Dialect;
 
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
+import org.hibernate.engine.profile.DefaultFetchProfile;
+import org.hibernate.graph.GraphSemantic;
 
 /**
- * Models a selection query returning results.  It is a slimmed down version
- * of {@link Query}, but providing only methods relevant to selection queries.
+ * Within the context of an active {@linkplain org.hibernate.Session session},
+ * an instance of this type represents an executable selection query, that is,
+ * a {@code select}. It is a slimmed-down version of {@link Query}, providing
+ * only methods relevant to selection queries.
+ * <p>
+ * A {@code SelectionQuery} may be obtained from the {@link org.hibernate.Session}
+ * by calling:
+ * <ul>
+ * <li>{@link QueryProducer#createSelectionQuery(String, Class)}, passing the
+ *     HQL as a string,
+ * <li>{@link QueryProducer#createSelectionQuery(jakarta.persistence.criteria.CriteriaQuery)},
+ *     passing a {@linkplain jakarta.persistence.criteria.CriteriaQuery criteria
+ *     query object}, or
+ * <li>{@link QueryProducer#createNamedSelectionQuery(String, Class)} passing
+ *     the name of a query defined using {@link jakarta.persistence.NamedQuery}
+ *     or {@link jakarta.persistence.NamedNativeQuery}.
+ * </ul>
+ * <p>
+ * A {@code SelectionQuery} controls how a query is executed, and allows arguments
+ * to be bound to its parameters.
+ * <ul>
+ * <li>Selection queries are usually executed using {@link #getResultList()} or
+ *     {@link #getSingleResult()}.
+ * <li>The methods {@link #setMaxResults(int)} and {@link #setFirstResult(int)}
+ *     control limits and pagination.
+ * <li>The various overloads of {@link #setParameter(String, Object)} and
+ *     {@link #setParameter(int, Object)} allow arguments to be bound to named
+ *     and ordinal parameters defined by the query.
+ * </ul>
+ * A query which returns multiple results should be executed via
+ * {@link #getResultList()}:
+ * <pre>
+ * List&lt;Book&gt; books =
+ *         session.createSelectionQuery("from Book left join fetch authors where title like :title")
+ *                 .setParameter("title", title)
+ *                 .setMaxResults(50)
+ *                 .getResultList();
+ * </pre>
+ * A query which is expected to return exactly one on result should be executed
+ * via {@link #getSingleResult()}, or, if it might not return a result,
+ * {@link #getSingleResultOrNull()}:
+ * <pre>
+ * Book book =
+ *         session.createSelectionQuery("from Book where isbn = ?1")
+ *                 .setParameter(1, isbn)
+ *                 .getSingleResultOrNull();
+ * </pre>
+ * <p>
+ * A query may have explicit <em>fetch joins</em>, specified using the syntax
+ * {@code join fetch} in HQL, or via {@link jakarta.persistence.criteria.From#fetch}
+ * in the criteria API. Additional fetch joins may be added by:
+ * <ul>
+ * <li>setting an {@link EntityGraph} by calling
+ *     {@link #setEntityGraph(EntityGraph, GraphSemantic)}, or
+ * <li>enabling a fetch profile, using {@link Session#enableFetchProfile(String)}.
+ * </ul>
+ * <p>
+ * The special built-in fetch profile named
+ * {@value DefaultFetchProfile#HIBERNATE_DEFAULT_PROFILE} adds a fetch join for
+ * every {@link jakarta.persistence.FetchType#EAGER eager} {@code @ManyToOne} or
+ * {@code @OneToOne} association belonging to an entity returned by the query.
+ * <p>
+ * Finally, two alternative approaches to pagination are available:
+ * <ol>
+ * <li>
+ * The operations and {@link #setOrder(List)} and {@link #setPage(Page)}, together
+ * with {@link Order} and {@link Page}, provide a streamlined API for offset-based
+ * pagination, at a slightly higher semantic level than the ancient but dependable
+ * {@link #setFirstResult(int)} and {@link #setMaxResults(int)}.
+ * <li>
+ * On the other hand, {@link KeyedPage} and {@link KeyedResultList}, along with
+ * {@link #getKeyedResultList(KeyedPage)}, provide for <em>key-based pagination</em>,
+ * which can help eliminate missed or duplicate results when data is modified
+ * between page requests.
+ * </ol>
  *
  * @author Steve Ebersole
  */
@@ -64,7 +141,7 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 
 	/**
 	 * Returns scrollable access to the query results.
-	 *
+	 * <p>
 	 * This form calls {@link #scroll(ScrollMode)} using {@link Dialect#defaultScrollMode()}
 	 *
 	 * @apiNote The exact behavior of this method depends somewhat
@@ -91,6 +168,10 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * stream so that resources are freed as soon as possible.
 	 *
 	 * @return The results as a {@link Stream}
+	 *
+	 * @implNote The default implementation defined here simply returns
+	 *           {@link #list()}{@code .stream()}. Concrete implementations
+	 *           may be more efficient.
 	 */
 	default Stream<R> getResultStream() {
 		return stream();
@@ -110,7 +191,7 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * @since 5.2
 	 */
 	default Stream<R> stream() {
-		return getResultStream();
+		return list().stream();
 	}
 
 	/**
@@ -141,6 +222,8 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * @return the single result or {@code null} if there is no result to return
 	 *
 	 * @throws jakarta.persistence.NonUniqueResultException if there is more than one matching result
+	 *
+	 * @since 6.0
 	 */
 	R getSingleResultOrNull();
 
@@ -154,24 +237,102 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 */
 	Optional<R> uniqueResultOptional();
 
+	/**
+	 * Determine the size of the query result list that would be
+	 * returned by calling {@link #getResultList()} with no
+	 * {@linkplain #getFirstResult() offset} or
+	 * {@linkplain #getMaxResults() limit} applied to the query.
+	 *
+	 * @return the size of the list that would be returned
+	 *
+	 * @since 6.5
+	 */
+	@Incubating
+	long getResultCount();
+
+	/**
+	 * Execute the query and return the results for the given
+	 * {@linkplain KeyedPage page}, using key-based pagination.
+	 *
+	 * @param page the key-based specification of the page as
+	 *        an instance of {@link KeyedPage}
+	 *
+	 * @return the query results and the key of the next page
+	 *         as an instance of {@link KeyedResultList}
+	 *
+	 * @since 6.5
+	 *
+	 * @see KeyedPage
+	 * @see KeyedResultList
+	 */
+	@Incubating
+	KeyedResultList<R> getKeyedResultList(KeyedPage<R> page);
+
 	SelectionQuery<R> setHint(String hintName, Object value);
 
-	@Override
+	/**
+	 * Apply an {@link EntityGraph} to the query.
+	 * <p>
+	 * This is an alternative way to specify the associations which
+	 * should be fetched as part of the initial query.
+	 *
+	 * @since 6.3
+	 */
+	SelectionQuery<R> setEntityGraph(EntityGraph<R> graph, GraphSemantic semantic);
+
+	/**
+	 * Enable the {@link org.hibernate.annotations.FetchProfile fetch profile}
+	 * for this query. If the requested fetch profile is already enabled,
+	 * the call has no effect.
+	 * <p>
+	 * This is an alternative way to specify the associations which
+	 * should be fetched as part of the initial query.
+	 *
+	 * @param profileName the name of the fetch profile to be enabled
+	 *
+	 * @throws UnknownProfileException Indicates that the given name does not
+	 *                                 match any known fetch profile names
+	 *
+	 * @see org.hibernate.annotations.FetchProfile
+	 */
+	SelectionQuery<R> enableFetchProfile(String profileName);
+
+	/**
+	 * Disable the {@link org.hibernate.annotations.FetchProfile fetch profile}
+	 * with the given name in this session. If the requested fetch profile
+	 * is not currently enabled, the call has no effect.
+	 *
+	 * @param profileName the name of the fetch profile to be disabled
+	 *
+	 * @throws UnknownProfileException Indicates that the given name does not
+	 *                                 match any known fetch profile names
+	 *
+	 * @see org.hibernate.annotations.FetchProfile
+	 */
+	SelectionQuery<R> disableFetchProfile(String profileName);
+
+	@Override @Deprecated(since = "7")
 	SelectionQuery<R> setFlushMode(FlushModeType flushMode);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	SelectionQuery<R> setHibernateFlushMode(FlushMode flushMode);
+
+	@Override
+	SelectionQuery<R> setQueryFlushMode(QueryFlushMode queryFlushMode);
 
 	@Override
 	SelectionQuery<R> setTimeout(int timeout);
 
+	@Override
+	SelectionQuery<R> setComment(String comment);
+
 	/**
-	 * Obtain the JDBC fetch size hint in effect for this query.  This value is eventually passed along to the JDBC
-	 * query via {@link java.sql.Statement#setFetchSize(int)}.  As defined b y JDBC, this value is a hint to the
+	 * Obtain the JDBC fetch size hint in effect for this query. This value is eventually passed along to the JDBC
+	 * query via {@link java.sql.Statement#setFetchSize(int)}. As defined by JDBC, this value is a hint to the
 	 * driver to indicate how many rows to fetch from the database when more rows are needed.
 	 *
-	 * NOTE : JDBC expressly defines this value as a hint.  It may or may not have any effect on the actual
-	 * query execution and ResultSet processing depending on the driver.
+	 * @implNote JDBC expressly defines this value as a hint. Depending on the driver, it may or may not have any
+	 *           effect on the actual query execution and {@link java.sql.ResultSet} processing .
 	 *
 	 * @return The timeout <b>in seconds</b>
 	 *
@@ -192,48 +353,52 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	SelectionQuery<R> setFetchSize(int fetchSize);
 
 	/**
-	 * Should entities and proxies loaded by this Query be put in read-only mode? If the
-	 * read-only/modifiable setting was not initialized, then the default
-	 * read-only/modifiable setting for the persistence context is returned instead.
+	 * Should entities and proxies loaded by this Query be put in read-only
+	 * mode? If the read-only/modifiable setting was not initialized, then
+	 * the default read-only/modifiable setting for the persistence context i
+	 * s returned instead.
 	 *
 	 * @see #setReadOnly(boolean)
 	 * @see org.hibernate.engine.spi.PersistenceContext#isDefaultReadOnly()
 	 *
-	 * The read-only/modifiable setting has no impact on entities/proxies returned by the
-	 * query that existed in the session beforeQuery the query was executed.
+	 * The read-only/modifiable setting has no impact on entities/proxies
+	 * returned by the query that existed in the session beforeQuery the
+	 * query was executed.
 	 *
-	 * @return {@code true} if the entities and proxies loaded by the query will be put
-	 * in read-only mode; {@code false} otherwise (they will be modifiable)
+	 * @return {@code true} if the entities and proxies loaded by the query
+	 *         will be put in read-only mode; {@code false} otherwise
+	 *         (they will be modifiable)
 	 */
 	boolean isReadOnly();
 
 	/**
-	 * Set the read-only/modifiable mode for entities and proxies
-	 * loaded by this Query. This setting overrides the default setting
-	 * for the persistence context.
-	 * @see org.hibernate.engine.spi.PersistenceContext#isDefaultReadOnly()
-	 *
-	 * To set the default read-only/modifiable setting used for
-	 * entities and proxies that are loaded into the session:
-	 * @see org.hibernate.engine.spi.PersistenceContext#setDefaultReadOnly(boolean)
-	 * @see Session#setDefaultReadOnly(boolean)
-	 *
+	 * Set the read-only/modifiable mode for entities and proxies loaded
+	 *  by this {@code Query}. This setting overrides the default setting
+	 * for the persistence context,
+	 * {@link org.hibernate.Session#isDefaultReadOnly()}.
+	 * <p>
+	 * To set the default read-only/modifiable setting used for entities
+	 * and proxies that are loaded into the session, use
+	 * {@link Session#setDefaultReadOnly(boolean)}.
+	 * <p>
 	 * Read-only entities are not dirty-checked and snapshots of persistent
 	 * state are not maintained. Read-only entities can be modified, but
 	 * changes are not persisted.
-	 *
+	 * <p>
 	 * When a proxy is initialized, the loaded entity will have the same
 	 * read-only/modifiable setting as the uninitialized
 	 * proxy has, regardless of the session's current setting.
-	 *
+	 * <p>
 	 * The read-only/modifiable setting has no impact on entities/proxies
-	 * returned by the query that existed in the session beforeQuery the query was executed.
+	 * returned by the query that existed in the session beforeQuery the
+	 * query was executed.
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @param readOnly {@code true} indicates that entities and proxies loaded by the query
-	 * are to be put in read-only mode; {@code false} indicates that entities and proxies
-	 * loaded by the query will be put in modifiable mode
+	 * @param readOnly {@code true} indicates that entities and proxies
+	 *                 loaded by the query are to be put in read-only mode;
+	 *                 {@code false} indicates that entities and proxies
+	 *                 loaded by the query will be put in modifiable mode
 	 */
 	SelectionQuery<R> setReadOnly(boolean readOnly);
 
@@ -243,61 +408,100 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	int getMaxResults();
 
 	/**
-	 * Set the max number of rows requested for the query results.  Applied
+	 * Set the max number of rows requested for the query results. Applied
 	 * to the SQL query
 	 */
 	SelectionQuery<R> setMaxResults(int maxResult);
 
 	/**
-	 * The first row position to return from the query results.  Applied
-	 * to the SQL query
+	 * The first row position to return from the query results. Applied
+	 * to the SQL query.
 	 */
 	int getFirstResult();
 
 	/**
-	 * Set the first row position to return from the query results.  Applied
-	 * to the SQL query
+	 * Set the first row position to return from the query results. Applied
+	 * to the SQL query.
 	 */
 	SelectionQuery<R> setFirstResult(int startPosition);
 
 	/**
-	 * Obtain the CacheMode in effect for this query.  By default, the query
-	 * inherits the CacheMode of the Session from which is originates.
-	 * <p/>
-	 * NOTE: The CacheMode here describes reading-from/writing-to the
-	 * entity/collection caches as we process query results.  For caching of
-	 * the actual query results, see {@link #isCacheable()} and
-	 * {@link #getCacheRegion()}
-	 * <p/>
-	 * In order for this setting to have any affect, second-level caching would
-	 * have to be enabled and the entities/collections in question configured
-	 * for caching.
+	 * Set the {@linkplain Page page} of results to return.
+	 *
+	 * @see Page
+	 *
+	 * @since 6.3
+	 */
+	@Incubating
+	SelectionQuery<R> setPage(Page page);
+
+	/**
+	 * Obtain the {@link CacheMode} in effect for this query. By default,
+	 * the query inherits the {@link CacheMode} of the session from which
+	 * it originates.
+	 * <p>
+	 * The {@link CacheMode} here affects the use of entity and collection
+	 * caches as the query result set is processed. For caching of the actual
+	 * query results, use {@link #isCacheable()} and {@link #getCacheRegion()}.
+	 * <p>
+	 * In order for this setting to have any affect, second-level caching
+	 * must be enabled and the entities and collections must be eligible
+	 * for storage in the second-level cache.
 	 *
 	 * @see Session#getCacheMode()
 	 */
 	CacheMode getCacheMode();
 
 	/**
-	 * Set the current CacheMode in effect for this query.
+	 * @see #getCacheMode()
 	 *
-	 * @implNote Setting to {@code null} ultimately indicates to use the CacheMode of the Session
+	 * @since 6.2
+	 */
+	CacheStoreMode getCacheStoreMode();
+
+	/**
+	 * @see #getCacheMode()
+	 *
+	 * @since 6.2
+	 */
+	CacheRetrieveMode getCacheRetrieveMode();
+
+	/**
+	 * Set the current {@link CacheMode} in effect for this query.
+	 * <p>
+	 * Set it to {@code null} to indicate that the {@code CacheMode}
+	 * of the {@link Session#getCacheMode() session} should be used.
 	 *
 	 * @see #getCacheMode()
-	 * @see Session#setCacheMode
+	 * @see Session#setCacheMode(CacheMode)
 	 */
 	SelectionQuery<R> setCacheMode(CacheMode cacheMode);
 
 	/**
-	 * Should the results of the query be stored in the second level cache?
-	 * <p/>
-	 * This is different than second level caching of any returned entities and collections, which
-	 * is controlled by {@link #getCacheMode()}.
-	 * <p/>
-	 * NOTE: the query being "eligible" for caching does not necessarily mean its results will be cached.  Second level
-	 * query caching still has to be enabled on the {@link SessionFactory} for this to happen.  Usually that is
-	 * controlled by the {@code hibernate.cache.use_query_cache} configuration setting.
+	 * @see #setCacheMode(CacheMode)
 	 *
-	 * @see org.hibernate.cfg.AvailableSettings#USE_QUERY_CACHE
+	 * @since 6.2
+	 */
+	SelectionQuery<R> setCacheStoreMode(CacheStoreMode cacheStoreMode);
+
+	/**
+	 * @see #setCacheMode(CacheMode)
+	 *
+	 * @since 6.2
+	 */
+	SelectionQuery<R> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
+
+	/**
+	 * Should the results of the query be stored in the second level cache?
+	 * <p>
+	 * This is different to second level caching of any returned entities and
+	 * collections, which is controlled by {@link #getCacheMode()}.
+	 * <p>
+	 * The query being "eligible" for caching does not necessarily mean its
+	 * results will be cached. Second-level query caching still has to be
+	 * enabled on the {@link SessionFactory} for this to happen. Usually that
+	 * is controlled by the configuration setting
+	 * {@value org.hibernate.cfg.AvailableSettings#USE_QUERY_CACHE}.
 	 */
 	boolean isCacheable();
 
@@ -309,44 +513,100 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	SelectionQuery<R> setCacheable(boolean cacheable);
 
 	/**
-	 * Obtain the name of the second level query cache region in which query results will be stored (if they are
-	 * cached, see the discussion on {@link #isCacheable()} for more information).  {@code null} indicates that the
-	 * default region should be used.
+	 * Should the query plan of the query be stored in the query plan cache?
+	 */
+	boolean isQueryPlanCacheable();
+
+	/**
+	 * Enable/disable query plan caching for this query.
+	 *
+	 * @see #isQueryPlanCacheable
+	 */
+	SelectionQuery<R> setQueryPlanCacheable(boolean queryPlanCacheable);
+
+	/**
+	 * Obtain the name of the second level query cache region in which query
+	 * results will be stored (if they are cached, see the discussion on
+	 * {@link #isCacheable()} for more information). {@code null} indicates
+	 * that the default region should be used.
 	 */
 	String getCacheRegion();
 
 	/**
 	 * Set the name of the cache region where query results should be cached
-	 * (assuming {@link #isCacheable}).  {@code null} indicates to use the default region.
+	 * (assuming {@link #isCacheable}). {@code null} indicates to use the
+	 * default region.
 	 *
 	 * @see #getCacheRegion()
 	 */
 	SelectionQuery<R> setCacheRegion(String cacheRegion);
 
 	/**
-	 * The LockOptions currently in effect for the query
+	 * The {@link LockOptions} currently in effect for the query
 	 */
 	LockOptions getLockOptions();
 
 	/**
-	 * Specify the root LockModeType for the query
+	 * Get the root {@link LockModeType} for the query
+	 *
+	 * @see #getHibernateLockMode()
+	 */
+	LockModeType getLockMode();
+
+	/**
+	 * Specify the root {@link LockModeType} for the query
 	 *
 	 * @see #setHibernateLockMode
 	 */
 	SelectionQuery<R> setLockMode(LockModeType lockMode);
 
 	/**
-	 * Specify the root LockMode for the query
+	 * Get the root {@link LockMode} for the query
+	 *
+	 * @see #getLockMode()
+	 */
+	LockMode getHibernateLockMode();
+
+	/**
+	 * Specify the root {@link LockMode} for the query
+	 *
+	 * @see #setLockMode(LockModeType)
 	 */
 	SelectionQuery<R> setHibernateLockMode(LockMode lockMode);
 
 	/**
-	 * Specify a LockMode to apply to a specific alias defined in the query
+	 * Specify a {@link LockMode} to apply to a specific alias defined in the query
 	 */
-	SelectionQuery<R> setAliasSpecificLockMode(String alias, LockMode lockMode);
+	SelectionQuery<R> setLockMode(String alias, LockMode lockMode);
 
 	/**
-	 * Specifies whether follow-on locking should be applied?
+	 * If the result type of this query is an entity class, add one or more
+	 * {@linkplain Order rules} for ordering the query results.
+	 *
+	 * @param orderList one or more instances of {@link Order}
+	 *
+	 * @see Order
+	 *
+	 * @since 6.3
+	 */
+	@Incubating
+	SelectionQuery<R> setOrder(List<? extends Order<? super R>> orderList);
+
+	/**
+	 * If the result type of this query is an entity class, add a
+	 * {@linkplain Order rule} for ordering the query results.
+	 *
+	 * @param order an instance of {@link Order}
+	 *
+	 * @see Order
+	 *
+	 * @since 6.3
+	 */
+	@Incubating
+	SelectionQuery<R> setOrder(Order<? super R> order);
+
+	/**
+	 * Specifies whether follow-on locking should be applied
 	 */
 	SelectionQuery<R> setFollowOnLocking(boolean enable);
 
@@ -405,7 +665,7 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	SelectionQuery<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
 
 	@Override
-	SelectionQuery<R> setParameterList(String name, Collection values);
+	SelectionQuery<R> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values);
 
 	@Override
 	<P> SelectionQuery<R> setParameterList(String name, Collection<? extends P> values, Class<P> javaType);

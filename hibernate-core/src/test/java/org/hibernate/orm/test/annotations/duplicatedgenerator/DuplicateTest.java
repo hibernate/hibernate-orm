@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id$
 package org.hibernate.orm.test.annotations.duplicatedgenerator;
 
 import org.hibernate.DuplicateMappingException;
@@ -23,7 +19,7 @@ import org.junit.Test;
  * @author Emmanuel Bernard
  */
 public class DuplicateTest  {
-    @Test
+	@Test
 	public void testDuplicateEntityName() {
 		Configuration cfg = new Configuration();
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
@@ -37,7 +33,7 @@ public class DuplicateTest  {
 			cfg.addResource( "org/hibernate/orm/test/annotations/duplicatedgenerator/orm.xml" );
 			serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() );
 			sf = cfg.buildSessionFactory( serviceRegistry );
-            Assert.fail( "Should not be able to map the same entity name twice" );
+			Assert.fail( "Should not be able to map the same entity name twice" );
 		}
 		catch (DuplicateMappingException ae) {
 			//success

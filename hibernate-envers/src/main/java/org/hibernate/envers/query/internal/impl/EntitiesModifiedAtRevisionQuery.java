@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.query.internal.impl;
 
@@ -56,12 +54,12 @@ public class EntitiesModifiedAtRevisionQuery extends AbstractAuditQuery {
 	@Override
 	public List list() {
 		/*
-         * The query that we need to create:
-         *   SELECT new list(e) FROM versionsReferencedEntity e
-         *   WHERE
-         * (all specified conditions, transformed, on the "e" entity) AND
-         * e.revision = :revision
-         */
+		 * The query that we need to create:
+		 *   SELECT new list(e) FROM versionsReferencedEntity e
+		 *   WHERE
+		 * (all specified conditions, transformed, on the "e" entity) AND
+		 * e.revision = :revision
+		 */
 		String revisionPropertyPath = enversService.getConfig().getRevisionNumberPath();
 		qb.getRootParameters().addWhereWithParam( revisionPropertyPath, "=", revision );
 

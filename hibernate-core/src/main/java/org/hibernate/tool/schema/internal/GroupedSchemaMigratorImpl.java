@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal;
 
@@ -18,16 +16,16 @@ import org.hibernate.mapping.Table;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.extract.spi.NameSpaceTablesInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
-import org.hibernate.tool.schema.internal.exec.GenerationTarget;
+import org.hibernate.tool.schema.spi.GenerationTarget;
 import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaFilter;
 
 /**
- * @author Andrea Boriero
- *
  * This implementation executes a single {@link java.sql.DatabaseMetaData#getTables(String, String, String, String[])} call
  * to retrieve all the database table in order to determine if all the {@link jakarta.persistence.Entity} have a mapped database tables.
+ *
+ * @author Andrea Boriero
  */
 public class GroupedSchemaMigratorImpl extends AbstractSchemaMigrator {
 
@@ -50,12 +48,12 @@ public class GroupedSchemaMigratorImpl extends AbstractSchemaMigrator {
 			boolean tryToCreateSchemas,
 			Set<Identifier> exportedCatalogs,
 			Namespace namespace,
-			SqlStringGenerationContext sqlStringGenerationContext,
+			SqlStringGenerationContext context,
 			GenerationTarget[] targets) {
 		final NameSpaceTablesInformation tablesInformation =
 				new NameSpaceTablesInformation( metadata.getDatabase().getJdbcEnvironment().getIdentifierHelper() );
 
-		if ( options.getSchemaFilter().includeNamespace( namespace ) ) {
+		if ( schemaFilter.includeNamespace( namespace ) ) {
 			createSchemaAndCatalog(
 					existingDatabase,
 					options,
@@ -65,37 +63,38 @@ public class GroupedSchemaMigratorImpl extends AbstractSchemaMigrator {
 					tryToCreateSchemas,
 					exportedCatalogs,
 					namespace,
+					context,
 					targets
 			);
 
 			final NameSpaceTablesInformation tables = existingDatabase.getTablesInformation( namespace );
 			for ( Table table : namespace.getTables() ) {
-				if ( options.getSchemaFilter().includeTable( table )
+				if ( schemaFilter.includeTable( table )
 						&& table.isPhysicalTable()
 						&& contributableInclusionFilter.matches( table ) ) {
 					checkExportIdentifier( table, exportIdentifiers );
 					final TableInformation tableInformation = tables.getTableInformation( table );
 					if ( tableInformation == null ) {
-						createTable( table, dialect, metadata, formatter, options, sqlStringGenerationContext, targets );
+						createTable( table, dialect, metadata, formatter, options, context, targets );
 					}
 					else if ( tableInformation.isPhysicalTable() ) {
 						tablesInformation.addTableInformation( tableInformation );
 						migrateTable( table, tableInformation, dialect, metadata, formatter, options,
-								sqlStringGenerationContext, targets );
+								context, targets );
 					}
 				}
 			}
 
 			for ( Table table : namespace.getTables() ) {
-				if ( options.getSchemaFilter().includeTable( table )
+				if ( schemaFilter.includeTable( table )
 						&& table.isPhysicalTable()
 						&& contributableInclusionFilter.matches( table ) ) {
 					final TableInformation tableInformation = tablesInformation.getTableInformation( table );
 					if ( tableInformation == null || tableInformation.isPhysicalTable() ) {
 						applyIndexes( table, tableInformation, dialect, metadata, formatter, options,
-								sqlStringGenerationContext, targets );
+								context, targets );
 						applyUniqueKeys( table, tableInformation, dialect, metadata, formatter, options,
-								sqlStringGenerationContext, targets );
+								context, targets );
 					}
 				}
 			}

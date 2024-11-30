@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.idgen.identity;
 
@@ -11,14 +9,14 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.junit.Test;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertNotNull;
@@ -34,9 +32,9 @@ import static org.junit.Assert.assertNotNull;
  *
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-13104")
+@JiraKey(value = "HHH-13104")
 @RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
-@SkipForDialect(value=AbstractHANADialect.class, comment="SAP HANA requires at least value in insert value-list clause.")
+@SkipForDialect(value=HANADialect.class, comment="SAP HANA requires at least value in insert value-list clause.")
 public class IdentityInsertSoleColumnTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

@@ -1,15 +1,25 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.group;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-
 import java.util.HashSet;
 import java.util.Set;
+
+import org.hibernate.annotations.LazyGroup;
+import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
+import org.hibernate.bytecode.enhance.spi.UnloadedClass;
+
+import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
+import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Embeddable;
@@ -21,20 +31,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
-import org.hibernate.annotations.LazyGroup;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
-import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
-import org.hibernate.bytecode.enhance.spi.UnloadedClass;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
-import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 /**
  * Tests removing non-owning side of the bidirectional association,
  * where owning side is in an embeddable.
@@ -43,25 +39,25 @@ import org.junit.runner.RunWith;
  *
  * @author Gail Badner
  */
-@TestForIssue(jiraKey = "HHH-13241")
-@RunWith(BytecodeEnhancerRunner.class)
+@SuppressWarnings("JUnitMalformedDeclaration")
+@JiraKey("HHH-13241")
+@DomainModel(
+		annotatedClasses = {
+				BidirectionalLazyGroupsInEmbeddableTest.Employer.class, BidirectionalLazyGroupsInEmbeddableTest.Employee.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @CustomEnhancementContext({
 		EnhancerTestContext.class,
 		BidirectionalLazyGroupsInEmbeddableTest.NoDirtyCheckEnhancementContext.class
 })
-public class BidirectionalLazyGroupsInEmbeddableTest extends BaseCoreFunctionalTestCase {
-
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Employer.class, Employee.class };
-	}
+public class BidirectionalLazyGroupsInEmbeddableTest {
 
 	@Test
-	@Ignore("Test is failing with ByteBuddy if the mappings are moved to the fields.")
-	public void test() {
-
-		doInHibernate(
-				this::sessionFactory, session -> {
-
+	@Disabled("Test is failing with ByteBuddy if the mappings are moved to the fields.")
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 					Employer employer = new Employer( "RedHat" );
 					session.persist( employer );
 					employer.addEmployee( new Employee( "Jack" ) );
@@ -73,8 +69,7 @@ public class BidirectionalLazyGroupsInEmbeddableTest extends BaseCoreFunctionalT
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 					Employer employer = session.createQuery( "from Employer e", Employer.class ).getSingleResult();
 					session.remove( employer );
 					for ( Employee employee : employer.getEmployees() ) {
@@ -206,7 +201,6 @@ public class BidirectionalLazyGroupsInEmbeddableTest extends BaseCoreFunctionalT
 		private Employer employer;
 
 		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		@LazyGroup("EmployerForEmployee")
 		@JoinColumn(name = "employer_name")
 		public Employer getEmployer() {

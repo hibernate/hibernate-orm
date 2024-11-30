@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.registry;
 
@@ -68,7 +66,7 @@ public class BootstrapServiceRegistryBuilder {
 	}
 
 	/**
-	 * Adds a provided {@link ClassLoader} for use in class-loading and resource-lookup.
+	 * Adds a provided {@link ClassLoader} for use in classloading and resource lookup.
 	 *
 	 * @param classLoader The class loader to use
 	 *
@@ -83,8 +81,8 @@ public class BootstrapServiceRegistryBuilder {
 	}
 
 	/**
-	 * Defines when the lookup in the thread context {@code ClassLoader} is done
-	 * 
+	 * Defines when the lookup in the thread context {@code ClassLoader} is done.
+	 *
 	 * @param precedence The lookup precedence
 	 */
 	public void applyTcclLookupPrecedence(TcclLookupPrecedence precedence) {
@@ -92,7 +90,7 @@ public class BootstrapServiceRegistryBuilder {
 	}
 
 	/**
-	 * Adds a provided {@link ClassLoaderService} for use in class-loading and resource-lookup.
+	 * Adds a provided {@link ClassLoaderService} for use in classloading and resource lookup.
 	 *
 	 * @param classLoaderService The class loader service to use
 	 *
@@ -109,8 +107,8 @@ public class BootstrapServiceRegistryBuilder {
 	 * @param strategy The strategy
 	 * @param name The registered name
 	 * @param implementation The strategy implementation Class
-	 * @param <T> Defines the strategy type and makes sure that the strategy and implementation are of
-	 * compatible types.
+	 * @param <T> Defines the strategy type and makes sure that the strategy and implementation
+	 *            are of compatible types.
 	 *
 	 * @return {@code this}, for method chaining
 	 *
@@ -138,12 +136,12 @@ public class BootstrapServiceRegistryBuilder {
 	}
 
 	/**
-	 * By default, when a ServiceRegistry is no longer referenced by any other
-	 * registries as a parent it will be closed.
-	 * <p/>
-	 * Some applications that explicitly build "shared registries" may want to
-	 * circumvent that behavior.
-	 * <p/>
+	 * By default, when a {@link ServiceRegistry} is no longer referenced by
+	 * any other registries as a parent it will be closed.
+	 * <p>
+	 * Some applications that explicitly build "shared registries" may want
+	 * to circumvent that behavior.
+	 * <p>
 	 * This method indicates that the registry being built should not be
 	 * automatically closed.  The caller agrees to take responsibility to
 	 * close it themselves.
@@ -156,8 +154,7 @@ public class BootstrapServiceRegistryBuilder {
 	}
 
 	/**
-	 * See the discussion on {@link #disableAutoClose}.  This method enables
-	 * the auto-closing.
+	 * See the discussion on {@link #disableAutoClose}. This method enables the auto-closing.
 	 *
 	 * @return this, for method chaining
 	 */
@@ -181,14 +178,14 @@ public class BootstrapServiceRegistryBuilder {
 			if ( providedClassLoaders != null )  {
 				classLoaders.addAll( providedClassLoaders );
 			}
-			
+
 			classLoaderService = new ClassLoaderServiceImpl( classLoaders,tcclLookupPrecedence );
 		}
 		else {
 			classLoaderService = providedClassLoaderService;
 		}
 
-		final IntegratorServiceImpl integratorService = new IntegratorServiceImpl(
+		final IntegratorServiceImpl integratorService = IntegratorServiceImpl.create(
 				providedIntegrators,
 				classLoaderService
 		);
@@ -202,7 +199,7 @@ public class BootstrapServiceRegistryBuilder {
 	}
 
 	/**
-	 * Destroy a service registry.  Applications should only destroy registries they have explicitly created.
+	 * Destroy a service registry. Clients should only destroy registries they have created.
 	 *
 	 * @param serviceRegistry The registry to be closed.
 	 */

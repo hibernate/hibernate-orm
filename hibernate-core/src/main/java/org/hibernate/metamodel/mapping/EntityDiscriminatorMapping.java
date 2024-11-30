@@ -1,39 +1,37 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchOptions;
-import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.basic.BasicFetch;
 
 /**
+ * Details about the discriminator for an entity hierarchy.
+ *
+ * @implNote All {@linkplain EntityMappingType entity-mappings} within the
+ * hierarchy share the same EntityDiscriminatorMapping instance.
+ *
  * @see jakarta.persistence.DiscriminatorColumn
  * @see jakarta.persistence.DiscriminatorValue
  *
  * @author Steve Ebersole
  */
-public interface EntityDiscriminatorMapping extends VirtualModelPart, BasicValuedModelPart, FetchOptions {
-	String ROLE_NAME = "{discriminator}";
-	String LEGACY_HQL_ROLE_NAME = "class";
+public interface EntityDiscriminatorMapping extends DiscriminatorMapping, FetchOptions {
+
+	String DISCRIMINATOR_ROLE_NAME = "{discriminator}";
+	String LEGACY_DISCRIMINATOR_NAME = "class";
 
 	static boolean matchesRoleName(String name) {
-		return ROLE_NAME.equals( name ) || LEGACY_HQL_ROLE_NAME.equals( name );
+		return DISCRIMINATOR_ROLE_NAME.equals( name )
+			|| LEGACY_DISCRIMINATOR_NAME.equalsIgnoreCase( name );
 	}
 
 	@Override
 	default String getPartName() {
-		return ROLE_NAME;
+		return DISCRIMINATOR_ROLE_NAME;
 	}
 
 	@Override
@@ -41,30 +39,15 @@ public interface EntityDiscriminatorMapping extends VirtualModelPart, BasicValue
 		return getPartName();
 	}
 
-	String getConcreteEntityNameForDiscriminatorValue(Object value);
-
-	boolean isPhysical();
-
 	/**
-	 * Create the appropriate SQL expression for this discriminator
-	 *
-	 * @param jdbcMappingToUse The JDBC mapping to use.  This allows opting between
-	 * the "domain result type" (aka Class) and the "underlying type" (Integer, String, etc)
+	 * Is the discriminator defined by a physical column?
 	 */
-	Expression resolveSqlExpression(
-			NavigablePath navigablePath,
-			JdbcMapping jdbcMappingToUse,
-			TableGroup tableGroup,
-			SqlAstCreationState creationState);
+	boolean hasPhysicalColumn();
 
 	@Override
-	BasicFetch generateFetch(
-			FetchParent fetchParent,
-			NavigablePath fetchablePath,
-			FetchTiming fetchTiming,
-			boolean selected,
-			String resultVariable,
-			DomainResultCreationState creationState);
+	default int getFetchableKey() {
+		return -2;
+	}
 
 	@Override
 	default FetchOptions getMappedFetchOptions() {

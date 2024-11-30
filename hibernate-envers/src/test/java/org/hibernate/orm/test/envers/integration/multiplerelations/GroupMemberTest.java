@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.multiplerelations;
 
@@ -28,7 +26,7 @@ import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.type.StandardBasicTypes;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Test;
 
@@ -38,15 +36,15 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-7681")
+@JiraKey(value = "HHH-7681")
 public class GroupMemberTest extends BaseEnversJPAFunctionalTestCase {
 	private Integer uniqueGroupId;
 	private Integer groupMemberId;
 
-    @Override
-    protected Class<?>[] getAnnotatedClasses() {
-    	return new Class[] { GroupMember.class, MultiGroup.class, UniqueGroup.class };
-    }
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { GroupMember.class, MultiGroup.class, UniqueGroup.class };
+	}
 
 	@Test
 	@Priority(10)
@@ -88,9 +86,9 @@ public class GroupMemberTest extends BaseEnversJPAFunctionalTestCase {
 		return TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
 			final Session session = entityManager.unwrap( Session.class );
 			final Query query = session.createNativeQuery(
-							"SELECT uniqueGroup_id FROM GroupMember_AUD ORDER BY REV DESC"
+							"SELECT unique_group_id FROM GroupMember_AUD ORDER BY REV DESC"
 					)
-					.addScalar( "uniqueGroup_id", StandardBasicTypes.INTEGER )
+					.addScalar( "unique_group_id", StandardBasicTypes.INTEGER )
 					.setMaxResults( 1 );
 			final Object result = query.getSingleResult();
 			assertNotNull( result );
@@ -106,7 +104,7 @@ public class GroupMemberTest extends BaseEnversJPAFunctionalTestCase {
 		private Integer id;
 
 		@ManyToOne
-		@JoinColumn(name = "uniqueGroup_id", insertable = false, updatable = false)
+		@JoinColumn(name = "unique_group_id", insertable = false, updatable = false)
 		private UniqueGroup uniqueGroup;
 
 		@ManyToMany(mappedBy = "members")
@@ -150,7 +148,7 @@ public class GroupMemberTest extends BaseEnversJPAFunctionalTestCase {
 		private Integer id;
 
 		@OneToMany
-		@JoinColumn(name = "uniqueGroup_id")
+		@JoinColumn(name = "unique_group_id")
 		@AuditMappedBy(mappedBy = "uniqueGroup")
 		private Set<GroupMember> members = new HashSet<>();
 

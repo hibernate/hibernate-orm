@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.internal;
 
@@ -29,14 +27,17 @@ public class SingularAttributeMetadataImpl<X, Y> extends BaseAttributeMetadata<X
 			MetadataContext metadataContext) {
 		super( propertyMapping, ownerType, member, attributeClassification, metadataContext );
 		valueContext = new ValueContext() {
+			@Override
 			public Value getHibernateValue() {
 				return getPropertyMapping().getValue();
 			}
 
-			public Class getJpaBindableType() {
+			@Override
+			public Class<Y> getJpaBindableType() {
 				return getAttributeMetadata().getJavaType();
 			}
 
+			@Override
 			public ValueClassification getValueClassification() {
 				switch ( attributeClassification ) {
 					case EMBEDDED: {
@@ -51,12 +52,14 @@ public class SingularAttributeMetadataImpl<X, Y> extends BaseAttributeMetadata<X
 				}
 			}
 
-			public AttributeMetadata getAttributeMetadata() {
+			@Override
+			public AttributeMetadata<X,Y> getAttributeMetadata() {
 				return SingularAttributeMetadataImpl.this;
 			}
 		};
 	}
 
+	@Override
 	public ValueContext getValueContext() {
 		return valueContext;
 	}

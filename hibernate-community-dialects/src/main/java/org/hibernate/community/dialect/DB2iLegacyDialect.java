@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.DB2390IdentityColumnSupport;
@@ -17,16 +16,19 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.DB2iSequenceSupport;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.unique.DefaultUniqueDelegate;
+import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
+import org.hibernate.dialect.unique.SkipNullableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.mapping.Column;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+
+import java.util.List;
 
 /**
  * An SQL dialect for DB2 for iSeries previously known as DB2/400.
@@ -38,13 +40,15 @@ public class DB2iLegacyDialect extends DB2LegacyDialect {
 
 	final static DatabaseVersion DB2_LUW_VERSION9 = DatabaseVersion.make( 9, 0);
 
+	private static final DatabaseVersion DEFAULT_VERSION = DatabaseVersion.make( 7 );
+
 	public DB2iLegacyDialect(DialectResolutionInfo info) {
-		this( info.makeCopy() );
+		this( info.makeCopyOrDefault( DEFAULT_VERSION ) );
 		registerKeywords( info );
 	}
 
 	public DB2iLegacyDialect() {
-		this( DatabaseVersion.make(7) );
+		this( DEFAULT_VERSION );
 	}
 
 	public DB2iLegacyDialect(DatabaseVersion version) {
@@ -52,10 +56,10 @@ public class DB2iLegacyDialect extends DB2LegacyDialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry(functionContributions);
 		if ( getVersion().isSameOrAfter( 7, 2 ) ) {
-			CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+			CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 			functionFactory.listagg( null );
 			functionFactory.inverseDistributionOrderedSetAggregates();
 			functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
@@ -69,9 +73,24 @@ public class DB2iLegacyDialect extends DB2LegacyDialect {
 
 	@Override
 	protected UniqueDelegate createUniqueDelegate() {
-		return getVersion().isSameOrAfter(7, 3)
-				? new DefaultUniqueDelegate(this)
-				: super.createUniqueDelegate();
+		//TODO: when was 'create unique where not null index' really first introduced?
+		return getVersion().isSameOrAfter(7, 1)
+				//use 'create unique where not null index'
+				? new AlterTableUniqueIndexDelegate(this)
+				//ignore unique keys on nullable columns in earlier versions
+				: new SkipNullableUniqueDelegate(this);
+	}
+
+	@Override
+	public String getCreateIndexString(boolean unique) {
+		// we only create unique indexes, as opposed to unique constraints,
+		// when the column is nullable, so safe to infer unique => nullable
+		return unique ? "create unique where not null index" : "create index";
+	}
+
+	@Override
+	public String getCreateIndexTail(boolean unique, List<Column> columns) {
+		return "";
 	}
 
 	@Override
@@ -109,8 +128,8 @@ public class DB2iLegacyDialect extends DB2LegacyDialect {
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return getVersion().isSameOrAfter(7, 3)
-				? new DB2IdentityColumnSupport()
-				: new DB2390IdentityColumnSupport();
+				? DB2IdentityColumnSupport.INSTANCE
+				: DB2390IdentityColumnSupport.INSTANCE;
 	}
 
 	@Override
@@ -124,8 +143,14 @@ public class DB2iLegacyDialect extends DB2LegacyDialect {
 	}
 
 	@Override
+	public boolean supportsRecursiveCTE() {
+		return getVersion().isSameOrAfter( 7, 1 );
+	}
+
+	@Override
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
+
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
 					SessionFactoryImplementor sessionFactory, Statement statement) {

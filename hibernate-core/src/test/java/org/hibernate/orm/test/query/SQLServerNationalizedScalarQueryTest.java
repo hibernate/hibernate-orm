@@ -1,17 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query;
 
 import java.util.List;
 
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Convert;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.dialect.SQLServerDialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -28,7 +28,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-10183")
 @RequiresDialect(value = SQLServerDialect.class)
 @DomainModel(
 		annotatedClasses = SQLServerNationalizedScalarQueryTest.User.class
@@ -36,7 +35,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SessionFactory
 public class SQLServerNationalizedScalarQueryTest {
 
+	@JiraKey(value = "HHH-16857")
+	@Test
+	public void testLiteral(SessionFactoryScope scope) {
+		scope.inTransaction(session -> session.createSelectionQuery("from User where name = 'Gavin'").getResultList());
+		scope.inTransaction(session -> session.createSelectionQuery("from User where role = 'ADMIN'").getResultList());
+	}
 
+	@JiraKey(value = "HHH-10183")
 	@Test
 	public void testScalarResult(SessionFactoryScope scope) {
 
@@ -44,15 +50,28 @@ public class SQLServerNationalizedScalarQueryTest {
 		User user2 = new User( 2, "Steve" );
 
 		scope.inTransaction( session -> {
-			session.save( user1 );
-			session.save( user2 );
+			session.persist( user1 );
+			session.persist( user2 );
 		} );
 
 		scope.inTransaction( session -> {
-			List<Object[]> users = session.createNativeQuery(
-					"select * from users" ).getResultList();
+			List<Object[]> users = session.createNativeQuery("select * from users" ).getResultList();
 			assertEquals( 2, users.size() );
 		} );
+	}
+
+	enum Role { ADMIN, USER, GUEST }
+
+	static class Converter implements AttributeConverter<Role,String> {
+		@Override
+		public String convertToDatabaseColumn(Role attribute) {
+			return attribute==null ? null : attribute.name();
+		}
+
+		@Override
+		public Role convertToEntityAttribute(String name) {
+			return name==null ? null : Role.valueOf(name);
+		}
 	}
 
 	@Entity(name = "User")
@@ -61,6 +80,7 @@ public class SQLServerNationalizedScalarQueryTest {
 
 		private Integer id;
 		private String name;
+		private Role role = Role.USER;
 
 		public User() {
 
@@ -90,5 +110,14 @@ public class SQLServerNationalizedScalarQueryTest {
 			this.name = name;
 		}
 
+		@Nationalized
+		@Convert(converter = Converter.class)
+		public Role getRole() {
+			return role;
+		}
+
+		public void setRole(Role role) {
+			this.role = role;
+		}
 	}
 }

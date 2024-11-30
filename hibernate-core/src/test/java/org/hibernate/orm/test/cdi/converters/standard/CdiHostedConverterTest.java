@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cdi.converters.standard;
 
@@ -21,8 +19,10 @@ import org.hibernate.orm.test.cdi.converters.OrmXmlConverterBean;
 import org.hibernate.orm.test.cdi.converters.TheOrmXmlEntity;
 import org.hibernate.tool.schema.Action;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+
 import org.hibernate.orm.test.cdi.converters.ConverterBean;
 import org.hibernate.orm.test.cdi.converters.MonitorBean;
 import org.hibernate.orm.test.cdi.converters.TheEntity;
@@ -47,7 +47,7 @@ public class CdiHostedConverterTest extends BaseUnitTestCase {
 		try ( final SeContainer cdiContainer = cdiInitializer.initialize() ) {
 			BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
 
-			final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder( bsr )
+			final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder( bsr )
 					.applySetting( AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP )
 					.applySetting( AvailableSettings.CDI_BEAN_MANAGER, cdiContainer.getBeanManager() )
 					.build();
@@ -105,7 +105,7 @@ public class CdiHostedConverterTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-14881\n")
+	@JiraKey(value = "HHH-14881\n")
 	public void testOrmXml() {
 		MonitorBean.reset();
 
@@ -115,7 +115,7 @@ public class CdiHostedConverterTest extends BaseUnitTestCase {
 		try ( final SeContainer cdiContainer = cdiInitializer.initialize() ) {
 			BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
 
-			final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder( bsr )
+			final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder( bsr )
 					.applySetting( AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP )
 					.applySetting( AvailableSettings.CDI_BEAN_MANAGER, cdiContainer.getBeanManager() )
 					.build();

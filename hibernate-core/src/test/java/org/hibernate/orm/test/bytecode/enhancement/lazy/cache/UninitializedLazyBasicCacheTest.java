@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.cache;
 
@@ -18,45 +16,45 @@ import org.hibernate.Hibernate;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.stat.CacheRegionStatistics;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Aaron Schmischke
  * @author Gail Badner
  */
-@RunWith( BytecodeEnhancerRunner.class )
-public class UninitializedLazyBasicCacheTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				UninitializedLazyBasicCacheTest.Person.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true" ),
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class UninitializedLazyBasicCacheTest {
 	private Long personId;
 
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Person.class };
-	}
-
-	@Override
-	protected void configure(Configuration configuration) {
-		configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "true" );
-		configuration.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
-	}
-
-	@Before
-	public void prepare() {
-		this.personId = doInHibernate(
-				this::sessionFactory, s -> {
-
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		this.personId = scope.fromTransaction( s -> {
 					final Person person = new Person();
 					person.setLazyAttribute( "does_not_matter" );
 					s.persist( person );
@@ -66,26 +64,24 @@ public class UninitializedLazyBasicCacheTest extends BaseCoreFunctionalTestCase 
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11766")
-	public void test() {
+	@JiraKey("HHH-11766")
+	public void test(SessionFactoryScope scope) {
 
-		sessionFactory().getStatistics().clear();
-		sessionFactory().getCache().evictAll();
+		scope.getSessionFactory().getStatistics().clear();
+		scope.getSessionFactory().getCache().evictAll();
 
-		doInHibernate(
-				this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 					final Person person = s.get( Person.class, personId );
 					assertFalse( Hibernate.isPropertyInitialized( person, "lazyAttribute" ) );
 				}
 		);
 
-		CacheRegionStatistics regionStatistics = sessionFactory().getStatistics().getCacheRegionStatistics( "Person" );
+		CacheRegionStatistics regionStatistics = scope.getSessionFactory().getStatistics().getCacheRegionStatistics( "Person" );
 		assertEquals( 0, regionStatistics.getHitCount() );
 		assertEquals( 1, regionStatistics.getMissCount() );
 		assertEquals( 1, regionStatistics.getPutCount() );
 
-		doInHibernate(
-				this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 					final Person person = s.get( Person.class, personId );
 					assertFalse( Hibernate.isPropertyInitialized( person, "lazyAttribute" ) );
 					person.getLazyAttribute();

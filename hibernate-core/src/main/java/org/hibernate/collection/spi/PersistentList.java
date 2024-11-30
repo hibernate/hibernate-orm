@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.collection.spi;
 
@@ -21,11 +19,12 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
 
 /**
- * A persistent wrapper for a {@code java.util.List}. Underlying
+ * A persistent wrapper for a {@link java.util.List}. Underlying
  * collection is an {@code ArrayList}.
  *
- * @apiNote Incubating in terms of making this non-internal.  These contracts
- * will be getting cleaned up in following releases.
+ * @apiNote Incubating in terms of making this non-internal.
+ *          These contracts will be getting cleaned up in following
+ *          releases.
  *
  * @author Gavin King
  */
@@ -84,7 +83,8 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 	@SuppressWarnings("unchecked")
 	public void initializeEmptyCollection(CollectionPersister persister) {
 		assert list == null;
-		list = (List<E>) persister.getCollectionType().instantiate( 0 );
+		//noinspection unchecked
+		list = (List<E>) persister.getCollectionSemantics().instantiateRaw( 0, persister );
 		endRead();
 	}
 
@@ -118,7 +118,7 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 		final int size = array.length;
 
 		assert list == null;
-		this.list = (List<E>) persister.getCollectionType().instantiate( size );
+		list = (List<E>) persister.getCollectionSemantics().instantiateRaw( size, persister );
 
 		for ( Serializable arrayElement : array ) {
 			list.add( (E) persister.getElementType().assemble( arrayElement, getSession(), owner ) );
@@ -225,7 +225,7 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 
 	@Override
 	public boolean addAll(Collection<? extends E> values) {
-		if ( values.size() == 0 ) {
+		if ( values.isEmpty() ) {
 			return false;
 		}
 		if ( !isOperationQueueEnabled() ) {
@@ -236,7 +236,7 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 			for ( E value : values ) {
 				queueOperation( new SimpleAdd( value ) );
 			}
-			return values.size() > 0;
+			return !values.isEmpty();
 		}
 	}
 

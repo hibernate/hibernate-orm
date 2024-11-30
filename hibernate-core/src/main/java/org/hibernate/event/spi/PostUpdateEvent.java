@@ -1,16 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * Occurs after the datastore is updated
- * 
+ *
  * @author Gavin King
  */
 public class PostUpdateEvent extends AbstractEvent {
@@ -21,7 +20,7 @@ public class PostUpdateEvent extends AbstractEvent {
 	private Object id;
 	//list of dirty properties as computed by Hibernate during a FlushEntityEvent
 	private final int[] dirtyProperties;
-	
+
 	public PostUpdateEvent(
 			Object entity,
 			Object id,
@@ -39,7 +38,7 @@ public class PostUpdateEvent extends AbstractEvent {
 		this.dirtyProperties = dirtyProperties;
 		this.persister = persister;
 	}
-	
+
 	public Object getEntity() {
 		return entity;
 	}
@@ -54,6 +53,11 @@ public class PostUpdateEvent extends AbstractEvent {
 
 	public EntityPersister getPersister() {
 		return persister;
+	}
+
+	@Override
+	public SessionFactoryImplementor getFactory() {
+		return persister.getFactory();
 	}
 
 	public Object[] getState() {

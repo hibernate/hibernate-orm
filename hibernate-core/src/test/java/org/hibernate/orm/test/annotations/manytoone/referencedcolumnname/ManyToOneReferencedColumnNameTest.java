@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.manytoone.referencedcolumnname;
 
@@ -23,7 +21,7 @@ import org.junit.Test;
 public class ManyToOneReferencedColumnNameTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
-	public void testReoverableExceptionInFkOrdering() throws Exception {
+	public void testRecoverableExceptionInFkOrdering() throws Exception {
 		//SF should not blow up
 		Vendor v = new Vendor();
 		Item i = new Item();
@@ -38,10 +36,10 @@ public class ManyToOneReferencedColumnNameTest extends BaseCoreFunctionalTestCas
 		wi.setQtyInStock( new BigDecimal( 2 ) );
 		Session s = openSession();
 		s.getTransaction().begin();
-		s.save( i );
-		s.save( v );
-		s.save( ic );
-		s.save( wi );
+		s.persist( i );
+		s.persist( v );
+		s.persist( ic );
+		s.persist( wi );
 		s.flush();
 		s.getTransaction().rollback();
 		s.close();

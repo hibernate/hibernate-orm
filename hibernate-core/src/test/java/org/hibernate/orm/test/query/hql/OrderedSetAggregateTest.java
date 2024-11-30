@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hql;
 
@@ -10,7 +8,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -138,7 +136,7 @@ public class OrderedSetAggregateTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15360")
+	@JiraKey( value = "HHH-15360")
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStringAggregation.class)
 	public void testListaggWithNullsClause(SessionFactoryScope scope) {
 		scope.inTransaction(

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.unidir;
 
@@ -19,11 +17,10 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author Vlad Mihalcea
@@ -39,7 +36,7 @@ public class UnidirectionalOneToManyNonPkJoinColumnTest extends BaseEntityManage
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12064" )
+	@JiraKey( value = "HHH-12064" )
 	public void test() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			// Save the entity on the One side

@@ -1,14 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.internal;
 
-import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 import org.hibernate.EntityNameResolver;
@@ -39,8 +35,6 @@ public class EntityRepresentationStrategyMap implements EntityRepresentationStra
 	private final ProxyFactory proxyFactory;
 	private final EntityInstantiatorDynamicMap instantiator;
 
-	private final Map<String, PropertyAccess> propertyAccessMap = new ConcurrentHashMap<>();
-
 	public EntityRepresentationStrategyMap(
 			PersistentClass bootType,
 			RuntimeModelCreationContext creationContext) {
@@ -50,22 +44,6 @@ public class EntityRepresentationStrategyMap implements EntityRepresentationStra
 
 		this.proxyFactory = createProxyFactory( bootType );
 		this.instantiator = new EntityInstantiatorDynamicMap( bootType );
-
-		//noinspection unchecked
-		final Iterator<Property> itr = bootType.getPropertyClosureIterator();
-		int i = 0;
-		while ( itr.hasNext() ) {
-			//TODO: redesign how PropertyAccessors are acquired...
-			final Property property = itr.next();
-			final PropertyAccess propertyAccess = PropertyAccessStrategyMapImpl.INSTANCE.buildPropertyAccess(
-					null,
-					property.getName(),
-					true );
-
-			propertyAccessMap.put( property.getName(), propertyAccess );
-
-			i++;
-		}
 
 		createProxyFactory( bootType );
 	}

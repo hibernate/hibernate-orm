@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.quote;
 
@@ -22,7 +20,7 @@ import jakarta.persistence.Table;
 
 import org.hibernate.Session;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -34,7 +32,7 @@ import static org.junit.Assert.assertNotNull;
  * @author Brett Meyer
  */
 public class QuoteTest extends BaseNonConfigCoreFunctionalTestCase {
-	
+
 	@Test
 	public void testQuoteManytoMany() {
 		String role = User.class.getName() + ".roles";
@@ -54,9 +52,9 @@ public class QuoteTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.getTransaction().rollback();
 		s.close();
 	}
-	
+
 	@Test
-	@TestForIssue(jiraKey = "HHH-8464")
+	@JiraKey(value = "HHH-8464")
 	public void testDoubleQuoteJoinColumn() {
 		Session s = openSession();
 		s.getTransaction().begin();
@@ -67,7 +65,7 @@ public class QuoteTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.persist( user );
 		s.getTransaction().commit();
 		s.close();
-		
+
 		s = openSession();
 		s.getTransaction().begin();
 		user = s.get( User.class, user.getId() );
@@ -79,21 +77,21 @@ public class QuoteTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 	}
-	
+
 	@Test
-	@TestForIssue(jiraKey = "HHH-2988")
+	@JiraKey(value = "HHH-2988")
 	public void testUnionSubclassEntityQuoting() {
 		Session s = openSession();
 		s.beginTransaction();
 		Container container1 = new Container();
 		Container container2 = new Container();
 		SimpleItem simpleItem = new SimpleItem();
-		
+
 		container1.items.add( container2 );
 		container1.items.add( simpleItem );
 		container2.parent = container1;
 		simpleItem.parent = container1;
-		
+
 		s.persist( simpleItem );
 		s.persist( container2 );
 		s.persist( container1 );
@@ -133,7 +131,7 @@ public class QuoteTest extends BaseNonConfigCoreFunctionalTestCase {
 				SimpleItem.class
 		};
 	}
-	
+
 	@Entity( name = "Item" )
 	@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 	private static abstract class Item {
@@ -144,7 +142,7 @@ public class QuoteTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		@Column(name = "_id")
 		protected long _id;
-		
+
 		@ManyToOne(fetch = FetchType.LAZY)
 		@JoinColumn(name = "`ParentID`")
 		protected Container parent;

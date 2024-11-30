@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect.identity;
 
@@ -10,6 +8,9 @@ package org.hibernate.community.dialect.identity;
  * @author Andrea Boriero
  */
 public class Ingres10IdentityColumnSupport extends Ingres9IdentityColumnSupport {
+
+	public static final Ingres10IdentityColumnSupport INSTANCE = new Ingres10IdentityColumnSupport();
+
 	@Override
 	public boolean supportsIdentityColumns() {
 		return true;

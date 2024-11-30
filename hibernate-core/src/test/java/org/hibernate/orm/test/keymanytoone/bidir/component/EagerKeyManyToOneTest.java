@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.keymanytoone.bidir.component;
 
@@ -12,6 +10,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.internal.DefaultLoadEventListener;
 import org.hibernate.event.service.spi.EventListenerRegistry;
@@ -19,13 +18,11 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -49,21 +46,16 @@ public class EagerKeyManyToOneTest {
 		@Override
 		public void integrate(
 				Metadata metadata,
-				SessionFactoryImplementor sessionFactory,
-				SessionFactoryServiceRegistry serviceRegistry) {
-			integrate( serviceRegistry );
+				BootstrapContext bootstrapContext,
+				SessionFactoryImplementor sessionFactory) {
+			integrate( sessionFactory );
 		}
 
-		private void integrate(SessionFactoryServiceRegistry serviceRegistry) {
-			serviceRegistry.getService( EventListenerRegistry.class ).prependListeners(
+		private void integrate(SessionFactoryImplementor sessionFactory) {
+			sessionFactory.getServiceRegistry().getService( EventListenerRegistry.class ).prependListeners(
 					EventType.LOAD,
 					new CustomLoadListener()
 			);
-		}
-
-		@Override
-		public void disintegrate(
-				SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
 		}
 	}
 
@@ -73,7 +65,7 @@ public class EagerKeyManyToOneTest {
 				session -> {
 					List<Customer> customers = session.createQuery( "from Customer" ).list();
 					customers.forEach(
-							customer -> session.delete( customer )
+							customer -> session.remove( customer )
 					);
 				}
 		);
@@ -91,7 +83,7 @@ public class EagerKeyManyToOneTest {
 					Customer cust = new Customer( "Acme, Inc." );
 					Order order = new Order( new Order.Id( cust, 1 ) );
 					cust.getOrders().add( order );
-					s.save( cust );
+					s.persist( cust );
 					s.flush();
 					assertEquals( 2, statistics.getEntityInsertCount() );
 				}
@@ -108,7 +100,7 @@ public class EagerKeyManyToOneTest {
 					Customer cust = new Customer( "Acme, Inc." );
 					Order order = new Order( new Order.Id( cust, 1 ) );
 					cust.getOrders().add( order );
-					s.save( cust );
+					s.persist( cust );
 				}
 		);
 
@@ -138,7 +130,7 @@ public class EagerKeyManyToOneTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-2277")
+	@JiraKey(value = "HHH-2277")
 	public void testLoadEntityWithEagerFetchingToKeyManyToOneReferenceBackToSelf(SessionFactoryScope scope) {
 		StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
@@ -159,7 +151,7 @@ public class EagerKeyManyToOneTest {
 		Order order = new Order( new Order.Id( customer, 1 ) );
 		customer.getOrders().add( order );
 		scope.inTransaction(
-				session -> session.save( customer )
+				session -> session.persist( customer )
 		);
 
 		scope.inTransaction(

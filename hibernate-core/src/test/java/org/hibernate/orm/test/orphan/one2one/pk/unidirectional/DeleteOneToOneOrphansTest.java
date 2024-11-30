@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.orphan.one2one.pk.unidirectional;
 
@@ -34,7 +32,7 @@ public class DeleteOneToOneOrphansTest {
 		scope.inTransaction(
 				session -> {
 					Employee emp = new Employee();
-					session.save( emp );
+					session.persist( emp );
 					emp.setInfo( new EmployeeInfo( emp.getId() ) );
 				}
 		);
@@ -61,7 +59,7 @@ public class DeleteOneToOneOrphansTest {
 					assertEquals( 1, results.size() );
 					Employee emp = (Employee) results.get( 0 );
 					assertNotNull( emp.getInfo() );
-					results = session.createQuery( "from Employee e, EmployeeInfo i where e.info = i" ).list();
+					results = session.createQuery( "from Employee e, EmployeeInfo i where e.info = i", Object[].class ).list();
 					assertEquals( 1, results.size() );
 					Object[] result = (Object[]) results.get( 0 );
 					emp = (Employee) result[0];

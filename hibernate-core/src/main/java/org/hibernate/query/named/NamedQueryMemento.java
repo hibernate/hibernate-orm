@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.named;
 
@@ -15,6 +13,8 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryParameterImplementor;
 
+import jakarta.persistence.TypedQueryReference;
+
 /**
  * The runtime representation of named queries.  They are stored in and
  * available through the QueryEngine's {@link NamedObjectRepository}.
@@ -23,11 +23,16 @@ import org.hibernate.query.spi.QueryParameterImplementor;
  *
  * @author Steve Ebersole
  */
-public interface NamedQueryMemento {
+public interface NamedQueryMemento<E> extends TypedQueryReference<E> {
 	/**
 	 * The name under which the query is registered
 	 */
 	String getRegistrationName();
+
+	@Override
+	default String getName() {
+		return getRegistrationName();
+	}
 
 	Boolean getCacheable();
 
@@ -52,9 +57,9 @@ public interface NamedQueryMemento {
 	/**
 	 * Makes a copy of the memento using the specified registration name
 	 */
-	NamedQueryMemento makeCopy(String name);
+	NamedQueryMemento<E> makeCopy(String name);
 
-	<T> QueryImplementor<T> toQuery(SharedSessionContractImplementor session);
+	QueryImplementor<E> toQuery(SharedSessionContractImplementor session);
 	<T> QueryImplementor<T> toQuery(SharedSessionContractImplementor session, Class<T> javaType);
 
 	interface ParameterMemento {

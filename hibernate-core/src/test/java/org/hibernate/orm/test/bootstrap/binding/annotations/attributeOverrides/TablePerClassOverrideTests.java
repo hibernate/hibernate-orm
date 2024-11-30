@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bootstrap.binding.annotations.attributeOverrides;
 
@@ -48,10 +46,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 )
 @ServiceRegistry
 @SessionFactory
+@Disabled("@AttributeOverrides is not supported for inheritance.")
 public class TablePerClassOverrideTests {
 
 	@Test
-	@Disabled("@AttributeOverrides is not supported for inheritance. See CoreMessageLogger#unsupportedAttributeOverrideWithEntityInheritance")
 	public void testSchema(SessionFactoryScope scope) {
 		MetadataImplementor metadata = scope.getMetadataImplementor();
 		assertTrue( SchemaUtil.isColumnPresent( "CUSTOMER", "STREET", metadata ) );
@@ -117,10 +115,10 @@ public class TablePerClassOverrideTests {
 				session -> {
 					session.createQuery( "from DomesticCustomer", DomesticCustomer.class )
 							.list()
-							.forEach( cust -> session.delete( cust ) );
+							.forEach( cust -> session.remove( cust ) );
 					session.createQuery( "from ForeignCustomer", ForeignCustomer.class )
 							.list()
-							.forEach( cust -> session.delete( cust ) );
+							.forEach( cust -> session.remove( cust ) );
 				}
 		);
 	}

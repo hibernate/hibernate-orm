@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.procedure.internal;
 
@@ -30,14 +28,14 @@ import org.hibernate.query.spi.QueryImplementor;
  *
  * @author Steve Ebersole
  */
-public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento implements NamedCallableQueryMemento {
+public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento<Object> implements NamedCallableQueryMemento {
 	private final String callableName;
 
 	private final ParameterStrategy parameterStrategy;
 	private final List<NamedCallableQueryMemento.ParameterMemento> parameterMementos;
 
 	private final String[] resultSetMappingNames;
-	private final Class[] resultSetMappingClasses;
+	private final Class<?>[] resultSetMappingClasses;
 
 	private final Set<String> querySpaces;
 
@@ -51,7 +49,7 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 			ParameterStrategy parameterStrategy,
 			List<NamedCallableQueryMemento.ParameterMemento> parameterMementos,
 			String[] resultSetMappingNames,
-			Class[] resultSetMappingClasses,
+			Class<?>[] resultSetMappingClasses,
 			Set<String> querySpaces,
 			Boolean cacheable,
 			String cacheRegion,
@@ -64,6 +62,7 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 			Map<String, Object> hints) {
 		super(
 				name,
+				Object.class,
 				cacheable,
 				cacheRegion,
 				cacheMode,
@@ -103,7 +102,7 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 	}
 
 	@Override
-	public Class[] getResultSetMappingClasses() {
+	public Class<?>[] getResultSetMappingClasses() {
 		return resultSetMappingClasses;
 	}
 
@@ -132,17 +131,17 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 	}
 
 	@Override
-	public <T> QueryImplementor<T> toQuery(SharedSessionContractImplementor session) {
+	public QueryImplementor<Object> toQuery(SharedSessionContractImplementor session) {
 		return new ProcedureCallImpl<>( session, this );
 	}
 
 	@Override
 	public <T> ProcedureCallImplementor<T> toQuery(SharedSessionContractImplementor session, Class<T> javaType) {
-		return new ProcedureCallImpl( session, this, javaType );
+		return new ProcedureCallImpl<>( session, this, javaType );
 	}
 
 	@Override
-	public NamedQueryMemento makeCopy(String name) {
+	public NamedQueryMemento<Object> makeCopy(String name) {
 		return new NamedCallableQueryMementoImpl(
 				name,
 				callableName,
@@ -171,12 +170,12 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 	/**
 	 * A "disconnected" copy of the metadata for a parameter, that can be used in ProcedureCallMementoImpl.
 	 */
-	public static class ParameterMementoImpl implements NamedCallableQueryMemento.ParameterMemento {
+	public static class ParameterMementoImpl<T> implements NamedCallableQueryMemento.ParameterMemento {
 		private final Integer position;
 		private final String name;
 		private final ParameterMode mode;
-		private final Class type;
-		private final BindableType hibernateType;
+		private final Class<T> type;
+		private final BindableType<T> hibernateType;
 
 		/**
 		 * Create the memento
@@ -185,8 +184,8 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 				int position,
 				String name,
 				ParameterMode mode,
-				Class type,
-				BindableType hibernateType) {
+				Class<T> type,
+				BindableType<T> hibernateType) {
 			this.position = position;
 			this.name = name;
 			this.mode = mode;
@@ -206,19 +205,18 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 			return mode;
 		}
 
-		public Class getType() {
+		public Class<T> getType() {
 			return type;
 		}
 
-		public BindableType getHibernateType() {
+		public BindableType<T> getHibernateType() {
 			return hibernateType;
 		}
 
 		@Override
-		public ProcedureParameterImplementor resolve(SharedSessionContractImplementor session) {
+		public ProcedureParameterImplementor<T> resolve(SharedSessionContractImplementor session) {
 			if ( getName() != null ) {
-				//noinspection unchecked
-				return new ProcedureParameterImpl(
+				return new ProcedureParameterImpl<>(
 						getName(),
 						getMode(),
 						type,
@@ -226,8 +224,7 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 				);
 			}
 			else {
-				//noinspection unchecked
-				return new ProcedureParameterImpl(
+				return new ProcedureParameterImpl<>(
 						getPosition(),
 						getMode(),
 						type,
@@ -244,8 +241,8 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 		 *
 		 * @return The memento
 		 */
-		public static ParameterMementoImpl fromRegistration(ProcedureParameterImplementor registration) {
-			return new ParameterMementoImpl(
+		public static <U> ParameterMementoImpl<U> fromRegistration(ProcedureParameterImplementor<U> registration) {
+			return new ParameterMementoImpl<>(
 					registration.getPosition(),
 					registration.getName(),
 					registration.getMode(),

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.transaction.jta.platform.spi;
 
@@ -11,6 +9,7 @@ import jakarta.transaction.SystemException;
 import jakarta.transaction.Transaction;
 import jakarta.transaction.TransactionManager;
 import jakarta.transaction.UserTransaction;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.service.Service;
 
@@ -37,7 +36,7 @@ public interface JtaPlatform extends Service {
 	 *
 	 * @return The {@link TransactionManager}
 	 */
-	TransactionManager retrieveTransactionManager();
+	@Nullable TransactionManager retrieveTransactionManager();
 
 	/**
 	 * Locate the {@link UserTransaction}.
@@ -48,18 +47,18 @@ public interface JtaPlatform extends Service {
 	 *
 	 * @return The {@link UserTransaction}
 	 */
-	UserTransaction retrieveUserTransaction();
+	@Nullable UserTransaction retrieveUserTransaction();
 
 	/**
 	 * Determine an identifier for the given transaction appropriate for use in caching/lookup usages.
-	 * <p/>
+	 * <p>
 	 * Generally speaking the transaction itself will be returned here.  This method was added specifically
 	 * for use in WebSphere and other unfriendly Java EE containers.
 	 *
 	 * @param transaction The transaction to be identified.
 	 * @return An appropriate identifier
 	 */
-	Object getTransactionIdentifier(Transaction transaction);
+	@Nullable Object getTransactionIdentifier(Transaction transaction);
 
 	/**
 	 * Can we currently register a {@link Synchronization}?

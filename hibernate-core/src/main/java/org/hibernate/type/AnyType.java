@@ -1,18 +1,8 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
-
-import java.io.Serializable;
-import java.lang.reflect.Method;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Objects;
 
 import org.hibernate.EntityNameResolver;
 import org.hibernate.FetchMode;
@@ -22,37 +12,67 @@ import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
-import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
-import org.hibernate.pretty.MessageHelper;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import java.io.Serializable;
+import java.lang.reflect.Method;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Objects;
+
+import static org.hibernate.engine.internal.ForeignKeys.getEntityIdentifierIfNotUnsaved;
+import static org.hibernate.internal.util.collections.ArrayHelper.join;
+import static org.hibernate.metamodel.internal.FullNameImplicitDiscriminatorStrategy.FULL_NAME_STRATEGY;
+import static org.hibernate.pretty.MessageHelper.infoString;
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
+
 /**
  * Handles "any" mappings
- * 
+ *
  * @author Gavin King
  */
 public class AnyType extends AbstractType implements CompositeType, AssociationType {
 	private final TypeConfiguration typeConfiguration;
 	private final Type identifierType;
-	private final Type discriminatorType;
+	private final MetaType discriminatorType;
 	private final boolean eager;
 
-	public AnyType(TypeConfiguration typeConfiguration, Type discriminatorType, Type identifierType, boolean lazy) {
+	public AnyType(TypeConfiguration typeConfiguration, MetaType discriminatorType, Type identifierType, boolean lazy) {
 		this.typeConfiguration = typeConfiguration;
 		this.discriminatorType = discriminatorType;
 		this.identifierType = identifierType;
 		this.eager = !lazy;
+	}
+
+	/**
+	 * @deprecated Use {@linkplain AnyType#AnyType(TypeConfiguration, MetaType, Type, boolean)} instead
+	 */
+	@Deprecated
+	public AnyType(TypeConfiguration typeConfiguration, Type discriminatorType, Type identifierType, boolean lazy) {
+		this(
+				typeConfiguration,
+				wrapDiscriminatorType( discriminatorType ),
+				identifierType,
+				lazy
+		);
+	}
+
+	private static MetaType wrapDiscriminatorType(Type discriminatorType) {
+		if ( discriminatorType instanceof MetaType metaType ) {
+			return metaType;
+		}
+
+		return new MetaType( discriminatorType, FULL_NAME_STRATEGY, null );
 	}
 
 	public Type getIdentifierType() {
@@ -77,8 +97,8 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	}
 
 	@Override
-	public int[] getSqlTypeCodes(Mapping mapping) throws MappingException {
-		return ArrayHelper.join( discriminatorType.getSqlTypeCodes( mapping ), identifierType.getSqlTypeCodes( mapping ) );
+	public int[] getSqlTypeCodes(MappingContext mappingContext) throws MappingException {
+		return join( discriminatorType.getSqlTypeCodes( mappingContext ), identifierType.getSqlTypeCodes( mappingContext ) );
 	}
 
 	@Override
@@ -121,32 +141,37 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 
 	@Override
 	public int compare(Object x, Object y) {
+		throw new UnsupportedOperationException( "compare() not implemented for AnyType" );
+	}
+
+	@Override
+	public int compare(Object x, Object y, SessionFactoryImplementor factory) {
 		if ( x == null ) {
 			// if y is also null, return that they are the same (no option for "UNKNOWN")
-			// if y is not null, return that y is "greater" (-1 because the result is from the perspective of
-			// 		the first arg: x)
+			// if y is not null, return that y is "greater"
+			// (-1 because the result is from the perspective of the first arg: x)
 			return y == null ? 0 : -1;
 		}
 		else if ( y == null ) {
-			// x is not null, but y is.  return that x is "greater"
+			// x is not null, but y is, return that x is "greater"
 			return 1;
 		}
 
 		// At this point we know both are non-null.
-		final Object xId = extractIdentifier( x );
-		final Object yId = extractIdentifier( y );
+		final Object xId = extractIdentifier( x, factory );
+		final Object yId = extractIdentifier( y, factory );
 
 		return getIdentifierType().compare( xId, yId );
 	}
 
-	private Object extractIdentifier(Object entity) {
-		final EntityPersister concretePersister = guessEntityPersister( entity );
+	private Object extractIdentifier(Object entity, SessionFactoryImplementor factory) {
+		final EntityPersister concretePersister = guessEntityPersister( entity, factory );
 		return concretePersister == null
 				? null
-				: concretePersister.getIdentifier( entity, null );
+				: concretePersister.getIdentifier( entity );
 	}
 
-	private EntityPersister guessEntityPersister(Object object) {
+	private EntityPersister guessEntityPersister(Object object, SessionFactoryImplementor factory) {
 		if ( typeConfiguration == null ) {
 			return null;
 		}
@@ -155,18 +180,16 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 
 		// this code is largely copied from Session's bestGuessEntityName
 		Object entity = object;
-		if ( entity instanceof HibernateProxy ) {
-			final LazyInitializer initializer = ( (HibernateProxy) entity ).getHibernateLazyInitializer();
-			if ( initializer.isUninitialized() ) {
-				entityName = initializer.getEntityName();
+		final LazyInitializer lazyInitializer = extractLazyInitializer( entity );
+		if ( lazyInitializer != null ) {
+			if ( lazyInitializer.isUninitialized() ) {
+				entityName = lazyInitializer.getEntityName();
 			}
-			entity = initializer.getImplementation();
+			entity = lazyInitializer.getImplementation();
 		}
 
 		if ( entityName == null ) {
-			final MappingMetamodelImplementor mappingMetamodel = typeConfiguration.getSessionFactory()
-					.getRuntimeMetamodels()
-					.getMappingMetamodel();
+			final MappingMetamodelImplementor mappingMetamodel = factory.getRuntimeMetamodels().getMappingMetamodel();
 			for ( EntityNameResolver resolver : mappingMetamodel.getEntityNameResolvers() ) {
 				entityName = resolver.resolveEntityName( entity );
 				if ( entityName != null ) {
@@ -180,7 +203,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 			entityName = object.getClass().getName();
 		}
 
-		return typeConfiguration.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( entityName );
+		return factory.getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( entityName );
 	}
 
 	@Override
@@ -201,12 +224,12 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		final ObjectTypeCacheEntry holder = (ObjectTypeCacheEntry) old;
 		final boolean[] idCheckable = new boolean[checkable.length-1];
 		System.arraycopy( checkable, 1, idCheckable, 0, idCheckable.length );
-		return ( checkable[0] && !holder.entityName.equals( session.bestGuessEntityName( current ) ) )
+		return checkable[0] && !holder.entityName.equals( session.bestGuessEntityName( current ) )
 				|| identifierType.isModified( holder.id, getIdentifier( current, session ), idCheckable, session );
 	}
 
 	@Override
-	public boolean[] toColumnNullness(Object value, Mapping mapping) {
+	public boolean[] toColumnNullness(Object value, MappingContext mapping) {
 		final boolean[] result = new boolean[ getColumnSpan( mapping ) ];
 		if ( value != null ) {
 			Arrays.fill( result, true );
@@ -221,7 +244,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	}
 
 	@Override
-	public int getColumnSpan(Mapping session) {
+	public int getColumnSpan(MappingContext session) {
 		return 2;
 	}
 
@@ -242,7 +265,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		}
 		else {
 			entityName = session.bestGuessEntityName( value );
-			id = ForeignKeys.getEntityIdentifierIfNotUnsaved( entityName, value, session );
+			id = getEntityIdentifierIfNotUnsaved( entityName, value, session );
 		}
 
 		// discriminatorType is assumed to be single-column type
@@ -270,11 +293,11 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 			return "<uninitialized>";
 		}
 
-		String entityName = factory.bestGuessEntityName(value);
+		final String entityName = factory.bestGuessEntityName(value);
 		final EntityPersister descriptor = entityName == null
 				? null
 				: factory.getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( entityName );
-		return MessageHelper.infoString( descriptor, value, factory );
+		return infoString( descriptor, value, factory );
 	}
 
 	@Override
@@ -291,13 +314,18 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		else {
 			return new ObjectTypeCacheEntry(
 					session.bestGuessEntityName( value ),
-					ForeignKeys.getEntityIdentifierIfNotUnsaved(
+					getEntityIdentifierIfNotUnsaved(
 							session.bestGuessEntityName( value ),
 							value,
 							session
 					)
 			);
 		}
+	}
+
+	@Override
+	public Serializable disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
+		throw new UnsupportedOperationException( "AnyType not supported as part of cache key!" );
 	}
 
 	@Override
@@ -308,7 +336,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		}
 		else {
 			final String entityName = session.bestGuessEntityName( original );
-			final Object id = ForeignKeys.getEntityIdentifierIfNotUnsaved( entityName, original, session );
+			final Object id = getEntityIdentifierIfNotUnsaved( entityName, original, session );
 			return session.internalLoad( entityName, id, eager, false );
 		}
 	}
@@ -336,7 +364,8 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 			return 1;
 		}
 
-		throw new PropertyNotFoundException( "Unable to locate property named " + name + " on AnyType" );
+		throw new PropertyNotFoundException( "Could not resolve attribute '" + name
+				+ "' of any mapping (must be one of 'class', 'id')" );
 	}
 
 	@Override
@@ -356,7 +385,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 
 	private Object getIdentifier(Object value, SharedSessionContractImplementor session) throws HibernateException {
 		try {
-			return ForeignKeys.getEntityIdentifierIfNotUnsaved(
+			return getEntityIdentifierIfNotUnsaved(
 					session.bestGuessEntityName( value ),
 					value,
 					session
@@ -383,6 +412,11 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	public boolean hasNotNullProperty() {
 		// both are non-nullable
 		return true;
+	}
+
+	@Override
+	public boolean hasNullProperty() {
+		return false;
 	}
 
 	@Override
@@ -460,9 +494,10 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		}
 
 		public boolean equals(Object object) {
-			if (object instanceof ObjectTypeCacheEntry) {
-				ObjectTypeCacheEntry objectTypeCacheEntry = (ObjectTypeCacheEntry)object;
-				return Objects.equals( objectTypeCacheEntry.entityName, entityName ) && Objects.equals( objectTypeCacheEntry.id, id );
+			if ( object instanceof ObjectTypeCacheEntry ) {
+				final ObjectTypeCacheEntry objectTypeCacheEntry = (ObjectTypeCacheEntry) object;
+				return Objects.equals( objectTypeCacheEntry.entityName, entityName )
+					&& Objects.equals( objectTypeCacheEntry.id, id );
 			}
 			return false;
 		}

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.reventity.removal;
 
@@ -18,14 +16,14 @@ import org.hibernate.orm.test.envers.entities.manytomany.ListOwningEntity;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue( jiraKey = "HHH-7807" )
+@JiraKey( value = "HHH-7807" )
 @RequiresDialectFeature(DialectChecks.SupportsCascadeDeleteCheck.class)
 public abstract class AbstractRevisionEntityRemovalTest extends BaseEnversJPAFunctionalTestCase {
 	@Override
@@ -36,8 +34,7 @@ public abstract class AbstractRevisionEntityRemovalTest extends BaseEnversJPAFun
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
-				StrTestEntity.class, ListOwnedEntity.class, ListOwningEntity.class,
-				getRevisionEntityClass()
+				StrTestEntity.class, ListOwnedEntity.class, ListOwningEntity.class
 		};
 	}
 

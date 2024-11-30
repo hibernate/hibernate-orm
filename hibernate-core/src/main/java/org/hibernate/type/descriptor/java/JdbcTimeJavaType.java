@@ -1,31 +1,34 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
 import java.sql.Time;
 import java.sql.Types;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
 import org.hibernate.HibernateException;
-import org.hibernate.cache.internal.CacheKeyValueDescriptor;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
+
+import static org.hibernate.internal.util.CharSequenceHelper.subSequence;
 
 /**
  * Descriptor for {@link Time} handling.
@@ -38,31 +41,16 @@ import jakarta.persistence.TemporalType;
 public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 	public static final JdbcTimeJavaType INSTANCE = new JdbcTimeJavaType();
 
-	public static final String TIME_FORMAT = "HH:mm:ss.SSS";
-
 	public static final DateTimeFormatter LITERAL_FORMATTER = DateTimeFormatter.ISO_LOCAL_TIME;
 
-	/**
-	 * Alias for {@link DateTimeFormatter#ISO_LOCAL_TIME}.
-	 *
-	 * Intended for use with logging
-	 *
-	 * @see #LITERAL_FORMATTER
-	 */
-	@SuppressWarnings("unused")
-	public static final DateTimeFormatter LOGGABLE_FORMATTER = DateTimeFormatter.ISO_LOCAL_TIME;
+	private static final DateTimeFormatter ENCODED_FORMATTER = new DateTimeFormatterBuilder()
+			.optionalStart()
+			.append( DateTimeFormatter.ISO_DATE )
+			.appendLiteral( 'T' )
+			.optionalEnd()
+			.append( DateTimeFormatter.ISO_LOCAL_TIME )
+			.toFormatter();
 
-	private static final CacheKeyValueDescriptor CACHE_KEY_VALUE_DESCRIPTOR = new CacheKeyValueDescriptor() {
-		@Override
-		public int getHashCode(Object key) {
-			return INSTANCE.extractHashCode( (Date) key );
-		}
-
-		@Override
-		public boolean isEqual(Object key1, Object key2) {
-			return INSTANCE.areEqual( (Date) key1, (Date) key2 );
-		}
-	};
 
 	public JdbcTimeJavaType() {
 		super( Time.class, TimeMutabilityPlan.INSTANCE );
@@ -77,7 +65,7 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 	public boolean isInstance(Object value) {
 		// this check holds true for java.sql.Time as well
 		return value instanceof Date
-				&& !( value instanceof java.sql.Date );
+			&& !( value instanceof java.sql.Date );
 	}
 
 	@Override
@@ -112,14 +100,9 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 		calendar2.setTime( another );
 
 		return calendar1.get( Calendar.HOUR_OF_DAY ) == calendar2.get( Calendar.HOUR_OF_DAY )
-				&& calendar1.get( Calendar.MINUTE ) == calendar2.get( Calendar.MINUTE )
-				&& calendar1.get( Calendar.SECOND ) == calendar2.get( Calendar.SECOND )
-				&& calendar1.get( Calendar.MILLISECOND ) == calendar2.get( Calendar.MILLISECOND );
-	}
-
-	@Override
-	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
-		return CACHE_KEY_VALUE_DESCRIPTOR;
+			&& calendar1.get( Calendar.MINUTE ) == calendar2.get( Calendar.MINUTE )
+			&& calendar1.get( Calendar.SECOND ) == calendar2.get( Calendar.SECOND )
+			&& calendar1.get( Calendar.MILLISECOND ) == calendar2.get( Calendar.MILLISECOND );
 	}
 
 	@Override
@@ -135,15 +118,26 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 		}
 
 		if ( LocalTime.class.isAssignableFrom( type ) ) {
-			return value instanceof java.sql.Time
-					? ( (java.sql.Time) value ).toLocalTime()
-					: new java.sql.Time( value.getTime() ).toLocalTime();
+			final Time time = value instanceof java.sql.Time
+					? ( (java.sql.Time) value )
+					: new java.sql.Time( value.getTime() % 86_400_000 );
+			final LocalTime localTime = time.toLocalTime();
+			long millis = time.getTime() % 1000;
+			if ( millis == 0 ) {
+				return localTime;
+			}
+			if ( millis < 0 ) {
+				// The milliseconds for a Time could be negative,
+				// which usually means the time is in a different time zone
+				millis += 1_000L;
+			}
+			return localTime.with( ChronoField.NANO_OF_SECOND, millis * 1_000_000L );
 		}
 
 		if ( Time.class.isAssignableFrom( type ) ) {
 			return value instanceof Time
 					? value
-					: new Time( value.getTime() );
+					: new Time( value.getTime() % 86_400_000 );
 		}
 
 		if ( Date.class.isAssignableFrom( type ) ) {
@@ -181,20 +175,29 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 			return null;
 		}
 
-		if ( value instanceof LocalTime ) {
-			return Time.valueOf( (LocalTime) value );
+		if ( value instanceof Time time ) {
+			return time;
 		}
 
-		if ( value instanceof Date ) {
-			return (Date) value;
+		if ( value instanceof Date date ) {
+			return new Time( date.getTime() % 86_400_000 );
 		}
 
-		if ( value instanceof Long ) {
-			return new Time( (Long) value );
+		if ( value instanceof LocalTime localTime ) {
+			final Time time = Time.valueOf( localTime );
+			if ( localTime.getNano() == 0 ) {
+				return time;
+			}
+			// Preserve milliseconds, which java.sql.Time supports
+			return new Time( time.getTime() + DateTimeUtils.roundToPrecision( localTime.getNano(), 3 ) / 1000000 );
 		}
 
-		if ( value instanceof Calendar ) {
-			return new Time( ( (Calendar) value ).getTimeInMillis() );
+		if ( value instanceof Long longValue ) {
+			return new Time( longValue );
+		}
+
+		if ( value instanceof Calendar calendar ) {
+			return new Time( calendar.getTimeInMillis() % 86_400_000 );
 		}
 
 		throw unknownWrap( value.getClass() );
@@ -202,27 +205,59 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 
 	@Override
 	public String toString(Date value) {
-		return new SimpleDateFormat( TIME_FORMAT ).format( value );
+		if ( value instanceof java.sql.Time time ) {
+			return LITERAL_FORMATTER.format( time.toLocalTime() );
+		}
+		else {
+			return LITERAL_FORMATTER.format( LocalTime.ofInstant( value.toInstant(), ZoneOffset.systemDefault() ) );
+		}
 	}
 
 	@Override
 	public Date fromString(CharSequence string) {
 		try {
-			return new Time( new SimpleDateFormat( TIME_FORMAT ).parse( string.toString() ).getTime() );
+			final TemporalAccessor accessor = LITERAL_FORMATTER.parse( string );
+			final LocalTime localTime = LocalTime.from( accessor );
+			final Time time = Time.valueOf( localTime );
+			time.setTime( time.getTime() + localTime.getNano() / 1_000_000 );
+			return time;
 		}
-		catch ( ParseException pe ) {
-			throw new HibernateException( "could not parse time string" + string, pe );
+		catch ( DateTimeParseException pe) {
+			throw new HibernateException( "could not parse time string " + string, pe );
+		}
+	}
+
+	@Override
+	public Date fromEncodedString(CharSequence charSequence, int start, int end) {
+		try {
+			final TemporalAccessor accessor = ENCODED_FORMATTER.parse( subSequence( charSequence, start, end ) );
+			return java.sql.Time.valueOf( accessor.query( LocalTime::from ) );
+		}
+		catch ( DateTimeParseException pe) {
+			throw new HibernateException( "could not parse time string " + subSequence( charSequence, start, end ), pe );
+		}
+	}
+
+	@Override
+	public void appendEncodedString(SqlAppender sb, Date value) {
+		if ( value instanceof java.sql.Time time ) {
+			LITERAL_FORMATTER.formatTo( time.toLocalTime(), sb );
+		}
+		else {
+			LITERAL_FORMATTER.formatTo( LocalTime.ofInstant( value.toInstant(), ZoneOffset.systemDefault() ), sb );
 		}
 	}
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( Types.TIME );
+		return context.getJdbcType( Types.TIME );
 	}
 
 	@Override
 	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
-		//seconds (currently ignored since Dialects don't parameterize time type by precision)
+		// times represent repeating events - they
+		// almost never come equipped with seconds,
+		// let alone fractional seconds!
 		return 0;
 	}
 
@@ -235,6 +270,7 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 
 	public static class TimeMutabilityPlan extends MutableMutabilityPlan<Date> {
 		public static final TimeMutabilityPlan INSTANCE = new TimeMutabilityPlan();
+
 		@Override
 		public Date deepCopyNotNull(Date value) {
 			return new Time( value.getTime() );

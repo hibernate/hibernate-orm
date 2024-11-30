@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.embeddables;
 
@@ -15,10 +13,12 @@ import org.hibernate.JDBCException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.PersistenceException;
@@ -39,16 +39,17 @@ public class EmbeddableIntegratorTest {
 	 */
 	@Test
 	public void testWithoutIntegrator() {
-		try (SessionFactory sf = new Configuration().addAnnotatedClass( Investor.class )
-				.setProperty( "hibernate.hbm2ddl.auto", "create-drop" )
-				.buildSessionFactory()) {
+		final Configuration cfg = new Configuration().addAnnotatedClass( Investor.class )
+				.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
+		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
+		try (SessionFactory sf = cfg.buildSessionFactory()) {
 			Session sess = sf.openSession();
 			try {
 				sess.getTransaction().begin();
 				Investor myInv = getInvestor();
 				myInv.setId( 1L );
 
-				sess.save( myInv );
+				sess.persist( myInv );
 				sess.flush();
 				fail( "A JDBCException expected" );
 
@@ -58,7 +59,7 @@ public class EmbeddableIntegratorTest {
 				assertEquals( new BigDecimal( "100" ), inv.getInvestments().get( 0 ).getAmount().getAmount() );
 			}
 			catch (PersistenceException e) {
-				assertTyping( JDBCException.class, e.getCause() );
+				assertTyping( JDBCException.class, e );
 				sess.getTransaction().rollback();
 			}
 			finally {
@@ -72,16 +73,17 @@ public class EmbeddableIntegratorTest {
 
 	@Test
 	public void testWithTypeContributor() {
-		try (SessionFactory sf = new Configuration().addAnnotatedClass( Investor.class )
+		final Configuration cfg = new Configuration().addAnnotatedClass( Investor.class )
 				.registerTypeContributor( new InvestorTypeContributor() )
-				.setProperty( "hibernate.hbm2ddl.auto", "create-drop" )
-				.buildSessionFactory(); Session sess = sf.openSession()) {
+				.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
+		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
+		try (SessionFactory sf = cfg.buildSessionFactory(); Session sess = sf.openSession()) {
 			try {
 				sess.getTransaction().begin();
 				Investor myInv = getInvestor();
 				myInv.setId( 2L );
 
-				sess.save( myInv );
+				sess.persist( myInv );
 				sess.flush();
 				sess.clear();
 

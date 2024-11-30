@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.byteman;
 
@@ -13,7 +11,7 @@ import org.jboss.byteman.rule.helper.Helper;
 import org.jboss.logging.Logger;
 
 /**
- * @author <a href="mailto:sanne@hibernate.org">Sanne Grinovero</a> (C) 2011 Red Hat Inc.
+ * @author Sanne Grinovero (C) 2011 Red Hat Inc.
  * @author Hardy Ferentschik
  */
 public class BytemanHelper extends Helper {

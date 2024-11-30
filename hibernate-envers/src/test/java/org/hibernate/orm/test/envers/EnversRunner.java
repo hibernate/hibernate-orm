@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers;
 
@@ -32,10 +30,10 @@ import org.jboss.logging.Logger;
 
 /**
  * Copied & modified from {@link Parameterized}.
- * <p/>
+ * <p>
  * The modification is that the generated runners extend {@link CustomRunner} instead of the default
  * {@code TestClassRunnerForParameters}.
- * <p/>
+ * <p>
  * The runner itself sets the data using a setter instead of a constructor, and creates only one test instance. Moreover
  * it doesn't override {@code classBlock} which causes the custom {@code @BeforeClassOnce} and {@code @AfterClassOnce}
  * annotations to work.

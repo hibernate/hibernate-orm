@@ -1,14 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.expression;
 
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.sql.ast.SqlAstWalker;
-import org.hibernate.sql.ast.tree.select.QueryPart;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
 
 /**
  * @author Steve Ebersole
@@ -30,15 +28,15 @@ public class ModifiedSubQueryExpression implements Expression {
 		}
 	}
 
-	private final QueryPart subQuery;
+	private final SelectStatement subQuery;
 	private final Modifier modifier;
 
-	public ModifiedSubQueryExpression(QueryPart subQuery, Modifier modifier) {
+	public ModifiedSubQueryExpression(SelectStatement subQuery, Modifier modifier) {
 		this.subQuery = subQuery;
 		this.modifier = modifier;
 	}
 
-	public QueryPart getSubQuery() {
+	public SelectStatement getSubQuery() {
 		return subQuery;
 	}
 

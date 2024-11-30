@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
@@ -19,7 +17,10 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.action.spi.Executable;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.util.collections.CollectionHelper;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * A list of {@link Executable executeble actions}. Responsible for
@@ -28,29 +29,25 @@ import org.hibernate.internal.util.collections.CollectionHelper;
  *
  * @author Steve Ebersole
  * @author Anton Marsden
- *
- * @param <E> Intersection type describing {@link Executable} implementations
  */
-public class ExecutableList<E extends Executable & Comparable<? super E> & Serializable>
+public class ExecutableList<E extends ComparableExecutable>
 		implements Serializable, Iterable<E>, Externalizable {
 
 	public static final int INIT_QUEUE_LIST_SIZE = 5;
 
 	/**
 	 * Provides a sorting interface for {@link ExecutableList}.
-	 * 
-	 * @param <E>
 	 */
-	public interface Sorter<E extends Executable> {
+	public interface Sorter<ComparableExecutable> {
 		/**
 		 * Sorts the list.
 		 */
-		void sort(List<E> l);
+		void sort(List<ComparableExecutable> l);
 	}
 
 	private final ArrayList<E> executables;
 
-	private final Sorter<E> sorter;
+	private final @Nullable Sorter<E> sorter;
 	private final boolean requiresSorting;
 	private boolean sorted;
 
@@ -60,7 +57,7 @@ public class ExecutableList<E extends Executable & Comparable<? super E> & Seria
 	 * invalidate cache regions as it is exposed from {@link #getQuerySpaces}. This value
 	 * being {@code null} indicates that the query spaces should be calculated.
 	 */
-	private transient Set<Serializable> querySpaces;
+	private transient @Nullable Set<Serializable> querySpaces;
 
 	/**
 	 * Creates a new instance with the default settings.
@@ -122,7 +119,7 @@ public class ExecutableList<E extends Executable & Comparable<? super E> & Seria
 	 */
 	public Set<Serializable> getQuerySpaces() {
 		if ( querySpaces == null ) {
-			for ( E e : executables ) {
+			for ( ComparableExecutable e : executables ) {
 				Serializable[] propertySpaces = e.getPropertySpaces();
 				if ( propertySpaces != null && propertySpaces.length > 0 ) {
 					if( querySpaces == null ) {
@@ -131,7 +128,7 @@ public class ExecutableList<E extends Executable & Comparable<? super E> & Seria
 					Collections.addAll( querySpaces, propertySpaces );
 				}
 			}
-			if( querySpaces == null ) {
+			if ( querySpaces == null ) {
 				return Collections.emptySet();
 			}
 		}
@@ -147,15 +144,15 @@ public class ExecutableList<E extends Executable & Comparable<? super E> & Seria
 
 	/**
 	 * Removes the entry at position index in the list.
-	 * 
+	 *
 	 * @param index The index of the element to remove
 	 *
 	 * @return the entry that was removed
 	 */
-	public E remove(int index) {
+	public ComparableExecutable remove(int index) {
 		// removals are generally safe with regard to sorting...
 
-		final E e = executables.remove( index );
+		final ComparableExecutable e = executables.remove( index );
 
 		// If the executable being removed defined query spaces we need to recalculate the overall query spaces for
 		// this list.  The problem is that we don't know how many other executable instances in the list also
@@ -180,13 +177,13 @@ public class ExecutableList<E extends Executable & Comparable<? super E> & Seria
 
 	/**
 	 * Removes the last n entries from the list.
-	 * 
+	 *
 	 * @param n The number of elements to remove.
 	 */
 	public void removeLastN(int n) {
 		if ( n > 0 ) {
 			int size = executables.size();
-			for ( Executable e : executables.subList( size - n, size ) ) {
+			for ( ComparableExecutable e : executables.subList( size - n, size ) ) {
 				if ( e.getPropertySpaces() != null && e.getPropertySpaces().length > 0 ) {
 					// querySpaces could now be incorrect
 					querySpaces = null;
@@ -199,13 +196,13 @@ public class ExecutableList<E extends Executable & Comparable<? super E> & Seria
 
 	/**
 	 * Add an {@link Executable} to this list.
-	 * 
+	 *
 	 * @param executable the executable to add to the list
 	 *
 	 * @return true if the object was added to the list
 	 */
 	public boolean add(E executable) {
-		final E previousLast = sorter != null || executables.isEmpty() ? null : executables.get( executables.size() - 1 );
+		final ComparableExecutable previousLast = sorter != null || executables.isEmpty() ? null : executables.get( executables.size() - 1 );
 		boolean added = executables.add( executable );
 
 		if ( !added ) {
@@ -272,7 +269,7 @@ public class ExecutableList<E extends Executable & Comparable<? super E> & Seria
 
 	/**
 	 * Returns an iterator for the list. Wraps the list just in case something tries to modify it.
-	 * 
+	 *
 	 * @return an unmodifiable iterator
 	 */
 	@Override
@@ -282,7 +279,7 @@ public class ExecutableList<E extends Executable & Comparable<? super E> & Seria
 
 	/**
 	 * Write this list out to the given stream as part of serialization
-	 * 
+	 *
 	 * @param oos The stream to which to serialize our state
 	 */
 	@Override
@@ -290,7 +287,7 @@ public class ExecutableList<E extends Executable & Comparable<? super E> & Seria
 		oos.writeBoolean( sorted );
 
 		oos.writeInt( executables.size() );
-		for ( E e : executables ) {
+		for ( ComparableExecutable e : executables ) {
 			oos.writeObject( e );
 		}
 
@@ -299,9 +296,10 @@ public class ExecutableList<E extends Executable & Comparable<? super E> & Seria
 			oos.writeInt( -1 );
 		}
 		else {
+			final Set<Serializable> qs = querySpaces;
 			oos.writeInt( querySpaces.size() );
 			// these are always String, why we treat them as Serializable instead is beyond me...
-			for ( Serializable querySpace : querySpaces ) {
+			for ( Serializable querySpace : qs ) {
 				oos.writeUTF( querySpace.toString() );
 			}
 		}
@@ -310,7 +308,7 @@ public class ExecutableList<E extends Executable & Comparable<? super E> & Seria
 	/**
 	 * Read this object state back in from the given stream as part of
 	 * the deserialization process.
-	 * 
+	 *
 	 * @param in The stream from which to read our serial state
 	 */
 	@Override
@@ -332,21 +330,23 @@ public class ExecutableList<E extends Executable & Comparable<? super E> & Seria
 			this.querySpaces = null;
 		}
 		else {
-			querySpaces = CollectionHelper.setOfSize( numberOfQuerySpaces );
+			// The line below is for CF nullness checking purposes.
+			final Set<Serializable> querySpaces = CollectionHelper.setOfSize( numberOfQuerySpaces );
 			for ( int i = 0; i < numberOfQuerySpaces; i++ ) {
 				querySpaces.add( in.readUTF() );
 			}
+			this.querySpaces = querySpaces;
 		}
 	}
 
 	/**
 	 * Allow the {@link Executable}s to reassociate themselves with the
 	 * session after deserialization.
-	 * 
+	 *
 	 * @param session The session with which to associate the {@code Executable}s
 	 */
-	public void afterDeserialize(SessionImplementor session) {
-		for ( E e : executables ) {
+	public void afterDeserialize(EventSource session) {
+		for ( ComparableExecutable e : executables ) {
 			e.afterDeserialize( session );
 		}
 	}

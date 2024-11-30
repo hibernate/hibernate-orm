@@ -1,26 +1,38 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.query.common.FetchClauseType;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
+import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
+import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.insert.ConflictClause;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.predicate.LikePredicate;
+import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.exec.internal.JdbcOperationQueryInsertImpl;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
+import org.hibernate.sql.model.internal.TableInsertStandard;
+import org.hibernate.type.SqlTypes;
 
 /**
  * A SQL AST translator for PostgreSQL.
@@ -34,8 +46,91 @@ public class PostgreSQLLegacySqlAstTranslator<T extends JdbcOperation> extends A
 	}
 
 	@Override
+	protected void renderInsertIntoNoColumns(TableInsertStandard tableInsert) {
+		renderIntoIntoAndTable( tableInsert );
+		appendSql( "default values" );
+	}
+
+	@Override
+	protected JdbcOperationQueryInsert translateInsert(InsertSelectStatement sqlAst) {
+		visitInsertStatement( sqlAst );
+
+		return new JdbcOperationQueryInsertImpl(
+				getSql(),
+				getParameterBinders(),
+				getAffectedTableNames(),
+				null
+		);
+	}
+
+	@Override
+	protected void renderTableReferenceIdentificationVariable(TableReference tableReference) {
+		final String identificationVariable = tableReference.getIdentificationVariable();
+		if ( identificationVariable != null ) {
+			final Clause currentClause = getClauseStack().getCurrent();
+			if ( currentClause == Clause.INSERT ) {
+				// PostgreSQL requires the "as" keyword for inserts
+				appendSql( " as " );
+			}
+			else {
+				append( WHITESPACE );
+			}
+			append( tableReference.getIdentificationVariable() );
+		}
+	}
+
+	@Override
+	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
+		super.renderDmlTargetTableExpression( tableReference );
+		final Statement currentStatement = getStatementStack().getCurrent();
+		if ( !( currentStatement instanceof UpdateStatement )
+				|| !hasNonTrivialFromClause( ( (UpdateStatement) currentStatement ).getFromClause() ) ) {
+			// For UPDATE statements we render a full FROM clause and a join condition to match target table rows,
+			// but for that to work, we have to omit the alias for the target table reference here
+			renderTableReferenceIdentificationVariable( tableReference );
+		}
+	}
+
+	@Override
+	protected void renderFromClauseAfterUpdateSet(UpdateStatement statement) {
+		renderFromClauseJoiningDmlTargetReference( statement );
+	}
+
+	@Override
+	protected void visitConflictClause(ConflictClause conflictClause) {
+		visitStandardConflictClause( conflictClause );
+	}
+
+	@Override
 	protected void renderExpressionAsClauseItem(Expression expression) {
 		expression.accept( this );
+	}
+
+	@Override
+	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
+		final JdbcMappingContainer lhsExpressionType = lhs.getExpressionType();
+		if ( lhsExpressionType != null && lhsExpressionType.getJdbcTypeCount() == 1
+				&& lhsExpressionType.getSingleJdbcMapping().getJdbcType().getDdlTypeCode() == SqlTypes.SQLXML ) {
+			// In PostgreSQL, XMLTYPE is not "comparable", so we have to cast the two parts to varchar for this purpose
+			switch ( operator ) {
+				case EQUAL:
+				case NOT_DISTINCT_FROM:
+				case NOT_EQUAL:
+				case DISTINCT_FROM:
+					appendSql( "cast(" );
+					lhs.accept( this );
+					appendSql( " as text)" );
+					appendSql( operator.sqlText() );
+					appendSql( "cast(" );
+					rhs.accept( this );
+					appendSql( " as text)" );
+					return;
+				default:
+					// Fall through
+					break;
+			}
+		}
+		renderComparisonStandard( lhs, operator, rhs );
 	}
 
 	@Override
@@ -51,6 +146,26 @@ public class PostgreSQLLegacySqlAstTranslator<T extends JdbcOperation> extends A
 	}
 
 	@Override
+	public void visitNullnessPredicate(NullnessPredicate nullnessPredicate) {
+		final Expression expression = nullnessPredicate.getExpression();
+		final JdbcMappingContainer expressionType = expression.getExpressionType();
+		if ( isStruct( expressionType ) ) {
+			// Surprise, the null predicate checks if all components of the struct are null or not,
+			// rather than the column itself, so we have to use the distinct from predicate to implement this instead
+			expression.accept( this );
+			if ( nullnessPredicate.isNegated() ) {
+				appendSql( " is distinct from null" );
+			}
+			else {
+				appendSql( " is not distinct from null" );
+			}
+		}
+		else {
+			super.visitNullnessPredicate( nullnessPredicate );
+		}
+	}
+
+	@Override
 	protected void renderMaterializationHint(CteMaterialization materialization) {
 		if ( getDialect().getVersion().isSameOrAfter( 12 ) ) {
 			if ( materialization == CteMaterialization.NOT_MATERIALIZED ) {
@@ -58,6 +173,16 @@ public class PostgreSQLLegacySqlAstTranslator<T extends JdbcOperation> extends A
 			}
 			appendSql( "materialized " );
 		}
+	}
+
+	@Override
+	protected boolean supportsRowConstructor() {
+		return true;
+	}
+
+	@Override
+	protected boolean supportsArrayConstructor() {
+		return true;
 	}
 
 	@Override
@@ -117,13 +242,27 @@ public class PostgreSQLLegacySqlAstTranslator<T extends JdbcOperation> extends A
 	}
 
 	@Override
-	protected void renderSearchClause(CteStatement cte) {
-		// PostgreSQL does not support this, but it's just a hint anyway
+	protected boolean supportsRecursiveSearchClause() {
+		return getDialect().getVersion().isSameOrAfter( 14 );
 	}
 
 	@Override
-	protected void renderCycleClause(CteStatement cte) {
-		// PostgreSQL does not support this, but it can be emulated
+	protected boolean supportsRecursiveCycleClause() {
+		return getDialect().getVersion().isSameOrAfter( 14 );
+	}
+
+	@Override
+	protected boolean supportsRecursiveCycleUsingClause() {
+		return getDialect().getVersion().isSameOrAfter( 14 );
+	}
+
+	@Override
+	protected void renderStandardCycleClause(CteStatement cte) {
+		super.renderStandardCycleClause( cte );
+		if ( cte.getCycleMarkColumn() != null && cte.getCyclePathColumn() == null && supportsRecursiveCycleUsingClause() ) {
+			appendSql( " using " );
+			appendSql( determineCyclePathColumnName( cte ) );
+		}
 	}
 
 	@Override
@@ -135,9 +274,7 @@ public class PostgreSQLLegacySqlAstTranslator<T extends JdbcOperation> extends A
 				appendSql( "()" );
 			}
 			else {
-				appendSql( "(select 1" );
-				appendSql( getFromDualForSelectOnly() );
-				appendSql( ')' );
+				appendSql( "(select 1)" );
 			}
 		}
 		else if ( expression instanceof Summarization ) {
@@ -186,6 +323,15 @@ public class PostgreSQLLegacySqlAstTranslator<T extends JdbcOperation> extends A
 		else {
 			appendSql( " escape ''" );
 		}
+	}
+
+	@Override
+	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
+		appendSql( OPEN_PARENTHESIS );
+		visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
+		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
+		visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
+		appendSql( CLOSE_PARENTHESIS );
 	}
 
 }

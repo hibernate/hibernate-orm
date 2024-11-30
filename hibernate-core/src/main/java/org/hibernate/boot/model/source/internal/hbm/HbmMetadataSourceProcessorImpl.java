@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
@@ -12,6 +10,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
+import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
@@ -40,16 +39,15 @@ public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 		this( managedResources.getXmlMappingBindings(), rootBuildingContext );
 	}
 
-	@SuppressWarnings("unchecked")
 	public HbmMetadataSourceProcessorImpl(
-			Collection<Binding> xmlBindings,
+			Collection<Binding<JaxbBindableMappingDescriptor>> xmlBindings,
 			MetadataBuildingContext rootBuildingContext) {
 		this.rootBuildingContext = rootBuildingContext;
 		final EntityHierarchyBuilder hierarchyBuilder = new EntityHierarchyBuilder();
 
 		this.mappingDocuments = new ArrayList<>();
 
-		for ( Binding xmlBinding : xmlBindings ) {
+		for ( Binding<JaxbBindableMappingDescriptor> xmlBinding : xmlBindings ) {
 			if ( !(xmlBinding.getRoot() instanceof JaxbHbmHibernateMapping) ) {
 				continue;
 			}

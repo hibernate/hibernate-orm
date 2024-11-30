@@ -1,14 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.enhanced;
 
 import java.io.Serializable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.hibernate.HibernateException;
 import org.hibernate.id.IntegralDataTypeHolder;
@@ -18,34 +18,37 @@ import org.jboss.logging.Logger;
 /**
  * Optimizer which applies a 'hilo' algorithm in memory to achieve
  * optimization.
- * <p/>
+ * <p>
  * A 'hilo' algorithm is simply a means for a single value stored in the
- * database to represent a "bucket" of possible, contiguous values.  The
+ * database to represent a "bucket" of possible, contiguous values. The
  * database value identifies which particular bucket we are on.
- * <p/>
+ * <p>
  * This database value must be paired with another value that defines the
  * size of the bucket; the number of possible values available.
- * The {@link #getIncrementSize() incrementSize} serves this purpose.  The
+ * The {@link #getIncrementSize() incrementSize} serves this purpose. The
  * naming here is meant more for consistency in that this value serves the
  * same purpose as the increment supplied to the {@link PooledOptimizer}.
- * <p/>
- * The general algorithms used to determine the bucket are:<ol>
+ * <p>
+ * The general algorithms used to determine the bucket is:
+ * <ol>
  * <li>{@code upperLimit = (databaseValue * incrementSize) + 1}</li>
  * <li>{@code lowerLimit = upperLimit - incrementSize}</li>
  * </ol>
- * As an example, consider a case with incrementSize of 20.  Initially the
+ * <p>
+ * As an example, consider a case with incrementSize of 20. Initially, the
  * database holds 1:<ol>
  * <li>{@code upperLimit = (1 * 20) + 1 = 21}</li>
  * <li>{@code lowerLimit = 21 - 20 = 1}</li>
  * </ol>
+ * <p>
  * From there we increment the value from lowerLimit until we reach the
- * upperLimit, at which point we would define a new bucket.  The database
+ * upperLimit, at which point we would define a new bucket. The database
  * now contains 2, though incrementSize remains unchanged:<ol>
  * <li>{@code upperLimit = (2 * 20) + 1 = 41}</li>
  * <li>{@code lowerLimit = 41 - 20 = 21}</li>
  * </ol>
  * And so on...
- * <p/>
+ * <p>
  * Note, 'value' always (after init) holds the next value to return
  *
  * @author Steve Ebersole
@@ -61,12 +64,12 @@ public class HiLoOptimizer extends AbstractOptimizer {
 
 
 	/**
-	 * Constructs a HiLoOptimizer
+	 * Constructs a {@code HiLoOptimizer}
 	 *
 	 * @param returnClass The Java type of the values to be generated
 	 * @param incrementSize The increment size.
 	 */
-	public HiLoOptimizer(Class returnClass, int incrementSize) {
+	public HiLoOptimizer(Class<?> returnClass, int incrementSize) {
 		super( returnClass, incrementSize );
 		if ( incrementSize < 1 ) {
 			throw new HibernateException( "increment size cannot be less than 1" );
@@ -77,29 +80,39 @@ public class HiLoOptimizer extends AbstractOptimizer {
 	}
 
 	@Override
-	public synchronized Serializable generate(AccessCallback callback) {
-		final GenerationState generationState = locateGenerationState( callback.getTenantIdentifier() );
+	public Serializable generate(AccessCallback callback) {
+		lock.lock();
+		try {
+			final GenerationState generationState = locateGenerationState( callback.getTenantIdentifier() );
 
-		if ( generationState.lastSourceValue == null ) {
-			// first call, so initialize ourselves.  we need to read the database
-			// value and set up the 'bucket' boundaries
-			generationState.lastSourceValue = callback.getNextValue();
-			while ( generationState.lastSourceValue.lt( 1 ) ) {
+			if ( generationState.lastSourceValue == null ) {
+				// first call, so initialize ourselves.  we need to read the database
+				// value and set up the 'bucket' boundaries
 				generationState.lastSourceValue = callback.getNextValue();
+				while ( generationState.lastSourceValue.lt( 1 ) ) {
+					generationState.lastSourceValue = callback.getNextValue();
+				}
+				// upperLimit defines the upper end of the bucket values
+				generationState.upperLimit = generationState.lastSourceValue.copy().multiplyBy( incrementSize ).increment();
+				// initialize value to the lower end of the bucket
+				generationState.value = generationState.upperLimit.copy().subtract( incrementSize );
 			}
-			// upperLimit defines the upper end of the bucket values
-			generationState.upperLimit = generationState.lastSourceValue.copy().multiplyBy( incrementSize ).increment();
-			// initialize value to the lower end of the bucket
-			generationState.value = generationState.upperLimit.copy().subtract( incrementSize );
+			else if ( ! generationState.upperLimit.gt( generationState.value ) ) {
+				generationState.lastSourceValue = callback.getNextValue();
+				generationState.upperLimit = generationState.lastSourceValue.copy().multiplyBy( incrementSize ).increment();
+				generationState.value = generationState.upperLimit.copy().subtract( incrementSize );
+			}
+			return generationState.value.makeValueThenIncrement();
 		}
-		else if ( ! generationState.upperLimit.gt( generationState.value ) ) {
-			generationState.lastSourceValue = callback.getNextValue();
-			generationState.upperLimit = generationState.lastSourceValue.copy().multiplyBy( incrementSize ).increment();
-			generationState.value = generationState.upperLimit.copy().subtract( incrementSize );
+		finally {
+			lock.unlock();
 		}
-		return generationState.value.makeValueThenIncrement();
 	}
 
+	/**
+	 * Use a lock instead of the monitor lock to avoid pinning when using virtual threads.
+	 */
+	private final Lock lock = new ReentrantLock();
 	private GenerationState noTenantState;
 	private Map<String,GenerationState> tenantSpecificState;
 
@@ -136,8 +149,14 @@ public class HiLoOptimizer extends AbstractOptimizer {
 	}
 
 	@Override
-	public synchronized IntegralDataTypeHolder getLastSourceValue() {
-		return noTenantGenerationState().lastSourceValue;
+	public IntegralDataTypeHolder getLastSourceValue() {
+		lock.lock();
+		try {
+			return noTenantGenerationState().lastSourceValue;
+		}
+		finally {
+			lock.unlock();
+		}
 	}
 
 	@Override
@@ -147,23 +166,35 @@ public class HiLoOptimizer extends AbstractOptimizer {
 
 	/**
 	 * Getter for property 'lastValue'.
-	 * <p/>
+	 * <p>
 	 * Exposure intended for testing purposes.
 	 *
 	 * @return Value for property 'lastValue'.
 	 */
-	public synchronized IntegralDataTypeHolder getLastValue() {
-		return noTenantGenerationState().value.copy().decrement();
+	public IntegralDataTypeHolder getLastValue() {
+		lock.lock();
+		try {
+			return noTenantGenerationState().value.copy().decrement();
+		}
+		finally {
+			lock.unlock();
+		}
 	}
 
 	/**
 	 * Getter for property 'upperLimit'.
-	 * <p/>
+	 * <p>
 	 * Exposure intended for testing purposes.
 	 *
 	 * @return Value for property 'upperLimit'.
 	 */
-	public synchronized IntegralDataTypeHolder getHiValue() {
-		return noTenantGenerationState().upperLimit;
+	public IntegralDataTypeHolder getHiValue() {
+		lock.lock();
+		try {
+			return noTenantGenerationState().upperLimit;
+		}
+		finally {
+			lock.unlock();
+		}
 	}
 }

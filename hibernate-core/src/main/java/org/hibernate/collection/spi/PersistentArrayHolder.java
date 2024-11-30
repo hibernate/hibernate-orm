@@ -1,14 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.collection.spi;
 
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -24,12 +23,13 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
 
 /**
- * A persistent wrapper for an array. Lazy initialization
- * is NOT supported. Use of Hibernate arrays is not really
- * recommended.
+ * A dummy collection wrapper for an array. Lazy initialization is
+ * <em>not</em> supported. The use of arrays to represent persistent
+ * collections in Hibernate is discouraged.
  *
- * @apiNote Incubating in terms of making this non-internal.  These contracts
- * will be getting cleaned up in following releases.
+ * @apiNote Incubating in terms of making this non-internal.
+ *          These contracts will be getting cleaned up in following
+ *          releases.
  *
  * @author Gavin King
  */
@@ -40,7 +40,7 @@ public class PersistentArrayHolder<E> extends AbstractPersistentCollection<E> {
 	protected Object array;
 
 	//just to help out during the load (ugly, i know)
-	private transient Class elementClass;
+	private transient Class<?> elementClass;
 
 	/**
 	 * Constructs a PersistentCollection instance for holding an array.
@@ -93,6 +93,9 @@ public class PersistentArrayHolder<E> extends AbstractPersistentCollection<E> {
 	public Collection getOrphans(Serializable snapshot, String entityName) throws HibernateException {
 		final Object[] sn = (Object[]) snapshot;
 		final Object[] arr = (Object[]) array;
+		if ( arr.length == 0 ) {
+			return Arrays.asList( sn );
+		}
 		final ArrayList result = new ArrayList();
 		Collections.addAll( result, sn );
 		for ( int i=0; i<sn.length; i++ ) {
@@ -124,7 +127,7 @@ public class PersistentArrayHolder<E> extends AbstractPersistentCollection<E> {
 		attributeMapping.getPropertyAccess().getSetter().set( getOwner(), array );
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public Object getArray() {
 		return array;
 	}

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
@@ -96,7 +94,7 @@ public class SqmJpaCriteriaParameterWrapper<T>
 	 * as part of {@link SemanticQueryWalker#visitJpaCriteriaParameter}.  This wrapper
 	 * is intended just for representing unique SqmParameter references for each
 	 * JpaCriteriaParameter occurrence in the SQM true as part of the {@link org.hibernate.query.QueryParameter}
-	 * -> {@link SqmParameter} -> {@link JdbcParameter} transformation.
+	 * to {@link SqmParameter} to {@link JdbcParameter} transformation.
 	 * Each occurrence requires a unique SqmParameter to make sure we ultimately get the complete
 	 * set of JdbcParameter references
 	 */
@@ -123,29 +121,10 @@ public class SqmJpaCriteriaParameterWrapper<T>
 		jpaCriteriaParameter.appendHqlString( sb );
 	}
 
-//	@Override
-//	public Expression toSqlExpression(
-//			Clause clause,
-//			SqmToSqlAstConverter walker,
-//			SqlAstCreationState sqlAstCreationState) {
-//
-//		final MappingModelExpressible mappingModelExpressible = DomainModelHelper.resolveMappingModelExpressible(
-//				jpaCriteriaParameter,
-//				sqlAstCreationState
-//		);
-//
-//		final List<JdbcMapping> jdbcMappings = mappingModelExpressible.getJdbcMappings(
-//				sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()
-//		);
-//
-//		if ( jdbcMappings.size() == 1 ) {
-//			return new JdbcParameterImpl( jdbcMappings.get( 0 ) );
-//		}
-//
-//		final SqlTuple.Builder tupleBuilder = new SqlTuple.Builder( mappingModelExpressible );
-//		for ( JdbcMapping jdbcMapping : jdbcMappings ) {
-//			tupleBuilder.addSubExpression( new JdbcParameterImpl( jdbcMapping ) );
-//		}
-//		return tupleBuilder.buildTuple();
-//	}
+	@Override
+	public int compareTo(SqmParameter anotherParameter) {
+		return anotherParameter instanceof SqmJpaCriteriaParameterWrapper ?
+				getJpaCriteriaParameter().compareTo( ( (SqmJpaCriteriaParameterWrapper<?>) anotherParameter ).getJpaCriteriaParameter() )
+				: 1;
+	}
 }

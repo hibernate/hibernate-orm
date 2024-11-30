@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
@@ -29,15 +27,14 @@ public interface NaturalIdResolutions {
 
 	/**
 	 * Removes a natural-id-to-identifier resolution.
-	 *
+	 * <p>
 	 * Handles both the local (transactional) and shared (second-level) caches.
 	 *
 	 * @return The cached values, if any.  May be different from incoming values.
 	 */
 	Object removeResolution(Object id, Object naturalId, EntityMappingType entityDescriptor);
 
-	void cacheResolutionFromLoad(
-			Object id, Object naturalId, EntityMappingType entityDescriptor);
+	void cacheResolutionFromLoad(Object id, Object naturalId, EntityMappingType entityDescriptor);
 
 	/**
 	 * Ensures that the necessary local cross-reference exists.  Specifically, this
@@ -51,7 +48,7 @@ public interface NaturalIdResolutions {
 
 	/**
 	 * Removes any local cross-reference, returning the previously cached value if one.
-	 *
+	 * <p>
 	 * Again, this only effects the persistence-context cache, not the L2 cache
 	 */
 	Object removeLocalResolution(Object id, Object naturalId, EntityMappingType entityDescriptor);
@@ -69,7 +66,11 @@ public interface NaturalIdResolutions {
 	/**
 	 * Removes any cross-reference from the L2 cache
 	 */
-	void removeSharedResolution(Object id, Object naturalId, EntityMappingType entityDescriptor);
+	void removeSharedResolution(Object id, Object naturalId, EntityMappingType entityDescriptor, boolean delayToAfterTransactionCompletion);
+
+	default void removeSharedResolution(Object id, Object naturalId, EntityMappingType entityDescriptor) {
+		removeSharedResolution( id, naturalId, entityDescriptor, false );
+	}
 
 	/**
 	 * Find the cached natural-id for the given identifier
@@ -94,10 +95,10 @@ public interface NaturalIdResolutions {
 
 	/**
 	 * Part of the "load synchronization process".
-	 *
+	 * <p>
 	 * Responsible for maintaining cross-reference entries when natural-id values were found
 	 * to have changed.
-	 *
+	 * <p>
 	 * Also responsible for tracking the old values as no longer valid until the next flush
 	 * because otherwise going to the database would just re-pull the old values as valid.
 	 * In this responsibility, {@link #cleanupFromSynchronizations} is the inverse process

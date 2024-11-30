@@ -1,14 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.sqm.mutation;
 
-import java.sql.SQLException;
-
-import org.hibernate.annotations.QueryHints;
 import org.hibernate.query.IllegalMutationQueryException;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
@@ -23,13 +18,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.NamedQuery;
-import jakarta.persistence.PersistenceException;
-import jakarta.persistence.QueryHint;
-import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.Table;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Steve Ebersole
@@ -121,9 +110,9 @@ public class BasicMutationQueryTests {
 			resultClass = BasicMutationQueryTests.SillyEntity.class
 	)
 	public static class SillyEntity {
-	    @Id
-	    private Integer id;
-	    @Basic
+		@Id
+		private Integer id;
+		@Basic
 		private String name;
 
 		private SillyEntity() {

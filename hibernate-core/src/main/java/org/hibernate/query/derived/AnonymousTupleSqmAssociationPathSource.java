@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.derived;
 
@@ -14,6 +12,7 @@ import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
@@ -39,8 +38,8 @@ public class AnonymousTupleSqmAssociationPathSource<O, J> extends AnonymousTuple
 	}
 
 	@Override
-	public SqmJoin createSqmJoin(
-			SqmFrom lhs,
+	public SqmJoin<O, J> createSqmJoin(
+			SqmFrom<?, O> lhs,
 			SqmJoinType joinType,
 			String alias,
 			boolean fetched,
@@ -63,6 +62,11 @@ public class AnonymousTupleSqmAssociationPathSource<O, J> extends AnonymousTuple
 	@Override
 	public ManagedDomainType<O> getDeclaringType() {
 		return null;
+	}
+
+	@Override
+	public SqmPathSource<J> getPathSource() {
+		return this;
 	}
 
 	@Override

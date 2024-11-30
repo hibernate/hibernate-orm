@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.property.access.spi;
 
@@ -10,16 +8,20 @@ import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import org.hibernate.Internal;
 import org.hibernate.PropertyAccessException;
 import org.hibernate.PropertySetterAccessException;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.property.access.internal.AbstractSetterMethodSerialForm;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
  * @author Steve Ebersole
  */
+@Internal
 public class SetterMethodImpl implements Setter {
 	private static final CoreMessageLogger LOG = messageLogger( SetterMethodImpl.class );
 
@@ -38,7 +40,7 @@ public class SetterMethodImpl implements Setter {
 	}
 
 	@Override
-	public void set(Object target, Object value) {
+	public void set(Object target, @Nullable Object value) {
 		try {
 			setterMethod.invoke( target, value );
 		}
@@ -63,8 +65,13 @@ public class SetterMethodImpl implements Setter {
 			}
 		}
 		catch (InvocationTargetException ite) {
+			Throwable cause = ite.getCause();
+			if ( cause instanceof Error ) {
+				// HHH-16403 Don't wrap Error
+				throw (Error) cause;
+			}
 			throw new PropertyAccessException(
-					ite,
+					cause,
 					"Exception occurred inside",
 					true,
 					containerClass,
@@ -107,6 +114,10 @@ public class SetterMethodImpl implements Setter {
 		}
 	}
 
+	public Class<?> getContainerClass() {
+		return containerClass;
+	}
+
 	@Override
 	public String getMethodName() {
 		return setterMethod.getName();
@@ -121,38 +132,13 @@ public class SetterMethodImpl implements Setter {
 		return new SerialForm( containerClass, propertyName, setterMethod );
 	}
 
-	private static class SerialForm implements Serializable {
-		private final Class<?> containerClass;
-		private final String propertyName;
-
-		private final Class<?> declaringClass;
-		private final String methodName;
-		private final Class<?> argumentType;
-
+	private static class SerialForm extends AbstractSetterMethodSerialForm implements Serializable {
 		private SerialForm(Class<?> containerClass, String propertyName, Method method) {
-			this.containerClass = containerClass;
-			this.propertyName = propertyName;
-			this.declaringClass = method.getDeclaringClass();
-			this.methodName = method.getName();
-			this.argumentType = method.getParameterTypes()[0];
+			super( containerClass, propertyName, method );
 		}
 
 		private Object readResolve() {
-			return new SetterMethodImpl( containerClass, propertyName, resolveMethod() );
-		}
-
-		private Method resolveMethod() {
-			try {
-				final Method method = declaringClass.getDeclaredMethod( methodName, argumentType );
-				ReflectHelper.ensureAccessibility( method );
-				return method;
-			}
-			catch (NoSuchMethodException e) {
-				throw new PropertyAccessSerializationException(
-						"Unable to resolve setter method on deserialization : " + declaringClass.getName() + "#"
-								+ methodName + "(" + argumentType.getName() + ")"
-				);
-			}
+			return new SetterMethodImpl( getContainerClass(), getPropertyName(), resolveMethod() );
 		}
 	}
 }

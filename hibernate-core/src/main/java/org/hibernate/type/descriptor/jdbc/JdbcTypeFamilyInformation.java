@@ -1,10 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
+
 
 import java.sql.Types;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,21 +18,17 @@ public class JdbcTypeFamilyInformation {
 
 	// todo : make Family non-enum so it can be expanded by Dialects?
 
-	public static enum Family {
-		BINARY( Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY ),
+	public enum Family {
+		BINARY( Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY/*, SqlTypes.LONG32VARBINARY*/ ),
 		NUMERIC( Types.BIGINT, Types.DECIMAL, Types.DOUBLE, Types.FLOAT, Types.INTEGER, Types.NUMERIC, Types.REAL, Types.SMALLINT, Types.TINYINT ),
-		CHARACTER( Types.CHAR, Types.LONGNVARCHAR, Types.LONGVARCHAR, Types.NCHAR, Types.NVARCHAR, Types.VARCHAR ),
-		DATETIME( Types.DATE, Types.TIME, Types.TIMESTAMP ),
+		CHARACTER( Types.CHAR, Types.LONGNVARCHAR, Types.LONGVARCHAR, /*SqlTypes.LONG32NVARCHAR ,SqlTypes.LONG32VARCHAR,*/ Types.NCHAR, Types.NVARCHAR, Types.VARCHAR ),
+		DATETIME( Types.DATE, Types.TIME, Types.TIME_WITH_TIMEZONE, Types.TIMESTAMP, Types.TIMESTAMP_WITH_TIMEZONE ),
 		CLOB( Types.CLOB, Types.NCLOB );
 
 		private final int[] typeCodes;
 
-		private Family(int... typeCodes) {
+		Family(int... typeCodes) {
 			this.typeCodes = typeCodes;
-
-			for ( final int typeCode : typeCodes ) {
-				JdbcTypeFamilyInformation.INSTANCE.typeCodeToFamilyMap.put( typeCode, this );
-			}
 		}
 
 		public int[] getTypeCodes() {
@@ -41,7 +36,14 @@ public class JdbcTypeFamilyInformation {
 		}
 	}
 
-	private ConcurrentHashMap<Integer,Family> typeCodeToFamilyMap = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<Integer,Family> typeCodeToFamilyMap = new ConcurrentHashMap<>();
+	{
+		for ( Family family : Family.values() ) {
+			for ( int typeCode : family.getTypeCodes() ) {
+				typeCodeToFamilyMap.put( typeCode, family );
+			}
+		}
+	}
 
 	/**
 	 * Will return {@code null} if no match is found.
@@ -51,6 +53,6 @@ public class JdbcTypeFamilyInformation {
 	 * @return The family of datatypes the type code belongs to, or {@code null} if it belongs to no known families.
 	 */
 	public Family locateJdbcTypeFamilyByTypeCode(int typeCode) {
-		return typeCodeToFamilyMap.get( Integer.valueOf( typeCode ) );
+		return typeCodeToFamilyMap.get(typeCode);
 	}
 }

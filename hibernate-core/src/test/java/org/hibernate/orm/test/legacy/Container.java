@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id: Container.java 6844 2005-05-21 14:22:16Z oneovthafew $
 package org.hibernate.orm.test.legacy;
 
 import java.util.ArrayList;
@@ -15,18 +11,18 @@ import java.util.Map;
 import java.util.Set;
 
 public class Container {
-	
+
 	public static final class ContainerInnerClass {
 		private Simple simple;
 		private String name;
 		private One one;
 		private Many many;
 		private int count;
-		
+
 		public void setSimple(Simple simple) {
 			this.simple = simple;
 		}
-		
+
 		public Simple getSimple() {
 			return simple;
 		}
@@ -37,7 +33,7 @@ public class Container {
 		public String getName() {
 			return name;
 		}
-		
+
 		/**
 		 * Sets the name.
 		 * @param name The name to set
@@ -45,15 +41,15 @@ public class Container {
 		public void setName(String name) {
 			this.name = name;
 		}
-		
+
 		public String toString() {
-			return name + " = " 
+			return name + " = "
 			+ (simple==null ? "nil" : Integer.toString( simple.getCount() ) )
 			+ "/" + ( one==null ? "nil" : one.getKey().toString() )
 			+ "/" + ( many==null ? "nil" : many.getKey().toString() );
 		}
-		
-		
+
+
 		/**
 		 * Returns the one.
 		 * @return One
@@ -61,7 +57,7 @@ public class Container {
 		public One getOne() {
 			return one;
 		}
-		
+
 		/**
 		 * Sets the one.
 		 * @param one The one to set
@@ -69,7 +65,7 @@ public class Container {
 		public void setOne(One one) {
 			this.one = one;
 		}
-		
+
 		/**
 		 * Returns the many.
 		 * @return Many
@@ -77,7 +73,7 @@ public class Container {
 		public Many getMany() {
 			return many;
 		}
-		
+
 		/**
 		 * Sets the many.
 		 * @param many The many to set
@@ -85,7 +81,7 @@ public class Container {
 		public void setMany(Many many) {
 			this.many = many;
 		}
-		
+
 		/**
 		 * Returns the count.
 		 * @return int
@@ -101,22 +97,22 @@ public class Container {
 		public void setCount(int count) {
 			this.count = count;
 		}
-		
+
 		public int hashCode() {
 			return count + name.hashCode();
 		}
-		
+
 		public boolean equals(Object other) {
 			ContainerInnerClass cic = (ContainerInnerClass) other;
-			return cic.name.equals(name) 
-				&& cic.count==count 
+			return cic.name.equals(name)
+				&& cic.count==count
 				&& cic.one.getKey().equals(one.getKey())
 				&& cic.many.getKey().equals(many.getKey())
 				&& cic.simple.getCount()==simple.getCount();
 		}
 
 	}
-	
+
 	private List oneToMany;
 	private List manyToMany;
 	private List components;
@@ -127,14 +123,14 @@ public class Container {
 	private Collection lazyBag = new ArrayList();
 	private Map ternaryMap;
 	private Set ternarySet;
-	
+
 	/**
 	 * Constructor for Container.
 	 */
 	public Container() {
 		super();
 	}
-	
+
 	/**
 	 * Returns the components.
 	 * @return List
@@ -142,7 +138,7 @@ public class Container {
 	public List getComponents() {
 		return components;
 	}
-	
+
 	/**
 	 * Returns the manyToMany.
 	 * @return List
@@ -150,7 +146,7 @@ public class Container {
 	public List getManyToMany() {
 		return manyToMany;
 	}
-	
+
 	/**
 	 * Returns the oneToMany.
 	 * @return List
@@ -158,7 +154,7 @@ public class Container {
 	public List getOneToMany() {
 		return oneToMany;
 	}
-	
+
 	/**
 	 * Sets the components.
 	 * @param components The components to set
@@ -166,7 +162,7 @@ public class Container {
 	public void setComponents(List components) {
 		this.components = components;
 	}
-	
+
 	/**
 	 * Sets the manyToMany.
 	 * @param manyToMany The manyToMany to set
@@ -174,7 +170,7 @@ public class Container {
 	public void setManyToMany(List manyToMany) {
 		this.manyToMany = manyToMany;
 	}
-	
+
 	/**
 	 * Sets the oneToMany.
 	 * @param oneToMany The oneToMany to set
@@ -182,7 +178,7 @@ public class Container {
 	public void setOneToMany(List oneToMany) {
 		this.oneToMany = oneToMany;
 	}
-	
+
 	/**
 	 * Returns the id.
 	 * @return long
@@ -190,7 +186,7 @@ public class Container {
 	public long getId() {
 		return id;
 	}
-	
+
 	/**
 	 * Sets the id.
 	 * @param id The id to set
@@ -198,7 +194,7 @@ public class Container {
 	public void setId(long id) {
 		this.id = id;
 	}
-	
+
 	/**
 	 * Gets the composites.
 	 * @return Returns a Set
@@ -206,7 +202,7 @@ public class Container {
 	public Set getComposites() {
 		return composites;
 	}
-	
+
 	/**
 	 * Sets the composites.
 	 * @param composites The composites to set
@@ -214,7 +210,7 @@ public class Container {
 	public void setComposites(Set composites) {
 		this.composites = composites;
 	}
-	
+
 	/**
 	 * Returns the bag.
 	 * @return Collection
@@ -222,7 +218,7 @@ public class Container {
 	public Collection getBag() {
 		return bag;
 	}
-	
+
 	/**
 	 * Sets the bag.
 	 * @param bag The bag to set
@@ -230,7 +226,7 @@ public class Container {
 	public void setBag(Collection bag) {
 		this.bag = bag;
 	}
-	
+
 	/**
 	 * Returns the ternary.
 	 * @return Map
@@ -238,7 +234,7 @@ public class Container {
 	public Map getTernaryMap() {
 		return ternaryMap;
 	}
-	
+
 	/**
 	 * Sets the ternary.
 	 * @param ternary The ternary to set
@@ -246,7 +242,7 @@ public class Container {
 	public void setTernaryMap(Map ternary) {
 		this.ternaryMap = ternary;
 	}
-	
+
 	public static final class Ternary {
 		private String name;
 		private Foo foo;
@@ -258,7 +254,7 @@ public class Container {
 		public Foo getFoo() {
 			return foo;
 		}
-		
+
 		/**
 		 * Returns the glarch.
 		 * @return Glarch
@@ -266,7 +262,7 @@ public class Container {
 		public Glarch getGlarch() {
 			return glarch;
 		}
-		
+
 		/**
 		 * Returns the name.
 		 * @return String
@@ -274,7 +270,7 @@ public class Container {
 		public String getName() {
 			return name;
 		}
-		
+
 		/**
 		 * Sets the foo.
 		 * @param foo The foo to set
@@ -282,7 +278,7 @@ public class Container {
 		public void setFoo(Foo foo) {
 			this.foo = foo;
 		}
-		
+
 		/**
 		 * Sets the glarch.
 		 * @param glarch The glarch to set
@@ -290,7 +286,7 @@ public class Container {
 		public void setGlarch(Glarch glarch) {
 			this.glarch = glarch;
 		}
-		
+
 		/**
 		 * Sets the name.
 		 * @param name The name to set
@@ -298,9 +294,9 @@ public class Container {
 		public void setName(String name) {
 			this.name = name;
 		}
-		
+
 	}
-	
+
 	/**
 	 * Returns the ternarySet.
 	 * @return Set
@@ -308,7 +304,7 @@ public class Container {
 	public Set getTernarySet() {
 		return ternarySet;
 	}
-	
+
 	/**
 	 * Sets the ternarySet.
 	 * @param ternarySet The ternarySet to set
@@ -316,7 +312,7 @@ public class Container {
 	public void setTernarySet(Set ternarySet) {
 		this.ternarySet = ternarySet;
 	}
-	
+
 	/**
 	 * Returns the lazyBag.
 	 * @return Collection
@@ -324,7 +320,7 @@ public class Container {
 	public Collection getLazyBag() {
 		return lazyBag;
 	}
-	
+
 	/**
 	 * Sets the lazyBag.
 	 * @param lazyBag The lazyBag to set
@@ -332,7 +328,7 @@ public class Container {
 	public void setLazyBag(Collection lazyBag) {
 		this.lazyBag = lazyBag;
 	}
-	
+
 	/**
 	 * Returns the cascades.
 	 * @return Collection
@@ -350,9 +346,3 @@ public class Container {
 	}
 
 }
-
-
-
-
-
-

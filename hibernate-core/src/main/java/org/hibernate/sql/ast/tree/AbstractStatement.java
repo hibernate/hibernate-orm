@@ -1,15 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree;
 
-import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.hibernate.sql.ast.tree.cte.CteContainer;
+import org.hibernate.sql.ast.tree.cte.CteObject;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 
 /**
@@ -18,20 +17,17 @@ import org.hibernate.sql.ast.tree.cte.CteStatement;
 public abstract class AbstractStatement implements Statement, CteContainer {
 
 	private final Map<String, CteStatement> cteStatements;
-	private boolean withRecursive;
+	private final Map<String, CteObject> cteObjects;
 
-	public AbstractStatement(Map<String, CteStatement> cteStatements) {
-		this.cteStatements = cteStatements;
-	}
-
-	@Override
-	public boolean isWithRecursive() {
-		return withRecursive;
-	}
-
-	@Override
-	public void setWithRecursive(boolean withRecursive) {
-		this.withRecursive = withRecursive;
+	public AbstractStatement(CteContainer cteContainer) {
+		if ( cteContainer == null ) {
+			this.cteStatements = new LinkedHashMap<>();
+			this.cteObjects = new LinkedHashMap<>();
+		}
+		else {
+			this.cteStatements = cteContainer.getCteStatements();
+			this.cteObjects = cteContainer.getCteObjects();
+		}
 	}
 
 	@Override
@@ -48,6 +44,23 @@ public abstract class AbstractStatement implements Statement, CteContainer {
 	public void addCteStatement(CteStatement cteStatement) {
 		if ( cteStatements.putIfAbsent( cteStatement.getCteTable().getTableExpression(), cteStatement ) != null ) {
 			throw new IllegalArgumentException( "A CTE with the label " + cteStatement.getCteTable().getTableExpression() + " already exists" );
+		}
+	}
+
+	@Override
+	public Map<String, CteObject> getCteObjects() {
+		return cteObjects;
+	}
+
+	@Override
+	public CteObject getCteObject(String cteObjectName) {
+		return cteObjects.get( cteObjectName );
+	}
+
+	@Override
+	public void addCteObject(CteObject cteObject) {
+		if ( cteObjects.putIfAbsent( cteObject.getName(), cteObject ) != null ) {
+			throw new IllegalArgumentException( "A CTE object with the name " + cteObject.getName() + " already exists" );
 		}
 	}
 }

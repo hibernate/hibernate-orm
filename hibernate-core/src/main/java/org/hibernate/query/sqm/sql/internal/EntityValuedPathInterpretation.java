@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.sql.internal;
 
@@ -11,9 +9,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.FunctionalDependencyAnalysisSupport;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -22,33 +20,38 @@ import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
-import org.hibernate.spi.NavigablePath;
+import org.hibernate.persister.entity.UnionSubclassEntityPersister;
+import org.hibernate.query.derived.AnonymousTupleEntityValuedModelPart;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
+import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationArgument;
+import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
+import org.hibernate.query.sqm.tree.select.SqmSelection;
+import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstWalker;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
-import org.hibernate.sql.ast.spi.SqlAstProcessingState;
-import org.hibernate.sql.ast.spi.SqlAstQueryPartProcessingState;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
-import org.hibernate.sql.ast.tree.from.CorrelatedTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.update.Assignable;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetchable;
 
-import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
+import jakarta.persistence.criteria.Selection;
 
-/**
- * @author Koen Aers
- */
-public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpretation<T> implements SqlTupleContainer,
-		Assignable {
+public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpretation<T>
+		implements SqlTupleContainer, Assignable {
+	private final Expression sqlExpression;
 
 	public static <T> EntityValuedPathInterpretation<T> from(
 			SqmEntityValuedSimplePath<T> sqmPath,
@@ -102,13 +105,23 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 								sqmPath.getNavigablePath(),
 								tableGroup,
 								pathMapping.getEntityMappingType().getIdentifierMapping(),
-								false,
 								pathMapping,
 								pathMapping,
 								sqlAstCreationState
 						);
 					}
 				}
+			}
+			else if ( pathMapping instanceof AnonymousTupleEntityValuedModelPart ) {
+				// AnonymousEntityValuedModelParts use the PK, which the inferred path will also use in this case,
+				// so we render this path as it is
+				return from(
+						sqmPath.getNavigablePath(),
+						tableGroup,
+						pathMapping,
+						inferredMapping,
+						sqlAstCreationState
+				);
 			}
 			else {
 				// This is the case when the inferred mapping is an association, but the path mapping is not,
@@ -141,21 +154,15 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 			EntityValuedModelPart mapping,
 			MappingModelExpressible<?> inferredMapping,
 			SqmToSqlAstConverter sqlAstCreationState) {
-		final boolean allowFkOptimization;
 		final ModelPart resultModelPart;
 		final TableGroup resultTableGroup;
 		// For association mappings where the FK optimization i.e. use of the parent table group is allowed,
 		// we try to make use of it and the FK model part if possible based on the inferred mapping
 		if ( mapping instanceof EntityAssociationMapping ) {
 			final EntityAssociationMapping associationMapping = (EntityAssociationMapping) mapping;
-			final ModelPart associationKeyTargetMatchPart = associationMapping.getKeyTargetMatchPart();
-			final ModelPart keyTargetMatchPart;
-			if ( associationKeyTargetMatchPart instanceof ToOneAttributeMapping ) {
-				keyTargetMatchPart = ( (ToOneAttributeMapping) associationKeyTargetMatchPart ).getKeyTargetMatchPart();
-			}
-			else {
-				keyTargetMatchPart = associationKeyTargetMatchPart;
-			}
+			final ModelPart keyTargetMatchPart = associationMapping.getForeignKeyDescriptor().getPart(
+					associationMapping.getSideNature()
+			);
 
 			if ( associationMapping.isFkOptimizationAllowed() ) {
 				final boolean forceUsingForeignKeyAssociationSidePart;
@@ -182,21 +189,18 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 					forceUsingForeignKeyAssociationSidePart = false;
 				}
 				if ( forceUsingForeignKeyAssociationSidePart ) {
-					if ( associationKeyTargetMatchPart instanceof ToOneAttributeMapping ) {
-						resultModelPart = keyTargetMatchPart;
-					}
-					else {
-						resultModelPart = associationMapping.getForeignKeyDescriptor()
-								.getPart( associationMapping.getSideNature() );
-					}
+					resultModelPart = associationMapping.getForeignKeyDescriptor()
+							.getPart( associationMapping.getSideNature() );
 					resultTableGroup = sqlAstCreationState.getFromClauseAccess()
 							.findTableGroup( tableGroup.getNavigablePath().getParent() );
 				}
 				else {
-					if ( isCorrelated( tableGroup, sqlAstCreationState ) ) {
-						// Access to the parent table group is forbidden for correlated table groups. For more details,
-						// see: `ToOneAttributeMapping.createRootTableGroupJoin`
-						// Due to that, we forcefully use the model part to which this association points to i.e. the target
+					if ( !tableGroup.getNavigablePath().isParentOrEqual( navigablePath ) ) {
+						// Force the use of the FK target key if the navigable path for this entity valued path is
+						// not equal to or a child of the table group navigable path.
+						// This can happen when using an implicit join path e.g. `where root.association.id is null`,
+						// yet also an explicit join was made which is compatible e.g. `join fetch root.association`.
+						// Since we have an explicit join in this case anyway, it's fine to us the FK target key.
 						resultModelPart = associationMapping.getForeignKeyDescriptor()
 								.getPart( associationMapping.getSideNature().inverse() );
 					}
@@ -205,54 +209,39 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 					}
 					resultTableGroup = tableGroup;
 				}
-				allowFkOptimization = true;
 			}
-			else if ( inferredMapping == null && hasNotFound( mapping ) ) {
-				// This is necessary to allow expression like `where root.notFoundAssociation is null`
-				// to render to `alias.not_found_fk is null`, but IMO this shouldn't be done
-				// todo: discuss removing this part and create a left joined table group instead?
+			else if ( inferredMapping == null
+					&& hasNotFound( mapping )
+					&& sqlAstCreationState.getCurrentClauseStack().getCurrent() == Clause.SET ) {
+				// for not-found mappings encountered in the SET clause of an UPDATE statement
+				// we will want to (1) not join and (2) render the fk
 				resultModelPart = keyTargetMatchPart;
 				resultTableGroup = sqlAstCreationState.getFromClauseAccess()
 						.findTableGroup( tableGroup.getNavigablePath().getParent() );
-				allowFkOptimization = false;
 			}
 			else {
 				// If the mapping is an inverse association, use the PK and disallow FK optimizations
-				resultModelPart = ( (EntityAssociationMapping) mapping ).getAssociatedEntityMappingType().getIdentifierMapping();
+				resultModelPart = associationMapping.getAssociatedEntityMappingType().getIdentifierMapping();
 				resultTableGroup = tableGroup;
-				allowFkOptimization = false;
 			}
+		}
+		else if ( mapping instanceof AnonymousTupleEntityValuedModelPart ) {
+			resultModelPart = ( (AnonymousTupleEntityValuedModelPart) mapping ).getForeignKeyPart();
+			resultTableGroup = tableGroup;
 		}
 		else {
 			// If the mapping is not an association, use the PK and disallow FK optimizations
 			resultModelPart = mapping.getEntityMappingType().getIdentifierMapping();
 			resultTableGroup = tableGroup;
-			allowFkOptimization = false;
 		}
 		return from(
 				navigablePath,
 				resultTableGroup,
 				resultModelPart,
-				allowFkOptimization,
 				mapping,
 				mapping,
 				sqlAstCreationState
 		);
-	}
-
-	private static boolean isCorrelated(TableGroup tableGroup, SqmToSqlAstConverter sqlAstCreationState) {
-		final SqlAstProcessingState processingState = sqlAstCreationState.getCurrentProcessingState();
-		if ( !( processingState instanceof SqlAstQueryPartProcessingState )
-				|| ( (SqlAstQueryPartProcessingState) processingState ).getInflightQueryPart().isRoot() ) {
-			return false;
-		}
-		final FromClauseAccess fromClauseAccess = sqlAstCreationState.getFromClauseAccess();
-
-		TableGroup realParentTableGroup = fromClauseAccess.findTableGroup( tableGroup.getNavigablePath().getParent() );
-		while ( realParentTableGroup.getModelPart() instanceof EmbeddableValuedModelPart ) {
-			realParentTableGroup = fromClauseAccess.findTableGroup( realParentTableGroup.getNavigablePath().getParent() );
-		}
-		return realParentTableGroup instanceof CorrelatedTableGroup;
 	}
 
 	private static boolean hasNotFound(EntityValuedModelPart mapping) {
@@ -261,73 +250,89 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 
 	private static boolean hasJoinTable(EntityAssociationMapping associationMapping) {
 		return associationMapping instanceof EntityCollectionPart
-				&& !( (EntityCollectionPart) associationMapping ).getCollectionDescriptor().isOneToMany();
+				&& ( (EntityCollectionPart) associationMapping ).getCardinality() == EntityCollectionPart.Cardinality.MANY_TO_MANY;
 	}
 
 	public static <T> EntityValuedPathInterpretation<T> from(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			ModelPart resultModelPart,
-			boolean allowFkOptimization,
 			EntityValuedModelPart mapping,
 			EntityValuedModelPart treatedMapping,
 			SqmToSqlAstConverter sqlAstCreationState) {
-		final SqlExpressionResolver sqlExprResolver = sqlAstCreationState.getSqlExpressionResolver();
-		final SessionFactoryImplementor sessionFactory = sqlAstCreationState.getCreationContext().getSessionFactory();
-		final Expression sqlExpression;
+		final boolean expandToAllColumns;
+		final Clause currentClause = sqlAstCreationState.getCurrentClauseStack().getCurrent();
+		if ( currentClause == Clause.GROUP || currentClause == Clause.ORDER ) {
+			assert sqlAstCreationState.getCurrentSqmQueryPart().isSimpleQueryPart();
+			final SqmQuerySpec<?> querySpec = sqlAstCreationState.getCurrentSqmQueryPart().getFirstQuerySpec();
+			if ( currentClause == Clause.ORDER && !querySpec.groupByClauseContains( navigablePath, sqlAstCreationState ) ) {
+				// We must ensure that the order by expression be expanded but only if the group by
+				// contained the same expression, and that was expanded as well
+				expandToAllColumns = false;
+			}
+			else {
+				// When the table group is selected and the navigablePath is selected we need to expand
+				// to all columns, as we must make sure we include all columns present in the select clause
+				expandToAllColumns = isSelected(
+						tableGroup,
+						navigablePath,
+						querySpec,
+						sqlAstCreationState.getCurrentProcessingState().isTopLevel()
+				);
+			}
+		}
+		else {
+			expandToAllColumns = false;
+		}
 
-		if ( resultModelPart == null ) {
+		final SqlExpressionResolver sqlExprResolver = sqlAstCreationState.getSqlExpressionResolver();
+		final Expression sqlExpression;
+		if ( expandToAllColumns ) {
+			// Expand to all columns of the entity mapping type to ensure a correct group / order by expression,
+			// or use only the primary key if the dialect supports functional dependency
+			final Dialect dialect = sqlAstCreationState.getCreationContext()
+					.getSessionFactory()
+					.getJdbcServices()
+					.getDialect();
 			final EntityMappingType entityMappingType = mapping.getEntityMappingType();
 			final EntityIdentifierMapping identifierMapping = entityMappingType.getIdentifierMapping();
-			final EntityDiscriminatorMapping discriminatorMapping = entityMappingType.getDiscriminatorMapping();
-			final List<Expression> expressions = new ArrayList<>(
-					entityMappingType.getJdbcTypeCount() + identifierMapping.getJdbcTypeCount()
-							+ ( discriminatorMapping == null ? 0 : 1 )
-			);
-			final TableGroup parentTableGroup = tableGroup;
+			final List<Expression> expressions = new ArrayList<>( identifierMapping.getJdbcTypeCount() );
 			final SelectableConsumer selectableConsumer = (selectionIndex, selectableMapping) -> {
-				final TableReference tableReference = parentTableGroup.resolveTableReference(
+				final TableReference tableReference = tableGroup.resolveTableReference(
 						navigablePath,
-						selectableMapping.getContainingTableExpression(),
-						false
+						selectableMapping.getContainingTableExpression()
 				);
-				expressions.add(
-						sqlExprResolver.resolveSqlExpression(
-								createColumnReferenceKey(
-										tableReference,
-										selectableMapping.getSelectionExpression()
-								),
-								processingState -> new ColumnReference(
-										tableReference,
-										selectableMapping,
-										sessionFactory
-								)
-						)
-				);
+				expressions.add( sqlExprResolver.resolveSqlExpression( tableReference, selectableMapping ) );
 			};
 			identifierMapping.forEachSelectable( selectableConsumer );
-			if ( discriminatorMapping != null ) {
-				discriminatorMapping.forEachSelectable( selectableConsumer );
+			if ( !supportsFunctionalDependency( dialect, entityMappingType ) ) {
+				final EntityDiscriminatorMapping discriminatorMapping = entityMappingType.getDiscriminatorMapping();
+				if ( discriminatorMapping != null ) {
+					expressions.add( discriminatorMapping.resolveSqlExpression(
+							navigablePath,
+							discriminatorMapping.getUnderlyingJdbcMapping(),
+							tableGroup,
+							sqlAstCreationState
+					) );
+				}
+				for ( int i = 0; i < entityMappingType.getNumberOfFetchables(); i++ ) {
+					final Fetchable fetchable = entityMappingType.getFetchable( i );
+					if ( fetchable.isSelectable() ) {
+						fetchable.forEachSelectable( selectableConsumer );
+					}
+				}
 			}
-			entityMappingType.forEachSelectable( selectableConsumer );
 			sqlExpression = new SqlTuple( expressions, entityMappingType );
 		}
 		else {
-			if ( resultModelPart instanceof BasicValuedModelPart ) {
-				final BasicValuedModelPart basicValuedModelPart = (BasicValuedModelPart) resultModelPart;
+			final BasicValuedModelPart basicValuedModelPart = resultModelPart.asBasicValuedModelPart();
+			if ( basicValuedModelPart != null ) {
 				final TableReference tableReference = tableGroup.resolveTableReference(
 						navigablePath,
-						basicValuedModelPart.getContainingTableExpression(),
-						allowFkOptimization
+						basicValuedModelPart,
+						basicValuedModelPart.getContainingTableExpression()
 				);
-				sqlExpression = sqlExprResolver.resolveSqlExpression(
-						createColumnReferenceKey( tableReference, basicValuedModelPart.getSelectionExpression() ),
-						processingState -> new ColumnReference(
-								tableReference,
-								basicValuedModelPart,
-								sessionFactory
-						)
-				);
+				sqlExpression = sqlExprResolver.resolveSqlExpression( tableReference, basicValuedModelPart );
 			}
 			else {
 				final List<Expression> expressions = new ArrayList<>( resultModelPart.getJdbcTypeCount() );
@@ -335,22 +340,10 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 						(selectionIndex, selectableMapping) -> {
 							final TableReference tableReference = tableGroup.resolveTableReference(
 									navigablePath,
-									selectableMapping.getContainingTableExpression(),
-									allowFkOptimization
+									(ValuedModelPart) resultModelPart,
+									selectableMapping.getContainingTableExpression()
 							);
-							expressions.add(
-									sqlExprResolver.resolveSqlExpression(
-											createColumnReferenceKey(
-													tableReference,
-													selectableMapping.getSelectionExpression()
-											),
-											processingState -> new ColumnReference(
-													tableReference,
-													selectableMapping,
-													sessionFactory
-											)
-									)
-							);
+							expressions.add( sqlExprResolver.resolveSqlExpression( tableReference, selectableMapping ) );
 						}
 				);
 				sqlExpression = new SqlTuple( expressions, resultModelPart );
@@ -364,7 +357,65 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 		);
 	}
 
-	private final Expression sqlExpression;
+	private static boolean isSelected(
+			TableGroup tableGroup,
+			NavigablePath path,
+			SqmQuerySpec<?> sqmQuerySpec,
+			boolean isTopLevel) {
+		// If the table group is not initialized, i.e. not selected, no need to check selections
+		if ( !tableGroup.isInitialized() || sqmQuerySpec.getSelectClause() == null ) {
+			return false;
+		}
+		final NavigablePath tableGroupPath = isTopLevel ? null : tableGroup.getNavigablePath();
+		for ( SqmSelection<?> selection : sqmQuerySpec.getSelectClause().getSelections() ) {
+			if ( selectionContains( selection.getSelectableNode(), path, tableGroupPath ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static boolean selectionContains(Selection<?> selection, NavigablePath path, NavigablePath tableGroupPath) {
+		if ( selection instanceof SqmPath<?> ) {
+			final SqmPath<?> sqmPath = (SqmPath<?>) selection;
+			// Expansion is needed if the table group is null, i.e. we're in a top level query where EVPs are always
+			// expanded to all columns, or if the selection is on the same table (lhs) as the group by expression ...
+			return ( tableGroupPath == null || sqmPath.getLhs() != null && sqmPath.getLhs().getNavigablePath().equals( tableGroupPath ) )
+					// ... and if the entity valued path is selected or any of its columns are
+					&& path.isParentOrEqual( sqmPath.getNavigablePath() );
+		}
+		else if ( selection.isCompoundSelection() ) {
+			for ( Selection<?> compoundSelection : selection.getCompoundSelectionItems() ) {
+				if ( selectionContains( compoundSelection, path, tableGroupPath ) ) {
+					return true;
+				}
+			}
+		}
+		else if ( selection instanceof SqmDynamicInstantiation ) {
+			for ( SqmDynamicInstantiationArgument<?> argument : ( (SqmDynamicInstantiation<?>) selection ).getArguments() ) {
+				if ( selectionContains( argument.getSelectableNode(), path, tableGroupPath ) ) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private static boolean supportsFunctionalDependency(Dialect dialect, EntityMappingType entityMappingType) {
+		final FunctionalDependencyAnalysisSupport analysisSupport = dialect.getFunctionalDependencyAnalysisSupport();
+		if ( analysisSupport.supportsAnalysis() ) {
+			if ( entityMappingType.getSqmMultiTableMutationStrategy() == null ) {
+				return true;
+			}
+			else {
+				return analysisSupport.supportsTableGroups() && ( analysisSupport.supportsConstants() ||
+						// Union entity persisters use a literal 'clazz_' column as a discriminator
+						// that breaks functional dependency for dialects that don't support constants
+						!( entityMappingType.getEntityPersister() instanceof UnionSubclassEntityPersister ) );
+			}
+		}
+		return false;
+	}
 
 	public EntityValuedPathInterpretation(
 			Expression sqlExpression,
@@ -415,12 +466,23 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 
 	@Override
 	public void applySqlSelections(DomainResultCreationState creationState) {
-		creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
-				sqlExpression,
-				getExpressionType().getJavaType(),
-				null,
-				creationState.getSqlAstCreationState().getCreationContext().getMappingMetamodel().getTypeConfiguration()
-		);
+		applySqlSelections( sqlExpression, creationState.getSqlAstCreationState() );
+	}
+
+	private void applySqlSelections(Expression sqlExpression, SqlAstCreationState creationState) {
+		if ( sqlExpression instanceof SqlTuple ) {
+			for ( Expression expression : ( (SqlTuple) sqlExpression ).getExpressions() ) {
+				applySqlSelections( expression, creationState );
+			}
+		}
+		else {
+			creationState.getSqlExpressionResolver().resolveSqlSelection(
+					sqlExpression,
+					getExpressionType().getJavaType(),
+					null,
+					creationState.getCreationContext().getMappingMetamodel().getTypeConfiguration()
+			);
+		}
 	}
 
 	@Override

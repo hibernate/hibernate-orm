@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.typedonetoone;
 
@@ -73,7 +71,7 @@ public class TypedOneToOneTest {
 					assertEquals( "30326", cust.getShippingAddress().getZip() );
 					assertEquals( "BILLING", cust.getBillingAddress().getAddressId().getType() );
 					assertEquals( "SHIPPING", cust.getShippingAddress().getAddressId().getType() );
-					session.delete( cust );
+					session.remove( cust );
 				}
 		);
 	}
@@ -101,10 +99,9 @@ public class TypedOneToOneTest {
 					Customer cust = results.get( 0 );
 					assertNull( cust.getShippingAddress() );
 					assertNull( cust.getBillingAddress() );
-					session.delete( cust );
+					session.remove( cust );
 				}
 		);
 	}
 
 }
-

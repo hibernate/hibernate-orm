@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
 
@@ -30,6 +28,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <li>{@link NotFoundAction#IGNORE} specifies that this situation should
  *     be tolerated and treated as if the foreign key were null.
  * </ul>
+ * <p>
  * Note that this annotation has the side effect of making a to-one
  * association non-lazy. It does not affect the laziness of a many-to-many
  * association.

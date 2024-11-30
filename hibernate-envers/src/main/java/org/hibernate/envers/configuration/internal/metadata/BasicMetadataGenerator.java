@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
@@ -40,7 +38,7 @@ public final class BasicMetadataGenerator {
 			boolean key) {
 		if ( value.getType() instanceof BasicType ) {
 			if ( attributeContainer != null ) {
-				BasicAttribute attribute = buildProperty(propertyAuditingData, value, insertable, key );
+				BasicAttribute attribute = buildProperty( propertyAuditingData, value, insertable, key );
 				attributeContainer.addAttribute( attribute );
 
 				if ( isAddNestedType( value ) ) {
@@ -60,18 +58,18 @@ public final class BasicMetadataGenerator {
 		return false;
 	}
 
-	private void mapEnumerationType(TypeSpecification typeDefinition, Type type, Properties parameters) {
+	private void mapEnumerationType(TypeSpecification typeDefinition, EnumType type, Properties parameters) {
 		if ( parameters.getProperty( EnumType.ENUM ) != null ) {
 			typeDefinition.setParameter( EnumType.ENUM, parameters.getProperty( EnumType.ENUM ) );
 		}
 		else {
-			typeDefinition.setParameter( EnumType.ENUM, type.getReturnedClass().getName() );
+			typeDefinition.setParameter( EnumType.ENUM, type.getEnumClass().getName() );
 		}
 		if ( parameters.getProperty( EnumType.NAMED ) != null ) {
 			typeDefinition.setParameter( EnumType.NAMED, parameters.getProperty( EnumType.NAMED ) );
 		}
 		else {
-			typeDefinition.setParameter( EnumType.NAMED, "" + !( (EnumType) ( (CustomType<Object>) type ).getUserType() ).isOrdinal() );
+			typeDefinition.setParameter( EnumType.NAMED, Boolean.toString( !type.isOrdinal() ) );
 		}
 	}
 
@@ -98,12 +96,13 @@ public final class BasicMetadataGenerator {
 		final Properties typeParameters = value.getTypeParameters();
 		final String typeName = getBasicTypeName( value.getType() );
 
-		final TypeSpecification type = new TypeSpecification(typeName );
-		attribute.setType( type );
+		final TypeSpecification typeSpecification = new TypeSpecification( typeName );
+		attribute.setType( typeSpecification );
 
-		if ( isEnumType( value.getType(), typeName ) ) {
-			// Proper handling of enumeration type
-			mapEnumerationType( type, value.getType(), typeParameters );
+		Type type = value.getType();
+		if ( type instanceof CustomType && ((CustomType<?>) type).getUserType() instanceof EnumType ) {
+			// Proper handling of nasty legacy EnumType
+			mapEnumerationType( typeSpecification, (EnumType) ((CustomType<?>) type).getUserType(), typeParameters );
 		}
 		else {
 			// By default, copying all Hibernate properties
@@ -111,7 +110,7 @@ public final class BasicMetadataGenerator {
 				final String keyType = (String) object;
 				final String property = typeParameters.getProperty( keyType );
 				if ( property != null ) {
-					type.setParameter( keyType, property );
+					typeSpecification.setParameter( keyType, property );
 				}
 			}
 		}
@@ -125,16 +124,4 @@ public final class BasicMetadataGenerator {
 		return typeName;
 	}
 
-	private boolean isEnumType(Type type, String typeName) {
-		// Check if a custom type implementation is used and it extends the EnumType directly.
-		if ( type instanceof CustomType ) {
-			final CustomType<?> customType = (CustomType<?>) type;
-			if ( customType.getUserType() instanceof EnumType ) {
-				return true;
-			}
-		}
-
-		// Check if it is an EnumType without a custom type
-		return EnumType.class.getName().equals( typeName );
-	}
 }

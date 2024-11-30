@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast;
 
@@ -36,11 +34,16 @@ public enum Clause {
 	SET,
 
 	/**
-	 * Not used in 5.x.  Intended for use in 6+ as indicator
-	 * of processing predicates (where clause) that occur in a
-	 * delete
+	 * The update set clause expression part
+	 */
+	SET_EXPRESSION,
+
+	/**
+	 * Used as indicator of processing predicates (where clause)
+	 * that occur in a delete
 	 */
 	DELETE,
+	MERGE,
 
 	SELECT,
 	FROM,
@@ -50,15 +53,16 @@ public enum Clause {
 	ORDER,
 	OFFSET,
 	FETCH,
-	FOR_UPDATE,
 	OVER,
+	/**
+	 * The clause containing CTEs
+	 */
+	WITH,
 	WITHIN_GROUP,
 	PARTITION,
+	CONFLICT,
 	CALL,
 
-	/**
-	 * Again, not used in 5.x.  Used in 6+
-	 */
 	IRRELEVANT
 
 }

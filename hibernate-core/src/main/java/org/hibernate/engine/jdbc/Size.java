@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc;
 
@@ -11,15 +9,17 @@ import org.hibernate.Length;
 import java.io.Serializable;
 
 /**
- * Models size restrictions/requirements on a column's datatype.
- * <p/>
- * IMPL NOTE: since we do not necessarily know the datatype up front, and therefore do not necessarily know
- * whether length or precision/scale sizing is needed, we simply account for both here.  Additionally LOB
- * definitions, by standard, are allowed a "multiplier" consisting of 'K' (Kb), 'M' (Mb) or 'G' (Gb).
+ * Models size restrictions/requirements on a column's data type.
+ *
+ * @implNote Since we do not necessarily know the data type up front, and therefore do not necessarily know
+ * whether length or precision/scale sizing is needed, we simply account for both here. Additionally, LOB
+ * sizes, by standard, are allowed a "multiplier": {@code K} (Kb), {@code M} (Mb), or {@code G} (Gb).
  *
  * @author Steve Ebersole
  */
 public class Size implements Serializable {
+
+	@Deprecated( forRemoval = true )
 	public enum LobMultiplier {
 		NONE( 1 ),
 		K( NONE.factor * 1024 ),
@@ -47,6 +47,7 @@ public class Size implements Serializable {
 	private Integer scale;
 
 	private Long length;
+	private Integer arrayLength;
 	private LobMultiplier lobMultiplier;
 
 	public Size() {
@@ -59,7 +60,9 @@ public class Size implements Serializable {
 	 * @param scale numeric scale
 	 * @param length type length
 	 * @param lobMultiplier LOB length multiplier
+	 * @deprecated in favor of {@link Size#Size(Integer, Integer, Long)}
 	 */
+	@Deprecated( forRemoval = true )
 	public Size(Integer precision, Integer scale, Long length, LobMultiplier lobMultiplier) {
 		this.precision = precision;
 		this.scale = scale;
@@ -67,11 +70,19 @@ public class Size implements Serializable {
 		this.lobMultiplier = lobMultiplier;
 	}
 
+	/**
+	 * @deprecated in favor of {@link Size#Size(Integer, Integer, Long)}
+	 */
+	@Deprecated( forRemoval = true )
 	public Size(Integer precision, Integer scale, Integer length, LobMultiplier lobMultiplier) {
 		this.precision = precision;
 		this.scale = scale;
 		this.length = length == null ?  null : length.longValue();
 		this.lobMultiplier = lobMultiplier;
+	}
+
+	public Size(Integer precision, Integer scale, Long length) {
+		this( precision, scale, length, Size.LobMultiplier.NONE );
 	}
 
 	public static Size nil() {
@@ -106,6 +117,11 @@ public class Size implements Serializable {
 		return length;
 	}
 
+	public Integer getArrayLength() {
+		return arrayLength;
+	}
+
+	@Deprecated( forRemoval = true )
 	public LobMultiplier getLobMultiplier() {
 		return lobMultiplier;
 	}
@@ -131,6 +147,12 @@ public class Size implements Serializable {
 		return this;
 	}
 
+	public Size setArrayLength(Integer arrayLength) {
+		this.arrayLength = arrayLength;
+		return this;
+	}
+
+	@Deprecated( forRemoval = true )
 	public Size setLobMultiplier(LobMultiplier lobMultiplier) {
 		this.lobMultiplier = lobMultiplier;
 		return this;

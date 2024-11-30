@@ -1,13 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jdbc.internal;
 
 import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import jakarta.persistence.Entity;
@@ -17,24 +14,19 @@ import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
 public class SessionJdbcBatchTest
 		extends BaseNonConfigCoreFunctionalTestCase {
 
-	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider( true, false );
+	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider();
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -44,7 +36,10 @@ public class SessionJdbcBatchTest
 	@Override
 	protected void addSettings(Map<String,Object> settings) {
 		settings.put( AvailableSettings.STATEMENT_BATCH_SIZE, 2 );
-		connectionProvider.setConnectionProvider( (ConnectionProvider) settings.get( AvailableSettings.CONNECTION_PROVIDER ) );
+		settings.put( AvailableSettings.DIALECT_NATIVE_PARAM_MARKERS, Boolean.FALSE );
+		if ( settings.containsKey( AvailableSettings.CONNECTION_PROVIDER ) ) {
+			connectionProvider.setConnectionProvider( (ConnectionProvider) settings.get( AvailableSettings.CONNECTION_PROVIDER ) );
+		}
 		settings.put(
 				AvailableSettings.CONNECTION_PROVIDER,
 				connectionProvider
@@ -77,7 +72,7 @@ public class SessionJdbcBatchTest
 	private long id;
 
 	@Test
-	public void testSessionFactorySetting() throws SQLException {
+	public void testSessionFactorySetting() throws Throwable {
 		Session session = sessionFactory().openSession();
 		session.beginTransaction();
 		try {
@@ -89,14 +84,22 @@ public class SessionJdbcBatchTest
 			session.close();
 		}
 		PreparedStatement preparedStatement = connectionProvider.getPreparedStatement(
-				"insert into Event (name, id) values (?, ?)" );
-		verify( preparedStatement, times( 5 ) ).addBatch();
-		verify( preparedStatement, times( 3 ) ).executeBatch();
+				"insert into Event (name,id) values (?,?)" );
+		List<Object[]> addBatchCalls = connectionProvider.spyContext.getCalls(
+				PreparedStatement.class.getMethod( "addBatch" ),
+				preparedStatement
+		);
+		List<Object[]> executeBatchCalls = connectionProvider.spyContext.getCalls(
+				PreparedStatement.class.getMethod( "executeBatch" ),
+				preparedStatement
+		);
+		assertEquals( 5, addBatchCalls.size() );
+		assertEquals( 3, executeBatchCalls.size() );
 	}
 
 	@Test
 	public void testSessionSettingOverridesSessionFactorySetting()
-			throws SQLException {
+			throws Throwable {
 		Session session = sessionFactory().openSession();
 		session.setJdbcBatchSize( 3 );
 		session.beginTransaction();
@@ -109,9 +112,17 @@ public class SessionJdbcBatchTest
 			session.close();
 		}
 
-		PreparedStatement preparedStatement = connectionProvider.getPreparedStatement( "insert into Event (name, id) values (?, ?)" );
-		verify(preparedStatement, times( 5 )).addBatch();
-		verify(preparedStatement, times( 2 )).executeBatch();
+		PreparedStatement preparedStatement = connectionProvider.getPreparedStatement( "insert into Event (name,id) values (?,?)" );
+		List<Object[]> addBatchCalls = connectionProvider.spyContext.getCalls(
+				PreparedStatement.class.getMethod( "addBatch" ),
+				preparedStatement
+		);
+		List<Object[]> executeBatchCalls = connectionProvider.spyContext.getCalls(
+				PreparedStatement.class.getMethod( "executeBatch" ),
+				preparedStatement
+		);
+		assertEquals( 5, addBatchCalls.size() );
+		assertEquals( 2, executeBatchCalls.size() );
 
 		session = sessionFactory().openSession();
 		session.setJdbcBatchSize( null );
@@ -127,8 +138,16 @@ public class SessionJdbcBatchTest
 		List<PreparedStatement> preparedStatements = connectionProvider.getPreparedStatements();
 		assertEquals(1, preparedStatements.size());
 		preparedStatement = preparedStatements.get( 0 );
-		verify(preparedStatement, times( 5 )).addBatch();
-		verify(preparedStatement, times( 3 )).executeBatch();
+		addBatchCalls = connectionProvider.spyContext.getCalls(
+				PreparedStatement.class.getMethod( "addBatch" ),
+				preparedStatement
+		);
+		executeBatchCalls = connectionProvider.spyContext.getCalls(
+				PreparedStatement.class.getMethod( "executeBatch" ),
+				preparedStatement
+		);
+		assertEquals( 5, addBatchCalls.size() );
+		assertEquals( 3, executeBatchCalls.size() );
 	}
 
 	private void addEvents(Session session) {

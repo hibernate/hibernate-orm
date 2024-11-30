@@ -1,14 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.spatial.dialect.oracle;
 
 import java.util.List;
 
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
@@ -57,6 +55,7 @@ public class OracleSpatialSQLMMFunction extends OracleSpatialFunction {
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> arguments,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		final Expression geometry = (Expression) arguments.get( 0 );
 
@@ -68,7 +67,7 @@ public class OracleSpatialSQLMMFunction extends OracleSpatialFunction {
 		for ( int i = 1; i < arguments.size(); i++ ) {
 			Expression param = (Expression) arguments.get( i );
 
-			if ( param.getExpressionType().getJdbcMappings().get( 0 ).getJdbcType()
+			if ( param.getExpressionType().getSingleJdbcMapping().getJdbcType()
 					.getDefaultSqlTypeCode() == SqlTypes.GEOMETRY ) {
 				sqlAppender.appendSql( "ST_GEOMETRY(" );
 				walker.render( param, SqlAstNodeRenderingMode.DEFAULT);

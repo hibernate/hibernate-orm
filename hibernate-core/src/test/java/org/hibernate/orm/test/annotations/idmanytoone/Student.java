@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.idmanytoone;
 
@@ -21,39 +19,39 @@ import jakarta.persistence.Table;
 @Table(name = "idmanytoone_student")
 public class Student implements Serializable {
 
-    @Id
-    @GeneratedValue
-    private int id;
+	@Id
+	@GeneratedValue
+	private int id;
 
-    private String name;
+	private String name;
 
-    @OneToMany(mappedBy = "student")
-    private Set<CourseStudent> courses;
+	@OneToMany(mappedBy = "student")
+	private Set<CourseStudent> courses;
 
-    public Student() {
-    }
+	public Student() {
+	}
 
-    public int getId() {
-        return id;
-    }
+	public int getId() {
+		return id;
+	}
 
-    public void setId(int id) {
-        this.id = id;
-    }
+	public void setId(int id) {
+		this.id = id;
+	}
 
-    public String getName() {
-        return name;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public Set<CourseStudent> getCourses() {
-        return courses;
-    }
+	public Set<CourseStudent> getCourses() {
+		return courses;
+	}
 
-    public void setCourses(Set<CourseStudent> courses) {
-        this.courses = courses;
-    }
+	public void setCourses(Set<CourseStudent> courses) {
+		this.courses = courses;
+	}
 }

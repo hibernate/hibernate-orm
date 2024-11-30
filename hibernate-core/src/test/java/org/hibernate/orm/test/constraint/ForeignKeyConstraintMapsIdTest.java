@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.constraint;
 
@@ -18,7 +16,7 @@ import jakarta.persistence.OneToOne;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.mapping.Table;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -28,7 +26,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-12320")
+@JiraKey(value = "HHH-12320")
 public class ForeignKeyConstraintMapsIdTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Entity(name = "Post")
 	public static class Post {
@@ -90,7 +88,7 @@ public class ForeignKeyConstraintMapsIdTest extends BaseNonConfigCoreFunctionalT
 		for ( Namespace namespace : metadata().getDatabase().getNamespaces() ) {
 			for ( Table table : namespace.getTables() ) {
 				if ( table.getName().equals( "Post" ) ) {
-					Iterator<org.hibernate.mapping.ForeignKey> foreignKeyIterator = table.getForeignKeyIterator();
+					Iterator<org.hibernate.mapping.ForeignKey> foreignKeyIterator = table.getForeignKeys().values().iterator();
 					while ( foreignKeyIterator.hasNext() ) {
 						org.hibernate.mapping.ForeignKey foreignKey = foreignKeyIterator.next();
 						if ( foreignKey.getColumn( 0 ).getName().equals( "PD_ID" ) ) {

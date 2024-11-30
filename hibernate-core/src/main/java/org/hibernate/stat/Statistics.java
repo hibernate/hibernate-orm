@@ -1,12 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.stat;
 
 import java.time.Instant;
+import java.util.Map;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Exposes statistics collected from all sessions belonging to a
@@ -48,7 +49,7 @@ public interface Statistics {
 	void logSummary();
 
 
-    /**
+	/**
 	 * Obtain the statistics for the entity with the given name.
 	 *
 	 * @param entityName the entity name
@@ -101,7 +102,7 @@ public interface Statistics {
 	 *         if either query result caching is not enabled, or no
 	 *         query cache region exists with the given name
 	 */
-	CacheRegionStatistics getQueryRegionStatistics(String regionName);
+	@Nullable CacheRegionStatistics getQueryRegionStatistics(String regionName);
 
 	/**
 	 * Obtain the statistics for either a domain data or query result
@@ -120,63 +121,63 @@ public interface Statistics {
 	 * @return the statistics for the named region, or {@code null} if
 	 *         there is no region with the given name
 	 */
-	CacheRegionStatistics getCacheRegionStatistics(String regionName);
+	@Nullable CacheRegionStatistics getCacheRegionStatistics(String regionName);
 
-    /**
-     * The global number of entity deletes.
+	/**
+	 * The global number of entity deletes.
 	 */
 	long getEntityDeleteCount();
 
-    /**
-     * The global number of entity inserts.
+	/**
+	 * The global number of entity inserts.
 	 */
 	long getEntityInsertCount();
 
-    /**
-     * The global number of entity loads.
+	/**
+	 * The global number of entity loads.
 	 */
 	long getEntityLoadCount();
 
 	/**
-     * The global number of entity fetches.
+	 * The global number of entity fetches.
 	 */
 	long getEntityFetchCount();
 
 	/**
-     * The global number of entity updates.
+	 * The global number of entity updates.
 	 */
 	long getEntityUpdateCount();
 
-    /**
-     * The global number of executed queries.
+	/**
+	 * The global number of executed queries.
 	 */
 	long getQueryExecutionCount();
 
-    /**
-     * The time in milliseconds of the slowest query.
-     */
+	/**
+	 * The time in milliseconds of the slowest query.
+	 */
 	long getQueryExecutionMaxTime();
 
 	/**
 	 * The query string for the slowest query.
 	 */
-	String getQueryExecutionMaxTimeQueryString();
+	@Nullable String getQueryExecutionMaxTimeQueryString();
 
-    /**
-     * The global number of cached queries successfully retrieved from
+	/**
+	 * The global number of cached queries successfully retrieved from
 	 * the cache.
-     */
+	 */
 	long getQueryCacheHitCount();
 
-    /**
-     * The global number of cached queries <em>not</em>not found in the
+	/**
+	 * The global number of cached queries <em>not</em>not found in the
 	 * cache.
-     */
+	 */
 	long getQueryCacheMissCount();
 
-    /**
-     * The global number of cacheable queries put in cache.
-     */
+	/**
+	 * The global number of cacheable queries put in cache.
+	 */
 	long getQueryCachePutCount();
 
 	/**
@@ -194,50 +195,50 @@ public interface Statistics {
 	/**
 	 * The region for the maximum natural id query time.
 	 */
-	String getNaturalIdQueryExecutionMaxTimeRegion();
+	@Nullable String getNaturalIdQueryExecutionMaxTimeRegion();
 
 	/**
 	 * The entity name for the maximum natural id query time.
 	 */
-	String getNaturalIdQueryExecutionMaxTimeEntity();
+	@Nullable String getNaturalIdQueryExecutionMaxTimeEntity();
 
-    /**
-     * The global number of cached natural id lookups successfully
+	/**
+	 * The global number of cached natural id lookups successfully
 	 * retrieved from the cache.
-     */
+	 */
 	long getNaturalIdCacheHitCount();
 
-    /**
-     * The global number of cached natural id lookups <em>not</em> found
+	/**
+	 * The global number of cached natural id lookups <em>not</em> found
 	 * in the cache.
-     */
+	 */
 	long getNaturalIdCacheMissCount();
 
-    /**
-     * The global number of cacheable natural id lookups put in cache.
-     */
+	/**
+	 * The global number of cacheable natural id lookups put in cache.
+	 */
 	long getNaturalIdCachePutCount();
 
-    /**
-     * The global number of timestamps successfully retrieved from cache.
-     */
+	/**
+	 * The global number of timestamps successfully retrieved from cache.
+	 */
 	long getUpdateTimestampsCacheHitCount();
 
-    /**
-     * The global number of timestamp requests that were not found in the
+	/**
+	 * The global number of timestamp requests that were not found in the
 	 * cache.
-     */
+	 */
 	long getUpdateTimestampsCacheMissCount();
 
-    /**
-     * The global number of timestamps put in cache.
-     */
+	/**
+	 * The global number of timestamps put in cache.
+	 */
 	long getUpdateTimestampsCachePutCount();
 
 	/**
-     * The global number of flush operations executed, including automatic
+	 * The global number of flush operations executed, including automatic
 	 * (either manual or automatic).
-     */
+	 */
 	long getFlushCount();
 
 	/**
@@ -249,15 +250,15 @@ public interface Statistics {
 	long getConnectCount();
 
 	/**
-     * The global number of cacheable entities and collections successfully
+	 * The global number of cacheable entities and collections successfully
 	 * retrieved from the cache.
-     */
+	 */
 	long getSecondLevelCacheHitCount();
 
 	/**
-     * The global number of cacheable entities collections not found in the
+	 * The global number of cacheable entities collections not found in the
 	 * cache and loaded from the database.
-     */
+	 */
 	long getSecondLevelCacheMissCount();
 
 	/**
@@ -294,7 +295,7 @@ public interface Statistics {
 	/**
 	 * The global number of collections removed.
 	 */
-    //even on inverse="true"
+	//even on inverse="true"
 	long getCollectionRemoveCount();
 
 	/**
@@ -309,7 +310,7 @@ public interface Statistics {
 	Instant getStart();
 
 	/**
-	 * The {@linkplain Instant#toEpochMilli()}  milliseconds}) since the
+	 * The {@linkplain Instant#toEpochMilli()}  milliseconds since the
 	 * initial creation of this instance, or since the last time
 	 * {@link #clear()} was called.
 	 *
@@ -324,8 +325,21 @@ public interface Statistics {
 	 * The maximum number of queries tracked by the Hibernate statistics
 	 * is determined by the configuration property
 	 * {@value org.hibernate.cfg.AvailableSettings#QUERY_STATISTICS_MAX_SIZE}.
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#QUERY_STATISTICS_MAX_SIZE
 	 */
 	String[] getQueries();
+
+	/**
+	 * If {@value org.hibernate.cfg.AvailableSettings#LOG_SLOW_QUERY}
+	 * is enabled, a map from the SQL query to the maximum execution time
+	 * in milliseconds.
+	 *
+	 * @since 6.3
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#LOG_SLOW_QUERY
+	 */
+	Map<String,Long> getSlowQueries();
 
 	/**
 	 * The names of all entities.

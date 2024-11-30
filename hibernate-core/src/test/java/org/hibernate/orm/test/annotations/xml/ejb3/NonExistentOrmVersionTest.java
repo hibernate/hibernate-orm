@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.xml.ejb3;
 
@@ -11,13 +9,17 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.orm.junit.JiraKeyGroup;
 import org.junit.Test;
 
 import static org.junit.Assert.fail;
 
-@TestForIssue(jiraKey = {"HHH-6271", "HHH-14529"})
+@JiraKeyGroup( value = {
+		@JiraKey( value = "HHH-6271" ),
+		@JiraKey( value = "HHH-14529" )
+} )
 public class NonExistentOrmVersionTest extends BaseUnitTestCase {
 	@Test
 	public void testNonExistentOrmVersion() {

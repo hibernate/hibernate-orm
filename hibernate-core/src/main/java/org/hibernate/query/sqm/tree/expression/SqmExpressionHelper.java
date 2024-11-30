@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
@@ -13,49 +11,42 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.OffsetTime;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.query.BindableType;
+import org.hibernate.query.BindingContext;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressible;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.type.descriptor.java.JavaTypeHelper;
 import org.hibernate.type.descriptor.java.JdbcDateJavaType;
 import org.hibernate.type.descriptor.java.JdbcTimeJavaType;
 import org.hibernate.type.descriptor.java.JdbcTimestampJavaType;
-import org.hibernate.type.descriptor.java.TemporalJavaType;
-import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType;
+import org.hibernate.usertype.internal.OffsetTimeCompositeUserType;
 
 /**
  * @author Steve Ebersole
  */
 public class SqmExpressionHelper {
 	public static <T> SqmExpressible<T> toSqmType(BindableType<T> parameterType, SqmCreationState creationState) {
-		return toSqmType( parameterType, creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration() );
+		return toSqmType( parameterType, creationState.getCreationContext() );
 	}
 
-	public static <T> SqmExpressible<T> toSqmType(BindableType<T> anticipatedType, NodeBuilder nodeBuilder) {
-		return toSqmType( anticipatedType, nodeBuilder.getTypeConfiguration() );
-	}
-
-	public static <T> SqmExpressible<T> toSqmType(BindableType<T> anticipatedType, TypeConfiguration typeConfiguration) {
-		return toSqmType( anticipatedType, typeConfiguration.getSessionFactory() );
-	}
-
-	public static <T> SqmExpressible<T> toSqmType(BindableType<T> anticipatedType, SessionFactoryImplementor sessionFactory) {
+	public static <T> SqmExpressible<T> toSqmType(
+			BindableType<T> anticipatedType, BindingContext bindingContext) {
 		if ( anticipatedType == null ) {
 			return null;
 		}
-		final SqmExpressible<T> sqmExpressible = anticipatedType.resolveExpressible( sessionFactory );
+		final SqmExpressible<T> sqmExpressible = anticipatedType.resolveExpressible(bindingContext);
 		assert sqmExpressible != null;
 
 		return sqmExpressible;
-
 	}
 
 	public static SqmLiteral<Timestamp> timestampLiteralFrom(String literalText, SqmCreationState creationState) {
@@ -65,8 +56,8 @@ public class SqmExpressionHelper {
 
 		return new SqmLiteral<>(
 				literal,
-				creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration().standardBasicTypeForJavaType( Timestamp.class ),
-				creationState.getCreationContext().getQueryEngine().getCriteriaBuilder()
+				creationState.getCreationContext().getTypeConfiguration().standardBasicTypeForJavaType( Timestamp.class ),
+				creationState.getCreationContext().getNodeBuilder()
 		);
 	}
 
@@ -92,8 +83,8 @@ public class SqmExpressionHelper {
 
 		return new SqmLiteral<>(
 				literal,
-				creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration().standardBasicTypeForJavaType( Date.class ),
-				creationState.getCreationContext().getQueryEngine().getCriteriaBuilder()
+				creationState.getCreationContext().getTypeConfiguration().standardBasicTypeForJavaType( Date.class ),
+				creationState.getCreationContext().getNodeBuilder()
 		);
 	}
 
@@ -103,20 +94,25 @@ public class SqmExpressionHelper {
 
 		return new SqmLiteral<>(
 				literal,
-				creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration().standardBasicTypeForJavaType( Time.class ),
-				creationState.getCreationContext().getQueryEngine().getCriteriaBuilder()
+				creationState.getCreationContext().getTypeConfiguration().standardBasicTypeForJavaType( Time.class ),
+				creationState.getCreationContext().getNodeBuilder()
 		);
 	}
 
 	public static boolean isCompositeTemporal(SqmExpression<?> expression) {
 		// When TimeZoneStorageStrategy.COLUMN is used, that implies using a composite user type
 		return expression instanceof SqmPath<?> && expression.getNodeType() instanceof EmbeddedSqmPathSource<?>
-				&& expression.getJavaTypeDescriptor() instanceof TemporalJavaType<?>;
+				&& JavaTypeHelper.isTemporal( expression.getJavaTypeDescriptor() );
 	}
 
 	public static SqmExpression<?> getActualExpression(SqmExpression<?> expression) {
 		if ( isCompositeTemporal( expression ) ) {
-			return ( (SqmPath<?>) expression ).get( AbstractTimeZoneStorageCompositeUserType.INSTANT_NAME );
+			if ( expression.getJavaTypeDescriptor().getJavaTypeClass() == OffsetTime.class ) {
+				return ( (SqmPath<?>) expression ).get( OffsetTimeCompositeUserType.LOCAL_TIME_NAME );
+			}
+			else {
+				return ( (SqmPath<?>) expression ).get( AbstractTimeZoneStorageCompositeUserType.INSTANT_NAME );
+			}
 		}
 		else {
 			return expression;
@@ -126,18 +122,24 @@ public class SqmExpressionHelper {
 	public static SqmExpression<?> getOffsetAdjustedExpression(SqmExpression<?> expression) {
 		if ( isCompositeTemporal( expression ) ) {
 			final SqmPath<?> compositePath = (SqmPath<?>) expression;
-			final SqmPath<Object> instantPath = compositePath.get( AbstractTimeZoneStorageCompositeUserType.INSTANT_NAME );
-			final NodeBuilder nodeBuilder = instantPath.nodeBuilder();
+			final SqmPath<Object> temporalPath;
+			if ( expression.getJavaTypeDescriptor().getJavaTypeClass() == OffsetTime.class ) {
+				temporalPath = compositePath.get( OffsetTimeCompositeUserType.LOCAL_TIME_NAME );
+			}
+			else {
+				temporalPath = compositePath.get( AbstractTimeZoneStorageCompositeUserType.INSTANT_NAME );
+			}
+			final NodeBuilder nodeBuilder = temporalPath.nodeBuilder();
 			return new SqmBinaryArithmetic<>(
 					BinaryArithmeticOperator.ADD,
-					instantPath,
+					temporalPath,
 					new SqmToDuration<>(
 							compositePath.get( AbstractTimeZoneStorageCompositeUserType.ZONE_OFFSET_NAME ),
 							new SqmDurationUnit<>( TemporalUnit.SECOND, nodeBuilder.getIntegerType(), nodeBuilder ),
 							nodeBuilder.getTypeConfiguration().getBasicTypeForJavaType( Duration.class ),
 							nodeBuilder
 					),
-					instantPath.getNodeType(),
+					temporalPath.getNodeType(),
 					nodeBuilder
 			);
 		}
@@ -160,9 +162,7 @@ public class SqmExpressionHelper {
 				return lhs;
 			}
 			final SqmPath<?> rhs = findPath( binaryArithmetic.getRightHandOperand(), nodeType );
-			if ( rhs != null ) {
-				return rhs;
-			}
+			return rhs;
 		}
 		return null;
 	}

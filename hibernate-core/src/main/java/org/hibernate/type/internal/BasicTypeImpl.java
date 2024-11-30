@@ -1,15 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.internal;
 
 import java.util.Locale;
 
-import org.hibernate.cache.internal.CacheKeyValueDescriptor;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.AdjustableBasicType;
@@ -26,8 +22,6 @@ public class BasicTypeImpl<J> extends AbstractSingleColumnStandardBasicType<J> i
 	private static int count;
 
 	private final String name;
-
-	private transient CacheKeyValueDescriptor cacheKeyValueDescriptor;
 
 	public BasicTypeImpl(JavaType<J> jtd, JdbcType std) {
 		super( std, jtd );
@@ -75,12 +69,4 @@ public class BasicTypeImpl<J> extends AbstractSingleColumnStandardBasicType<J> i
 		return name;
 	}
 
-	@Override
-	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
-		CacheKeyValueDescriptor cacheKeyValueDescriptor = this.cacheKeyValueDescriptor;
-		if ( cacheKeyValueDescriptor == null ) {
-			this.cacheKeyValueDescriptor = cacheKeyValueDescriptor = getMappedJavaType().toCacheKeyDescriptor( sessionFactory );
-		}
-		return cacheKeyValueDescriptor;
-	}
 }

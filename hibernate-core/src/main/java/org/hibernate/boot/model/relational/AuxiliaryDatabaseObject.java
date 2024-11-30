@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.relational;
 
@@ -11,9 +9,12 @@ import java.io.Serializable;
 import org.hibernate.dialect.Dialect;
 
 /**
- * Auxiliary database objects (i.e., triggers, stored procedures, etc) defined
- * in the mappings.  Allows Hibernate to manage their lifecycle as part of
- * creating/dropping the schema.
+ * An auxiliary database object is a trigger, function, stored procedure,
+ * or anything similar which is defined using explicit handwritten DDL
+ * {@code create} and {@code drop} statements in the mapping metadata.
+ * <p>
+ * This SPI allows Hibernate to export and clean up these objects along
+ * with the rest of the schema.
  *
  * @author Steve Ebersole
  */
@@ -27,15 +28,19 @@ public interface AuxiliaryDatabaseObject extends Exportable, Serializable {
 	boolean appliesToDialect(Dialect dialect);
 
 	/**
-	 * Defines a simple precedence.  Should creation of this auxiliary object happen before creation of
-	 * tables?  If {@code true}, the auxiliary object creation will happen after any explicit schema creations
-	 * but before table/sequence creations; if {@code false}, the auxiliary object creation will happen after
-	 * explicit schema creations and after table/sequence creations.
+	 * Defines a simple precedence.
+	 * Should creation of this auxiliary object happen before creation of tables?
+	 * <ul>
+	 * <li>If {@code true}, the auxiliary object creation will happen after any
+	 *     explicit schema creation but before creation of tables and sequences.
+	 * <li>If {@code false}, the auxiliary object creation will happen after
+	 *     explicit schema creation and after creation of tables and sequences.
+	 * </ul>
+	 * <p>
+	 * This precedence is automatically inverted for when the schema is dropped.
 	 *
-	 * This precedence is automatically inverted for dropping.
-	 *
-	 * @return {@code true} indicates this object should be created before tables; {@code false} indicates
-	 * it should be created after.
+	 * @return {@code true} indicates this object should be created before tables;
+	 *         {@code false} indicates it should be created after tables.
 	 */
 	boolean beforeTablesOnCreation();
 
@@ -58,8 +63,8 @@ public interface AuxiliaryDatabaseObject extends Exportable, Serializable {
 	String[] sqlDropStrings(SqlStringGenerationContext context);
 
 	/**
-	 * Additional, optional interface for AuxiliaryDatabaseObject that want to allow
-	 * expansion of allowable dialects via mapping.
+	 * Additional, optional interface for {@code AuxiliaryDatabaseObject}s
+	 * that want to allow expansion of allowable dialects via mapping.
 	 */
 	interface Expandable {
 		void addDialectScope(String dialectName);

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
@@ -10,7 +8,7 @@ package org.hibernate.engine.spi;
  * Contract for classes (specifically, entities and components/embeddables) that are "managed".  Developers can
  * choose to either have their classes manually implement these interfaces or Hibernate can enhance their classes
  * to implement these interfaces via built-time or run-time enhancement.
- * <p/>
+ * <p>
  * The term managed here is used to describe both:<ul>
  *     <li>
  *         the fact that they are known to the persistence provider (this is defined by the interface itself)
@@ -22,5 +20,16 @@ package org.hibernate.engine.spi;
  *
  * @author Steve Ebersole
  */
-public interface Managed {
+public interface Managed extends PrimeAmongSecondarySupertypes {
+
+	/**
+	 * Special internal contract to optimize type checking
+	 * @see PrimeAmongSecondarySupertypes
+	 * @return this same instance
+	 */
+	@Override
+	default Managed asManaged() {
+		return this;
+	}
+
 }

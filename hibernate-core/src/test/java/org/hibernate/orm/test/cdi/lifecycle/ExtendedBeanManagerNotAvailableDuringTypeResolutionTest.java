@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cdi.lifecycle;
 
@@ -17,17 +15,18 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import jakarta.enterprise.inject.spi.BeanManager;
 
-@TestForIssue(jiraKey = "HHH-15068")
+@JiraKey(value = "HHH-15068")
 public class ExtendedBeanManagerNotAvailableDuringTypeResolutionTest {
 
 	@Test
 	public void tryIt() throws IOException {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting(
 						AvailableSettings.JAKARTA_CDI_BEAN_MANAGER,
 						new ExtendedBeanManagerNotAvailableDuringTypeResolutionTest.ExtendedBeanManagerImpl()

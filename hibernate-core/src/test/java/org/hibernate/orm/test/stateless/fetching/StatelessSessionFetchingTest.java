@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.stateless.fetching;
 
@@ -12,9 +10,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.DerbyDialect;
-import org.hibernate.dialect.Dialect;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -39,7 +35,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 )
 @ServiceRegistry(
-		settings = @Setting(name = AvailableSettings.PHYSICAL_NAMING_STRATEGY, value = "org.hibernate.orm.test.stateless.fetching.TestingNamingStrategy")
+		settings = {
+				@Setting(name = AvailableSettings.PHYSICAL_NAMING_STRATEGY, value = "org.hibernate.orm.test.stateless.fetching.TestingNamingStrategy"),
+				@Setting(name = MappingSettings.TRANSFORM_HBM_XML, value = "true")
+		}
 )
 @SessionFactory
 public class StatelessSessionFetchingTest {
@@ -53,10 +52,10 @@ public class StatelessSessionFetchingTest {
 					User you = new User( "you" );
 					Resource yourClock = new Resource( "clock", you );
 					Task task = new Task( me, "clean", yourClock, now ); // :)
-					session.save( me );
-					session.save( you );
-					session.save( yourClock );
-					session.save( task );
+					session.persist( me );
+					session.persist( you );
+					session.persist( yourClock );
+					session.persist( task );
 				}
 		);
 
@@ -85,33 +84,34 @@ public class StatelessSessionFetchingTest {
 					Resource yourClock = new Resource( "clock", you );
 					Task task = new Task( me, "clean", yourClock, now ); // :)
 
-					session.save( me );
-					session.save( you );
-					session.save( yourClock );
-					session.save( task );
+					session.persist( me );
+					session.persist( you );
+					session.persist( yourClock );
+					session.persist( task );
 
 					User u3 = new User( "U3" );
 					User u4 = new User( "U4" );
 					Resource it = new Resource( "it", u4 );
 					Task task2 = new Task( u3, "beat", it, now ); // :))
 
-					session.save( u3 );
-					session.save( u4 );
-					session.save( it );
-					session.save( task2 );
+					session.persist( u3 );
+					session.persist( u4 );
+					session.persist( it );
+					session.persist( task2 );
 				}
 		);
 
 		scope.inStatelessTransaction(
 				session -> {
 					final Query query = session.createQuery( "from Task t join fetch t.resource join fetch t.user" );
-					final ScrollableResults scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY );
-					while ( scrollableResults.next() ) {
-						Task taskRef = (Task) scrollableResults.get();
-						assertTrue( Hibernate.isInitialized( taskRef ) );
-						assertTrue( Hibernate.isInitialized( taskRef.getUser() ) );
-						assertTrue( Hibernate.isInitialized( taskRef.getResource() ) );
-						assertFalse( Hibernate.isInitialized( taskRef.getResource().getOwner() ) );
+					try (ScrollableResults scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY )) {
+						while ( scrollableResults.next() ) {
+							Task taskRef = (Task) scrollableResults.get();
+							assertTrue( Hibernate.isInitialized( taskRef ) );
+							assertTrue( Hibernate.isInitialized( taskRef.getUser() ) );
+							assertTrue( Hibernate.isInitialized( taskRef.getResource() ) );
+							assertFalse( Hibernate.isInitialized( taskRef.getResource().getOwner() ) );
+						}
 					}
 				}
 		);
@@ -128,33 +128,34 @@ public class StatelessSessionFetchingTest {
 					Resource yourClock = new Resource( "clock", you );
 					Task task = new Task( me, "clean", yourClock, now ); // :)
 
-					session.save( me );
-					session.save( you );
-					session.save( yourClock );
-					session.save( task );
+					session.persist( me );
+					session.persist( you );
+					session.persist( yourClock );
+					session.persist( task );
 
 					User u3 = new User( "U3" );
 					User u4 = new User( "U4" );
 					Resource it = new Resource( "it", u4 );
 					Task task2 = new Task( u3, "beat", it, now ); // :))
 
-					session.save( u3 );
-					session.save( u4 );
-					session.save( it );
-					session.save( task2 );
+					session.persist( u3 );
+					session.persist( u4 );
+					session.persist( it );
+					session.persist( task2 );
 				}
 		);
 
 		scope.inStatelessTransaction(
 				session -> {
 					final Query query = session.createQuery( "from Task t join fetch t.resource join fetch t.user" );
-					final ScrollableResults scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY );
-					while ( scrollableResults.next() ) {
-						Task taskRef = (Task) scrollableResults.get();
-						assertTrue( Hibernate.isInitialized( taskRef ) );
-						assertTrue( Hibernate.isInitialized( taskRef.getUser() ) );
-						assertTrue( Hibernate.isInitialized( taskRef.getResource() ) );
-						assertFalse( Hibernate.isInitialized( taskRef.getResource().getOwner() ) );
+					try (ScrollableResults scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY )) {
+						while ( scrollableResults.next() ) {
+							Task taskRef = (Task) scrollableResults.get();
+							assertTrue( Hibernate.isInitialized( taskRef ) );
+							assertTrue( Hibernate.isInitialized( taskRef.getUser() ) );
+							assertTrue( Hibernate.isInitialized( taskRef.getResource() ) );
+							assertFalse( Hibernate.isInitialized( taskRef.getResource().getOwner() ) );
+						}
 					}
 				}
 		);
@@ -167,61 +168,43 @@ public class StatelessSessionFetchingTest {
 					Producer p1 = new Producer( 1, "Acme" );
 					Producer p2 = new Producer( 2, "ABC" );
 
-					session.save( p1 );
-					session.save( p2 );
+					session.persist( p1 );
+					session.persist( p2 );
 
 					Vendor v1 = new Vendor( 1, "v1" );
 					Vendor v2 = new Vendor( 2, "v2" );
 
-					session.save( v1 );
-					session.save( v2 );
+					session.persist( v1 );
+					session.persist( v2 );
 
 					final Product product1 = new Product( 1, "123", v1, p1 );
 					final Product product2 = new Product( 2, "456", v1, p1 );
 					final Product product3 = new Product( 3, "789", v1, p2 );
 
-					session.save( product1 );
-					session.save( product2 );
-					session.save( product3 );
+					session.persist( product1 );
+					session.persist( product2 );
+					session.persist( product3 );
 				}
 		);
 
 		scope.inStatelessTransaction(
 				session -> {
 					final Query query = session.createQuery( "select p from Producer p join fetch p.products" );
-					final ScrollableResults scrollableResults = getScrollableResults(
-							query,
-							scope.getSessionFactory()
-									.getJdbcServices()
-									.getDialect()
-					);
+					try (ScrollableResults scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY )) {
 
-					while ( scrollableResults.next() ) {
-						Producer producer = (Producer) scrollableResults.get();
-						assertTrue( Hibernate.isInitialized( producer ) );
-						assertTrue( Hibernate.isInitialized( producer.getProducts() ) );
+						while ( scrollableResults.next() ) {
+							Producer producer = (Producer) scrollableResults.get();
+							assertTrue( Hibernate.isInitialized( producer ) );
+							assertTrue( Hibernate.isInitialized( producer.getProducts() ) );
 
-						for ( Product product : producer.getProducts() ) {
-							assertTrue( Hibernate.isInitialized( product ) );
-							assertFalse( Hibernate.isInitialized( product.getVendor() ) );
+							for ( Product product : producer.getProducts() ) {
+								assertTrue( Hibernate.isInitialized( product ) );
+								assertFalse( Hibernate.isInitialized( product.getVendor() ) );
+							}
 						}
 					}
 				}
 		);
-	}
-
-	private ScrollableResults getScrollableResults(Query query, Dialect dialect) {
-		if ( dialect instanceof DB2Dialect || dialect instanceof DerbyDialect ) {
-			/*
-				FetchingScrollableResultsImp#next() in order to check if the ResultSet is empty calls ResultSet#isBeforeFirst()
-				but the support for ResultSet#isBeforeFirst() is optional for ResultSets with a result
-				set type of TYPE_FORWARD_ONLY and db2 does not support it.
-			 */
-			return query.scroll( ScrollMode.SCROLL_INSENSITIVE );
-		}
-		else {
-			return query.scroll( ScrollMode.FORWARD_ONLY );
-		}
 	}
 
 	@AfterEach

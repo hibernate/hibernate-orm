@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
@@ -18,12 +16,13 @@ import org.hibernate.type.SortedMapType;
 import org.hibernate.usertype.UserCollectionType;
 
 /**
- * A map has a primary key consisting of
- * the key columns + index columns.
+ * A mapping model object representing a collection of type {@link java.util.Map}.
+ * A map has a primary key consisting of the key columns + index columns.
  */
 public class Map extends IndexedCollection {
 
 	private String mapKeyPropertyName;
+	private boolean hasMapKeyProperty;
 
 	public Map(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		super( buildingContext, owner );
@@ -76,5 +75,14 @@ public class Map extends IndexedCollection {
 
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
+	}
+
+	@Override
+	public boolean hasMapKeyProperty() {
+		return hasMapKeyProperty;
+	}
+
+	public void setHasMapKeyProperty(boolean hasMapKeyProperty) {
+		this.hasMapKeyProperty = hasMapKeyProperty;
 	}
 }

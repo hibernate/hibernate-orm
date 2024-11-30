@@ -1,39 +1,47 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.criteria;
 
+import jakarta.persistence.criteria.Nulls;
 import jakarta.persistence.criteria.Order;
 
-import org.hibernate.query.sqm.NullPrecedence;
-import org.hibernate.query.sqm.SortOrder;
+import org.hibernate.query.SortDirection;
 
 /**
  * @author Steve Ebersole
  */
 public interface JpaOrder extends Order, JpaCriteriaNode {
-	SortOrder getSortOrder();
 
 	/**
-	 * Set the precedence for nulls for this order element
+	 * The direction, ascending or descending, in which to sort
 	 */
-	JpaOrder nullPrecedence(NullPrecedence precedence);
+	SortDirection getSortDirection();
+
+	/**
+	 * Set the precedence of nulls for this order element
+	 */
+	JpaOrder nullPrecedence(Nulls precedence);
 
 	/**
 	 * The precedence for nulls for this order element
 	 */
-	NullPrecedence getNullPrecedence();
+	Nulls getNullPrecedence();
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Co-variants
+	// Covariant returns
 
+	/**
+	 * Reverse the sorting direction
+	 */
 	@Override
 	JpaOrder reverse();
 
+	/**
+	 * The expression to sort by
+	 */
 	@Override
 	JpaExpression<?> getExpression();
 }

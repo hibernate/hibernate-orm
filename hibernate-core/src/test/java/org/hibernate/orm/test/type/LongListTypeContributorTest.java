@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.type;
 
@@ -20,7 +18,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractClassJavaType;
 import org.hibernate.type.descriptor.jdbc.LongVarcharJdbcType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.junit.jupiter.api.Test;
 
@@ -57,7 +55,7 @@ public class LongListTypeContributorTest extends EntityManagerFactoryBasedFuncti
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11409")
+	@JiraKey(value = "HHH-11409")
 	public void testParameterRegisterredCollection() {
 
 		LongList longList = new LongList( 5L, 11L, 6123L, -61235L, 24L );
@@ -70,7 +68,7 @@ public class LongListTypeContributorTest extends EntityManagerFactoryBasedFuncti
 		inTransaction( em -> {
 
 			SpecialItem item = (SpecialItem) em.createNativeQuery(
-							"SELECT * FROM special_table WHERE longList = ?", SpecialItem.class )
+							"SELECT * FROM special_table WHERE long_list = ?", SpecialItem.class )
 					.setParameter( 1, longList )
 					.getSingleResult();
 
@@ -79,7 +77,7 @@ public class LongListTypeContributorTest extends EntityManagerFactoryBasedFuncti
 
 		inTransaction( em -> {
 			SpecialItem item = (SpecialItem) em.createNativeQuery(
-							"SELECT * FROM special_table WHERE longList = :longList", SpecialItem.class )
+							"SELECT * FROM special_table WHERE long_list = :longList", SpecialItem.class )
 					.setParameter( "longList", longList )
 					.getSingleResult();
 
@@ -95,7 +93,7 @@ public class LongListTypeContributorTest extends EntityManagerFactoryBasedFuncti
 		@Column(length = 30)
 		private String name;
 
-		@Column(columnDefinition = "VARCHAR(255)")
+		@Column(name = "long_list", columnDefinition = "VARCHAR(255)")
 		private LongList longList;
 
 		public SpecialItem() {

@@ -1,12 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.internal;
 
-import java.io.Serializable;
 import java.util.Collection;
 
 import org.hibernate.cache.spi.RegionFactory;
@@ -15,6 +12,8 @@ import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventManager;
+import org.hibernate.event.spi.HibernateMonitoringEvent;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.jboss.logging.Logger;
@@ -55,11 +54,12 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 		final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
 		final boolean debugEnabled = log.isDebugEnabled();
 
-		for ( Serializable space : spaces ) {
+		for ( String space : spaces ) {
 			if ( debugEnabled ) {
 				log.debugf( "Pre-invalidating space [%s], timestamp: %s", space, ts );
 			}
-
+			final EventManager eventManager = session.getEventManager();
+			final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
 			try {
 				eventListenerManager.cachePutStart();
 
@@ -68,6 +68,13 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 				timestampsRegion.putIntoCache( space, ts, session );
 			}
 			finally {
+				eventManager.completeCachePutEvent(
+						cachePutEvent,
+						session,
+						timestampsRegion,
+						true,
+						EventManager.CacheActionDescription.TIMESTAMP_PRE_INVALIDATE
+				);
 				eventListenerManager.cachePutEnd();
 			}
 
@@ -87,17 +94,26 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 		final Long ts = session.getFactory().getCache().getRegionFactory().nextTimestamp();
 		final boolean debugEnabled = log.isDebugEnabled();
 
-		for ( Serializable space : spaces ) {
+		for ( String space : spaces ) {
 			if ( debugEnabled ) {
 				log.debugf( "Invalidating space [%s], timestamp: %s", space, ts );
 			}
 
 			final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
+			final EventManager eventManager = session.getEventManager();
+			final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
 			try {
 				eventListenerManager.cachePutStart();
 				timestampsRegion.putIntoCache( space, ts, session );
 			}
 			finally {
+				eventManager.completeCachePutEvent(
+						cachePutEvent,
+						session,
+						timestampsRegion,
+						true,
+						EventManager.CacheActionDescription.TIMESTAMP_INVALIDATE
+				);
 				eventListenerManager.cachePutEnd();
 
 				if ( stats ) {
@@ -114,7 +130,7 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 			SharedSessionContractImplementor session) {
 		final StatisticsImplementor statistics = session.getFactory().getStatistics();
 
-		for ( Serializable space : spaces ) {
+		for ( String space : spaces ) {
 			if ( isSpaceOutOfDate( space, timestamp, session, statistics ) ) {
 				return false;
 			}
@@ -124,7 +140,7 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 	}
 
 	private boolean isSpaceOutOfDate(
-			Serializable space,
+			String space,
 			Long timestamp,
 			SharedSessionContractImplementor session,
 			StatisticsImplementor statistics) {
@@ -165,7 +181,7 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 			SharedSessionContractImplementor session) {
 		final StatisticsImplementor statistics = session.getFactory().getStatistics();
 
-		for ( Serializable space : spaces ) {
+		for ( String space : spaces ) {
 			if ( isSpaceOutOfDate( space, timestamp, session, statistics ) ) {
 				return false;
 			}
@@ -174,13 +190,21 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 		return true;
 	}
 
-	private Long getLastUpdateTimestampForSpace(Serializable space, SharedSessionContractImplementor session) {
+	private Long getLastUpdateTimestampForSpace(String space, SharedSessionContractImplementor session) {
 		Long ts = null;
+		final EventManager eventManager = session.getEventManager();
+		final HibernateMonitoringEvent cacheGetEvent = eventManager.beginCacheGetEvent();
 		try {
 			session.getEventListenerManager().cacheGetStart();
 			ts = (Long) timestampsRegion.getFromCache( space, session );
 		}
 		finally {
+			eventManager.completeCacheGetEvent(
+					cacheGetEvent,
+					session,
+					timestampsRegion,
+					ts != null
+			);
 			session.getEventListenerManager().cacheGetEnd( ts != null );
 		}
 		return ts;

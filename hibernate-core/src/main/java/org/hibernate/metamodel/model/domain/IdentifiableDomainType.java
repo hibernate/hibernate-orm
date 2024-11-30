@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain;
 
@@ -15,7 +13,7 @@ import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.query.sqm.SqmPathSource;
 
 /**
- * Extension to the JPA {@link IdentifiableType} contract
+ * Extension to the JPA {@link IdentifiableType} contract.
  *
  * @author Steve Ebersole
  */
@@ -45,7 +43,7 @@ public interface IdentifiableDomainType<J> extends ManagedDomainType<J>, Identif
 
 	boolean hasIdClass();
 
-	SingularPersistentAttribute<J,?> findIdAttribute();
+	SingularPersistentAttribute<? super J,?> findIdAttribute();
 
 	void visitIdClassAttributes(Consumer<SingularPersistentAttribute<? super J,?>> action);
 

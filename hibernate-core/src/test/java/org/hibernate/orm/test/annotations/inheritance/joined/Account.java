@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.inheritance.joined;
 
@@ -27,12 +25,12 @@ public class Account implements Serializable {
 
 	@Column(name="fld_number")
 	private String number;
-	
+
 	@OneToMany(mappedBy="account")
 	private Set<Client> clients;
-	
+
 	private double balance;
-	
+
 	public Account() {
 	}
 
@@ -68,8 +66,8 @@ public class Account implements Serializable {
 		clients.add(c);
 		c.setAccount(this);
 	}
-	
-	
+
+
 	public Set<Client> getClients() {
 		return clients;
 	}
@@ -78,8 +76,8 @@ public class Account implements Serializable {
 		this.clients = clients;
 	}
 
-	
-	
-	
+
+
+
 
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.sqm.exec;
 
@@ -36,8 +34,8 @@ public class DiscriminatorTests extends BaseSessionFactoryFunctionalTest {
 	public void setUpTestData() {
 		inTransaction(
 				session -> {
-					session.save( new ForeignVendor( 1, "ForeignVendor", "Vendor, Inc." ) );
-					session.save( new DomesticVendor( 2, "DomesticVendor", "Vendor, Inc." ) );
+					session.persist( new ForeignVendor( 1, "ForeignVendor", "Vendor, Inc." ) );
+					session.persist( new DomesticVendor( 2, "DomesticVendor", "Vendor, Inc." ) );
 				}
 		);
 	}

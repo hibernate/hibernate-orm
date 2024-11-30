@@ -1,8 +1,14 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.query.criteria.internal.hhh14916;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -15,10 +21,11 @@ import jakarta.persistence.criteria.Root;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@TestForIssue(jiraKey = "HHH-14916")
+@JiraKey(value = "HHH-14916")
 @Jpa(
 		annotatedClasses = { Author.class, Book.class, Chapter.class }
 )
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 public class HHH14916Test {
 
 	@BeforeEach

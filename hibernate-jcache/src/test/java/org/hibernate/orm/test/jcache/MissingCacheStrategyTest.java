@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jcache;
 
@@ -23,10 +21,10 @@ import org.hibernate.testing.logger.Triggerable;
 import org.junit.Rule;
 import org.junit.Test;
 
-import org.hamcrest.CoreMatchers;
-
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertTrue;
@@ -65,11 +63,11 @@ public class MissingCacheStrategyTest extends BaseUnitTestCase {
 		}
 		catch (ServiceException expected) {
 			assertTyping( CacheException.class, expected.getCause() );
-			assertThat( expected.getMessage(), CoreMatchers.equalTo( "Unable to create requested service [" + org.hibernate.cache.spi.CacheImplementor.class.getName() + "]" ) );
-			assertThat( expected.getCause().getMessage(), CoreMatchers.startsWith( "On-the-fly creation of JCache Cache objects is not supported" ) );
+			assertThat( expected.getMessage(), startsWith( "Unable to create requested service [" + org.hibernate.cache.spi.CacheImplementor.class.getName() + "]" ) );
+			assertThat( expected.getCause().getMessage(), startsWith( "On-the-fly creation of JCache Cache objects is not supported" ) );
 		}
 		catch (CacheException expected) {
-			assertThat( expected.getMessage(), CoreMatchers.equalTo( "On-the-fly creation of JCache Cache objects is not supported" ) );
+			assertThat( expected.getMessage(), equalTo( "On-the-fly creation of JCache Cache objects is not supported" ) );
 		}
 	}
 

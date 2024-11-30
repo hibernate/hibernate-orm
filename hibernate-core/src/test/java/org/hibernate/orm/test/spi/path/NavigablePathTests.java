@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.spi.path;
 
@@ -103,12 +101,12 @@ public class NavigablePathTests {
 		final String aliasedRootStr = "org.hibernate.Root(r)";
 
 		final String pkStr = "pk";
-		final String pkFullPathStr = aliasedRootStr + "." + EntityIdentifierMapping.ROLE_LOCAL_NAME;
+		final String pkFullPathStr = aliasedRootStr + "." + EntityIdentifierMapping.ID_ROLE_NAME;
 
 		final NavigablePath root = new NavigablePath( rootStr, "r" );
 
 		final NavigablePath idPath = new EntityIdentifierNavigablePath( root, pkStr );
-		assertThat( idPath.getLocalName() ).isEqualTo( EntityIdentifierMapping.ROLE_LOCAL_NAME );
+		assertThat( idPath.getLocalName() ).isEqualTo( EntityIdentifierMapping.ID_ROLE_NAME );
 		assertThat( idPath.getFullPath() ).isEqualTo( pkFullPathStr );
 	}
 }

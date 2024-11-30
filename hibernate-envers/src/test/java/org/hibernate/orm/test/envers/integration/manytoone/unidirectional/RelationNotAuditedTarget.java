@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.manytoone.unidirectional;
 
@@ -19,6 +17,7 @@ import org.hibernate.proxy.HibernateProxy;
 
 import org.hibernate.proxy.LazyInitializer;
 import org.junit.Test;
+
 
 /**
  * @author Tomasz Bech
@@ -114,10 +113,9 @@ public class RelationNotAuditedTarget extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	static Class<?> getClassWithoutInitializingProxy(Object object) {
-		if (object instanceof HibernateProxy) {
-			HibernateProxy proxy = (HibernateProxy) object;
-			LazyInitializer li = proxy.getHibernateLazyInitializer();
-			return li.getPersistentClass();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+		if ( lazyInitializer != null ) {
+			return lazyInitializer.getPersistentClass();
 		}
 		else {
 			return object.getClass();

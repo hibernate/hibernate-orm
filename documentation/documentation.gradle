@@ -52,7 +52,6 @@ configurations {
 	agroal
 	c3p0
 	hikaricp
-	vibur
 
 	jcache
 
@@ -71,7 +70,6 @@ configurations {
 		extendsFrom agroal
 		extendsFrom c3p0
 		extendsFrom hikaricp
-		extendsFrom vibur
 		extendsFrom jcache
 		extendsFrom jpamodelgen
 	}
@@ -132,7 +130,6 @@ dependencies {
 	reportAggregation project(':hibernate-jcache')
 	reportAggregation project(':hibernate-micrometer')
 	reportAggregation project(':hibernate-spatial')
-	reportAggregation project(':hibernate-vibur')
 	reportAggregation project(':hibernate-ant')
 	reportAggregation project(':hibernate-maven-plugin')
 	reportAggregation project(':hibernate-processor')
@@ -159,9 +156,6 @@ dependencies {
 
 	hikaricp project( ':hibernate-hikaricp' )
 	javadocSources project( path: ':hibernate-hikaricp', configuration: 'javadocSources' )
-
-	vibur project( ':hibernate-vibur' )
-	javadocSources project( path: ':hibernate-vibur', configuration: 'javadocSources' )
 
 	jcache project( ':hibernate-jcache' )
 	javadocSources project( path: ':hibernate-jcache', configuration: 'javadocSources' )

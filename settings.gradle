@@ -87,7 +87,6 @@ dependencyResolutionManagement {
             def agroalVersion = version "agroal", "2.5"
             def c3poVersion = version "c3p0", "0.10.1"
             def hikaricpVersion = version "hikaricp", "6.2.1"
-            def viburVersion = version "vibur", "25.0"
             def ucpVersion = version "ucp", "23.6.0.24.10"
 
             def jcacheVersion = version "jcache", "1.1.1"
@@ -120,7 +119,6 @@ dependencyResolutionManagement {
             library( "agroalPool", "io.agroal", "agroal-pool" ).versionRef( agroalVersion )
             library( "c3p0", "com.mchange", "c3p0" ).versionRef( c3poVersion )
             library( "hikaricp", "com.zaxxer", "HikariCP" ).versionRef( hikaricpVersion )
-            library( "vibur", "org.vibur", "vibur-dbcp" ).versionRef( viburVersion )
             library( "ucp", "com.oracle.database.jdbc", "ucp11" ).versionRef( ucpVersion )
 
             library( "ojdbc11", "com.oracle.database.jdbc", "ojdbc11" ).versionRef( ucpVersion )
@@ -322,7 +320,6 @@ include 'hibernate-vector'
 
 include 'hibernate-c3p0'
 include 'hibernate-hikaricp'
-include 'hibernate-vibur'
 include 'hibernate-agroal'
 include 'hibernate-ucp'
 

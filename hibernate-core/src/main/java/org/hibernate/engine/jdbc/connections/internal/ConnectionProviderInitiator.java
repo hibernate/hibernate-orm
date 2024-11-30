@@ -71,11 +71,6 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	public static final String HIKARI_STRATEGY = "hikari";
 
 	/**
-	 * The strategy for vibur connection pooling
-	 */
-	public static final String VIBUR_STRATEGY = "vibur";
-
-	/**
 	 * The strategy for oracle ucp connection pooling
 	 */
 	public static final String UCP_STRATEGY = "ucp";
@@ -158,9 +153,6 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		}
 		else if ( hasConfiguration( configurationValues, HIKARI_CONFIG_PREFIX ) ) {
 			return instantiateProvider( strategySelector, HIKARI_STRATEGY );
-		}
-		else if ( hasConfiguration( configurationValues, "hibernate.vibur" ) ) {
-			return instantiateProvider( strategySelector, VIBUR_STRATEGY );
 		}
 		else if (hasConfiguration( configurationValues, "hibernate.oracleucp" ) ) {
 			return instantiateProvider( strategySelector, UCP_STRATEGY );

@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @RequiresDialect(MySQLDialect.class)
 @RequiresDialect(SQLServerDialect.class)
 @RequiresDialect(PostgreSQLDialect.class)
-@RequiresDialect(DB2Dialect.class)
+@RequiresDialect(value = DB2Dialect.class, majorVersion = 11)
 @RequiresDialect(OracleDialect.class)
 public class CustomSqlRestrictionOverridesTest {
 	@Test

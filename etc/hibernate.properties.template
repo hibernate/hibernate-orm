@@ -191,22 +191,6 @@ hibernate.connection.pool_size 1
 
 
 
-##############################
-### Proxool Connection Pool###
-##############################
-
-## Properties for external configuration of Proxool
-
-hibernate.proxool.pool_alias pool1
-
-## Only need one of the following
-
-#hibernate.proxool.existing_pool true
-#hibernate.proxool.xml proxool.xml
-#hibernate.proxool.properties proxool.properties
-
-
-
 #################################
 ### Plugin ConnectionProvider ###
 #################################
@@ -217,7 +201,6 @@ hibernate.proxool.pool_alias pool1
 #hibernate.connection.provider_class org.hibernate.connection.DatasourceConnectionProvider
 #hibernate.connection.provider_class org.hibernate.connection.C3P0ConnectionProvider
 #hibernate.connection.provider_class org.hibernate.connection.DBCPConnectionProvider
-#hibernate.connection.provider_class org.hibernate.connection.ProxoolConnectionProvider
 
 
 

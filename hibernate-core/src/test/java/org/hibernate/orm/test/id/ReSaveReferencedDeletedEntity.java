@@ -6,14 +6,18 @@ package org.hibernate.orm.test.id;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.Test;
 
 import jakarta.persistence.*;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
+@SkipForDialect( dialectClass = HANADialect.class,
+		reason = "The INSERT statement for table [Child] contains no column, and this is not supported")
 public class ReSaveReferencedDeletedEntity extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

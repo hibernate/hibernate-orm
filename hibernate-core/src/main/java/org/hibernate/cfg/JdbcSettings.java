@@ -19,7 +19,7 @@ import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
  *
  * @author Steve Ebersole
  */
-public interface JdbcSettings extends C3p0Settings, ProxoolSettings, AgroalSettings, HikariCPSettings {
+public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSettings {
 
 	/**
 	 * Specifies a JTA {@link javax.sql.DataSource} to use for Connections.

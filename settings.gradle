@@ -72,7 +72,7 @@ dependencyResolutionManagement {
             version "maxSupportedBytecode", maxJdk
         }
         libs {
-            def antlrVersion = version "antlr", "4.13.0"
+            def antlrVersion = version "antlr", "4.13.2"
             // WARNING: When upgrading to a version of bytebuddy that supports a new bytecode version,
             // make sure to remove the now unnecessary net.bytebuddy.experimental=true in relevant CI jobs (Jenkinsfile).
             def byteBuddyVersion = version "byteBuddy", "1.15.10"
@@ -94,9 +94,9 @@ dependencyResolutionManagement {
             def jcacheVersion = version "jcache", "1.0.0"
             def ehcache3Version = version "ehcache3", "3.10.8"
 
-            def micrometerVersion = version "micrometer", "1.10.4"
+            def micrometerVersion = version "micrometer", "1.14.1"
 
-            def hibernateValidatorVersion = version "hibernateValidator", "8.0.0.Final"
+            def hibernateValidatorVersion = version "hibernateValidator", "8.0.1.Final"
 
             library( "antlr", "org.antlr", "antlr4" ).versionRef( antlrVersion )
             library( "antlrRuntime", "org.antlr", "antlr4-runtime" ).versionRef( antlrVersion)
@@ -141,19 +141,19 @@ dependencyResolutionManagement {
             // `jakartaJpaVersion` comes from the local-build-plugins to allow for command-line overriding of the JPA version to use
             def jpaVersion = version "jpa", "${jakartaJpaVersion}"
 
-            def annotationVersion = version "annotation", "2.1.1"
-            def cdiVersion = version "cdi", "4.0.1"
+            def annotationVersion = version "annotation", "3.0.0"
+            def cdiVersion = version "cdi", "4.1.0"
             def elVersion = version "el", "5.0.0"
             def injectVersion = version "inject", "2.0.1"
-            def interceptorsVersion = version "interceptors", "2.1.0"
-            def dataVersion = version "data", "1.0.0"
-            def jaccVersion = version "jacc", "2.1.0"
-            def jaxbApiVersion = version "jaxbApi", "4.0.0"
-            def jaxbRuntimeVersion = version "jaxbRuntime", "4.0.2"
-            def jsonbApiVersion = version "jsonbApi", "3.0.0"
-            def jsonbRuntimeVersion = version "jsonbRuntime", "3.0.2"
+            def interceptorsVersion = version "interceptors", "2.2.0"
+            def dataVersion = version "data", "1.0.1"
+            def jaccVersion = version "jacc", "3.0.0"
+            def jaxbApiVersion = version "jaxbApi", "4.0.2"
+            def jaxbRuntimeVersion = version "jaxbRuntime", "4.0.5"
+            def jsonbApiVersion = version "jsonbApi", "3.0.1"
+            def jsonbRuntimeVersion = version "jsonbRuntime", "3.0.4"
             def jtaVersion = version "jta", "2.0.1"
-            def validationVersion = version "validation", "3.0.2"
+            def validationVersion = version "validation", "3.1.0"
             def xjcVersion = version "jaxbRuntime", jaxbRuntimeVersion
 
             library( "jpa", "jakarta.persistence", "jakarta.persistence-api" ).versionRef( jpaVersion )
@@ -269,9 +269,9 @@ dependencyResolutionManagement {
             library( "altibase", "com.altibase", "altibase-jdbc" ).versionRef( altibaseVersion )
         }
         mavenLibs {
-            def mavenCoreVersion = version "mavenCore", "3.8.1"
-            def mavenVersion = version "maven", "3.0.5"
-            def mavenPluginToolsVersion = version "mavenPluginTools", "3.2"
+            def mavenCoreVersion = version "mavenCore", "3.9.9"
+            def mavenVersion = version "maven", "3.9.9"
+            def mavenPluginToolsVersion = version "mavenPluginTools", "3.15.1"
 
             library( "mavenCore", "org.apache.maven", "maven-core" ).versionRef( mavenCoreVersion )
             library( "mavenArtifact", "org.apache.maven", "maven-artifact" ).versionRef( mavenVersion )
@@ -279,7 +279,7 @@ dependencyResolutionManagement {
             library( "mavenPluginTools", "org.apache.maven.plugin-tools", "maven-plugin-annotations" ).versionRef( mavenPluginToolsVersion )
         }
         buildscriptLibs {
-            def forbiddenapisversion = version "forbiddenapis", "3.7"
+            def forbiddenapisversion = version "forbiddenapis", "3.8"
 
             library( "forbiddenapis", "de.thetaphi", "forbiddenapis" ).versionRef( forbiddenapisversion )
         }

@@ -181,11 +181,11 @@ dependencies {
 	javadocClasspath jakartaLibs.jacc
 	javadocClasspath jakartaLibs.jsonbApi
 	javadocClasspath libs.ant
-	javadocClasspath dbLibs.postgresql
+	javadocClasspath jdbcLibs.postgresql
 	javadocClasspath libs.jackson
 	javadocClasspath gradleApi()
 	javadocClasspath libs.jacksonXml
-	javadocClasspath dbLibs.oracle
+	javadocClasspath jdbcLibs.oracle
 }
 
 
@@ -303,7 +303,7 @@ def buildTutorialZipTask = tasks.register( 'buildTutorialZip', Zip ) { task ->
 			version: project.version,
 			slf4j: "2.0.7",
 			junit: testLibs.versions.junit4.get(),
-			h2: dbLibs.versions.h2.get()
+			h2: jdbcLibs.versions.h2.get()
 	)
 }
 

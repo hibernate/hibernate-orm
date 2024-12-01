@@ -55,6 +55,7 @@ import java.util.Set;
 import java.util.function.BiFunction;
 
 import static java.util.Collections.unmodifiableMap;
+import static java.util.stream.Collectors.toSet;
 import static org.hibernate.metamodel.internal.InjectionHelper.injectField;
 
 /**
@@ -345,14 +346,16 @@ public class MetadataContext {
 					final MappedSuperclassDomainType<Object> jpaType = (MappedSuperclassDomainType<Object>)
 							mappedSuperclassByMappedSuperclassMapping.get( safeMapping );
 
-					applyIdMetadata( safeMapping, jpaType );
+					final Set<String> idProperties = applyIdMetadata( safeMapping, jpaType );
 					applyVersionAttribute( safeMapping, jpaType );
 //					applyNaturalIdAttribute( safeMapping, jpaType );
 
 					for ( Property property : safeMapping.getDeclaredProperties() ) {
-						if ( !safeMapping.isVersioned()
+						if ( !idProperties.contains( property.getName() )
+								// skip already applied properties
+							&& (!safeMapping.isVersioned()
 								// skip the version property, it was already handled previously.
-								|| property != safeMapping.getVersion() ) {
+								|| property != safeMapping.getVersion()) ) {
 							buildAttribute( property, jpaType );
 						}
 					}
@@ -568,7 +571,7 @@ public class MetadataContext {
 		return embeddableType;
 	}
 
-	private <X> void applyIdMetadata(MappedSuperclass mappingType, MappedSuperclassDomainType<X> jpaMappingType) {
+	private <X> Set<String> applyIdMetadata(MappedSuperclass mappingType, MappedSuperclassDomainType<X> jpaMappingType) {
 		@SuppressWarnings("unchecked")
 		final AttributeContainer<X> attributeContainer = (AttributeContainer<X>) jpaMappingType;
 		if ( mappingType.hasIdentifierProperty() ) {
@@ -582,6 +585,7 @@ public class MetadataContext {
 										attributeFactory::buildIdAttribute
 								);
 				attributeContainer.getInFlightAccess().applyIdAttribute( attribute );
+				return Set.of(attribute.getName());
 			}
 		}
 		//a MappedSuperclass can have no identifier if the id is set below in the hierarchy
@@ -592,7 +596,9 @@ public class MetadataContext {
 							mappingType.getIdentifierMapper().getProperties()
 					);
 			attributeContainer.getInFlightAccess().applyIdClassAttributes( attributes );
+			return attributes.stream().map( Attribute::getName ).collect( toSet());
 		}
+		return Set.of();
 	}
 
 	private <X> void applyVersionAttribute(PersistentClass persistentClass, EntityDomainType<X> jpaEntityType) {

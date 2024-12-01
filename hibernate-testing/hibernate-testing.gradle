@@ -25,14 +25,16 @@ dependencies {
     api testLibs.bytemanBmunit
 
     api( testLibs.jbossTxSpi ) {
-        transitive=false;
+        transitive=false
     }
     api( testLibs.jbossJta ) {
-        transitive=false;
+        transitive=false
     }
 
     api 'javax.money:money-api:1.1'
-    api 'org.javamoney:moneta:1.4.4'
+    api ( 'org.javamoney.moneta:moneta-core:1.4.4' ) {
+        transitive = false
+    }
 
     api testLibs.log4j2
 

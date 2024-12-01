@@ -133,7 +133,7 @@ public class InitFromCacheTest {
 	@Entity( name = "Document" )
 	@Table( name = "DOCUMENT" )
 	@Cacheable
-	@Cache( usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, include = "non-lazy", region = "foo" )
+	@Cache( usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, includeLazy = false, region = "foo" )
 	static class Document {
 
 		@Id

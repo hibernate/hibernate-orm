@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -127,7 +126,6 @@ import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.PrimaryKeyJoinColumns;
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.SecondaryTables;
-import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.UniqueConstraint;
 
 import static jakarta.persistence.InheritanceType.SINGLE_TABLE;
@@ -1639,24 +1637,24 @@ public class EntityBinder {
 	}
 
 	private void bindNaturalIdCache() {
-		naturalIdCacheRegion = null;
 		final NaturalIdCache naturalIdCacheAnn =
 				annotatedClass.getAnnotationUsage( NaturalIdCache.class, getSourceModelContext() );
-		if ( naturalIdCacheAnn == null ) {
-			return;
-		}
-
-		final String region = naturalIdCacheAnn.region();
-		if ( region.isBlank() ) {
-			final Cache explicitCacheAnn = annotatedClass.getAnnotationUsage( Cache.class, getSourceModelContext() );
-
-			naturalIdCacheRegion =
-					explicitCacheAnn != null && isNotBlank( explicitCacheAnn.region() )
-							? explicitCacheAnn.region() + NATURAL_ID_CACHE_SUFFIX
-							: annotatedClass.getName() + NATURAL_ID_CACHE_SUFFIX;
+		if ( naturalIdCacheAnn != null ) {
+			final String region = naturalIdCacheAnn.region();
+			if ( region.isBlank() ) {
+				final Cache explicitCacheAnn =
+						annotatedClass.getAnnotationUsage( Cache.class, getSourceModelContext() );
+				naturalIdCacheRegion =
+						explicitCacheAnn != null && isNotBlank( explicitCacheAnn.region() )
+								? explicitCacheAnn.region() + NATURAL_ID_CACHE_SUFFIX
+								: annotatedClass.getName() + NATURAL_ID_CACHE_SUFFIX;
+			}
+			else {
+				naturalIdCacheRegion = naturalIdCacheAnn.region();
+			}
 		}
 		else {
-			naturalIdCacheRegion = naturalIdCacheAnn.region();
+			naturalIdCacheRegion = null;
 		}
 	}
 
@@ -1666,16 +1664,15 @@ public class EntityBinder {
 		cacheRegion = null;
 		cacheLazyProperty = true;
 		queryCacheLayout = null;
-		final SharedCacheMode sharedCacheMode  = context.getBuildingOptions().getSharedCacheMode();
-		if ( persistentClass instanceof RootClass ) {
-			bindRootClassCache( sharedCacheMode, context );
+		if ( isRootEntity() ) {
+			bindRootClassCache();
 		}
 		else {
-			bindSubclassCache( sharedCacheMode );
+			bindSubclassCache();
 		}
 	}
 
-	private void bindSubclassCache(SharedCacheMode sharedCacheMode) {
+	private void bindSubclassCache() {
 		if ( annotatedClass.hasAnnotationUsage( Cache.class, getSourceModelContext() ) ) {
 			final String className = persistentClass.getClassName() == null
 					? annotatedClass.getName()
@@ -1691,46 +1688,30 @@ public class EntityBinder {
 				? persistentClass.getSuperclass().isCached()
 				//TODO: is this even correct?
 				//      Do we even correctly support selectively enabling caching on subclasses like this?
-				: isCacheable( sharedCacheMode, cacheable );
+				: isCacheable( cacheable );
 	}
 
-	private void bindRootClassCache(SharedCacheMode sharedCacheMode, MetadataBuildingContext context) {
-		final Cache cache = annotatedClass.getAnnotationUsage( Cache.class, getSourceModelContext() );
-		final Cacheable cacheable = annotatedClass.getAnnotationUsage( Cacheable.class, getSourceModelContext() );
-		final Cache effectiveCache;
-		if ( cache != null ) {
-			// preserve legacy behavior of circumventing SharedCacheMode when Hibernate's @Cache is used.
-			isCached = true;
-			effectiveCache = cache;
-		}
-		else {
-			effectiveCache = buildCacheMock( annotatedClass, context );
-			isCached = isCacheable( sharedCacheMode, cacheable );
-		}
+	private void bindRootClassCache() {
+		final SourceModelBuildingContext sourceModelContext = getSourceModelContext();
+
+		final Cache cache = annotatedClass.getAnnotationUsage( Cache.class, sourceModelContext );
+		final Cacheable cacheable = annotatedClass.getAnnotationUsage( Cacheable.class, sourceModelContext );
+
+		// preserve legacy behavior of circumventing SharedCacheMode when Hibernate @Cache is used
+		final Cache effectiveCache = cache != null ? cache : buildCacheMock( annotatedClass );
+		isCached = cache != null || isCacheable( cacheable );
+
 		cacheConcurrentStrategy = getCacheConcurrencyStrategy( effectiveCache.usage() );
 		cacheRegion = effectiveCache.region();
-		cacheLazyProperty = isCacheLazy( effectiveCache, annotatedClass );
+		cacheLazyProperty = effectiveCache.includeLazy();
 
 		final QueryCacheLayout queryCache =
-				annotatedClass.getAnnotationUsage( QueryCacheLayout.class, getSourceModelContext() );
+				annotatedClass.getAnnotationUsage( QueryCacheLayout.class, sourceModelContext );
 		queryCacheLayout = queryCache == null ? null : queryCache.layout();
 	}
 
-	private static boolean isCacheLazy(Cache effectiveCache, ClassDetails annotatedClass) {
-		if ( !effectiveCache.includeLazy() ) {
-			return false;
-		}
-		return switch ( effectiveCache.include().toLowerCase( Locale.ROOT ) ) {
-			case "all" -> true;
-			case "non-lazy" -> false;
-			default -> throw new AnnotationException(
-					"Class '" + annotatedClass.getName()
-							+ "' has a '@Cache' with undefined option 'include=\"" + effectiveCache.include() + "\"'" );
-		};
-	}
-
-	private static boolean isCacheable(SharedCacheMode sharedCacheMode, Cacheable explicitCacheableAnn) {
-		return switch ( sharedCacheMode ) {
+	private boolean isCacheable(Cacheable explicitCacheableAnn) {
+		return switch ( context.getBuildingOptions().getSharedCacheMode() ) {
 			case ALL ->
 				// all entities should be cached
 					true;
@@ -1747,15 +1728,15 @@ public class EntityBinder {
 		};
 	}
 
-	private static Cache buildCacheMock(ClassDetails classDetails, MetadataBuildingContext context) {
+	private Cache buildCacheMock(ClassDetails classDetails) {
 		final CacheAnnotation cacheUsage =
-				HibernateAnnotations.CACHE.createUsage( context.getMetadataCollector().getSourceModelBuildingContext() );
+				HibernateAnnotations.CACHE.createUsage( getSourceModelContext() );
 		cacheUsage.region( classDetails.getName() );
-		cacheUsage.usage( determineCacheConcurrencyStrategy( context ) );
+		cacheUsage.usage( determineCacheConcurrencyStrategy() );
 		return cacheUsage;
 	}
 
-	private static CacheConcurrencyStrategy determineCacheConcurrencyStrategy(MetadataBuildingContext context) {
+	private CacheConcurrencyStrategy determineCacheConcurrencyStrategy() {
 		return CacheConcurrencyStrategy.fromAccessType( context.getBuildingOptions().getImplicitCacheAccessType() );
 	}
 

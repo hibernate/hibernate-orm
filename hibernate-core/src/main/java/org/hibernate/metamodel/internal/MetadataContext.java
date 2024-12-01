@@ -61,7 +61,8 @@ import jakarta.persistence.metamodel.IdentifiableType;
 import jakarta.persistence.metamodel.SingularAttribute;
 import jakarta.persistence.metamodel.Type;
 
-import static org.hibernate.internal.util.StringHelper.root;
+import static java.util.Collections.unmodifiableMap;
+import static java.util.stream.Collectors.toSet;
 
 /**
  * Defines a context for storing information during the building of the {@link MappingMetamodelImpl}.
@@ -362,11 +363,14 @@ public class MetadataContext {
 					final MappedSuperclassDomainType<Object> jpaType = (MappedSuperclassDomainType<Object>)
 							mappedSuperclassByMappedSuperclassMapping.get( safeMapping );
 
-					applyIdMetadata( safeMapping, jpaType );
+					final Set<String> idProperties = applyIdMetadata( safeMapping, jpaType );
 					applyVersionAttribute( safeMapping, jpaType );
 //					applyNaturalIdAttribute( safeMapping, jpaType );
 
 					for ( Property property : safeMapping.getDeclaredProperties() ) {
+						if ( idProperties.contains( property.getName() ) ) {
+							continue;
+						}
 						if ( safeMapping.isVersioned() && property == safeMapping.getVersion() ) {
 							// skip the version property, it was already handled previously.
 							continue;
@@ -379,7 +383,7 @@ public class MetadataContext {
 						if ( attribute != null ) {
 							addAttribute( jpaType, attribute );
 							if ( property.isNaturalIdentifier() ) {
-								( ( AttributeContainer<Object>) jpaType ).getInFlightAccess()
+								( (AttributeContainer<Object>) jpaType ).getInFlightAccess()
 										.applyNaturalIdAttribute( attribute );
 							}
 						}
@@ -580,29 +584,34 @@ public class MetadataContext {
 		return embeddableType;
 	}
 
-	private <X> void applyIdMetadata(MappedSuperclass mappingType, MappedSuperclassDomainType<X> jpaMappingType) {
+	private <X> Set<String> applyIdMetadata(MappedSuperclass mappingType, MappedSuperclassDomainType<X> jpaMappingType) {
+		@SuppressWarnings("unchecked")
+		final AttributeContainer<X> attributeContainer = (AttributeContainer<X>) jpaMappingType;
 		if ( mappingType.hasIdentifierProperty() ) {
 			final Property declaredIdentifierProperty = mappingType.getDeclaredIdentifierProperty();
 			if ( declaredIdentifierProperty != null ) {
-				//noinspection unchecked
-				final SingularPersistentAttribute<X, Object> attribute = (SingularPersistentAttribute<X, Object>) buildAttribute(
-						declaredIdentifierProperty,
-						jpaMappingType,
-						attributeFactory::buildIdAttribute
-				);
-				//noinspection unchecked
-				( (AttributeContainer<X>) jpaMappingType ).getInFlightAccess().applyIdAttribute( attribute );
+				final SingularPersistentAttribute<X, ?> attribute =
+						(SingularPersistentAttribute<X, ?>)
+								buildAttribute(
+										declaredIdentifierProperty,
+										jpaMappingType,
+										attributeFactory::buildIdAttribute
+								);
+				attributeContainer.getInFlightAccess().applyIdAttribute( attribute );
+				return Set.of(attribute.getName());
 			}
 		}
 		//a MappedSuperclass can have no identifier if the id is set below in the hierarchy
 		else if ( mappingType.getIdentifierMapper() != null ) {
-			Set<SingularPersistentAttribute<? super X, ?>> attributes = buildIdClassAttributes(
-					jpaMappingType,
-					mappingType.getIdentifierMapper().getProperties()
-			);
-			//noinspection unchecked
-			( ( AttributeContainer<X>) jpaMappingType ).getInFlightAccess().applyIdClassAttributes( attributes );
+			final Set<SingularPersistentAttribute<? super X, ?>> attributes =
+					buildIdClassAttributes(
+							jpaMappingType,
+							mappingType.getIdentifierMapper().getProperties()
+					);
+			attributeContainer.getInFlightAccess().applyIdClassAttributes( attributes );
+			return attributes.stream().map( Attribute::getName ).collect( toSet());
 		}
+		return Set.of();
 	}
 
 	private <X> void applyVersionAttribute(PersistentClass persistentClass, EntityDomainType<X> jpaEntityType) {

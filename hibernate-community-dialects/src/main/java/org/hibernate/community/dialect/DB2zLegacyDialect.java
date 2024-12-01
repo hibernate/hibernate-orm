@@ -9,7 +9,7 @@ import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.identity.DB2390IdentityColumnSupport;
+import org.hibernate.dialect.identity.DB2zIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.FetchLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -146,7 +146,7 @@ public class DB2zLegacyDialect extends DB2LegacyDialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return DB2390IdentityColumnSupport.INSTANCE;
+		return DB2zIdentityColumnSupport.INSTANCE;
 	}
 
 	@Override

@@ -1052,11 +1052,6 @@ public class DialectDelegateWrapper extends Dialect {
 		return wrapped.supportsNullPrecedence();
 	}
 
-	@Override
-	@Deprecated(since = "6")
-	public boolean isAnsiNullOn() {
-		return wrapped.isAnsiNullOn();
-	}
 
 	@Override
 	public boolean requiresCastForConcatenatingNonStrings() {

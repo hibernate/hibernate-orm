@@ -237,7 +237,6 @@ public class SybaseASEDialect extends SybaseDialect {
 		return getInt( SYBASE_PAGE_SIZE, info.getConfigurationValues(), MAX_PAGE_SIZE );
 	}
 
-	@Override
 	public boolean isAnsiNullOn() {
 		return ansiNull;
 	}

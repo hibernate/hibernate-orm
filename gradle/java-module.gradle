@@ -85,7 +85,7 @@ dependencies {
 
 	compileOnly libs.loggingAnnotations
 	// Used for compiling some Oracle specific JdbcTypes
-	compileOnly dbLibs.oracle
+	compileOnly jdbcLibs.oracle
 
 	// JUnit dependencies made up of:
 	// 		* JUnit 5
@@ -98,51 +98,49 @@ dependencies {
 	testImplementation testLibs.junit4Engine
 	testImplementation testLibs.assertjCore
 
-	testImplementation testLibs.byteman
-
 	testRuntimeOnly testLibs.log4j2
 	testRuntimeOnly libs.byteBuddy
 
 	//Databases
-	testRuntimeOnly dbLibs.h2
-	testRuntimeOnly dbLibs.derby
-	testRuntimeOnly dbLibs.derbyTools
-	testRuntimeOnly dbLibs.hsqldb
-	testRuntimeOnly dbLibs.postgresql
-	testRuntimeOnly dbLibs.mssql
-	testRuntimeOnly dbLibs.informix
-	testRuntimeOnly dbLibs.cockroachdb
-	testRuntimeOnly dbLibs.sybase
+	testRuntimeOnly jdbcLibs.h2
+	testRuntimeOnly jdbcLibs.derby
+	testRuntimeOnly jdbcLibs.derbyTools
+	testRuntimeOnly jdbcLibs.hsqldb
+	testRuntimeOnly jdbcLibs.postgresql
+	testRuntimeOnly jdbcLibs.mssql
+	testRuntimeOnly jdbcLibs.informix
+	testRuntimeOnly jdbcLibs.cockroachdb
+	testRuntimeOnly jdbcLibs.sybase
 	testRuntimeOnly rootProject.fileTree(dir: 'drivers', include: '*.jar')
 
 	// Since both the DB2 driver and HANA have a package "net.jpountz" we have to add dependencies conditionally
 	// This is due to the "no split-packages" requirement of Java 9+
 
 	if ( db.startsWith( 'db2' ) ) {
-		testRuntimeOnly dbLibs.db2
+		testRuntimeOnly jdbcLibs.db2
 	}
 	else if ( db.startsWith( 'hana' ) ) {
-		testRuntimeOnly dbLibs.hana
+		testRuntimeOnly jdbcLibs.hana
 	}
 	else if ( db.startsWith( 'mysql' ) || db.startsWith( 'tidb' ) ) {
-		testRuntimeOnly dbLibs.mysql
+		testRuntimeOnly jdbcLibs.mysql
 	}
 	else if ( db.startsWith( 'mariadb' ) ) {
-		testRuntimeOnly dbLibs.mariadb
+		testRuntimeOnly jdbcLibs.mariadb
 	}
 	else if ( db.startsWith( 'firebird' ) ) {
-		testRuntimeOnly dbLibs.firebird
+		testRuntimeOnly jdbcLibs.firebird
 	}
 	else if ( db.startsWith( 'oracle' ) ) {
-		testRuntimeOnly dbLibs.oracle
-		testRuntimeOnly dbLibs.oracleXml
-		testRuntimeOnly dbLibs.oracleXmlParser
+		testRuntimeOnly jdbcLibs.oracle
+		testRuntimeOnly jdbcLibs.oracleXml
+		testRuntimeOnly jdbcLibs.oracleXmlParser
 	}
 	else if ( db.startsWith( 'altibase' ) ) {
-		testRuntimeOnly dbLibs.altibase
+		testRuntimeOnly jdbcLibs.altibase
 	}
 	else if ( db.startsWith( 'informix' ) ) {
-		testRuntimeOnly dbLibs.informix
+		testRuntimeOnly jdbcLibs.informix
 	}
 
 	annotationProcessor libs.loggingProcessor

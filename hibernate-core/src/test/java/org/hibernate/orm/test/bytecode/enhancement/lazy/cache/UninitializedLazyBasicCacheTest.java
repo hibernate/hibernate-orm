@@ -94,7 +94,7 @@ public class UninitializedLazyBasicCacheTest {
 	}
 
 	@Cacheable
-	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, include = "all", region = "Person")
+	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, includeLazy = true, region = "Person")
 	@Entity(name = "Person")
 	public static class Person {
 

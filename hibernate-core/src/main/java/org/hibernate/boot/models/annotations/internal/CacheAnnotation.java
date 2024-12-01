@@ -16,7 +16,6 @@ public class CacheAnnotation implements Cache {
 	private org.hibernate.annotations.CacheConcurrencyStrategy usage;
 	private String region;
 	private boolean includeLazy;
-	private String include;
 
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
@@ -24,7 +23,6 @@ public class CacheAnnotation implements Cache {
 	public CacheAnnotation(SourceModelBuildingContext modelContext) {
 		this.region = "";
 		this.includeLazy = true;
-		this.include = "all";
 	}
 
 	/**
@@ -34,7 +32,6 @@ public class CacheAnnotation implements Cache {
 		this.usage = annotation.usage();
 		this.region = annotation.region();
 		this.includeLazy = annotation.includeLazy();
-		this.include = annotation.include();
 	}
 
 	/**
@@ -44,7 +41,6 @@ public class CacheAnnotation implements Cache {
 		this.usage = (org.hibernate.annotations.CacheConcurrencyStrategy) attributeValues.get( "usage" );
 		this.region = (String) attributeValues.get( "region" );
 		this.includeLazy = (boolean) attributeValues.get( "includeLazy" );
-		this.include = (String) attributeValues.get( "include" );
 	}
 
 	@Override
@@ -80,16 +76,5 @@ public class CacheAnnotation implements Cache {
 	public void includeLazy(boolean value) {
 		this.includeLazy = value;
 	}
-
-
-	@Override
-	public String include() {
-		return include;
-	}
-
-	public void include(String value) {
-		this.include = value;
-	}
-
 
 }

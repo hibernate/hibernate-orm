@@ -3821,17 +3821,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * A setting specific to {@link SybaseASEDialect}.
-	 *
-	 * @deprecated This is only called from {@link SybaseASESqlAstTranslator}
-	 *             so it doesn't need to be declared here.
-	 */
-	@Deprecated(since = "6")
-	public boolean isAnsiNullOn() {
-		return true;
-	}
-
-	/**
 	 * Does this dialect/database require casting of non-string arguments
 	 * in the {@code concat()} function?
 	 *

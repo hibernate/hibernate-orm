@@ -199,7 +199,6 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 		return false;
 	}
 
-	@Override
 	public boolean isAnsiNullOn() {
 		return ansiNull;
 	}

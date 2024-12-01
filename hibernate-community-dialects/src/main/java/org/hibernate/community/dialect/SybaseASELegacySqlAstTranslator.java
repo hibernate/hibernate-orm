@@ -393,7 +393,7 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 			}
 		}
 		// I think intersect is only supported in 16.0 SP3
-		if ( getDialect().isAnsiNullOn() ) {
+		if ( ( (SybaseASELegacyDialect) getDialect() ).isAnsiNullOn() ) {
 			if ( isLob ) {
 				switch ( operator ) {
 					case DISTINCT_FROM:

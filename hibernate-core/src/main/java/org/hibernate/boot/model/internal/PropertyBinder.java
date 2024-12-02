@@ -508,6 +508,18 @@ public class PropertyBinder {
 							+ "' belongs to an entity subclass and may not be annotated '@NaturalId'" +
 							" (only a property of a root '@Entity' or a '@MappedSuperclass' may be a '@NaturalId')" );
 				}
+				if ( memberDetails.hasDirectAnnotationUsage( ManyToOne.class ) ) {
+					if ( memberDetails.getDirectAnnotationUsage( ManyToOne.class ).fetch() == LAZY ) {
+						throw new AnnotationException( "Property '" + qualify( holder.getPath(), name )
+								+ " is annotated '@NaturalId' and '@ManyToOne(fetch=LAZY)' (natural id fields may not be lazy)" );
+					}
+				}
+				if ( memberDetails.hasDirectAnnotationUsage( Basic.class ) ) {
+					if ( memberDetails.getDirectAnnotationUsage( Basic.class ).fetch() == LAZY ) {
+						throw new AnnotationException( "Property '" + qualify( holder.getPath(), name )
+								+ " is annotated '@NaturalId' and '@Basic(fetch=LAZY)' (natural id fields may not be lazy)" );
+					}
+				}
 				if ( !naturalId.mutable() ) {
 					updatable = false;
 				}

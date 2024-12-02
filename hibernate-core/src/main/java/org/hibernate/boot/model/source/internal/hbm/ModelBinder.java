@@ -2022,11 +2022,7 @@ public class ModelBinder {
 
 		Property prop = new Property();
 		prop.setValue( manyToOneBinding );
-		bindProperty(
-				sourceDocument,
-				manyToOneSource,
-				prop
-		);
+		bindProperty( sourceDocument, manyToOneSource, prop );
 
 		if ( isNotEmpty( manyToOneSource.getCascadeStyleName() ) ) {
 			// todo : would be better to delay this the end of binding (second pass, etc)

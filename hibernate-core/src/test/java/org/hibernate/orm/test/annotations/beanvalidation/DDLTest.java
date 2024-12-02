@@ -34,7 +34,6 @@ public class DDLTest extends BaseNonConfigCoreFunctionalTestCase {
 		assertFalse( zipColumn.isNullable() );
 	}
 
-
 	@Test
 	public void testNotNullDDL() {
 		PersistentClass classMapping = metadata().getEntityBinding( Address.class.getName() );
@@ -46,6 +45,41 @@ public class DDLTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		Column line2Column = classMapping.getProperty( "line2" ).getColumns().get(0);
 		assertFalse("Validator annotations are applied on line2 as it is @NotBlank", line2Column.isNullable());
+
+		Column line3Column = classMapping.getProperty( "line3" ).getColumns().get(0);
+		assertTrue(
+				"Validator composition of type OR should result in line3 being nullable",
+				line3Column.isNullable());
+
+		Column line4Column = classMapping.getProperty( "line4" ).getColumns().get(0);
+		assertFalse(
+				"Validator composition of type OR should result in line4 being not-null",
+				line4Column.isNullable());
+
+		Column line5Column = classMapping.getProperty( "line5" ).getColumns().get(0);
+		assertFalse(
+				"Validator composition of type AND should result in line5 being not-null",
+				line5Column.isNullable());
+
+		Column line6Column = classMapping.getProperty( "line6" ).getColumns().get(0);
+		assertFalse(
+				"Validator composition of type AND should result in line6 being not-null",
+				line6Column.isNullable());
+
+		Column line7Column = classMapping.getProperty( "line7" ).getColumns().get(0);
+		assertTrue(
+				"Validator composition of type OR should result in line7 being nullable",
+				line7Column.isNullable());
+
+		Column line8Column = classMapping.getProperty( "line8" ).getColumns().get( 0 );
+		assertFalse(
+				"Validator should result in line8 being not-null",
+				line8Column.isNullable());
+
+		Column line9Column = classMapping.getProperty( "line9" ).getColumns().get( 0 );
+		assertTrue(
+				"Validator should result in line9 being nullable",
+				line9Column.isNullable());
 	}
 
 	@Test

@@ -29,6 +29,7 @@ import javax.tools.Diagnostic;
 import java.util.List;
 
 import static org.hibernate.processor.util.Constants.ELEMENT_COLLECTION;
+import static org.hibernate.processor.util.Constants.LIST_ATTRIBUTE;
 import static org.hibernate.processor.util.Constants.MANY_TO_ANY;
 import static org.hibernate.processor.util.Constants.MANY_TO_MANY;
 import static org.hibernate.processor.util.Constants.MAP_KEY_CLASS;
@@ -72,7 +73,13 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<@Nullable
 
 	@Override
 	public @Nullable AnnotationMetaAttribute visitArray(ArrayType arrayType, Element element) {
-		return new AnnotationMetaSingleAttribute( entity, element, toArrayTypeString( arrayType, context ) );
+		if ( hasAnnotation( element, MANY_TO_MANY, ONE_TO_MANY, ELEMENT_COLLECTION ) ) {
+			return new AnnotationMetaCollection( entity, element, LIST_ATTRIBUTE,
+					toTypeString(arrayType.getComponentType()) );
+		}
+		else {
+			return new AnnotationMetaSingleAttribute( entity, element, toArrayTypeString( arrayType, context ) );
+		}
 	}
 
 	@Override

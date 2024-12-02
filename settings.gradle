@@ -96,8 +96,6 @@ dependencyResolutionManagement {
 
             def micrometerVersion = version "micrometer", "1.14.1"
 
-            def hibernateValidatorVersion = version "hibernateValidator", "8.0.1.Final"
-
             def antVersion = version "ant", "1.10.15"
 
             library( "antlr", "org.antlr", "antlr4" ).versionRef( antlrVersion )
@@ -118,7 +116,6 @@ dependencyResolutionManagement {
             library( "jackson", "com.fasterxml.jackson.core", "jackson-databind" ).versionRef( jacksonVersion )
             library( "jacksonXml", "com.fasterxml.jackson.dataformat", "jackson-dataformat-xml" ).versionRef( jacksonVersion )
             library( "jacksonJsr310", "com.fasterxml.jackson.datatype", "jackson-datatype-jsr310" ).versionRef( jacksonVersion )
-            library( "validator", "org.hibernate.validator", "hibernate-validator" ).versionRef( hibernateValidatorVersion )
 
             library( "agroal", "io.agroal", "agroal-api" ).versionRef( agroalVersion )
             library( "agroalPool", "io.agroal", "agroal-pool" ).versionRef( agroalVersion )
@@ -145,7 +142,6 @@ dependencyResolutionManagement {
 
             def annotationVersion = version "annotation", "3.0.0"
             def cdiVersion = version "cdi", "4.1.0"
-            def elVersion = version "el", "5.0.0"
             def injectVersion = version "inject", "2.0.1"
             def interceptorsVersion = version "interceptors", "2.2.0"
             def dataVersion = version "data", "1.0.1"
@@ -173,7 +169,6 @@ dependencyResolutionManagement {
             library( "jaxbApi", "jakarta.xml.bind", "jakarta.xml.bind-api" ).versionRef( jaxbApiVersion )
             library( "jaxb", "org.glassfish.jaxb", "jaxb-runtime" ).versionRef( jaxbRuntimeVersion )
             library( "xjc", "org.glassfish.jaxb", "jaxb-xjc" ).versionRef( xjcVersion )
-            library( "el", "org.glassfish.expressly", "expressly" ).versionRef( elVersion )
         }
         testLibs {
             def junit5Version = version "junit5", "5.11.3"
@@ -193,6 +188,12 @@ dependencyResolutionManagement {
             def wildFlyTxnClientVersion = version "wildFlyTxnClient", "2.0.0.Final"
 
             def jfrUnitVersion = version "jfrUnit", "1.0.0.Alpha2"
+
+            def hibernateValidatorVersion = version "hibernateValidator", "9.0.0.Beta3"
+            def expresslyVersion = version "expressly", "6.0.0-M1"
+
+            library( "validator", "org.hibernate.validator", "hibernate-validator" ).versionRef( hibernateValidatorVersion )
+            library( "expressly", "org.glassfish.expressly", "expressly" ).versionRef( expresslyVersion )
 
             library( "junit5Api", "org.junit.jupiter", "junit-jupiter-api" ).versionRef( junit5Version )
             library( "junit5Engine", "org.junit.jupiter", "junit-jupiter-engine" ).versionRef( junit5Version )

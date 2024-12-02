@@ -23,13 +23,13 @@ dependencies {
 	testImplementation jakartaLibs.validation
 	testImplementation libs.jandex
 	testImplementation libs.classmate
-	testImplementation libs.validator
+	testImplementation testLibs.validator
 	testImplementation 'org.dom4j:dom4j:2.1.3@jar'
 
 	testImplementation jdbcLibs.postgresql
 	testImplementation jdbcLibs.h2gis
 
-	testRuntimeOnly jakartaLibs.el
+	testRuntimeOnly testLibs.expressly
 	testRuntimeOnly 'jaxen:jaxen:1.1'
 	testRuntimeOnly libs.byteBuddy
 }

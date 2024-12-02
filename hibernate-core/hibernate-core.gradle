@@ -45,22 +45,19 @@ dependencies {
     compileOnly libs.jacksonXml
     compileOnly jdbcLibs.postgresql
 
-//    annotationProcessor project( ":annotation-descriptor-generator" )
     compileOnly project( ":annotation-descriptor-generator" )
 
     testImplementation project(':hibernate-testing')
     testImplementation project(':hibernate-ant')
     testImplementation project(':hibernate-scan-jandex')
 
-//    testImplementation testLibs.shrinkwrapApi
     testImplementation testLibs.shrinkwrap
     testImplementation testLibs.shrinkwrapDescriptors
-//    testImplementation testLibs.shrinkwrapDescriptorsApi
     testImplementation jakartaLibs.cdi
     testImplementation jakartaLibs.jacc
     testImplementation jakartaLibs.validation
-    testImplementation jakartaLibs.el
-    testImplementation( libs.validator ) {
+    testImplementation testLibs.expressly
+    testImplementation( testLibs.validator ) {
         // for test runtime
         transitive = true
     }

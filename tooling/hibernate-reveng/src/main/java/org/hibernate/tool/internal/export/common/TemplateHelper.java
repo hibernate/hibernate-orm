@@ -177,7 +177,7 @@ public class TemplateHelper {
 	}
 	
     public void setupContext() {
-    	getContext().put("version", Version.CURRENT_VERSION);
+    	getContext().put("version", Version.versionString());
         getContext().put("ctx", getContext() ); //TODO: I would like to remove this, but don't know another way to actually get the list possible "root" keys for debugging.
         getContext().put("templates", new Templates());
         

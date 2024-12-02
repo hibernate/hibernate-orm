@@ -14,7 +14,8 @@ dependencies {
     implementation libs.c3p0
 
     testImplementation project( ':hibernate-testing' )
-    testImplementation libs.validator
-    testRuntimeOnly jakartaLibs.el
+    testImplementation jakartaLibs.validation
+    testImplementation testLibs.validator
+    testRuntimeOnly testLibs.expressly
 }
 

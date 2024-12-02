@@ -8,8 +8,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
+import jakarta.validation.constraints.NotBlank;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.validator.constraints.NotBlank;
 
 /**
  * A testing entity for cases where the entity definition itself is irrelevant (testing JDBC connection semantics, etc).

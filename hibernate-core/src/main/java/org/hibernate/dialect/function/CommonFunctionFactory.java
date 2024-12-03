@@ -389,7 +389,8 @@ public class CommonFunctionFactory {
 	}
 
 	/**
-	 * CockroachDB lacks implicit casting: https://github.com/cockroachdb/cockroach/issues/89965
+	 * CockroachDB lacks
+	 * <a href="https://github.com/cockroachdb/cockroach/issues/89965">implicit casting</a>
 	 */
 	public void median_percentileCont_castDouble() {
 		functionRegistry.patternDescriptorBuilder(
@@ -2321,6 +2322,14 @@ public class CommonFunctionFactory {
 		functionRegistry.namedDescriptorBuilder( "crc32" )
 				.setInvariantType(integerType)
 				.setParameterTypes( STRING )
+				.setExactArgumentCount( 1 )
+				.register();
+	}
+
+	public void hex(String pattern) {
+		functionRegistry.patternDescriptorBuilder( "hex", pattern )
+				.setInvariantType(stringType)
+				.setParameterTypes( BINARY )
 				.setExactArgumentCount( 1 )
 				.register();
 	}

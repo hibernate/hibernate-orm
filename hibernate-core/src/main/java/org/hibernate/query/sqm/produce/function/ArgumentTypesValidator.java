@@ -248,6 +248,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 			case TEMPORAL -> jdbcType.isTemporal();
 			case DATE -> jdbcType.hasDatePart();
 			case TIME -> jdbcType.hasTimePart();
+			case BINARY -> jdbcType.isBinary();
 			case SPATIAL -> jdbcType.isSpatial();
 			case JSON -> jdbcType.isJson();
 			case IMPLICIT_JSON -> jdbcType.isImplicitJson();

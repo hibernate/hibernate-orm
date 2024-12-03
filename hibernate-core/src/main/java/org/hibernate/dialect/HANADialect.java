@@ -518,6 +518,7 @@ public class HANADialect extends Dialect {
 //		functionFactory.xmlextract();
 		functionFactory.generateSeries_hana( getMaximumSeriesSize() );
 
+		functionFactory.hex( "to_hex(?1)" );
 		functionFactory.sha( "hash_sha256(?1)" );
 		functionFactory.md5( "hash_md5(?1)" );
 	}

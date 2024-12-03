@@ -841,6 +841,7 @@ Naturally, there are a good number of functions for working with strings.
 | `replace()` | Replace every occurrence of a pattern in a string | `replace(str, patt, rep)` | ✔ / ✖
 | `repeat()` | Concatenate a string with itself multiple times | `repeat(str, times)` | ✖ / ✖
 | `collate()` | Select a collation | `collate(p.name as collation)` | ✖ / ✖
+| `hex()` | Encode a binary value as a hexadecimal string | `hex(image.bytes)` | ✖ / ✖
 |===
 
 Let's take a closer look at just some of these.

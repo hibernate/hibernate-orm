@@ -49,6 +49,10 @@ public enum FunctionParameterType {
 	 */
 	BOOLEAN,
 	/**
+	 * @see org.hibernate.type.SqlTypes#isBinaryType(int)
+	 */
+	BINARY,
+	/**
 	 * Indicates a parameter that accepts any type
 	 */
 	ANY,

@@ -690,6 +690,7 @@ public class PostgreSQLDialect extends Dialect {
 		}
 		functionFactory.generateSeries( null, "ordinality", false );
 
+		functionFactory.hex( "encode(?1, 'hex')" );
 		functionFactory.sha( "sha256(?1)" );
 		functionFactory.md5( "decode(md5(?1), 'hex')" );
 	}

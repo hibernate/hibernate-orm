@@ -503,6 +503,7 @@ public class CockroachDialect extends Dialect {
 		);
 		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
 
+		functionFactory.hex( "encode(?1, 'hex')" );
 		functionFactory.sha( "digest(?1, 'sha256')" );
 		functionFactory.md5( "digest(?1, 'md5')" );
 	}

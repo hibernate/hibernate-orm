@@ -488,6 +488,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			}
 		}
 
+		functionFactory.hex( "convert(varchar(MAX), ?1, 2)" );
 		functionFactory.sha( "hashbytes('SHA2_256', ?1)" );
 		functionFactory.md5( "hashbytes('MD5', ?1)" );
 	}

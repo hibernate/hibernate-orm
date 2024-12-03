@@ -2618,6 +2618,13 @@ public class FunctionTests {
 			catch (NoSuchAlgorithmException e) {
 				throw new RuntimeException( e );
 			}
+			bytes = s.createSelectionQuery("select md5('hello')", byte[].class).getSingleResult();
+			try {
+				assertArrayEquals( MessageDigest.getInstance( "MD5" ).digest("hello".getBytes()), bytes );
+			}
+			catch (NoSuchAlgorithmException e) {
+				throw new RuntimeException( e );
+			}
 		});
 	}
 }

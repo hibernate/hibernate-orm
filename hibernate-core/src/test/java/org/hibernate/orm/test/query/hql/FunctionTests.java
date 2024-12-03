@@ -23,6 +23,7 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
@@ -62,6 +63,7 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -2625,6 +2627,16 @@ public class FunctionTests {
 			catch (NoSuchAlgorithmException e) {
 				throw new RuntimeException( e );
 			}
+		});
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = SybaseASEDialect.class)
+	public void testHexFunction(SessionFactoryScope scope) {
+		scope.inTransaction(s -> {
+			assertEquals( "DEADBEEF",
+					s.createSelectionQuery("select hex({0xDE, 0xAD, 0xBE, 0xEF})", String.class)
+							.getSingleResult().toUpperCase( Locale.ROOT ) );
 		});
 	}
 }

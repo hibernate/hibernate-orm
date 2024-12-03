@@ -453,6 +453,7 @@ public class DB2Dialect extends Dialect {
 		functionFactory.unnest_db2( getMaximumSeriesSize() );
 		functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, true );
 
+		functionFactory.hex( "hex(?1)" );
 		functionFactory.sha( "hash(?1, 2)" );
 		functionFactory.md5( "hash(?1, 0)" );
 	}

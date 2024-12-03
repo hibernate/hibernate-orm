@@ -687,6 +687,7 @@ public class MySQLDialect extends Dialect {
 			functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, false );
 		}
 
+		functionFactory.hex( "hex(?1)" );
 		functionFactory.sha( "unhex(sha2(?1, 256))" );
 		functionFactory.md5( "unhex(md5(?1))" );
 	}

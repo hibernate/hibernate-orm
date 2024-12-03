@@ -222,6 +222,8 @@ public class HSQLDialect extends Dialect {
 				functionContributions.getTypeConfiguration(),
 				SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER
 		) );
+
+		functionFactory.hex( "hex(?1)" );
 	}
 
 	/**

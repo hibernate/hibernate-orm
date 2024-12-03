@@ -6,6 +6,7 @@
  */
 package org.hibernate.testing.bytecode.enhancement.extension.engine;
 
+import static org.hibernate.bytecode.enhance.spi.UnsupportedEnhancementStrategy.SKIP;
 import static org.hibernate.bytecode.internal.BytecodeProviderInitiator.buildDefaultBytecodeProvider;
 
 import java.io.BufferedInputStream;
@@ -29,6 +30,7 @@ import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.bytecode.enhance.spi.UnloadedField;
 
+import org.hibernate.bytecode.enhance.spi.UnsupportedEnhancementStrategy;
 import org.hibernate.testing.bytecode.enhancement.ClassEnhancementSelector;
 import org.hibernate.testing.bytecode.enhancement.ClassEnhancementSelectors;
 import org.hibernate.testing.bytecode.enhancement.ClassSelector;
@@ -113,6 +115,12 @@ final class BytecodeEnhancedClassUtils {
 				@Override
 				public boolean isLazyLoadable(UnloadedField field) {
 					return options.lazyLoading() && super.isLazyLoadable( field );
+				}
+
+				@Override
+				public UnsupportedEnhancementStrategy getUnsupportedEnhancementStrategy() {
+					final UnsupportedEnhancementStrategy strategy = options.unsupportedEnhancementStrategy();
+					return strategy != SKIP ? strategy : super.getUnsupportedEnhancementStrategy();
 				}
 			};
 		}

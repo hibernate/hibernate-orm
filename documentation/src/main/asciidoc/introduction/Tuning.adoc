@@ -33,7 +33,7 @@ the connection pool.
 === Tuning the connection pool
 
 The connection pool built in to Hibernate is suitable for testing, but isn't intended for use in production.
-Instead, Hibernate supports a range of different connection pools, including our favorite, Agroal.
+Instead, Hibernate supports several different connection pools, including our favorite, Agroal.
 
 To select and configure Agroal, you'll need to set some extra configuration properties, in addition to the settings we already saw in <<basic-configuration-settings>>.
 Properties with the prefix `hibernate.agroal` are passed through to Agroal:
@@ -48,7 +48,7 @@ hibernate.agroal.reapTimeout PT10s
 ----
 
 As long as you set at least one property with the prefix `hibernate.agroal`, the `AgroalConnectionProvider` will be selected automatically.
-There are many to choose from:
+There are many to choose from, as enumerated by link:{doc-javadoc-url}/org/hibernate/cfg/AgroalSettings.html[`AgroalSettings`]:
 
 .Settings for configuring Agroal
 [%breakable,cols="37,~"]
@@ -72,9 +72,12 @@ The following settings are common to all connection pools supported by Hibernate
 .Common settings for connection pools
 [%breakable,cols="37,~"]
 |===
-| `hibernate.connection.autocommit` | The default autocommit mode
-| `hibernate.connection.isolation` | The default transaction isolation level
+| link:{doc-javadoc-url}/org/hibernate/cfg/JdbcSettings.html#AUTOCOMMIT[`hibernate.connection.autocommit`] | The default autocommit mode
+| link:{doc-javadoc-url}/org/hibernate/cfg/JdbcSettings.html#ISOLATION[`hibernate.connection.isolation`] | The default transaction isolation level
 |===
+
+A popular alternative to Agroal is HikariCP.
+Its setting are enumerated by link:{doc-javadoc-url}/org/hibernate/cfg/HikariCPSettings.html[`HikariCPSettings`].
 
 .Container-managed datasources
 ****

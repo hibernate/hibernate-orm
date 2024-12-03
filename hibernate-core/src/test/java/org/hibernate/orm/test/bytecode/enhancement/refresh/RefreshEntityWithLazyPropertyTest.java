@@ -13,7 +13,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.Formula;
-import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
@@ -44,8 +43,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @BytecodeEnhanced
 @SkipForDialectGroup(
 		{
-				@SkipForDialect( dialectClass = MySQLDialect.class, reason = "does not support || as String concatenation"),
-				@SkipForDialect( dialectClass = MariaDBDialect.class, reason = "does not support || as String concatenation"),
+				@SkipForDialect( dialectClass = MySQLDialect.class, matchSubTypes = true, reason = "does not support || as String concatenation"),
 				@SkipForDialect( dialectClass = SQLServerDialect.class, reason = "does not support || as String concatenation"),
 		}
 )

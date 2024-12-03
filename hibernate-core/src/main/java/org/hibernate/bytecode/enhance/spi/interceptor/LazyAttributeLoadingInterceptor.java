@@ -201,4 +201,8 @@ public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor
 		}
 		mutableLazyFields.add( fieldName );
 	}
+
+	public void clearInitializedLazyFields() {
+		initializedLazyFields = null;
+	}
 }

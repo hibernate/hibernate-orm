@@ -590,7 +590,6 @@ public class MySQLDialect extends Dialect {
 		functionFactory.space();
 		functionFactory.repeat();
 		functionFactory.pad_space();
-		functionFactory.md5();
 		functionFactory.yearMonthDay();
 		functionFactory.hourMinuteSecond();
 		functionFactory.dayofweekmonthyear();
@@ -606,7 +605,6 @@ public class MySQLDialect extends Dialect {
 		functionFactory.crc32();
 		functionFactory.sha1();
 		functionFactory.sha2();
-		functionFactory.sha();
 		functionFactory.bitLength();
 		functionFactory.octetLength();
 		functionFactory.ascii();
@@ -688,6 +686,9 @@ public class MySQLDialect extends Dialect {
 		if ( supportsRecursiveCTE() ) {
 			functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, false );
 		}
+
+		functionFactory.sha( "unhex(sha2(?1, 256))" );
+		functionFactory.md5( "unhex(md5(?1))" );
 	}
 
 	/**

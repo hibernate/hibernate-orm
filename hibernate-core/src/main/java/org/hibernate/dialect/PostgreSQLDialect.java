@@ -550,7 +550,6 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.pi();
 		functionFactory.trim2();
 		functionFactory.repeat();
-		functionFactory.md5();
 		functionFactory.initcap();
 		functionFactory.substr();
 		functionFactory.substring_substr();
@@ -690,6 +689,9 @@ public class PostgreSQLDialect extends Dialect {
 			functionFactory.unnest_postgresql();
 		}
 		functionFactory.generateSeries( null, "ordinality", false );
+
+		functionFactory.sha( "sha256(?1)" );
+		functionFactory.md5( "decode(md5(?1), 'hex')" );
 	}
 
 	@Override

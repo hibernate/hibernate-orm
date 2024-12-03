@@ -440,6 +440,9 @@ public class OracleDialect extends Dialect {
 		functionFactory.unnest_oracle();
 		functionFactory.generateSeries_recursive( getMaximumSeriesSize(), true, false );
 		functionFactory.jsonTable_oracle();
+
+		functionFactory.sha( "standard_hash(?1, 'SHA256')" );
+		functionFactory.md5( "standard_hash(?1, 'MD5')" );
 	}
 
 	/**

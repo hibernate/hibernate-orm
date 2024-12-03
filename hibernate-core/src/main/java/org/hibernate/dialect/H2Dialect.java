@@ -368,6 +368,9 @@ public class H2Dialect extends Dialect {
 		functionFactory.unnest_h2( getMaximumArraySize() );
 		functionFactory.generateSeries_h2( getMaximumSeriesSize() );
 		functionFactory.jsonTable_h2( getMaximumArraySize() );
+
+		functionFactory.sha( "hash('SHA-256', ?1)" );
+		functionFactory.md5( "hash('MD5', ?1)" );
 	}
 
 	/**

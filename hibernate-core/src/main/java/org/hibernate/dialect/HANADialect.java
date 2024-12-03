@@ -517,6 +517,9 @@ public class HANADialect extends Dialect {
 
 //		functionFactory.xmlextract();
 		functionFactory.generateSeries_hana( getMaximumSeriesSize() );
+
+		functionFactory.sha( "hash_sha256(?1)" );
+		functionFactory.md5( "hash_md5(?1)" );
 	}
 
 	/**

@@ -487,6 +487,9 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 				functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, false );
 			}
 		}
+
+		functionFactory.sha( "hashbytes('SHA2_256', ?1)" );
+		functionFactory.md5( "hashbytes('MD5', ?1)" );
 	}
 
 	/**

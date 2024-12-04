@@ -26,7 +26,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 @ValidIdRange( min = 10005001, max = 10010000 )
 @SubSystemLogging(
 		name = BeansMessageLogger.LOGGER_NAME,
-		description = "Logging related to Hibernate's support for managed beans (CDI, etc)"
+		description = "Logging related to managed beans and the BeanContainer (CDI, etc)"
 )
 public interface BeansMessageLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".beans";
@@ -37,8 +37,8 @@ public interface BeansMessageLogger {
 	@Message(
 			id = 10005001,
 			value = "An explicit CDI BeanManager reference [%s] was passed to Hibernate, " +
-					"but CDI is not available on the Hibernate ClassLoader.  This is likely " +
-					"going to lead to exceptions later on in bootstrap"
+					"but CDI is not available on the Hibernate ClassLoader. This is likely " +
+					"going to lead to exceptions later on in bootstrap."
 	)
 	void beanManagerButCdiNotAvailable(Object cdiBeanManagerReference);
 

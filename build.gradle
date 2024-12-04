@@ -62,9 +62,9 @@ task publish {
 }
 
 ext {
-	if ( project.hasProperty( 'OSSRH_USER' ) ) {
-		if ( ! project.hasProperty( 'OSSRH_PASSWORD' ) ) {
-			throw new GradleException( "Should specify both `OSSRH_USER` and `OSSRH_PASSWORD` as project properties" );
+	if ( project.hasProperty( 'hibernatePublishUsername' ) ) {
+		if ( ! project.hasProperty( 'hibernatePublishPassword' ) ) {
+			throw new GradleException( "Should specify both `hibernatePublishUsername` and `hibernatePublishPassword` as project properties" );
 		}
 	}
 }
@@ -72,8 +72,8 @@ ext {
 nexusPublishing {
 	repositories {
 		sonatype {
-			username = project.hasProperty( 'OSSRH_USER' ) ? project.property( 'OSSRH_USER' ) : null
-			password = project.hasProperty( 'OSSRH_PASSWORD' ) ? project.property( 'OSSRH_PASSWORD' ) : null
+			username = project.hasProperty( 'hibernatePublishUsername' ) ? project.property( 'hibernatePublishUsername' ) : null
+			password = project.hasProperty( 'hibernatePublishPassword' ) ? project.property( 'hibernatePublishPassword' ) : null
 		}
 	}
 }
@@ -94,11 +94,11 @@ gradle.taskGraph.addTaskExecutionGraphListener(
 					if ( graph.hasTask( taskToLookFor ) ) {
 						// trying to publish - make sure the needed credentials are available
 
-						if ( project.property( 'OSSRH_USER' ) == null ) {
-							throw new RuntimeException( "`-POSSRH_USER=...` not found" )
+						if ( project.property( 'hibernatePublishUsername' ) == null ) {
+							throw new RuntimeException( "`-PhibernatePublishUsername=...` not found" )
 						}
-						if ( project.property( 'OSSRH_PASSWORD' ) == null ) {
-							throw new RuntimeException( "`-POSSRH_PASSWORD=...` not found" )
+						if ( project.property( 'hibernatePublishPassword' ) == null ) {
+							throw new RuntimeException( "`-PhibernatePublishPassword=...` not found" )
 						}
 
 						break;

@@ -106,7 +106,7 @@ public class MissingCacheStrategyTest extends BaseUnitTestCase {
 			triggerables.put(
 					regionName,
 					logInspection.watchForLogMessages(
-							"HHH90001006: Missing cache[" + TestHelper.prefix( regionName ) + "] was created on-the-fly"
+							"HHH90001006: Missing cache region [" + TestHelper.prefix( regionName ) + "] was created"
 					)
 			);
 		}

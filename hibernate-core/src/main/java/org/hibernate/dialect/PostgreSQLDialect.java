@@ -243,7 +243,8 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	protected String castType(int sqlTypeCode) {
 		return switch (sqlTypeCode) {
-			case CHAR, NCHAR, VARCHAR, NVARCHAR, LONG32VARCHAR, LONG32NVARCHAR -> "text";
+			case CHAR, NCHAR, VARCHAR, NVARCHAR -> "varchar";
+			case LONG32VARCHAR, LONG32NVARCHAR -> "text";
 			case BINARY, VARBINARY, LONG32VARBINARY -> "bytea";
 			default -> super.castType( sqlTypeCode );
 		};

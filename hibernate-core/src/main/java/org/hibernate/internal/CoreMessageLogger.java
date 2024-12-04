@@ -887,4 +887,50 @@ public interface CoreMessageLogger extends BasicLogger {
 			value = "Encountered multiple persistence-unit stanzas defining same name [%s]; persistence-unit names must be unique"
 	)
 	void duplicatedPersistenceUnitName(String name);
+
+	@LogMessage(level = DEBUG)
+	@Message(
+			id = 425,
+			value = """
+					Logging session metrics:
+						%s ns acquiring %s JDBC connections
+						%s ns releasing %s JDBC connections
+						%s ns preparing %s JDBC statements
+						%s ns executing %s JDBC statements
+						%s ns executing %s JDBC batches
+						%s ns performing %s second-level cache puts
+						%s ns performing %s second-level cache hits
+						%s ns performing %s second-level cache misses
+						%s ns executing %s flushes (flushing a total of %s entities and %s collections)
+						%s ns executing %s pre-partial-flushes
+						%s ns executing %s partial-flushes (flushing a total of %s entities and %s collections)
+					"""
+	)
+	void sessionMetrics(
+			long jdbcConnectionAcquisitionTime,
+			int jdbcConnectionAcquisitionCount,
+			long jdbcConnectionReleaseTime,
+			int jdbcConnectionReleaseCount,
+			long jdbcPrepareStatementTime,
+			int jdbcPrepareStatementCount,
+			long jdbcExecuteStatementTime,
+			int jdbcExecuteStatementCount,
+			long jdbcExecuteBatchTime,
+			int jdbcExecuteBatchCount,
+			long cachePutTime,
+			int cachePutCount,
+			long cacheHitTime,
+			int cacheHitCount,
+			long cacheMissTime,
+			int cacheMissCount,
+			long flushTime,
+			int flushCount,
+			long flushEntityCount,
+			long flushCollectionCount,
+			long prePartialFlushTime,
+			int prePartialFlushCount,
+			long partialFlushTime,
+			int partialFlushCount,
+			long partialFlushEntityCount,
+			long partialFlushCollectionCount);
 }

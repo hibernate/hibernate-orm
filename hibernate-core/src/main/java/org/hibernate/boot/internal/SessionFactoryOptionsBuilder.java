@@ -100,7 +100,6 @@ import static org.hibernate.cfg.AvailableSettings.IN_CLAUSE_PARAMETER_PADDING;
 import static org.hibernate.cfg.AvailableSettings.JDBC_TIME_ZONE;
 import static org.hibernate.cfg.AvailableSettings.JPA_CALLBACKS_ENABLED;
 import static org.hibernate.cfg.AvailableSettings.JTA_TRACK_BY_THREAD;
-import static org.hibernate.cfg.AvailableSettings.LOG_SESSION_METRICS;
 import static org.hibernate.cfg.AvailableSettings.MAX_FETCH_DEPTH;
 import static org.hibernate.cfg.AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLVER;
 import static org.hibernate.cfg.AvailableSettings.ORDER_INSERTS;
@@ -357,8 +356,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				? null
 				: strategySelector.selectStrategyImplementor( SessionEventListener.class, autoSessionEventsListenerName );
 
-		final boolean logSessionMetrics = configurationService.getSetting( LOG_SESSION_METRICS, BOOLEAN, statisticsEnabled );
-		this.baselineSessionEventsListenerBuilder = new BaselineSessionEventsListenerBuilder( logSessionMetrics, autoSessionEventsListener );
+		this.baselineSessionEventsListenerBuilder = new BaselineSessionEventsListenerBuilder( autoSessionEventsListener );
 
 		this.customEntityDirtinessStrategy = strategySelector.resolveDefaultableStrategy(
 				CustomEntityDirtinessStrategy.class,

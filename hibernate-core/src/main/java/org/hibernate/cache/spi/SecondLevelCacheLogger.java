@@ -84,6 +84,7 @@ public interface SecondLevelCacheLogger extends BasicLogger {
 					" You can disable this warning by setting '%2$s' to '%3$s'.",
 			id = NAMESPACE + 6
 	)
+	@SuppressWarnings( "unused" ) // used by hibernate-jcache
 	void missingCacheCreated(String regionName, String configurationPropertyToDisableKey, String configurationPropertyToDisableValue);
 
 	@LogMessage(level = WARN)
@@ -92,6 +93,7 @@ public interface SecondLevelCacheLogger extends BasicLogger {
 					" Update your configuration to rename cache [%2$s] to [%1$s].",
 			id = NAMESPACE + 7
 	)
+	@SuppressWarnings( "unused" ) // used by hibernate-jcache
 	void usingLegacyCacheName(String currentName, String legacyName);
 
 	@LogMessage(level = WARN)
@@ -100,6 +102,7 @@ public interface SecondLevelCacheLogger extends BasicLogger {
 					" Make sure your cache implementation supports JTA transactions.",
 			id = NAMESPACE + 8
 	)
+	@SuppressWarnings( "unused" ) // used by hibernate-jcache
 	void nonStandardSupportForAccessType(String key, String accessType, String regionName);
 
 }

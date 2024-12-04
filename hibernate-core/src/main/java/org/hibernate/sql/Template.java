@@ -167,8 +167,11 @@ public final class Template {
 
 		boolean hasMore = tokens.hasMoreTokens();
 		String nextToken = hasMore ? tokens.nextToken() : null;
+		String token = null;
+		String previousToken;
 		while ( hasMore ) {
-			String token = nextToken;
+			previousToken = token;
+			token = nextToken;
 			String lcToken = token.toLowerCase(Locale.ROOT);
 			hasMore = tokens.hasMoreTokens();
 			nextToken = hasMore ? tokens.nextToken() : null;
@@ -203,7 +206,9 @@ public final class Template {
 				else {
 					isOpenQuote = false;
 				}
-				if ( isOpenQuote ) {
+				if ( isOpenQuote
+					&& !inFromClause // don't want to append alias to tokens inside the from clause
+					&& notEndsWithDot( previousToken ) ) {
 					result.append( alias ).append( '.' );
 				}
 			}
@@ -232,7 +237,8 @@ public final class Template {
 				result.append(token);
 				inExtractOrTrim = true;
 			}
-			else if ( isIdentifier(token)
+			else if ( !inFromClause // don't want to append alias to tokens inside the from clause
+					&& isIdentifier( token )
 					&& !isFunctionOrKeyword( lcToken, nextToken, dialect, typeConfiguration )
 					&& !isLiteral( lcToken, nextToken, sql, symbols, tokens ) ) {
 				result.append(alias)
@@ -266,6 +272,10 @@ public final class Template {
 		}
 
 		return result.toString();
+	}
+
+	private static boolean notEndsWithDot(String token) {
+		return token == null || !token.endsWith( "." );
 	}
 
 	private static boolean isLiteral(

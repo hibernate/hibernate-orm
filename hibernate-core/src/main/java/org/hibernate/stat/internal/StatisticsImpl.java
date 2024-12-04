@@ -42,7 +42,7 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  */
 public class StatisticsImpl implements StatisticsImplementor, Service {
 
-	private static final CoreMessageLogger LOG = messageLogger( StatisticsImpl.class );
+	private static final CoreMessageLogger log = messageLogger( StatisticsImpl.class );
 
 	private final MappingMetamodelImplementor metamodel;
 	private final CacheImplementor cache;
@@ -702,7 +702,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public void queryExecuted(String hql, int rows, long time) {
-		LOG.hql( hql, time, (long) rows );
+		log.hql( hql, time, (long) rows );
 		queryExecutionCount.increment();
 
 		boolean isLongestQuery;
@@ -724,7 +724,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public void queryCacheHit(String hql, String regionName) {
-		LOG.tracef( "Statistics#queryCacheHit( `%s`, `%s` )", hql, regionName );
+		log.tracef( "Statistics#queryCacheHit( `%s`, `%s` )", hql, regionName );
 
 		queryCacheHitCount.increment();
 
@@ -737,7 +737,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public void queryCacheMiss(String hql, String regionName) {
-		LOG.tracef( "Statistics#queryCacheMiss( `%s`, `%s` )", hql, regionName );
+		log.tracef( "Statistics#queryCacheMiss( `%s`, `%s` )", hql, regionName );
 
 		queryCacheMissCount.increment();
 
@@ -750,7 +750,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public void queryCachePut(String hql, String regionName) {
-		LOG.tracef( "Statistics#queryCachePut( `%s`, `%s` )", hql, regionName );
+		log.tracef( "Statistics#queryCachePut( `%s`, `%s` )", hql, regionName );
 
 		queryCachePutCount.increment();
 
@@ -890,45 +890,45 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public void logSummary() {
-		LOG.loggingStatistics();
-		LOG.startTime( startTime.toEpochMilli() );
-		LOG.sessionsOpened( sessionOpenCount.sum() );
-		LOG.sessionsClosed( sessionCloseCount.sum() );
-		LOG.transactions( transactionCount.sum() );
-		LOG.successfulTransactions( committedTransactionCount.sum() );
-		LOG.optimisticLockFailures( optimisticFailureCount.sum() );
-		LOG.flushes( flushCount.sum() );
-		LOG.connectionsObtained( connectCount.sum() );
-		LOG.statementsPrepared( prepareStatementCount.sum() );
-		LOG.statementsClosed( closeStatementCount.sum() );
-		LOG.secondLevelCachePuts( secondLevelCachePutCount.sum() );
-		LOG.secondLevelCacheHits( secondLevelCacheHitCount.sum() );
-		LOG.secondLevelCacheMisses( secondLevelCacheMissCount.sum() );
-		LOG.entitiesLoaded( entityLoadCount.sum() );
-		LOG.entitiesUpdated( entityUpdateCount.sum() );
-		LOG.entitiesInserted( entityInsertCount.sum() );
-		LOG.entitiesDeleted( entityDeleteCount.sum() );
-		LOG.entitiesFetched( entityFetchCount.sum() );
-		LOG.collectionsLoaded( collectionLoadCount.sum() );
-		LOG.collectionsUpdated( collectionUpdateCount.sum() );
-		LOG.collectionsRemoved( collectionRemoveCount.sum() );
-		LOG.collectionsRecreated( collectionRecreateCount.sum() );
-		LOG.collectionsFetched( collectionFetchCount.sum() );
-		LOG.naturalIdCachePuts( naturalIdCachePutCount.sum() );
-		LOG.naturalIdCacheHits( naturalIdCacheHitCount.sum() );
-		LOG.naturalIdCacheMisses( naturalIdCacheMissCount.sum() );
-		LOG.naturalIdMaxQueryTime( naturalIdQueryExecutionMaxTime.get() );
-		LOG.naturalIdQueriesExecuted( naturalIdQueryExecutionCount.sum() );
-		LOG.queriesExecuted( queryExecutionCount.sum() );
-		LOG.queryCachePuts( queryCachePutCount.sum() );
-		LOG.timestampCachePuts( updateTimestampsCachePutCount.sum() );
-		LOG.timestampCacheHits( updateTimestampsCacheHitCount.sum() );
-		LOG.timestampCacheMisses( updateTimestampsCacheMissCount.sum() );
-		LOG.queryCacheHits( queryCacheHitCount.sum() );
-		LOG.queryCacheMisses( queryCacheMissCount.sum() );
-		LOG.maxQueryTime( queryExecutionMaxTime.get() );
-		LOG.queryPlanCacheHits( queryPlanCacheHitCount.sum() );
-		LOG.queryPlanCacheMisses( queryPlanCacheMissCount.sum() );
+		log.loggingStatistics();
+		log.startTime( startTime.toEpochMilli() );
+		log.sessionsOpened( sessionOpenCount.sum() );
+		log.sessionsClosed( sessionCloseCount.sum() );
+		log.transactions( transactionCount.sum() );
+		log.successfulTransactions( committedTransactionCount.sum() );
+		log.optimisticLockFailures( optimisticFailureCount.sum() );
+		log.flushes( flushCount.sum() );
+		log.connectionsObtained( connectCount.sum() );
+		log.statementsPrepared( prepareStatementCount.sum() );
+		log.statementsClosed( closeStatementCount.sum() );
+		log.secondLevelCachePuts( secondLevelCachePutCount.sum() );
+		log.secondLevelCacheHits( secondLevelCacheHitCount.sum() );
+		log.secondLevelCacheMisses( secondLevelCacheMissCount.sum() );
+		log.entitiesLoaded( entityLoadCount.sum() );
+		log.entitiesUpdated( entityUpdateCount.sum() );
+		log.entitiesInserted( entityInsertCount.sum() );
+		log.entitiesDeleted( entityDeleteCount.sum() );
+		log.entitiesFetched( entityFetchCount.sum() );
+		log.collectionsLoaded( collectionLoadCount.sum() );
+		log.collectionsUpdated( collectionUpdateCount.sum() );
+		log.collectionsRemoved( collectionRemoveCount.sum() );
+		log.collectionsRecreated( collectionRecreateCount.sum() );
+		log.collectionsFetched( collectionFetchCount.sum() );
+		log.naturalIdCachePuts( naturalIdCachePutCount.sum() );
+		log.naturalIdCacheHits( naturalIdCacheHitCount.sum() );
+		log.naturalIdCacheMisses( naturalIdCacheMissCount.sum() );
+		log.naturalIdMaxQueryTime( naturalIdQueryExecutionMaxTime.get() );
+		log.naturalIdQueriesExecuted( naturalIdQueryExecutionCount.sum() );
+		log.queriesExecuted( queryExecutionCount.sum() );
+		log.queryCachePuts( queryCachePutCount.sum() );
+		log.timestampCachePuts( updateTimestampsCachePutCount.sum() );
+		log.timestampCacheHits( updateTimestampsCacheHitCount.sum() );
+		log.timestampCacheMisses( updateTimestampsCacheMissCount.sum() );
+		log.queryCacheHits( queryCacheHitCount.sum() );
+		log.queryCacheMisses( queryCacheMissCount.sum() );
+		log.maxQueryTime( queryExecutionMaxTime.get() );
+		log.queryPlanCacheHits( queryPlanCacheHitCount.sum() );
+		log.queryPlanCacheMisses( queryPlanCacheMissCount.sum() );
 	}
 
 	@Override

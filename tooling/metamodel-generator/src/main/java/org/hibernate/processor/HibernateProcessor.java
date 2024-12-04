@@ -30,6 +30,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic;
 import javax.tools.StandardLocation;
 import java.io.IOException;
@@ -41,6 +42,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 import static java.lang.Boolean.parseBoolean;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
@@ -374,7 +376,8 @@ public class HibernateProcessor extends AbstractProcessor {
 				// skip it completely
 				return;
 			}
-			else if ( isEntityOrEmbeddable( element ) && !element.getModifiers().contains( Modifier.PRIVATE )) {
+			else if ( isEntityOrEmbeddable( element )
+					&& !element.getModifiers().contains( Modifier.PRIVATE ) ) {
 				context.logMessage( Diagnostic.Kind.OTHER, "Processing annotated entity class '" + element + "'" );
 				handleRootElementAnnotationMirrors( element, parent );
 			}
@@ -409,30 +412,14 @@ public class HibernateProcessor extends AbstractProcessor {
 						}
 					}
 					if ( enclosesEntityOrEmbeddable( element ) ) {
-						AnnotationMetaEntity parentMeta = null;
-						if ( parent instanceof TypeElement parentElement ) {
-							final String key = parentElement.getQualifiedName().toString();
-							if ( context.getMetamodel( key ) instanceof AnnotationMetaEntity parentMetaEntity ) {
-								parentMeta = parentMetaEntity;
-							}
-						}
-						final NonManagedMetamodel  metaEntity =
-								NonManagedMetamodel .create(
-										typeElement, context,
-										false, parentMeta );
+						final NonManagedMetamodel metaEntity =
+								NonManagedMetamodel.create( typeElement, context, false,
+										parentMetadata( parent, context::getMetamodel ) );
 						context.addMetaEntity( metaEntity.getQualifiedName(), metaEntity );
-						if ( context.generateJakartaDataStaticMetamodel()) {
-							AnnotationMetaEntity parentDataMeta = null;
-							if ( parent instanceof TypeElement parentElement ) {
-								final String key = parentElement.getQualifiedName().toString();
-								if ( context.getDataMetaEntity( key ) instanceof AnnotationMetaEntity parentMetaEntity ) {
-									parentDataMeta = parentMetaEntity;
-								}
-							}
-							final NonManagedMetamodel  dataMetaEntity =
-									NonManagedMetamodel .create(
-											typeElement, context,
-											true, parentDataMeta );
+						if ( context.generateJakartaDataStaticMetamodel() ) {
+							final NonManagedMetamodel dataMetaEntity =
+									NonManagedMetamodel.create( typeElement, context, true,
+											parentMetadata( parent, context::getDataMetaEntity ) );
 							context.addDataMetaEntity( dataMetaEntity.getQualifiedName(), dataMetaEntity );
 						}
 
@@ -448,13 +435,25 @@ public class HibernateProcessor extends AbstractProcessor {
 			}
 		}
 		catch ( ProcessLaterException processLaterException ) {
-			if ( element instanceof TypeElement ) {
+			if ( element instanceof TypeElement typeElement ) {
 				context.logMessage(
 						Diagnostic.Kind.OTHER,
 						"Could not process '" + element + "' (will redo in next round)"
 				);
-				context.addElementToRedo( ( (TypeElement) element ).getQualifiedName() );
+				context.addElementToRedo( typeElement.getQualifiedName() );
 			}
+		}
+	}
+
+	private @Nullable AnnotationMetaEntity parentMetadata(
+			@Nullable Element parent, Function<String, @Nullable Object> metamodel) {
+		if ( parent instanceof TypeElement parentElement
+				&& metamodel.apply( parentElement.getQualifiedName().toString() )
+						instanceof AnnotationMetaEntity parentMetaEntity ) {
+			return parentMetaEntity;
+		}
+		else {
+			return null;
 		}
 	}
 
@@ -562,15 +561,18 @@ public class HibernateProcessor extends AbstractProcessor {
 	}
 
 	private static boolean enclosesEntityOrEmbeddable(Element element) {
-		if ( !(element instanceof TypeElement typeElement) ) {
+		if ( element instanceof TypeElement typeElement ) {
+			for ( final Element enclosedElement : typeElement.getEnclosedElements() ) {
+				if ( isEntityOrEmbeddable( enclosedElement )
+					|| enclosesEntityOrEmbeddable( enclosedElement ) ) {
+					return true;
+				}
+			}
 			return false;
 		}
-		for ( final Element enclosedElement : typeElement.getEnclosedElements() ) {
-			if ( isEntityOrEmbeddable( enclosedElement ) || enclosesEntityOrEmbeddable( enclosedElement ) ) {
-				return true;
-			}
+		else {
+			return false;
 		}
-		return false;
 	}
 
 	private static boolean isEntityOrEmbeddable(Element element) {
@@ -621,14 +623,8 @@ public class HibernateProcessor extends AbstractProcessor {
 									+ "' since XML configuration is metadata complete.");
 				}
 				else {
-					AnnotationMetaEntity parentMetaEntity = null;
-					if ( parent instanceof TypeElement parentTypeElement ) {
-						if ( context.getMetamodel(
-								parentTypeElement.getQualifiedName().toString() )
-								instanceof AnnotationMetaEntity pme ) {
-							parentMetaEntity = pme;
-						}
-					}
+					final AnnotationMetaEntity parentMetaEntity =
+							parentMetadata( parent, context::getMetamodel );
 					final boolean requiresLazyMemberInitialization
 							= hasAnnotation( element, EMBEDDABLE, MAPPED_SUPERCLASS );
 					final AnnotationMetaEntity metaEntity =
@@ -648,13 +644,8 @@ public class HibernateProcessor extends AbstractProcessor {
 							// let a handwritten metamodel "override" the generated one
 							// (this is used in the Jakarta Data TCK)
 							&& !hasHandwrittenMetamodel(element) ) {
-						AnnotationMetaEntity parentDataEntity = null;
-						if ( parent instanceof TypeElement parentTypeElement ) {
-							if ( context.getDataMetaEntity( parentTypeElement.getQualifiedName().toString() )
-									instanceof AnnotationMetaEntity pme ) {
-								parentDataEntity = pme;
-							}
-						}
+						final AnnotationMetaEntity parentDataEntity =
+								parentMetadata( parent, context::getDataMetaEntity );
 						final AnnotationMetaEntity dataMetaEntity =
 								AnnotationMetaEntity.create( typeElement, context,
 										requiresLazyMemberInitialization,
@@ -783,13 +774,14 @@ public class HibernateProcessor extends AbstractProcessor {
 
 	private void writeIndex() {
 		final ProcessingEnvironment processingEnvironment = context.getProcessingEnvironment();
+		final Elements elementUtils = processingEnvironment.getElementUtils();
 		context.getEntityNameMappings().forEach((entityName, className) -> {
 			try (Writer writer = processingEnvironment.getFiler()
 					.createResource(
 							StandardLocation.SOURCE_OUTPUT,
 							ENTITY_INDEX,
 							entityName,
-							processingEnvironment.getElementUtils().getTypeElement( className )
+							elementUtils.getTypeElement( className )
 					)
 					.openWriter()) {
 				writer.append(className);
@@ -801,11 +793,12 @@ public class HibernateProcessor extends AbstractProcessor {
 			}
 		});
 		context.getEnumTypesByValue().forEach((valueName, enumTypeNames) -> {
-			try (Writer writer = processingEnvironment.getFiler().createResource(
+			try (Writer writer = processingEnvironment.getFiler()
+					.createResource(
 							StandardLocation.SOURCE_OUTPUT,
 							ENTITY_INDEX,
 							'.' + valueName,
-							processingEnvironment.getElementUtils().getTypeElement( enumTypeNames.iterator().next() )
+							elementUtils.getTypeElement( enumTypeNames.iterator().next() )
 					)
 					.openWriter()) {
 				for (String enumTypeName : enumTypeNames) {

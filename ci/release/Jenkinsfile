@@ -151,16 +151,6 @@ pipeline {
 					env.RELEASE_VERSION = releaseVersion.toString()
 					env.DEVELOPMENT_VERSION = developmentVersion.toString()
 
-
-                    def notesFiles = findFiles(glob: 'release_notes.md')
-                    if ( notesFiles.length < 1 ) {
-                        throw new IllegalStateException( "Could not locate `release_notes.md`" )
-                    }
-                    if ( notesFiles.length > 1 ) {
-                        throw new IllegalStateException( "Located more than 1 `release_notes.md`" )
-                    }
-                    env.SCRIPT_OPTIONS = " --notes=${notesFiles[0].path}"
-
 					if ( params.RELEASE_DRY_RUN ) {
 					    env.SCRIPT_OPTIONS += " -d"
 					}
@@ -265,8 +255,17 @@ pipeline {
 			steps {
 				script {
 					checkoutReleaseScripts()
+
+                    def notesFiles = findFiles(glob: 'release_notes.md')
+                    if ( notesFiles.length < 1 ) {
+                        throw new IllegalStateException( "Could not locate `release_notes.md`" )
+                    }
+                    if ( notesFiles.length > 1 ) {
+                        throw new IllegalStateException( "Located more than 1 `release_notes.md`" )
+                    }
+
 					withCredentials([string(credentialsId: 'Hibernate-CI.github.com', variable: 'GITHUB_API_TOKEN')]) {
-						sh ".release/scripts/github-release.sh ${env.SCRIPT_OPTIONS} ${env.PROJECT} ${env.RELEASE_VERSION}"
+						sh ".release/scripts/github-release.sh ${env.SCRIPT_OPTIONS} --notes=${notesFiles[0].path} ${env.PROJECT} ${env.RELEASE_VERSION}"
 					}
 				}
 			}

@@ -890,45 +890,46 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public void logSummary() {
-		log.loggingStatistics();
-		log.startTime( startTime.toEpochMilli() );
-		log.sessionsOpened( sessionOpenCount.sum() );
-		log.sessionsClosed( sessionCloseCount.sum() );
-		log.transactions( transactionCount.sum() );
-		log.successfulTransactions( committedTransactionCount.sum() );
-		log.optimisticLockFailures( optimisticFailureCount.sum() );
-		log.flushes( flushCount.sum() );
-		log.connectionsObtained( connectCount.sum() );
-		log.statementsPrepared( prepareStatementCount.sum() );
-		log.statementsClosed( closeStatementCount.sum() );
-		log.secondLevelCachePuts( secondLevelCachePutCount.sum() );
-		log.secondLevelCacheHits( secondLevelCacheHitCount.sum() );
-		log.secondLevelCacheMisses( secondLevelCacheMissCount.sum() );
-		log.entitiesLoaded( entityLoadCount.sum() );
-		log.entitiesUpdated( entityUpdateCount.sum() );
-		log.entitiesInserted( entityInsertCount.sum() );
-		log.entitiesDeleted( entityDeleteCount.sum() );
-		log.entitiesFetched( entityFetchCount.sum() );
-		log.collectionsLoaded( collectionLoadCount.sum() );
-		log.collectionsUpdated( collectionUpdateCount.sum() );
-		log.collectionsRemoved( collectionRemoveCount.sum() );
-		log.collectionsRecreated( collectionRecreateCount.sum() );
-		log.collectionsFetched( collectionFetchCount.sum() );
-		log.naturalIdCachePuts( naturalIdCachePutCount.sum() );
-		log.naturalIdCacheHits( naturalIdCacheHitCount.sum() );
-		log.naturalIdCacheMisses( naturalIdCacheMissCount.sum() );
-		log.naturalIdMaxQueryTime( naturalIdQueryExecutionMaxTime.get() );
-		log.naturalIdQueriesExecuted( naturalIdQueryExecutionCount.sum() );
-		log.queriesExecuted( queryExecutionCount.sum() );
-		log.queryCachePuts( queryCachePutCount.sum() );
-		log.timestampCachePuts( updateTimestampsCachePutCount.sum() );
-		log.timestampCacheHits( updateTimestampsCacheHitCount.sum() );
-		log.timestampCacheMisses( updateTimestampsCacheMissCount.sum() );
-		log.queryCacheHits( queryCacheHitCount.sum() );
-		log.queryCacheMisses( queryCacheMissCount.sum() );
-		log.maxQueryTime( queryExecutionMaxTime.get() );
-		log.queryPlanCacheHits( queryPlanCacheHitCount.sum() );
-		log.queryPlanCacheMisses( queryPlanCacheMissCount.sum() );
+		log.logStatistics(
+				startTime.toEpochMilli(),
+				sessionOpenCount.sum(),
+				sessionCloseCount.sum(),
+				transactionCount.sum(),
+				committedTransactionCount.sum(),
+				optimisticFailureCount.sum(),
+				flushCount.sum(),
+				connectCount.sum(),
+				prepareStatementCount.sum(),
+				closeStatementCount.sum(),
+				secondLevelCachePutCount.sum(),
+				secondLevelCacheHitCount.sum(),
+				secondLevelCacheMissCount.sum(),
+				entityLoadCount.sum(),
+				entityFetchCount.sum(),
+				entityUpdateCount.sum(),
+				entityInsertCount.sum(),
+				entityDeleteCount.sum(),
+				collectionLoadCount.sum(),
+				collectionFetchCount.sum(),
+				collectionUpdateCount.sum(),
+				collectionRemoveCount.sum(),
+				collectionRecreateCount.sum(),
+				naturalIdQueryExecutionCount.sum(),
+				naturalIdCachePutCount.sum(),
+				naturalIdCacheHitCount.sum(),
+				naturalIdCacheMissCount.sum(),
+				naturalIdQueryExecutionMaxTime.get(),
+				queryExecutionCount.sum(),
+				queryCachePutCount.sum(),
+				queryCacheHitCount.sum(),
+				queryCacheMissCount.sum(),
+				queryExecutionMaxTime.get(),
+				updateTimestampsCachePutCount.sum(),
+				updateTimestampsCacheHitCount.sum(),
+				updateTimestampsCacheMissCount.sum(),
+				queryPlanCacheHitCount.sum(),
+				queryPlanCacheMissCount.sum()
+		);
 	}
 
 	@Override

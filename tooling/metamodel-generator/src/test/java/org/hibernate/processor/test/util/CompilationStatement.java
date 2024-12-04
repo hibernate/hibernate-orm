@@ -100,6 +100,9 @@ public class CompilationStatement extends Statement {
 	}
 
 	private String getPathToSource(Class<?> testClass) {
+		if ( testClass.isMemberClass() ) {
+			return getPathToSource( testClass.getDeclaringClass() );
+		}
 		return TestUtil.getSourceBaseDir( testClass ).getAbsolutePath() + File.separator + testClass.getName()
 				.replace( PACKAGE_SEPARATOR, File.separator ) + ".java";
 	}

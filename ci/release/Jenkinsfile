@@ -148,8 +148,19 @@ pipeline {
 					env.RELEASE_VERSION = releaseVersion.toString()
 					env.DEVELOPMENT_VERSION = developmentVersion.toString()
 
-                    def notesFile = new File( "release_notes.md" )
-                    assert notesFile.exists
+                    def notesFiles = findFiles(glob: 'release_notes.md')
+                    if ( notesFiles.length < 1 ) {
+                        throw new IllegalStateException( "Could not locate `release_notes.md`" )
+                    }
+                    if ( notesFiles.length > 1 ) {
+                        throw new IllegalStateException( "Located more than 1 `release_notes.md`" )
+                    }
+
+                    def notesFile = notesFile[0]
+                    if ( !notesFile.exists ) {
+                        throw new IllegalStateException( "File `release_notes.md` does not exist" )
+                    }
+
                     env.SCRIPT_OPTIONS = " --notes=${notesFile.absolutePath}"
 
 					if ( params.RELEASE_DRY_RUN ) {

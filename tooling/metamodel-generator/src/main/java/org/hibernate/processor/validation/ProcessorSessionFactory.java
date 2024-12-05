@@ -72,8 +72,9 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	public static MockSessionFactory create(
 			ProcessingEnvironment environment,
 			Map<String,String> entityNameMappings,
-			Map<String, Set<String>> enumTypesByValue) {
-		return instance.make(environment, entityNameMappings, enumTypesByValue);
+			Map<String, Set<String>> enumTypesByValue,
+			boolean indexing) {
+		return instance.make(environment, indexing, entityNameMappings, enumTypesByValue);
 	}
 
 	static final Mocker<ProcessorSessionFactory> instance = Mocker.variadic(ProcessorSessionFactory.class);
@@ -88,16 +89,19 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	private final Elements elementUtil;
 	private final Types typeUtil;
 	private final Filer filer;
+	private final boolean indexing;
 	private final Map<String, String> entityNameMappings;
 	private final Map<String, Set<String>> enumTypesByValue;
 
 	public ProcessorSessionFactory(
 			ProcessingEnvironment processingEnvironment,
+			boolean indexing,
 			Map<String,String> entityNameMappings,
 			Map<String, Set<String>> enumTypesByValue) {
 		elementUtil = processingEnvironment.getElementUtils();
 		typeUtil = processingEnvironment.getTypeUtils();
 		filer = processingEnvironment.getFiler();
+		this.indexing = indexing;
 		this.entityNameMappings = entityNameMappings;
 		this.enumTypesByValue = enumTypesByValue;
 	}
@@ -220,15 +224,25 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		if ( result != null ) {
 			return result;
 		}
-		try (Reader reader = filer.getResource(StandardLocation.SOURCE_OUTPUT, ENTITY_INDEX, value)
-				.openReader(true); BufferedReader buffered = new BufferedReader(reader) ) {
-			return Set.of(split(" ", buffered.readLine()));
+		if ( indexing ) {
+			final Set<String> indexed = getIndexedEnumTypesByValue(value);
+			enumTypesByValue.put(value, indexed);
+			return indexed;
+		}
+		//TODO: else do a full scan like in findEntityByUnqualifiedName()
+		return null;
+	}
+
+	private @Nullable Set<String> getIndexedEnumTypesByValue(String value) {
+		try (Reader reader = filer.getResource( StandardLocation.SOURCE_OUTPUT, ENTITY_INDEX, value )
+				.openReader( true ); BufferedReader buffered = new BufferedReader( reader )) {
+			return Set.of( split( " ", buffered.readLine() ) );
 		}
 		catch (IOException ignore) {
 		}
-		try (Reader reader = filer.getResource(StandardLocation.CLASS_PATH, ENTITY_INDEX, '.' + value)
-				.openReader(true); BufferedReader buffered = new BufferedReader(reader) ) {
-			return Set.of(split(" ", buffered.readLine()));
+		try (Reader reader = filer.getResource( StandardLocation.CLASS_PATH, ENTITY_INDEX, '.' + value )
+				.openReader( true ); BufferedReader buffered = new BufferedReader( reader )) {
+			return Set.of( split( " ", buffered.readLine() ) );
 		}
 		catch (IOException ignore) {
 		}
@@ -503,27 +517,13 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		if ( cached != null ) {
 			return cached;
 		}
-		final String qualifiedName = entityNameMappings.get(entityName);
-		if ( qualifiedName != null ) {
-			final TypeElement result = elementUtil.getTypeElement(qualifiedName);
-			entityCache.put(entityName, result);
-			return result;
-		}
-		try (Reader reader = filer.getResource( StandardLocation.SOURCE_OUTPUT, ENTITY_INDEX, entityName)
-				.openReader(true); BufferedReader buffered = new BufferedReader(reader) ) {
-			final TypeElement result = elementUtil.getTypeElement(buffered.readLine());
-			entityCache.put(entityName, result);
-			return result;
-		}
-		catch (IOException ignore) {
-		}
-		try (Reader reader = filer.getResource(StandardLocation.CLASS_PATH, ENTITY_INDEX, entityName)
-				.openReader(true); BufferedReader buffered = new BufferedReader(reader) ) {
-			final TypeElement result = elementUtil.getTypeElement(buffered.readLine());
-			entityCache.put(entityName, result);
-			return result;
-		}
-		catch (IOException ignore) {
+
+		if ( indexing ) {
+			final TypeElement indexedEntity = findIndexedEntityByQualifiedName( entityName );
+			if ( indexedEntity != null ) {
+				entityCache.put(entityName, indexedEntity);
+				return indexedEntity;
+			}
 		}
 
 		TypeElement symbol =
@@ -539,6 +539,26 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 				entityCache.put(entityName, symbol);
 				return symbol;
 			}
+		}
+		return null;
+	}
+
+	private @Nullable TypeElement findIndexedEntityByQualifiedName(String entityName) {
+		final String qualifiedName = entityNameMappings.get(entityName);
+		if ( qualifiedName != null ) {
+			return elementUtil.getTypeElement(qualifiedName);
+		}
+		try (Reader reader = filer.getResource( StandardLocation.SOURCE_OUTPUT, ENTITY_INDEX, entityName)
+				.openReader(true); BufferedReader buffered = new BufferedReader(reader) ) {
+			return elementUtil.getTypeElement(buffered.readLine());
+		}
+		catch (IOException ignore) {
+		}
+		try (Reader reader = filer.getResource(StandardLocation.CLASS_PATH, ENTITY_INDEX, entityName)
+				.openReader(true); BufferedReader buffered = new BufferedReader(reader) ) {
+			return elementUtil.getTypeElement(buffered.readLine());
+		}
+		catch (IOException ignore) {
 		}
 		return null;
 	}

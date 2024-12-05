@@ -2451,7 +2451,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						true,
 						new ErrorHandler( context, isLocal(method) ? method : element, mirror, value, hql ),
 						ProcessorSessionFactory.create( context.getProcessingEnvironment(),
-								context.getEntityNameMappings(), context.getEnumTypesByValue() )
+								context.getEntityNameMappings(), context.getEnumTypesByValue(), context.isIndexing() )
 				);
 		if ( statement != null ) {
 			if ( statement instanceof SqmSelectStatement ) {

@@ -107,6 +107,8 @@ public final class Context {
 	private String[] includes = {"*"};
 	private String[] excludes = {};
 
+	private boolean indexing = true;
+
 	private final Map<String, String> entityNameMappings = new HashMap<>();
 	private final Map<String, Set<String>> enumTypesByValue = new HashMap<>();
 
@@ -550,5 +552,13 @@ public final class Context {
 			}
 		}
 		return null;
+	}
+
+	public void setIndexing(boolean index) {
+		this.indexing = index;
+	}
+
+	public boolean isIndexing() {
+		return indexing;
 	}
 }

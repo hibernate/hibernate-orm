@@ -3,6 +3,72 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 7.0.0.Beta3 (December 05, 2024)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32364
+
+** Bug
+    * [HHH-18912] - Fix ORM release process
+    * [HHH-18881] - In MySQL, array of dates are not converted correctly
+    * [HHH-18872] - ConcreteProxy type not restored from 2LC when loading a ManyToOne
+    * [HHH-18862] - Group by error due to subselect using foreign key reference instead of primary key in HQL query
+    * [HHH-18859] - slice operator and @ElementCollection
+    * [HHH-18851] - ArrayContainsArgumentTypeResolver wrongly infers array type for needle argument
+    * [HHH-18850] - createCountQuery with Hibernate 6.6.2
+    * [HHH-18848] - JAR for org.hibernate.orm:hibernate-scan-jandex:7.0.0.Beta2 at Maven Central
+    * [HHH-18842] - Regression: CollectionType.replace() breaks if target is PersistentCollection, but not instance of Collection (e.g. PersistentMap)
+    * [HHH-18832] - Bytecode enhancement skipped for entities with "compute-only" @Transient properties
+    * [HHH-18830] - extraneous SQL UPDATE statements for unowned collection with @OrderColumn
+    * [HHH-18826] - mappedBy validation in Processor
+    * [HHH-18765] - Error in the booleanarray_to_string auxiliary function 
+    * [HHH-18709] - CriteriaUpdate involving JSON field containing Map<String, Object> results in SemanticException
+    * [HHH-18705] - Hibernate processor creates bad TypedReferenceQuery when @Entity have name attribute
+    * [HHH-18692] - Hibernate attempts to close batched statements multiple times 
+    * [HHH-18629] - Inconsistent column alias generated while result class is used for placeholder
+    * [HHH-18610] - "SQLGrammarException: Unable to find column position by name:" when using Single Table Inheritance with a strict JDBC driver such as PostgreSQL
+    * [HHH-18583] - Joined + discriminator inheritance treat in where clause not restricting to subtype
+    * [HHH-18274] - Problems with generics in queries; proposed partial solution
+    * [HHH-18069] - NullPointerException when unioning partition results
+    * [HHH-17838] - @OneToOne relationship + @Embeddable keys + FetchType.LAZY fail in most recent version
+    * [HHH-16054] - JPA / Hibernate, duplicate pkey error when updating entity that is a subclass of a base class that uses IdClass for composite primary key
+    * [HHH-14119] - IN clause parameter padding not working for criteria query in conjunction with LiteralHandlingMode.BIND
+
+** Improvement
+    * [HHH-18875] - Stop using `Array.newInstance` in `org.hibernate.internal.util.collections.StandardStack`
+    * [HHH-18861] - Improve GitHub release announcement body for automated releases
+    * [HHH-18847] - Organize the org.hibernate.query.results package
+    * [HHH-18844] - Run preVerifyRelease task as part of h2 CI job
+    * [HHH-18841] - Make `_identifierMapper` property added for a IdClass synthetic
+    * [HHH-18840] - detect and report incorrect usage of @OrderColumn, @MapKeyColumn, and @MapKey
+    * [HHH-18683] - The method Metamodel#entity(String) should throw IllegalArgumentException for non-entities
+    * [HHH-18534] - Remove the org.hibernate.boot.models.categorize package
+    * [HHH-17246] - Guard against Sybase being configured for truncating trailing zeros.
+    * [HHH-16160] - XML aggregate support for more databases
+    * [HHH-14020] - Allow Hibernate Types to have access to ServiceRegistry during initialization
+    * [HHH-7913] - Catalog and schema replacement in <subselect> / @Subselect
+
+** New Feature
+    * [HHH-18644] - New and improved hibernate-maven-plugin
+
+** Remove Feature
+    * [HHH-18843] - remove deprecated @OrderBy annotation
+
+** Sub-task
+    * [HHH-18804] - Add XML aggregate support for HANA
+    * [HHH-18803] - Add XML aggregate support for DB2
+    * [HHH-18802] - Add XML aggregate support for SQL Server
+    * [HHH-18801] - Add XML aggregate support for Sybase ASE
+    * [HHH-18800] - Add XML aggregate support for PostgreSQL
+    * [HHH-18799] - Add XML aggregate support for Oracle
+
+** Task
+    * [HHH-18906] - Allow specifying UnsupportedEnhancementStrategy for Hibernate testing
+    * [HHH-18866] - Fix more failing tests on CockroachDB
+    * [HHH-18854] - Changes for Hibernate Reactive 3.0 integration
+    * [HHH-18678] - Use specific tasks for CI builds
+
+
 Changes in 7.0.0.Beta2 (November 13, 2024)
 ------------------------------------------------------------------------------------------------------------------------
 

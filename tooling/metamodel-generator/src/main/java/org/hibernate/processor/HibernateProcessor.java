@@ -291,7 +291,7 @@ public class HibernateProcessor extends AbstractProcessor {
 		context.setInclude( options.getOrDefault( INCLUDE, "*" ) );
 		context.setExclude( options.getOrDefault( EXCLUDE, "" ) );
 
-		context.setIndexing( parseBoolean( options.get( INDEX ) ) );
+		context.setIndexing( parseBoolean( options.getOrDefault( INDEX, "true" ) ) );
 
 		return parseBoolean( options.get( FULLY_ANNOTATION_CONFIGURED_OPTION ) );
 	}

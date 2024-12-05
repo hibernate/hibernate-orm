@@ -2234,11 +2234,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 
 		final AnnotationValue value = getAnnotationValue( mirror, "value" );
-		if ( value != null ) {
-			final Object queryString = value.getValue();
-			if ( queryString instanceof String ) {
-				addQueryMethod(method, returnType, containerTypeName, mirror, isNative, value, (String) queryString);
-			}
+		if ( value != null && value.getValue() instanceof String queryString ) {
+			addQueryMethod( method, returnType, containerTypeName, mirror, isNative, value, queryString );
 		}
 	}
 
@@ -2388,8 +2385,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		else {
 			final HqlLexer hqlLexer = HqlParseTreeBuilder.INSTANCE.buildHqlLexer( hql );
 			final List<? extends Token> allTokens = hqlLexer.getAllTokens();
-			for (int i = 0; i < allTokens.size(); i++) {
-				final Token token = allTokens.get(i);
+			for ( final Token token : allTokens ) {
 				switch ( token.getType() ) {
 					case FROM:
 						return hql;
@@ -2449,8 +2445,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 								context.getEntityNameMappings(), context.getEnumTypesByValue(), context.isIndexing() )
 				);
 		if ( statement != null ) {
-			if ( statement instanceof SqmSelectStatement ) {
-				validateSelectHql( method, returnType, mirror, value, (SqmSelectStatement<?>) statement );
+			if ( statement instanceof SqmSelectStatement<?> selectStatement ) {
+				validateSelectHql( method, returnType, mirror, value, selectStatement );
 			}
 			else {
 				validateUpdateHql( method, returnType, mirror, value );

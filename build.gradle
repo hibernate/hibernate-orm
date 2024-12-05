@@ -71,7 +71,18 @@ String extractPropertyOrSetting(String name) {
 	if ( project.hasProperty( name) ) {
 		return project.property( name )
 	}
-	return System.getProperty( name )
+
+	def sysProp = System.getProperty( name )
+	if ( sysProp != null ) {
+		return sysProp
+	}
+
+	def envProp = System.getenv( name )
+	if ( envProp != null ) {
+		return envProp
+	}
+
+	return null
 }
 
 nexusPublishing {

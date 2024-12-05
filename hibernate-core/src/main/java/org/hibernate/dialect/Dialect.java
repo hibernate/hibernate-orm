@@ -278,7 +278,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 	private static final Pattern ESCAPE_CLOSING_COMMENT_PATTERN = Pattern.compile( "\\*/" );
 	private static final Pattern ESCAPE_OPENING_COMMENT_PATTERN = Pattern.compile( "/\\*" );
-	private static final Pattern QUERY_PATTERN = Pattern.compile( "^\\s*(select\\b.+?\\bfrom\\b.+?)(\\b(where|join)\\b.+?)$" );
+	private static final Pattern QUERY_PATTERN = Pattern.compile(
+		"^\\s*(select\\b.+?\\bfrom\\b.+?)(\\b(?:natural )?(?:left |right )?(?:inner |outer )?join.+?\\b)?(\\bwhere\\b.+?)$");
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, Dialect.class.getName() );
 
@@ -4767,13 +4768,16 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	public static String addQueryHints(String query, String hints) {
 		Matcher matcher = QUERY_PATTERN.matcher( query );
 		if ( matcher.matches() && matcher.groupCount() > 1 ) {
-			String startToken = matcher.group( 1 );
-			String endToken = matcher.group( 2 );
+			final String startToken = matcher.group(1);
+			// Null if there is no join in the query
+			final String joinToken = Objects.toString(matcher.group(2), "");
+			final String endToken = matcher.group(3);
 
 			return startToken +
 					" use index (" +
 					hints +
 					") " +
+					joinToken +
 					endToken;
 		}
 		else {

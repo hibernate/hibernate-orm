@@ -1,5 +1,5 @@
 import org.apache.tools.ant.filters.ReplaceTokens
-import org.asciidoctor.gradle.AsciidoctorTask
+import org.asciidoctor.gradle.jvm.AsciidoctorTask
 
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
@@ -28,7 +28,7 @@ rootProject.subprojects { subproject ->
 
 apply from: rootProject.file( 'gradle/java-module.gradle' )
 
-apply plugin: 'org.asciidoctor.convert'
+apply plugin: 'org.asciidoctor.jvm.convert'
 
 apply plugin: 'hibernate-matrix-testing'
 
@@ -179,8 +179,6 @@ task renderTopicalGuides(type: AsciidoctorTask, group: 'Documentation') {
     description = 'Renders the  Topical Guides in HTML format using Asciidoctor.'
     sourceDir = file( 'src/main/asciidoc/topical' )
     outputDir = new File("$buildDir/asciidoc/topical/html_single")
-	backends "html5"
-	separateOutputDirs false
 	options logDocuments: true
 	attributes  icons: 'font',
 				experimental: true,
@@ -204,8 +202,6 @@ task renderGettingStartedGuides(type: AsciidoctorTask, group: 'Documentation') {
         include 'index.adoc'
     }
     outputDir = new File("$buildDir/asciidoc/quickstart/html_single")
-	backends "html5"
-	separateOutputDirs false
 	options logDocuments: true
 	attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify'
 }
@@ -234,8 +230,6 @@ task renderUserGuide(type: AsciidoctorTask, group: 'Documentation') {
         include 'Hibernate_User_Guide.adoc'
     }
     outputDir = new File("$buildDir/asciidoc/userguide/html_single")
-    backends "html5"
-    separateOutputDirs false
     options logDocuments: true
 	attributes icons: 'font', experimental: true,
 			   'source-highlighter': 'prettify',
@@ -270,8 +264,6 @@ task renderIntegrationGuide(type: AsciidoctorTask, group: 'Documentation') {
 		include 'Hibernate_Integration_Guide.adoc'
 	}
 	outputDir = new File("$buildDir/asciidoc/integrationguide/html_single")
-	backends "html5"
-	separateOutputDirs false
 	options logDocuments: true
 	attributes  icons: 'font',
 				experimental: true,
@@ -318,3 +310,10 @@ buildDocsForPublishing.dependsOn renderIntegrationGuide
 
 checkstyleMain.exclude '**/org/hibernate/userguide/model/*'
 
+tasks.withType(AsciidoctorTask).configureEach {
+	baseDirFollowsSourceDir()
+	outputOptions {
+		separateOutputDirs = false
+		backends 'html5'
+	}
+}

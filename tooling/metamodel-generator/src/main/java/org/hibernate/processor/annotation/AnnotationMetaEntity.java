@@ -111,7 +111,6 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private final ImportContext importContext;
 	private final TypeElement element;
 	private final Map<String, MetaAttribute> members;
-	private TypeElement parentElement;
 	private final Context context;
 	private final boolean managed;
 	private boolean jakartaDataRepository;
@@ -188,7 +187,6 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final AnnotationMetaEntity annotationMetaEntity =
 				new AnnotationMetaEntity( element, context, managed, jakartaData, parent );
 		if ( parent != null ) {
-			annotationMetaEntity.setParentElement( parent.element );
 			parent.addInnerClass( annotationMetaEntity );
 		}
 		if ( !lazilyInitialised ) {
@@ -267,11 +265,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	public void addInnerClass(AnnotationMetaEntity metaEntity) {
-		putMember( "INNER_" + metaEntity.getQualifiedName(), new InnerClassMetaAttribute( metaEntity ) );
-	}
-
-	public void setParentElement(TypeElement parentElement) {
-		this.parentElement = parentElement;
+		putMember( "INNER_" + metaEntity.getQualifiedName(),
+				new InnerClassMetaAttribute( metaEntity ) );
 	}
 
 	@Override

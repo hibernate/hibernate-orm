@@ -39,6 +39,7 @@ plugins {
 
 apply from: file( 'gradle/module.gradle' )
 
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Release Task
 
@@ -61,19 +62,23 @@ task publish {
 			"themselves if they have any publish-related activities to perform"
 }
 
-ext {
-	if ( project.hasProperty( 'hibernatePublishUsername' ) ) {
-		if ( ! project.hasProperty( 'hibernatePublishPassword' ) ) {
-			throw new GradleException( "Should specify both `hibernatePublishUsername` and `hibernatePublishPassword` as project properties" );
-		}
+
+
+def ossrhUsername = extractPropertyOrSetting( "OSSRH_USER" )
+def ossrhPassword = extractPropertyOrSetting( "OSSRH_PASSWORD" )
+
+String extractPropertyOrSetting(String name) {
+	if ( project.hasProperty( name) ) {
+		return project.property( name )
 	}
+	return System.getProperty( name )
 }
 
 nexusPublishing {
 	repositories {
 		sonatype {
-			username = project.hasProperty( 'hibernatePublishUsername' ) ? project.property( 'hibernatePublishUsername' ) : null
-			password = project.hasProperty( 'hibernatePublishPassword' ) ? project.property( 'hibernatePublishPassword' ) : null
+			username = ossrhUsername
+			password = ossrhPassword
 		}
 	}
 }
@@ -82,26 +87,15 @@ gradle.taskGraph.addTaskExecutionGraphListener(
 		new TaskExecutionGraphListener() {
 			@Override
 			void graphPopulated(TaskExecutionGraph graph) {
-				String[] tasksToLookFor = [
-						'publish',
-						'publishToSonatype',
-						'publishAllPublicationsToSonatype',
-						'publishPublishedArtifactsPublicationToSonatypeRepository',
-						'publishRelocationArtifactsPublicationToSonatypeRepository',
-				]
-
-				for ( String taskToLookFor : tasksToLookFor ) {
-					if ( graph.hasTask( taskToLookFor ) ) {
-						// trying to publish - make sure the needed credentials are available
-
-						if ( project.property( 'hibernatePublishUsername' ) == null ) {
-							throw new RuntimeException( "`-PhibernatePublishUsername=...` not found" )
+				for ( final def task in graph.allTasks ) {
+					if ( task instanceof PublishToMavenRepository ) {
+						if ( ossrhUsername == null ) {
+							throw new RuntimeException( "OSSRH username not specified, but publishing was requested" )
 						}
-						if ( project.property( 'hibernatePublishPassword' ) == null ) {
-							throw new RuntimeException( "`-PhibernatePublishPassword=...` not found" )
+						if ( ossrhPassword == null ) {
+							throw new RuntimeException( "OSSRH password not specified, but publishing was requested" )
 						}
-
-						break;
+						break
 					}
 				}
 			}
@@ -139,6 +133,3 @@ idea {
 		name = "hibernate-orm"
 	}
 }
-
-
-

@@ -137,24 +137,9 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 		}
 
 		if ( Timestamp.class.isAssignableFrom( type ) ) {
-			/*
-			 * This works around two bugs:
-			 * - HHH-13266 (JDK-8061577): around and before 1900,
-			 * the number of milliseconds since the epoch does not mean the same thing
-			 * for java.util and java.time, so conversion must be done using the year, month, day, hour, etc.
-			 * - HHH-13379 (JDK-4312621): after 1908 (approximately),
-			 * Daylight Saving Time introduces ambiguity in the year/month/day/hour/etc representation once a year
-			 * (on DST end), so conversion must be done using the number of milliseconds since the epoch.
-			 * - around 1905, both methods are equally valid, so we don't really care which one is used.
-			 */
-			if ( offsetDateTime.getYear() < 1905 ) {
-				return (X) Timestamp.valueOf(
-						offsetDateTime.atZoneSameInstant( ZoneId.systemDefault() ).toLocalDateTime()
-				);
-			}
-			else {
-				return (X) Timestamp.from( offsetDateTime.toInstant() );
-			}
+			final ZonedDateTime dateTime =
+					offsetDateTime.atZoneSameInstant( options.getJdbcZoneId() ); // convert to the JDBC timezone
+			return (X) Timestamp.valueOf( dateTime.toLocalDateTime() );
 		}
 
 		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
@@ -195,22 +180,10 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 		}
 
 		if (value instanceof Timestamp timestamp) {
-			/*
-			 * This works around two bugs:
-			 * - HHH-13266 (JDK-8061577): around and before 1900,
-			 * the number of milliseconds since the epoch does not mean the same thing
-			 * for java.util and java.time, so conversion must be done using the year, month, day, hour, etc.
-			 * - HHH-13379 (JDK-4312621): after 1908 (approximately),
-			 * Daylight Saving Time introduces ambiguity in the year/month/day/hour/etc representation once a year
-			 * (on DST end), so conversion must be done using the number of milliseconds since the epoch.
-			 * - around 1905, both methods are equally valid, so we don't really care which one is used.
-			 */
-			if ( timestamp.getYear() < 5 ) { // Timestamp year 0 is 1900
-				return timestamp.toLocalDateTime().atZone( ZoneId.systemDefault() ).toOffsetDateTime();
-			}
-			else {
-				return OffsetDateTime.ofInstant( timestamp.toInstant(), ZoneId.systemDefault() );
-			}
+			return timestamp.toLocalDateTime()
+					.atZone( options.getJdbcZoneId() ) // the Timestamp is in the JDBC timezone
+					.withZoneSameInstant( ZoneId.systemDefault() ) // convert back to the VM timezone
+					.toOffsetDateTime(); // return the corresponding OffsetDateTime
 		}
 
 		if (value instanceof Date date) {

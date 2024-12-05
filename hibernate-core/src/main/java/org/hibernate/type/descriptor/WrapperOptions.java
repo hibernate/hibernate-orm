@@ -9,6 +9,9 @@ import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.TimeZone;
 
 /**
@@ -91,4 +94,53 @@ public interface WrapperOptions {
 	 * @see org.hibernate.cfg.AvailableSettings#JDBC_TIME_ZONE
 	 */
 	TimeZone getJdbcTimeZone();
+
+	/**
+	 * Get the {@link ZoneId} representing the
+	 * {@linkplain #getJdbcTimeZone JDBC time zone}, or the
+	 * {@linkplain ZoneId#systemDefault JVM default time zone id}
+	 * if no JDBC time zone was set via
+	 * {@value org.hibernate.cfg.AvailableSettings#JDBC_TIME_ZONE}.
+	 *
+	 * @apiNote Use for converting datetimes to and from the JDBC
+	 *          time zone.
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#JDBC_TIME_ZONE
+	 */
+	default ZoneId getJdbcZoneId() {
+		final TimeZone jdbcTimeZone = getJdbcTimeZone();
+		return jdbcTimeZone == null
+				? ZoneId.systemDefault()
+				: jdbcTimeZone.toZoneId();
+	}
+
+	/**
+	 * Get the current {@link ZoneOffset} for the {@link ZoneId}
+	 * representing the {@linkplain #getJdbcTimeZone JDBC time zone},
+	 * or the {@linkplain ZoneId#systemDefault JVM default time zone id}
+	 * if no JDBC time zone was set via
+	 * {@value org.hibernate.cfg.AvailableSettings#JDBC_TIME_ZONE}.
+	 *
+	 * @apiNote Use for converting <em>times</em> to and from the JDBC
+	 *          time zone. For datetimes, prefer {@link #getJdbcZoneId()}
+	 *          to apply the rules in force at the given datetime.
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#JDBC_TIME_ZONE
+	 */
+	default ZoneOffset getJdbcZoneOffset() {
+		return getJdbcZoneId().getRules().getOffset( Instant.now() );
+	}
+
+	/**
+	 * Get the current {@link ZoneOffset} for the
+	 * {@linkplain ZoneId#systemDefault JVM default time zone id}.
+	 *
+	 * @apiNote Use for converting <em>times</em> to and from the
+	 *          system time zone. For datetimes, prefer
+	 *          {@link ZoneId#systemDefault()}, to apply the rules
+	 *          in force at the given datetime.
+	 */
+	default ZoneOffset getSystemZoneOffset() {
+		return ZoneId.systemDefault().getRules().getOffset( Instant.now() );
+	}
 }

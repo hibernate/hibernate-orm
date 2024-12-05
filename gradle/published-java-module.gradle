@@ -46,7 +46,7 @@ java {
 }
 
 var signingKey = resolveSigningKey()
-var signingPassword = findSigningProperty( "signingPassword" )
+var signingPassword = findSigningProperty( "RELEASE_GPG_PASSPHRASE" )
 
 signing {
 	useInMemoryPgpKeys( signingKey, signingPassword )
@@ -55,12 +55,12 @@ signing {
 }
 
 String resolveSigningKey() {
-	var key = findSigningProperty( "signingKey" )
+	var key = findSigningProperty( "RELEASE_GPG_PRIVATE_KEY" )
 	if ( key != null ) {
 		return key
 	}
 
-	var keyFile = findSigningProperty( "signingKeyFile" )
+	var keyFile = findSigningProperty( "RELEASE_GPG_PRIVATE_KEY_PATH" )
 	if ( keyFile != null ) {
 		return new File( keyFile ).text
 	}
@@ -69,22 +69,26 @@ String resolveSigningKey() {
 }
 
 String findSigningProperty(String propName) {
-	if ( System.getProperty( propName ) != null ) {
+	def sysProp = System.getProperty(propName)
+	if ( sysProp != null ) {
 		logger.debug "Found `{}` as a system property", propName
-		return System.getProperty(propName )
+		return sysProp
 	}
-	else if ( System.getenv().get( propName ) != null ) {
+
+	def envVar = System.getenv().get(propName)
+	if ( envVar != null ) {
 		logger.debug "Found `{}` as an env-var property", propName
-		return System.getenv().get( propName )
+		return envVar
 	}
-	else if ( project.hasProperty( propName ) ) {
+
+	def projectProp = project.hasProperty(propName)
+	if (projectProp) {
 		logger.debug "Found `{}` as a project property", propName
-		return project.hasProperty( propName )
+		return projectProp
 	}
-	else {
-		logger.debug "Did not find `{}`", propName
-		return null
-	}
+
+	logger.debug "Did not find `{}`", propName
+	return null
 }
 
 

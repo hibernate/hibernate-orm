@@ -6,8 +6,10 @@ package org.hibernate.event.internal;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.ActionQueue;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.event.spi.DirtyCheckEvent;
 import org.hibernate.event.spi.DirtyCheckEventListener;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 
@@ -29,7 +31,7 @@ public class DefaultDirtyCheckEventListener extends AbstractFlushingEventListene
 	@Override
 	public void onDirtyCheck(DirtyCheckEvent event) throws HibernateException {
 		final ActionQueue actionQueue = event.getSession().getActionQueue();
-		int oldSize = actionQueue.numberOfCollectionRemovals();
+		final int oldSize = actionQueue.numberOfCollectionRemovals();
 
 		try {
 			flushEverythingToExecutions(event);
@@ -45,5 +47,10 @@ public class DefaultDirtyCheckEventListener extends AbstractFlushingEventListene
 		finally {
 			actionQueue.clearFromFlushNeededCheck( oldSize );
 		}
+	}
+
+	@Override
+	void checkForTransientReferences(EventSource session, PersistenceContext persistenceContext) {
+		// suppress the check
 	}
 }

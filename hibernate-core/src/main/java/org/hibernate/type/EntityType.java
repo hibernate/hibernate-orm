@@ -25,7 +25,7 @@ import org.hibernate.persister.entity.Joinable;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.engine.internal.ForeignKeys.getEntityIdentifierIfNotUnsaved;
+import static org.hibernate.engine.internal.ForeignKeys.getEntityIdentifier;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
@@ -449,7 +449,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	protected final Object getIdentifier(Object value, SharedSessionContractImplementor session)
 			throws HibernateException {
 		if ( isReferenceToIdentifierProperty() ) {
-			return getEntityIdentifierIfNotUnsaved( getAssociatedEntityName(), value, session ); //tolerates nulls
+			return getEntityIdentifier( getAssociatedEntityName(), value, session ); //tolerates nulls
 		}
 		else if ( value == null ) {
 			return null;

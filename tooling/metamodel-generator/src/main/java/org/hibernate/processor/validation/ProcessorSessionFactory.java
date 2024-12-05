@@ -134,7 +134,6 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		}
 	}
 
-
 	@Override
 	Type propertyType(String typeName, String propertyPath) {
 		final TypeElement type = findClassByQualifiedName(typeName);
@@ -226,8 +225,10 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		}
 		if ( indexing ) {
 			final Set<String> indexed = getIndexedEnumTypesByValue(value);
-			enumTypesByValue.put(value, indexed);
-			return indexed;
+			if ( indexed != null ) {
+				enumTypesByValue.put(value, indexed);
+				return indexed;
+			}
 		}
 		//TODO: else do a full scan like in findEntityByUnqualifiedName()
 		return null;

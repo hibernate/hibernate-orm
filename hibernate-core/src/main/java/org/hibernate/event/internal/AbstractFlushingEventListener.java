@@ -19,7 +19,6 @@ import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.internal.Collections;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.ActionQueue;
-import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.CollectionKey;
@@ -106,29 +105,27 @@ public abstract class AbstractFlushingEventListener {
 	}
 
 	protected void logFlushResults(FlushEvent event) {
-		if ( !LOG.isDebugEnabled() ) {
-			return;
+		if ( LOG.isDebugEnabled() ) {
+			final EventSource session = event.getSession();
+			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+			final ActionQueue actionQueue = session.getActionQueue();
+			LOG.debugf(
+					"Flushed: %s insertions, %s updates, %s deletions to %s objects",
+					actionQueue.numberOfInsertions(),
+					actionQueue.numberOfUpdates(),
+					actionQueue.numberOfDeletions(),
+					persistenceContext.getNumberOfManagedEntities()
+			);
+			LOG.debugf(
+					"Flushed: %s (re)creations, %s updates, %s removals to %s collections",
+					actionQueue.numberOfCollectionCreations(),
+					actionQueue.numberOfCollectionUpdates(),
+					actionQueue.numberOfCollectionRemovals(),
+					persistenceContext.getCollectionEntriesSize()
+			);
+			new EntityPrinter( session.getFactory() )
+					.logEntities( persistenceContext.getEntityHoldersByKey().entrySet() );
 		}
-		final EventSource session = event.getSession();
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		final ActionQueue actionQueue = session.getActionQueue();
-		LOG.debugf(
-				"Flushed: %s insertions, %s updates, %s deletions to %s objects",
-				actionQueue.numberOfInsertions(),
-				actionQueue.numberOfUpdates(),
-				actionQueue.numberOfDeletions(),
-				persistenceContext.getNumberOfManagedEntities()
-		);
-		LOG.debugf(
-				"Flushed: %s (re)creations, %s updates, %s removals to %s collections",
-				actionQueue.numberOfCollectionCreations(),
-				actionQueue.numberOfCollectionUpdates(),
-				actionQueue.numberOfCollectionRemovals(),
-				persistenceContext.getCollectionEntriesSize()
-		);
-		new EntityPrinter( session.getFactory() ).toString(
-				persistenceContext.getEntityHoldersByKey().entrySet()
-		);
 	}
 
 	/**
@@ -140,8 +137,8 @@ public abstract class AbstractFlushingEventListener {
 
 		LOG.debug( "Processing flush-time cascades" );
 
-		final PersistContext context = getContext( session );
-		//safe from concurrent modification because of how concurrentEntries() is implemented on IdentityMap
+		final PersistContext context = PersistContext.create();
+		// safe from concurrent modification because of how concurrentEntries() is implemented on IdentityMap
 		for ( Map.Entry<Object,EntityEntry> me : persistenceContext.reentrantSafeEntityEntries() ) {
 //		for ( Map.Entry me : IdentityMap.concurrentEntries( persistenceContext.getEntityEntries() ) ) {
 			final EntityEntry entry = me.getValue();
@@ -150,6 +147,10 @@ public abstract class AbstractFlushingEventListener {
 			}
 		}
 
+		checkForTransientReferences( session, persistenceContext );
+	}
+
+	void checkForTransientReferences(EventSource session, PersistenceContext persistenceContext) {
 		// perform these checks after all cascade persist events have been
 		// processed, so that all entities which will be persisted are
 		// persistent when we do the check (I wonder if we could move this
@@ -181,19 +182,11 @@ public abstract class AbstractFlushingEventListener {
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		persistenceContext.incrementCascadeLevel();
 		try {
-			Cascade.cascade( getCascadingAction(session), CascadePoint.BEFORE_FLUSH, session, persister, object, anything );
+			Cascade.cascade( CascadingActions.PERSIST_ON_FLUSH, CascadePoint.BEFORE_FLUSH, session, persister, object, anything );
 		}
 		finally {
 			persistenceContext.decrementCascadeLevel();
 		}
-	}
-
-	protected PersistContext getContext(EventSource session) {
-		return PersistContext.create();
-	}
-
-	protected CascadingAction<PersistContext> getCascadingAction(EventSource session) {
-		return CascadingActions.PERSIST_ON_FLUSH;
 	}
 
 	/**

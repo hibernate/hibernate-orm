@@ -105,8 +105,26 @@ public abstract class AbstractFlushingEventListener {
 	}
 
 	protected void logFlushResults(FlushEvent event) {
-		if ( !LOG.isDebugEnabled() ) {
-			return;
+		if ( LOG.isDebugEnabled() ) {
+			final EventSource session = event.getSession();
+			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+			final ActionQueue actionQueue = session.getActionQueue();
+			LOG.debugf(
+					"Flushed: %s insertions, %s updates, %s deletions to %s objects",
+					actionQueue.numberOfInsertions(),
+					actionQueue.numberOfUpdates(),
+					actionQueue.numberOfDeletions(),
+					persistenceContext.getNumberOfManagedEntities()
+			);
+			LOG.debugf(
+					"Flushed: %s (re)creations, %s updates, %s removals to %s collections",
+					actionQueue.numberOfCollectionCreations(),
+					actionQueue.numberOfCollectionUpdates(),
+					actionQueue.numberOfCollectionRemovals(),
+					persistenceContext.getCollectionEntriesSize()
+			);
+			new EntityPrinter( session.getFactory() )
+					.logEntities( persistenceContext.getEntityHoldersByKey().entrySet() );
 		}
 	}
 

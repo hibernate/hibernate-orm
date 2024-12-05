@@ -461,8 +461,8 @@ public class EnhancerImpl implements Enhancer {
 				continue;
 			}
 			boolean propertyNameMatchesFieldName = false;
-			// convert field letter to lower case
-			methodFieldName = methodFieldName.substring(0, 1).toLowerCase() + methodFieldName.substring(1);
+			// extract the property name from method name
+			methodFieldName = getJavaBeansFieldName(methodFieldName);
 			TypeList typeList = methodDescription.getDeclaredAnnotations().asTypeList();
 			if (typeList.stream().anyMatch(typeDefinitions ->
 					(typeDefinitions.getName().equals("jakarta.persistence.Transient")))) {
@@ -476,7 +476,6 @@ public class EnhancerImpl implements Enhancer {
 			for (FieldDescription ctField : methodDescription.getDeclaringType().getDeclaredFields()) {
 				if (!Modifier.isStatic(ctField.getModifiers())) {
 					AnnotatedFieldDescription annotatedField = new AnnotatedFieldDescription(enhancementContext, ctField);
-					boolean containsPropertyAccessorMethods = false;
 					if (enhancementContext.isPersistentField(annotatedField)) {
 						if (methodFieldName.equals(ctField.getActualName())) {
 							propertyNameMatchesFieldName = true;
@@ -505,6 +504,22 @@ public class EnhancerImpl implements Enhancer {
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * If the first two characters are upper case, assume all characters are upper case to be returned as is.
+	 * Otherwise, return the name with the first character converted to lower case and the remaining part returned as is.
+	 * @param fieldName is the property accessor name to be updated following Persistence property name rules.
+	 * @return name that follows JavaBeans rules.
+	 */
+	private static String getJavaBeansFieldName(String fieldName) {
+
+		if (fieldName.length() == 0 ||
+				(fieldName.length() > 1 && Character.isUpperCase(fieldName.charAt(0)) && Character.isUpperCase(fieldName.charAt(1)))
+		) {
+			return fieldName;
+		}
+		return Character.toLowerCase(fieldName.charAt(0)) + fieldName.substring(1);
 	}
 
 	private static void verifyVersions(TypeDescription managedCtClass, ByteBuddyEnhancementContext enhancementContext) {

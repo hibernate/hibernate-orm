@@ -104,7 +104,8 @@ public abstract class AnnotationMeta implements Metamodel {
 									new WarningErrorHandler( context, getElement(), mirror, value, hql,
 											reportErrors, checkHql ),
 									ProcessorSessionFactory.create( context.getProcessingEnvironment(),
-											context.getEntityNameMappings(), context.getEnumTypesByValue() )
+											context.getEntityNameMappings(), context.getEnumTypesByValue(),
+											context.isIndexing() )
 							);
 					if ( !isJakartaDataStyle()
 							&& statement instanceof SqmSelectStatement<?> selectStatement ) {

@@ -54,6 +54,7 @@ import static org.hibernate.processor.HibernateProcessor.DEBUG_OPTION;
 import static org.hibernate.processor.HibernateProcessor.EXCLUDE;
 import static org.hibernate.processor.HibernateProcessor.FULLY_ANNOTATION_CONFIGURED_OPTION;
 import static org.hibernate.processor.HibernateProcessor.INCLUDE;
+import static org.hibernate.processor.HibernateProcessor.INDEX;
 import static org.hibernate.processor.HibernateProcessor.LAZY_XML_PARSING;
 import static org.hibernate.processor.HibernateProcessor.ORM_XML_OPTION;
 import static org.hibernate.processor.HibernateProcessor.PERSISTENCE_XML_OPTION;
@@ -120,7 +121,8 @@ import static org.hibernate.processor.util.TypeUtils.isMemberType;
 		ADD_GENERATED_ANNOTATION,
 		ADD_SUPPRESS_WARNINGS_ANNOTATION,
 		SUPPRESS_JAKARTA_DATA_METAMODEL,
-		INCLUDE, EXCLUDE
+		INCLUDE, EXCLUDE,
+		INDEX
 })
 public class HibernateProcessor extends AbstractProcessor {
 
@@ -189,6 +191,13 @@ public class HibernateProcessor extends AbstractProcessor {
 	 * empty.
 	 */
 	public static final String EXCLUDE = "exclude";
+
+	/**
+	 * Option to suppress creation of a filesystem-based index of entity
+	 * types and enums for use by the query validator. By default, and
+	 * index is created.
+	 */
+	public static final String INDEX = "index";
 
 	private static final boolean ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS = false;
 
@@ -281,6 +290,8 @@ public class HibernateProcessor extends AbstractProcessor {
 
 		context.setInclude( options.getOrDefault( INCLUDE, "*" ) );
 		context.setExclude( options.getOrDefault( EXCLUDE, "" ) );
+
+		context.setIndexing( parseBoolean( options.get( INDEX ) ) );
 
 		return parseBoolean( options.get( FULLY_ANNOTATION_CONFIGURED_OPTION ) );
 	}
@@ -773,43 +784,45 @@ public class HibernateProcessor extends AbstractProcessor {
 	}
 
 	private void writeIndex() {
-		final ProcessingEnvironment processingEnvironment = context.getProcessingEnvironment();
-		final Elements elementUtils = processingEnvironment.getElementUtils();
-		context.getEntityNameMappings().forEach((entityName, className) -> {
-			try (Writer writer = processingEnvironment.getFiler()
-					.createResource(
-							StandardLocation.SOURCE_OUTPUT,
-							ENTITY_INDEX,
-							entityName,
-							elementUtils.getTypeElement( className )
-					)
-					.openWriter()) {
-				writer.append(className);
-			}
-			catch (IOException e) {
-				processingEnvironment.getMessager()
-						.printMessage(Diagnostic.Kind.WARNING,
-								"could not write entity index " + e.getMessage());
-			}
-		});
-		context.getEnumTypesByValue().forEach((valueName, enumTypeNames) -> {
-			try (Writer writer = processingEnvironment.getFiler()
-					.createResource(
-							StandardLocation.SOURCE_OUTPUT,
-							ENTITY_INDEX,
-							'.' + valueName,
-							elementUtils.getTypeElement( enumTypeNames.iterator().next() )
-					)
-					.openWriter()) {
-				for (String enumTypeName : enumTypeNames) {
-					writer.append(enumTypeName).append(" ");
+		if ( context.isIndexing() ) {
+			final ProcessingEnvironment processingEnvironment = context.getProcessingEnvironment();
+			final Elements elementUtils = processingEnvironment.getElementUtils();
+			context.getEntityNameMappings().forEach( (entityName, className) -> {
+				try (Writer writer = processingEnvironment.getFiler()
+						.createResource(
+								StandardLocation.SOURCE_OUTPUT,
+								ENTITY_INDEX,
+								entityName,
+								elementUtils.getTypeElement( className )
+						)
+						.openWriter()) {
+					writer.append( className );
 				}
-			}
-			catch (IOException e) {
-				processingEnvironment.getMessager()
-						.printMessage(Diagnostic.Kind.WARNING,
-								"could not write entity index " + e.getMessage());
-			}
-		});
+				catch (IOException e) {
+					processingEnvironment.getMessager()
+							.printMessage( Diagnostic.Kind.WARNING,
+									"could not write entity index " + e.getMessage() );
+				}
+			} );
+			context.getEnumTypesByValue().forEach( (valueName, enumTypeNames) -> {
+				try (Writer writer = processingEnvironment.getFiler()
+						.createResource(
+								StandardLocation.SOURCE_OUTPUT,
+								ENTITY_INDEX,
+								'.' + valueName,
+								elementUtils.getTypeElement( enumTypeNames.iterator().next() )
+						)
+						.openWriter()) {
+					for ( String enumTypeName : enumTypeNames ) {
+						writer.append( enumTypeName ).append( " " );
+					}
+				}
+				catch (IOException e) {
+					processingEnvironment.getMessager()
+							.printMessage( Diagnostic.Kind.WARNING,
+									"could not write entity index " + e.getMessage() );
+				}
+			} );
+		}
 	}
 }

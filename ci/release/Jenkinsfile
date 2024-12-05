@@ -243,7 +243,7 @@ pipeline {
 											extensions: [],
 											userRemoteConfigs: [[credentialsId: 'ed25519.Hibernate-CI.github.com', url: 'https://github.com/hibernate/hibernate.org.git']]
 									)
-									sh "../scripts/website-release.sh ${env.SCRIPT_OPTIONS} ${env.PROJECT} ${env.RELEASE_VERSION}"
+									sh "../scripts/website-release.sh ${env.PROJECT} ${env.RELEASE_VERSION} ${env.SCRIPT_OPTIONS} "
 								}
 							}
 						}
@@ -265,7 +265,7 @@ pipeline {
                     }
 
 					withCredentials([string(credentialsId: 'Hibernate-CI.github.com', variable: 'GITHUB_API_TOKEN')]) {
-						sh ".release/scripts/github-release.sh ${env.SCRIPT_OPTIONS} --notes=${notesFiles[0].path} ${env.PROJECT} ${env.RELEASE_VERSION}"
+						sh ".release/scripts/github-release.sh ${env.PROJECT} ${env.RELEASE_VERSION} ${env.SCRIPT_OPTIONS} --notes=${notesFiles[0].path}"
 					}
 				}
 			}

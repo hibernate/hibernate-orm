@@ -56,7 +56,7 @@ public abstract class AbstractFlushingEventListener {
 
 	/**
 	 * Coordinates the processing necessary to get things ready for executions
-	 * as db calls by preping the session caches and moving the appropriate
+	 * as db calls by preparing the session caches and moving the appropriate
 	 * entities and collections to their respective execution queues.
 	 *
 	 * @param event The flush event.
@@ -190,8 +190,7 @@ public abstract class AbstractFlushingEventListener {
 	}
 
 	/**
-	 * Initialize the flags of the CollectionEntry, including the
-	 * dirty check.
+	 * Initialize the flags of the {@link CollectionEntry}, including the dirty check.
 	 */
 	private void prepareCollectionFlushes(PersistenceContext persistenceContext) throws HibernateException {
 
@@ -208,9 +207,11 @@ public abstract class AbstractFlushingEventListener {
 	}
 
 	/**
-	 * 1. detect any dirty entities
-	 * 2. schedule any entity updates
-	 * 3. search out any reachable collections
+	 * <ol>
+	 * <li> detect any dirty entities
+	 * <li> schedule any entity updates
+	 * <li> search out any reachable collections
+	 * </ol>
 	 */
 	private int flushEntities(final FlushEvent event, final PersistenceContext persistenceContext)
 			throws HibernateException {
@@ -256,8 +257,8 @@ public abstract class AbstractFlushingEventListener {
 	}
 
 	/**
-	 * Reuses a FlushEntityEvent for a new purpose, if possible;
-	 * if not possible a new actual instance is returned.
+	 * Reuses a {@link FlushEntityEvent} for a new purpose, if possible;
+	 * or if not possible, a new actual instance is returned.
 	 */
 	private FlushEntityEvent createOrReuseEventInstance(
 			FlushEntityEvent possiblyValidExistingInstance,
@@ -275,8 +276,8 @@ public abstract class AbstractFlushingEventListener {
 	}
 
 	/**
-	 * process any unreferenced collections and then inspect all known collections,
-	 * scheduling creates/removes/updates
+	 * Process any unreferenced collections and then inspect all known collections,
+	 * scheduling creates/removes/updates.
 	 */
 	private int flushCollections(final EventSource session, final PersistenceContext persistenceContext)
 			throws HibernateException {
@@ -402,9 +403,11 @@ public abstract class AbstractFlushingEventListener {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * 1. Recreate the collection key -> collection map
-	 * 2. rebuild the collection entries
-	 * 3. call Interceptor.postFlush()
+	 * <ol>
+	 * <li> Recreate the collection key to collection mapping
+	 * <li> rebuild the collection entries
+	 * <li> call {@link Interceptor#postFlush}
+	 * </ol>
 	 */
 	protected void postFlush(SessionImplementor session) throws HibernateException {
 

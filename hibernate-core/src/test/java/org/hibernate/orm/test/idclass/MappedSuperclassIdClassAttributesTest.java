@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.metamodel.hhh18868;
+package org.hibernate.orm.test.idclass;
 
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DomainModel(annotatedClasses = {Summary.class, BaseSummary.class})
 @SessionFactory
 @JiraKey( "HHH-18858" )
-public class HHH18868Test {
+public class MappedSuperclassIdClassAttributesTest {
 
 	@Test
 	public void test(SessionFactoryScope scope) {

@@ -216,7 +216,7 @@ pipeline {
 								withEnv([
 										"DISABLE_REMOTE_GRADLE_CACHE=true"
 								]) {
-									sh ".release/scripts/publish.sh ${env.SCRIPT_OPTIONS} ${env.PROJECT} ${env.RELEASE_VERSION} ${env.DEVELOPMENT_VERSION} ${env.GIT_BRANCH}"
+									sh ".release/scripts/publish.sh ${env.PROJECT} ${env.RELEASE_VERSION} ${env.DEVELOPMENT_VERSION} ${env.GIT_BRANCH} ${env.SCRIPT_OPTIONS}"
 								}
 							}
 						}

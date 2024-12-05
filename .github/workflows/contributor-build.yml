@@ -83,7 +83,7 @@ jobs:
         run: ./ci/build-github.sh
         shell: bash
       - name: Upload test reports (if Gradle failed)
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: test-reports-java8-${{ matrix.rdbms }}

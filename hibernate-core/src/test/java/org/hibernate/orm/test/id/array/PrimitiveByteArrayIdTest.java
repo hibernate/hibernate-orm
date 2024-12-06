@@ -13,6 +13,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.query.Query;
@@ -35,6 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @SkipForDialect(dialectClass = MySQLDialect.class, majorVersion = 5, reason = "BLOB/TEXT column 'id' used in key specification without a key length")
 @SkipForDialect(dialectClass = OracleDialect.class, matchSubTypes = true, reason = "ORA-02329: column of datatype LOB cannot be unique or a primary key")
+@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix does not support unique / primary constraints on binary columns")
 @DomainModel(
 		annotatedClasses = PrimitiveByteArrayIdTest.DemoEntity.class
 )

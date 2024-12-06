@@ -629,7 +629,7 @@ public class EmbeddableBinder {
 		//embeddable elements can have type defs
 		final PropertyContainer container =
 				new PropertyContainer( returnedClassOrElement, annotatedClass, propertyAccessor );
-		addElementsOfClass( classElements, container, context);
+		addElementsOfClass( classElements, container, context, 0 );
 		//add elements of the embeddable's mapped superclasses
 		XClass subclass = returnedClassOrElement;
 		XClass superClass;
@@ -637,7 +637,7 @@ public class EmbeddableBinder {
 			//FIXME: proper support of type variables incl var resolved at upper levels
 			final PropertyContainer superContainer =
 					new PropertyContainer( superClass, annotatedClass, propertyAccessor );
-			addElementsOfClass( classElements, superContainer, context );
+			addElementsOfClass( classElements, superContainer, context, 0 );
 			if ( subclassToSuperclass != null ) {
 				subclassToSuperclass.put( subclass.getName(), superClass.getName() );
 			}
@@ -668,7 +668,7 @@ public class EmbeddableBinder {
 			assert put == null;
 			// collect property of subclass
 			final PropertyContainer superContainer = new PropertyContainer( subclass, superclass, propertyAccessor );
-			addElementsOfClass( classElements, superContainer, context );
+			addElementsOfClass( classElements, superContainer, context, 0 );
 			// recursively do that same for all subclasses
 			collectSubclassElements(
 					propertyAccessor,
@@ -739,7 +739,7 @@ public class EmbeddableBinder {
 			while ( !Object.class.getName().equals( baseReturnedClassOrElement.getName() ) ) {
 				final PropertyContainer container =
 						new PropertyContainer( baseReturnedClassOrElement, annotatedClass, propertyAccessor );
-				addElementsOfClass( baseClassElements, container, context );
+				addElementsOfClass( baseClassElements, container, context, 0 );
 				baseReturnedClassOrElement = baseReturnedClassOrElement.getSuperclass();
 			}
 			return baseClassElements;

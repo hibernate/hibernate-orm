@@ -1,6 +1,7 @@
 package org.hibernate.orm.test.length;
 
 import org.hibernate.Length;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.type.SqlTypes;
@@ -8,12 +9,14 @@ import org.hibernate.type.SqlTypes;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertEquals;
 
 @SessionFactory
 @DomainModel(annotatedClasses = {WithLongStrings.class,WithLongTypeStrings.class})
+@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix rowsize to exceed the allowable limit (32767).")
 public class LengthTest {
     @Test
     public void testLength(SessionFactoryScope scope) {

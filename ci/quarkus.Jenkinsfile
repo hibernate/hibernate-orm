@@ -1,4 +1,4 @@
-@Library('hibernate-jenkins-pipeline-helpers@1.5') _
+@Library('hibernate-jenkins-pipeline-helpers@1.13') _
 
 // Avoid running the pipeline on branch indexing
 if (currentBuild.getBuildCauses().toString().contains('BranchIndexingCause')) {
@@ -28,6 +28,7 @@ pipeline {
     stages {
         stage('Build') {
         	steps {
+                requireApprovalForPullRequest 'hibernate'
 				script {
 					dir('hibernate') {
 						checkout scm

@@ -27,6 +27,7 @@ import org.hibernate.annotations.PolymorphismType;
 import org.hibernate.annotations.SelectBeforeUpdate;
 import org.hibernate.annotations.Where;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
@@ -63,6 +64,7 @@ public class Forest {
 	
 	@OptimisticLock(excluded=true)
 	@JdbcTypeCode( Types.LONGVARCHAR )
+	@Column(length = 10000)
 	public String getLongDescription() {
 		return longDescription;
 	}

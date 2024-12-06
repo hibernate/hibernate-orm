@@ -13,6 +13,7 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -25,6 +26,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 
@@ -45,6 +47,7 @@ import static org.hamcrest.Matchers.is;
 public class LiteralTests {
 
 	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix does not support binary literals")
 	public void testBinaryLiteral(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

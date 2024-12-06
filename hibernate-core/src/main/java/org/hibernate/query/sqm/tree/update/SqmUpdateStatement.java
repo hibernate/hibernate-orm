@@ -183,7 +183,9 @@ public class SqmUpdateStatement<T>
 
 	@Override
 	public <Y, X extends Y> SqmUpdateStatement<T> set(Path<Y> attribute, X value) {
-		applyAssignment( (SqmPath<Y>) attribute, (SqmExpression<? extends Y>) nodeBuilder().value( value ) );
+		final SqmCriteriaNodeBuilder nodeBuilder = (SqmCriteriaNodeBuilder) nodeBuilder();
+		final SqmPath<Y> sqmAttribute = (SqmPath<Y>) attribute;
+		applyAssignment( sqmAttribute, nodeBuilder.value( value, sqmAttribute ) );
 		return this;
 	}
 
@@ -195,15 +197,15 @@ public class SqmUpdateStatement<T>
 
 	@Override @SuppressWarnings({"rawtypes", "unchecked"})
 	public SqmUpdateStatement<T> set(String attributeName, Object value) {
-		final SqmPath sqmPath = getTarget().get(attributeName);
+		final SqmPath sqmPath = getTarget().get( attributeName );
 		final SqmExpression expression;
 		if ( value instanceof SqmExpression ) {
 			expression = (SqmExpression) value;
 		}
 		else {
-			expression = (SqmExpression) nodeBuilder().value( value );
+			final SqmCriteriaNodeBuilder nodeBuilder = (SqmCriteriaNodeBuilder) nodeBuilder();
+			expression = nodeBuilder.value( value, sqmPath );
 		}
-		assertAssignable( null, sqmPath, expression, nodeBuilder().getSessionFactory() );
 		applyAssignment( sqmPath, expression );
 		return this;
 	}

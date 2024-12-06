@@ -62,6 +62,9 @@ import static org.hibernate.type.SqlTypes.NCLOB;
 
 /**
  * A {@linkplain Dialect SQL dialect} for HSQLDB (HyperSQL) 2.6.1 and above.
+ * <p>
+ * Please refer to the
+ * <a href="https://hsqldb.org/doc/2.0/guide/index.html">HyperSQL User Guide</a>.
  *
  * @author Christoph Sturm
  * @author Phillip Baird

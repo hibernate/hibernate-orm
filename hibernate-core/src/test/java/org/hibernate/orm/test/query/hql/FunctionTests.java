@@ -2316,6 +2316,12 @@ public class FunctionTests {
 	public void testMedian(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
+					assertEquals( 1.0,
+							session.createQuery("select median(e.theDouble) from EntityOfBasics e", Double.class).getSingleResult(),
+							1e-5);
+					assertEquals( 5.0,
+							session.createQuery("select median(e.theInt) from EntityOfBasics e", Double.class).getSingleResult(),
+							1e-5);
 					List<Object[]> list = session.createQuery("select median(e.theDouble), median(e.theInt) from EntityOfBasics e", Object[].class)
 							.list();
 					assertEquals( 1, list.size() );

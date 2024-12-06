@@ -6,19 +6,12 @@
  */
 package org.hibernate.engine.query.spi;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import javax.persistence.AttributeNode;
-import javax.persistence.EntityGraph;
-import javax.persistence.Subgraph;
-
+import antlr.SemanticException;
 import org.hibernate.QueryException;
 import org.hibernate.engine.internal.JoinSequence;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.AppliedGraph;
+import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.tree.FromClause;
@@ -27,13 +20,21 @@ import org.hibernate.hql.internal.ast.tree.FromElementFactory;
 import org.hibernate.hql.internal.ast.tree.ImpliedFromElement;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
-import antlr.SemanticException;
+import javax.persistence.AttributeNode;
+import javax.persistence.EntityGraph;
+import javax.persistence.Subgraph;
+import javax.persistence.metamodel.Attribute;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Encapsulates a JPA EntityGraph provided through a JPQL query hint.  Converts the fetches into a list of AST
@@ -92,6 +93,7 @@ public class EntityGraphQueryHint implements AppliedGraph {
 		return getFromElements(
 				applyEntityGraph ? graph.getAttributeNodes() : Collections.emptyList(),
 				fromClause.getFromElement(),
+				Collections.emptyList(),
 				fromClause,
 				walker,
 				explicitFetches
@@ -101,6 +103,7 @@ public class EntityGraphQueryHint implements AppliedGraph {
 	private List<FromElement> getFromElements(
 			List attributeNodes,
 			FromElement origin,
+			List<PersistentAttributeDescriptor<?, ?>> parentEmbeddedNodeAttributeDescriptors,
 			FromClause fromClause,
 			HqlSqlWalker walker,
 			Map<String, FromElement> explicitFetches) {
@@ -113,10 +116,15 @@ public class EntityGraphQueryHint implements AppliedGraph {
 			final String className = origin.getClassName();
 			// TODO: This is ignored by collection types and probably wrong for entity types.  Presumably it screws
 			// with inheritance.
-			final String role = className + "." + attributeName;
+			String embeddedPrefix = parentEmbeddedNodeAttributeDescriptors.stream()
+					.map( descriptor -> descriptor.getName() + "." )
+					.collect( Collectors.joining());
+			final String role = className + "." + embeddedPrefix + attributeName;
 			final String classAlias = origin.getClassAlias();
 			final String originTableAlias = origin.getTableAlias();
-			final Type propertyType = origin.getPropertyType( attributeName, attributeName );
+			final Type propertyType = parentEmbeddedNodeAttributeDescriptors.isEmpty() ?
+					origin.getPropertyType( attributeName, attributeName ) :
+					getEmbeddedTypeFieldType( parentEmbeddedNodeAttributeDescriptors, attributeName );
 
 			try {
 				FromElement fromElement = explicitFetches.get( role );
@@ -125,7 +133,7 @@ public class EntityGraphQueryHint implements AppliedGraph {
 					if ( propertyType.isEntityType() ) {
 						final EntityType entityType = (EntityType) propertyType;
 
-						final String[] columns = origin.toColumns( originTableAlias, attributeName, false );
+						final String[] columns = origin.toColumns( originTableAlias, embeddedPrefix + attributeName, false );
 						final String tableAlias = walker.getAliasGenerator().createName(
 								entityType.getAssociatedEntityName()
 						);
@@ -150,7 +158,7 @@ public class EntityGraphQueryHint implements AppliedGraph {
 					}
 					else if ( propertyType.isCollectionType() ) {
 						CollectionType collectionType = (CollectionType) propertyType;
-						final String[] columns = origin.toColumns( originTableAlias, attributeName, false );
+						final String[] columns = origin.toColumns( originTableAlias, embeddedPrefix + attributeName, false );
 
 						final FromElementFactory fromElementFactory = new FromElementFactory(
 								fromClause, origin,
@@ -169,16 +177,38 @@ public class EntityGraphQueryHint implements AppliedGraph {
 					fromElement.setFetch( true );
 				}
 
+				List<PersistentAttributeDescriptor<?, ?>> currentEmbeddedNodeAttributeDescriptors
+						= Collections.emptyList();
 				if ( fromElement != null ) {
 					if( !explicitFromElement ){
 						fromElements.add( fromElement );
 					}
+				} else {
+					if ( attributeNode instanceof AttributeNodeImplementor ) {
+						AttributeNodeImplementor<?> attributeNodeImplementor = (AttributeNodeImplementor<?>) attributeNode;
+						PersistentAttributeDescriptor<?, ?> embeddedNodeAttributeDescriptor
+								= attributeNodeImplementor.getAttributeDescriptor();
+						if ( embeddedNodeAttributeDescriptor.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED ) {
+							// embedded type, descend into it keeping the origin as from
+							fromElement = origin;
 
+							if (parentEmbeddedNodeAttributeDescriptors.isEmpty()) {
+								currentEmbeddedNodeAttributeDescriptors = Collections.singletonList( embeddedNodeAttributeDescriptor );
+							} else {
+								currentEmbeddedNodeAttributeDescriptors = new ArrayList<>( parentEmbeddedNodeAttributeDescriptors );
+								currentEmbeddedNodeAttributeDescriptors.add( embeddedNodeAttributeDescriptor );
+							}
+						}
+					}
+				}
+
+				if ( fromElement != null ) {
 					// recurse into subgraphs
 					for ( Subgraph<?> subgraph : attributeNode.getSubgraphs().values() ) {
 						fromElements.addAll(
 								getFromElements(
 										subgraph.getAttributeNodes(), fromElement,
+										currentEmbeddedNodeAttributeDescriptors,
 										fromClause, walker, explicitFetches
 								)
 						);
@@ -191,6 +221,19 @@ public class EntityGraphQueryHint implements AppliedGraph {
 		}
 
 		return fromElements;
+	}
+
+	private Type getEmbeddedTypeFieldType(List<PersistentAttributeDescriptor<?, ?>> parentEmbeddedNodeAttributeDescriptors, String attributeName) {
+		PersistentAttributeDescriptor<?, ?> parentEmbeddedNodeAttributeDescriptor
+				= parentEmbeddedNodeAttributeDescriptors.get( parentEmbeddedNodeAttributeDescriptors.size() - 1 );
+		CompositeType compositeType = ((EmbeddedTypeDescriptor<?>) parentEmbeddedNodeAttributeDescriptor.getValueGraphType()).getHibernateType();
+		String[] propertyNames = compositeType.getPropertyNames();
+		for ( int i = 0; i < propertyNames.length; i++ ) {
+			if ( attributeName.equals( propertyNames[i] ) ) {
+				return compositeType.getSubtypes()[i];
+			}
+		}
+		throw new IllegalStateException( "Cannot find attribute " + attributeName + " in " + parentEmbeddedNodeAttributeDescriptor );
 	}
 
 	/**

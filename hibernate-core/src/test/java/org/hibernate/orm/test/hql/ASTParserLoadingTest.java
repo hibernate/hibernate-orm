@@ -24,12 +24,13 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.TypeMismatchException;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -57,13 +58,17 @@ import org.hibernate.stat.QueryStatistics;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.transform.Transformers;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 
 import org.hibernate.orm.test.cid.Customer;
 import org.hibernate.orm.test.cid.LineItem;
@@ -71,8 +76,10 @@ import org.hibernate.orm.test.cid.LineItem.Id;
 import org.hibernate.orm.test.cid.Order;
 import org.hibernate.orm.test.cid.Product;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
+import org.jboss.logging.Logger;
 
 import org.hamcrest.CoreMatchers;
 
@@ -83,7 +90,6 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertClassAssignability;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -103,15 +109,40 @@ import static org.junit.Assert.fail;
  *
  * @author Steve
  */
-@RequiresDialectFeature(DialectChecks.SupportsTemporaryTable.class)
-public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsTemporaryTable.class)
+@DomainModel( annotatedClasses = {Department.class, Employee.class, Title.class},
+		xmlMappings = {"/org/hibernate/orm/test/hql/Animal.hbm.xml",
+		"/org/hibernate/orm/test/hql/FooBarCopy.hbm.xml",
+		"/org/hibernate/orm/test/hql/SimpleEntityWithAssociation.hbm.xml",
+		"/org/hibernate/orm/test/hql/CrazyIdFieldNames.hbm.xml",
+		"/org/hibernate/orm/test/hql/Image.hbm.xml",
+		"/org/hibernate/orm/test/hql/ComponentContainer.hbm.xml",
+		"/org/hibernate/orm/test/hql/VariousKeywordPropertyEntity.hbm.xml",
+		"/org/hibernate/orm/test/hql/Constructor.hbm.xml",
+		"/org/hibernate/orm/test/batchfetch/ProductLine.hbm.xml",
+		"/org/hibernate/orm/test/cid/Customer.hbm.xml",
+		"/org/hibernate/orm/test/cid/Order.hbm.xml",
+		"/org/hibernate/orm/test/cid/LineItem.hbm.xml",
+		"/org/hibernate/orm/test/cid/Product.hbm.xml",
+		"/org/hibernate/orm/test/any/hbm/Properties.hbm.xml",
+		"/org/hibernate/orm/test/legacy/Commento.hbm.xml",
+		"/org/hibernate/orm/test/legacy/Marelo.hbm.xml"})
+@SessionFactory
+@ServiceRegistry(
+		settings = {
+				@Setting(name = Environment.USE_QUERY_CACHE, value = "true"),
+				@Setting(name = Environment.GENERATE_STATISTICS, value = "true")
+		}
+)
+@SuppressWarnings("JUnitMalformedDeclaration")
+public class ASTParserLoadingTest {
+	private static final Logger log = Logger.getLogger(ASTParserLoadingTest.class);
 
 	private final List<Long> createdAnimalIds = new ArrayList<>();
 
-	@After
-	public void cleanUpTestData() {
-		inTransaction(
-				(session) -> {
+	@AfterEach
+	public void cleanUpTestData(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
 					session.createQuery( "from Animal" ).list().forEach(
 							(animal) -> session.remove( animal )
 					);
@@ -190,51 +221,10 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 	}
-	@Override
-	protected boolean isCleanupTestDataRequired() {
-		return false;
-	}
-
-	@Override
-	public String[] getMappings() {
-		return new String[] {
-				"/org/hibernate/orm/test/hql/Animal.hbm.xml",
-				"/org/hibernate/orm/test/hql/FooBarCopy.hbm.xml",
-				"/org/hibernate/orm/test/hql/SimpleEntityWithAssociation.hbm.xml",
-				"/org/hibernate/orm/test/hql/CrazyIdFieldNames.hbm.xml",
-				"/org/hibernate/orm/test/hql/Image.hbm.xml",
-				"/org/hibernate/orm/test/hql/ComponentContainer.hbm.xml",
-				"/org/hibernate/orm/test/hql/VariousKeywordPropertyEntity.hbm.xml",
-				"/org/hibernate/orm/test/hql/Constructor.hbm.xml",
-				"/org/hibernate/orm/test/batchfetch/ProductLine.hbm.xml",
-				"/org/hibernate/orm/test/cid/Customer.hbm.xml",
-				"/org/hibernate/orm/test/cid/Order.hbm.xml",
-				"/org/hibernate/orm/test/cid/LineItem.hbm.xml",
-				"/org/hibernate/orm/test/cid/Product.hbm.xml",
-				"/org/hibernate/orm/test/any/hbm/Properties.hbm.xml",
-				"/org/hibernate/orm/test/legacy/Commento.hbm.xml",
-				"/org/hibernate/orm/test/legacy/Marelo.hbm.xml"
-		};
-	}
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				Department.class,
-				Employee.class,
-				Title.class
-		};
-	}
-
-	@Override
-	public void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( Environment.USE_QUERY_CACHE, true );
-		cfg.setProperty( Environment.GENERATE_STATISTICS, true );
-	}
 
 	@Test
-	public void testSubSelectAsArithmeticOperand() {
-		inTransaction(
+	public void testSubSelectAsArithmeticOperand(SessionFactoryScope scope) {
+		scope.inTransaction(
 				(s) -> {
 					s.createQuery( "from Zoo z where ( select count(*) from Zoo ) = 0" ).list();
 
@@ -249,8 +239,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@JiraKey( value = "HHH-8432" )
-	public void testExpandListParameter() {
+	@JiraKey( "HHH-8432" )
+	public void testExpandListParameter(SessionFactoryScope scope) {
 		final Object[] namesArray = new Object[] {
 				"ZOO 1", "ZOO 2", "ZOO 3", "ZOO 4", "ZOO 5", "ZOO 6", "ZOO 7",
 				"ZOO 8", "ZOO 9", "ZOO 10", "ZOO 11", "ZOO 12"
@@ -260,7 +250,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 				"City 8", "City 9", "City 10", "City 11", "City 12"
 		};
 
-		inTransaction(
+		scope.inTransaction(
 				(session) -> {
 					Address address = new Address();
 					Zoo zoo = new Zoo( "ZOO 1", address );
@@ -269,7 +259,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				(session) -> {
 					List result = session.createQuery( "FROM Zoo z WHERE z.name IN (?1) and z.address.city IN (?2)" )
 							.setParameterList( 1, namesArray )
@@ -281,9 +271,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@JiraKey(value = "HHH-8699")
-	public void testBooleanPredicate() {
-		final Constructor created = fromTransaction(
+	@JiraKey( "HHH-8699")
+	public void testBooleanPredicate(SessionFactoryScope scope) {
+		final Constructor created = scope.fromTransaction(
 				(session) -> {
 					final Constructor constructor = new Constructor();
 					session.persist( constructor );
@@ -293,7 +283,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		Constructor.resetConstructorExecutionCount();
 
-		inTransaction(
+		scope.inTransaction(
 				(session) -> {
 					final String qry = "select new Constructor( c.id, c.id is not null, c.id = c.id, c.id + 1, concat( str(c.id), 'foo' ) ) from Constructor c where c.id = :id";
 					final Constructor result = session.createQuery(qry, Constructor.class).setParameter( "id", created.getId() ).uniqueResult();
@@ -311,8 +301,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testJpaTypeOperator() {
-		inTransaction(
+	public void testJpaTypeOperator(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 					// where clause
@@ -349,8 +339,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testComponentJoins() {
-		inTransaction(
+	public void testComponentJoins(SessionFactoryScope scope) {
+		scope.inTransaction(
 				(s) -> {
 					ComponentContainer root = new ComponentContainer(
 							new ComponentContainer.Address(
@@ -364,7 +354,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				(s) -> {
 					List result = s.createQuery( "select a from ComponentContainer c join c.address a" ).list();
 					assertEquals( 1, result.size() );
@@ -386,9 +376,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@JiraKey( value = "HHH-9642")
-	public void testLazyAssociationInComponent() {
-		inTransaction(
+	@JiraKey( "HHH-9642")
+	public void testLazyAssociationInComponent(SessionFactoryScope scope) {
+		scope.inTransaction(
 				(session) -> {
 					Address address = new Address();
 					Zoo zoo = new Zoo( "ZOO 1", address );
@@ -401,7 +391,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				(session) -> {
 					final Zoo zoo = (Zoo) session.createQuery( "from Zoo z" ).uniqueResult();
 					assertNotNull( zoo );
@@ -414,7 +404,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		);
 
 
-		inTransaction(
+		scope.inTransaction(
 				(session) -> {
 					final Zoo zoo = (Zoo) session.createQuery( "from Zoo z join fetch z.address.stateProvince" ).uniqueResult();
 					assertNotNull( zoo );
@@ -425,7 +415,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				(session) -> {
 					final Zoo zoo = (Zoo) session.createQuery( "from Zoo z join fetch z.address a join fetch a.stateProvince" ).uniqueResult();
 					assertNotNull( zoo );
@@ -438,9 +428,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testJPAQLQualifiedIdentificationVariablesControl() {
+	public void testJPAQLQualifiedIdentificationVariablesControl(SessionFactoryScope scope) {
 		// just checking syntax here...
-		Session s = openSession();
+		Session s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		s.createQuery( "from VariousKeywordPropertyEntity where type = 'something'" ).list();
 		s.createQuery( "from VariousKeywordPropertyEntity where value = 'something'" ).list();
@@ -457,8 +447,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SuppressWarnings( {"unchecked"})
-	public void testJPAQLMapKeyQualifier() {
-		Session s = openSession();
+	public void testJPAQLMapKeyQualifier(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		Human me = new Human();
 		me.setName( new Name( "Steve", null, "Ebersole" ) );
@@ -474,7 +464,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		// in SELECT clause
 		{
 			// hibernate-only form
-			s = openSession();
+			s = scope.getSessionFactory().openSession();
 			s.beginTransaction();
 			List results = s.createQuery( "select distinct key(h.family) from Human h" ).list();
 			assertEquals( 1, results.size() );
@@ -486,7 +476,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		{
 			// jpa form
-			s = openSession();
+			s = scope.getSessionFactory().openSession();
 			s.beginTransaction();
 			List results = s.createQuery( "select distinct KEY(f) from Human h join h.family f" ).list();
 			assertEquals( 1, results.size() );
@@ -499,7 +489,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		// in WHERE clause
 		{
 			// hibernate-only form
-			s = openSession();
+			s = scope.getSessionFactory().openSession();
 			s.beginTransaction();
 			Long count = (Long) s.createQuery( "select count(*) from Human h where KEY(h.family) = 'son'" ).uniqueResult();
 			assertEquals( (Long)1L, count );
@@ -509,7 +499,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		{
 			// jpa form
-			s = openSession();
+			s = scope.getSessionFactory().openSession();
 			s.beginTransaction();
 			Long count = (Long) s.createQuery( "select count(*) from Human h join h.family f where key(f) = 'son'" ).uniqueResult();
 			assertEquals( (Long)1L, count );
@@ -517,7 +507,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 			s.close();
 		}
 
-		s = openSession();
+		s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		s.remove( me );
 		s.remove( joe );
@@ -527,8 +517,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SuppressWarnings( {"unchecked"})
-	public void testJPAQLMapEntryQualifier() {
-		Session s = openSession();
+	public void testJPAQLMapEntryQualifier(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		Human me = new Human();
 		me.setName( new Name( "Steve", null, "Ebersole" ) );
@@ -544,7 +534,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		// in SELECT clause
 		{
 			// hibernate-only form
-			s = openSession();
+			s = scope.getSessionFactory().openSession();
 			s.beginTransaction();
 			List results = s.createQuery( "select entry(h.family) from Human h" ).list();
 			assertEquals( 1, results.size() );
@@ -559,7 +549,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		{
 			// jpa form
-			s = openSession();
+			s = scope.getSessionFactory().openSession();
 			s.beginTransaction();
 			List results = s.createQuery( "select ENTRY(f) from Human h join h.family f" ).list();
 			assertEquals( 1, results.size() );
@@ -575,7 +565,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		// not exactly sure of the syntax of ENTRY in the WHERE clause...
 
 
-		s = openSession();
+		s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		s.remove( me );
 		s.remove( joe );
@@ -585,8 +575,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SuppressWarnings( {"unchecked"})
-	public void testJPAQLMapValueQualifier() {
-		Session s = openSession();
+	public void testJPAQLMapValueQualifier(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		Human me = new Human();
 		me.setName( new Name( "Steve", null, "Ebersole" ) );
@@ -602,7 +592,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		// in SELECT clause
 		{
 			// hibernate-only form
-			s = openSession();
+			s = scope.getSessionFactory().openSession();
 			s.beginTransaction();
 			List results = s.createQuery( "select value(h.family) from Human h" ).list();
 			assertEquals( 1, results.size() );
@@ -614,7 +604,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		{
 			// jpa form
-			s = openSession();
+			s = scope.getSessionFactory().openSession();
 			s.beginTransaction();
 			List results = s.createQuery( "select VALUE(f) from Human h join h.family f" ).list();
 			assertEquals( 1, results.size() );
@@ -627,7 +617,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		// in WHERE clause
 		{
 			// hibernate-only form
-			s = openSession();
+			s = scope.getSessionFactory().openSession();
 			s.beginTransaction();
 			Long count = (Long) s.createQuery( "select count(*) from Human h where VALUE(h.family) = :joe" ).setParameter( "joe", joe ).uniqueResult();
 			// ACTUALLY EXACTLY THE SAME AS:
@@ -639,7 +629,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		{
 			// jpa form
-			s = openSession();
+			s = scope.getSessionFactory().openSession();
 			s.beginTransaction();
 			Long count = (Long) s.createQuery( "select count(*) from Human h join h.family f where value(f) = :joe" ).setParameter( "joe", joe ).uniqueResult();
 			// ACTUALLY EXACTLY THE SAME AS:
@@ -649,7 +639,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 			s.close();
 		}
 
-		s = openSession();
+		s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		s.remove( me );
 		s.remove( joe );
@@ -658,9 +648,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialectFeature( DialectChecks.SupportsSubqueryInSelect.class )
-	public void testPaginationWithPolymorphicQuery() {
-		Session s = openSession();
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSubqueryInSelect.class )
+	public void testPaginationWithPolymorphicQuery(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		Human h = new Human();
 		h.setName( new Name( "Steve", null, "Ebersole" ) );
@@ -668,14 +658,14 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		s = openSession();
+		s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		List results = s.createQuery( "from java.lang.Object" ).setMaxResults( 2 ).list();
 		assertEquals( 1, results.size() );
 		s.getTransaction().commit();
 		s.close();
 
-		s = openSession();
+		s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		s.remove( h );
 		s.getTransaction().commit();
@@ -683,10 +673,10 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@JiraKey( value = "HHH-2045" )
+	@JiraKey( "HHH-2045" )
 	@RequiresDialect( H2Dialect.class )
-	public void testEmptyInList() {
-		Session session = openSession();
+	public void testEmptyInList(SessionFactoryScope scope) {
+		Session session = scope.getSessionFactory().openSession();
 		session.beginTransaction();
 		Human human = new Human();
 		human.setName( new Name( "Lukasz", null, "Antoniak" ) );
@@ -695,14 +685,14 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		session.getTransaction().commit();
 		session.close();
 
-		session = openSession();
+		session = scope.getSessionFactory().openSession();
 		session.beginTransaction();
 		List results = session.createQuery( "from Human h where h.nickName in ()" ).list();
 		assertEquals( 0, results.size() );
 		session.getTransaction().commit();
 		session.close();
 
-		session = openSession();
+		session = scope.getSessionFactory().openSession();
 		session.beginTransaction();
 		session.remove( human );
 		session.getTransaction().commit();
@@ -710,9 +700,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@JiraKey( value = "HHH-8901" )
-	public void testEmptyInListForDialectsNotSupportsEmptyInList() {
-		Session session = openSession();
+	@JiraKey( "HHH-8901" )
+	public void testEmptyInListForDialectsNotSupportsEmptyInList(SessionFactoryScope scope) {
+		Session session = scope.getSessionFactory().openSession();
 		session.beginTransaction();
 		Human human = new Human();
 		human.setName( new Name( "Lukasz", null, "Antoniak" ) );
@@ -721,7 +711,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		session.getTransaction().commit();
 		session.close();
 
-		session = openSession();
+		session = scope.getSessionFactory().openSession();
 		session.beginTransaction();
 		List results = session.createQuery( "from Human h where h.nickName in (:nickNames)" )
 				.setParameter( "nickNames", Collections.emptySet() )
@@ -730,7 +720,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		session.getTransaction().commit();
 		session.close();
 
-		session = openSession();
+		session = scope.getSessionFactory().openSession();
 		session.beginTransaction();
 		session.remove( human );
 		session.getTransaction().commit();
@@ -738,9 +728,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@JiraKey( value = "HHH-2851")
-	public void testMultipleRefsToSameParam() {
-		Session s = openSession();
+	@JiraKey( "HHH-2851")
+	public void testMultipleRefsToSameParam(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		Human h = new Human();
 		h.setName( new Name( "Johnny", 'B', "Goode" ) );
@@ -761,7 +751,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		s = openSession();
+		s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		List results = s.createQuery( "from Human where name.first = :name or name.last=:name" )
 				.setParameter( "name", "Johnny" )
@@ -810,7 +800,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		s = openSession();
+		s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		s.createQuery( "delete Human" ).executeUpdate();
 		s.getTransaction().commit();
@@ -818,8 +808,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testComponentNullnessChecks() {
-		Session s = openSession();
+	public void testComponentNullnessChecks(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		Human h = new Human();
 		h.setName( new Name( "Johnny", 'B', "Goode" ) );
@@ -836,18 +826,19 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		s = openSession();
+		s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		List results = s.createQuery( "from Human where name is null" ).list();
 		assertEquals( 1, results.size() );
 		results = s.createQuery( "from Human where name is not null" ).list();
 		assertEquals( 3, results.size() );
+		Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		String query =
-				( getDialect() instanceof DB2Dialect || getDialect() instanceof HSQLDialect ) ?
+				( dialect instanceof DB2Dialect || dialect instanceof HSQLDialect ) ?
 						"from Human where cast(?1 as string) is null" :
 						"from Human where ?1 is null"
 				;
-		if ( getDialect() instanceof DerbyDialect ) {
+		if ( dialect instanceof DerbyDialect ) {
 			s.createQuery( query ).setParameter( 1, "null" ).list();
 		}
 		else {
@@ -857,7 +848,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		s = openSession();
+		s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		s.createQuery( "delete Human" ).executeUpdate();
 		s.getTransaction().commit();
@@ -865,9 +856,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@JiraKey( value = "HHH-4150" )
-	public void testSelectClauseCaseWithSum() {
-		Session s = openSession();
+	@JiraKey( "HHH-4150" )
+	public void testSelectClauseCaseWithSum(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		Transaction t = s.beginTransaction();
 
 		Human h1 = new Human();
@@ -897,9 +888,10 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@JiraKey( value = "HHH-4150" )
-	public void testSelectClauseCaseWithCountDistinct() {
-		Session s = openSession();
+	@JiraKey( "HHH-4150" )
+	@SkipForDialect( dialectClass = InformixDialect.class, majorVersion = 11, minorVersion = 70, reason = "Informix does not support case with count distinct")
+	public void testSelectClauseCaseWithCountDistinct(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		Transaction t = s.beginTransaction();
 
 		Human h1 = new Human();
@@ -934,12 +926,12 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testInvalidCollectionDereferencesFail() {
+	public void testInvalidCollectionDereferencesFail(SessionFactoryScope scope) {
 
 
-		try ( final SessionImplementor s = (SessionImplementor) openSession() ) {
+		try ( final SessionImplementor s = (SessionImplementor) scope.getSessionFactory().openSession() ) {
 			// control group...
-			inTransaction(
+			scope.inTransaction(
 					s,
 					session -> {
 						s.createQuery( "from Animal a join a.offspring o where o.description = 'xyz'", Object[].class ).list();
@@ -949,7 +941,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 					}
 			);
 
-			inTransaction(
+			scope.inTransaction(
 					s,
 					session -> {
 						try {
@@ -965,7 +957,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 					}
 			);
 
-			inTransaction(
+			scope.inTransaction(
 					s,
 					session -> {
 						try {
@@ -981,7 +973,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 					}
 			);
 
-			inTransaction(
+			scope.inTransaction(
 					s,
 					session -> {
 						try {
@@ -997,7 +989,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 					}
 			);
 
-			inTransaction(
+			scope.inTransaction(
 					s,
 					session -> {
 						try {
@@ -1016,9 +1008,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testConcatenation() {
+	public void testConcatenation(SessionFactoryScope scope) {
 		// simple syntax checking...
-		Session s = openSession();
+		Session s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		s.createQuery( "from Human h where h.nickName = '1' || 'ov' || 'tha' || 'few'" ).list();
 		s.getTransaction().commit();
@@ -1026,13 +1018,14 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = CockroachDialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/41943")
-	public void testExpressionWithParamInFunction() {
-		Session s = openSession();
+	@SkipForDialect(dialectClass = CockroachDialect.class, matchSubTypes = true ,reason = "https://github.com/cockroachdb/cockroach/issues/41943")
+	public void testExpressionWithParamInFunction(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		s.createQuery( "from Animal a where abs(a.bodyWeight-:param) < 2.0" ).setParameter( "param", 1 ).list();
 		s.createQuery( "from Animal a where abs(:param - a.bodyWeight) < 2.0" ).setParameter( "param", 1 ).list();
-		if ( getDialect() instanceof HSQLDialect || getDialect() instanceof DB2Dialect || getDialect() instanceof DerbyDialect ) {
+		Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
+		if ( dialect instanceof HSQLDialect || dialect instanceof DB2Dialect || dialect instanceof DerbyDialect ) {
 			// HSQLDB and DB2 don't like the abs(? - ?) syntax. bit work if at least one parameter is typed...
 			s.createQuery( "from Animal where abs(cast(:x as long) - :y) < 2.0" ).setParameter( "x", 1 ).setParameter( "y", 1 ).list();
 			s.createQuery( "from Animal where abs(:x - cast(:y as long)) < 2.0" ).setParameter( "x", 1 ).setParameter( "y", 1 ).list();
@@ -1042,7 +1035,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 			s.createQuery( "from Animal where abs(:x - :y) < 2.0" ).setParameter( "x", 1 ).setParameter( "y", 1 ).list();
 		}
 
-		if ( getDialect() instanceof DB2Dialect ) {
+		if ( dialect instanceof DB2Dialect ) {
 			s.createQuery( "from Animal where lower(upper(cast(:foo as string))) like 'f%'" ).setParameter( "foo", "foo" ).list();
 		}
 		else {
@@ -1051,17 +1044,17 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		s.createQuery( "from Animal a where abs(abs(a.bodyWeight - 1.0 + :param) * abs(length('ffobar')-3)) = 3.0" ).setParameter( "param", 1 ).list();
 
-		if ( getDialect() instanceof DB2Dialect ) {
+		if ( dialect instanceof DB2Dialect ) {
 			s.createQuery( "from Animal where lower(upper('foo') || upper(cast(:bar as string))) like 'f%'" ).setParameter( "bar", "xyz" ).list();
 		}
 		else {
 			s.createQuery( "from Animal where lower(upper('foo') || upper(:bar)) like 'f%'" ).setParameter( "bar", "xyz" ).list();
 		}
 
-		if ( getDialect() instanceof HANADialect ) {
+		if ( dialect instanceof HANADialect ) {
 			s.createQuery( "from Animal where abs(cast(1 as double) - cast(:param as double)) = 1.0" ).setParameter( "param", 1 ).list();
 		}
-		else if ( !( getDialect() instanceof PostgreSQLDialect || getDialect() instanceof MySQLDialect ) ) {
+		else if ( !( dialect instanceof PostgreSQLDialect || dialect instanceof MySQLDialect ) ) {
 			s.createQuery( "from Animal where abs(cast(1 as float) - cast(:param as float)) = 1.0" ).setParameter( "param", 1 ).list();
 		}
 
@@ -1070,12 +1063,12 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testCrazyIdFieldNames() {
+	public void testCrazyIdFieldNames(SessionFactoryScope scope) {
 		MoreCrazyIdFieldNameStuffEntity top = new MoreCrazyIdFieldNameStuffEntity( "top" );
 		HeresAnotherCrazyIdFieldName next = new HeresAnotherCrazyIdFieldName( "next" );
 		top.setHeresAnotherCrazyIdFieldName( next );
 		MoreCrazyIdFieldNameStuffEntity other = new MoreCrazyIdFieldNameStuffEntity( "other" );
-		Session s = openSession();
+		Session s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		s.persist( next );
 		s.persist( top );
@@ -1105,15 +1098,15 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@JiraKey( value = "HHH-2257" )
-	public void testImplicitJoinsInDifferentClauses() {
+	@JiraKey( "HHH-2257" )
+	public void testImplicitJoinsInDifferentClauses(SessionFactoryScope scope) {
 		// both the classic and ast translators output the same syntactically valid sql
 		// for all of these cases; the issue is that shallow (iterate) and
 		// non-shallow (list/scroll) queries return different results because the
 		// shallow skips the inner join which "weeds out" results from the non-shallow queries.
 		// The results were initially different depending upon the clause(s) in which the
 		// implicit join occurred
-		Session s = openSession();
+		Session s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		SimpleEntityWithAssociation owner = new SimpleEntityWithAssociation( "owner" );
 		SimpleAssociatedEntity e1 = new SimpleAssociatedEntity( "thing one", owner );
@@ -1124,19 +1117,19 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		checkCounts( "select e.owner from SimpleAssociatedEntity e", 1, "implicit-join in select clause" );
-		checkCounts( "select e.id, e.owner from SimpleAssociatedEntity e", 1, "implicit-join in select clause" );
+		checkCounts( scope, "select e.owner from SimpleAssociatedEntity e", 1, "implicit-join in select clause" );
+		checkCounts( scope, "select e.id, e.owner from SimpleAssociatedEntity e", 1, "implicit-join in select clause" );
 
 		// resolved to a "id short cut" when part of the order by clause -> no inner join = no weeding out...
-		checkCounts( "from SimpleAssociatedEntity e order by e.owner", 2, "implicit-join in order-by clause" );
+		checkCounts( scope, "from SimpleAssociatedEntity e order by e.owner", 2, "implicit-join in order-by clause" );
 		// resolved to a "id short cut" when part of the group by clause -> no inner join = no weeding out...
-		checkCounts(
+		checkCounts( scope,
 				"select e.owner.id, count(*) from SimpleAssociatedEntity e group by e.owner",
 				2,
 				"implicit-join in select and group-by clauses"
 		);
 
-		s = openSession();
+		s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		s.remove( e1 );
 		s.remove( e2 );
@@ -1146,8 +1139,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testRowValueConstructorSyntaxInInList() {
-		Session s = openSession();
+	public void testRowValueConstructorSyntaxInInList(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		Product product = new Product();
 		product.setDescription( "My Product" );
@@ -1194,8 +1187,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	}
 
-	private void checkCounts(String hql, int expected, String testCondition) {
-		inTransaction(
+	private void checkCounts(SessionFactoryScope scope, String hql, int expected, String testCondition) {
+		scope.inTransaction(
 				session -> {
 					int count = determineCount( session.createQuery( hql ).list().iterator() );
 					assertEquals( "list() [" + testCondition + "]", expected, count );
@@ -1204,13 +1197,13 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@JiraKey( value = "HHH-2257" )
-	public void testImplicitSelectEntityAssociationInShallowQuery() {
+	@JiraKey( "HHH-2257" )
+	public void testImplicitSelectEntityAssociationInShallowQuery(SessionFactoryScope scope) {
 		// both the classic and ast translators output the same syntactically valid sql.
 		// the issue is that shallow and non-shallow queries return different
 		// results because the shallow skips the inner join which "weeds out" results
 		// from the non-shallow queries...
-		Session s = openSession();
+		Session s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		SimpleEntityWithAssociation owner = new SimpleEntityWithAssociation( "owner" );
 		SimpleAssociatedEntity e1 = new SimpleAssociatedEntity( "thing one", owner );
@@ -1221,7 +1214,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		s = openSession();
+		s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		int count = determineCount( s.createQuery( "select e.id, e.owner from SimpleAssociatedEntity e" ).list().iterator() );
 		// thing two would be removed from the result due to the inner join
@@ -1229,7 +1222,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		s = openSession();
+		s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		s.remove( e1 );
 		s.remove( e2 );
@@ -1248,9 +1241,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@JiraKey( value = "HHH-6714" )
-	public void testUnaryMinus(){
-		Session s = openSession();
+	@JiraKey( "HHH-6714" )
+	public void testUnaryMinus(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		Human stliu = new Human();
 		stliu.setIntValue( 26 );
@@ -1259,7 +1252,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.clear();
 		s.beginTransaction();
-		List list =s.createQuery( "from Human h where -(h.intValue - 100)=74" ).list();
+		List list = s.createQuery( "from Human h where -(h.intValue - 100)=74" ).list();
 		assertEquals( 1, list.size() );
 		s.getTransaction().commit();
 		s.close();
@@ -1268,8 +1261,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testEntityAndOneToOneReturnedByQuery() {
-		Session s = openSession();
+	public void testEntityAndOneToOneReturnedByQuery(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		Human h = new Human();
 		h.setName( new Name( "Gail", null, "Badner" ) );
@@ -1281,7 +1274,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		s = openSession();
+		s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		Object [] result = s.createQuery( "from User u, Human h where u.human = h", Object[].class ).uniqueResult();
 		assertNotNull( result );
@@ -1295,8 +1288,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@JiraKey( value = "HHH-9305")
-	public void testExplicitToOneInnerJoin() {
+	@JiraKey( "HHH-9305")
+	public void testExplicitToOneInnerJoin(SessionFactoryScope scope) {
 		final Employee employee1 = new Employee();
 		employee1.setFirstName( "Jane" );
 		employee1.setLastName( "Doe" );
@@ -1314,7 +1307,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		title2.setDescription( "John's title" );
 		employee2.setTitle( title2 );
 
-		Session s = openSession();
+		Session s = scope.getSessionFactory().openSession();
 		s.getTransaction().begin();
 		s.persist( title1 );
 		s.persist( dept1 );
@@ -1324,7 +1317,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		s = openSession();
+		s = scope.getSessionFactory().openSession();
 		s.getTransaction().begin();
 		Department department = (Department) s.createQuery( "select e.department from Employee e inner join e.department" ).uniqueResult();
 		assertEquals( employee1.getDepartment().getDeptName(), department.getDeptName() );
@@ -1338,7 +1331,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testExplicitToOneOuterJoin() {
+	public void testExplicitToOneOuterJoin(SessionFactoryScope scope) {
 		final Employee employee1 = new Employee();
 		employee1.setFirstName( "Jane" );
 		employee1.setLastName( "Doe" );
@@ -1356,7 +1349,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		title2.setDescription( "John's title" );
 		employee2.setTitle( title2 );
 
-		Session s = openSession();
+		Session s = scope.getSessionFactory().openSession();
 		s.getTransaction().begin();
 		s.persist( title1 );
 		s.persist( dept1 );
@@ -1365,7 +1358,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.persist( employee2 );
 		s.getTransaction().commit();
 		s.close();
-		s = openSession();
+		s = scope.getSessionFactory().openSession();
 		s.getTransaction().begin();
 		List list = s.createQuery( "select e.department from Employee e left join e.department" ).list();
 		assertEquals( 2, list.size() );
@@ -1388,7 +1381,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testExplicitToOneInnerJoinAndImplicitToOne() {
+	public void testExplicitToOneInnerJoinAndImplicitToOne(SessionFactoryScope scope) {
 		final Employee employee1 = new Employee();
 		employee1.setFirstName( "Jane" );
 		employee1.setLastName( "Doe" );
@@ -1406,7 +1399,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		title2.setDescription( "John's title" );
 		employee2.setTitle( title2 );
 
-		Session s = openSession();
+		Session s = scope.getSessionFactory().openSession();
 		s.getTransaction().begin();
 		s.persist( title1 );
 		s.persist( dept1 );
@@ -1415,7 +1408,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.persist( employee2 );
 		s.getTransaction().commit();
 		s.close();
-		s = openSession();
+		s = scope.getSessionFactory().openSession();
 		s.getTransaction().begin();
 		Object[] result = (Object[]) s.createQuery(
 				"select e.firstName, e.lastName, e.title.description, e.department from Employee e inner join e.department"
@@ -1434,7 +1427,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testNestedComponentIsNull() {
+	public void testNestedComponentIsNull(SessionFactoryScope scope) {
 		// (1) From MapTest originally...
 		// (2) Was then moved into HQLTest...
 		// (3) However, a bug fix to EntityType#getIdentifierOrUniqueKeyType (HHH-2138)
@@ -1444,57 +1437,57 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		//
 		// fyi... found and fixed the problem in the classic parser; still
 		// leaving here for syntax checking
-		new SyntaxChecker( "from Commento c where c.marelo.commento.mcompr is null" ).checkAll();
+		new SyntaxChecker( scope, "from Commento c where c.marelo.commento.mcompr is null" ).checkAll();
 	}
 
 	@Test
-	@JiraKey( value = "HHH-939" )
-	public void testSpecialClassPropertyReference() {
+	@JiraKey( "HHH-939" )
+	public void testSpecialClassPropertyReference(SessionFactoryScope scope) {
 		// this is a long standing bug in Hibernate when applied to joined-subclasses;
 		//  see HHH-939 for details and history
-		new SyntaxChecker( "from Zoo zoo where zoo.class = PettingZoo" ).checkAll();
-		new SyntaxChecker( "select a.description from Animal a where a.class = Mammal" ).checkAll();
-		new SyntaxChecker( "select a.class from Animal a" ).checkAll();
-		new SyntaxChecker( "from DomesticAnimal an where an.class = Dog" ).checkAll();
-		new SyntaxChecker( "from Animal an where an.class = Dog" ).checkAll();
+		new SyntaxChecker( scope, "from Zoo zoo where zoo.class = PettingZoo" ).checkAll();
+		new SyntaxChecker( scope, "select a.description from Animal a where a.class = Mammal" ).checkAll();
+		new SyntaxChecker( scope, "select a.class from Animal a" ).checkAll();
+		new SyntaxChecker( scope, "from DomesticAnimal an where an.class = Dog" ).checkAll();
+		new SyntaxChecker( scope, "from Animal an where an.class = Dog" ).checkAll();
 	}
 
 	@Test
-	@JiraKey( value = "HHH-2376" )
-	public void testSpecialClassPropertyReferenceFQN() {
-		new SyntaxChecker( "from Zoo zoo where zoo.class = org.hibernate.orm.test.hql.PettingZoo" ).checkAll();
-		new SyntaxChecker( "select a.description from Animal a where a.class = org.hibernate.orm.test.hql.Mammal" ).checkAll();
-		new SyntaxChecker( "from DomesticAnimal an where an.class = org.hibernate.orm.test.hql.Dog" ).checkAll();
-		new SyntaxChecker( "from Animal an where an.class = org.hibernate.orm.test.hql.Dog" ).checkAll();
+	@JiraKey( "HHH-2376" )
+	public void testSpecialClassPropertyReferenceFQN(SessionFactoryScope scope) {
+		new SyntaxChecker( scope, "from Zoo zoo where zoo.class = org.hibernate.orm.test.hql.PettingZoo" ).checkAll();
+		new SyntaxChecker( scope, "select a.description from Animal a where a.class = org.hibernate.orm.test.hql.Mammal" ).checkAll();
+		new SyntaxChecker( scope, "from DomesticAnimal an where an.class = org.hibernate.orm.test.hql.Dog" ).checkAll();
+		new SyntaxChecker( scope, "from Animal an where an.class = org.hibernate.orm.test.hql.Dog" ).checkAll();
 	}
 
 	@Test
-	@JiraKey( value = "HHH-1631" )
-	public void testSubclassOrSuperclassPropertyReferenceInJoinedSubclass() {
+	@JiraKey( "HHH-1631" )
+	public void testSubclassOrSuperclassPropertyReferenceInJoinedSubclass(SessionFactoryScope scope) {
 		// this is a long standing bug in Hibernate; see HHH-1631 for details and history
 		//
 		// (1) pregnant is defined as a property of the class (Mammal) itself
 		// (2) description is defined as a property of the superclass (Animal)
 		// (3) name is defined as a property of a particular subclass (Human)
 
-		new SyntaxChecker( "from Zoo z join z.mammals as m where m.name.first = 'John'" ).checkAll();
+		new SyntaxChecker( scope, "from Zoo z join z.mammals as m where m.name.first = 'John'" ).checkAll();
 
-		new SyntaxChecker( "from Zoo z join z.mammals as m where m.pregnant = false" ).checkAll();
-		new SyntaxChecker( "select m.pregnant from Zoo z join z.mammals as m where m.pregnant = false" ).checkAll();
+		new SyntaxChecker( scope, "from Zoo z join z.mammals as m where m.pregnant = false" ).checkAll();
+		new SyntaxChecker( scope, "select m.pregnant from Zoo z join z.mammals as m where m.pregnant = false" ).checkAll();
 
-		new SyntaxChecker( "from Zoo z join z.mammals as m where m.description = 'tabby'" ).checkAll();
-		new SyntaxChecker( "select m.description from Zoo z join z.mammals as m where m.description = 'tabby'" ).checkAll();
+		new SyntaxChecker( scope, "from Zoo z join z.mammals as m where m.description = 'tabby'" ).checkAll();
+		new SyntaxChecker( scope, "select m.description from Zoo z join z.mammals as m where m.description = 'tabby'" ).checkAll();
 
-		new SyntaxChecker( "from Zoo z join z.mammals as m where m.name.first = 'John'" ).checkAll();
-		new SyntaxChecker( "select m.name from Zoo z join z.mammals as m where m.name.first = 'John'" ).checkAll();
+		new SyntaxChecker( scope, "from Zoo z join z.mammals as m where m.name.first = 'John'" ).checkAll();
+		new SyntaxChecker( scope, "select m.name from Zoo z join z.mammals as m where m.name.first = 'John'" ).checkAll();
 
-		new SyntaxChecker( "select m.pregnant from Zoo z join z.mammals as m" ).checkAll();
-		new SyntaxChecker( "select m.description from Zoo z join z.mammals as m" ).checkAll();
-		new SyntaxChecker( "select m.name from Zoo z join z.mammals as m" ).checkAll();
+		new SyntaxChecker( scope, "select m.pregnant from Zoo z join z.mammals as m" ).checkAll();
+		new SyntaxChecker( scope, "select m.description from Zoo z join z.mammals as m" ).checkAll();
+		new SyntaxChecker( scope, "select m.name from Zoo z join z.mammals as m" ).checkAll();
 
-		new SyntaxChecker( "from DomesticAnimal da join da.owner as o where o.nickName = 'Gavin'" ).checkAll();
-		new SyntaxChecker( "select da.father from DomesticAnimal da join da.owner as o where o.nickName = 'Gavin'" ).checkAll();
-		new SyntaxChecker( "select da.father from DomesticAnimal da where da.owner.nickName = 'Gavin'" ).checkAll();
+		new SyntaxChecker( scope, "from DomesticAnimal da join da.owner as o where o.nickName = 'Gavin'" ).checkAll();
+		new SyntaxChecker( scope, "select da.father from DomesticAnimal da join da.owner as o where o.nickName = 'Gavin'" ).checkAll();
+		new SyntaxChecker( scope, "select da.father from DomesticAnimal da where da.owner.nickName = 'Gavin'" ).checkAll();
 	}
 
 	/**
@@ -1503,19 +1496,19 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	 * keyword.
 	 */
 	@Test
-	public void testExplicitEntityCasting() {
-		new SyntaxChecker( "from Zoo z join treat(z.mammals as Human) as m where m.name.first = 'John'" ).checkAll();
-		new SyntaxChecker( "from Zoo z join z.mammals as m where treat(m as Human).name.first = 'John'" ).checkAll();
+	public void testExplicitEntityCasting(SessionFactoryScope scope) {
+		new SyntaxChecker( scope, "from Zoo z join treat(z.mammals as Human) as m where m.name.first = 'John'" ).checkAll();
+		new SyntaxChecker( scope, "from Zoo z join z.mammals as m where treat(m as Human).name.first = 'John'" ).checkAll();
 	}
 
 	@Test
 	@RequiresDialectFeature(
-			value = DialectChecks.SupportLimitAndOffsetCheck.class,
+			feature = DialectFeatureChecks.SupportLimitAndOffsetCheck.class,
 			comment = "dialect does not support offset and limit combo"
 	)
-	public void testSimpleSelectWithLimitAndOffset() throws Exception {
+	public void testSimpleSelectWithLimitAndOffset(SessionFactoryScope scope) throws Exception {
 		// just checking correctness of param binding code...
-		Session session = openSession();
+		Session session = scope.getSessionFactory().openSession();
 		Transaction t = session.beginTransaction();
 		session.createQuery( "from Animal" )
 				.setFirstResult( 2 )
@@ -1526,8 +1519,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testJPAPositionalParameterList() {
-		Session s = openSession();
+	public void testJPAPositionalParameterList(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		ArrayList<String> params = new ArrayList<String>();
 		params.add( "Doe" );
@@ -1569,8 +1562,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testComponentQueries() {
-		inTransaction(
+	public void testComponentQueries(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					final QueryImplementor<?> query = session.createQuery( "select h.name from Human h" );
 					final SqmSelectStatement<?> sqmStatement = (SqmSelectStatement<?>) query.unwrap( QuerySqmImpl.class ).getSqmStatement();
@@ -1599,10 +1592,10 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@JiraKey( value = "HHH-1774" )
-	@RequiresDialectFeature( DialectChecks.SupportsSubqueryInSelect.class )
-	public void testComponentParameterBinding() {
-		Session s = openSession();
+	@JiraKey( "HHH-1774" )
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSubqueryInSelect.class )
+	public void testComponentParameterBinding(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 
 		Order.Id oId = new Order.Id( "1234", 1 );
@@ -1625,8 +1618,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	@SuppressWarnings( {"unchecked"})
 	@Test
-	public void testAnyMappingReference() {
-		Session s = openSession();
+	public void testAnyMappingReference(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 
 		PropertyValue redValue = new StringPropertyValue( "red" );
@@ -1661,8 +1654,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testJdkEnumStyleEnumConstant() throws Exception {
-		Session s = openSession();
+	public void testJdkEnumStyleEnumConstant(SessionFactoryScope scope) throws Exception {
+		Session s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 
 		s.createQuery( "from Zoo z where z.classification = org.hibernate.orm.test.hql.Classification.LAME" ).list();
@@ -1673,9 +1666,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@FailureExpected( jiraKey = "unknown" )
-	public void testParameterTypeMismatch() {
-		try ( final SessionImplementor s = (SessionImplementor) openSession() ) {
-			inTransaction(
+	public void testParameterTypeMismatch(SessionFactoryScope scope) {
+		try ( final SessionImplementor s = (SessionImplementor) scope.getSessionFactory().openSession() ) {
+			scope.inTransaction(
 					s,
 				session -> {
 					try {
@@ -1696,9 +1689,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testMultipleBagFetchesFail() {
-		try ( final SessionImplementor s = (SessionImplementor) openSession() ) {
-			inTransaction(
+	public void testMultipleBagFetchesFail(SessionFactoryScope scope) {
+		try ( final SessionImplementor s = (SessionImplementor) scope.getSessionFactory().openSession() ) {
+			scope.inTransaction(
 					s,
 					session-> {
 						try {
@@ -1717,8 +1710,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@JiraKey( value = "HHH-1248" )
-	public void testCollectionJoinsInSubselect() {
+	@JiraKey( "HHH-1248" )
+	public void testCollectionJoinsInSubselect(SessionFactoryScope scope) {
 		// HHH-1248 : initially FromElementFactory treated any explicit join
 		// as an implied join so that theta-style joins would always be used.
 		// This was because correlated subqueries cannot use ANSI-style joins
@@ -1726,7 +1719,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		// to only correlated subqueries; it was applied to any subqueries ->
 		// which in-and-of-itself is not necessarily bad.  But somewhere later
 		// the choices made there caused joins to be dropped.
-		Session s = openSession();
+		Session s = scope.getSessionFactory().openSession();
 		Transaction t = s.beginTransaction();
 		String qryString =
 				"select a.id, a.description" +
@@ -1765,9 +1758,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testCollectionFetchWithDistinctionAndLimit() {
+	public void testCollectionFetchWithDistinctionAndLimit(SessionFactoryScope scope) {
 		// create some test data...
-		Session s = openSession();
+		Session s = scope.getSessionFactory().openSession();
 		Transaction t = s.beginTransaction();
 		int parentCount = 30;
 		for ( int i = 0; i < parentCount; i++ ) {
@@ -1787,7 +1780,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
-		s = openSession();
+		s = scope.getSessionFactory().openSession();
 		t = s.beginTransaction();
 		// Test simple distinction
 		List results;
@@ -1804,7 +1797,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
-		s = openSession();
+		s = scope.getSessionFactory().openSession();
 		t = s.beginTransaction();
 		s.createQuery( "delete Animal where mother is not null" ).executeUpdate();
 		s.createQuery( "delete Animal" ).executeUpdate();
@@ -1813,8 +1806,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testFetchInSubqueryFails() {
-		Session s = openSession();
+	public void testFetchInSubqueryFails(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		try {
 			s.createQuery( "from Animal a where a.mother in (select m from Animal a1 inner join a1.mother as m join fetch m.mother)" ).list();
 			fail( "fetch join allowed in subquery" );
@@ -1829,10 +1822,10 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@JiraKey(value = "HHH-1830")
-	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't see that the subquery is functionally dependent")
-	public void testAggregatedJoinAlias() {
-		Session s = openSession();
+	@JiraKey( "HHH-1830")
+	@SkipForDialect(dialectClass = DerbyDialect.class, matchSubTypes = true, reason = "Derby doesn't see that the subquery is functionally dependent")
+	public void testAggregatedJoinAlias(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		s.getTransaction().begin();
 		s.createQuery(
 			"select p.id, size( descendants ) " +
@@ -1845,11 +1838,11 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@JiraKey( value = "HHH-1464" )
-	public void testQueryMetadataRetrievalWithFetching() {
+	@JiraKey( "HHH-1464" )
+	public void testQueryMetadataRetrievalWithFetching(SessionFactoryScope scope) {
 		// HHH-1464 : there was a problem due to the fact they we polled
 		// the shallow version of the query plan to get the metadata.
-		inSession(
+		scope.inSession(
 				session -> {
 					final Query query = session.createQuery( "from Animal a inner join fetch a.mother" );
 					final SqmSelectStatement<?> sqmStatement = (SqmSelectStatement<?>) query.unwrap( QuerySqmImpl.class ).getSqmStatement();
@@ -1860,16 +1853,16 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 					assertThat( selectionType.getExpressibleJavaType().getJavaTypeClass(), equalTo( Animal.class ) );
 				}
 		);
-		Session s = openSession();
+		Session s = scope.getSessionFactory().openSession();
 		s.close();
 	}
 
 	@Test
-	@JiraKey( value = "HHH-429" )
+	@JiraKey( "HHH-429" )
 	@SuppressWarnings( {"unchecked"})
-	public void testSuperclassPropertyReferenceAfterCollectionIndexedAccess() {
+	public void testSuperclassPropertyReferenceAfterCollectionIndexedAccess(SessionFactoryScope scope) {
 		// note: simply performing syntax checking in the db
-		Session s = openSession();
+		Session s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		Mammal tiger = new Mammal();
 		tiger.setDescription( "Tiger" );
@@ -1887,14 +1880,14 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		s = openSession();
+		s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		List results = s.createQuery( "from Zoo zoo where zoo.mammals['tiger'].mother.bodyWeight > 3.0f" ).list();
 		assertEquals( 1, results.size() );
 		s.getTransaction().commit();
 		s.close();
 
-		s = openSession();
+		s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		s.remove( tiger );
 		s.remove( mother );
@@ -1904,9 +1897,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testJoinFetchCollectionOfValues() {
+	public void testJoinFetchCollectionOfValues(SessionFactoryScope scope) {
 		// note: simply performing syntax checking in the db
-		Session s = openSession();
+		Session s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		s.createQuery( "select h from Human as h join fetch h.nickNames" ).list();
 		s.getTransaction().commit();
@@ -1914,9 +1907,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testIntegerLiterals() {
+	public void testIntegerLiterals(SessionFactoryScope scope) {
 		// note: simply performing syntax checking in the db
-		Session s = openSession();
+		Session s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		s.createQuery( "from Foo where long = 1" ).list();
 		s.createQuery( "from Foo where long = " + Integer.MIN_VALUE ).list();
@@ -1930,9 +1923,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testDecimalLiterals() {
+	public void testDecimalLiterals(SessionFactoryScope scope) {
 		// note: simply performing syntax checking in the db
-		Session s = openSession();
+		Session s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		s.createQuery( "from Animal where bodyWeight > 100.0e-10" ).list();
 		s.createQuery( "from Animal where bodyWeight > 100.0E-10" ).list();
@@ -1949,9 +1942,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testNakedPropertyRef() {
+	public void testNakedPropertyRef(SessionFactoryScope scope) {
 		// note: simply performing syntax and column/table resolution checking in the db
-		Session s = openSession();
+		Session s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		s.createQuery( "from Animal where bodyWeight = bodyWeight" ).list();
 		s.createQuery( "select bodyWeight from Animal" ).list();
@@ -1961,9 +1954,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testNakedComponentPropertyRef() {
+	public void testNakedComponentPropertyRef(SessionFactoryScope scope) {
 		// note: simply performing syntax and column/table resolution checking in the db
-		Session s = openSession();
+		Session s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		s.createQuery( "from Human where name.first = 'Gavin'" ).list();
 		s.createQuery( "select name from Human" ).list();
@@ -1974,9 +1967,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testNakedImplicitJoins() {
+	public void testNakedImplicitJoins(SessionFactoryScope scope) {
 		// note: simply performing syntax and column/table resolution checking in the db
-		Session s = openSession();
+		Session s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		s.createQuery( "from Animal where mother.father.id = 1" ).list();
 		s.getTransaction().commit();
@@ -1984,11 +1977,11 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testNakedEntityAssociationReference() {
+	public void testNakedEntityAssociationReference(SessionFactoryScope scope) {
 		// note: simply performing syntax and column/table resolution checking in the db
-		Session s = openSession();
+		Session s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
-		if ( getDialect() instanceof HANADialect ) {
+		if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof HANADialect ) {
 			s.createQuery( "from Animal where mother is null" ).list();
 		}
 		else {
@@ -2000,9 +1993,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testNakedMapIndex() throws Exception {
+	public void testNakedMapIndex(SessionFactoryScope scope) throws Exception {
 		// note: simply performing syntax and column/table resolution checking in the db
-		Session s = openSession();
+		Session s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		s.createQuery( "from Zoo where mammals['dog'].description like '%black%'" ).list();
 		s.getTransaction().commit();
@@ -2010,10 +2003,10 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testInvalidFetchSemantics() {
-		try ( final SessionImplementor s = (SessionImplementor) openSession()) {
+	public void testInvalidFetchSemantics(SessionFactoryScope scope) {
+		try ( final SessionImplementor s = (SessionImplementor) scope.getSessionFactory().openSession()) {
 
-			inTransaction(
+			scope.inTransaction(
 					s,
 					session -> {
 						try {
@@ -2028,7 +2021,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 					}
 			);
 
-			inTransaction(
+			scope.inTransaction(
 					s,
 					session-> {
 						try {
@@ -2047,8 +2040,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testArithmetic() {
-		Session s = openSession();
+	public void testArithmetic(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		Transaction t = s.beginTransaction();
 		Zoo zoo = new Zoo();
 		zoo.setName("Melbourne Zoo");
@@ -2075,8 +2068,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testNestedCollectionFetch() {
-		Session s = openSession();
+	public void testNestedCollectionFetch(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		Transaction t = s.beginTransaction();
 		s.createQuery("from Animal a left join fetch a.offspring o left join fetch o.offspring where a.mother.id = 1 order by a.description").list();
 		s.createQuery("from Zoo z left join fetch z.animals a left join fetch a.offspring where z.name ='MZ' order by a.description").list();
@@ -2086,10 +2079,10 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialectFeature( DialectChecks.SupportsSubqueryInSelect.class )
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSubqueryInSelect.class )
 	@SuppressWarnings( {"unchecked"})
-	public void testSelectClauseSubselect() {
-		Session s = openSession();
+	public void testSelectClauseSubselect(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		Transaction t = s.beginTransaction();
 		Zoo zoo = new Zoo();
 		zoo.setName("Melbourne Zoo");
@@ -2116,8 +2109,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testInitProxy() {
-		Session s = openSession();
+	public void testInitProxy(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		Transaction t = s.beginTransaction();
 		Mammal plat = new Mammal();
 		plat.setBodyWeight( 11f );
@@ -2137,8 +2130,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SuppressWarnings( {"unchecked"})
-	public void testSelectClauseImplicitJoin() {
-		Session s = openSession();
+	public void testSelectClauseImplicitJoin(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		Transaction t = s.beginTransaction();
 		Zoo zoo = new Zoo();
 		zoo.setName("The Zoo");
@@ -2184,10 +2177,10 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@JiraKey( value = "HHH-9305")
+	@JiraKey( "HHH-9305")
 	@SuppressWarnings( {"unchecked"})
-	public void testSelectClauseImplicitJoinOrderByJoinedProperty() {
-		Session s = openSession();
+	public void testSelectClauseImplicitJoinOrderByJoinedProperty(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		Transaction t = s.beginTransaction();
 		Zoo zoo = new Zoo();
 		zoo.setName("The Zoo");
@@ -2250,8 +2243,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SuppressWarnings( {"unchecked"})
-	public void testSelectClauseDistinctImplicitJoinOrderByJoinedProperty() {
-		Session s = openSession();
+	public void testSelectClauseDistinctImplicitJoinOrderByJoinedProperty(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		Transaction t = s.beginTransaction();
 		Zoo zoo = new Zoo();
 		zoo.setName("The Zoo");
@@ -2314,8 +2307,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SuppressWarnings( {"unchecked"})
-	public void testSelectClauseImplicitJoinWithIterate() {
-		Session s = openSession();
+	public void testSelectClauseImplicitJoinWithIterate(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		Transaction t = s.beginTransaction();
 		Zoo zoo = new Zoo();
 		zoo.setName("The Zoo");
@@ -2348,8 +2341,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testComponentOrderBy() {
-		Session s = openSession();
+	public void testComponentOrderBy(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		Transaction t = s.beginTransaction();
 
 		Human human1 = genSimpleHuman( "John", "Jacob" );
@@ -2379,8 +2372,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testOrderedWithCustomColumnReadAndWrite() {
-		Session s = openSession();
+	public void testOrderedWithCustomColumnReadAndWrite(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		Transaction t = s.beginTransaction();
 		SimpleEntityWithAssociation first = new SimpleEntityWithAssociation();
 		first.setNegatedNumber( 1 );
@@ -2409,8 +2402,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testHavingWithCustomColumnReadAndWrite() {
-		Session s = openSession();
+	public void testHavingWithCustomColumnReadAndWrite(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		Transaction t = s.beginTransaction();
 		SimpleEntityWithAssociation first = new SimpleEntityWithAssociation();
 		first.setNegatedNumber(5);
@@ -2440,9 +2433,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testLoadSnapshotWithCustomColumnReadAndWrite() {
+	public void testLoadSnapshotWithCustomColumnReadAndWrite(SessionFactoryScope scope) {
 		// Exercises entity snapshot load when select-before-update is true.
-		Session s = openSession();
+		Session s = scope.getSessionFactory().openSession();
 		Transaction t = s.beginTransaction();
 		final double SIZE_IN_KB = 1536d;
 		final double SIZE_IN_MB = SIZE_IN_KB / 1024d;
@@ -2459,7 +2452,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
-		s = openSession();
+		s = scope.getSessionFactory().openSession();
 		t = s.beginTransaction();
 		final double NEW_SIZE_IN_KB = 2048d;
 		final double NEW_SIZE_IN_MB = NEW_SIZE_IN_KB / 1024d;
@@ -2483,8 +2476,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testCastInSelect() {
-		Session s = openSession();
+	public void testCastInSelect(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		Transaction t = s.beginTransaction();
 		Animal a = new Animal();
 		a.setBodyWeight(12.4f);
@@ -2507,8 +2500,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testNumericExpressionReturnTypes() {
-		Session s = openSession();
+	public void testNumericExpressionReturnTypes(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		Transaction t = s.beginTransaction();
 		Animal a = new Animal();
 		a.setBodyWeight(12.4f);
@@ -2614,8 +2607,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testAliases() {
-		Session s = openSession();
+	public void testAliases(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		Transaction t = s.beginTransaction();
 		Animal a = new Animal();
 		a.setBodyWeight(12.4f);
@@ -2651,9 +2644,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialectFeature(DialectChecks.SupportsTemporaryTable.class)
-	public void testParameterMixing() {
-		Session s = openSession();
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsTemporaryTable.class)
+	public void testParameterMixing(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		Transaction t = s.beginTransaction();
 		s.createQuery( "from Animal a where a.description = ?1 and a.bodyWeight = ?2 or a.bodyWeight = :bw" )
 				.setParameter( 1, "something" )
@@ -2665,8 +2658,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testOrdinalParameters() {
-		Session s = openSession();
+	public void testOrdinalParameters(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		Transaction t = s.beginTransaction();
 		s.createQuery( "from Animal a where a.description = ?1 and a.bodyWeight = ?2" )
 				.setParameter( 1, "something" )
@@ -2681,8 +2674,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testIndexParams() {
-		Session s = openSession();
+	public void testIndexParams(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		Transaction t = s.beginTransaction();
 		s.createQuery( "from Zoo zoo where zoo.mammals[:name].id = :id" )
 			.setParameter( "name", "Walrus" )
@@ -2712,8 +2705,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testAggregation() {
-		Session s = openSession();
+	public void testAggregation(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		Human h = new Human();
 		h.setBodyWeight( (float) 74.0 );
@@ -2732,7 +2725,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		s = openSession();
+		s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
 		h = new Human();
 		h.setFloatValue( 2.5F );
@@ -2763,8 +2756,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testSelectClauseCase() {
-		Session s = openSession();
+	public void testSelectClauseCase(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		Transaction t = s.beginTransaction();
 		Human h = new Human();
 		h.setBodyWeight( (float) 74.0 );
@@ -2783,9 +2776,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialectFeature( DialectChecks.SupportsSubqueryInSelect.class )
-	public void testImplicitPolymorphism() {
-		Session s = openSession();
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSubqueryInSelect.class )
+	public void testImplicitPolymorphism(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
 		Transaction t = s.beginTransaction();
 
 		Product product = new Product();
@@ -2808,8 +2801,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testCoalesce() {
-		Session session = openSession();
+	public void testCoalesce(SessionFactoryScope scope) {
+		Session session = scope.getSessionFactory().openSession();
 		Transaction txn = session.beginTransaction();
 		session.createQuery("from Human h where coalesce(h.nickName, h.name.first, h.name.last) = 'max'").list();
 		session.createQuery("select nullif(nickName, '1e1') from Human").list();
@@ -2818,14 +2811,14 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testStr() {
-		Session session = openSession();
+	public void testStr(SessionFactoryScope scope) {
+		Session session = scope.getSessionFactory().openSession();
 		Transaction txn = session.beginTransaction();
 		Animal an = new Animal();
 		an.setBodyWeight(123.45f);
 		session.persist( an );
 		String str = (String) session.createQuery("select str(an.bodyWeight) from Animal an where str(an.bodyWeight) like '%1%'").uniqueResult();
-		if ( getDialect() instanceof DB2Dialect ) {
+		if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof DB2Dialect ) {
 			assertTrue( str.startsWith( "1.234" ) );
 		}
 		else {
@@ -2848,10 +2841,10 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect( MySQLDialect.class )
-	@SkipForDialect( DB2Dialect.class )
-	public void testCast() {
-		Session session = openSession();
+	@SkipForDialect( dialectClass = MySQLDialect.class, matchSubTypes = true )
+	@SkipForDialect( dialectClass = DB2Dialect.class, matchSubTypes = true )
+	public void testCast(SessionFactoryScope scope) {
+		Session session = scope.getSessionFactory().openSession();
 		Transaction txn = session.beginTransaction();
 		session.createQuery("from Human h where h.nickName like 'G%'").list();
 		session.createQuery("from Animal a where cast(a.bodyWeight as string) like '1.%'").list();
@@ -2861,12 +2854,12 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testExtract() {
-		Session session = openSession();
+	public void testExtract(SessionFactoryScope scope) {
+		Session session = scope.getSessionFactory().openSession();
 		Transaction txn = session.beginTransaction();
 		session.createQuery("select second(current_timestamp()), minute(current_timestamp()), hour(current_timestamp()) from Mammal m").list();
 		session.createQuery("select day(m.birthdate), month(m.birthdate), year(m.birthdate) from Mammal m").list();
-		if ( !(getDialect() instanceof DB2Dialect) ) { //no ANSI extract
+		if ( !(scope.getSessionFactory().getJdbcServices().getDialect() instanceof DB2Dialect) ) { //no ANSI extract
 			session.createQuery("select extract(second from current_timestamp()), extract(minute from current_timestamp()), extract(hour from current_timestamp()) from Mammal m").list();
 			session.createQuery("select extract(day from m.birthdate), extract(month from m.birthdate), extract(year from m.birthdate) from Mammal m").list();
 		}
@@ -2875,10 +2868,10 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = CockroachDialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/41943")
-	public void testSelectExpressions() {
-		createTestBaseData();
-		Session session = openSession();
+	@SkipForDialect(dialectClass = CockroachDialect.class, matchSubTypes = true, reason = "https://github.com/cockroachdb/cockroach/issues/41943")
+	public void testSelectExpressions(SessionFactoryScope scope) {
+		createTestBaseData( scope );
+		Session session = scope.getSessionFactory().openSession();
 		Transaction txn = session.beginTransaction();
 		Human h = new Human();
 		h.setName( new Name( "Gavin", 'A', "King" ) );
@@ -2906,11 +2899,11 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		session.remove(h);
 		txn.commit();
 		session.close();
-		destroyTestBaseData();
+		destroyTestBaseData( scope );
 	}
 
-	private void createTestBaseData() {
-		Session session = openSession();
+	private void createTestBaseData(SessionFactoryScope scope) {
+		Session session = scope.getSessionFactory().openSession();
 		Transaction txn = session.beginTransaction();
 
 		Mammal m1 = new Mammal();
@@ -2933,8 +2926,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		createdAnimalIds.add( m2.getId() );
 	}
 
-	private void destroyTestBaseData() {
-		Session session = openSession();
+	private void destroyTestBaseData(SessionFactoryScope scope) {
+		Session session = scope.getSessionFactory().openSession();
 		Transaction txn = session.beginTransaction();
 
 		for ( Long createdAnimalId : createdAnimalIds ) {
@@ -2949,8 +2942,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testImplicitJoin() throws Exception {
-		Session session = openSession();
+	public void testImplicitJoin(SessionFactoryScope scope) throws Exception {
+		Session session = scope.getSessionFactory().openSession();
 		Transaction t = session.beginTransaction();
 		Animal a = new Animal();
 		a.setBodyWeight(0.5f);
@@ -2975,48 +2968,48 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testFromOnly() throws Exception {
-		createTestBaseData();
-		Session session = openSession();
+	public void testFromOnly(SessionFactoryScope scope) throws Exception {
+		createTestBaseData( scope );
+		Session session = scope.getSessionFactory().openSession();
 		Transaction t = session.beginTransaction();
 		List results = session.createQuery( "from Animal" ).list();
 		assertEquals( "Incorrect result size", 2, results.size() );
 		assertTrue( "Incorrect result return type", results.get( 0 ) instanceof Animal );
 		t.commit();
 		session.close();
-		destroyTestBaseData();
+		destroyTestBaseData( scope );
 	}
 
 	@Test
-	public void testSimpleSelect() throws Exception {
-		createTestBaseData();
-		Session session = openSession();
+	public void testSimpleSelect(SessionFactoryScope scope) throws Exception {
+		createTestBaseData( scope );
+		Session session = scope.getSessionFactory().openSession();
 		Transaction t = session.beginTransaction();
 		List results = session.createQuery( "select a from Animal as a" ).list();
 		assertEquals( "Incorrect result size", 2, results.size() );
 		assertTrue( "Incorrect result return type", results.get( 0 ) instanceof Animal );
 		t.commit();
 		session.close();
-		destroyTestBaseData();
+		destroyTestBaseData( scope );
 	}
 
 	@Test
-	public void testEntityPropertySelect() throws Exception {
-		createTestBaseData();
-		Session session = openSession();
+	public void testEntityPropertySelect(SessionFactoryScope scope) throws Exception {
+		createTestBaseData( scope );
+		Session session = scope.getSessionFactory().openSession();
 		Transaction t = session.beginTransaction();
 		List results = session.createQuery( "select a.mother from Animal as a" ).list();
 		assertTrue( "Incorrect result return type", results.get( 0 ) instanceof Animal );
 		t.commit();
 		session.close();
-		destroyTestBaseData();
+		destroyTestBaseData( scope );
 	}
 
 	@Test
-	public void testWhere() throws Exception {
-		createTestBaseData();
+	public void testWhere(SessionFactoryScope scope) throws Exception {
+		createTestBaseData( scope );
 
-		Session session = openSession();
+		Session session = scope.getSessionFactory().openSession();
 		Transaction t = session.beginTransaction();
 		List results = session.createQuery( "from Animal an where an.bodyWeight > 10" ).list();
 		assertEquals( "Incorrect result size", 1, results.size() );
@@ -3039,14 +3032,14 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		session.close();
 
-		destroyTestBaseData();
+		destroyTestBaseData( scope );
 	}
 
 	@Test
-	public void testEntityFetching() throws Exception {
-		createTestBaseData();
+	public void testEntityFetching(SessionFactoryScope scope) throws Exception {
+		createTestBaseData( scope );
 
-		Session session = openSession();
+		Session session = scope.getSessionFactory().openSession();
 		Transaction t = session.beginTransaction();
 
 		List results = session.createQuery( "from Animal an join fetch an.mother" ).list();
@@ -3064,14 +3057,14 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		session.close();
 
-		destroyTestBaseData();
+		destroyTestBaseData( scope );
 	}
 
 	@Test
-	public void testCollectionFetching() throws Exception {
-		createTestBaseData();
+	public void testCollectionFetching(SessionFactoryScope scope) throws Exception {
+		createTestBaseData( scope );
 
-		Session session = openSession();
+		Session session = scope.getSessionFactory().openSession();
 		Transaction t = session.beginTransaction();
 		List results = session.createQuery( "from Animal an join fetch an.offspring" ).list();
 		assertEquals( "Incorrect result size", 1, results.size() );
@@ -3088,12 +3081,12 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		session.close();
 
-		destroyTestBaseData();
+		destroyTestBaseData( scope );
 	}
 
 	@Test
 	@SuppressWarnings( {"unchecked"})
-	public void testJoinFetchedCollectionOfJoinedSubclass() throws Exception {
+	public void testJoinFetchedCollectionOfJoinedSubclass(SessionFactoryScope scope) throws Exception {
 		Mammal mammal = new Mammal();
 		mammal.setDescription( "A Zebra" );
 		Zoo zoo = new Zoo();
@@ -3101,14 +3094,14 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		zoo.getMammals().put( "zebra", mammal );
 		mammal.setZoo( zoo );
 
-		Session session = openSession();
+		Session session = scope.getSessionFactory().openSession();
 		Transaction txn = session.beginTransaction();
 		session.persist( mammal );
 		session.persist( zoo );
 		txn.commit();
 		session.close();
 
-		session = openSession();
+		session = scope.getSessionFactory().openSession();
 		txn = session.beginTransaction();
 		List results = session.createQuery( "from Zoo z join fetch z.mammals" ).list();
 		assertEquals( "Incorrect result size", 1, results.size() );
@@ -3126,7 +3119,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SuppressWarnings( {"unchecked"})
-	public void testJoinedCollectionOfJoinedSubclass() throws Exception {
+	public void testJoinedCollectionOfJoinedSubclass(SessionFactoryScope scope) throws Exception {
 		Mammal mammal = new Mammal();
 		mammal.setDescription( "A Zebra" );
 		Zoo zoo = new Zoo();
@@ -3134,14 +3127,14 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		zoo.getMammals().put( "zebra", mammal );
 		mammal.setZoo( zoo );
 
-		Session session = openSession();
+		Session session = scope.getSessionFactory().openSession();
 		Transaction txn = session.beginTransaction();
 		session.persist( mammal );
 		session.persist( zoo );
 		txn.commit();
 		session.close();
 
-		session = openSession();
+		session = scope.getSessionFactory().openSession();
 		txn = session.beginTransaction();
 		List results = session.createQuery( "select z, m from Zoo z join z.mammals m" ).list();
 		assertEquals( "Incorrect result size", 1, results.size() );
@@ -3159,7 +3152,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SuppressWarnings( {"unchecked"})
-	public void testJoinedCollectionOfJoinedSubclassProjection() throws Exception {
+	public void testJoinedCollectionOfJoinedSubclassProjection(SessionFactoryScope scope) throws Exception {
 		Mammal mammal = new Mammal();
 		mammal.setDescription( "A Zebra" );
 		Zoo zoo = new Zoo();
@@ -3167,14 +3160,14 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		zoo.getMammals().put( "zebra", mammal );
 		mammal.setZoo( zoo );
 
-		Session session = openSession();
+		Session session = scope.getSessionFactory().openSession();
 		Transaction txn = session.beginTransaction();
 		session.persist( mammal );
 		session.persist( zoo );
 		txn.commit();
 		session.close();
 
-		session = openSession();
+		session = scope.getSessionFactory().openSession();
 		txn = session.beginTransaction();
 		List results = session.createQuery( "select z, m from Zoo z join z.mammals m" ).list();
 		assertEquals( "Incorrect result size", 1, results.size() );
@@ -3191,9 +3184,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testProjectionQueries() throws Exception {
-		createTestBaseData();
-		Session session = openSession();
+	public void testProjectionQueries(SessionFactoryScope scope) throws Exception {
+		createTestBaseData( scope );
+		Session session = scope.getSessionFactory().openSession();
 		Transaction t = session.beginTransaction();
 
 		List results = session.createQuery( "select an.mother.id, max(an.bodyWeight) from Animal an group by an.mother.id" ).list();
@@ -3204,13 +3197,13 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		t.commit();
 		session.close();
-		destroyTestBaseData();
+		destroyTestBaseData( scope );
 	}
 
 	@Test
-	@SkipForDialect(value = CockroachDialect.class, strictMatching = true)
-	public void testStandardFunctions() {
-		Session session = openSession();
+	@SkipForDialect(dialectClass = CockroachDialect.class)
+	public void testStandardFunctions(SessionFactoryScope scope) {
+		Session session = scope.getSessionFactory().openSession();
 		Transaction t = session.beginTransaction();
 		Product p = new Product();
 		p.setDescription( "a product" );
@@ -3232,10 +3225,10 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testDynamicInstantiationQueries() throws Exception {
-		createTestBaseData();
+	public void testDynamicInstantiationQueries(SessionFactoryScope scope) throws Exception {
+		createTestBaseData( scope );
 
-		Session session = openSession();
+		Session session = scope.getSessionFactory().openSession();
 		Transaction t = session.beginTransaction();
 
 		List results = session.createQuery( "select new Animal(an.description, an.bodyWeight) from Animal an" ).list();
@@ -3281,7 +3274,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		}
 
 		// caching...
-		QueryStatistics stats = sessionFactory().getStatistics().getQueryStatistics( "select new Animal(an.description, an.bodyWeight) from Animal an" );
+		QueryStatistics stats = scope.getSessionFactory().getStatistics().getQueryStatistics( "select new Animal(an.description, an.bodyWeight) from Animal an" );
 		results = session.createQuery( "select new Animal(an.description, an.bodyWeight) from Animal an" )
 				.setCacheable( true )
 				.list();
@@ -3298,12 +3291,12 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		session.close();
 
-		destroyTestBaseData();
+		destroyTestBaseData( scope );
 	}
 
 	@Test
-	@JiraKey( value = "HHH-9305")
-	public void testDynamicInstantiationWithToOneQueries() throws Exception {
+	@JiraKey( "HHH-9305")
+	public void testDynamicInstantiationWithToOneQueries(SessionFactoryScope scope) throws Exception {
 		final Employee employee1 = new Employee();
 		employee1.setFirstName( "Jane" );
 		employee1.setLastName( "Doe" );
@@ -3321,7 +3314,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		title2.setDescription( "John's title" );
 		employee2.setTitle( title2 );
 
-		Session s = openSession();
+		Session s = scope.getSessionFactory().openSession();
 		s.getTransaction().begin();
 		s.persist( title1 );
 		s.persist( dept1 );
@@ -3336,64 +3329,64 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		// at the beginning of the FROM clause, avoiding failures on DBs that cannot handle cross joins
 		// interleaved with ANSI joins (e.g., PostgreSql).
 
-		s = openSession();
+		s = scope.getSessionFactory().openSession();
 		s.getTransaction().begin();
-		List results = session.createQuery(
+		List results = s.createQuery(
 				"select new Employee(e.id, e.lastName, e.title.id, e.title.description, e.department, e.firstName) from Employee e inner join e.title"
 		).list();
 		assertEquals( "Incorrect result size", 1, results.size() );
 		assertClassAssignability( results.get( 0 ).getClass(), Employee.class );
-		results = session.createQuery(
+		results = s.createQuery(
 				"select new Employee(e.id, e.lastName, t.id, t.description, e.department, e.firstName) from Employee e inner join e.title t"
 		).list();
 		assertEquals( "Incorrect result size", 1, results.size() );
 		assertClassAssignability( results.get( 0 ).getClass(), Employee.class );
-		results = session.createQuery(
+		results = s.createQuery(
 				"select new Employee(e.id, e.lastName, e.title.id, e.title.description, e.department, e.firstName) from Employee e inner join e.department"
 		).list();
 		assertEquals( "Incorrect result size", 1, results.size() );
 		assertClassAssignability( results.get( 0 ).getClass(), Employee.class );
-		results = session.createQuery(
+		results = s.createQuery(
 				"select new Employee(e.id, e.lastName, e.title.id, e.title.description, d, e.firstName) from Employee e inner join e.department d"
 		).list();
 		assertEquals( "Incorrect result size", 1, results.size() );
 		assertClassAssignability( results.get( 0 ).getClass(), Employee.class );
-		results = session.createQuery(
+		results = s.createQuery(
 				"select new Employee(e.id, e.lastName, e.title.id, e.title.description, e.department, e.firstName) from Employee e left outer join e.department"
 		).list();
 		assertEquals( "Incorrect result size", 2, results.size() );
 		assertClassAssignability( results.get( 0 ).getClass(), Employee.class );
-		results = session.createQuery(
+		results = s.createQuery(
 				"select new Employee(e.id, e.lastName, e.title.id, e.title.description, d, e.firstName) from Employee e left outer join e.department d"
 		).list();
 		assertEquals( "Incorrect result size", 2, results.size() );
 		assertClassAssignability( results.get( 0 ).getClass(), Employee.class );
-		results = session.createQuery(
+		results = s.createQuery(
 				"select new Employee(e.id, e.lastName, e.title.id, e.title.description, e.department, e.firstName) from Employee e left outer join e.department inner join e.title"
 		).list();
 		assertEquals( "Incorrect result size", 2, results.size() );
 		assertClassAssignability( results.get( 0 ).getClass(), Employee.class );
-		results = session.createQuery(
+		results = s.createQuery(
 				"select new Employee(e.id, e.lastName, t.id, t.description, d, e.firstName) from Employee e left outer join e.department d inner join e.title t"
 		).list();
 		assertEquals( "Incorrect result size", 2, results.size() );
 		assertClassAssignability( results.get( 0 ).getClass(), Employee.class );
-		results = session.createQuery(
+		results = s.createQuery(
 				"select new Employee(e.id, e.lastName, e.title.id, e.title.description, e.department, e.firstName) from Employee e left outer join e.department left outer join e.title"
 		).list();
 		assertEquals( "Incorrect result size", 2, results.size() );
 		assertClassAssignability( results.get( 0 ).getClass(), Employee.class );
-		results = session.createQuery(
+		results = s.createQuery(
 				"select new Employee(e.id, e.lastName, t.id, t.description, d, e.firstName) from Employee e left outer join e.department d left outer join e.title t"
 		).list();
 		assertEquals( "Incorrect result size", 2, results.size() );
 		assertClassAssignability( results.get( 0 ).getClass(), Employee.class );
-		results = session.createQuery(
+		results = s.createQuery(
 				"select new Employee(e.id, e.lastName, e.title.id, e.title.description, e.department, e.firstName) from Employee e left outer join e.department order by e.title.description"
 		).list();
 		assertEquals( "Incorrect result size", 2, results.size() );
 		assertClassAssignability( results.get( 0 ).getClass(), Employee.class );
-		results = session.createQuery(
+		results = s.createQuery(
 				"select new Employee(e.id, e.lastName, e.title.id, e.title.description, e.department, e.firstName) from Employee e left outer join e.department d order by e.title.description"
 		).list();
 		assertEquals( "Incorrect result size", 2, results.size() );
@@ -3402,7 +3395,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		s.close();
 
-		s = openSession();
+		s = scope.getSessionFactory().openSession();
 		s.getTransaction().begin();
 		s.remove( employee1 );
 		s.remove( title1 );
@@ -3415,7 +3408,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SuppressWarnings("unused")
-	public void testCachedJoinedAndJoinFetchedManyToOne() throws Exception {
+	public void testCachedJoinedAndJoinFetchedManyToOne(SessionFactoryScope scope) throws Exception {
 		Animal a = new Animal();
 		a.setDescription( "an animal" );
 
@@ -3434,7 +3427,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		a.addOffspring( offspring2 );
 		offspring2.setMother( a );
 
-		Session s = openSession();
+		Session s = scope.getSessionFactory().openSession();
 		Transaction t = s.beginTransaction();
 		s.persist( mother );
 		s.persist( a );
@@ -3443,20 +3436,20 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
-		sessionFactory().getCache().evictQueryRegions();
-		sessionFactory().getStatistics().clear();
+		scope.getSessionFactory().getCache().evictQueryRegions();
+		scope.getSessionFactory().getStatistics().clear();
 
-		s = openSession();
+		s = scope.getSessionFactory().openSession();
 		t = s.beginTransaction();
 		List list = s.createQuery( "from Animal a left join fetch a.mother" ).setCacheable( true ).list();
-		assertEquals( 0, sessionFactory().getStatistics().getQueryCacheHitCount() );
-		assertEquals( 1, sessionFactory().getStatistics().getQueryCachePutCount() );
+		assertEquals( 0, scope.getSessionFactory().getStatistics().getQueryCacheHitCount() );
+		assertEquals( 1, scope.getSessionFactory().getStatistics().getQueryCachePutCount() );
 		list = s.createQuery( "select a from Animal a left join fetch a.mother" ).setCacheable( true ).list();
-		assertEquals( 1, sessionFactory().getStatistics().getQueryCacheHitCount() );
-		assertEquals( 1, sessionFactory().getStatistics().getQueryCachePutCount() );
+		assertEquals( 1, scope.getSessionFactory().getStatistics().getQueryCacheHitCount() );
+		assertEquals( 1, scope.getSessionFactory().getStatistics().getQueryCachePutCount() );
 		list = s.createQuery( "select a, m from Animal a left join a.mother m" ).setCacheable( true ).list();
-		assertEquals( 1, sessionFactory().getStatistics().getQueryCacheHitCount() );
-		assertEquals( 2, sessionFactory().getStatistics().getQueryCachePutCount() );
+		assertEquals( 1, scope.getSessionFactory().getStatistics().getQueryCacheHitCount() );
+		assertEquals( 2, scope.getSessionFactory().getStatistics().getQueryCachePutCount() );
 		list = s.createQuery( "from Animal" ).list();
 		for(Object obj : list){
 			s.remove( obj );
@@ -3466,7 +3459,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testCachedJoinedAndJoinFetchedOneToMany() throws Exception {
+	public void testCachedJoinedAndJoinFetchedOneToMany(SessionFactoryScope scope) throws Exception {
 		Animal a = new Animal();
 		a.setDescription( "an animal" );
 		Animal mother = new Animal();
@@ -3482,10 +3475,10 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		a.addOffspring( offspring2 );
 		offspring2.setMother( a );
 
-		sessionFactory().getCache().evictQueryRegions();
-		sessionFactory().getStatistics().clear();
+		scope.getSessionFactory().getCache().evictQueryRegions();
+		scope.getSessionFactory().getStatistics().clear();
 
-		Session s = openSession();
+		Session s = scope.getSessionFactory().openSession();
 		Transaction t = s.beginTransaction();
 		s.persist( mother );
 		s.persist( a );
@@ -3494,17 +3487,17 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
-		s = openSession();
+		s = scope.getSessionFactory().openSession();
 		t = s.beginTransaction();
 		List list = s.createQuery( "from Animal a left join fetch a.offspring" ).setCacheable( true ).list();
-		assertEquals( 0, sessionFactory().getStatistics().getQueryCacheHitCount() );
-		assertEquals( 1, sessionFactory().getStatistics().getQueryCachePutCount() );
+		assertEquals( 0, scope.getSessionFactory().getStatistics().getQueryCacheHitCount() );
+		assertEquals( 1, scope.getSessionFactory().getStatistics().getQueryCachePutCount() );
 		list = s.createQuery( "select a from Animal a left join fetch a.offspring" ).setCacheable( true ).list();
-		assertEquals( 1, sessionFactory().getStatistics().getQueryCacheHitCount() );
-		assertEquals( 1, sessionFactory().getStatistics().getQueryCachePutCount() );
+		assertEquals( 1, scope.getSessionFactory().getStatistics().getQueryCacheHitCount() );
+		assertEquals( 1, scope.getSessionFactory().getStatistics().getQueryCachePutCount() );
 		list = s.createQuery( "select a, o from Animal a left join a.offspring o" ).setCacheable( true ).list();
-		assertEquals( 1, sessionFactory().getStatistics().getQueryCacheHitCount() );
-		assertEquals( 2, sessionFactory().getStatistics().getQueryCachePutCount() );
+		assertEquals( 1, scope.getSessionFactory().getStatistics().getQueryCacheHitCount() );
+		assertEquals( 2, scope.getSessionFactory().getStatistics().getQueryCachePutCount() );
 		list = s.createQuery( "from Animal" ).list();
 		for ( Object obj : list ) {
 			s.remove( obj );
@@ -3514,9 +3507,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testSelectNewTransformerQueries() {
-		createTestBaseData();
-		Session session = openSession();
+	public void testSelectNewTransformerQueries(SessionFactoryScope scope) {
+		createTestBaseData( scope );
+		Session session = scope.getSessionFactory().openSession();
 		Transaction t = session.beginTransaction();
 		List list = session.createQuery( "select new Animal(an.description, an.bodyWeight) as animal from Animal an order by an.description" )
 				.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP )
@@ -3530,16 +3523,16 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		assertEquals( "Mammal #2", m2.get( "animal" ).getDescription() );
 		t.commit();
 		session.close();
-		destroyTestBaseData();
+		destroyTestBaseData( scope );
 	}
 
 	@Test
-	public void testResultTransformerScalarQueries() throws Exception {
-		createTestBaseData();
+	public void testResultTransformerScalarQueries(SessionFactoryScope scope) throws Exception {
+		createTestBaseData( scope );
 
 		String query = "select an.description as description, an.bodyWeight as bodyWeight from Animal an order by bodyWeight desc";
 
-		Session session = openSession();
+		Session session = scope.getSessionFactory().openSession();
 		Transaction t = session.beginTransaction();
 
 		List results = session.createQuery( query )
@@ -3555,11 +3548,11 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		session.close();
 
-		session = openSession();
+		session = scope.getSessionFactory().openSession();
 		t = session.beginTransaction();
 
 		try (ScrollableResults sr = session.createQuery( query )
-				.setResultTransformer(Transformers.aliasToBean(Animal.class)).scroll()) {
+				.setResultTransformer( Transformers.aliasToBean( Animal.class ) ).scroll()) {
 			assertTrue( "Incorrect result size", sr.next() );
 			assertTrue( "Incorrect return type", sr.get() instanceof Animal );
 			assertFalse( session.contains( sr.get() ) );
@@ -3568,7 +3561,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		session.close();
 
-		session = openSession();
+		session = scope.getSessionFactory().openSession();
 		t = session.beginTransaction();
 
 		results = session.createQuery( "select a from Animal a, Animal b order by a.id" )
@@ -3589,16 +3582,16 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		session.close();
 
-		destroyTestBaseData();
+		destroyTestBaseData( scope );
 	}
 
 	@Test
-	public void testResultTransformerEntityQueries() throws Exception {
-		createTestBaseData();
+	public void testResultTransformerEntityQueries(SessionFactoryScope scope) throws Exception {
+		createTestBaseData( scope );
 
 		String query = "select an as an from Animal an order by bodyWeight desc";
 
-		Session session = openSession();
+		Session session = scope.getSessionFactory().openSession();
 		Transaction t = session.beginTransaction();
 
 		List results = session.createQuery( query )
@@ -3617,7 +3610,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		session.close();
 
-		session = openSession();
+		session = scope.getSessionFactory().openSession();
 		t = session.beginTransaction();
 
 		try (ScrollableResults sr = session.createQuery( query )
@@ -3629,12 +3622,12 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		session.close();
 
-		destroyTestBaseData();
+		destroyTestBaseData( scope );
 	}
 
 	@Test
-	public void testEJBQLFunctions() throws Exception {
-		Session session = openSession();
+	public void testEJBQLFunctions(SessionFactoryScope scope) throws Exception {
+		Session session = scope.getSessionFactory().openSession();
 		Transaction t = session.beginTransaction();
 
 		String hql = "from Animal a where a.description = concat('1', concat('2','3'), '4'||'5')||'0'";
@@ -3664,17 +3657,21 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		hql = "select length(a.description) from Animal a";
 		session.createQuery(hql).list();
 
-		//note: postgres and db2 don't have a 3-arg form, it gets transformed to 2-args
-		hql = "from Animal a where locate('abc', a.description, 2) = 2";
-		session.createQuery(hql).list();
+		Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
+		// Informix before version 12 didn't support finding the index of substrings
+		if ( !( dialect instanceof InformixDialect && dialect.getVersion().isBefore( 12 ) ) ) {
+			//note: postgres and db2 don't have a 3-arg form, it gets transformed to 2-args
+			hql = "from Animal a where locate('abc', a.description, 2) = 2";
+			session.createQuery( hql ).list();
 
-		hql = "from Animal a where locate('abc', a.description) = 2";
-		session.createQuery(hql).list();
+			hql = "from Animal a where locate('abc', a.description) = 2";
+			session.createQuery( hql ).list();
 
-		hql = "select locate('cat', a.description, 2) from Animal a";
-		session.createQuery(hql).list();
+			hql = "select locate('cat', a.description, 2) from Animal a";
+			session.createQuery( hql ).list();
+		}
 
-		if ( !( getDialect() instanceof DB2Dialect ) ) {
+		if ( !( dialect instanceof DB2Dialect ) ) {
 			hql = "from Animal a where trim(trailing '_' from a.description) = 'cat'";
 			session.createQuery(hql).list();
 
@@ -3688,7 +3685,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 			session.createQuery(hql).list();
 		}
 
-		if ( !(getDialect() instanceof HSQLDialect) ) { //HSQL doesn't like trim() without specification
+		if ( !(dialect instanceof HSQLDialect) ) { //HSQL doesn't like trim() without specification
 			hql = "from Animal a where trim(a.description) = 'cat'";
 			session.createQuery(hql).list();
 		}
@@ -3727,10 +3724,10 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@JiraKey( value = "HHH-11942" )
-	public void testOrderByExtraParenthesis() throws Exception {
+	@JiraKey( "HHH-11942" )
+	public void testOrderByExtraParenthesis(SessionFactoryScope scope) throws Exception {
 		try {
-			doInHibernate( this::sessionFactory, session -> {
+			scope.inTransaction( session -> {
 				session.createQuery(
 					"select a from Product a " +
 					"where " +
@@ -3749,22 +3746,22 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@RequiresDialectFeature(
-			value = DialectChecks.SupportSubqueryAsLeftHandSideInPredicate.class,
+			feature = DialectFeatureChecks.SupportsSubqueryAsLeftHandSideInPredicate.class,
 			comment = "Database does not support using subquery as singular value expression"
 	)
-	public void testSubqueryAsSingularValueExpression() {
-			assertResultSize( "from Animal x where (select max(a.bodyWeight) from Animal a) in (1,2,3)", 0 );
-			assertResultSize( "from Animal x where (select max(a.bodyWeight) from Animal a) between 0 and 100", 0 );
-			assertResultSize( "from Animal x where (select max(a.description) from Animal a) like 'big%'", 0 );
-			assertResultSize( "from Animal x where (select max(a.bodyWeight) from Animal a) is not null", 0 );
+	public void testSubqueryAsSingularValueExpression(SessionFactoryScope scope) {
+			assertResultSize( scope, "from Animal x where (select max(a.bodyWeight) from Animal a) in (1,2,3)", 0 );
+			assertResultSize( scope,"from Animal x where (select max(a.bodyWeight) from Animal a) between 0 and 100", 0 );
+			assertResultSize( scope,"from Animal x where (select max(a.description) from Animal a) like 'big%'", 0 );
+			assertResultSize( scope,"from Animal x where (select max(a.bodyWeight) from Animal a) is not null", 0 );
 	}
 
-	public void testExistsSubquery() {
-		assertResultSize( "from Animal x where exists (select max(a.bodyWeight) from Animal a)", 0 );
+	public void testExistsSubquery(SessionFactoryScope scope) {
+		assertResultSize( scope, "from Animal x where exists (select max(a.bodyWeight) from Animal a)", 0 );
 	}
 
-	private void assertResultSize(String hql, int size) {
-		Session session = openSession();
+	private void assertResultSize(SessionFactoryScope scope, String hql, int size) {
+		Session session = scope.getSessionFactory().openSession();
 		Transaction txn = session.beginTransaction();
 		assertEquals( size, session.createQuery(hql).list().size() );
 		txn.commit();
@@ -3781,14 +3778,16 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	};
 
 	private class SyntaxChecker {
+		private final SessionFactoryScope scope;
 		private final String hql;
 		private final QueryPreparer preparer;
 
-		public SyntaxChecker(String hql) {
-			this( hql, DEFAULT_PREPARER );
+		public SyntaxChecker(SessionFactoryScope scope, String hql) {
+			this( scope, hql, DEFAULT_PREPARER );
 		}
 
-		public SyntaxChecker(String hql, QueryPreparer preparer) {
+		public SyntaxChecker(SessionFactoryScope scope, String hql, QueryPreparer preparer) {
+			this.scope = scope;
 			this.hql = hql;
 			this.preparer = preparer;
 		}
@@ -3799,7 +3798,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		}
 
 		public SyntaxChecker checkList() {
-			Session s = openSession();
+			Session s = scope.getSessionFactory().openSession();
 			s.beginTransaction();
 			Query query = s.createQuery( hql, Object[].class );
 			preparer.prepare( query );
@@ -3810,7 +3809,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		}
 
 		public SyntaxChecker checkScroll() {
-			Session s = openSession();
+			Session s = scope.getSessionFactory().openSession();
 			s.beginTransaction();
 			Query query = s.createQuery( hql, Object[].class );
 			preparer.prepare( query );

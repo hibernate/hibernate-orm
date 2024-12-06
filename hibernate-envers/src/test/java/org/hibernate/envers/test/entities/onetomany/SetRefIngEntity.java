@@ -7,6 +7,7 @@
 package org.hibernate.envers.test.entities.onetomany;
 
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
@@ -26,7 +27,7 @@ public class SetRefIngEntity {
 	private String data;
 
 	@Audited
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	private SetRefEdEntity reference;
 
 	public SetRefIngEntity() {

@@ -2678,12 +2678,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private static boolean parameterMatches(VariableElement parameter, JpaSelection<?> item) {
 		final Class<?> javaType = item.getJavaType();
-		return javaType != null && parameterMatches( parameter.asType(), javaType );
+		return javaType != null && parameterMatches( parameter.asType(), javaType, item.getJavaTypeName() );
 	}
 
-	private static boolean parameterMatches(TypeMirror parameterType, Class<?> itemType) {
+	private static boolean parameterMatches(TypeMirror parameterType, Class<?> itemType, String itemTypeName) {
 		final TypeKind kind = parameterType.getKind();
-		final String itemTypeName = itemType.getName();
 		if ( kind == TypeKind.DECLARED ) {
 			final DeclaredType declaredType = (DeclaredType) parameterType;
 			final TypeElement paramTypeElement = (TypeElement) declaredType.asElement();
@@ -2695,7 +2694,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		else if ( kind == TypeKind.ARRAY ) {
 			final ArrayType arrayType = (ArrayType) parameterType;
 			return itemType.isArray()
-				&& parameterMatches( arrayType.getComponentType(), itemType.getComponentType() );
+				&& parameterMatches( arrayType.getComponentType(), itemType.getComponentType(), itemType.getComponentType().getTypeName() );
 		}
 		else {
 			return false;

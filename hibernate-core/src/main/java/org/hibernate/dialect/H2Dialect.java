@@ -109,6 +109,10 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
 
 /**
  * A {@linkplain Dialect SQL dialect} for H2.
+ * <p>
+ * Please refer to the
+ * <a href="http://www.h2database.com/html/main.html">H2 documentation</a>.
+ *
  *
  * @author Thomas Mueller
  * @author Jürgen Kreitler

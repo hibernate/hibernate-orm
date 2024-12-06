@@ -127,7 +127,10 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
 /**
- * A dialect for Microsoft SQL Server 2008 and above
+ * A dialect for Microsoft SQL Server 2012 and above.
+ * <p>
+ * Please refer to the
+ * <a href="https://learn.microsoft.com/en-us/sql/t-sql/language-reference">SQL Server documentation</a>.
  *
  * @author Gavin King
  */

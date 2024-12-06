@@ -12,18 +12,18 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-
 import org.hibernate.Hibernate;
-import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.FetchProfile;
+import org.hibernate.annotations.FetchProfileOverride;
 import org.hibernate.engine.spi.BatchFetchQueue;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.entity.EntityPersister;
-
-import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.Jpa;
-import org.junit.jupiter.api.BeforeAll;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
@@ -33,15 +33,31 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 
-@Jpa(annotatedClasses = {
+@SessionFactory
+@DomainModel(annotatedClasses = {
 		GenerateSubselectsOnJoinedAssociationTest.LazySelectRoot.class,
 		GenerateSubselectsOnJoinedAssociationTest.LazySelectNode.class
 })
 public class GenerateSubselectsOnJoinedAssociationTest {
 
-	@BeforeAll
-	static void setup(final EntityManagerFactoryScope scope) {
+	private EntityKey key1;
+	private EntityKey key2;
+	private EntityKey key3;
+
+	@BeforeEach
+	void setup(final SessionFactoryScope scope) {
+		final EntityPersister persister = scope.getSessionFactory().getMappingMetamodel()
+				.getEntityDescriptor( LazySelectNode.class );
+
+		key1 = new EntityKey( 10, persister );
+		key2 = new EntityKey( 20, persister );
+		key3 = new EntityKey( 30, persister );
+
 		scope.inTransaction( em -> {
+			if ( em.find( LazySelectRoot.class, 1 ) != null ) {
+				return;
+			}
+
 			final LazySelectNode rootNode = new LazySelectNode();
 			rootNode.id = 10;
 
@@ -68,64 +84,114 @@ public class GenerateSubselectsOnJoinedAssociationTest {
 	}
 
 	@Test
-	void testSubselectFetchingFromFind(final EntityManagerFactoryScope scope) {
-		final LazySelectRoot root = scope.fromTransaction( em -> {
-			final SessionImplementor session = em.unwrap( SessionImplementor.class );
-			final EntityPersister persister = session.getEntityPersister( null, new LazySelectNode() );
-			final EntityKey key1 = session.generateEntityKey( 10, persister );
-			final EntityKey key2 = session.generateEntityKey( 20, persister );
-			final EntityKey key3 = session.generateEntityKey( 30, persister );
+	void testLazySubselectFetchingFromFind(final SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.enableFetchProfile( "lazysubselect" );
 
-			final LazySelectRoot in = em.find( LazySelectRoot.class, 1L );
+			final LazySelectRoot root = session.find( LazySelectRoot.class, 1 );
 
-			final BatchFetchQueue batchFetchQueue = session.getPersistenceContextInternal().getBatchFetchQueue();
-			assertThat( batchFetchQueue.getSubselect( key1 ), is( notNullValue() ) );
-			assertThat( batchFetchQueue.getSubselect( key2 ), is( notNullValue() ) );
-			assertThat( batchFetchQueue.getSubselect( key3 ), is( notNullValue() ) );
+			assertNotInitialized( root );
+			Hibernate.initialize( root.nodes );
 
-			return in;
+			assertGeneratedSubselects( session );
+			assertNodesInitialized( root );
+
+			final LazySelectNode anyNode = root.nodes.iterator().next();
+			Hibernate.initialize( anyNode.children );
+
+			assertFullyInitialized( root );
 		} );
-
-		for ( final LazySelectNode node : root.nodes ) {
-			assertThat( Hibernate.isInitialized( ( (LazySelectNode) Hibernate.unproxy( node ) ).children ),
-						is( false )
-			);
-		}
 	}
 
 	@Test
-	void testSubselectFetchingFromQuery(final EntityManagerFactoryScope scope) {
-		final LazySelectRoot root = scope.fromTransaction( em -> {
-			final SessionImplementor session = em.unwrap( SessionImplementor.class );
-			final EntityPersister persister = session.getEntityPersister( null, new LazySelectNode() );
-			final EntityKey key1 = session.generateEntityKey( 10, persister );
-			final EntityKey key2 = session.generateEntityKey( 20, persister );
-			final EntityKey key3 = session.generateEntityKey( 30, persister );
+	void testEagerSubselectFetchingFromFind(final SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.enableFetchProfile( "eagersubselect" );
 
-			final LazySelectRoot in = em.createQuery( "select r from root r join fetch r.nodes where r.id = ?1",
-													  LazySelectRoot.class ).setParameter( 1, 1 ).getSingleResult();
+			final LazySelectRoot root = session.find( LazySelectRoot.class, 1 );
 
-			final BatchFetchQueue batchFetchQueue = session.getPersistenceContextInternal().getBatchFetchQueue();
-			assertThat( batchFetchQueue.getSubselect( key1 ), is( notNullValue() ) );
-			assertThat( batchFetchQueue.getSubselect( key2 ), is( notNullValue() ) );
-			assertThat( batchFetchQueue.getSubselect( key3 ), is( notNullValue() ) );
-			return in;
+			assertGeneratedSubselects( session );
+			assertFullyInitialized( root );
 		} );
+	}
 
-		for ( final LazySelectNode node : root.nodes ) {
-			assertThat( Hibernate.isInitialized( ( (LazySelectNode) Hibernate.unproxy( node ) ).children ),
-						is( false )
-			);
+	@Test
+	void testLazySubselectFetchingFromQuery(final SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.enableFetchProfile( "lazysubselect" );
+
+			final LazySelectRoot root = session.createQuery( "select r from root r where r.id = ?1",
+							LazySelectRoot.class )
+					.setParameter( 1, 1 ).getSingleResult();
+
+			assertNotInitialized( root );
+			Hibernate.initialize( root.nodes );
+
+			assertGeneratedSubselects( session );
+			assertNodesInitialized( root );
+
+			final LazySelectNode anyNode = root.nodes.iterator().next();
+			Hibernate.initialize( anyNode.children );
+
+			assertFullyInitialized( root );
+		} );
+	}
+
+	@Test
+	void testEagerSubselectFetchingFromQuery(final SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.enableFetchProfile( "eagersubselect" );
+
+			final LazySelectRoot root = session.createQuery( "select r from root r where r.id = ?1",
+					LazySelectRoot.class ).setParameter( 1, 1 ).getSingleResult();
+
+			assertGeneratedSubselects( session );
+			assertFullyInitialized( root );
+		} );
+	}
+
+	private void assertGeneratedSubselects(final SessionImplementor session) {
+		final BatchFetchQueue batchFetchQueue = session.getPersistenceContextInternal().getBatchFetchQueue();
+		assertThat( batchFetchQueue.getSubselect( key1 ), is( notNullValue() ) );
+		assertThat( batchFetchQueue.getSubselect( key2 ), is( notNullValue() ) );
+		assertThat( batchFetchQueue.getSubselect( key3 ), is( notNullValue() ) );
+	}
+
+	private void assertNotInitialized(LazySelectRoot root) {
+		assertThat( Hibernate.isInitialized( root.getNodes() ), is( false ) );
+	}
+
+	private void assertNodesInitialized(LazySelectRoot root) {
+		assertThat( Hibernate.isInitialized( root.getNodes() ), is( true ) );
+
+		for ( final LazySelectNode node : root.getNodes() ) {
+			assertThat( Hibernate.isInitialized( node.getChildren() ), is( false ) );
+		}
+	}
+
+	private void assertFullyInitialized(LazySelectRoot root) {
+		assertThat( Hibernate.isInitialized( root.getNodes() ), is( true ) );
+
+		for ( final LazySelectNode node : root.getNodes() ) {
+			assertThat( Hibernate.isInitialized( node.getChildren() ), is( true ) );
 		}
 	}
 
 	@Entity(name = "root")
+	@FetchProfile(name = "lazysubselect")
+	@FetchProfile(name = "eagersubselect")
 	public static class LazySelectRoot {
 		@Id
 		public Integer id;
 
-		@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "root")
+		@OneToMany(cascade = CascadeType.ALL, mappedBy = "root")
+		@FetchProfileOverride(profile = "lazysubselect", fetch = FetchType.LAZY)
+		@FetchProfileOverride(profile = "eagersubselect", fetch = FetchType.EAGER)
 		public Set<LazySelectNode> nodes = new HashSet<>();
+
+		public Set<LazySelectNode> getNodes() {
+			return nodes;
+		}
 	}
 
 	@Entity(name = "node")
@@ -139,7 +205,12 @@ public class GenerateSubselectsOnJoinedAssociationTest {
 
 		@ManyToMany(cascade = CascadeType.ALL)
 		@JoinTable(name = "RELATIONSHIPS")
-		@Fetch(FetchMode.SUBSELECT)
+		@FetchProfileOverride(profile = "lazysubselect", fetch = FetchType.LAZY, mode = FetchMode.SUBSELECT)
+		@FetchProfileOverride(profile = "eagersubselect", fetch = FetchType.EAGER, mode = FetchMode.SUBSELECT)
 		public final Set<LazySelectNode> children = new HashSet<>();
+
+		public Set<LazySelectNode> getChildren() {
+			return children;
+		}
 	}
 }

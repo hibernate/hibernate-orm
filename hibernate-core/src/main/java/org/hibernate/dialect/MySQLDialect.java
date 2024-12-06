@@ -122,7 +122,10 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
 /**
- * A {@linkplain Dialect SQL dialect} for MySQL 5.7 and above.
+ * A {@linkplain Dialect SQL dialect} for MySQL 8 and above.
+ * <p>
+ * Please refer to the
+ * <a href="https://dev.mysql.com/doc/refman/9.1/en/">MySQL documentation</a>.
  *
  * @author Gavin King
  */
@@ -1048,6 +1051,11 @@ public class MySQLDialect extends Dialect {
 		return '`';
 	}
 
+	/**
+	 * Here we interpret "catalog" as a MySQL database.
+	 *
+	 * @return {@code true}
+	 */
 	@Override
 	public boolean canCreateCatalog() {
 		return true;
@@ -1063,6 +1071,14 @@ public class MySQLDialect extends Dialect {
 		return new String[] { "drop database " + catalogName };
 	}
 
+	/**
+	 * MySQL does support the {@code create schema} command, but
+	 * it's a synonym for {@code create database}. Hibernate has
+	 * always treated a MySQL database as a
+	 * {@linkplain #canCreateCatalog catalog}.
+	 *
+	 * @return {@code false}
+	 */
 	@Override
 	public boolean canCreateSchema() {
 		return false;

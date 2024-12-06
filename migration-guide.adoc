@@ -351,6 +351,26 @@ The migration requires to read data and re-save it.
 
 To retain backwards compatibility, configure the setting `hibernate.type.xml_format_mapper.legacy_format` to `true`.
 
+[[float-mapping-changes-oracle]]
+== DDL type for Java `float` and `double` changed on Oracle
+
+Previous version of Hibernate ORM mapped Java `float` and `double` to Oracle `float(p)`, `real` or `double precision`
+types, which are all internally implemented as `number`. To avoid potential misbehavior compared to Java execution
+and match the expectations of the IEEE floating point semantics as requested by using Java `float`/`double`,
+the default DDL types were changed to Oracles IEEE floating point types `binary_float` and `binary_double` respectively.
+
+Migration requires multiple steps because Oracle doesn't support online type changes:
+
+```sql
+alter table TBL add (NEW_COLUMN binary_float);
+update TBL set NEW_COLUMN=OLD_COLUMN;
+alter table TBL drop column OLD_COLUMN;
+alter table TBL rename column NEW_COLUMN to OLD_COLUMN;
+```
+
+Note that changing the schema is not required for Hibernate ORM to work correctly.
+The previous behavior may be recovered by setting `hibernate.dialect.oracle.use_binary_floats` to `false`.
+
 [[sf-name]]
 == SessionFactory Name (and JNDI)
 

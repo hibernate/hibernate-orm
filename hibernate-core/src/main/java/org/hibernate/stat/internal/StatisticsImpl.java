@@ -889,6 +889,13 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	}
 
 	@Override
+	public void closeSessionFactory() {
+		if ( isStatisticsEnabled ) {
+			logSummary();
+		}
+	}
+
+	@Override
 	public void logSummary() {
 		log.logStatistics(
 				startTime.toEpochMilli(),

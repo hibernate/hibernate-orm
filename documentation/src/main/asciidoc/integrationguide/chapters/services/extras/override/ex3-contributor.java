@@ -5,10 +5,10 @@ public class LatestAndGreatestConnectionProviderImplContributor
     public void contribute(
             StandardServiceRegistryBuilder serviceRegistryBuilder) {
 
-        // here we will register a short-name for our service strategy
+        // here we will register a short name for our service strategy
         StrategySelector selector = serviceRegistryBuilder
             .getBootstrapServiceRegistry().
-            .getService( StrategySelector.class );
+            .requireService( StrategySelector.class );
 
         selector.registerStrategyImplementor(
             ConnectionProvider.class,

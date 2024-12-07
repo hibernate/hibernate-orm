@@ -348,10 +348,10 @@ include::{extrasdir}/override/ex3-contributor.java[]
 ----
 ====
 
-That all allows the application to pick our `LatestAndGreatestConnectionProviderImpl` by a short-name.
+That all allows the application to pick our `LatestAndGreatestConnectionProviderImpl` by a short name.
 
 [[services-custom-service-short-name-example]]
-.Custom service short-name
+.Custom service short name
 ====
 [source, JAVA, indent=0]
 ----

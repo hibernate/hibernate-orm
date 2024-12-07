@@ -6,7 +6,7 @@ public class EventPublishingServiceContributor
         builder.addInitiator( EventPublishingServiceInitiator.instance );
 
         // if we wanted to allow other strategies (e.g. a jms
-        // queue publisher) we might also register short-names
+        // queue publisher) we might also register short names
         // here with the strategyselector.  the initiator would
         // then need to accept the strategy as a config setting
     }

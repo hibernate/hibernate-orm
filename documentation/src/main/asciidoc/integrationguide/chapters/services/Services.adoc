@@ -151,7 +151,7 @@ The specific capabilities exposed on this `Service` include:
 ===== `IntegratorService`
 
 The `Service` role for this `Service` is `org.hibernate.integrator.spi.IntegratorService.` 
-Applications, third-party integrators and others all need to integrate with Hibernate. Historically this used to require something (usually the application) to coordinate registering the pieces of each integration needed on behalf of each integration. The `org.hibernate.integrator.spi.Integrator` contract formalized this "integration SPI". The `IntegratorService` manages all known integrators.
+Applications, third-party integrators, and others all need to integrate with Hibernate. Historically this used to require something (usually the application) to coordinate registering the pieces of each integration needed on behalf of each integration. The `org.hibernate.integrator.spi.Integrator` contract formalized this "integration SPI". The `IntegratorService` manages all known integrators.
 
 [TIP]
 ====

@@ -58,7 +58,7 @@ Any method on the `Service` implementation class accepting a single parameter an
 By default, the type of the method parameter is expected to be the `Service` role to be injected.
 If the parameter type is different than the `Service` role, the `serviceRole` attribute of the `@InjectService` annotation should be used to explicitly name the role.
 +
-By default, injected services are considered required, that is the startup will fail if a named dependent `Service` is missing.
+By default, injected services are considered required, that is, the startup will fail if a named dependent `Service` is missing.
 If the `Service` to be injected is optional, the `required` attribute of the `@InjectService` annotation should be declared as `false` (default is `true`).
 
 `org.hibernate.service.spi.ServiceRegistryAwareService`::

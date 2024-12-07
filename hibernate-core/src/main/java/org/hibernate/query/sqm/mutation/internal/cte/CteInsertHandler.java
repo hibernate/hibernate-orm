@@ -20,6 +20,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.enhanced.Optimizer;
+import org.hibernate.id.enhanced.PooledOptimizer;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
@@ -387,7 +388,14 @@ public class CteInsertHandler implements InsertHandler {
 				rowsWithSequenceQuery.getSelectClause().addSqlSelection(
 						new SqlSelectionImpl(
 								1,
-								new SelfRenderingSqlFragmentExpression( fragment )
+								optimizer instanceof PooledOptimizer ?
+										new BinaryArithmeticExpression(
+												new SelfRenderingSqlFragmentExpression( fragment ),
+												BinaryArithmeticOperator.SUBTRACT,
+												new QueryLiteral<>( optimizer.getIncrementSize() - 1, integerType ),
+												integerType
+										) :
+										new SelfRenderingSqlFragmentExpression( fragment )
 						)
 				);
 				rowsWithSequenceQuery.applyPredicate(

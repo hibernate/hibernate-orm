@@ -180,13 +180,4 @@ public class IdFinderMethod extends AbstractFinderMethod {
 		declaration
 				.append(")");
 	}
-
-	private static void nullCheck(StringBuilder declaration, String parameterName) {
-		declaration
-				.append("\tif (")
-				.append(parameterName)
-				.append(" == null) throw new IllegalArgumentException(\"Null ")
-				.append(parameterName)
-				.append("\");\n");
-	}
 }

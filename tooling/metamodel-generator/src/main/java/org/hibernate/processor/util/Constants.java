@@ -123,6 +123,7 @@ public final class Constants {
 	public static final String MAP_ATTRIBUTE = "jakarta.persistence.metamodel.MapAttribute";
 
 	public static final String JAVA_OBJECT = "java.lang.Object";
+	public static final String OBJECTS = "java.util.Objects";
 	public static final String ITERABLE = "java.lang.Iterable";
 	public static final String COLLECTION = "java.util.Collection";
 	public static final String LIST = "java.util.List";

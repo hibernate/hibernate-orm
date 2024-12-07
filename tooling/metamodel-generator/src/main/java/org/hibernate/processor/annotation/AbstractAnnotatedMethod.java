@@ -17,6 +17,7 @@ import static org.hibernate.processor.annotation.AnnotationMetaEntity.usingReact
 import static org.hibernate.processor.annotation.AnnotationMetaEntity.usingReactiveSessionAccess;
 import static org.hibernate.processor.annotation.AnnotationMetaEntity.usingStatelessSession;
 import static org.hibernate.processor.util.Constants.ENTITY_MANAGER;
+import static org.hibernate.processor.util.Constants.OBJECTS;
 import static org.hibernate.processor.util.TypeUtils.hasAnnotation;
 
 /**
@@ -75,5 +76,16 @@ public abstract class AbstractAnnotatedMethod implements MetaAttribute {
 		else {
 			return emptyList();
 		}
+	}
+
+	void nullCheck(StringBuilder declaration, String paramName) {
+		declaration
+				.append('\t')
+				.append(annotationMetaEntity.staticImport(OBJECTS, "requireNonNull"))
+				.append('(')
+				.append(paramName.replace('.', '$'))
+				.append(", \"Null ")
+				.append(paramName)
+				.append("\");\n");
 	}
 }

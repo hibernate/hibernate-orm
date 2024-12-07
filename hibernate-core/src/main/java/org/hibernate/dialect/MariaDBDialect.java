@@ -6,6 +6,7 @@ package org.hibernate.dialect;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
+import java.sql.Types;
 
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
@@ -312,5 +313,12 @@ public class MariaDBDialect extends MySQLDialect {
 	@Override
 	public String getDual() {
 		return "dual";
+	}
+
+	@Override
+	public boolean equivalentTypes(int typeCode1, int typeCode2) {
+		return typeCode1 == Types.LONGVARCHAR && typeCode2 == SqlTypes.JSON
+			|| typeCode1 == SqlTypes.JSON && typeCode2 == Types.LONGVARCHAR
+			|| super.equivalentTypes( typeCode1, typeCode2 );
 	}
 }

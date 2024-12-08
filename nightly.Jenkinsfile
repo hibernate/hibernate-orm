@@ -30,8 +30,8 @@ stage('Configure') {
 		new BuildEnvironment( dbName: 'hsqldb_2_6' ),
 		new BuildEnvironment( dbName: 'mysql_8_0' ),
 		new BuildEnvironment( dbName: 'mariadb_10_5' ),
-		new BuildEnvironment( dbName: 'postgresql_12' ),
-		new BuildEnvironment( dbName: 'edb_12' ),
+		new BuildEnvironment( dbName: 'postgresql_17' ),
+		new BuildEnvironment( dbName: 'edb_17' ),
 		new BuildEnvironment( dbName: 'db2_10_5', longRunning: true ),
 		new BuildEnvironment( dbName: 'mssql_2017' ), // Unfortunately there is no SQL Server 2008 image, so we have to test with 2017
 // 		new BuildEnvironment( dbName: 'sybase_16' ), // There only is a Sybase ASE 16 image, so no pint in testing that nightly
@@ -123,17 +123,17 @@ stage('Build') {
 									sh "./docker_db.sh mariadb_10_5"
 									state[buildEnv.tag]['containerName'] = "mariadb"
 									break;
-								case "postgresql_12":
+								case "postgresql_17":
 									// use the postgis image to enable the PGSQL GIS (spatial) extension
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('postgis/postgis:12-3.4').pull()
+										docker.image('postgis/postgis:17-3.5').pull()
 									}
-									sh "./docker_db.sh postgresql_12"
+									sh "./docker_db.sh postgresql_17"
 									state[buildEnv.tag]['containerName'] = "postgres"
 									break;
-								case "edb_12":
+								case "edb_17":
 									docker.image('quay.io/enterprisedb/edb-postgres-advanced:12.16-3.3-postgis').pull()
-									sh "./docker_db.sh edb_12"
+									sh "./docker_db.sh edb_17"
 									state[buildEnv.tag]['containerName'] = "edb"
 									break;
 								case "db2_10_5":

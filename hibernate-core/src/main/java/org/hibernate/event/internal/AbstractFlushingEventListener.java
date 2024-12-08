@@ -19,7 +19,6 @@ import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.internal.Collections;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.ActionQueue;
-import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.CollectionKey;
@@ -57,7 +56,7 @@ public abstract class AbstractFlushingEventListener {
 
 	/**
 	 * Coordinates the processing necessary to get things ready for executions
-	 * as db calls by preping the session caches and moving the appropriate
+	 * as db calls by preparing the session caches and moving the appropriate
 	 * entities and collections to their respective execution queues.
 	 *
 	 * @param event The flush event.
@@ -106,29 +105,27 @@ public abstract class AbstractFlushingEventListener {
 	}
 
 	protected void logFlushResults(FlushEvent event) {
-		if ( !LOG.isDebugEnabled() ) {
-			return;
+		if ( LOG.isDebugEnabled() ) {
+			final EventSource session = event.getSession();
+			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+			final ActionQueue actionQueue = session.getActionQueue();
+			LOG.debugf(
+					"Flushed: %s insertions, %s updates, %s deletions to %s objects",
+					actionQueue.numberOfInsertions(),
+					actionQueue.numberOfUpdates(),
+					actionQueue.numberOfDeletions(),
+					persistenceContext.getNumberOfManagedEntities()
+			);
+			LOG.debugf(
+					"Flushed: %s (re)creations, %s updates, %s removals to %s collections",
+					actionQueue.numberOfCollectionCreations(),
+					actionQueue.numberOfCollectionUpdates(),
+					actionQueue.numberOfCollectionRemovals(),
+					persistenceContext.getCollectionEntriesSize()
+			);
+			new EntityPrinter( session.getFactory() )
+					.logEntities( persistenceContext.getEntityHoldersByKey().entrySet() );
 		}
-		final EventSource session = event.getSession();
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		final ActionQueue actionQueue = session.getActionQueue();
-		LOG.debugf(
-				"Flushed: %s insertions, %s updates, %s deletions to %s objects",
-				actionQueue.numberOfInsertions(),
-				actionQueue.numberOfUpdates(),
-				actionQueue.numberOfDeletions(),
-				persistenceContext.getNumberOfManagedEntities()
-		);
-		LOG.debugf(
-				"Flushed: %s (re)creations, %s updates, %s removals to %s collections",
-				actionQueue.numberOfCollectionCreations(),
-				actionQueue.numberOfCollectionUpdates(),
-				actionQueue.numberOfCollectionRemovals(),
-				persistenceContext.getCollectionEntriesSize()
-		);
-		new EntityPrinter( session.getFactory() ).toString(
-				persistenceContext.getEntityHoldersByKey().entrySet()
-		);
 	}
 
 	/**
@@ -140,8 +137,8 @@ public abstract class AbstractFlushingEventListener {
 
 		LOG.debug( "Processing flush-time cascades" );
 
-		final PersistContext context = getContext( session );
-		//safe from concurrent modification because of how concurrentEntries() is implemented on IdentityMap
+		final PersistContext context = PersistContext.create();
+		// safe from concurrent modification because of how concurrentEntries() is implemented on IdentityMap
 		for ( Map.Entry<Object,EntityEntry> me : persistenceContext.reentrantSafeEntityEntries() ) {
 //		for ( Map.Entry me : IdentityMap.concurrentEntries( persistenceContext.getEntityEntries() ) ) {
 			final EntityEntry entry = me.getValue();
@@ -150,6 +147,10 @@ public abstract class AbstractFlushingEventListener {
 			}
 		}
 
+		checkForTransientReferences( session, persistenceContext );
+	}
+
+	void checkForTransientReferences(EventSource session, PersistenceContext persistenceContext) {
 		// perform these checks after all cascade persist events have been
 		// processed, so that all entities which will be persisted are
 		// persistent when we do the check (I wonder if we could move this
@@ -181,24 +182,15 @@ public abstract class AbstractFlushingEventListener {
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		persistenceContext.incrementCascadeLevel();
 		try {
-			Cascade.cascade( getCascadingAction(session), CascadePoint.BEFORE_FLUSH, session, persister, object, anything );
+			Cascade.cascade( CascadingActions.PERSIST_ON_FLUSH, CascadePoint.BEFORE_FLUSH, session, persister, object, anything );
 		}
 		finally {
 			persistenceContext.decrementCascadeLevel();
 		}
 	}
 
-	protected PersistContext getContext(EventSource session) {
-		return PersistContext.create();
-	}
-
-	protected CascadingAction<PersistContext> getCascadingAction(EventSource session) {
-		return CascadingActions.PERSIST_ON_FLUSH;
-	}
-
 	/**
-	 * Initialize the flags of the CollectionEntry, including the
-	 * dirty check.
+	 * Initialize the flags of the {@link CollectionEntry}, including the dirty check.
 	 */
 	private void prepareCollectionFlushes(PersistenceContext persistenceContext) throws HibernateException {
 
@@ -215,9 +207,11 @@ public abstract class AbstractFlushingEventListener {
 	}
 
 	/**
-	 * 1. detect any dirty entities
-	 * 2. schedule any entity updates
-	 * 3. search out any reachable collections
+	 * <ol>
+	 * <li> detect any dirty entities
+	 * <li> schedule any entity updates
+	 * <li> search out any reachable collections
+	 * </ol>
 	 */
 	private int flushEntities(final FlushEvent event, final PersistenceContext persistenceContext)
 			throws HibernateException {
@@ -263,8 +257,8 @@ public abstract class AbstractFlushingEventListener {
 	}
 
 	/**
-	 * Reuses a FlushEntityEvent for a new purpose, if possible;
-	 * if not possible a new actual instance is returned.
+	 * Reuses a {@link FlushEntityEvent} for a new purpose, if possible;
+	 * or if not possible, a new actual instance is returned.
 	 */
 	private FlushEntityEvent createOrReuseEventInstance(
 			FlushEntityEvent possiblyValidExistingInstance,
@@ -282,8 +276,8 @@ public abstract class AbstractFlushingEventListener {
 	}
 
 	/**
-	 * process any unreferenced collections and then inspect all known collections,
-	 * scheduling creates/removes/updates
+	 * Process any unreferenced collections and then inspect all known collections,
+	 * scheduling creates/removes/updates.
 	 */
 	private int flushCollections(final EventSource session, final PersistenceContext persistenceContext)
 			throws HibernateException {
@@ -409,9 +403,11 @@ public abstract class AbstractFlushingEventListener {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * 1. Recreate the collection key -> collection map
-	 * 2. rebuild the collection entries
-	 * 3. call Interceptor.postFlush()
+	 * <ol>
+	 * <li> Recreate the collection key to collection mapping
+	 * <li> rebuild the collection entries
+	 * <li> call {@link Interceptor#postFlush}
+	 * </ol>
 	 */
 	protected void postFlush(SessionImplementor session) throws HibernateException {
 

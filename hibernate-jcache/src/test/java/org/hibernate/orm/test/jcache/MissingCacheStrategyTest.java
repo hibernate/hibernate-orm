@@ -11,15 +11,16 @@ import java.util.function.Consumer;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.jcache.ConfigSettings;
+import org.hibernate.cache.jcache.JCacheHelper;
 import org.hibernate.cache.spi.SecondLevelCacheLogger;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.spi.ServiceException;
-
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
 import org.junit.Rule;
 import org.junit.Test;
+import javax.cache.CacheManager;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -63,11 +64,14 @@ public class MissingCacheStrategyTest extends BaseUnitTestCase {
 		}
 		catch (ServiceException expected) {
 			assertTyping( CacheException.class, expected.getCause() );
-			assertThat( expected.getMessage(), startsWith( "Unable to create requested service [" + org.hibernate.cache.spi.CacheImplementor.class.getName() + "]" ) );
-			assertThat( expected.getCause().getMessage(), startsWith( "On-the-fly creation of JCache Cache objects is not supported" ) );
+			assertThat( expected.getMessage(), startsWith(
+					"Unable to create requested service [" + org.hibernate.cache.spi.CacheImplementor.class.getName() + "]" ) );
+			assertThat( expected.getCause().getMessage(),
+					startsWith( "On-the-fly creation of JCache Cache objects is not supported" ) );
 		}
 		catch (CacheException expected) {
-			assertThat( expected.getMessage(), equalTo( "On-the-fly creation of JCache Cache objects is not supported" ) );
+			assertThat( expected.getMessage(),
+					equalTo( "On-the-fly creation of JCache Cache objects is not supported" ) );
 		}
 	}
 
@@ -129,15 +133,26 @@ public class MissingCacheStrategyTest extends BaseUnitTestCase {
 
 	@Test
 	public void testMissingCacheStrategyFailLegacyNames1() {
-		doTestMissingCacheStrategyFailLegacyNames( TestHelper.queryRegionLegacyNames1, TestHelper.queryRegionLegacyNames2 );
+		doTestMissingCacheStrategyFailLegacyNames( TestHelper.queryRegionLegacyNames1,
+				TestHelper.queryRegionLegacyNames2 );
 	}
 
 	@Test
 	public void testMissingCacheStrategyFailLegacyNames2() {
-		doTestMissingCacheStrategyFailLegacyNames( TestHelper.queryRegionLegacyNames2, TestHelper.queryRegionLegacyNames1 );
+		doTestMissingCacheStrategyFailLegacyNames( TestHelper.queryRegionLegacyNames2,
+				TestHelper.queryRegionLegacyNames1 );
 	}
 
 	private void doTestMissingCacheStrategyFailLegacyNames(String[] existingLegacyCaches, String[] nonExistingLegacyCaches) {
+		// clean up global state from previous tests
+		final CacheManager standardCacheManager = JCacheHelper.locateStandardCacheManager();
+		for ( String regionName : existingLegacyCaches ) {
+			standardCacheManager.destroyCache( TestHelper.prefix( regionName ) );
+		}
+		for ( String regionName : nonExistingLegacyCaches ) {
+			standardCacheManager.destroyCache( TestHelper.prefix( regionName ) );
+		}
+
 		Map<String, Triggerable> triggerables = new HashMap<>();
 
 		// first, lets make sure that the regions used for model caches exist
@@ -169,7 +184,7 @@ public class MissingCacheStrategyTest extends BaseUnitTestCase {
 		}
 
 		// and now let's try to build the standard testing SessionFactory
-		try ( SessionFactoryImplementor ignored = TestHelper.buildStandardSessionFactory(
+		try  (SessionFactoryImplementor ignored = TestHelper.buildStandardSessionFactory(
 				builder -> builder.applySetting( ConfigSettings.MISSING_CACHE_STRATEGY, "fail" )
 		) ) {
 			// The session should start successfully (if we reach this line, we're good)

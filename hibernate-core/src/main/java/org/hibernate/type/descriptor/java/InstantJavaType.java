@@ -126,7 +126,7 @@ public class InstantJavaType extends AbstractTemporalJavaType<Instant>
 		}
 
 		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
-			return (X) new java.sql.Time( instant.toEpochMilli() % 86_400_000 );
+			return (X) millisToSqlTime( instant.toEpochMilli() );
 		}
 
 		if ( Date.class.isAssignableFrom( type ) ) {

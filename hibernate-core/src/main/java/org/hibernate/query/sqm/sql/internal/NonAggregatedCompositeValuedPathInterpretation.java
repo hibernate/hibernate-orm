@@ -4,15 +4,19 @@
  */
 package org.hibernate.query.sqm.sql.internal;
 
-import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.EntityAssociationMapping;
+import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.domain.NonAggregatedCompositeSimplePath;
+import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Andrea Boriero
@@ -40,19 +44,34 @@ public class NonAggregatedCompositeValuedPathInterpretation<T>
 				),
 				sqmPath.getNavigablePath(),
 				mapping,
-				tableGroup
+				tableGroup,
+				determineAffectedTableName( tableGroup, mapping )
 		);
 	}
 
 	private final SqlTuple sqlExpression;
+	private final @Nullable String affectedTableName;
 
 	private NonAggregatedCompositeValuedPathInterpretation(
 			SqlTuple sqlExpression,
 			NavigablePath navigablePath,
-			ModelPart mapping,
-			TableGroup tableGroup) {
+			NonAggregatedIdentifierMapping mapping,
+			TableGroup tableGroup,
+			@Nullable String affectedTableName) {
 		super( navigablePath, mapping, tableGroup );
 		this.sqlExpression = sqlExpression;
+		this.affectedTableName = affectedTableName;
+	}
+
+	private static @Nullable String determineAffectedTableName(TableGroup tableGroup, NonAggregatedIdentifierMapping mapping) {
+		final ModelPartContainer modelPart = tableGroup.getModelPart();
+		if ( modelPart instanceof EntityAssociationMapping ) {
+			final EntityAssociationMapping associationMapping = (EntityAssociationMapping) modelPart;
+			if ( !associationMapping.containsTableReference( mapping.getContainingTableExpression() ) ) {
+				return associationMapping.getAssociatedEntityMappingType().getMappedTableDetails().getTableName();
+			}
+		}
+		return null;
 	}
 
 	@Override
@@ -61,7 +80,15 @@ public class NonAggregatedCompositeValuedPathInterpretation<T>
 	}
 
 	@Override
+	public @Nullable String getAffectedTableName() {
+		return affectedTableName;
+	}
+
+	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
+		if ( affectedTableName != null && sqlTreeWalker instanceof SqlAstTranslator<?> ) {
+			( (SqlAstTranslator<?>) sqlTreeWalker ).addAffectedTableName( affectedTableName );
+		}
 		sqlExpression.accept( sqlTreeWalker );
 	}
 

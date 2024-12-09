@@ -824,13 +824,26 @@ public class MetadataContext {
 //								+ "; expected type :  " + attribute.getClass().getName()
 //								+ "; encountered type : " + field.getType().getName()
 //				);
-			LOG.illegalArgumentOnStaticMetamodelFieldInjection(
-					metamodelClass.getName(),
-					name,
-					model.getClass().getName(),
-					field.getType().getName()
-			);
+			// Avoid logging an error for Enver's default revision classes that are both entities and mapped-supers.
+			// This is a workaround for https://hibernate.atlassian.net/browse/HHH-17612
+			if ( !isDefaultEnversRevisionType( metamodelClass ) ) {
+				LOG.illegalArgumentOnStaticMetamodelFieldInjection(
+						metamodelClass.getName(),
+						name,
+						model.getClass().getName(),
+						field.getType().getName()
+				);
+			}
 		}
+	}
+
+	private static boolean isDefaultEnversRevisionType(Class<?> metamodelClass) {
+		return Set.of(
+				"org.hibernate.envers.DefaultRevisionEntity_",
+				"org.hibernate.envers.DefaultTrackingModifiedEntitiesRevisionEntity_",
+				"org.hibernate.envers.enhanced.SequenceIdRevisionEntity_",
+				"org.hibernate.envers.enhanced.SequenceIdTrackingModifiedEntitiesRevisionEntity_"
+		).contains( metamodelClass.getName() );
 	}
 
 	public MappedSuperclassDomainType<?> locateMappedSuperclassType(MappedSuperclass mappedSuperclass) {

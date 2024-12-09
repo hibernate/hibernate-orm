@@ -1,4 +1,4 @@
-public class LatestAndGreatestConnectionProviderImplContributor1
+public class LatestAndGreatestConnectionProviderImplContributor
         implements ServiceContributor {
 
     @Override

@@ -6,6 +6,7 @@
  */
 package org.hibernate.graph.internal;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -22,6 +23,7 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 
 import org.hibernate.metamodel.model.domain.internal.DomainModelHelper;
+
 import org.jboss.logging.Logger;
 
 import static java.util.Collections.emptyMap;
@@ -37,11 +39,12 @@ public class AttributeNodeImpl<J>
 		implements AttributeNodeImplementor<J> {
 	private final PersistentAttribute<?, J> attribute;
 
-	private Map<Class<? extends J>, SubGraphImplementor<? extends J>> subGraphMap;
 	private Map<Class<? extends J>, SubGraphImplementor<? extends J>> keySubGraphMap;
+	private SubGraphImplementor<J> subgraph;
+
 
 	public <X> AttributeNodeImpl(PersistentAttribute<X, J> attribute, boolean mutable) {
-		this(attribute, null, null, mutable);
+		this( attribute, null, null, mutable );
 	}
 
 	/**
@@ -49,12 +52,12 @@ public class AttributeNodeImpl<J>
 	 */
 	private AttributeNodeImpl(
 			PersistentAttribute<?, J> attribute,
-			Map<Class<? extends J>, SubGraphImplementor<? extends J>> subGraphMap,
+			SubGraphImplementor<J> subgraph,
 			Map<Class<? extends J>, SubGraphImplementor<? extends J>> keySubGraphMap,
 			boolean mutable) {
 		super( mutable );
 		this.attribute = attribute;
-		this.subGraphMap = subGraphMap;
+		this.subgraph = subgraph;
 		this.keySubGraphMap = keySubGraphMap;
 	}
 
@@ -70,7 +73,24 @@ public class AttributeNodeImpl<J>
 
 	@Override
 	public Map<Class<? extends J>, SubGraphImplementor<? extends J>> getSubGraphMap() {
-		return subGraphMap == null ? emptyMap() : subGraphMap;
+		if ( this.subgraph == null ) {
+			return emptyMap();
+		}
+
+		var subclassSubgraphs = subgraph.getSubclassSubgraphs();
+
+		if ( subclassSubgraphs.isEmpty() ) {
+			return Collections.singletonMap( subgraph.getClassType(), subgraph );
+		}
+
+		subclassSubgraphs.put( subgraph.getClassType(), subgraph );
+
+		return subclassSubgraphs;
+	}
+
+	@Override
+	public SubGraphImplementor<J> getSubgraph() {
+		return subgraph;
 	}
 
 	@Override
@@ -95,10 +115,18 @@ public class AttributeNodeImpl<J>
 
 	private <S extends J> SubGraphImplementor<S> internalMakeSubgraph(ManagedDomainType<S> type) {
 		assert type != null;
+
 		log.debugf( "Making sub-graph : ( (%s) %s )", type.getTypeName(), getAttributeName() );
-		final SubGraphImplementor<S> subGraph = DomainModelHelper.makeSubGraph( type, type.getBindableJavaType() );
-		internalAddSubGraph( subGraph );
-		return subGraph;
+
+		if ( this.subgraph == null ) {
+			this.subgraph = new SubGraphImpl<>( valueGraphTypeAsManaged(), true );
+		}
+
+		if ( type.equals( valueGraphTypeAsManaged() ) ) {
+			return (SubGraphImplementor) this.subgraph;
+		}
+
+		return this.subgraph.addTreatedSubgraph( type.getJavaType() );
 	}
 
 	@SuppressWarnings("unchecked")
@@ -124,18 +152,30 @@ public class AttributeNodeImpl<J>
 	private <S extends J> SubGraphImplementor<S> internalMakeSubgraph(Class<S> subType) {
 		verifyMutability();
 		final ManagedDomainType<S> managedType = valueGraphTypeAsManaged();
-		return internalMakeSubgraph( findSubType( managedType, subType == null ? managedType.getJavaType() : subType ) );
+		return internalMakeSubgraph( findSubType(
+				managedType,
+				subType == null ? managedType.getJavaType() : subType
+		) );
 	}
 
 	protected void internalAddSubGraph(SubGraphImplementor<? extends J> subGraph) {
 		log.tracef( "Adding sub-graph : ( (%s) %s )", subGraph.getGraphedType().getTypeName(), getAttributeName() );
-		if ( subGraphMap == null ) {
-			subGraphMap = new HashMap<>();
+
+		if ( this.subgraph == null ) {
+			this.subgraph = new SubGraphImpl<>( valueGraphTypeAsManaged(), true );
 		}
-		final SubGraphImplementor<? extends J> previous = subGraphMap.put( subGraph.getClassType(), subGraph );
-		if ( previous != null ) {
-			log.debugf( "Adding sub-graph [%s] over-wrote existing [%s]", subGraph, previous );
+
+		ManagedDomainType<?> incomingSubGraphType = subGraph.getGraphedType();
+
+		if ( incomingSubGraphType.equals( this.subgraph.getGraphedType() ) ) {
+			this.subgraph.merge( subGraph );
+			return;
 		}
+
+		if ( this.subgraph.getGraphedType().getSubTypes().contains( incomingSubGraphType ) ) {
+			this.subgraph.addSubclassSubgraph( subGraph );
+		}
+
 	}
 
 	@Override
@@ -220,7 +260,10 @@ public class AttributeNodeImpl<J>
 	@Override
 	public AttributeNodeImplementor<J> makeCopy(boolean mutable) {
 		return new AttributeNodeImpl<>(
-				this.attribute, makeMapCopy( mutable, subGraphMap ), makeMapCopy( mutable, keySubGraphMap ), mutable
+				this.attribute,
+				this.subgraph == null ? null : this.subgraph.makeCopy( mutable ),
+				makeMapCopy( mutable, keySubGraphMap ),
+				mutable
 		);
 	}
 
@@ -232,32 +275,21 @@ public class AttributeNodeImpl<J>
 		}
 		else {
 			return nodeMap.entrySet().stream()
-					.map(entry -> Map.entry( entry.getKey(), entry.getValue().makeCopy( mutable ) ))
-					.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+					.map( entry -> Map.entry( entry.getKey(), entry.getValue().makeCopy( mutable ) ) )
+					.collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue ) );
 		}
 	}
 
 	@Override
 	public void merge(AttributeNodeImplementor<?> attributeNode) {
-		attributeNode.visitSubGraphs(
-				(incomingSubType, incomingGraph) -> {
-					SubGraphImplementor<?> existing;
-					if ( subGraphMap == null ) {
-						subGraphMap = new HashMap<>();
-						existing = null;
-					}
-					else {
-						existing = subGraphMap.get( incomingSubType );
-					}
 
-					if ( existing != null ) {
-						existing.merge( (GraphImplementor) incomingGraph );
-					}
-					else {
-						internalAddSubGraph( (SubGraphImplementor) incomingGraph.makeCopy( true ) );
-					}
-				}
-		);
+
+		if ( this.subgraph != null ) {
+			this.subgraph.merge( (SubGraphImplementor) attributeNode.getSubgraph() );
+		}
+		else {
+			this.subgraph = (SubGraphImplementor) attributeNode.getSubgraph();
+		}
 
 		attributeNode.visitKeySubGraphs(
 				(incomingSubType, incomingGraph) -> {

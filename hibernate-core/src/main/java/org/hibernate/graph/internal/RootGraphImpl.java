@@ -32,7 +32,7 @@ public class RootGraphImpl<J> extends AbstractGraph<J> implements RootGraphImple
 	}
 
 	public RootGraphImpl(String name, GraphImplementor<J> original, boolean mutable) {
-		super(original, mutable);
+		super( original, mutable );
 		this.name = name;
 	}
 
@@ -43,12 +43,12 @@ public class RootGraphImpl<J> extends AbstractGraph<J> implements RootGraphImple
 
 	@Override
 	public RootGraphImplementor<J> makeCopy(boolean mutable) {
-		return new RootGraphImpl<>( null, this, mutable);
+		return new RootGraphImpl<>( null, this, mutable );
 	}
 
 	@Override
 	public SubGraphImplementor<J> makeSubGraph(boolean mutable) {
-		return new SubGraphImpl<>(this, mutable);
+		return new SubGraphImpl<>( this, mutable );
 	}
 
 	@Override
@@ -57,8 +57,9 @@ public class RootGraphImpl<J> extends AbstractGraph<J> implements RootGraphImple
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public <T1> SubGraph<? extends T1> addSubclassSubgraph(Class<? extends T1> type) {
-		throw new UnsupportedOperationException();
+		return addTreatedSubgraph( (Class) type );
 	}
 
 	@Override

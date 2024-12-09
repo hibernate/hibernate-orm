@@ -6,6 +6,7 @@
  */
 package org.hibernate.graph.internal;
 
+import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 
@@ -16,17 +17,25 @@ import org.hibernate.metamodel.model.domain.ManagedDomainType;
  */
 public class SubGraphImpl<J> extends AbstractGraph<J> implements SubGraphImplementor<J> {
 
+	private GraphImplementor<J> parent = null;
+
 	public SubGraphImpl(ManagedDomainType<J> managedType, boolean mutable) {
 		super( managedType, mutable );
 	}
 
 	public SubGraphImpl(AbstractGraph<J> original, boolean mutable) {
-		super(original, mutable);
+		super( original, mutable );
 	}
+
+	protected SubGraphImpl(ManagedDomainType<J> managedType, GraphImplementor<J> parent, boolean mutable) {
+		this( managedType, mutable );
+		this.parent = parent;
+	}
+
 
 	@Override
 	public SubGraphImplementor<J> makeCopy(boolean mutable) {
-		return new SubGraphImpl<>(this, mutable);
+		return new SubGraphImpl<>( this, mutable );
 	}
 
 	@Override

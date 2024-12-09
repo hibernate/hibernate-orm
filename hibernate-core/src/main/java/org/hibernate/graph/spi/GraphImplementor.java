@@ -7,6 +7,7 @@
 package org.hibernate.graph.spi;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 import org.hibernate.graph.AttributeNode;
@@ -27,6 +28,13 @@ public interface GraphImplementor<J> extends Graph<J>, GraphNodeImplementor<J> {
 
 	void merge(GraphImplementor<? extends J> other);
 
+	<S extends J> SubGraphImplementor<S> getSubclassSubgraph(Class<S> subType);
+
+	Map<Class<? extends J>, SubGraphImplementor<? extends J>> getSubclassSubgraphs();
+
+	<S extends J> SubGraphImplementor<S> addTreatedSubgraph(Class<S> subType);
+
+	<S extends J> SubGraphImplementor<S> addSubclassSubgraph(SubGraphImplementor<S> subgraph);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant returns
@@ -54,7 +62,7 @@ public interface GraphImplementor<J> extends Graph<J>, GraphNodeImplementor<J> {
 	List<AttributeNodeImplementor<?>> getAttributeNodeImplementors();
 
 	@Override
-	@SuppressWarnings({"unchecked", "rawtypes"})
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	default List<AttributeNode<?>> getAttributeNodeList() {
 		return (List) getAttributeNodeImplementors();
 	}

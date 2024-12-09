@@ -8,6 +8,7 @@ package org.hibernate.graph.spi;
 
 import java.util.Map;
 import java.util.function.BiConsumer;
+
 import jakarta.persistence.Subgraph;
 
 import org.hibernate.graph.AttributeNode;
@@ -22,6 +23,9 @@ import org.hibernate.metamodel.model.domain.ManagedDomainType;
  */
 public interface AttributeNodeImplementor<J> extends AttributeNode<J>, GraphNodeImplementor<J> {
 	Map<Class<? extends J>, SubGraphImplementor<? extends J>> getSubGraphMap();
+
+	SubGraphImplementor<J> getSubgraph();
+
 	Map<Class<? extends J>, SubGraphImplementor<? extends J>> getKeySubGraphMap();
 
 	default void visitSubGraphs(BiConsumer<Class<? extends J>, SubGraphImplementor<? extends J>> consumer) {
@@ -33,25 +37,25 @@ public interface AttributeNodeImplementor<J> extends AttributeNode<J>, GraphNode
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked", "rawtypes"})
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	default Map<Class<? extends J>, SubGraph<? extends J>> getSubGraphs() {
 		return (Map) getSubGraphMap();
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked", "rawtypes"})
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	default Map<Class<? extends J>, SubGraph<? extends J>> getKeySubGraphs() {
 		return (Map) getKeySubGraphMap();
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked", "rawtypes"})
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	default Map<Class, Subgraph> getSubgraphs() {
 		return (Map) getSubGraphMap();
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked", "rawtypes"})
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	default Map<Class, Subgraph> getKeySubgraphs() {
 		return (Map) getKeySubGraphMap();
 	}

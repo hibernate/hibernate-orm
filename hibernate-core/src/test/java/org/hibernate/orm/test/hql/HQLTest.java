@@ -25,6 +25,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.community.dialect.FirebirdDialect;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.H2Dialect;
@@ -1523,6 +1524,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	@SkipForDialect(dialectClass = DerbyDialect.class)
 	@SkipForDialect(dialectClass = SybaseASEDialect.class)
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "order by not supported in list")
+	@SkipForDialect(dialectClass = InformixDialect.class)
 	public void test_hql_aggregate_functions_within_group_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-aggregate-functions-within-group-example[]

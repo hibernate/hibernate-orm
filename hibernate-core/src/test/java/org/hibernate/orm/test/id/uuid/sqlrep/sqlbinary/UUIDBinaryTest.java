@@ -10,6 +10,7 @@ import java.sql.Types;
 import java.util.UUID;
 
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.metamodel.MappingMetamodel;
@@ -39,6 +40,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @SkipForDialect(dialectClass = PostgreSQLDialect.class, reason = "Postgres has its own UUID type")
 @SkipForDialect( dialectClass = SybaseDialect.class, matchSubTypes = true,
 		reason = "Skipped for Sybase to avoid problems with UUIDs potentially ending with a trailing 0 byte")
+@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix does not support unique / primary constraints on binary columns")
 public class UUIDBinaryTest {
 
 	private static class UUIDPair {

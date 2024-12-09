@@ -8,12 +8,14 @@ package org.hibernate.query.sqm.tree.select;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+
+import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
 
 /**
  * @author Steve Ebersole
@@ -71,12 +73,7 @@ public class SqmOrderByClause implements Serializable {
 	}
 
 	public List<SqmSortSpecification> getSortSpecifications() {
-		if ( sortSpecifications == null ) {
-			return Collections.emptyList();
-		}
-		else {
-			return Collections.unmodifiableList( sortSpecifications );
-		}
+		return sortSpecifications == null ? emptyList() : unmodifiableList( sortSpecifications );
 	}
 
 	public void setSortSpecifications(List<SqmSortSpecification> sortSpecifications) {

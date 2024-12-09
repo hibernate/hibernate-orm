@@ -25,7 +25,7 @@ public class SqmUnaryOperation<T> extends AbstractSqmExpression<T> implements Sq
 				operation,
 				operand,
 				operand.nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType(
-						operand.getNodeType().getRelationalJavaType().getJavaType()
+						operand.getExpressible().getRelationalJavaType().getJavaType()
 				)
 		);
 	}

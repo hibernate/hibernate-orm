@@ -14,8 +14,6 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
-
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.ADD;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.SUBTRACT;
 import static org.hibernate.type.spi.TypeConfiguration.isDuration;
@@ -37,8 +35,8 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 		//noinspection unchecked
 		super(
 				(SqmExpressible<T>) domainModel.getTypeConfiguration().resolveArithmeticType(
-						lhsOperand.getNodeType(),
-						rhsOperand.getNodeType(),
+						lhsOperand.getExpressible(),
+						rhsOperand.getExpressible(),
 						operator
 				),
 				nodeBuilder
@@ -52,8 +50,8 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 				( operator == ADD || operator == SUBTRACT ) ) {
 			return;
 		}
-		this.lhsOperand.applyInferableType( rhsOperand.getNodeType() );
-		this.rhsOperand.applyInferableType( lhsOperand.getNodeType() );
+		this.lhsOperand.applyInferableType( rhsOperand.getExpressible() );
+		this.rhsOperand.applyInferableType( lhsOperand.getExpressible() );
 	}
 
 	public SqmBinaryArithmetic(

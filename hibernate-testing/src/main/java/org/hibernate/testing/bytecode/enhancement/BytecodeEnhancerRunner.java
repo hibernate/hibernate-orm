@@ -24,6 +24,7 @@ import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.bytecode.enhance.spi.UnloadedField;
 import org.hibernate.cfg.Environment;
 
+import org.hibernate.bytecode.enhance.spi.UnsupportedEnhancementStrategy;
 import org.hibernate.testing.junit4.CustomRunner;
 import org.junit.runner.Runner;
 import org.junit.runner.notification.RunNotifier;
@@ -32,6 +33,7 @@ import org.junit.runners.Suite;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.RunnerBuilder;
 
+import static org.hibernate.bytecode.enhance.spi.UnsupportedEnhancementStrategy.SKIP;
 import static org.hibernate.bytecode.internal.BytecodeProviderInitiator.buildDefaultBytecodeProvider;
 
 /**
@@ -115,6 +117,12 @@ public class BytecodeEnhancerRunner extends Suite {
 				@Override
 				public boolean isLazyLoadable(UnloadedField field) {
 					return options.lazyLoading() && super.isLazyLoadable( field );
+				}
+
+				@Override
+				public UnsupportedEnhancementStrategy getUnsupportedEnhancementStrategy() {
+					final UnsupportedEnhancementStrategy strategy = options.unsupportedEnhancementStrategy();
+					return strategy != SKIP ? strategy : super.getUnsupportedEnhancementStrategy();
 				}
 			};
 		}

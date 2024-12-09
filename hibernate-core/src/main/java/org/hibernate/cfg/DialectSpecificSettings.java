@@ -37,6 +37,15 @@ public interface DialectSpecificSettings {
 	String ORACLE_APPLICATION_CONTINUITY = "hibernate.dialect.oracle.application_continuity";
 
 	/**
+	 * Specifies whether the dialect should use the binary IEEE Oracle SQL types {@code binary_float}/{@code binary_double}
+	 * over {@code float(p)}/{@code real}/{@code double precision} when generating DDL or SQL casts for float types.
+	 *
+	 * @settingDefault {@code true}
+	 * @since 7.0
+	 */
+	String ORACLE_USE_BINARY_FLOATS = "hibernate.dialect.oracle.use_binary_floats";
+
+	/**
 	 * Specifies whether this database's {@code ansinull} setting is enabled.
 	 *
 	 * @settingDefault {@code false}

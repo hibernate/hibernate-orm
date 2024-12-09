@@ -94,6 +94,7 @@ import org.hibernate.type.descriptor.jdbc.OracleJsonBlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.SqlTypedJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.ArrayDdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NamedNativeEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NamedNativeOrdinalEnumDdlTypeImpl;
@@ -110,6 +111,7 @@ import static org.hibernate.LockOptions.WAIT_FOREVER;
 import static org.hibernate.cfg.AvailableSettings.BATCH_VERSIONED_DATA;
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_EXTENDED_STRING_SIZE;
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_AUTONOMOUS_DATABASE;
+import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_USE_BINARY_FLOATS;
 import static org.hibernate.dialect.OracleJdbcHelper.getArrayJdbcTypeConstructor;
 import static org.hibernate.dialect.OracleJdbcHelper.getNestedTableJdbcTypeConstructor;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
@@ -207,11 +209,9 @@ public class OracleDialect extends Dialect {
 
 	// Is the database accessed using a database service protected by Application Continuity.
 	protected final boolean applicationContinuity;
-
 	protected final int driverMajorVersion;
-
 	protected final int driverMinorVersion;
-
+	private boolean useBinaryFloat;
 
 	public OracleDialect() {
 		this( MINIMUM_VERSION );
@@ -811,11 +811,11 @@ public class OracleDialect extends Dialect {
 				return "number(19,0)";
 			case REAL:
 				// Oracle's 'real' type is actually double precision
-				return "float(24)";
+				return useBinaryFloat ? "binary_float" : "float(24)";
 			case DOUBLE:
 				// Oracle's 'double precision' means float(126), and
 				// we never need 126 bits (38 decimal digits)
-				return "float(53)";
+				return useBinaryFloat ? "binary_double" : "float(53)";
 
 			case NUMERIC:
 			case DECIMAL:
@@ -1006,6 +1006,9 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		final ConfigurationService configurationService = serviceRegistry.requireService( ConfigurationService.class );
+		useBinaryFloat = configurationService.getSetting( ORACLE_USE_BINARY_FLOATS, StandardConverters.BOOLEAN, true );
+
 		super.contributeTypes( typeContributions, serviceRegistry );
 		if ( ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( serviceRegistry, this ) == BIT ) {
 			typeContributions.contributeJdbcType( OracleBooleanJdbcType.INSTANCE );
@@ -1021,9 +1024,18 @@ public class OracleDialect extends Dialect {
 
 		// account for Oracle's deprecated support for LONGVARBINARY
 		// prefer BLOB, unless the user explicitly opts out
-		final boolean preferLong = serviceRegistry.requireService( ConfigurationService.class )
-				.getSetting( PREFER_LONG_RAW, StandardConverters.BOOLEAN, false );
+		final boolean preferLong =
+				configurationService.getSetting( PREFER_LONG_RAW, StandardConverters.BOOLEAN, false );
 		typeContributions.contributeJdbcType( preferLong ? BlobJdbcType.PRIMITIVE_ARRAY_BINDING : BlobJdbcType.DEFAULT );
+
+		if ( useBinaryFloat ) {
+			// Override the descriptor for float to produce binary_float or binary_double based on precision
+			typeContributions.getTypeConfiguration().getDdlTypeRegistry().addDescriptor(
+					CapacityDependentDdlType.builder( FLOAT, columnType( DOUBLE ), this )
+							.withTypeCapacity( getFloatPrecision(), columnType( REAL ) )
+							.build()
+			);
+		}
 
 		if ( getVersion().isSameOrAfter( 21 ) ) {
 			typeContributions.contributeJdbcType( OracleJsonJdbcType.INSTANCE );

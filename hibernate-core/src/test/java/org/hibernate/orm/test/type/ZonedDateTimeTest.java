@@ -128,11 +128,11 @@ public class ZonedDateTimeTest extends AbstractJavaTimeTypeTest<ZonedDateTime, Z
 				)
 				// HHH-13379: DST end (where Timestamp becomes ambiguous, see JDK-4312621)
 				// => This used to work correctly in 5.4.1.Final and earlier
-				.skippedForDialects(
-						dialect -> dialect instanceof H2Dialect && ( (H2Dialect) dialect ).hasOddDstBehavior(),
-						b -> b.add( 2018, 10, 28, 2, 0, 0, 0, "+01:00", ZONE_PARIS )
-								.add( 2018, 4, 1, 2, 0, 0, 0, "+12:00", ZONE_AUCKLAND )
-				)
+//				.skippedForDialects(
+//						dialect -> dialect instanceof H2Dialect && ( (H2Dialect) dialect ).hasOddDstBehavior(),
+//						b -> b.add( 2018, 10, 28, 2, 0, 0, 0, "+01:00", ZONE_PARIS )
+//								.add( 2018, 4, 1, 2, 0, 0, 0, "+12:00", ZONE_AUCKLAND )
+//				)
 				// => This has never worked correctly, unless the JDBC timezone was set to UTC
 				.withForcedJdbcTimezone( "UTC", b -> b
 						.add( 2018, 10, 28, 2, 0, 0, 0, "+02:00", ZONE_PARIS )

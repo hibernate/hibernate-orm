@@ -24,10 +24,10 @@ import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.query.Query;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -114,13 +114,13 @@ public class OffsetDateTimeTest extends AbstractJavaTimeTypeTest<OffsetDateTime,
 						b -> b
 								.add( 1600, 1, 1, 0, 0, 0, 0, "+00:19:32", ZONE_AMSTERDAM )
 				)
-				// HHH-13379: DST end (where Timestamp becomes ambiguous, see JDK-4312621)
-				// => This used to work correctly in 5.4.1.Final and earlier
-				.skippedForDialects(
-						dialect -> dialect instanceof H2Dialect && ( (H2Dialect) dialect ).hasOddDstBehavior(),
-						b -> b.add( 2018, 10, 28, 2, 0, 0, 0, "+01:00", ZONE_PARIS )
-								.add( 2018, 4, 1, 2, 0, 0, 0, "+12:00", ZONE_AUCKLAND )
-				)
+//				// HHH-13379: DST end (where Timestamp becomes ambiguous, see JDK-4312621)
+//				// => This used to work correctly in 5.4.1.Final and earlier
+//				.skippedForDialects(
+//						dialect -> dialect instanceof H2Dialect && ( (H2Dialect) dialect ).hasOddDstBehavior(),
+//						b -> b.add( 2018, 10, 28, 2, 0, 0, 0, "+01:00", ZONE_PARIS )
+//								.add( 2018, 4, 1, 2, 0, 0, 0, "+12:00", ZONE_AUCKLAND )
+//				)
 				// => This has never worked correctly, unless the JDBC timezone was set to UTC
 				.withForcedJdbcTimezone( "UTC", b -> b
 						.add( 2018, 10, 28, 2, 0, 0, 0, "+02:00", ZONE_PARIS )

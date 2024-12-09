@@ -4,22 +4,18 @@
  */
 package org.hibernate.loader.ast.internal;
 
-import java.util.List;
-
 import org.hibernate.LockOptions;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.internal.SimpleQueryOptions;
-import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.spi.QueryOptionsAdapter;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.internal.CallbackImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.Callback;
@@ -30,12 +26,13 @@ import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.sql.results.spi.RowTransformer;
 
+import java.util.List;
+
 /**
  * Describes a plan for loading an entity by identifier.
  *
- * @implNote Made up of (1) a SQL AST for the SQL SELECT and (2) the `ModelPart` used as the restriction
- *
  * @author Steve Ebersole
+ * @implNote Made up of (1) a SQL AST for the SQL SELECT and (2) the `ModelPart` used as the restriction
  */
 // todo (6.0) : this can generically define a load-by-uk as well.
 // only the SQL AST and `restrictivePart` vary and they are passed as constructor args
@@ -43,6 +40,7 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 	private final EntityMappingType entityMappingType;
 	private final ModelPart restrictivePart;
 	private final LockOptions lockOptions;
+	private final SelectStatement sqlAst;
 	private final JdbcOperationQuerySelect jdbcSelect;
 	private final JdbcParametersList jdbcParameters;
 
@@ -57,18 +55,14 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 		this.restrictivePart = restrictivePart;
 		this.lockOptions = lockOptions.makeCopy();
 		this.jdbcParameters = jdbcParameters;
+		this.sqlAst = sqlAst;
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
 		this.jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlAst )
 				.translate(
 						null,
-						new QueryOptionsAdapter() {
-							@Override
-							public LockOptions getLockOptions() {
-								return lockOptions;
-							}
-						}
+						new SimpleQueryOptions( lockOptions, null )
 				);
 	}
 
@@ -137,23 +131,32 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 			);
 		}
 		assert offset == jdbcParameters.size();
-		final QueryOptions queryOptions = new SimpleQueryOptions( lockOptions, readOnly );
 		final Callback callback = new CallbackImpl();
+		final SubselectFetch.RegistrationHandler subselectRegistrationHandler = SubselectFetch.createRegistrationHandler(
+				session.getPersistenceContextInternal().getBatchFetchQueue(),
+				sqlAst,
+				jdbcParameters,
+				jdbcParameterBindings
+		);
 
 		final List<T> list = session.getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,
 				jdbcParameterBindings,
 				new SingleIdExecutionContext(
-						session,
-						entityInstance,
 						restrictedValue,
+						entityInstance,
 						entityMappingType.getRootEntityDescriptor(),
-						queryOptions,
+						readOnly,
+						lockOptions,
+						subselectRegistrationHandler,
+						session,
 						callback
 				),
 				getRowTransformer(),
 				null,
-				singleResultExpected ? ListResultsConsumer.UniqueSemantic.ASSERT : ListResultsConsumer.UniqueSemantic.FILTER,
+				singleResultExpected ?
+						ListResultsConsumer.UniqueSemantic.ASSERT :
+						ListResultsConsumer.UniqueSemantic.FILTER,
 				1
 		);
 
@@ -164,53 +167,5 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 		final T entity = list.get( 0 );
 		callback.invokeAfterLoadActions( entity, entityMappingType, session );
 		return entity;
-	}
-
-	private static class SingleIdExecutionContext extends BaseExecutionContext {
-		private final Object entityInstance;
-		private final Object restrictedValue;
-		private final EntityMappingType rootEntityDescriptor;
-		private final QueryOptions queryOptions;
-		private final Callback callback;
-
-		public SingleIdExecutionContext(
-				SharedSessionContractImplementor session,
-				Object entityInstance,
-				Object restrictedValue,
-				EntityMappingType rootEntityDescriptor, QueryOptions queryOptions,
-				Callback callback) {
-			super( session );
-			this.entityInstance = entityInstance;
-			this.restrictedValue = restrictedValue;
-			this.rootEntityDescriptor = rootEntityDescriptor;
-			this.queryOptions = queryOptions;
-			this.callback = callback;
-		}
-
-		@Override
-		public Object getEntityInstance() {
-			return entityInstance;
-		}
-
-		@Override
-		public Object getEntityId() {
-			return restrictedValue;
-		}
-
-		@Override
-		public EntityMappingType getRootEntityDescriptor() {
-			return rootEntityDescriptor;
-		}
-
-		@Override
-		public QueryOptions getQueryOptions() {
-			return queryOptions;
-		}
-
-		@Override
-		public Callback getCallback() {
-			return callback;
-		}
-
 	}
 }

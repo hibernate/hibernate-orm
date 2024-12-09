@@ -89,22 +89,6 @@ public class SubselectFetch {
 	public static RegistrationHandler createRegistrationHandler(
 			BatchFetchQueue batchFetchQueue,
 			SelectStatement sqlAst,
-			TableGroup tableGroup,
-			JdbcParametersList jdbcParameters,
-			JdbcParameterBindings jdbcParameterBindings) {
-
-		return new StandardRegistrationHandler(
-				batchFetchQueue,
-				sqlAst,
-				tableGroup,
-				jdbcParameters,
-				jdbcParameterBindings
-		);
-	}
-
-	public static RegistrationHandler createRegistrationHandler(
-			BatchFetchQueue batchFetchQueue,
-			SelectStatement sqlAst,
 			JdbcParametersList jdbcParameters,
 			JdbcParameterBindings jdbcParameterBindings) {
 		final List<TableGroup> roots = sqlAst.getQuerySpec().getFromClause().getRoots();
@@ -113,18 +97,20 @@ public class SubselectFetch {
 			return NO_OP_REG_HANDLER;
 		}
 
-		return createRegistrationHandler( batchFetchQueue, sqlAst, roots.get( 0 ), jdbcParameters, jdbcParameterBindings );
+		return new StandardRegistrationHandler(
+				batchFetchQueue,
+				sqlAst,
+				jdbcParameters,
+				jdbcParameterBindings
+		);
 	}
 
 	public interface RegistrationHandler {
 		void addKey(EntityHolder holder);
 	}
 
-	private static final RegistrationHandler NO_OP_REG_HANDLER = new RegistrationHandler() {
-		@Override
-		public void addKey(EntityHolder holder) {
-		}
-	} ;
+	private static final RegistrationHandler NO_OP_REG_HANDLER = holder -> {
+	};
 
 	public static class StandardRegistrationHandler implements RegistrationHandler {
 		private final BatchFetchQueue batchFetchQueue;
@@ -136,7 +122,6 @@ public class SubselectFetch {
 		private StandardRegistrationHandler(
 				BatchFetchQueue batchFetchQueue,
 				SelectStatement loadingSqlAst,
-				TableGroup ownerTableGroup,
 				JdbcParametersList loadingJdbcParameters,
 				JdbcParameterBindings loadingJdbcParameterBindings) {
 			this.batchFetchQueue = batchFetchQueue;

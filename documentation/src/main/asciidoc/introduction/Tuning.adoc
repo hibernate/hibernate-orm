@@ -566,7 +566,7 @@ But in case it helps, we often test Hibernate with the following configuration, 
 |===
 | Configuration property name              | Property value
 
-| `hibernate.cache.region.factory_class`   | `jcache`
+| link:{doc-javadoc-url}org/hibernate/cfg/CacheSettings#CACHE_REGION_FACTORY[`hibernate.cache.region.factory_class`]   | `jcache`
 | `hibernate.javax.cache.uri`              | `/ehcache.xml`
 |===
 
@@ -603,7 +603,7 @@ Alternatively, to use Infinispan as the cache implementation, the following sett
 |===
 | Configuration property name              | Property value
 
-| `hibernate.cache.region.factory_class`   | `infinispan`
+| link:{doc-javadoc-url}org/hibernate/cfg/CacheSettings#CACHE_REGION_FACTORY[`hibernate.cache.region.factory_class`]   | `infinispan`
 | `hibernate.cache.infinispan.cfg`         a| Path to infinispan configuration file, for example:
 [%breakable,cols="~,35"]
 !===
@@ -624,7 +624,7 @@ Finally, there's a way to globally disable the second-level cache:
 |===
 | Configuration property name              | Property value
 
-| `hibernate.cache.use_second_level_cache` | `true` to enable caching, or `false` to disable it
+| link:{doc-javadoc-url}org/hibernate/cfg/CacheSettings#USE_SECOND_LEVEL_CACHE[`hibernate.cache.use_second_level_cache`] | `true` to enable caching, or `false` to disable it
 |===
 
 When `hibernate.cache.region.factory_class` is set, this property defaults to `true`.
@@ -650,7 +650,7 @@ The query cache must be enabled explicitly:
 |===
 | Configuration property name | Property value
 
-| `hibernate.cache.use_query_cache` | `true` to enable the query cache
+| link:{doc-javadoc-url}org/hibernate/cfg/CacheSettings#USE_QUERY_CACHE[`hibernate.cache.use_query_cache`] | `true` to enable the query cache
 |===
 
 To cache the results of a query, call `SelectionQuery.setCacheable(true)`:
@@ -969,7 +969,7 @@ We may ask Hibernate to collect statistics about its activity by setting this co
 |===
 | Configuration property name | Property value
 
-| `hibernate.generate_statistics` | `true` to enable collection of statistics
+| link:{doc-javadoc-url}org/hibernate/cfg/StatisticsSettings#GENERATE_STATISTICS[`hibernate.generate_statistics`] | `true` to enable collection of statistics
 |===
 
 The statistics are exposed by the link:{doc-javadoc-url}org/hibernate/stat/Statistics.html[`Statistics`] object:
@@ -1003,8 +1003,8 @@ Hibernate offers two configuration properties that can make it easier to identif
 |===
 | Configuration property name | Purpose | Property value
 
-| `hibernate.log_slow_query` | Log slow queries at the `INFO` level | The minimum execution time, in milliseconds, which characterizes a "slow" query
-| `hibernate.use_sql_comments` | Prepend comments to the executed SQL | `true` or `false`
+| link:{doc-javadoc-url}org/hibernate/cfg/JdbcSettings#LOG_SLOW_QUERY[`hibernate.log_slow_query`] | Log slow queries at the `INFO` level | The minimum execution time, in milliseconds, which characterizes a "slow" query
+| link:{doc-javadoc-url}org/hibernate/cfg/JdbcSettings#USE_SQL_COMMENTS[`hibernate.use_sql_comments`] | Prepend comments to the executed SQL | `true` or `false`
 |===
 
 When `hibernate.use_sql_comments` is enabled, the text of the HQL query is prepended as a comment to the generated SQL, which usually makes it easy to find the HQL in the Java code.

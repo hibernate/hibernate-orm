@@ -1056,6 +1056,21 @@ abstract public class DialectFeatureChecks {
 		return getSqmFunctionRegistry( dialect ).findSetReturningFunctionDescriptor( functionName ) != null;
 	}
 
+	public static class SupportsSubqueryInSelect implements DialectFeatureCheck {
+		@Override
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsSubqueryInSelect();
+		}
+	}
+
+	public static class SupportSubqueryAsLeftHandSideInPredicate implements DialectFeatureCheck {
+		@Override
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsSubselectAsInPredicateLHS();
+		}
+	}
+
+
 	private static SqmFunctionRegistry getSqmFunctionRegistry(Dialect dialect) {
 		SqmFunctionRegistry sqmFunctionRegistry = FUNCTION_REGISTRIES.get( dialect );
 		if ( sqmFunctionRegistry == null ) {

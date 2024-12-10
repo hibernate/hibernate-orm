@@ -43,6 +43,9 @@ public class StandardArchiveDescriptorFactory implements ArchiveDescriptorFactor
 		if ( "jar".equals( protocol ) ) {
 			return new JarProtocolArchiveDescriptor( this, url, entry );
 		}
+		else if ( "jrt".equals( protocol ) ) {
+			return new JRTFileBasedArchiveDescriptor( this, url, entry );
+		}
 		else if ( StringHelper.isEmpty( protocol )
 				|| "file".equals( protocol )
 				|| "vfszip".equals( protocol )

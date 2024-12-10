@@ -289,4 +289,9 @@ public interface StatisticsImplementor extends Statistics, Service {
 		//For backward compatibility
 		return emptyMap();
 	}
+
+	/**
+	 * The {@link org.hibernate.SessionFactory} was closed.
+	 */
+	default void closeSessionFactory() {}
 }

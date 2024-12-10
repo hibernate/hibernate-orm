@@ -772,6 +772,9 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		}
 
 		observer.sessionFactoryClosed( this );
+		if ( statistics != null ) {
+			statistics.closeSessionFactory();
+		}
 		serviceRegistry.destroy();
 	}
 

@@ -16,6 +16,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.engine.jndi.spi.JndiService;
+import org.hibernate.internal.log.ConnectionInfoLogger;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.InjectService;
@@ -87,8 +88,8 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 	public void configure(Map<String, Object> configValues) {
 		if ( dataSource == null ) {
 			final Object dataSourceSetting = configValues.get( DATASOURCE );
-			if ( dataSourceSetting instanceof DataSource ) {
-				dataSource = (DataSource) dataSourceSetting;
+			if ( dataSourceSetting instanceof DataSource ds ) {
+				dataSource = ds;
 			}
 			else {
 				final String dataSourceJndiName = (String) dataSourceSetting;
@@ -107,6 +108,15 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 		}
 		if ( dataSource == null ) {
 			throw new HibernateException( "Unable to determine appropriate DataSource to use" );
+		}
+
+		if ( configValues.containsKey( AvailableSettings.AUTOCOMMIT ) ) {
+			ConnectionInfoLogger.INSTANCE.ignoredSetting( AvailableSettings.AUTOCOMMIT,
+					DatasourceConnectionProviderImpl.class );
+		}
+		if ( configValues.containsKey( AvailableSettings.ISOLATION ) ) {
+			ConnectionInfoLogger.INSTANCE.ignoredSetting( AvailableSettings.ISOLATION,
+					DatasourceConnectionProviderImpl.class );
 		}
 
 		user = (String) configValues.get( AvailableSettings.USER );

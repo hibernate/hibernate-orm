@@ -49,7 +49,7 @@ public interface ConnectionInfoLogger extends BasicLogger {
 	@Message(id = 10001006,
 			value = "No JDBC Driver class was specified by property '"
 					+ JdbcSettings.JAKARTA_JDBC_DRIVER + "', '"
-					+ JdbcSettings.JPA_JDBC_DRIVER +  "', or '"
+					+ JdbcSettings.JPA_JDBC_DRIVER + "', or '"
 					+ JdbcSettings.DRIVER + "'")
 	void jdbcDriverNotSpecified();
 
@@ -72,4 +72,8 @@ public interface ConnectionInfoLogger extends BasicLogger {
 	@LogMessage(level = DEBUG)
 	@Message(value = "Configuring connection pool [%s]", id = 10001012)
 	void configureConnectionPool(String type);
+
+	@LogMessage(level = INFO)
+	@Message(value = "Ignoring setting '%s' for connection provider [%s]", id = 10001013)
+	void ignoredSetting(String setting, Class<?> provider);
 }

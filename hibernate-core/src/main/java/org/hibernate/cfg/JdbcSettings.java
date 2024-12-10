@@ -291,7 +291,7 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	 *
 	 * @since 5.2.10
 	 */
-	String CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT= "hibernate.connection.provider_disables_autocommit";
+	String CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT = "hibernate.connection.provider_disables_autocommit";
 
 	/**
 	 * A prefix for properties specifying arbitrary JDBC connection properties. These

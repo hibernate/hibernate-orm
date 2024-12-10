@@ -632,7 +632,7 @@ public abstract class AbstractCollectionPersister
 				formulaTemplates = elementFormulaTemplates;
 			}
 			else {
-				columnNames = elementPropertyMapping.toColumns( reference );
+				columnNames = columnNames( reference );
 				formulaTemplates = formulaTemplates( reference, columnNames.length );
 			}
 
@@ -662,6 +662,20 @@ public abstract class AbstractCollectionPersister
 				i++;
 			}
 			return result;
+		}
+	}
+
+	private String[] columnNames(String reference) {
+		if ( elementPersister == null ) {
+			return elementPropertyMapping.toColumns( reference );
+		}
+
+		final Integer propertyIndex = elementPersister.getEntityMetamodel().getPropertyIndexOrNull( reference );
+		if ( propertyIndex != null ) {
+			return ( (Queryable) elementPersister ).getSubclassPropertyColumnNameClosure()[propertyIndex];
+		}
+		else {
+			return elementPropertyMapping.toColumns( reference );
 		}
 	}
 

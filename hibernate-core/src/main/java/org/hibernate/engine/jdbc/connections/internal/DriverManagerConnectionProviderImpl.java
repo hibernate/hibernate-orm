@@ -178,7 +178,6 @@ public class DriverManagerConnectionProviderImpl
 		);
 
 		return factory.create(
-
 				driver,
 				serviceRegistry,
 				url,

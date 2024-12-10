@@ -50,7 +50,7 @@ import org.jboss.logging.Logger;
  * <tr>
  *   <td>{@value #CONNECTION_PROVIDER}</td>
  *   <td>name of a {@link org.hibernate.engine.jdbc.connections.spi.ConnectionProvider}
- *   subclass (if not specified heuristics are used)</td>
+ *   subclass (if not specified, heuristics are used)</td>
  * </tr>
  * <tr><td>{@value #USER}</td><td>database username</td></tr>
  * <tr><td>{@value #PASS}</td><td>database password</td></tr>

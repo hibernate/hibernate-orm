@@ -357,7 +357,7 @@ public class MetadataContext {
 							// #buildIdClassAttributes
 							continue;
 						}
-						if ( safeMapping.isVersioned() && property == safeMapping.getVersion() ) {
+						else if ( safeMapping.isVersioned() && property == safeMapping.getVersion() ) {
 							// skip the version property, it was already handled previously.
 							continue;
 						}
@@ -415,8 +415,10 @@ public class MetadataContext {
 
 	private static boolean isIdentifierProperty(Property property, MappedSuperclass mappedSuperclass) {
 		final Component identifierMapper = mappedSuperclass.getIdentifierMapper();
-		return identifierMapper != null ?
-				ArrayHelper.contains( identifierMapper.getPropertyNames(), property.getName() ) : false;
+		return identifierMapper != null && ArrayHelper.contains(
+				identifierMapper.getPropertyNames(),
+				property.getName()
+		);
 	}
 
 	private <T> void addAttribute(EmbeddableDomainType<T> embeddable, Property property, Component component) {

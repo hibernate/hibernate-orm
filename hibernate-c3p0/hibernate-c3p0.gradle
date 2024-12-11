@@ -16,6 +16,5 @@ dependencies {
     testImplementation project( ':hibernate-testing' )
     testImplementation jakartaLibs.validation
     testImplementation testLibs.validator
-    testRuntimeOnly testLibs.expressly
 }
 

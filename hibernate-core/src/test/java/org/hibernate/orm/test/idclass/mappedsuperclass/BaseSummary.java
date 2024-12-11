@@ -2,15 +2,25 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.idclass;
+package org.hibernate.orm.test.idclass.mappedsuperclass;
+
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.MappedSuperclass;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Objects;
 
-public class PKey implements Serializable {
+@IdClass(PKey.class)
+@MappedSuperclass
+public class BaseSummary implements Serializable {
 
+	@Id
 	private Integer year;
+	@Id
 	private Integer month;
+	private BigDecimal value;
 
 	public Integer getYear() {
 		return year;
@@ -28,13 +38,21 @@ public class PKey implements Serializable {
 		this.month = month;
 	}
 
+	public BigDecimal getValue() {
+		return value;
+	}
+
+	public void setValue(BigDecimal value) {
+		this.value = value;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if ( o == null || getClass() != o.getClass() ) {
 			return false;
 		}
-		PKey pKey = (PKey) o;
-		return Objects.equals( year, pKey.year ) && Objects.equals( month, pKey.month );
+		BaseSummary that = (BaseSummary) o;
+		return Objects.equals( year, that.year ) && Objects.equals( month, that.month );
 	}
 
 	@Override

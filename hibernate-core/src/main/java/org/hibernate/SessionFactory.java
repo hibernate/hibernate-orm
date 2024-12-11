@@ -89,9 +89,9 @@ import static org.hibernate.internal.TransactionManagement.manageTransaction;
  * used in a sophisticated way by libraries or frameworks to implement generic
  * concerns involving entity classes.
  * <p>
- * When the Metamodel Generator is used, elements of this metamodel may also
- * be obtained in a typesafe way, via the generated metamodel classes. For
- * an entity class {@code Book}, the generated {@code Book_} class has:
+ * When Hibernate Processor is used, elements of this metamodel may also be
+ * obtained in a typesafe way, via the generated metamodel classes. For an
+ * entity class {@code Book}, the generated {@code Book_} class has:
  * <ul>
  * <li>a single member named {@code class_} of type
  *     {@link jakarta.persistence.metamodel.EntityType EntityType&lt;Book&gt;},
@@ -129,7 +129,8 @@ import static org.hibernate.internal.TransactionManagement.manageTransaction;
  * underlying {@code SessionFactory}.
  * <p>
  * The very simplest way to obtain a new {@code SessionFactory} is using a
- * {@link org.hibernate.cfg.Configuration}.
+ * {@link org.hibernate.cfg.Configuration} or
+ * {@link org.hibernate.jpa.HibernatePersistenceConfiguration}.
  *
  * @see Session
  * @see org.hibernate.cfg.Configuration
@@ -139,7 +140,7 @@ import static org.hibernate.internal.TransactionManagement.manageTransaction;
  */
 public interface SessionFactory extends EntityManagerFactory, Referenceable, Serializable {
 	/**
-	 * The JNDI name, used to bind the SessionFactory to JNDI
+	 * The JNDI name, used to bind the {@code SessionFactory} to JNDI.
 	 */
 	String getJndiName();
 
@@ -203,7 +204,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	/**
 	 * Open a new stateless session.
 	 *
-	 * @return The created stateless session.
+	 * @return The new stateless session.
 	 */
 	StatelessSession openStatelessSession();
 
@@ -213,7 +214,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @param connection Connection provided by the application.
 	 *
-	 * @return The created stateless session.
+	 * @return The new stateless session.
 	 */
 	StatelessSession openStatelessSession(Connection connection);
 

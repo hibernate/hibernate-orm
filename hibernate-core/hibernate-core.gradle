@@ -56,7 +56,6 @@ dependencies {
     testImplementation jakartaLibs.cdi
     testImplementation jakartaLibs.jacc
     testImplementation jakartaLibs.validation
-    testImplementation testLibs.expressly
     testImplementation( testLibs.validator ) {
         // for test runtime
         transitive = true

@@ -29,7 +29,6 @@ dependencies {
 	testImplementation jdbcLibs.postgresql
 	testImplementation jdbcLibs.h2gis
 
-	testRuntimeOnly testLibs.expressly
 	testRuntimeOnly 'jaxen:jaxen:1.1'
 	testRuntimeOnly libs.byteBuddy
 }

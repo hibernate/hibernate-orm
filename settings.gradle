@@ -186,10 +186,8 @@ dependencyResolutionManagement {
             def jfrUnitVersion = version "jfrUnit", "1.0.0.Alpha2"
 
             def hibernateValidatorVersion = version "hibernateValidator", "9.0.0.Beta3"
-            def expresslyVersion = version "expressly", "6.0.0-M1"
 
             library( "validator", "org.hibernate.validator", "hibernate-validator" ).versionRef( hibernateValidatorVersion )
-            library( "expressly", "org.glassfish.expressly", "expressly" ).versionRef( expresslyVersion )
 
             library( "junit5Api", "org.junit.jupiter", "junit-jupiter-api" ).versionRef( junit5Version )
             library( "junit5Engine", "org.junit.jupiter", "junit-jupiter-engine" ).versionRef( junit5Version )

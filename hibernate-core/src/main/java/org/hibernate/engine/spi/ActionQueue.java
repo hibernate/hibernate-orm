@@ -1093,7 +1093,7 @@ public class ActionQueue {
 
 			boolean hasAnyParentEntityNames(BatchIdentifier batchIdentifier) {
 				return parentEntityNames.contains( batchIdentifier.getEntityName() ) ||
-						parentEntityNames.contains( batchIdentifier.getRootEntityName() );
+						(parentEntityNames.contains( batchIdentifier.getRootEntityName() ) && !batchIdentifier.getRootEntityName().equals(getRootEntityName()) );
 			}
 
 			boolean hasAnyChildEntityNames(BatchIdentifier batchIdentifier) {
@@ -1112,7 +1112,9 @@ public class ActionQueue {
 				return (
 					parent == batchIdentifier
 					|| parentEntityNames.contains( batchIdentifier.getEntityName() )
-					|| ( parentEntityNames.contains( batchIdentifier.getRootEntityName() ) && !this.getEntityName().equals( batchIdentifier.getRootEntityName() ) )
+					|| (parentEntityNames.contains(batchIdentifier.getRootEntityName())
+						&& !this.getEntityName().equals(batchIdentifier.getRootEntityName())
+						&& !this.getRootEntityName().equals(batchIdentifier.getRootEntityName()))
 					|| parent != null && parent.hasParent( batchIdentifier, new ArrayList<>() )
 				);
 			}

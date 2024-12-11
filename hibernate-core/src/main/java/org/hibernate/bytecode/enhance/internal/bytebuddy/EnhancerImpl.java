@@ -437,7 +437,38 @@ public class EnhancerImpl implements Enhancer {
 		// Check name of the getter/setter method with persistence annotation and getter/setter method name that doesn't refer to an entity field
 		// and will return false.  If the property accessor method(s) are named to match the field name(s), return true.
 		boolean propertyHasAnnotation = false;
+
+		// defaultAccessType can be FIELD or PROPERTY or null
+		AccessType defaultAccessType = getDefaultAccessType(managedCtClass);
+
 		MethodGraph.Linked methodGraph = MethodGraph.Compiler.Default.forJavaHierarchy().compile((TypeDefinition) managedCtClass);
+		for (MethodGraph.Node node : methodGraph.listNodes()) {
+			MethodDescription methodDescription = node.getRepresentative();
+			if (methodDescription.getDeclaringType().represents(Object.class)) { // skip class java.lang.Object methods
+				continue;
+			}
+
+			String methodName = methodDescription.getActualName();
+			if (methodName.equals("") ||
+					(!methodName.startsWith("get") && !methodName.startsWith("set") && !methodName.startsWith("is"))) {
+				continue;
+			}
+			if (! methodName.startsWith("is") && ! methodName.startsWith("get") && ! methodName.startsWith("set")) {
+				// not a property accessor method so ignore it
+				continue;
+			}
+			TypeList typeList = methodDescription.getDeclaredAnnotations().asTypeList();
+			if (typeList.stream().anyMatch(typeDefinitions ->
+					(typeDefinitions.getName().equals("jakarta.persistence.Transient")))) {
+				// transient property so ignore it
+				continue;
+			}
+			// Note that a property has a jakarta.persistence annotation
+			if (typeList.stream().anyMatch(typeDefinitions ->
+					(typeDefinitions.getName().contains("jakarta.persistence")))) {
+				propertyHasAnnotation = true;
+			}
+		}
 		for (MethodGraph.Node node : methodGraph.listNodes()) {
 			MethodDescription methodDescription = node.getRepresentative();
 			if (methodDescription.getDeclaringType().represents(Object.class)) { // skip class java.lang.Object methods
@@ -452,12 +483,10 @@ public class EnhancerImpl implements Enhancer {
 			String methodFieldName;
 			if (methodName.startsWith("is")) { // skip past "is"
 				methodFieldName = methodName.substring(2);
-			}
-			else if (methodName.startsWith("get") ||
+			} else if (methodName.startsWith("get") ||
 					methodName.startsWith("set")) { // skip past "get" or "set"
 				methodFieldName = methodName.substring(3);
-			}
-			else {
+			} else {
 				// not a property accessor method so ignore it
 				continue;
 			}
@@ -470,10 +499,6 @@ public class EnhancerImpl implements Enhancer {
 				// transient property so ignore it
 				continue;
 			}
-			if (typeList.stream().anyMatch(typeDefinitions ->
-					(typeDefinitions.getName().contains("jakarta.persistence")))) {
-				propertyHasAnnotation = true;
-			}
 			for (FieldDescription ctField : methodDescription.getDeclaringType().getDeclaredFields()) {
 				if (!Modifier.isStatic(ctField.getModifiers())) {
 					AnnotatedFieldDescription annotatedField = new AnnotatedFieldDescription(enhancementContext, ctField);
@@ -485,6 +510,7 @@ public class EnhancerImpl implements Enhancer {
 					}
 				}
 			}
+
 			if ( propertyHasAnnotation && !propertyNameMatchesFieldName ) {
 				switch ( strategy ) {
 					case SKIP:
@@ -502,9 +528,69 @@ public class EnhancerImpl implements Enhancer {
 						// We shouldn't even be in this method if using LEGACY, see top of this method.
 						throw new AssertionFailure( "Unexpected strategy at this point: " + strategy );
 				}
+			} else if ( propertyHasAnnotation && (defaultAccessType == null || AccessType.PROPERTY.equals( defaultAccessType ) ) ) {
+				switch ( strategy ) {
+					case SKIP:
+						log.debugf(
+								"Skipping enhancement of [%s] because Access Type is PROPERTY."
+										+ " To fix this, set the Entity class AccessType to FIELD.",
+								managedCtClass.getName() );
+						return true;
+					case FAIL:
+						throw new EnhancementException( String.format(
+								"Enhancement of [%s] failed because Access Type is PROPERTY.."
+										+ " To fix this, set the Entity class AccessType to FIELD.",
+								managedCtClass.getName() ) );
+					default:
+						// We shouldn't even be in this method if using LEGACY, see top of this method.
+						throw new AssertionFailure( "Unexpected strategy at this point: " + strategy );
+				}
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Determine the default Access Type as per Persistence 3.2 Spec section 2.3.1
+	 * @param managedCtClass
+	 * @return AccessType.PROPERTY or AccessType.FIELD or null if unknown
+	 */
+	private AccessType getDefaultAccessType(TypeDescription managedCtClass) {
+		AnnotationDescription.Loadable<Access> access = managedCtClass.asErasure().getDeclaredAnnotations().ofType( Access.class );
+		if ( access != null && access.load().value() == AccessType.PROPERTY ) {
+			return AccessType.PROPERTY;
+		} else if ( access != null && access.load().value() == AccessType.FIELD ) {
+			return AccessType.FIELD;
+		}
+		boolean hasAnnotationOnFields = false;
+		boolean hasAnnotationOnProperties = false;
+		MethodGraph.Linked methodGraph = MethodGraph.Compiler.Default.forJavaHierarchy().compile((TypeDefinition) managedCtClass);
+		for ( MethodGraph.Node node : methodGraph.listNodes() ) {
+			MethodDescription methodDescription = node.getRepresentative();
+			AnnotationDescription.Loadable<Access> methodAccessType = methodDescription.getDeclaredAnnotations().ofType( Access.class );
+			if ( methodAccessType != null && methodAccessType.load().value() == AccessType.PROPERTY ) {
+				hasAnnotationOnProperties = true;
+				break;
+			}
+		}
+		for ( FieldDescription fieldDescription: managedCtClass.getDeclaredFields() ) {
+			AnnotationDescription.Loadable<Access> fieldAccessType = fieldDescription.getDeclaredAnnotations().ofType( Access.class );
+			if ( fieldAccessType != null && fieldAccessType.load().value() == AccessType.FIELD ) {
+				hasAnnotationOnFields = true;
+				break;
+			}
+		}
+
+		if ( hasAnnotationOnProperties && ! hasAnnotationOnFields ) {
+			return AccessType.PROPERTY;
+		} else if ( hasAnnotationOnFields && ! hasAnnotationOnProperties) {
+			return AccessType.FIELD;
+		} else if ( hasAnnotationOnProperties && hasAnnotationOnFields ) {
+			// TODO: consider throwing exception here instead of returning null if this
+			//  condition isn't detected elsewhere.
+			return null;
+		}
+		return null;
 	}
 
 	/**

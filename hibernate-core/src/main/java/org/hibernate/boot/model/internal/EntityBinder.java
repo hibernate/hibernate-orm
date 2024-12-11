@@ -1596,27 +1596,27 @@ public class EntityBinder {
 	public void bindDiscriminatorValue() {
 		final DiscriminatorValue discriminatorValueAnn =
 				annotatedClass.getAnnotationUsage( DiscriminatorValue.class, getSourceModelContext() );
-		final String discriminatorValue = discriminatorValueAnn != null
-				? discriminatorValueAnn.value()
-				: null;
-		if ( isBlank( discriminatorValue ) ) {
+		if ( discriminatorValueAnn == null ) {
 			final Value discriminator = persistentClass.getDiscriminator();
 			if ( discriminator == null ) {
 				persistentClass.setDiscriminatorValue( name );
 			}
-			else if ( "character".equals( discriminator.getType().getName() ) ) {
-				throw new AnnotationException( "Entity '" + name
-						+ "' has a discriminator of character type and must specify its '@DiscriminatorValue'" );
-			}
-			else if ( "integer".equals( discriminator.getType().getName() ) ) {
-				persistentClass.setDiscriminatorValue( String.valueOf( name.hashCode() ) );
-			}
 			else {
-				persistentClass.setDiscriminatorValue( name ); //Spec compliant
+				switch ( discriminator.getType().getName() ) {
+					case "character":
+						throw new AnnotationException( "Entity '" + name
+								+ "' has a discriminator of character type and must specify its '@DiscriminatorValue'" );
+					case "integer":
+						// TODO: pretty nasty, should we just deprecate/disallow this?
+						persistentClass.setDiscriminatorValue( String.valueOf( name.hashCode() ) );
+						break;
+					default:
+						persistentClass.setDiscriminatorValue( name ); //Spec compliant
+				}
 			}
 		}
 		else {
-			persistentClass.setDiscriminatorValue( discriminatorValue );
+			persistentClass.setDiscriminatorValue( discriminatorValueAnn.value() );
 		}
 	}
 

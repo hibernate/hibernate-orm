@@ -815,11 +815,15 @@ public class CockroachDialect extends Dialect {
 
 	/**
 	 * {@code microsecond} is the smallest unit for an {@code interval},
-	 * and the highest precision for a {@code timestamp}.
+	 * and the highest precision for a {@code timestamp}, so we could
+	 * use it as the "native" precision, but it's more convenient to use
+	 * whole seconds (with the fractional part), since we want to use
+	 * {@code extract(epoch from ...)} in our emulation of
+	 * {@code timestampdiff()}.
 	 */
 	@Override
 	public long getFractionalSecondPrecisionInNanos() {
-		return 1_000; //microseconds
+		return 1_000_000_000; //seconds
 	}
 
 	@Override @SuppressWarnings("deprecation")
@@ -831,8 +835,8 @@ public class CockroachDialect extends Dialect {
 
 	private static String intervalPattern(TemporalUnit unit) {
 		return switch (unit) {
-			case NATIVE -> "(?2)*interval '1 microsecond'";
 			case NANOSECOND -> "(?2)/1e3*interval '1 microsecond'";
+			case NATIVE -> "(?2)*interval '1 second'";
 			case QUARTER -> "(?2)*interval '3 month'"; // quarter is not supported in interval literals
 			case WEEK -> "(?2)*interval '7 day'"; // week is not supported in interval literals
 			default -> "(?2)*interval '1 " + unit + "'";
@@ -849,9 +853,9 @@ public class CockroachDialect extends Dialect {
 			// results in an integer number of days
 			// instead of an INTERVAL
 			return switch (unit) {
-				case YEAR, MONTH, QUARTER ->
-					// age only supports timestamptz, so we have to cast the date expressions
-						"extract(" + translateDurationField( unit )
+				case YEAR, MONTH, QUARTER
+						-> "extract(" + translateDurationField( unit )
+								// age only supports timestamptz, so we have to cast the date expressions
 								+ " from age(cast(?3 as timestamptz),cast(?2 as timestamptz)))";
 				default -> "(?3-?2)" + DAY.conversionFactor( unit, this );
 			};
@@ -863,26 +867,16 @@ public class CockroachDialect extends Dialect {
 				case MONTH -> "(extract(year from ?3-?2)*12+extract(month from ?3-?2))";
 				case WEEK -> "(extract(day from ?3-?2)/7)"; // week is not supported by extract() when the argument is a duration
 				case DAY -> "extract(day from ?3-?2)";
-				//in order to avoid multiple calls to extract(),
-				//we use extract(epoch from x - y) * factor for
-				//all the following units:
+				// In order to avoid multiple calls to extract(),
+				// we use extract(epoch from x - y) * factor for
+				// all the following units:
 				// Note that CockroachDB also has an extract_duration function which returns an int,
 				// but we don't use that here because it is deprecated since v20.
-				// We need to use round() instead of cast(... as int) because extract epoch returns
-				// float8 which can cause loss-of-precision in some cases
-				// https://github.com/cockroachdb/cockroach/issues/72523
 				case HOUR, MINUTE, SECOND, NANOSECOND, NATIVE ->
-						"round(extract(epoch from ?3-?2)" + EPOCH.conversionFactor( unit, this ) + ")::int";
+						"extract(epoch from ?3-?2)" + EPOCH.conversionFactor( unit, this );
 				default -> throw new SemanticException( "Unrecognized field: " + unit );
 			};
 		}
-	}
-
-	@Override
-	public String translateDurationField(TemporalUnit unit) {
-		return unit==NATIVE
-				? "microsecond"
-				: super.translateDurationField( unit );
 	}
 
 	@Override

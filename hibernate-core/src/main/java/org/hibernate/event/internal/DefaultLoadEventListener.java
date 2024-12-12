@@ -226,10 +226,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 	 */
 	private Object proxyOrLoad(LoadEvent event, EntityPersister persister, EntityKey keyToLoad, LoadType options) {
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev(
-					"Loading entity: {0}",
-					infoString( persister, event.getEntityId(), persister.getFactory() )
-			);
+			LOG.trace( "Loading entity: " + infoString( persister, event.getEntityId(), persister.getFactory() ) );
 		}
 		if ( hasBytecodeProxy( persister, options ) ) {
 			return loadWithBytecodeProxy( event, persister, keyToLoad, options );
@@ -515,10 +512,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		final EventSource session = event.getSession();
 
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev(
-					"Attempting to resolve: {0}",
-					infoString( persister, event.getEntityId(), event.getFactory() )
-			);
+			LOG.trace( "Attempting to resolve: " + infoString( persister, event.getEntityId(), event.getFactory() ) );
 		}
 
 		if ( session.getPersistenceContextInternal().containsDeletedUnloadedEntityKey( keyToLoad ) ) {
@@ -547,8 +541,8 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		if ( isPersistentAttributeInterceptable( entity ) ) {
 			final PersistentAttributeInterceptable interceptable = asPersistentAttributeInterceptable( entity );
 			final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
-			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-				( (EnhancementAsProxyLazinessInterceptor) interceptor ).forceInitialize( entity, null );
+			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor lazinessInterceptor ) {
+				lazinessInterceptor.forceInitialize( entity, null );
 			}
 		}
 	}
@@ -568,23 +562,15 @@ public class DefaultLoadEventListener implements LoadEventListener {
 
 	private Object loadFromCacheOrDatasource(LoadEvent event, EntityPersister persister, EntityKey keyToLoad) {
 		final Object entity = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache( event, persister, keyToLoad );
-		if ( entity != null ) {
-			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev(
-						"Resolved object in second-level cache: {0}",
-						infoString( persister, event.getEntityId(), event.getFactory() )
-				);
-			}
-			return entity;
+		if ( entity == null ) {
+			return loadFromDatasource( event, persister );
 		}
 		else {
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev(
-						"Object not resolved in any cache: {0}",
-						infoString( persister, event.getEntityId(), event.getFactory() )
-				);
+				LOG.trace( "Resolved entity in second-level cache: "
+							+ infoString( persister, event.getEntityId(), event.getFactory() ) );
 			}
-			return loadFromDatasource( event, persister );
+			return entity;
 		}
 	}
 
@@ -598,6 +584,11 @@ public class DefaultLoadEventListener implements LoadEventListener {
 	 * @return The object loaded from the datasource, or null if not found.
 	 */
 	protected Object loadFromDatasource(final LoadEvent event, final EntityPersister persister) {
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Entity not resolved in any cache, loading from datastore: "
+						+ infoString( persister, event.getEntityId(), event.getFactory() ) );
+		}
+
 		Object entity = persister.load(
 				event.getEntityId(),
 				event.getInstanceToLoad(),

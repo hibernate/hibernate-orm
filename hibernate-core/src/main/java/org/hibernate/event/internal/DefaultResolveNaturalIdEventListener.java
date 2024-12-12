@@ -48,34 +48,22 @@ public class DefaultResolveNaturalIdEventListener implements ResolveNaturalIdEve
 		final EntityPersister persister = event.getEntityPersister();
 
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev(
-					"Attempting to resolve: {0}#{1}",
-					infoString( persister ),
-					event.getNaturalIdValues()
-			);
+			LOG.trace( "Attempting to resolve: " + infoString( persister ) + "#" + event.getNaturalIdValues() );
 		}
 
 		final Object entityId = resolveFromCache( event );
 		if ( entityId != null ) {
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev(
-						"Resolved object in cache: {0}#{1}",
-						infoString( persister ),
-						event.getNaturalIdValues()
-				);
+				LOG.trace( "Resolved object in cache: " + infoString( persister ) + "#" + event.getNaturalIdValues() );
 			}
 			return entityId;
 		}
-
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev(
-					"Object not resolved in any cache: {0}#{1}",
-					infoString( persister ),
-					event.getNaturalIdValues()
-			);
+		else {
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Object not resolved in any cache: "+ infoString( persister ) + "#" + event.getNaturalIdValues() );
+			}
+			return loadFromDatasource( event );
 		}
-
-		return loadFromDatasource( event );
 	}
 
 	/**

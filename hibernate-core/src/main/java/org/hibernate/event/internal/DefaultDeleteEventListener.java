@@ -38,7 +38,6 @@ import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.CollectionType;
@@ -47,6 +46,7 @@ import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
 import static org.hibernate.engine.internal.Collections.skipRemoval;
+import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
@@ -134,8 +134,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 			}
 		}
 		else if ( type instanceof ComponentType componentType ) {
-			final Type[] subtypes = componentType.getSubtypes();
-			for ( Type subtype : subtypes ) {
+			for ( Type subtype : componentType.getSubtypes() ) {
 				deleteOwnedCollections( subtype, key, session );
 			}
 		}
@@ -367,10 +366,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 			final DeleteContext transientEntities) {
 
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev(
-					"Deleting {0}",
-					MessageHelper.infoString( persister, entityEntry.getId(), session.getFactory() )
-			);
+			LOG.trace( "Deleting " + infoString( persister, entityEntry.getId(), session.getFactory() ) );
 		}
 
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();

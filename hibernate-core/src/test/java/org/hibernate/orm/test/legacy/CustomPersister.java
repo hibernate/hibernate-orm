@@ -285,11 +285,6 @@ public 	class CustomPersister implements EntityPersister {
 	}
 
 	@Override
-	public boolean implementsLifecycle() {
-		return false;
-	}
-
-	@Override
 	public Class<?> getConcreteProxyClass() {
 		return Custom.class;
 	}

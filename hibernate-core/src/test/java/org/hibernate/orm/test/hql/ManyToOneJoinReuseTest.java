@@ -78,7 +78,7 @@ public class ManyToOneJoinReuseTest {
 					query.where(
 							cb.and(
 									root.get( "book" ).isNotNull(),
-									join.isNotNull()
+									cb.fk( root.get( "book" ) ).isNotNull()
 							)
 					);
 

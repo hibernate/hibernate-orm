@@ -52,12 +52,26 @@ public class MapIssueTest {
 	}
 
 	@Test
-	public void testMapKeyJoinIsOmitted(SessionFactoryScope scope) {
+	public void testMapKeyJoinIsNotOmitted(SessionFactoryScope scope) {
 		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				s -> {
 					s.createQuery( "select c from MapOwner as o join o.contents c join c.relationship r where r.id is not null" ).list();
+					statementInspector.assertExecutedCount( 1 );
+					// Assert 3 joins, collection table, collection element and collection key (relationship)
+					statementInspector.assertNumberOfJoins( 0, 3 );
+				}
+		);
+	}
+
+	@Test
+	public void testMapKeyJoinIsOmitted2(SessionFactoryScope scope) {
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+		scope.inTransaction(
+				s -> {
+					s.createQuery( "select c from MapOwner as o join o.contents c where c.relationship.id is not null" ).list();
 					statementInspector.assertExecutedCount( 1 );
 					// Assert 2 joins, collection table and collection element. No need to join the relationship because it is not nullable
 					statementInspector.assertNumberOfJoins( 0, 2 );

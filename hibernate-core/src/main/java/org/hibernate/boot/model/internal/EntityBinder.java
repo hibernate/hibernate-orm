@@ -958,7 +958,9 @@ public class EntityBinder {
 			rootClass.setPolymorphic( true );
 			final String rootEntityName = rootClass.getEntityName();
 			LOG.tracev( "Setting discriminator for entity {0}", rootEntityName);
-			getMetadataCollector().addSecondPass( new NullableDiscriminatorColumnSecondPass( rootEntityName ) );
+			getMetadataCollector()
+					.addSecondPass( new DiscriminatorColumnSecondPass( rootEntityName,
+							context.getMetadataCollector().getDatabase().getDialect() ) );
 		}
 	}
 

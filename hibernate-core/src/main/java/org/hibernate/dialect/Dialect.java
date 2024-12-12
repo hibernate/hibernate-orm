@@ -189,6 +189,7 @@ import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalAmount;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -839,11 +840,17 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Generate a check condition for column with the given set of values.
+	 * Generate a SQL {@code check} condition for the given column,
+	 * constraining to the given values.
 	 *
-	 * @apiNote Only supports TINYINT, SMALLINT and (VAR)CHAR
+	 * @return a SQL expression that will occur in a {@code check} constraint
+	 *
+	 * @apiNote Only supports {@code TINYINT}, {@code SMALLINT}, {@code CHAR},
+	 *          and {@code VARCHAR}
+	 *
+	 * @since 7.0
 	 */
-	public String getCheckCondition(String columnName, Set<?> valueSet, JdbcType jdbcType) {
+	public String getCheckCondition(String columnName, Collection<?> valueSet, JdbcType jdbcType) {
 		final boolean isCharacterJdbcType = isCharacterType( jdbcType.getJdbcTypeCode() );
 		assert isCharacterJdbcType || isIntegral( jdbcType.getJdbcTypeCode() );
 
@@ -856,11 +863,12 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 				nullIsValid = true;
 				continue;
 			}
+			check.append( separator );
 			if ( isCharacterJdbcType ) {
-				check.append( separator ).append('\'').append( value ).append('\'');
+				check.append('\'').append( value ).append('\'');
 			}
 			else {
-				check.append( separator ).append( value );
+				check.append( value );
 			}
 			separator = ",";
 		}

@@ -78,7 +78,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 				);
 			}
 
-			final MappingMetamodelImplementor mappingMetamodel = session.getFactory().getRuntimeMetamodels().getMappingMetamodel();
+			final MappingMetamodelImplementor mappingMetamodel = session.getFactory().getMappingMetamodel();
 			final Set<String> roles = mappingMetamodel.getCollectionRolesByEntityParticipant( persister.getEntityName() );
 			if ( roles != null ) {
 				for ( String role : roles ) {
@@ -149,9 +149,9 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		}
 		for ( SqmCteStatement<?> cteStatement : statement.getCteStatements() ) {
 			final SqmQuery<?> cteDefinition = cteStatement.getCteDefinition();
-			if ( cteDefinition instanceof SqmDmlStatement<?> ) {
+			if ( cteDefinition instanceof SqmDmlStatement<?> dmlStatement ) {
 				entityPersisters.add(
-						metamodel.getEntityDescriptor( ( (SqmDmlStatement<?>) cteDefinition ).getTarget().getEntityName() )
+						metamodel.getEntityDescriptor( dmlStatement.getTarget().getEntityName() )
 				);
 			}
 		}

@@ -251,7 +251,7 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 	 */
 	public List<Subclass> getSubclasses() {
 		@SuppressWarnings("unchecked")
-		List<Subclass>[] subclassLists = new List[subclasses.size() + 1];
+		final List<Subclass>[] subclassLists = new List[subclasses.size() + 1];
 		int j;
 		for (j = 0; j < subclasses.size(); j++) {
 			subclassLists[j] = subclasses.get(j).getSubclasses();

@@ -507,7 +507,17 @@ public interface MappingSettings {
 	String TRANSFORM_HBM_XML_FEATURE_HANDLING = "hibernate.transform_hbm_xml.unsupported_feature_handling";
 
 	/**
+	 * Specifies that Hibernate should always restrict by discriminator values in
+	 * SQL {@code select} statements, even when querying the root entity of an
+	 * entity inheritance hierarchy.
+	 * <p>
+	 * By default, Hibernate only restricts by discriminator values when querying
+	 * a subtype, or when the root entity is explicitly annotated
+	 * {@link org.hibernate.annotations.DiscriminatorOptions#force
+	 * DiscriminatorOptions(force=true)}.
+	 *
 	 * @see org.hibernate.boot.MetadataBuilder#enableImplicitForcingOfDiscriminatorsInSelect
+	 * @see org.hibernate.annotations.DiscriminatorOptions#force
 	 *
 	 * @settingDefault {@code false}
 	 */

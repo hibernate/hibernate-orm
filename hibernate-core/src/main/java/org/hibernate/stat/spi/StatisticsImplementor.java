@@ -13,7 +13,9 @@ import java.util.Map;
 import static java.util.Collections.emptyMap;
 
 /**
- * A service SPI for collecting statistics about various events that occur at runtime.
+ * A service SPI for collecting statistics about various events occurring at runtime.
+ * <p>
+ * A custom implementation may be provided via a {@link StatisticsFactory}.
  *
  * @author Emmanuel Bernard
  */

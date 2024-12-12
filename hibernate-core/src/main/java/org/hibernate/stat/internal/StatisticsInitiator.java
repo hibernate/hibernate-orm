@@ -38,10 +38,9 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 
 	@Override
 	public StatisticsImplementor initiateService(SessionFactoryServiceInitiatorContext context) {
-		final Object configValue = context.getServiceRegistry()
-				.requireService( ConfigurationService.class )
-				.getSettings()
-				.get( STATS_BUILDER );
+		final Object configValue =
+				context.getServiceRegistry().requireService( ConfigurationService.class )
+						.getSettings().get( STATS_BUILDER );
 		return initiateServiceInternal( context.getSessionFactory(), configValue, context.getServiceRegistry() );
 	}
 
@@ -50,18 +49,30 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 			@Nullable Object configValue,
 			ServiceRegistryImplementor registry) {
 
-		final StatisticsFactory statisticsFactory;
+		final StatisticsFactory statisticsFactory = statisticsFactory( configValue, registry );
+		final StatisticsImplementor statistics =
+				statisticsFactory == null
+						? new StatisticsImpl( sessionFactory )  // default impl
+						: statisticsFactory.buildStatistics( sessionFactory );
+		final boolean enabled = sessionFactory.getSessionFactoryOptions().isStatisticsEnabled();
+		statistics.setStatisticsEnabled( enabled );
+		LOG.debugf( "Statistics initialized [enabled=%s]", enabled );
+		return statistics;
+	}
+
+	private static @Nullable StatisticsFactory statisticsFactory(
+			@Nullable Object configValue, ServiceRegistryImplementor registry) {
 		if ( configValue == null ) {
-			statisticsFactory = null; //We'll use the default
+			return null; //We'll use the default
 		}
-		else if ( configValue instanceof StatisticsFactory ) {
-			statisticsFactory = (StatisticsFactory) configValue;
+		else if ( configValue instanceof StatisticsFactory factory ) {
+			return factory;
 		}
 		else {
 			// assume it names the factory class
 			final ClassLoaderService classLoaderService = registry.requireService( ClassLoaderService.class );
 			try {
-				statisticsFactory = (StatisticsFactory) classLoaderService.classForName( configValue.toString() ).newInstance();
+				return (StatisticsFactory) classLoaderService.classForName( configValue.toString() ).newInstance();
 			}
 			catch (HibernateException e) {
 				throw e;
@@ -73,18 +84,5 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 				);
 			}
 		}
-		final StatisticsImplementor statistics;
-		if ( statisticsFactory == null ) {
-			// Default:
-			statistics = new StatisticsImpl( sessionFactory );
-		}
-		else {
-			statistics = statisticsFactory.buildStatistics( sessionFactory );
-		}
-		final boolean enabled = sessionFactory.getSessionFactoryOptions().isStatisticsEnabled();
-		statistics.setStatisticsEnabled( enabled );
-		LOG.debugf( "Statistics initialized [enabled=%s]", enabled );
-		return statistics;
 	}
-
 }

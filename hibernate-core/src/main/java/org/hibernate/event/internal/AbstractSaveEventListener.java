@@ -160,7 +160,7 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 			if  ( LOG.isDebugEnabled() ) {
 				// TODO: define toString()s for generators
 				LOG.debugf(
-						"Generated identifier: %s, using strategy: %s",
+						"Generated identifier [%s] using generator '%s'",
 						persister.getIdentifierType().toLoggableString( id, source.getFactory() ),
 						generator.getClass().getName()
 				);
@@ -210,7 +210,7 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 		}
 
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "Saving {0}", infoString( persister, id, source.getFactory() ) );
+			LOG.trace( "Saving " + infoString( persister, id, source.getFactory() ) );
 		}
 
 		final EntityKey key = useIdentityColumn ? null : entityKey( id, persister, source );

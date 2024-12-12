@@ -132,10 +132,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 						+ "' because it has a null identifier" );
 			}
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev(
-						"Refreshing transient {0}",
-						infoString( persister, id, event.getFactory() )
-				);
+				LOG.trace( "Refreshing transient " + infoString( persister, id, event.getFactory() ) );
 			}
 			if ( persistenceContext.getEntry( source.generateEntityKey( id, persister ) ) != null ) {
 				throw new NonUniqueObjectException( id, persister.getEntityName() );
@@ -143,10 +140,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		}
 		else {
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev(
-						"Refreshing ",
-						infoString( entry.getPersister(), entry.getId(), event.getFactory() )
-				);
+				LOG.trace( "Refreshing " + infoString( entry.getPersister(), entry.getId(), event.getFactory() ) );
 			}
 			if ( !entry.isExistsInDatabase() ) {
 				throw new UnresolvableObjectException(

@@ -109,7 +109,7 @@ public class DefaultEvictEventListener implements EvictEventListener {
 			final EventSource session)
 			throws HibernateException {
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "Evicting {0}", infoString( persister ) );
+			LOG.trace( "Evicting " + infoString( persister ) );
 		}
 
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();

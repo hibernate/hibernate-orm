@@ -292,31 +292,20 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 	private static void logScheduleUpdate(EntityEntry entry, SessionFactoryImplementor factory, Status status, EntityPersister persister) {
 		if ( LOG.isTraceEnabled() ) {
+			final String info = infoString( persister, entry.getId(), factory );
 			if ( status == Status.DELETED ) {
 				if ( !persister.isMutable() ) {
-					LOG.tracev(
-							"Updating immutable, deleted entity: {0}",
-							infoString(persister, entry.getId(), factory)
-					);
+					LOG.trace( "Updating immutable, deleted entity: " + info );
 				}
 				else if ( !entry.isModifiableEntity() ) {
-					LOG.tracev(
-							"Updating non-modifiable, deleted entity: {0}",
-							infoString(persister, entry.getId(), factory)
-					);
+					LOG.trace( "Updating non-modifiable, deleted entity: " + info );
 				}
 				else {
-					LOG.tracev(
-							"Updating deleted entity: {0}",
-							infoString(persister, entry.getId(), factory)
-					);
+					LOG.trace( "Updating deleted entity: " + info );
 				}
 			}
 			else {
-				LOG.tracev(
-						"Updating entity: {0}",
-						infoString(persister, entry.getId(), factory)
-				);
+				LOG.trace( "Updating entity: " + info );
 			}
 		}
 	}
@@ -681,11 +670,10 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			for ( int i = 0; i < dirtyProperties.length; i++ ) {
 				dirtyPropertyNames[i] = allPropertyNames[dirtyProperties[i]];
 			}
-			LOG.tracev(
-					"Found dirty properties [{0}] : {1}",
-					infoString( persister.getEntityName(), entry.getId() ),
-					Arrays.toString( dirtyPropertyNames )
-			);
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Found dirty properties [" + infoString( persister.getEntityName(), entry.getId() )
+							+ "] : "+ Arrays.toString( dirtyPropertyNames ) );
+			}
 		}
 	}
 

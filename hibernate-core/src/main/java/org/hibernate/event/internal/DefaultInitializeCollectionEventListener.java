@@ -47,10 +47,8 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 			final CollectionPersister loadedPersister = ce.getLoadedPersister();
 			final Object loadedKey = ce.getLoadedKey();
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev(
-						"Initializing collection {0}",
-						collectionInfoString( loadedPersister, collection, loadedKey, source )
-				);
+				LOG.trace( "Initializing collection "
+							+ collectionInfoString( loadedPersister, collection, loadedKey, source ) );
 				LOG.trace( "Checking second-level cache" );
 			}
 

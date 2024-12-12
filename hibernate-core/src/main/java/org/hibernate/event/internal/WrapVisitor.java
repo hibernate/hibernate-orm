@@ -125,7 +125,7 @@ public class WrapVisitor extends ProxyVisitor {
 				final PersistentCollection<?> persistentCollection = collectionType.wrap( session, collection );
 				persistenceContext.addNewCollection( persister, persistentCollection );
 				if ( LOG.isTraceEnabled() ) {
-					LOG.tracev( "Wrapped collection in role: {0}", collectionType.getRole() );
+					LOG.trace( "Wrapped collection in role: " + collectionType.getRole() );
 				}
 				return persistentCollection; //Force a substitution!
 			}

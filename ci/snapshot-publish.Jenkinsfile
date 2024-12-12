@@ -30,24 +30,19 @@ pipeline {
 		}
 		stage('Publish') {
 			steps {
-				withCredentials([
-					usernamePassword(credentialsId: 'ossrh.sonatype.org', passwordVariable: 'OSSRH_PASSWORD', usernameVariable: 'OSSRH_USER'),
-					usernamePassword(credentialsId: 'gradle-plugin-portal-api-key', passwordVariable: 'PLUGIN_PORTAL_PASSWORD', usernameVariable: 'PLUGIN_PORTAL_USERNAME'),
-					file(credentialsId: 'release.gpg.private-key', variable: 'RELEASE_GPG_PRIVATE_KEY_PATH'),
-					string(credentialsId: 'release.gpg.passphrase', variable: 'RELEASE_GPG_PASSPHRASE'),
-					// https://github.com/gradle-nexus/publish-plugin#publishing-to-maven-central-via-sonatype-ossrh
-					usernamePassword(credentialsId: 'ossrh.sonatype.org', passwordVariable: 'ORG_GRADLE_PROJECT_sonatypePassword', usernameVariable: 'ORG_GRADLE_PROJECT_sonatypeUsername'),
-					// https://docs.gradle.org/current/userguide/publishing_gradle_plugins.html#account_setup
-					usernamePassword(credentialsId: 'gradle-plugin-portal-api-key', passwordVariable: 'GRADLE_PUBLISH_SECRET', usernameVariable: 'GRADLE_PUBLISH_KEY'),
-					file(credentialsId: 'release.gpg.private-key', variable: 'SIGNING_GPG_PRIVATE_KEY_PATH'),
-					string(credentialsId: 'release.gpg.passphrase', variable: 'SIGNING_GPG_PASSPHRASE')
-				]) {
+                withCredentials([
+                    // https://github.com/gradle-nexus/publish-plugin#publishing-to-maven-central-via-sonatype-ossrh
+                    usernamePassword(credentialsId: 'ossrh.sonatype.org', passwordVariable: 'ORG_GRADLE_PROJECT_sonatypePassword', usernameVariable: 'ORG_GRADLE_PROJECT_sonatypeUsername'),
+                    // https://docs.gradle.org/current/userguide/publishing_gradle_plugins.html#account_setup
+                    usernamePassword(credentialsId: 'gradle-plugin-portal-api-key', passwordVariable: 'GRADLE_PUBLISH_SECRET', usernameVariable: 'GRADLE_PUBLISH_KEY'),
+                    file(credentialsId: 'release.gpg.private-key', variable: 'SIGNING_GPG_PRIVATE_KEY_PATH'),
+                    string(credentialsId: 'release.gpg.passphrase', variable: 'SIGNING_GPG_PASSPHRASE')
+                    gitUsernamePassword(credentialsId: 'username-and-token.Hibernate-CI.github.com', gitToolName: 'Default')
+                ]) {
 					withEnv([
 							"DISABLE_REMOTE_GRADLE_CACHE=true"
 					]) {
-						sh '''./gradlew clean publish -x test \
-						--no-scan --no-daemon --no-build-cache --stacktrace
-						'''
+						sh './gradlew clean publish -x test --no-scan --no-daemon --no-build-cache --stacktrace'
 					}
 				}
 			}

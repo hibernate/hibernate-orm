@@ -27,10 +27,6 @@ public interface EntityRepresentationStrategy extends ManagedTypeRepresentationS
 	 */
 	ProxyFactory getProxyFactory();
 
-	default boolean isLifecycleImplementor() {
-		return false;
-	}
-
 	default boolean isBytecodeEnhanced() {
 		return false;
 	}

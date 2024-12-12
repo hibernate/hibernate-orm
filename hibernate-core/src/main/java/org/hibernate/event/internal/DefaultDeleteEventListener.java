@@ -14,7 +14,6 @@ import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.internal.OrphanRemovalAction;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
-import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.internal.ForeignKeys;
@@ -271,20 +270,18 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 			Object id,
 			Object version,
 			EntityEntry entityEntry) {
-		callbackRegistry.preRemove(entity);
-		if ( !invokeDeleteLifecycle( source, entity, persister ) ) {
-			deleteEntity(
-					source,
-					entity,
-					entityEntry,
-					event.isCascadeDeleteEnabled(),
-					event.isOrphanRemovalBeforeUpdates(),
-					persister,
-					transientEntities
-			);
-			if ( source.getFactory().getSessionFactoryOptions().isIdentifierRollbackEnabled() ) {
-				persister.resetIdentifier( entity, id, version, source );
-			}
+		callbackRegistry.preRemove( entity );
+		deleteEntity(
+				source,
+				entity,
+				entityEntry,
+				event.isCascadeDeleteEnabled(),
+				event.isOrphanRemovalBeforeUpdates(),
+				persister,
+				transientEntities
+		);
+		if ( source.getFactory().getSessionFactoryOptions().isIdentifierRollbackEnabled() ) {
+			persister.resetIdentifier( entity, id, version, source );
 		}
 	}
 
@@ -293,7 +290,6 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 	 */
 	private boolean canBeDeletedWithoutLoading(EventSource source, EntityPersister persister) {
 		return source.getInterceptor() == EmptyInterceptor.INSTANCE
-			&& !persister.implementsLifecycle()
 			&& !persister.hasSubclasses() //TODO: should be unnecessary, using EntityPersister.getSubclassPropertyTypeClosure(), etc
 			&& !persister.hasCascadeDelete()
 			&& !persister.hasNaturalIdentifier()
@@ -486,17 +482,6 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 			}
 		}
 		return deletedState;
-	}
-
-	protected boolean invokeDeleteLifecycle(EventSource session, Object entity, EntityPersister persister) {
-		if ( persister.implementsLifecycle() ) {
-			LOG.debug( "Calling onDelete()" );
-			if ( ( (Lifecycle) entity ).onDelete( session ) ) {
-				LOG.debug( "Deletion vetoed by onDelete()" );
-				return true;
-			}
-		}
-		return false;
 	}
 
 	protected void cascadeBeforeDelete(

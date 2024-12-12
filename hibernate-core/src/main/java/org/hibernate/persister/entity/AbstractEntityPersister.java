@@ -40,7 +40,6 @@ import org.hibernate.cache.spi.entry.ReferenceCacheEntryImpl;
 import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
 import org.hibernate.cache.spi.entry.StructuredCacheEntry;
 import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
-import org.hibernate.classic.Lifecycle;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -464,8 +463,6 @@ public abstract class AbstractEntityPersister
 	 */
 	private final EntityPropertyMapping propertyMapping;
 
-	private final boolean implementsLifecycle;
-
 	private List<UniqueKeyEntry> uniqueKeyEntries = null; //lazily initialized
 	private ConcurrentHashMap<String,SingleIdArrayLoadPlan> nonLazyPropertyLoadPlansByName;
 
@@ -523,7 +520,6 @@ public abstract class AbstractEntityPersister
 
 		javaType = representationStrategy.getLoadJavaType();
 		assert javaType != null;
-		this.implementsLifecycle = Lifecycle.class.isAssignableFrom( javaType.getJavaTypeClass() );
 
 		concreteProxy = entityMetamodel.isPolymorphic()
 				&& ( getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() || hasProxy() )
@@ -4179,11 +4175,6 @@ public abstract class AbstractEntityPersister
 	@Override
 	public final Class<?> getMappedClass() {
 		return this.getMappedJavaType().getJavaTypeClass();
-	}
-
-	@Override
-	public boolean implementsLifecycle() {
-		return this.implementsLifecycle;
 	}
 
 	@Override

@@ -16,7 +16,6 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.bytecode.spi.ReflectionOptimizer.InstantiationOptimizer;
-import org.hibernate.classic.Lifecycle;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
@@ -59,7 +58,6 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 	private final JavaType<?> proxyJtd;
 
 	private final boolean isBytecodeEnhanced;
-	private final boolean lifecycleImplementor;
 
 	private final ReflectionOptimizer reflectionOptimizer;
 	private final ProxyFactory proxyFactory;
@@ -89,7 +87,6 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			this.proxyJtd = null;
 		}
 
-		this.lifecycleImplementor = Lifecycle.class.isAssignableFrom( mappedJavaType );
 		this.isBytecodeEnhanced = isPersistentAttributeInterceptableType( mappedJavaType );
 
 		final Property identifierProperty = bootDescriptor.getIdentifierProperty();
@@ -387,11 +384,6 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 	@Override
 	public ProxyFactory getProxyFactory() {
 		return proxyFactory;
-	}
-
-	@Override
-	public boolean isLifecycleImplementor() {
-		return lifecycleImplementor;
 	}
 
 	@Override

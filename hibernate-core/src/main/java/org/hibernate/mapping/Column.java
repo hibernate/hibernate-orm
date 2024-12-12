@@ -640,44 +640,8 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		return unmodifiableList( checkConstraints );
 	}
 
-	@Deprecated(since = "6.2")
-	public String getCheckConstraint() {
-		if ( checkConstraints.isEmpty() ) {
-			return null;
-		}
-		else if ( checkConstraints.size() > 1 ) {
-			throw new IllegalStateException( "column has multiple check constraints" );
-		}
-		else {
-			return checkConstraints.get(0).getConstraint();
-		}
-	}
-
-	@Deprecated(since = "6.2")
-	public void setCheckConstraint(String constraint) {
-		if ( constraint != null ) {
-			if ( !checkConstraints.isEmpty() ) {
-				throw new IllegalStateException( "column already has a check constraint" );
-			}
-			checkConstraints.add( new CheckConstraint( constraint ) );
-		}
-	}
-
 	public boolean hasCheckConstraint() {
 		return !checkConstraints.isEmpty();
-	}
-
-	@Deprecated(since = "6.2")
-	public String checkConstraint() {
-		if ( checkConstraints.isEmpty() ) {
-			return null;
-		}
-		else if ( checkConstraints.size() > 1 ) {
-			throw new IllegalStateException( "column has multiple check constraints" );
-		}
-		else {
-			return checkConstraints.get(0).constraintString();
-		}
 	}
 
 	@Override

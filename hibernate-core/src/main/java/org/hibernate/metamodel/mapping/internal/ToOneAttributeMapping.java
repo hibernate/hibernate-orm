@@ -914,6 +914,10 @@ public class ToOneAttributeMapping
 		return cardinality;
 	}
 
+	public boolean hasJoinTable() {
+		return hasJoinTable;
+	}
+
 	@Override
 	public EntityMappingType getMappedType() {
 		return getEntityMappingType();

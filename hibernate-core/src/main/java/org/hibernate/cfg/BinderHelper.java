@@ -458,6 +458,66 @@ public class BinderHelper {
 		}
 	}
 
+	public static String getRelativePathRecursively(PropertyHolder propertyHolder, String propertyName) {
+		if (propertyHolder == null) {
+			return propertyName;
+		}
+		String path = propertyHolder.getPath();
+		String entityName = propertyHolder.getPersistentClass().getEntityName();
+
+		if ( path.length() == entityName.length() ) {
+			if ( propertyHolder instanceof ComponentPropertyHolder ) {
+				String embeddedPrefixOverride = ((ComponentPropertyHolder) propertyHolder).getEmbeddedPrefixOverride();
+				if(StringHelper.isEmpty(embeddedPrefixOverride)) {
+					return propertyName;
+				} else {
+					return StringHelper.qualify(embeddedPrefixOverride, propertyName);
+				}
+			}
+			return propertyName;
+		}
+		else {
+			// traverse up
+			List<String> pathComponents = new ArrayList<>();
+			pathComponents.add(propertyName);
+			PropertyHolder tPropertyHolder = propertyHolder;
+
+			// We have to recursively traverse property holders
+			// to detect any holder with overridden prefixes for embeddables
+			// "path" alone is not sufficient and misleading
+			while(tPropertyHolder != null) {
+				if (tPropertyHolder.getPath().equals(entityName)) {
+					break;
+				}
+				if ( tPropertyHolder instanceof ComponentPropertyHolder ) {
+					String embeddedPrefixOverride = ((ComponentPropertyHolder) tPropertyHolder).getEmbeddedPrefixOverride();
+					if(StringHelper.isEmpty(embeddedPrefixOverride)) {
+						pathComponents.add(StringHelper.unqualify(tPropertyHolder.getPath()));
+					} else {
+						pathComponents.add(embeddedPrefixOverride);
+					}
+				} else {
+					pathComponents.add(StringHelper.unqualify(tPropertyHolder.getPath()));
+				}
+				if(tPropertyHolder instanceof AbstractPropertyHolder) {
+					tPropertyHolder = ((AbstractPropertyHolder) tPropertyHolder).getParent();
+				} else {
+					tPropertyHolder = null;
+				}
+			}
+
+			// reverse the list to allow processing with StringHelper qualify
+			Collections.reverse(pathComponents);
+
+			String result = pathComponents.get(0);
+			for (String c : pathComponents.subList(1, pathComponents.size())) {
+				result = StringHelper.qualify(result, c);
+			}
+
+			return result;
+		}
+	}
+
 	/**
 	 * Find the column owner (ie PersistentClass or Join) of columnName.
 	 * If columnName is null or empty, persistentClass is returned

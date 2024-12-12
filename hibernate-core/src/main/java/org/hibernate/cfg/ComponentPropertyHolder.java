@@ -17,6 +17,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.annotations.EmbeddedPrefixOverride;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -64,6 +65,12 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	private boolean isOrWithinEmbeddedId;
 	private boolean isWithinElementCollection;
 
+	private String embeddedPrefixOverride;
+
+	public String getEmbeddedPrefixOverride() {
+		return embeddedPrefixOverride;
+	}
+
 //	private boolean virtual;
 	private String embeddedAttributeName;
 	private Map<String,AttributeConversionInfo> attributeConversionInfoMap;
@@ -87,6 +94,10 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 			parent instanceof CollectionPropertyHolder;
 
 		if ( embeddedXProperty != null ) {
+			if(embeddedXProperty.isAnnotationPresent(EmbeddedPrefixOverride.class)) {
+				this.embeddedPrefixOverride = embeddedXProperty.getAnnotation(EmbeddedPrefixOverride.class).value();
+			}
+
 //			this.virtual = false;
 			this.embeddedAttributeName = embeddedXProperty.getName();
 			this.attributeConversionInfoMap = processAttributeConversions( embeddedXProperty );

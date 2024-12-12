@@ -58,7 +58,7 @@ public class SequenceStyleGeneratorBehavesLikeSequeceHiloGeneratorWitZeroIncreme
 		Properties properties = new Properties();
 		properties.setProperty( SequenceStyleGenerator.SEQUENCE_PARAM, TEST_SEQUENCE );
 		properties.setProperty( SequenceStyleGenerator.OPT_PARAM, "legacy-hilo" );
-		properties.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "0" ); // JPA allocationSize of 1
+		properties.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "1" ); // JPA allocationSize of 1
 		properties.put(
 				PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER,
 				new ObjectNameNormalizer() {

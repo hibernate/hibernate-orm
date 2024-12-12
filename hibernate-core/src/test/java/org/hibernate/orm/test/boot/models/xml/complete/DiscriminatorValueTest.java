@@ -39,14 +39,14 @@ public class DiscriminatorValueTest {
 
 		{
 			final ClassDetails rootClassDetails = classDetailsRegistry.getClassDetails( Root.class.getName() );
-			assertThat( rootClassDetails.hasDirectAnnotationUsage( DiscriminatorValue.class ) ).isFalse();
+			assertThat( rootClassDetails.hasDirectAnnotationUsage( DiscriminatorValue.class ) ).isTrue();
 			assertThat( rootClassDetails.hasDirectAnnotationUsage( DiscriminatorFormula.class ) ).isFalse();
 
 			final DiscriminatorColumn discriminatorColumn = rootClassDetails.getDirectAnnotationUsage(
 					DiscriminatorColumn.class );
 			assertThat( discriminatorColumn ).isNotNull();
 			assertThat( discriminatorColumn.name() ).isEqualTo( "TYPE_COLUMN" );
-			assertThat( discriminatorColumn.discriminatorType() ).isEqualTo( DiscriminatorType.INTEGER );
+			assertThat( discriminatorColumn.discriminatorType() ).isEqualTo( DiscriminatorType.CHAR );
 
 			final ClassDetails subClassDetails = classDetailsRegistry.getClassDetails( Sub.class.getName() );
 			assertThat( subClassDetails.hasDirectAnnotationUsage( DiscriminatorColumn.class ) ).isFalse();

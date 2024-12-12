@@ -11,7 +11,8 @@
 
     <entity class="Root" metadata-complete="true" access="FIELD">
         <inheritance strategy="JOINED"/>
-        <discriminator-column name="TYPE_COLUMN" discriminator-type="INTEGER"/>
+        <discriminator-value>P</discriminator-value>
+        <discriminator-column name="TYPE_COLUMN" discriminator-type="CHAR"/>
         <attributes>
             <id name="id">
                 <column name="pk"/>

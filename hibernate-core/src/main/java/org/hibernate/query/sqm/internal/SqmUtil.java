@@ -34,6 +34,7 @@ import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
@@ -257,7 +258,13 @@ public class SqmUtil {
 	 * or one that has an explicit on clause predicate.
 	 */
 	public static boolean isFkOptimizationAllowed(SqmPath<?> sqmPath, EntityAssociationMapping associationMapping) {
-		if ( associationMapping.isFkOptimizationAllowed() && sqmPath instanceof SqmJoin<?, ?> sqmJoin ) {
+		// By default, never allow the FK optimization if the path is a join, unless the association has a join table
+		// Hibernate ORM has no way for users to refer to collection/join table rows,
+		// so referring the columns of these rows by default when requesting FK column attributes is sensible.
+		// Users that need to refer to the actual target table columns will have to add an explicit entity join.
+		if ( associationMapping.isFkOptimizationAllowed()
+			&& sqmPath instanceof SqmJoin<?, ?> sqmJoin
+			&& hasJoinTable( associationMapping ) ) {
 			switch ( sqmJoin.getSqmJoinType() ) {
 				case LEFT:
 					if ( isFiltered( associationMapping ) ) {
@@ -269,6 +276,16 @@ public class SqmUtil {
 				default:
 					return false;
 			}
+		}
+		return false;
+	}
+
+	private static boolean hasJoinTable(EntityAssociationMapping associationMapping) {
+		if ( associationMapping instanceof CollectionPart collectionPart ) {
+			return !collectionPart.getCollectionAttribute().getCollectionDescriptor().isOneToMany();
+		}
+		else if ( associationMapping instanceof ToOneAttributeMapping toOneAttributeMapping ) {
+			return toOneAttributeMapping.hasJoinTable();
 		}
 		return false;
 	}

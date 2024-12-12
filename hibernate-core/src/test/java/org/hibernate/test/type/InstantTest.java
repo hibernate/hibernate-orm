@@ -104,6 +104,8 @@ public class InstantTest extends AbstractJavaTimeTypeTest<Instant, InstantTest.E
 				.add( 1904, 12, 31, 23, 0, 0, 0, ZONE_PARIS )
 				.add( 1905, 1, 1, 0, 0, 0, 0, ZONE_PARIS )
 				.add( 1905, 1, 1, 1, 0, 0, 0, ZONE_PARIS )
+				// => HHH-14256: Instants with negative years
+				.add(-1, 1, 1, 0, 0, 0, 0, ZoneId.of("UTC"))
 				.build();
 	}
 

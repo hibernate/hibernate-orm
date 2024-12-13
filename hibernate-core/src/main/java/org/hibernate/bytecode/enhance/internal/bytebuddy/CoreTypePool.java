@@ -36,7 +36,7 @@ public class CoreTypePool extends TypePool.AbstractBase implements TypePool {
 	 */
 	public CoreTypePool() {
 		//By default optimise for jakarta annotations, and java util collections
-		this("jakarta.", "java.", "org.hibernate.annotations.");
+		this("jakarta.", "java.", "org.hibernate.annotations.", "org.hibernate.bytecode.enhance.spi.");
 	}
 
 	/**

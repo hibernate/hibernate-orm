@@ -9,10 +9,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
-import jakarta.persistence.PostLoad;
 import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreRemove;
-import jakarta.persistence.PreUpdate;
 import org.hibernate.CallbackException;
 
 public class Foo implements FooProxy, Serializable {

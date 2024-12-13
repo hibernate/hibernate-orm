@@ -40,6 +40,7 @@ import org.hibernate.type.internal.ParameterizedTypeImpl;
 
 /**
  * @author Christian Beikov
+ * @author Emmanuel Jannetti
  */
 public final class JacksonXmlFormatMapper implements FormatMapper {
 
@@ -201,6 +202,27 @@ public final class JacksonXmlFormatMapper implements FormatMapper {
 			}
 		}
 		return writeValueAsString( value, javaType, javaType.getJavaType() );
+	}
+
+	@Override
+	public boolean supportsSourceType(Class<?> sourceType) {
+		return false;
+	}
+
+	@Override
+	public boolean supportsTargetType(Class<?> targetType) {
+		return false;
+	}
+
+	@Override
+	public <T> void writeToTarget(T value, JavaType<T> javaType, Object target, WrapperOptions options)
+			throws IOException {
+
+	}
+
+	@Override
+	public <T> T readFromSource(JavaType<T> javaType, Object source, WrapperOptions options) throws IOException {
+		return null;
 	}
 
 	private <T> String writeValueAsString(Object value, JavaType<T> javaType, Type type) {

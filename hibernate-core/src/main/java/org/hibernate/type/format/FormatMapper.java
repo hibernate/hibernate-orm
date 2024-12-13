@@ -8,6 +8,8 @@ import org.hibernate.Incubating;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import java.io.IOException;
+
 /**
  * A mapper for mapping objects to and from a format.
  * <ul>
@@ -41,4 +43,22 @@ public interface FormatMapper {
 	 * Serializes the object to a string.
 	 */
 	<T> String toString(T value, JavaType<T> javaType, WrapperOptions wrapperOptions);
+
+	/**
+	 * Checks that this mapper supports a type as a source type.
+	 * @param sourceType the source type
+	 * @return <code>true</code> if the type is supported, false otherwise.
+	 */
+	boolean supportsSourceType(Class<?> sourceType);
+
+	/**
+	 * Checks that this mapper supports a type as a target type.
+	 * @param targetType the target type
+	 * @return <code>true</code> if the type is supported, false otherwise.
+	 */
+	boolean supportsTargetType(Class<?> targetType);
+
+	<T> void writeToTarget(T value, JavaType<T> javaType, Object target, WrapperOptions options) throws IOException;
+
+	<T> T readFromSource(JavaType<T> javaType, Object source, WrapperOptions options) throws IOException;
 }

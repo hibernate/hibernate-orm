@@ -12,6 +12,7 @@ public final class JacksonIntegration {
 	// when GraalVM native image is initializing them.
 	private static final boolean JACKSON_XML_AVAILABLE = ableToLoadJacksonXMLMapper();
 	private static final boolean JACKSON_JSON_AVAILABLE = ableToLoadJacksonJSONMapper();
+	private static final boolean JACKSON_OSON_AVAILABLE = ableToLoadJacksonOSONGenerator();
 	private static final JacksonXmlFormatMapper XML_FORMAT_MAPPER = JACKSON_XML_AVAILABLE ? new JacksonXmlFormatMapper() : null;
 	private static final JacksonXmlFormatMapper XML_FORMAT_MAPPER_PORTABLE = JACKSON_XML_AVAILABLE ? new JacksonXmlFormatMapper( false ) : null;
 	private static final JacksonJsonFormatMapper JSON_FORMAT_MAPPER = JACKSON_JSON_AVAILABLE ? new JacksonJsonFormatMapper() : null;
@@ -28,8 +29,14 @@ public final class JacksonIntegration {
 		return canLoad( "com.fasterxml.jackson.dataformat.xml.XmlMapper" );
 	}
 
-	public static FormatMapper getXMLJacksonFormatMapperOrNull() {
-		return XML_FORMAT_MAPPER;
+	/**
+	 * Checks that Jackson is available and that we have the Oracle OSON extension available
+	 * in the classpath.
+	 * @return true if we can load the OSON support, false otherwise.
+	 */
+	private static boolean ableToLoadJacksonOSONGenerator() {
+		return ableToLoadJacksonJSONMapper() &&
+				canLoad( "oracle.jdbc.provider.oson.OsonGenerator" );
 	}
 
 	public static FormatMapper getXMLJacksonFormatMapperOrNull(boolean legacyFormat) {
@@ -39,6 +46,16 @@ public final class JacksonIntegration {
 	public static FormatMapper getJsonJacksonFormatMapperOrNull() {
 		return JSON_FORMAT_MAPPER;
 	}
+
+	/**
+	 * Checks that Oracle OSON extension available
+	 *
+	 * @return true if we can load the OSON support, false otherwise.
+	 */
+	public static boolean isOracleOsonExtensionAvailable() {
+		return JACKSON_OSON_AVAILABLE;
+	}
+
 
 	private static boolean canLoad(String name) {
 		try {

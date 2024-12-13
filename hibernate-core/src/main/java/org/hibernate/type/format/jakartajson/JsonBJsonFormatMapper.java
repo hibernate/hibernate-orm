@@ -15,6 +15,7 @@ import java.lang.reflect.Type;
 /**
  * @author Christian Beikov
  * @author Yanming Zhou
+ * @author Emmanuel Jannetti
  */
 public final class JsonBJsonFormatMapper extends AbstractJsonFormatMapper {
 

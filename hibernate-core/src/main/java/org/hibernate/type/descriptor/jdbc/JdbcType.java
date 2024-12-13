@@ -118,7 +118,8 @@ public interface JdbcType extends Serializable {
 	 */
 	// todo (6.0) : move to {@link org.hibernate.metamodel.mapping.JdbcMapping}?
 	default <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
-		return (appender, value, dialect, wrapperOptions) -> appender.appendSql( value.toString() );
+		return (appender, value, dialect, wrapperOptions) ->
+				appender.appendSql( value.toString() );
 	}
 
 	/**

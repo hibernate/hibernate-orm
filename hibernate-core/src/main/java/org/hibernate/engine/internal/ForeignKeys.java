@@ -371,6 +371,21 @@ public final class ForeignKeys {
 		}
 	}
 
+	public static Object getEntityIdentifier(
+			final String entityName,
+			final Object object,
+			final SharedSessionContractImplementor session) {
+		if ( object == null ) {
+			return null;
+		}
+		else {
+			final Object id = session.getContextEntityIdentifier( object );
+			return id == null
+					? session.getEntityPersister( entityName, object ).getIdentifier( object, session )
+					: id;
+		}
+	}
+
 	private static void throwIfTransient(String entityName, Object object, SharedSessionContractImplementor session) {
 		if ( isTransient( entityName, object, Boolean.FALSE, session ) ) {
 			throw new TransientObjectException(

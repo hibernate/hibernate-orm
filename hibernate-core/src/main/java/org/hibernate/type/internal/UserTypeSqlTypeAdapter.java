@@ -81,16 +81,12 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 	@Override
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
 		if ( !( userType instanceof EnhancedUserType<?> ) ) {
-			throw new HibernateException(
-					String.format(
-							"Could not create JdbcLiteralFormatter, UserType class [%s] did not implement %s",
-							userType.getClass().getName(),
-							EnhancedUserType.class.getName()
-					)
-			);
+			throw new HibernateException( "Could not create JdbcLiteralFormatter because UserType class '"
+							+ userType.getClass().getName() + "' did not implement EnhancedUserType" );
 		}
 		final EnhancedUserType<T> type = (EnhancedUserType<T>) userType;
-		return (appender, value, dialect, wrapperOptions) -> appender.append( type.toSqlLiteral( value ) );
+		return (appender, value, dialect, wrapperOptions) ->
+				appender.append( type.toSqlLiteral( value ) );
 	}
 
 	private static class ValueExtractorImpl<J> implements ValueExtractor<J> {

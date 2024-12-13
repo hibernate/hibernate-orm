@@ -23,11 +23,10 @@ public class JdbcLiteralFormatterArray<T> extends BasicJdbcLiteralFormatter<T> {
 
 	@Override
 	public void appendJdbcLiteral(SqlAppender appender, Object value, Dialect dialect, WrapperOptions wrapperOptions) {
-		dialect.appendArrayLiteral(
-				appender,
-				unwrap( value, Object[].class, wrapperOptions ),
-				elementFormatter,
-				wrapperOptions
-		);
+		dialect.appendArrayLiteral( appender, unwrapArray( value, wrapperOptions ), elementFormatter, wrapperOptions );
+	}
+
+	private Object[] unwrapArray(Object value, WrapperOptions wrapperOptions) {
+		return unwrap( value, Object[].class, wrapperOptions );
 	}
 }

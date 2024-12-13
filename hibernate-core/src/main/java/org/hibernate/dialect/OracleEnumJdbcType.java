@@ -63,9 +63,11 @@ public class OracleEnumJdbcType implements JdbcType {
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
 		@SuppressWarnings("unchecked")
 		final Class<? extends Enum<?>> enumClass = (Class<? extends Enum<?>>) javaType.getJavaType();
-		return (appender, value, dialect, wrapperOptions)
-				-> appender.appendSql( dialect.getEnumTypeDeclaration( enumClass )
-						+ "." + ((Enum<?>) value).name() );
+		return (appender, value, dialect, wrapperOptions) -> {
+			appender.appendSql( dialect.getEnumTypeDeclaration( enumClass ) );
+			appender.appendSql( '.' );
+			appender.appendSql( ((Enum<?>) value).name() );
+		};
 	}
 
 	@Override

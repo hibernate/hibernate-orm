@@ -4,6 +4,7 @@
  */
 package org.hibernate.dialect.aggregate;
 
+import org.hibernate.HibernateException;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Namespace;
@@ -37,7 +38,6 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.StructJdbcType;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
-import org.hibernate.type.internal.TypeConfigurationWrapperOptions;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.LinkedHashMap;
@@ -76,26 +76,15 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 
 	public static AggregateSupport valueOf(Dialect dialect) {
 		final DatabaseVersion version = dialect.getVersion();
-		switch ( version.getMajor() ) {
-			case 12:
-			case 13:
-			case 14:
-			case 15:
-			case 16:
-			case 17:
-				return V12_INSTANCE;
-			case 18:
-				return V18_INSTANCE;
-			case 19:
-			case 20:
-				return V19_INSTANCE;
-			case 21:
-			case 22:
-				return V21_INSTANCE;
-		}
-		return version.isSameOrAfter( 23 )
-				? OracleAggregateSupport.V23_INSTANCE
-				: OracleAggregateSupport.LEGACY_INSTANCE;
+		return switch ( version.getMajor() ) {
+			case 12, 13, 14, 15, 16, 17 -> V12_INSTANCE;
+			case 18 -> V18_INSTANCE;
+			case 19, 20 -> V19_INSTANCE;
+			case 21, 22 -> V21_INSTANCE;
+			default -> version.isSameOrAfter( 23 )
+					? OracleAggregateSupport.V23_INSTANCE
+					: OracleAggregateSupport.LEGACY_INSTANCE;
+		};
 	}
 
 	@Override
@@ -132,7 +121,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 								final JdbcLiteralFormatter<Boolean> jdbcLiteralFormatter = (JdbcLiteralFormatter<Boolean>) column.getJdbcMapping().getJdbcType()
 										.getJdbcLiteralFormatter( column.getJdbcMapping().getMappedJavaType() );
 								final Dialect dialect = typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect();
-								final WrapperOptions wrapperOptions = new TypeConfigurationWrapperOptions( typeConfiguration );
+								final WrapperOptions wrapperOptions = getWrapperOptions( typeConfiguration );
 								final String trueLiteral = jdbcLiteralFormatter.toJdbcLiteral( true, dialect, wrapperOptions );
 								final String falseLiteral = jdbcLiteralFormatter.toJdbcLiteral( false, dialect, wrapperOptions );
 								return template.replace(
@@ -242,7 +231,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 						final JdbcLiteralFormatter<Boolean> jdbcLiteralFormatter = (JdbcLiteralFormatter<Boolean>) column.getJdbcMapping().getJdbcType()
 								.getJdbcLiteralFormatter( column.getJdbcMapping().getMappedJavaType() );
 						final Dialect dialect = typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect();
-						final WrapperOptions wrapperOptions = new TypeConfigurationWrapperOptions( typeConfiguration );
+						final WrapperOptions wrapperOptions = getWrapperOptions( typeConfiguration );
 						final String trueLiteral = jdbcLiteralFormatter.toJdbcLiteral( true, dialect, wrapperOptions );
 						final String falseLiteral = jdbcLiteralFormatter.toJdbcLiteral( false, dialect, wrapperOptions );
 						return template.replace(
@@ -316,6 +305,15 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 				return template.replace( placeholder, aggregateParentReadExpression + "." + columnExpression );
 		}
 		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumnTypeCode );
+	}
+
+	private static WrapperOptions getWrapperOptions(TypeConfiguration typeConfiguration) {
+		try {
+			return typeConfiguration.getSessionFactory().getWrapperOptions();
+		}
+		catch (HibernateException e) {
+			return null;
+		}
 	}
 
 	private static String xmlExtractArguments(String aggregateParentReadExpression, String xpathFragment) {
@@ -433,7 +431,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 						final JdbcLiteralFormatter<Boolean> jdbcLiteralFormatter = (JdbcLiteralFormatter<Boolean>) jdbcMapping.getJdbcType()
 								.getJdbcLiteralFormatter( jdbcMapping.getMappedJavaType() );
 						final Dialect dialect = typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect();
-						final WrapperOptions wrapperOptions = new TypeConfigurationWrapperOptions( typeConfiguration );
+						final WrapperOptions wrapperOptions = getWrapperOptions( typeConfiguration );
 						final String trueLiteral = jdbcLiteralFormatter.toJdbcLiteral( true, dialect, wrapperOptions );
 						final String falseLiteral = jdbcLiteralFormatter.toJdbcLiteral( false, dialect, wrapperOptions );
 						return "decode(" + customWriteExpression + "," + trueLiteral + ",'true'," + falseLiteral + ",'false')";
@@ -458,7 +456,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 				final JdbcLiteralFormatter<Boolean> jdbcLiteralFormatter = (JdbcLiteralFormatter<Boolean>) jdbcMapping.getJdbcType()
 						.getJdbcLiteralFormatter( jdbcMapping.getMappedJavaType() );
 				final Dialect dialect = typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect();
-				final WrapperOptions wrapperOptions = new TypeConfigurationWrapperOptions( typeConfiguration );
+				final WrapperOptions wrapperOptions = getWrapperOptions( typeConfiguration );
 				final String trueLiteral = jdbcLiteralFormatter.toJdbcLiteral( true, dialect, wrapperOptions );
 				final String falseLiteral = jdbcLiteralFormatter.toJdbcLiteral( false, dialect, wrapperOptions );
 				return "decode(" + customWriteExpression + "," + trueLiteral + ",'true'," + falseLiteral + ",'false')";

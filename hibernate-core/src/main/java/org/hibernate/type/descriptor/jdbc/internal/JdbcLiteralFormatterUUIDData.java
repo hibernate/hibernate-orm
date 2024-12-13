@@ -24,7 +24,6 @@ public class JdbcLiteralFormatterUUIDData<T> extends BasicJdbcLiteralFormatter<T
 
 	@Override
 	public void appendJdbcLiteral(SqlAppender appender, Object value, Dialect dialect, WrapperOptions wrapperOptions) {
-		final UUID literalValue = unwrap( value, UUID.class, wrapperOptions );
-		dialect.appendUUIDLiteral( appender, literalValue );
+		dialect.appendUUIDLiteral( appender, unwrap( value, UUID.class, wrapperOptions ) );
 	}
 }

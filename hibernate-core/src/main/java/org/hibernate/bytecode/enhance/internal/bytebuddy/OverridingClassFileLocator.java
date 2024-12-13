@@ -11,6 +11,8 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import net.bytebuddy.dynamic.ClassFileLocator;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * Allows wrapping another ClassFileLocator to add the ability to define
@@ -20,7 +22,7 @@ public final class OverridingClassFileLocator implements ClassFileLocator {
 
 	private final ConcurrentHashMap<String, Resolution> registeredResolutions = new ConcurrentHashMap<>();
 	private final ClassFileLocator parent;
-
+	private static final CoreMessageLogger log = CoreLogging.messageLogger(OverridingClassFileLocator.class);
 	public OverridingClassFileLocator(final ClassFileLocator parent) {
 		this.parent = Objects.requireNonNull( parent );
 	}
@@ -29,9 +31,11 @@ public final class OverridingClassFileLocator implements ClassFileLocator {
 	public Resolution locate(final String name) throws IOException {
 		final Resolution resolution = registeredResolutions.get( name );
 		if ( resolution != null ) {
+			log.trace(String.format("OverridingClassFileLocator.registeredResolutions cache hit Resolution for class %s", name));
 			return resolution;
 		}
 		else {
+			log.trace(String.format("OverridingClassFileLocator.registeredResolutions cache miss Resolution for class %s", name));
 			return parent.locate( name );
 		}
 	}

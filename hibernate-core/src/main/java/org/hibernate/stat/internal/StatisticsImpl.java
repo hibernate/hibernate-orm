@@ -724,8 +724,6 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public void queryCacheHit(String hql, String regionName) {
-		log.tracef( "Statistics#queryCacheHit( `%s`, `%s` )", hql, regionName );
-
 		queryCacheHitCount.increment();
 
 		getQueryRegionStats( regionName ).incrementHitCount();
@@ -737,8 +735,6 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public void queryCacheMiss(String hql, String regionName) {
-		log.tracef( "Statistics#queryCacheMiss( `%s`, `%s` )", hql, regionName );
-
 		queryCacheMissCount.increment();
 
 		getQueryRegionStats( regionName ).incrementMissCount();
@@ -750,8 +746,6 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public void queryCachePut(String hql, String regionName) {
-		log.tracef( "Statistics#queryCachePut( `%s`, `%s` )", hql, regionName );
-
 		queryCachePutCount.increment();
 
 		getQueryRegionStats( regionName ).incrementPutCount();

@@ -61,8 +61,8 @@ public class MultiTenantConnectionProviderInitiator implements StandardServiceIn
 			return null;
 		}
 
-		if ( configValue instanceof MultiTenantConnectionProvider<?> ) {
-			return (MultiTenantConnectionProvider<?>) configValue;
+		if ( configValue instanceof MultiTenantConnectionProvider<?> multiTenantConnectionProvider ) {
+			return multiTenantConnectionProvider;
 		}
 		else {
 			final Class<MultiTenantConnectionProvider<?>> implClass;

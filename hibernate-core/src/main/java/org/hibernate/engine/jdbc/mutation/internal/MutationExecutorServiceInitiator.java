@@ -41,8 +41,8 @@ public class MutationExecutorServiceInitiator implements StandardServiceInitiato
 			return createStandardService( configurationValues, registry );
 		}
 
-		if ( custom instanceof MutationExecutorService ) {
-			return (MutationExecutorService) custom;
+		if ( custom instanceof MutationExecutorService mutationExecutorService ) {
+			return mutationExecutorService;
 		}
 
 		final Class<? extends MutationExecutorService> customImplClass;

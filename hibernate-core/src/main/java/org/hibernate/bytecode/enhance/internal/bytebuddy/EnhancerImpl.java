@@ -132,7 +132,6 @@ public class EnhancerImpl implements Enhancer {
 		}
 		finally {
 			typePool.deregisterClassNameAndBytes( safeClassName );
-			typePool.clear();
 		}
 	}
 

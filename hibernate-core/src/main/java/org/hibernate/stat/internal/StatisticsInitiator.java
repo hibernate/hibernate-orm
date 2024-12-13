@@ -7,7 +7,6 @@ package org.hibernate.stat.internal;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceInitiator;
@@ -41,29 +40,18 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 		final Object configValue =
 				context.getServiceRegistry().requireService( ConfigurationService.class )
 						.getSettings().get( STATS_BUILDER );
-		return initiateServiceInternal( context.getSessionFactory(), configValue, context.getServiceRegistry() );
-	}
-
-	private StatisticsImplementor initiateServiceInternal(
-			SessionFactoryImplementor sessionFactory,
-			@Nullable Object configValue,
-			ServiceRegistryImplementor registry) {
-
-		final StatisticsFactory statisticsFactory = statisticsFactory( configValue, registry );
-		final StatisticsImplementor statistics =
-				statisticsFactory == null
-						? new StatisticsImpl( sessionFactory )  // default impl
-						: statisticsFactory.buildStatistics( sessionFactory );
-		final boolean enabled = sessionFactory.getSessionFactoryOptions().isStatisticsEnabled();
+		final StatisticsFactory statisticsFactory = statisticsFactory( configValue, context.getServiceRegistry() );
+		final StatisticsImplementor statistics = statisticsFactory.buildStatistics( context.getSessionFactory() );
+		final boolean enabled = context.getSessionFactoryOptions().isStatisticsEnabled();
 		statistics.setStatisticsEnabled( enabled );
 		LOG.debugf( "Statistics initialized [enabled=%s]", enabled );
 		return statistics;
 	}
 
-	private static @Nullable StatisticsFactory statisticsFactory(
+	private static StatisticsFactory statisticsFactory(
 			@Nullable Object configValue, ServiceRegistryImplementor registry) {
 		if ( configValue == null ) {
-			return null; //We'll use the default
+			return StatisticsImpl::new; // Use the default implementation
 		}
 		else if ( configValue instanceof StatisticsFactory factory ) {
 			return factory;

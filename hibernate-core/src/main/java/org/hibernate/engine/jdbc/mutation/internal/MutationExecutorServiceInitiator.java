@@ -38,7 +38,7 @@ public class MutationExecutorServiceInitiator implements StandardServiceInitiato
 		final Object custom = configurationValues.get( EXECUTOR_KEY );
 
 		if ( custom == null ) {
-			return createStandardService( configurationValues, registry );
+			return createStandardService( configurationValues );
 		}
 
 		if ( custom instanceof MutationExecutorService mutationExecutorService ) {
@@ -51,8 +51,7 @@ public class MutationExecutorServiceInitiator implements StandardServiceInitiato
 			customImplClass = (Class<? extends MutationExecutorService>) custom;
 		}
 		else {
-			final ClassLoaderService classLoaderService = registry.requireService( ClassLoaderService.class );
-			customImplClass = classLoaderService.classForName( custom.toString() );
+			customImplClass = registry.requireService( ClassLoaderService.class ).classForName( custom.toString() );
 		}
 
 		try {
@@ -66,7 +65,7 @@ public class MutationExecutorServiceInitiator implements StandardServiceInitiato
 		}
 	}
 
-	private MutationExecutorService createStandardService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
+	private MutationExecutorService createStandardService(Map<String, Object> configurationValues) {
 		return new StandardMutationExecutorService( configurationValues );
 	}
 }

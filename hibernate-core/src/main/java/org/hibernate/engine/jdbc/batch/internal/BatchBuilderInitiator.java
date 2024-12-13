@@ -44,8 +44,8 @@ public class BatchBuilderInitiator implements StandardServiceInitiator<BatchBuil
 			);
 		}
 
-		if ( builder instanceof BatchBuilder ) {
-			return (BatchBuilder) builder;
+		if ( builder instanceof BatchBuilder batchBuilder ) {
+			return batchBuilder;
 		}
 
 		final String builderClassName = builder.toString();

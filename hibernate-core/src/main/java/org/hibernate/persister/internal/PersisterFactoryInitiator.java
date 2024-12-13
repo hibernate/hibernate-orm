@@ -32,8 +32,8 @@ public class PersisterFactoryInitiator implements StandardServiceInitiator<Persi
 			return new PersisterFactoryImpl();
 		}
 
-		if ( customImpl instanceof PersisterFactory ) {
-			return (PersisterFactory) customImpl;
+		if ( customImpl instanceof PersisterFactory persisterFactory ) {
+			return persisterFactory;
 		}
 
 		@SuppressWarnings("unchecked")

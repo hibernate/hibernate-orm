@@ -1295,8 +1295,8 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		// iterate over the *old* list
 		for ( E old : oldElements ) {
 			if ( !currentSaving.contains( old ) ) {
-				final Object oldId = ForeignKeys.getEntityIdentifierIfNotUnsaved( entityName, old, session );
-				if ( !currentIds.contains( useIdDirect ? oldId : new TypedValue( idType, oldId ) ) ) {
+				final Object oldId = ForeignKeys.getEntityIdentifier( entityName, old, session );
+				if ( oldId != null && !currentIds.contains( useIdDirect ? oldId : new TypedValue( idType, oldId ) ) ) {
 					res.add( old );
 				}
 			}

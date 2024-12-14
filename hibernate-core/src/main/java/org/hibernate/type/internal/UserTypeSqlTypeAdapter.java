@@ -24,7 +24,7 @@ import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.UserType;
 
 /**
- * Adapts UserType to the JdbcType contract
+ * Adapts {@link UserType} to the {@link JdbcType} contract
  *
  * @author Steve Ebersole
  */

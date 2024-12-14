@@ -18,9 +18,9 @@ import org.hibernate.HibernateException;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -219,10 +219,10 @@ public class EnumType<T extends Enum<T>>
 	}
 
 	@Override
-	public T nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+	public T nullSafeGet(ResultSet rs, int position, WrapperOptions options)
 			throws SQLException {
 		verifyConfigured();
-		return jdbcType.getExtractor( enumJavaType ).extract( rs, position, session );
+		return jdbcType.getExtractor( enumJavaType ).extract( rs, position, options );
 	}
 
 	private void verifyConfigured() {
@@ -232,10 +232,10 @@ public class EnumType<T extends Enum<T>>
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, T value, int index, SharedSessionContractImplementor session)
+	public void nullSafeSet(PreparedStatement st, T value, int index, WrapperOptions options)
 			throws SQLException {
 		verifyConfigured();
-		jdbcType.getBinder( enumJavaType ).bind( st, value, index, session );
+		jdbcType.getBinder( enumJavaType ).bind( st, value, index, options );
 	}
 
 	@Override

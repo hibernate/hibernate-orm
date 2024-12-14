@@ -4,8 +4,8 @@
  */
 package org.hibernate.orm.test.type.contributor.usertype.hhh18787;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.UserType;
 
 import java.io.Serializable;
@@ -45,16 +45,16 @@ public class CustomDataType implements UserType<CustomData[]> {
 	}
 
 	@Override
-	public CustomData[] nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session,
-									Object owner) throws SQLException {
+	public CustomData[] nullSafeGet(ResultSet rs, int position, WrapperOptions options)
+			throws SQLException {
 
 		final var customDataStr = rs.getString(position);
 		return rs.wasNull() ? new CustomData[0] : parseDataFromString(customDataStr);
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, CustomData[] value, int index,
-							SharedSessionContractImplementor session) throws SQLException {
+	public void nullSafeSet(PreparedStatement st, CustomData[] value, int index, WrapperOptions options)
+			throws SQLException {
 
 		if (value == null || value.length == 0) {
 			st.setNull(index, Types.VARCHAR);

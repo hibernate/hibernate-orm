@@ -10,7 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -113,9 +113,9 @@ public class StaticUserTypeSupport<T> implements UserType<T> {
 	}
 
 	@Override
-	public T nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+	public T nullSafeGet(ResultSet rs, int position, WrapperOptions options)
 			throws SQLException {
-		final Object extracted = jdbcValueExtractor.extract( rs, position, session );
+		final Object extracted = jdbcValueExtractor.extract( rs, position, options );
 
 		if ( valueConverter != null ) {
 			return valueConverter.toDomainValue( extracted );
@@ -126,7 +126,7 @@ public class StaticUserTypeSupport<T> implements UserType<T> {
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, T value, int index, SharedSessionContractImplementor session)
+	public void nullSafeSet(PreparedStatement st, T value, int index, WrapperOptions options)
 			throws SQLException {
 		final Object valueToBind;
 		if ( valueConverter != null ) {
@@ -136,7 +136,7 @@ public class StaticUserTypeSupport<T> implements UserType<T> {
 			valueToBind = value;
 		}
 
-		jdbcValueBinder.bind( st, valueToBind, index, session );
+		jdbcValueBinder.bind( st, valueToBind, index, options );
 	}
 
 	@Override

@@ -9,8 +9,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.orm.test.annotations.enumerated.enums.FirstLetter;
+import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
  * @author Janario Oliveira
@@ -23,7 +23,7 @@ public class FirstLetterType extends org.hibernate.type.EnumType<FirstLetter> {
 	}
 
 	@Override
-	public FirstLetter nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+	public FirstLetter nullSafeGet(ResultSet rs, int position, WrapperOptions options)
 			throws SQLException {
 		String persistValue = (String) rs.getObject( position );
 		if ( rs.wasNull() ) {
@@ -33,7 +33,7 @@ public class FirstLetterType extends org.hibernate.type.EnumType<FirstLetter> {
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, FirstLetter value, int index, SharedSessionContractImplementor session)
+	public void nullSafeSet(PreparedStatement st, FirstLetter value, int index, WrapperOptions options)
 			throws SQLException {
 		if ( value == null ) {
 			st.setNull( index, getSqlType() );

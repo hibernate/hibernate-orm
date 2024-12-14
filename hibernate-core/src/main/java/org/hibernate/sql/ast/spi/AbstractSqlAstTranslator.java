@@ -32,7 +32,6 @@ import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.spi.LazySessionWrapperOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.FilterJdbcParameter;
 import org.hibernate.internal.util.MathHelper;
@@ -330,7 +329,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	// See #visitCteContainer for details about the usage.
 	private int withClauseRecursiveIndex = -1;
 	private transient FunctionRenderer castFunction;
-	private transient LazySessionWrapperOptions lazySessionWrapperOptions;
 	private transient BasicType<Integer> integerType;
 	private transient BasicType<String> stringType;
 	private transient BasicType<Boolean> booleanType;
@@ -373,10 +371,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected WrapperOptions getWrapperOptions() {
-		if ( lazySessionWrapperOptions == null ) {
-			lazySessionWrapperOptions = new LazySessionWrapperOptions( sessionFactory );
-		}
-		return lazySessionWrapperOptions;
+		return sessionFactory.getWrapperOptions();
 	}
 
 	public BasicType<Integer> getIntegerType() {
@@ -419,10 +414,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void cleanup() {
-		if ( lazySessionWrapperOptions != null ) {
-			lazySessionWrapperOptions.cleanup();
-			lazySessionWrapperOptions = null;
-		}
 		this.jdbcParameterBindings = null;
 		this.lockOptions = null;
 		this.limit = null;

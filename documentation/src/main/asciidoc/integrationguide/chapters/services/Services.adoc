@@ -145,7 +145,7 @@ And just as important, it does so in a centralized, swappable manner.
 The specific capabilities exposed on this `Service` include:
 
 * Locating `Class` references by name. This includes application classes as well as _integration_ classes.
-* Locating resources (properties files, xml files, etc.) as _classpath resources_.
+* Locating resources (properties files, xml files, and so on) as _classpath resources_.
 * Interacting with `java.util.ServiceLoader`, Java's own `Service` provider discovery mechanism.
 
 ===== `IntegratorService`

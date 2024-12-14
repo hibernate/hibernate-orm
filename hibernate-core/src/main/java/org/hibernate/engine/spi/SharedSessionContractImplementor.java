@@ -16,6 +16,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.StatelessSession;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.query.Query;
 import org.hibernate.SharedSessionContract;
@@ -85,7 +86,7 @@ public interface SharedSessionContractImplementor
 	/**
 	 * Obtain the {@linkplain SessionFactoryImplementor factory} which created this session.
 	 */
-	@Override
+//	@Override
 	default SessionFactoryImplementor getSessionFactory() {
 		return getFactory();
 	}
@@ -96,6 +97,14 @@ public interface SharedSessionContractImplementor
 	@Override
 	default TypeConfiguration getTypeConfiguration() {
 		return getFactory().getTypeConfiguration();
+	}
+
+	/**
+	 * Obtain the {@link Dialect}.
+	 */
+	@Override
+	default Dialect getDialect() {
+		return getSessionFactory().getJdbcServices().getDialect();
 	}
 
 	/**

@@ -223,7 +223,7 @@ public class StructJdbcType implements org.hibernate.type.descriptor.jdbc.Struct
 						options
 				);
 				//noinspection unchecked
-				return (X) instantiate( embeddableMappingType, attributeValues, options.getSessionFactory() );
+				return (X) instantiate( embeddableMappingType, attributeValues );
 			}
 		};
 	}
@@ -243,13 +243,7 @@ public class StructJdbcType implements org.hibernate.type.descriptor.jdbc.Struct
 		);
 		int jdbcIndex = 0;
 		for ( int i = 0; i < size; i++ ) {
-			final int attributeIndex;
-			if ( orderMapping == null ) {
-				attributeIndex = i;
-			}
-			else {
-				attributeIndex = orderMapping[i];
-			}
+			final int attributeIndex = orderMapping == null ? i : orderMapping[i];
 			jdbcIndex += injectAttributeValue(
 					getEmbeddedPart( embeddableMappingType, attributeIndex ),
 					attributeValues,
@@ -272,22 +266,20 @@ public class StructJdbcType implements org.hibernate.type.descriptor.jdbc.Struct
 		final MappingType mappedType = modelPart.getMappedType();
 		final int jdbcValueCount;
 		final Object rawJdbcValue = rawJdbcValues[jdbcIndex];
-		if ( mappedType instanceof EmbeddableMappingType ) {
-			final EmbeddableMappingType embeddableMappingType = (EmbeddableMappingType) mappedType;
+		if ( mappedType instanceof EmbeddableMappingType embeddableMappingType ) {
 			if ( embeddableMappingType.getAggregateMapping() != null ) {
 				jdbcValueCount = 1;
 				if ( rawJdbcValue == null ) {
 					attributeValues.setAttributeValue( attributeIndex, null );
 				}
 				else {
-					final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) embeddableMappingType.getAggregateMapping()
-							.getJdbcMapping()
-							.getJdbcType();
+					final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType)
+							embeddableMappingType.getAggregateMapping().getJdbcMapping().getJdbcType();
 					final StructAttributeValues subValues;
-					if ( aggregateJdbcType instanceof StructJdbcType ) {
+					if ( aggregateJdbcType instanceof StructJdbcType structJdbcType ) {
 						subValues = getAttributeValues(
 								embeddableMappingType,
-								( (StructJdbcType) aggregateJdbcType ).orderMapping,
+								structJdbcType.orderMapping,
 								( (Struct) rawJdbcValue ).getAttributes(),
 								options
 						);
@@ -301,7 +293,7 @@ public class StructJdbcType implements org.hibernate.type.descriptor.jdbc.Struct
 					}
 					attributeValues.setAttributeValue(
 							attributeIndex,
-							instantiate( embeddableMappingType, subValues, options.getSessionFactory() )
+							instantiate( embeddableMappingType, subValues )
 					);
 				}
 			}
@@ -312,7 +304,7 @@ public class StructJdbcType implements org.hibernate.type.descriptor.jdbc.Struct
 				final StructAttributeValues subValues = getAttributeValues( embeddableMappingType, null, jdbcValues, options );
 				attributeValues.setAttributeValue(
 						attributeIndex,
-						instantiate( embeddableMappingType, subValues, options.getSessionFactory() )
+						instantiate( embeddableMappingType, subValues )
 				);
 			}
 		}
@@ -369,7 +361,7 @@ public class StructJdbcType implements org.hibernate.type.descriptor.jdbc.Struct
 											),
 											options
 									);
-									newArray[j] = instantiate( subEmbeddableMappingType, subValues, options.getSessionFactory() );
+									newArray[j] = instantiate( subEmbeddableMappingType, subValues );
 								}
 								jdbcValue = jdbcMapping.getJdbcJavaType().wrap( newArray, options );
 								break;
@@ -396,25 +388,18 @@ public class StructJdbcType implements org.hibernate.type.descriptor.jdbc.Struct
 		final int numberOfAttributeMappings = embeddableMappingType.getNumberOfAttributeMappings();
 		for ( int i = 0; i < numberOfAttributeMappings + ( embeddableMappingType.isPolymorphic() ? 1 : 0 ); i++ ) {
 			final ValuedModelPart attributeMapping = getEmbeddedPart( embeddableMappingType, i );
-			if ( attributeMapping instanceof ToOneAttributeMapping ) {
-				final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
+			if ( attributeMapping instanceof ToOneAttributeMapping toOneAttributeMapping ) {
 				if ( toOneAttributeMapping.getSideNature() == ForeignKeyDescriptor.Nature.TARGET ) {
 					continue;
 				}
-				final ForeignKeyDescriptor foreignKeyDescriptor = toOneAttributeMapping.getForeignKeyDescriptor();
-				final ValuedModelPart keyPart = foreignKeyDescriptor.getKeyPart();
+				final ValuedModelPart keyPart = toOneAttributeMapping.getForeignKeyDescriptor().getKeyPart();
 				if ( keyPart instanceof BasicValuedMapping ) {
 					wrapRawJdbcValue( keyPart.getSingleJdbcMapping(), jdbcValues, jdbcIndex, options );
 					jdbcIndex++;
 				}
-				else if ( keyPart instanceof EmbeddableValuedModelPart ) {
-					final EmbeddableMappingType mappingType = ( (EmbeddableValuedModelPart) keyPart ).getEmbeddableTypeDescriptor();
-					jdbcIndex = wrapRawJdbcValues(
-							mappingType,
-							jdbcValues,
-							jdbcIndex,
-							options
-					);
+				else if ( keyPart instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
+					final EmbeddableMappingType mappingType = embeddableValuedModelPart.getEmbeddableTypeDescriptor();
+					jdbcIndex = wrapRawJdbcValues( mappingType, jdbcValues, jdbcIndex, options );
 				}
 				else {
 					throw new UnsupportedOperationException( "Unsupported foreign key part: " + keyPart );
@@ -423,30 +408,27 @@ public class StructJdbcType implements org.hibernate.type.descriptor.jdbc.Struct
 			else if ( attributeMapping instanceof PluralAttributeMapping ) {
 				continue;
 			}
-			else if ( attributeMapping instanceof DiscriminatedAssociationAttributeMapping ) {
-				final DiscriminatedAssociationAttributeMapping discriminatedAssociationAttributeMapping = (DiscriminatedAssociationAttributeMapping) attributeMapping;
+			else if ( attributeMapping instanceof DiscriminatedAssociationAttributeMapping discriminatedMapping ) {
 				wrapRawJdbcValue(
-						discriminatedAssociationAttributeMapping.getDiscriminatorPart().getSingleJdbcMapping(),
+						discriminatedMapping.getDiscriminatorPart().getSingleJdbcMapping(),
 						jdbcValues,
 						jdbcIndex,
 						options
 				);
 				jdbcIndex++;
 				wrapRawJdbcValue(
-						discriminatedAssociationAttributeMapping.getKeyPart().getSingleJdbcMapping(),
+						discriminatedMapping.getKeyPart().getSingleJdbcMapping(),
 						jdbcValues,
 						jdbcIndex,
 						options
 				);
 				jdbcIndex++;
 			}
-			else if ( attributeMapping instanceof EmbeddableValuedModelPart ) {
-				final EmbeddableValuedModelPart embeddableValuedModelPart = (EmbeddableValuedModelPart) attributeMapping;
+			else if ( attributeMapping instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
 				final EmbeddableMappingType embeddableType = embeddableValuedModelPart.getMappedType();
 				if ( embeddableType.getAggregateMapping() != null ) {
-					final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) embeddableType.getAggregateMapping()
-							.getJdbcMapping()
-							.getJdbcType();
+					final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType)
+							embeddableType.getAggregateMapping().getJdbcMapping().getJdbcType();
 					final Object rawJdbcValue = jdbcValues[jdbcIndex];
 					jdbcValues[jdbcIndex] = aggregateJdbcType.extractJdbcValues( rawJdbcValue, options );
 					jdbcIndex++;
@@ -519,7 +501,7 @@ public class StructJdbcType implements org.hibernate.type.descriptor.jdbc.Struct
 									),
 									options
 							);
-							newArray[j] = instantiate( subEmbeddableMappingType, subValues, options.getSessionFactory() );
+							newArray[j] = instantiate( subEmbeddableMappingType, subValues );
 						}
 						jdbcValues[jdbcIndex] = jdbcMapping.getJdbcJavaType().wrap( newArray, options );
 						break;

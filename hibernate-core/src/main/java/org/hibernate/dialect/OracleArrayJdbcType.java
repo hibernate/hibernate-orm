@@ -147,8 +147,7 @@ public class OracleArrayJdbcType extends ArrayJdbcType implements SqlTypedJdbcTy
 	}
 
 	static String getTypeName(WrapperOptions options, BasicPluralJavaType<?> containerJavaType, ArrayJdbcType arrayJdbcType) {
-		final Dialect dialect = options.getSessionFactory().getJdbcServices().getDialect();
-		return getTypeName( containerJavaType.getElementJavaType(), arrayJdbcType.getElementJdbcType(), dialect );
+		return getTypeName( containerJavaType.getElementJavaType(), arrayJdbcType.getElementJdbcType(), options.getDialect() );
 	}
 
 	static String getTypeName(BasicType<?> elementType, Dialect dialect) {

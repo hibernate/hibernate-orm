@@ -201,10 +201,7 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 	@Override
 	public Object getIdentifier(Object entity, MergeContext mergeContext) {
 		if ( hasContainingClass() ) {
-			final Object id = identifierValueMapper.getRepresentationStrategy().getInstantiator().instantiate(
-					null,
-					null//sessionFactory
-			);
+			final Object id = identifierValueMapper.getRepresentationStrategy().getInstantiator().instantiate( null );
 			final EmbeddableMappingType embeddableTypeDescriptor = getEmbeddableTypeDescriptor();
 			final Object[] propertyValues = new Object[embeddableTypeDescriptor.getNumberOfAttributeMappings()];
 			for ( int i = 0; i < propertyValues.length; i++ ) {

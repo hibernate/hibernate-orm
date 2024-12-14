@@ -25,12 +25,12 @@ import org.hibernate.id.insert.InsertReturningDelegate;
 import org.hibernate.id.insert.UniqueKeySelectingDelegate;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.EntityTableMapping;
-import org.hibernate.pretty.MessageHelper;
 import org.hibernate.query.results.internal.TableGroupImpl;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.spi.NavigablePath;
@@ -51,9 +51,9 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.sql.results.spi.RowReader;
-import org.hibernate.type.descriptor.WrapperOptions;
 
 import static org.hibernate.generator.internal.NaturalIdHelper.getNaturalIdPropertyNames;
+import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
  * Factory and helper methods for {@link GeneratedValuesMutationDelegate} framework.
@@ -70,7 +70,7 @@ public class GeneratedValuesHelper {
 	 *
 	 * @param resultSet The result set from which to extract the generated values
 	 * @param persister The entity type which we're reading the generated values for
-	 * @param wrapperOptions The session
+	 * @param session The session
 	 *
 	 * @return The generated values
 	 *
@@ -81,7 +81,7 @@ public class GeneratedValuesHelper {
 			ResultSet resultSet,
 			EntityPersister persister,
 			EventType timing,
-			WrapperOptions wrapperOptions) throws SQLException {
+			SharedSessionContractImplementor session) throws SQLException {
 		if ( resultSet == null ) {
 			return null;
 		}
@@ -98,19 +98,11 @@ public class GeneratedValuesHelper {
 		}
 
 		final GeneratedValuesImpl generatedValues = new GeneratedValuesImpl( generatedProperties );
-		final Object[] results = readGeneratedValues(
-				resultSet,
-				persister,
-				mappingProducer,
-				wrapperOptions.getSession()
-		);
+		final Object[] results = readGeneratedValues( resultSet, persister, mappingProducer, session );
 
 		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf(
-					"Extracted generated values %s: %s",
-					MessageHelper.infoString( persister ),
-					results
-			);
+			LOG.debug( "Extracted generated values for entity "
+							+ infoString( persister ) + ": " + ArrayHelper.toString(results) );
 		}
 
 		for ( int i = 0; i < results.length; i++ ) {
@@ -187,10 +179,8 @@ public class GeneratedValuesHelper {
 			}
 		};
 
-		final JdbcValuesSourceProcessingStateStandardImpl valuesProcessingState = new JdbcValuesSourceProcessingStateStandardImpl(
-				executionContext,
-				processingOptions
-		);
+		final JdbcValuesSourceProcessingStateStandardImpl valuesProcessingState =
+				new JdbcValuesSourceProcessingStateStandardImpl( executionContext, processingOptions );
 
 		final RowReader<Object[]> rowReader = ResultsHelper.createRowReader(
 				session.getFactory(),

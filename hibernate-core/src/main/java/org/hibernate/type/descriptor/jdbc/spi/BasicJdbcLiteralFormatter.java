@@ -29,7 +29,7 @@ public abstract class BasicJdbcLiteralFormatter<T> extends AbstractJdbcLiteralFo
 		else {
 			final JavaType<T> javaType = getJavaType();
 			if ( !javaType.isInstance( value ) ) {
-				final T coerced = javaType.coerce( value, () -> options.getSessionFactory().getTypeConfiguration() );
+				final T coerced = javaType.coerce( value, options::getTypeConfiguration );
 				if ( unwrapType.isInstance( coerced ) ) {
 					return (X) coerced;
 				}

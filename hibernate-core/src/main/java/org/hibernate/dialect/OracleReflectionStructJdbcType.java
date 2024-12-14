@@ -68,13 +68,8 @@ public class OracleReflectionStructJdbcType extends OracleBaseStructJdbcType {
 			return rawJdbcValue;
 		}
 		try {
-			return rawJdbcTransformer.invoke(
-					rawJdbcValue,
-					options.getSession()
-							.getJdbcCoordinator()
-							.getLogicalConnection()
-							.getPhysicalConnection()
-			);
+			return rawJdbcTransformer.invoke( rawJdbcValue,
+					options.getSession().getJdbcCoordinator().getLogicalConnection().getPhysicalConnection() );
 		}
 		catch (Exception e) {
 			throw new HibernateException( "Could not transform the raw jdbc value", e );

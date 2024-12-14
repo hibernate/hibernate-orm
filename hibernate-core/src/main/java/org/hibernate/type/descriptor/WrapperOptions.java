@@ -8,6 +8,8 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.format.FormatMapper;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.TimeZone;
 
@@ -31,7 +33,9 @@ public interface WrapperOptions {
 	/**
 	 * Access to the current session factory.
 	 */
-	SessionFactoryImplementor getSessionFactory();
+	default SessionFactoryImplementor getSessionFactory() {
+		return getSession().getSessionFactory();
+	}
 
 	/**
 	 * Access to the current dialect.
@@ -99,4 +103,27 @@ public interface WrapperOptions {
 	default TimeZone getJdbcTimeZone() {
 		return getSessionFactory().getSessionFactoryOptions().getJdbcTimeZone();
 	}
+
+	/**
+	 * Obtain the {@link TypeConfiguration}.
+	 *
+	 * @since 7.0
+	 */
+	default TypeConfiguration getTypeConfiguration() {
+		return getSessionFactory().getTypeConfiguration();
+	}
+
+	/**
+	 * Obtain the XML {@link FormatMapper}.
+	 *
+	 * @since 7.0
+	 */
+	FormatMapper getXmlFormatMapper();
+
+	/**
+	 * Obtain the JSON {@link FormatMapper}.
+	 *
+	 * @since 7.0
+	 */
+	FormatMapper getJsonFormatMapper();
 }

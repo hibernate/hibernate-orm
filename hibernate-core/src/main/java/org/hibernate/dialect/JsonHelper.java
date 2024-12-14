@@ -356,7 +356,7 @@ public class JsonHelper {
 					options
 			);
 			//noinspection unchecked
-			return (X) instantiate( embeddableMappingType, attributeValues, options.getSessionFactory() );
+			return (X) instantiate( embeddableMappingType, attributeValues );
 		}
 		//noinspection unchecked
 		return (X) values;
@@ -378,8 +378,7 @@ public class JsonHelper {
 			jdbcJavaType = elementJavaType;
 		}
 		else {
-			jdbcJavaType = options.getSessionFactory().getTypeConfiguration().getJavaTypeRegistry()
-					.resolveDescriptor( preferredJavaTypeClass );
+			jdbcJavaType = options.getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor( preferredJavaTypeClass );
 		}
 		final CustomArrayList arrayList = new CustomArrayList();
 		final int i = fromArrayString(
@@ -527,7 +526,7 @@ public class JsonHelper {
 										subValues,
 										options
 								);
-								values[selectableIndex] = instantiate( embeddableMappingType, attributeValues, options.getSessionFactory() );
+								values[selectableIndex] = instantiate( embeddableMappingType, attributeValues );
 							}
 							else {
 								values[selectableIndex] = subValues;
@@ -1303,17 +1302,12 @@ public class JsonHelper {
 								subValues,
 								options
 						);
-						final EmbeddableMappingType embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
-						return instantiate( embeddableMappingType, subAttributeValues, options.getSessionFactory() ) ;
+						return instantiate( aggregateJdbcType.getEmbeddableMappingType(), subAttributeValues ) ;
 					}
 					return subValues;
 				}
 
-				return jdbcJavaType.fromEncodedString(
-						string,
-						start,
-						end
-				);
+				return jdbcJavaType.fromEncodedString( string, start, end );
 		}
 	}
 

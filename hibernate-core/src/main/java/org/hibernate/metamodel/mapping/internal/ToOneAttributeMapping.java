@@ -2461,7 +2461,7 @@ public class ToOneAttributeMapping
 			assert getAssociatedEntityMappingType()
 					.getRepresentationStrategy()
 					.getInstantiator()
-					.isInstance( domainValue, session.getSessionFactory() );
+					.isInstance( domainValue );
 			return extractAttributePathValue( domainValue, getAssociatedEntityMappingType(), referencedPropertyName );
 		}
 

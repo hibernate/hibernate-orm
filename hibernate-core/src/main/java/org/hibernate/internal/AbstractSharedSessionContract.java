@@ -119,6 +119,8 @@ import jakarta.persistence.criteria.CriteriaUpdate;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
+import org.hibernate.type.format.FormatMapper;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.lang.Boolean.TRUE;
 import static org.hibernate.internal.util.ReflectHelper.isClass;
@@ -726,6 +728,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public Dialect getDialect() {
 		return fastSessionServices.dialect;
+	}
+
+	@Override
+	public TypeConfiguration getTypeConfiguration() {
+		return fastSessionServices.typeConfiguration;
 	}
 
 	@Override
@@ -1568,6 +1575,16 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		checkOpen();
 		pulseTransactionCoordinator();
 		getLoadQueryInfluencers().disableFilter( filterName );
+	}
+
+	@Override
+	public FormatMapper getXmlFormatMapper() {
+		return fastSessionServices.getXmlFormatMapper();
+	}
+
+	@Override
+	public FormatMapper getJsonFormatMapper() {
+		return fastSessionServices.getJsonFormatMapper();
 	}
 
 	@Serial

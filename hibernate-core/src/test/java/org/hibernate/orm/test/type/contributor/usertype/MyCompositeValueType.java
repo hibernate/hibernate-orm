@@ -8,7 +8,6 @@ import java.io.Serializable;
 import java.util.Objects;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.usertype.CompositeUserType;
 
@@ -22,18 +21,15 @@ public class MyCompositeValueType implements CompositeUserType<MyCompositeValue>
 
 	@Override
 	public Object getPropertyValue(MyCompositeValue component, int property) throws HibernateException {
-		switch ( property ) {
-			case 0:
-				return component.longValue();
-			case 1:
-				return component.stringValue();
-			default:
-				return null;
-		}
+		return switch ( property ) {
+			case 0 -> component.longValue();
+			case 1 -> component.stringValue();
+			default -> null;
+		};
 	}
 
 	@Override
-	public MyCompositeValue instantiate(ValueAccess values, SessionFactoryImplementor sessionFactory) {
+	public MyCompositeValue instantiate(ValueAccess values) {
 		final Long id = values.getValue( 0, Long.class );
 		final String hash = values.getValue( 1, String.class );
 		return new MyCompositeValue( id, hash );

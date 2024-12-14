@@ -48,10 +48,7 @@ public class OracleStructJdbcType extends OracleBaseStructJdbcType {
 		if ( rawJdbcValue.getClass() == TIMESTAMPTZ.class ) {
 			try {
 				return ( (TIMESTAMPTZ) rawJdbcValue ).offsetDateTimeValue(
-						options.getSession()
-								.getJdbcCoordinator()
-								.getLogicalConnection()
-								.getPhysicalConnection()
+						options.getSession().getJdbcCoordinator().getLogicalConnection().getPhysicalConnection()
 				);
 			}
 			catch (Exception e) {

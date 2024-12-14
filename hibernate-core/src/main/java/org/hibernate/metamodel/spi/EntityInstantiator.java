@@ -4,7 +4,6 @@
  */
 package org.hibernate.metamodel.spi;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
  * Contract for instantiating entity values
@@ -13,7 +12,7 @@ public interface EntityInstantiator extends Instantiator {
 	/**
 	 * Create an instance of managed entity
 	 */
-	Object instantiate(SessionFactoryImplementor sessionFactory);
+	Object instantiate();
 
 	/**
 	 * Can this entity be instantiated?

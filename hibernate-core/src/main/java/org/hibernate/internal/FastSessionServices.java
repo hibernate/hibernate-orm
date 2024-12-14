@@ -40,6 +40,7 @@ import org.hibernate.type.format.FormatMapper;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.PessimisticLockScope;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.util.Collections.unmodifiableMap;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_SCOPE;
@@ -136,6 +137,7 @@ public final class FastSessionServices {
 	// Expose certain fields outside this package
 	// (but they are still considered internal)
 	public final Dialect dialect;
+	public final TypeConfiguration typeConfiguration;
 	public final JdbcServices jdbcServices;
 	public final boolean useStreamForLobBinding;
 	public final int preferredSqlTypeCodeForBoolean;
@@ -197,6 +199,7 @@ public final class FastSessionServices {
 
 		//Other highly useful constants:
 		this.dialect = jdbcServices.getJdbcEnvironment().getDialect();
+		this.typeConfiguration = sessionFactory.getTypeConfiguration();
 		this.disallowOutOfTransactionUpdateOperations = !sessionFactoryOptions.isAllowOutOfTransactionUpdateOperations();
 		this.useStreamForLobBinding = dialect.useInputStreamToInsertBlob();
 		this.preferredSqlTypeCodeForBoolean = sessionFactoryOptions.getPreferredSqlTypeCodeForBoolean();

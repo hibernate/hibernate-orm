@@ -10,7 +10,6 @@ import java.util.Set;
 
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.spi.EntityInstantiator;
 
@@ -36,7 +35,7 @@ public class EntityInstantiatorDynamicMap
 	}
 
 	@Override
-	public Object instantiate(SessionFactoryImplementor sessionFactory) {
+	public Object instantiate() {
 		return generateDataMap();
 	}
 

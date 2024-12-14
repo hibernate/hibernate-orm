@@ -61,9 +61,9 @@ public class XmlArrayJdbcType extends ArrayJdbcType {
 			return null;
 		}
 		if ( javaType.getJavaType() == SQLXML.class ) {
-			SQLXML sqlxml = options.getSession().getJdbcCoordinator().getLogicalConnection()
-					.getPhysicalConnection()
-					.createSQLXML();
+			final SQLXML sqlxml =
+					options.getSession().getJdbcCoordinator().getLogicalConnection().getPhysicalConnection()
+							.createSQLXML();
 			sqlxml.setString( string );
 			//noinspection unchecked
 			return (X) sqlxml;

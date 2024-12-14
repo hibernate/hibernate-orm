@@ -10,7 +10,6 @@ import java.time.ZonedDateTime;
 
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.type.SqlTypes;
 
@@ -21,17 +20,15 @@ public class ZonedDateTimeCompositeUserType extends AbstractTimeZoneStorageCompo
 
 	@Override
 	public Object getPropertyValue(ZonedDateTime component, int property) throws HibernateException {
-		switch ( property ) {
-			case 0:
-				return component.toInstant();
-			case 1:
-				return component.getOffset();
-		}
-		return null;
+		return switch ( property ) {
+			case 0 -> component.toInstant();
+			case 1 -> component.getOffset();
+			default -> null;
+		};
 	}
 
 	@Override
-	public ZonedDateTime instantiate(ValueAccess values, SessionFactoryImplementor sessionFactory) {
+	public ZonedDateTime instantiate(ValueAccess values) {
 		final Instant instant = values.getValue( 0, Instant.class );
 		final ZoneOffset zoneOffset = values.getValue( 1, ZoneOffset.class );
 		return instant == null || zoneOffset == null ? null : ZonedDateTime.ofInstant( instant, zoneOffset );

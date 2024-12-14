@@ -5,7 +5,6 @@
 package org.hibernate.metamodel.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
  * Strategy for instantiating a managed type
@@ -19,9 +18,10 @@ public interface Instantiator {
 	 * instance of managed structure
 	 * @see Class#isInstance
 	 */
-	boolean isInstance(Object object, SessionFactoryImplementor sessionFactory);
+	boolean isInstance(Object object);
 
 	/**
 	 * @see Class#equals
 	 */
-	boolean isSameClass(Object object, SessionFactoryImplementor sessionFactory);}
+	boolean isSameClass(Object object);
+}

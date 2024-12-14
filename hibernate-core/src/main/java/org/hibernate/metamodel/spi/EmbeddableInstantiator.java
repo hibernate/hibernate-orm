@@ -5,7 +5,6 @@
 package org.hibernate.metamodel.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
  * Contract for instantiating embeddable values.
@@ -21,6 +20,5 @@ public interface EmbeddableInstantiator extends Instantiator {
 	/**
 	 * Create an instance of the embeddable
 	 */
-	Object instantiate(ValueAccess valueAccess, SessionFactoryImplementor sessionFactory);
-
+	Object instantiate(ValueAccess valueAccess);
 }

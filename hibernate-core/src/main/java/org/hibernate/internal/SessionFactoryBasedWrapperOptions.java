@@ -11,8 +11,13 @@ import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.format.FormatMapper;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
+ * An incomplete implementation of {@link WrapperOptions} which is not backed by a session.
+ *
+ * @see SessionFactoryImplementor#getWrapperOptions()
  *
  * @author Christian Beikov
  */
@@ -28,12 +33,7 @@ class SessionFactoryBasedWrapperOptions implements WrapperOptions {
 
 	@Override
 	public SharedSessionContractImplementor getSession() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public SessionFactoryImplementor getSessionFactory() {
-		return factory;
+		throw new UnsupportedOperationException( "No session" );
 	}
 
 	@Override
@@ -59,5 +59,20 @@ class SessionFactoryBasedWrapperOptions implements WrapperOptions {
 	@Override
 	public Dialect getDialect() {
 		return fastSessionServices.dialect;
+	}
+
+	@Override
+	public TypeConfiguration getTypeConfiguration() {
+		return fastSessionServices.typeConfiguration;
+	}
+
+	@Override
+	public FormatMapper getXmlFormatMapper() {
+		return fastSessionServices.getXmlFormatMapper();
+	}
+
+	@Override
+	public FormatMapper getJsonFormatMapper() {
+		return fastSessionServices.getJsonFormatMapper();
 	}
 }

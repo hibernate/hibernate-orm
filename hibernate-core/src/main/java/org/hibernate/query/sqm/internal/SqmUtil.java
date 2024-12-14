@@ -655,7 +655,7 @@ public class SqmUtil {
 		if ( parameterType instanceof EntityIdentifierMapping identifierMapping ) {
 			final EntityMappingType entityMapping = identifierMapping.findContainingEntityMapping();
 			if ( entityMapping.getRepresentationStrategy().getInstantiator()
-					.isInstance( bindValue, session.getFactory() ) ) {
+					.isInstance( bindValue ) ) {
 				bindValue = identifierMapping.getIdentifierIfNotUnsaved( bindValue, session );
 			}
 		}
@@ -664,7 +664,7 @@ public class SqmUtil {
 			final EntityMappingType entityMapping = identifierMapping.findContainingEntityMapping();
 			parameterType = identifierMapping;
 			if ( entityMapping.getRepresentationStrategy().getInstantiator()
-					.isInstance( bindValue, session.getFactory() ) ) {
+					.isInstance( bindValue ) ) {
 				bindValue = identifierMapping.getIdentifierIfNotUnsaved( bindValue, session );
 			}
 		}

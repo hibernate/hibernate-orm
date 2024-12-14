@@ -511,10 +511,9 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 			Object exampleElement,
 			JAXBIntrospector introspector,
 			WrapperOptions wrapperOptions) {
-		final JavaType<Object> elementJavaType = wrapperOptions.getSessionFactory()
-				.getTypeConfiguration()
-				.getJavaTypeRegistry()
-				.findDescriptor( elementClass );
+		final JavaType<Object> elementJavaType =
+				wrapperOptions.getTypeConfiguration().getJavaTypeRegistry()
+						.findDescriptor( elementClass );
 		if ( exampleElement == null && ( elementJavaType == null || JavaTypeHelper.isUnknown( elementJavaType ) ) ) {
 			try {
 				final Constructor<?> declaredConstructor = elementClass.getDeclaredConstructor();

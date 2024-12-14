@@ -7,7 +7,6 @@ package org.hibernate.metamodel.internal;
 import java.lang.reflect.Constructor;
 
 import org.hibernate.InstantiationException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.ValueAccess;
 
@@ -41,7 +40,7 @@ public class EmbeddableInstantiatorPojoIndirecting extends AbstractPojoInstantia
 	}
 
 	@Override
-	public Object instantiate(ValueAccess valuesAccess, SessionFactoryImplementor sessionFactory) {
+	public Object instantiate(ValueAccess valuesAccess) {
 		try {
 			final Object[] originalValues = valuesAccess.getValues();
 			final Object[] values = new Object[originalValues.length];
@@ -63,7 +62,7 @@ public class EmbeddableInstantiatorPojoIndirecting extends AbstractPojoInstantia
 		}
 
 		@Override
-		public Object instantiate(ValueAccess valuesAccess, SessionFactoryImplementor sessionFactory) {
+		public Object instantiate(ValueAccess valuesAccess) {
 			try {
 				final Object[] originalValues = valuesAccess.getValues();
 				final Object[] values = new Object[index.length];

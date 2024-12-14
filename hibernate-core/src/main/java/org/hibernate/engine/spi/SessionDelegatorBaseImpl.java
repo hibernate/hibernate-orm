@@ -70,6 +70,7 @@ import jakarta.persistence.criteria.CriteriaSelect;
 import jakarta.persistence.criteria.CriteriaUpdate;
 import jakarta.persistence.metamodel.Metamodel;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.type.format.FormatMapper;
 
 /**
  * A wrapper class that delegates all method invocations to a delegate instance of
@@ -1199,5 +1200,15 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public TimeZone getJdbcTimeZone() {
 		return delegate.getJdbcTimeZone();
+	}
+
+	@Override
+	public FormatMapper getJsonFormatMapper() {
+		return delegate.getJsonFormatMapper();
+	}
+
+	@Override
+	public FormatMapper getXmlFormatMapper() {
+		return delegate.getXmlFormatMapper();
 	}
 }

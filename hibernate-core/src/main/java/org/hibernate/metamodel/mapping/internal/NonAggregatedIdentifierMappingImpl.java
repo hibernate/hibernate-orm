@@ -278,10 +278,7 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 					propertyValues[i] = o;
 				}
 			}
-			return identifierValueMapper.getRepresentationStrategy().getInstantiator().instantiate(
-					() -> propertyValues,
-					sessionFactory
-			);
+			return identifierValueMapper.getRepresentationStrategy().getInstantiator().instantiate( () -> propertyValues );
 		}
 		else {
 			return entity;

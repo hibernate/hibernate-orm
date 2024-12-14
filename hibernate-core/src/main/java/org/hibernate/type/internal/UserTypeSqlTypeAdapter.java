@@ -109,7 +109,8 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 		public J extract(CallableStatement statement, int paramIndex, WrapperOptions options) throws SQLException {
 			if ( userType instanceof ProcedureParameterExtractionAware ) {
 				//noinspection unchecked
-				final J extracted = ( (ProcedureParameterExtractionAware<J>) userType ).extract( statement, paramIndex, options.getSession() );
+				final J extracted = ( (ProcedureParameterExtractionAware<J>) userType )
+						.extract( statement, paramIndex, options.getSession() );
 				logExtracted( paramIndex, extracted );
 				return extracted;
 			}
@@ -121,7 +122,8 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 		public J extract(CallableStatement statement, String paramName, WrapperOptions options) throws SQLException {
 			if ( userType instanceof ProcedureParameterExtractionAware ) {
 				//noinspection unchecked
-				final J extracted = ( (ProcedureParameterExtractionAware<J>) userType ).extract( statement, paramName, options.getSession() );
+				final J extracted = ( (ProcedureParameterExtractionAware<J>) userType )
+						.extract( statement, paramName, options.getSession() );
 				logExtracted( paramName, extracted );
 				return extracted;
 			}

@@ -81,11 +81,7 @@ public class JsonJdbcType implements AggregateJdbcType {
 					options
 			);
 		}
-		return options.getSessionFactory().getFastSessionServices().getJsonFormatMapper().fromString(
-				string,
-				javaType,
-				options
-		);
+		return options.getJsonFormatMapper().fromString( string, javaType, options );
 	}
 
 	@Override
@@ -104,11 +100,7 @@ public class JsonJdbcType implements AggregateJdbcType {
 		if ( embeddableMappingType != null ) {
 			return JsonHelper.toString( embeddableMappingType, value, options );
 		}
-		return options.getSessionFactory().getFastSessionServices().getJsonFormatMapper().toString(
-				value,
-				javaType,
-				options
-		);
+		return options.getJsonFormatMapper().toString( value, javaType, options );
 	}
 
 	@Override

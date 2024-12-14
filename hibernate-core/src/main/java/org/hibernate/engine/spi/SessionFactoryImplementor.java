@@ -149,10 +149,16 @@ public interface SessionFactoryImplementor
 	JavaType<Object> getTenantIdentifierJavaType();
 
 	/**
-	 * @return the {@link FastSessionServices} instance associated with this SessionFactory
+	 * @return the {@link FastSessionServices} instance associated with this factory
 	 */
 	FastSessionServices getFastSessionServices();
 
+	/**
+	 * Return an instance of {@link WrapperOptions} which is not backed by a session,
+	 * and whose functionality is therefore incomplete.
+	 *
+	 * @apiNote Avoid using this operation.
+	 */
 	WrapperOptions getWrapperOptions();
 
 	@Override

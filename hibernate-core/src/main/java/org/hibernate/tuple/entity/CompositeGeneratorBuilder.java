@@ -188,8 +188,7 @@ class CompositeGeneratorBuilder {
 								.generate( session, owner, null, eventType );
 					}
 				}
-				return descriptor.getRepresentationStrategy().getInstantiator()
-						.instantiate( () -> generatedValues, session.getFactory() );
+				return descriptor.getRepresentationStrategy().getInstantiator().instantiate( () -> generatedValues );
 			}
 			else {
 				for ( int i = 0; i < size; i++ ) {

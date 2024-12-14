@@ -189,7 +189,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructJdbcType
 		if ( returnEmbeddable ) {
 			final StructAttributeValues attributeValues = getAttributeValues( embeddableMappingType, orderMapping, array, options );
 			//noinspection unchecked
-			return (X) instantiate( embeddableMappingType, attributeValues, options.getSessionFactory() );
+			return (X) instantiate( embeddableMappingType, attributeValues );
 		}
 		else if ( inverseOrderMapping != null ) {
 			StructHelper.orderJdbcValues( embeddableMappingType, inverseOrderMapping, array.clone(), array );
@@ -468,8 +468,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructJdbcType
 											subValues,
 											options
 									);
-									final Object subValue = instantiate( structJdbcType.embeddableMappingType, attributeValues, options.getSessionFactory() );
-									values[column] = subValue;
+									values[column] = instantiate( structJdbcType.embeddableMappingType, attributeValues );
 								}
 								else {
 									if ( structJdbcType.inverseOrderMapping != null ) {
@@ -849,9 +848,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructJdbcType
 						i += expectedQuotes - 1;
 						if ( string.charAt( i + 1 ) == '(' ) {
 							// This could be a nested struct
-							if ( elementType.getJdbcType() instanceof AbstractPostgreSQLStructJdbcType ) {
-								final AbstractPostgreSQLStructJdbcType structJdbcType;
-								structJdbcType = (AbstractPostgreSQLStructJdbcType) elementType.getJdbcType();
+							if ( elementType.getJdbcType() instanceof AbstractPostgreSQLStructJdbcType structJdbcType ) {
 								final Object[] subValues = new Object[structJdbcType.embeddableMappingType.getJdbcValueCount()];
 								final int subEnd = structJdbcType.deserializeStruct(
 										string,
@@ -868,8 +865,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructJdbcType
 											subValues,
 											options
 									);
-									final Object subValue = instantiate( structJdbcType.embeddableMappingType, attributeValues, options.getSessionFactory() );
-									values.add( subValue );
+									values.add( instantiate( structJdbcType.embeddableMappingType, attributeValues ) );
 								}
 								else {
 									if ( structJdbcType.inverseOrderMapping != null ) {
@@ -1422,10 +1418,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructJdbcType
 						subJdbcValues,
 						options
 				);
-				attributeValues.setAttributeValue(
-						attributeIndex,
-						instantiate( embeddableMappingType, subValues, options.getSessionFactory() )
-				);
+				attributeValues.setAttributeValue( attributeIndex, instantiate( embeddableMappingType, subValues ) );
 			}
 		}
 		else {

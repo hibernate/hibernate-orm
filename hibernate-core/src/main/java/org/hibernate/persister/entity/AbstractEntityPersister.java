@@ -89,7 +89,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.FilterHelper;
 import org.hibernate.internal.util.IndexedConsumer;
-import org.hibernate.internal.util.LazyValue;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -4321,7 +4320,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public Object instantiate(Object id, SharedSessionContractImplementor session) {
-		final Object instance = getRepresentationStrategy().getInstantiator().instantiate( session.getFactory() );
+		final Object instance = getRepresentationStrategy().getInstantiator().instantiate();
 		linkToSession( instance, session );
 		if ( id != null ) {
 			setIdentifier( instance, id, session );
@@ -4346,7 +4345,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public boolean isInstance(Object object) {
-		return getRepresentationStrategy().getInstantiator().isInstance( object, getFactory() );
+		return getRepresentationStrategy().getInstantiator().isInstance( object );
 	}
 
 	@Override
@@ -4376,12 +4375,12 @@ public abstract class AbstractEntityPersister
 	public EntityPersister getSubclassEntityPersister(Object instance, SessionFactoryImplementor factory) {
 		if ( instance != null
 				&& hasSubclasses()
-				&& !getRepresentationStrategy().getInstantiator().isSameClass( instance, factory ) ) {
+				&& !getRepresentationStrategy().getInstantiator().isSameClass( instance ) ) {
 			// todo (6.0) : this previously used `org.hibernate.tuple.entity.EntityTuplizer#determineConcreteSubclassEntityName`
 			//		- we may need something similar here...
 			for ( EntityMappingType subclassMappingType : subclassMappingTypes.values() ) {
 				if ( subclassMappingType.getEntityPersister().getRepresentationStrategy()
-						.getInstantiator().isSameClass(instance, factory) ) {
+						.getInstantiator().isSameClass(instance ) ) {
 					return subclassMappingType.getEntityPersister();
 				}
 			}
@@ -4907,21 +4906,15 @@ public abstract class AbstractEntityPersister
 
 	private void prepareMappingModel(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
 		final EntityInstantiator instantiator = getRepresentationStrategy().getInstantiator();
-		final Supplier<?> templateInstanceCreator;
-		if ( ! instantiator.canBeInstantiated() ) {
-			templateInstanceCreator = null;
-		}
-		else {
-			final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
-			templateInstanceCreator = new LazyValue<>( () -> instantiator.instantiate( sessionFactory ) )::getValue;
-		}
+		final Supplier<?> instantiate = instantiator.canBeInstantiated() ? instantiator::instantiate : null;
 
 		identifierMapping = creationProcess.processSubPart(
 				EntityIdentifierMapping.ID_ROLE_NAME,
-				(role, process) -> generateIdentifierMapping( templateInstanceCreator, bootEntityDescriptor, process )
+				(role, process)
+						-> generateIdentifierMapping( instantiate, bootEntityDescriptor, process )
 		);
 
-		versionMapping = generateVersionMapping( templateInstanceCreator, bootEntityDescriptor, creationProcess );
+		versionMapping = generateVersionMapping( instantiate, bootEntityDescriptor, creationProcess );
 
 		if ( rowIdName == null ) {
 			rowIdMapping = null;
@@ -4929,7 +4922,8 @@ public abstract class AbstractEntityPersister
 		else {
 			rowIdMapping = creationProcess.processSubPart(
 					rowIdName,
-					(role, process) -> new EntityRowIdMappingImpl( rowIdName, getTableName(), this )
+					(role, process)
+							-> new EntityRowIdMappingImpl( rowIdName, getTableName(), this )
 			);
 		}
 

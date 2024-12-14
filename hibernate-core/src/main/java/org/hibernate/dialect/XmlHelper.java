@@ -16,7 +16,6 @@ import java.util.List;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Internal;
-import org.hibernate.engine.spi.LazySessionWrapperOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.CharSequenceHelper;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -1125,14 +1124,9 @@ public class XmlHelper {
 		//noinspection unchecked
 		final JavaType<Object> javaType = (JavaType<Object>) pluralJavaType;
 		// Produce the XML string for a collection with a null element to find out the root and element tag names
-		final String nullElementXml;
-		try ( final LazySessionWrapperOptions lazySessionWrapperOptions = new LazySessionWrapperOptions( sessionFactory ) ) {
-			nullElementXml = sessionFactory.getSessionFactoryOptions().getXmlFormatMapper().toString(
-					javaType.fromString( "{null}" ),
-					javaType,
-					lazySessionWrapperOptions
-			);
-		}
+		final String nullElementXml =
+				sessionFactory.getSessionFactoryOptions().getXmlFormatMapper()
+						.toString( javaType.fromString( "{null}" ), javaType, sessionFactory.getWrapperOptions() );
 
 		// There must be an end tag for the root, so find that first
 		final int rootCloseTagPosition = nullElementXml.lastIndexOf( '<' );

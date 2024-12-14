@@ -5,7 +5,6 @@
 package org.hibernate.dialect.function;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.engine.spi.LazySessionWrapperOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
@@ -485,14 +484,10 @@ public abstract class NumberSeriesGenerateSeriesFunction extends GenerateSeriesF
 		private String getExpression(Expression expression, String tableIdentifierVariable, String syntheticColumnName, SqmToSqlAstConverter walker) {
 			if ( expression instanceof Literal literal ) {
 				final SessionFactoryImplementor sessionFactory = walker.getCreationContext().getSessionFactory();
-				try ( final LazySessionWrapperOptions wrapperOptions = new LazySessionWrapperOptions( sessionFactory ) ) {
-					//noinspection unchecked
-					return literal.getJdbcMapping().getJdbcLiteralFormatter().toJdbcLiteral(
-							literal.getLiteralValue(),
-							sessionFactory.getJdbcServices().getDialect(),
-							wrapperOptions
-					);
-				}
+				//noinspection unchecked
+				return literal.getJdbcMapping().getJdbcLiteralFormatter()
+						.toJdbcLiteral( literal.getLiteralValue(), sessionFactory.getJdbcServices().getDialect(),
+								sessionFactory.getWrapperOptions() );
 			}
 			else if ( expression instanceof ColumnReference columnReference ) {
 				return columnReference.getExpressionText();

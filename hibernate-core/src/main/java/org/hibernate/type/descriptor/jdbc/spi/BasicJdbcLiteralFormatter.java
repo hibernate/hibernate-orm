@@ -19,24 +19,27 @@ public abstract class BasicJdbcLiteralFormatter<T> extends AbstractJdbcLiteralFo
 	}
 
 	@SuppressWarnings("unchecked")
-	protected <X> X unwrap(Object value, Class<X> unwrapType, WrapperOptions wrapperOptions) {
+	protected <X> X unwrap(Object value, Class<X> unwrapType, WrapperOptions options) {
 		assert value != null;
 
 		// for performance reasons, avoid conversions if we can
 		if ( unwrapType.isInstance( value ) ) {
 			return (X) value;
 		}
-		else if ( !getJavaType().isInstance( value ) ) {
-			final T coerce = getJavaType().coerce( value, wrapperOptions.getSession() );
-			if ( unwrapType.isInstance( coerce ) ) {
-				return (X) coerce;
+		else {
+			final JavaType<T> javaType = getJavaType();
+			if ( !javaType.isInstance( value ) ) {
+				final T coerced = javaType.coerce( value, () -> options.getSessionFactory().getTypeConfiguration() );
+				if ( unwrapType.isInstance( coerced ) ) {
+					return (X) coerced;
+				}
+				else {
+					return javaType.unwrap( coerced, unwrapType, options );
+				}
 			}
 			else {
-				return getJavaType().unwrap( coerce, unwrapType, wrapperOptions );
+				return javaType.unwrap( (T) value, unwrapType, options );
 			}
-		}
-		else {
-			return getJavaType().unwrap( (T) value, unwrapType, wrapperOptions );
 		}
 	}
 }

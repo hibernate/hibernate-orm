@@ -35,7 +35,7 @@ What's interesting is the `ServiceRegistry` and the pluggable swapping of the di
 The basic requirement for a `Service` is to implement the marker interface `org.hibernate.service.Service`.
 Hibernate uses this internally for some basic type safety.
 
-The `Service` can also implement a number of optional life-cycle related contracts:
+The `Service` can also implement a number of optional lifecycle related contracts:
 
 `org.hibernate.service.spi.Startable`::
  	allows the `Service` impl to be notified that it is being started and about to be put into use.
@@ -43,9 +43,7 @@ The `Service` can also implement a number of optional life-cycle related contrac
 	allows the `Service` impl to be notified that it is being stopped and will be removed from use.
 `org.hibernate.service.spi.ServiceRegistryAwareService`::
 	allows the `Service` to be injected with a reference to the registry that is managing it. See <<services-dependencies>> for more details.
-`org.hibernate.service.spi.Manageable`::
-	marks the `Service` as manageable in JMX provided the JMX integration is enabled. This feature is still incomplete.
-Other::
+`Other`::
 	The different registry implementations also understand additional optional contracts specific to that registry. For details, see the details for each registry in <<services-registry>>.
 
 [[services-dependencies]]
@@ -58,10 +56,10 @@ Services are allowed to declare dependencies on other services using either of t
 Any method on the `Service` implementation class accepting a single parameter and annotated with `@InjectService` is considered requesting injection of another service.
 +
 By default, the type of the method parameter is expected to be the `Service` role to be injected.
-If the parameter type is different than the `Service` role, the serviceRole attribute of the `@InjectService` annotation should be used to explicitly name the role.
+If the parameter type is different to the `Service` role, the `serviceRole` attribute of the `@InjectService` annotation should be used to explicitly name the role.
 +
-By default, injected services are considered required, that is the start up will fail if a named dependent `Service` is missing.
-If the `Service` to be injected is optional, the required attribute of the `@InjectService` annotation should be declared as `false` (default is `true`).
+By default, injected services are considered required, that is, the startup will fail if a named dependent `Service` is missing.
+If the `Service` to be injected is optional, the `required` attribute of the `@InjectService` annotation should be declared as `false` (default is `true`).
 
 `org.hibernate.service.spi.ServiceRegistryAwareService`::
 +
@@ -103,7 +101,7 @@ Services in one registry can depend on and utilize services in that same registr
 === ServiceBinding
 
 The association of a given `Service` to a given `ServiceRegistry` is called a binding and is represented by the `org.hibernate.service.spi.ServiceBinding` interface. 
-Furthermore, the specific contract between a ServiceBinding and the `ServiceRegistry` is represented by the `org.hibernate.service.spi.ServiceBinding.ServiceLifecycleOwner` interface.
+Furthermore, the specific contract between a `ServiceBinding` and the `ServiceRegistry` is represented by the `org.hibernate.service.spi.ServiceBinding.ServiceLifecycleOwner` interface.
 
 There are two ways a `Service` becomes associated (bound) to a `ServiceRegistry`.
 
@@ -118,12 +116,12 @@ Each specific type of registry defines its own `ServiceInitiator` specialization
 === Types of ServiceRegistries
 
 Currently Hibernate utilizes three different `ServiceRegistry` implementations forming a hierarchy.
-Each type is a specialization for the purpose of type-safety, but they add no new functionality.
+Each type is a specialization for the purpose of type safety, but they add no new functionality.
 
 [[services-registry-boot]]
 ==== `BootstrapServiceRegistry`
 
-The `org.hibernate.boot.registry.BootstrapServiceRegistry` holds three `Service` and is normally built by means of the `org.hibernate.boot.registry.BootstrapServiceRegistryBuilder` factory class.
+The `org.hibernate.boot.registry.BootstrapServiceRegistry` holds three ``Service``s and is normally built by means of the `org.hibernate.boot.registry.BootstrapServiceRegistryBuilder` factory class.
 The builder gives type safe access to customizing these three `Services`.
 
 [IMPORTANT]
@@ -147,13 +145,13 @@ And just as important, it does so in a centralized, swappable manner.
 The specific capabilities exposed on this `Service` include:
 
 * Locating `Class` references by name. This includes application classes as well as _integration_ classes.
-* Locating resources (properties files, xml files, etc) as _classpath resources_
-* Interacting with `java.util.ServiceLoader`, Java's own `Service` provider discovery mechanism
+* Locating resources (properties files, xml files, and so on) as _classpath resources_.
+* Interacting with `java.util.ServiceLoader`, Java's own `Service` provider discovery mechanism.
 
 ===== `IntegratorService`
 
 The `Service` role for this `Service` is `org.hibernate.integrator.spi.IntegratorService.` 
-Applications, third-party integrators and others all need to integrate with Hibernate. Historically this used to require something (usually the application) to coordinate registering the pieces of each integration needed on behalf of each integration. The `org.hibernate.integrator.spi.Integrator` contract formalized this "integration SPI". The IntegratorService manages all known integrators.
+Applications, third-party integrators, and others all need to integrate with Hibernate. Historically this used to require something (usually the application) to coordinate registering the pieces of each integration needed on behalf of each integration. The `org.hibernate.integrator.spi.Integrator` contract formalized this "integration SPI". The `IntegratorService` manages all known integrators.
 
 [TIP]
 ====
@@ -162,7 +160,7 @@ The concept of "Integrator" is still being actively defined and developed. Expec
 
 There are two ways an integrator becomes known.
 
-* The integrator may be manually registered by calling `BootstrapServiceRegistryBuilder#with(Integrator)`
+* The integrator may be manually registered by calling `BootstrapServiceRegistryBuilder#with(Integrator)`.
 * The integrator may be discovered, leveraging the standard Java `ServiceLoader` capability provided by the `ClassLoaderService`.
 `Integrators` would simply define a file named `/META-INF/services/org.hibernate.integrator.spi.Integrator` and make it available on the classpath.
 `ServiceLoader` covers the format of this file in detail, but essentially it lists classes by fully-qualified name that implement `Integrator` one per line.
@@ -191,9 +189,9 @@ This registry is generally built using the `org.hibernate.boot.registry.Standard
 By default, it holds most of the `Services` used by Hibernate.
 For the full list of `Services` typically held in the `StandardServiceRegistry`, see the source code of `org.hibernate.service.StandardServiceInitiators`.
 
-In normal usage, the parent of the StandardServiceRegistry is the BootstrapServiceRegistry.
+In normal usage, the parent of the `StandardServiceRegistry` is the `BootstrapServiceRegistry`.
 
-The services of the StandardServiceRegistry can be extended (added to) and overridden (replaced).
+The services of the `StandardServiceRegistry` can be extended (added to) and overridden (replaced).
 
 ===== `ConnectionProvider/MultiTenantConnectionProvider`
 
@@ -211,7 +209,7 @@ Comes in two distinct (and mutually exclusive) roles:
 
 ===== `TransactionCoordinatorBuilder`
 
-`org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder` is used by Hibernate to integrate with and underlying transaction system.
+`org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder` is used by Hibernate to integrate with an underlying transaction system.
 It is responsible for building `org.hibernate.resource.transaction.spi.TransactionCoordinator` instances for use by each Hibernate `Session`.
 
 ===== `JtaPlatform`
@@ -229,7 +227,7 @@ The `org.hibernate.cache.spi.RegionFactory` `Service` defines the integration wi
 
 ===== `SessionFactoryServiceRegistryFactory`
 
-`org.hibernate.service.spi.SessionFactoryServiceRegistryFactory` is a `Service` that acts as a factory for building the third type of `ServiceRegistry` (the SessionFactoryServiceRegistry) which we will discuss next.
+`org.hibernate.service.spi.SessionFactoryServiceRegistryFactory` is a `Service` that acts as a factory for building the third type of `ServiceRegistry` (the `SessionFactoryServiceRegistry`) which we will discuss next.
 I opted for the _factory as service_ approach because in the current design there is really not a good exposed hook-in spot for when the `SessionFactoryServiceRegistry` needs to be built.
 
 [[services-registry-sf]]
@@ -350,10 +348,10 @@ include::{extrasdir}/override/ex3-contributor.java[]
 ----
 ====
 
-That all allows the application to pick our `LatestAndGreatestConnectionProviderImpl` by a short-name.
+That all allows the application to pick our `LatestAndGreatestConnectionProviderImpl` by a short name.
 
 [[services-custom-service-short-name-example]]
-.Custom service short-name
+.Custom service short name
 ====
 [source, JAVA, indent=0]
 ----

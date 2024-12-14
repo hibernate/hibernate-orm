@@ -7,7 +7,6 @@ package org.hibernate.engine.spi;
 import java.util.Collection;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
-import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -94,7 +93,7 @@ public interface SessionFactoryImplementor
 	/**
 	 * Get a non-transactional "current" session (used by hibernate-envers)
 	 */
-	SessionImplementor openTemporarySession() throws HibernateException;
+	SessionImplementor openTemporarySession();
 
 	@Override
 	CacheImplementor getCache();

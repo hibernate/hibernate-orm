@@ -26,19 +26,17 @@ public abstract class BasicJdbcLiteralFormatter<T> extends AbstractJdbcLiteralFo
 		if ( unwrapType.isInstance( value ) ) {
 			return (X) value;
 		}
-
-		if ( !getJavaType().isInstance( value ) ) {
+		else if ( !getJavaType().isInstance( value ) ) {
 			final T coerce = getJavaType().coerce( value, wrapperOptions.getSession() );
 			if ( unwrapType.isInstance( coerce ) ) {
 				return (X) coerce;
 			}
-			return getJavaType().unwrap(
-					coerce,
-					unwrapType,
-					wrapperOptions
-			);
+			else {
+				return getJavaType().unwrap( coerce, unwrapType, wrapperOptions );
+			}
 		}
-
-		return getJavaType().unwrap( (T) value, unwrapType, wrapperOptions );
+		else {
+			return getJavaType().unwrap( (T) value, unwrapType, wrapperOptions );
+		}
 	}
 }

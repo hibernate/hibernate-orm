@@ -34,6 +34,7 @@ import org.hibernate.UnknownEntityTypeException;
 import org.hibernate.binder.internal.TenantIdBinder;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.internal.SessionEventListenerManagerImpl;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -703,6 +704,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
+	public SessionFactoryImplementor getSessionFactory() {
+		return factory;
+	}
+
+	@Override
 	public boolean useStreamForLobBinding() {
 		return fastSessionServices.useStreamForLobBinding;
 	}
@@ -714,7 +720,12 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public LobCreator getLobCreator() {
-		return getFactory().getFastSessionServices().jdbcServices.getLobCreator( this );
+		return fastSessionServices.jdbcServices.getLobCreator( this );
+	}
+
+	@Override
+	public Dialect getDialect() {
+		return fastSessionServices.dialect;
 	}
 
 	@Override
@@ -1417,7 +1428,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public EventManager getEventManager() {
-		return fastSessionServices.getEventManager();
+		return fastSessionServices.eventManager;
 	}
 
 	@Override

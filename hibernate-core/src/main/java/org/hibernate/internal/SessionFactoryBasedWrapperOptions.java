@@ -2,11 +2,11 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.persister.entity;
+package org.hibernate.internal;
 
 import java.util.TimeZone;
 
-import org.hibernate.Internal;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -16,13 +16,14 @@ import org.hibernate.type.descriptor.WrapperOptions;
  *
  * @author Christian Beikov
  */
-@Internal
-public class SessionFactoryBasedWrapperOptions implements WrapperOptions {
+class SessionFactoryBasedWrapperOptions implements WrapperOptions {
 
 	private final SessionFactoryImplementor factory;
+	private final FastSessionServices fastSessionServices;
 
-	public SessionFactoryBasedWrapperOptions(SessionFactoryImplementor factory) {
+	SessionFactoryBasedWrapperOptions(SessionFactoryImplementor factory) {
 		this.factory = factory;
+		fastSessionServices = factory.getFastSessionServices();
 	}
 
 	@Override
@@ -37,21 +38,26 @@ public class SessionFactoryBasedWrapperOptions implements WrapperOptions {
 
 	@Override
 	public boolean useStreamForLobBinding() {
-		return factory.getFastSessionServices().useStreamForLobBinding();
+		return fastSessionServices.useStreamForLobBinding;
 	}
 
 	@Override
 	public int getPreferredSqlTypeCodeForBoolean() {
-		return factory.getFastSessionServices().getPreferredSqlTypeCodeForBoolean();
+		return fastSessionServices.preferredSqlTypeCodeForBoolean;
 	}
 
 	@Override
 	public LobCreator getLobCreator() {
-		return factory.getJdbcServices().getLobCreator( getSession() );
+		return fastSessionServices.jdbcServices.getLobCreator( getSession() );
 	}
 
 	@Override
 	public TimeZone getJdbcTimeZone() {
-		return factory.getSessionFactoryOptions().getJdbcTimeZone();
+		return fastSessionServices.jdbcTimeZone;
+	}
+
+	@Override
+	public Dialect getDialect() {
+		return fastSessionServices.dialect;
 	}
 }

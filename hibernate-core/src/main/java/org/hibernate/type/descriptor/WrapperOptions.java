@@ -47,7 +47,9 @@ public interface WrapperOptions {
 	 *
 	 * @see org.hibernate.dialect.Dialect#useInputStreamToInsertBlob()
 	 */
-	boolean useStreamForLobBinding();
+	default boolean useStreamForLobBinding() {
+		return getDialect().useInputStreamToInsertBlob();
+	}
 
 	/**
 	 * The JDBC {@link java.sql.Types type code} used to bind a null boolean value.
@@ -55,7 +57,9 @@ public interface WrapperOptions {
 	 * @see org.hibernate.cfg.AvailableSettings#PREFERRED_BOOLEAN_JDBC_TYPE
 	 * @see org.hibernate.dialect.Dialect#getPreferredSqlTypeCodeForBoolean()
 	 */
-	int getPreferredSqlTypeCodeForBoolean();
+	default int getPreferredSqlTypeCodeForBoolean() {
+		return getSessionFactory().getSessionFactoryOptions().getPreferredSqlTypeCodeForBoolean();
+	}
 
 	/**
 	 * Obtain access to the {@link LobCreator}.
@@ -65,7 +69,9 @@ public interface WrapperOptions {
 	 * @see org.hibernate.cfg.AvailableSettings#NON_CONTEXTUAL_LOB_CREATION
 	 * @see org.hibernate.dialect.Dialect#getDefaultNonContextualLobCreation()
 	 */
-	LobCreator getLobCreator();
+	default LobCreator getLobCreator() {
+		return getSession().getLobCreator();
+	}
 
 	/**
 	 * The JDBC {@link TimeZone} used when writing a value of type {@link java.sql.Time}
@@ -90,5 +96,7 @@ public interface WrapperOptions {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#JDBC_TIME_ZONE
 	 */
-	TimeZone getJdbcTimeZone();
+	default TimeZone getJdbcTimeZone() {
+		return getSessionFactory().getSessionFactoryOptions().getJdbcTimeZone();
+	}
 }

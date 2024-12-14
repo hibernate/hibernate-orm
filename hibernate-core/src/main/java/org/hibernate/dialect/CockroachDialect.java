@@ -873,7 +873,7 @@ public class CockroachDialect extends Dialect {
 				// Note that CockroachDB also has an extract_duration function which returns an int,
 				// but we don't use that here because it is deprecated since v20.
 				case HOUR, MINUTE, SECOND, NANOSECOND, NATIVE ->
-						"extract(epoch from ?3-?2)" + EPOCH.conversionFactor( unit, this );
+						"round(extract(epoch from ?3-?2)" + EPOCH.conversionFactor( unit, this ) + ")::int";
 				default -> throw new SemanticException( "Unrecognized field: " + unit );
 			};
 		}

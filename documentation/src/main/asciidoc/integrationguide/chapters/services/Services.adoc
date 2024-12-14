@@ -121,7 +121,7 @@ Each type is a specialization for the purpose of type safety, but they add no ne
 [[services-registry-boot]]
 ==== `BootstrapServiceRegistry`
 
-The `org.hibernate.boot.registry.BootstrapServiceRegistry` holds three `Services` and is normally built by means of the `org.hibernate.boot.registry.BootstrapServiceRegistryBuilder` factory class.
+The `org.hibernate.boot.registry.BootstrapServiceRegistry` holds three ``Service``s and is normally built by means of the `org.hibernate.boot.registry.BootstrapServiceRegistryBuilder` factory class.
 The builder gives type safe access to customizing these three `Services`.
 
 [IMPORTANT]

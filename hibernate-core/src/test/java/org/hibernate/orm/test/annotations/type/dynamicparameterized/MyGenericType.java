@@ -4,7 +4,7 @@
  */
 package org.hibernate.orm.test.annotations.type.dynamicparameterized;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.UserType;
 
@@ -32,13 +32,13 @@ public class MyGenericType implements UserType<Object>, DynamicParameterizedType
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
+	public void nullSafeSet(PreparedStatement st, Object value, int index, WrapperOptions options)
 			throws SQLException {
 		st.setString( index, null );
 	}
 
 	@Override
-	public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+	public Object nullSafeGet(ResultSet rs, int position, WrapperOptions options)
 			throws SQLException {
 		return null;
 	}

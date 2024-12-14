@@ -49,6 +49,7 @@ public class ComponentBasicProxyTest {
 	@Test
 	@JiraKey(value = "HHH-12791")
 	public void testOnlyOneProxyClassGenerated(DomainModelScope domainModelScope, SessionFactoryScope sfScope) {
+		sfScope.getSessionFactory();
 		final PersistentClass personDescriptor = domainModelScope.getDomainModel().getEntityBinding( Person.class.getName() );
 		final CompositeTypeImplementor componentType = (CompositeTypeImplementor) personDescriptor.getIdentifierMapper().getType();
 		final EmbeddableValuedModelPart embedded = componentType.getMappingModelPart();

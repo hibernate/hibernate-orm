@@ -10,8 +10,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.BindingContext;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.sqm.SqmExpressible;
@@ -70,15 +70,15 @@ public class ArrayType implements UserType<Array>, BindableType<Array>, BasicVal
 	}
 
 	@Override
-	public Array nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+	public Array nullSafeGet(ResultSet rs, int position, WrapperOptions options)
 			throws SQLException {
-		return jdbcType.getExtractor( javaType ).extract( rs, position, session );
+		return jdbcType.getExtractor( javaType ).extract( rs, position, options );
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, Array value, int index, SharedSessionContractImplementor session)
+	public void nullSafeSet(PreparedStatement st, Array value, int index, WrapperOptions options)
 			throws SQLException {
-		jdbcType.getBinder( javaType ).bind( st, value, index, session );
+		jdbcType.getBinder( javaType ).bind( st, value, index, options );
 	}
 
 	@Override

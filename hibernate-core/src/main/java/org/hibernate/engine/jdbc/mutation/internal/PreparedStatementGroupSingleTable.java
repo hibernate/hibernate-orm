@@ -14,8 +14,8 @@ import org.hibernate.sql.model.PreparableMutationOperation;
 import org.hibernate.sql.model.TableMapping;
 
 /**
- * {@link PreparedStatementGroup} implementation for cases where we
- * have just a single operation
+ * {@link org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup}
+ * implementation for cases where we have just a single operation
  *
  * @author Steve Ebersole
  */

@@ -485,17 +485,13 @@ public abstract class NumberSeriesGenerateSeriesFunction extends GenerateSeriesF
 		private String getExpression(Expression expression, String tableIdentifierVariable, String syntheticColumnName, SqmToSqlAstConverter walker) {
 			if ( expression instanceof Literal literal ) {
 				final SessionFactoryImplementor sessionFactory = walker.getCreationContext().getSessionFactory();
-				final LazySessionWrapperOptions wrapperOptions = new LazySessionWrapperOptions( sessionFactory );
-				try {
+				try ( final LazySessionWrapperOptions wrapperOptions = new LazySessionWrapperOptions( sessionFactory ) ) {
 					//noinspection unchecked
 					return literal.getJdbcMapping().getJdbcLiteralFormatter().toJdbcLiteral(
 							literal.getLiteralValue(),
 							sessionFactory.getJdbcServices().getDialect(),
 							wrapperOptions
 					);
-				}
-				finally {
-					wrapperOptions.cleanup();
 				}
 			}
 			else if ( expression instanceof ColumnReference columnReference ) {

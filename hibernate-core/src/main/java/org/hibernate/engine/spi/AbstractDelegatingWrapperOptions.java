@@ -12,7 +12,11 @@ import org.hibernate.type.descriptor.WrapperOptions;
 /**
  * @author Christian Beikov
  * @author Andrea Boriero
+ *
+ * @deprecated This isn't bringing any value, since {@link SessionImplementor}
+ *             already extends {@link WrapperOptions}.
  */
+@Deprecated(since = "7", forRemoval = true)
 public abstract class AbstractDelegatingWrapperOptions implements WrapperOptions {
 
 	/**

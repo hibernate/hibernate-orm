@@ -312,6 +312,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 			return typeConfiguration.getSessionFactory().getWrapperOptions();
 		}
 		catch (HibernateException e) {
+			// before we have a SessionFactory, no useful WrapperOptions to pass
 			return null;
 		}
 	}
@@ -549,16 +550,11 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 		final String columnDefinition = aggregateColumn.getColumnDefinition();
 		if ( columnDefinition == null ) {
 			assert aggregateColumn.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode() == JSON;
-			switch ( jsonSupport ) {
-				case OSON:
-					return "json";
-				case MERGEPATCH:
-				case QUERY_AND_PATH:
-				case QUERY:
-					return "blob";
-				case NONE:
-					return "clob";
-			}
+			return switch ( jsonSupport ) {
+				case OSON -> "json";
+				case MERGEPATCH, QUERY_AND_PATH, QUERY -> "blob";
+				case NONE -> "clob";
+			};
 		}
 		return columnDefinition;
 	}

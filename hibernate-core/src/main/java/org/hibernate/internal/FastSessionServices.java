@@ -8,59 +8,24 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.TimeZone;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
-import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
-import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.internal.EmptyEventManager;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
-import org.hibernate.event.spi.AutoFlushEventListener;
-import org.hibernate.event.spi.ClearEventListener;
-import org.hibernate.event.spi.DeleteEventListener;
-import org.hibernate.event.spi.DirtyCheckEventListener;
-import org.hibernate.event.spi.EntityCopyObserverFactory;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.EventType;
-import org.hibernate.event.spi.EvictEventListener;
-import org.hibernate.event.spi.FlushEntityEventListener;
-import org.hibernate.event.spi.FlushEventListener;
-import org.hibernate.event.spi.InitializeCollectionEventListener;
-import org.hibernate.event.spi.LoadEventListener;
-import org.hibernate.event.spi.LockEventListener;
-import org.hibernate.event.spi.MergeEventListener;
-import org.hibernate.event.spi.PersistEventListener;
-import org.hibernate.event.spi.PostCollectionRecreateEventListener;
-import org.hibernate.event.spi.PostCollectionRemoveEventListener;
-import org.hibernate.event.spi.PostCollectionUpdateEventListener;
-import org.hibernate.event.spi.PostDeleteEventListener;
-import org.hibernate.event.spi.PostInsertEventListener;
-import org.hibernate.event.spi.PostLoadEvent;
-import org.hibernate.event.spi.PostLoadEventListener;
-import org.hibernate.event.spi.PostUpdateEventListener;
-import org.hibernate.event.spi.PostUpsertEventListener;
-import org.hibernate.event.spi.PreCollectionRecreateEventListener;
-import org.hibernate.event.spi.PreCollectionRemoveEventListener;
-import org.hibernate.event.spi.PreCollectionUpdateEventListener;
-import org.hibernate.event.spi.PreDeleteEventListener;
-import org.hibernate.event.spi.PreInsertEventListener;
-import org.hibernate.event.spi.PreLoadEventListener;
-import org.hibernate.event.spi.PreUpdateEventListener;
-import org.hibernate.event.spi.PreUpsertEventListener;
-import org.hibernate.event.spi.RefreshEventListener;
-import org.hibernate.event.spi.ReplicateEventListener;
-import org.hibernate.event.spi.ResolveNaturalIdEventListener;
+import org.hibernate.event.spi.*;
 import org.hibernate.jpa.HibernateHints;
 import org.hibernate.jpa.LegacySpecHints;
 import org.hibernate.jpa.SpecHints;
@@ -152,17 +117,14 @@ public final class FastSessionServices {
 	public final EventListenerGroup<ReplicateEventListener> eventListenerGroup_REPLICATE;
 	public final EventListenerGroup<ResolveNaturalIdEventListener> eventListenerGroup_RESOLVE_NATURAL_ID;
 
-	//Intentionally Package private:
+	// Fields used only from within this package
 	final boolean disallowOutOfTransactionUpdateOperations;
-	final boolean useStreamForLobBinding;
-	final int preferredSqlTypeCodeForBoolean;
-	final TimeZoneStorageStrategy defaultTimeZoneStorageStrategy;
 	final boolean requiresMultiTenantConnectionProvider;
 	final ConnectionProvider connectionProvider;
 	final MultiTenantConnectionProvider<Object> multiTenantConnectionProvider;
 	final ClassLoaderService classLoaderService;
 	final TransactionCoordinatorBuilder transactionCoordinatorBuilder;
-	public final JdbcServices jdbcServices;
+	final EventManager eventManager;
 	final boolean isJtaTransactionAccessible;
 	final CacheMode initialSessionCacheMode;
 	final FlushMode initialSessionFlushMode;
@@ -171,20 +133,23 @@ public final class FastSessionServices {
 	final LockOptions defaultLockOptions;
 	final int defaultJdbcBatchSize;
 
-	//Some fields are handy as public - still considered internal.
+	// Expose certain fields outside this package
+	// (but they are still considered internal)
+	public final Dialect dialect;
+	public final JdbcServices jdbcServices;
+	public final boolean useStreamForLobBinding;
+	public final int preferredSqlTypeCodeForBoolean;
+	public final TimeZone jdbcTimeZone;
 	public final EntityCopyObserverFactory entityCopyObserverFactory;
 	public final BatchBuilder batchBuilder;
-	public final Dialect dialect;
 	public final ParameterMarkerStrategy parameterMarkerStrategy;
 
-	//Private fields:
+	// Private fields (probably don't really belong here)
 	private final CacheStoreMode defaultCacheStoreMode;
 	private final CacheRetrieveMode defaultCacheRetrieveMode;
 	private final FormatMapper jsonFormatMapper;
 	private final FormatMapper xmlFormatMapper;
-	private final MutationExecutorService mutationExecutorService;
 	private final JdbcValuesMappingProducerProvider jdbcValuesMappingProducerProvider;
-	private final EventManager eventManager;
 
 	FastSessionServices(SessionFactoryImplementor sessionFactory) {
 		Objects.requireNonNull( sessionFactory );
@@ -235,11 +200,10 @@ public final class FastSessionServices {
 		this.disallowOutOfTransactionUpdateOperations = !sessionFactoryOptions.isAllowOutOfTransactionUpdateOperations();
 		this.useStreamForLobBinding = dialect.useInputStreamToInsertBlob();
 		this.preferredSqlTypeCodeForBoolean = sessionFactoryOptions.getPreferredSqlTypeCodeForBoolean();
-		this.defaultTimeZoneStorageStrategy = sessionFactoryOptions.getDefaultTimeZoneStorageStrategy();
 		this.defaultJdbcBatchSize = sessionFactoryOptions.getJdbcBatchSize();
+		this.jdbcTimeZone = sessionFactoryOptions.getJdbcTimeZone();
 		this.requiresMultiTenantConnectionProvider = sessionFactory.getSessionFactoryOptions().isMultiTenancyEnabled();
 		this.parameterMarkerStrategy = serviceRegistry.getService( ParameterMarkerStrategy.class );
-		this.mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
 
 		//Some "hot" services:
 		this.connectionProvider = requiresMultiTenantConnectionProvider
@@ -254,7 +218,6 @@ public final class FastSessionServices {
 		this.entityCopyObserverFactory = serviceRegistry.requireService( EntityCopyObserverFactory.class );
 		this.jdbcValuesMappingProducerProvider = serviceRegistry.getService( JdbcValuesMappingProducerProvider.class );
 
-
 		this.isJtaTransactionAccessible = isTransactionAccessible( sessionFactory, transactionCoordinatorBuilder );
 
 		this.defaultSessionProperties = initializeDefaultSessionProperties( sessionFactory );
@@ -268,10 +231,9 @@ public final class FastSessionServices {
 		this.jsonFormatMapper = sessionFactoryOptions.getJsonFormatMapper();
 		this.xmlFormatMapper = sessionFactoryOptions.getXmlFormatMapper();
 		this.batchBuilder = serviceRegistry.getService( BatchBuilder.class );
+
 		final Collection<EventManager> eventManagers = classLoaderService.loadJavaServices( EventManager.class );
-		this.eventManager = eventManagers.isEmpty()
-				? new EmptyEventManager()
-				: eventManagers.iterator().next();
+		this.eventManager = eventManagers.isEmpty() ? new EmptyEventManager() : eventManagers.iterator().next();
 	}
 
 	private static FlushMode initializeDefaultFlushMode(Map<String, Object> defaultSessionProperties) {
@@ -374,25 +336,8 @@ public final class FastSessionServices {
 		return this.jdbcValuesMappingProducerProvider;
 	}
 
-	public EventManager getEventManager() {
-		return eventManager;
-	}
-
-	public boolean useStreamForLobBinding() {
-		return useStreamForLobBinding;
-	}
-
 	public void firePostLoadEvent(final PostLoadEvent postLoadEvent) {
 		eventListenerGroup_POST_LOAD.fireEventOnEachListener( postLoadEvent, PostLoadEventListener::onPostLoad );
-	}
-
-	public int getPreferredSqlTypeCodeForBoolean() {
-		return preferredSqlTypeCodeForBoolean;
-	}
-
-	@Deprecated(forRemoval = true) //This seems no longer used - cleanup?
-	public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
-		return defaultTimeZoneStorageStrategy;
 	}
 
 	public FormatMapper getJsonFormatMapper() {
@@ -412,10 +357,4 @@ public final class FastSessionServices {
 		}
 		return xmlFormatMapper;
 	}
-
-	@Deprecated(forRemoval = true) //This seems no longer used - cleanup?
-	public MutationExecutorService getMutationExecutorService() {
-		return mutationExecutorService;
-	}
-
 }

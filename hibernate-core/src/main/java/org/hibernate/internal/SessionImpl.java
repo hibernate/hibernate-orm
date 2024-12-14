@@ -1647,12 +1647,6 @@ public class SessionImpl
 	}
 
 	@Override
-	public SessionFactoryImplementor getSessionFactory() {
-//		checkTransactionSynchStatus();
-		return getFactory();
-	}
-
-	@Override
 	public <T> QueryImplementor<T> createQuery(CriteriaSelect<T> selectQuery) {
 		checkOpen();
 		if ( selectQuery instanceof CriteriaDefinition<T> criteriaDefinition ) {

@@ -1124,18 +1124,14 @@ public class XmlHelper {
 		}
 		//noinspection unchecked
 		final JavaType<Object> javaType = (JavaType<Object>) pluralJavaType;
-		final LazySessionWrapperOptions lazySessionWrapperOptions = new LazySessionWrapperOptions( sessionFactory );
 		// Produce the XML string for a collection with a null element to find out the root and element tag names
 		final String nullElementXml;
-		try {
+		try ( final LazySessionWrapperOptions lazySessionWrapperOptions = new LazySessionWrapperOptions( sessionFactory ) ) {
 			nullElementXml = sessionFactory.getSessionFactoryOptions().getXmlFormatMapper().toString(
 					javaType.fromString( "{null}" ),
 					javaType,
 					lazySessionWrapperOptions
 			);
-		}
-		finally {
-			lazySessionWrapperOptions.cleanup();
 		}
 
 		// There must be an end tag for the root, so find that first

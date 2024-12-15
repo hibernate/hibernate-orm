@@ -207,6 +207,11 @@ public class HibernateMetrics implements MeterBinder {
 				"The number of entity updates",
 				Statistics::getEntityUpdateCount
 		);
+		counter(registry,
+				"hibernate.entities.upserts",
+				"The number of entity upserts",
+				Statistics::getEntityUpsertCount
+		);
 
 		// Collections
 		counter(registry,

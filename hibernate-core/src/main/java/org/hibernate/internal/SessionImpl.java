@@ -448,25 +448,30 @@ public class SessionImpl
 	private boolean isTransactionInProgressAndNotMarkedForRollback() {
 		if ( waitingForAutoClose ) {
 			return getSessionFactory().isOpen()
-				&& getTransactionCoordinator().isTransactionActive( false );
+				&& isTransactionActive();
 		}
 		else {
 			return !isClosed()
-				&& getTransactionCoordinator().isTransactionActive( false );
+				&& isTransactionActive();
 		}
+	}
+
+	private boolean isTransactionActive() {
+		return getTransactionCoordinator().isTransactionActive( false );
 	}
 
 	@Override
 	protected boolean shouldCloseJdbcCoordinatorOnClose(boolean isTransactionCoordinatorShared) {
-		if ( !isTransactionCoordinatorShared ) {
-			return super.shouldCloseJdbcCoordinatorOnClose( isTransactionCoordinatorShared );
+		if ( isTransactionCoordinatorShared ) {
+			final ActionQueue actionQueue = getActionQueue();
+			if ( actionQueue.hasBeforeTransactionActions() || actionQueue.hasAfterTransactionActions() ) {
+				log.warn( "On close, shared Session had before/after transaction actions that have not yet been processed" );
+			}
+			return false;
 		}
-
-		final ActionQueue actionQueue = getActionQueue();
-		if ( actionQueue.hasBeforeTransactionActions() || actionQueue.hasAfterTransactionActions() ) {
-			log.warn( "On close, shared Session had before/after transaction actions that have not yet been processed" );
+		else {
+			return true;
 		}
-		return false;
 	}
 
 	@Override

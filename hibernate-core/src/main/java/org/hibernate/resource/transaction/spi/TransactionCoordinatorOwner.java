@@ -37,7 +37,7 @@ public interface TransactionCoordinatorOwner {
 	}
 
 	/**
-	 * A after-begin callback from the coordinator to its owner.
+	 * An after-begin callback from the coordinator to its owner.
 	 */
 	void afterTransactionBegin();
 

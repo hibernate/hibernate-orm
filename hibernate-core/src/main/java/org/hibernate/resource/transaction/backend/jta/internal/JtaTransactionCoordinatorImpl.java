@@ -376,7 +376,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 
 	/**
 	 * Implementation of the LocalInflow for this TransactionCoordinator.  Allows the
-	 * local transaction ({@link org.hibernate.Transaction} to callback into this
+	 * local transaction ({@link org.hibernate.Transaction}) to callback into this
 	 * TransactionCoordinator for the purpose of driving the underlying JTA transaction.
 	 */
 	public class TransactionDriverControlImpl implements TransactionDriver {

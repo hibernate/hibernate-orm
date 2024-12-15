@@ -18,7 +18,7 @@ import jdk.jfr.StackTrace;
 @Label( "PrePartialFlushEvent Execution" )
 @Category( "Hibernate ORM" )
 @Description( "PrePartialFlushEvent Execution" )
-@StackTrace(false)
+@StackTrace
 @AllowNonPortable
 public class PrePartialFlushEvent extends Event implements HibernateMonitoringEvent {
 	public static final String NAME = "org.hibernate.orm.PrePartialFlushEvent";

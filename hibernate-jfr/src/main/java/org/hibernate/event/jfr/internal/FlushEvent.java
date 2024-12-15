@@ -18,7 +18,7 @@ import jdk.jfr.StackTrace;
 @Label("Flush Execution")
 @Category("Hibernate ORM")
 @Description("Flush Execution")
-@StackTrace(false)
+@StackTrace
 @AllowNonPortable
 public class FlushEvent extends Event implements HibernateMonitoringEvent {
 	public static final String NAME = "org.hibernate.orm.FlushEvent";

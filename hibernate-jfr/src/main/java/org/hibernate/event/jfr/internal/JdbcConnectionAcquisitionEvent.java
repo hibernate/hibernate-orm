@@ -18,7 +18,7 @@ import jdk.jfr.StackTrace;
 @Label("JDBC Connection Obtained")
 @Category("Hibernate ORM")
 @Description("JDBC Connection Obtained")
-@StackTrace(false)
+@StackTrace
 @AllowNonPortable
 public class JdbcConnectionAcquisitionEvent extends Event implements HibernateMonitoringEvent {
 	public static final String NAME = "org.hibernate.orm.JdbcConnectionAcquisition";

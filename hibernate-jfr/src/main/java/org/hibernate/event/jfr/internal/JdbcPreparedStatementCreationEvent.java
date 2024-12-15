@@ -18,7 +18,7 @@ import jdk.jfr.StackTrace;
 @Label("JDBC PreparedStatement Created")
 @Category("Hibernate ORM")
 @Description("JDBC PreparedStatement Created")
-@StackTrace(false)
+@StackTrace
 @AllowNonPortable
 public class JdbcPreparedStatementCreationEvent extends Event implements HibernateMonitoringEvent {
 	public static final String NAME = "org.hibernate.orm.JdbcPreparedStatementCreation";

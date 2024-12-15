@@ -43,6 +43,7 @@ public class JfrEventManager implements EventManager {
 	private static final EventType prePartialFlushEventType = EventType.getEventType( PrePartialFlushEvent.class );
 	private static final EventType entityInsertEventType = EventType.getEventType( EntityInsertEvent.class );
 	private static final EventType entityUpdateEventType = EventType.getEventType( EntityUpdateEvent.class );
+	private static final EventType entityUpsertEventType = EventType.getEventType( EntityUpsertEvent.class );
 	private static final EventType entityDeleteEventType = EventType.getEventType( EntityDeleteEvent.class );
 	private static final EventType collectionRecreateEventType = EventType.getEventType( CollectionRecreateEvent.class );
 	private static final EventType collectionUpdateEventType = EventType.getEventType( CollectionUpdateEvent.class );
@@ -594,6 +595,37 @@ public class JfrEventManager implements EventManager {
 	}
 
 	@Override
+	public HibernateMonitoringEvent beginEntityUpsertEvent() {
+		if ( entityUpsertEventType.isEnabled() ) {
+			final EntityUpsertEvent event = new EntityUpsertEvent();
+			event.begin();
+			return event;
+		}
+		else {
+			return null;
+		}
+	}
+
+	@Override
+	public void completeEntityUpsertEvent(
+			HibernateMonitoringEvent event,
+			Object id, String entityName,
+			boolean success,
+			SharedSessionContractImplementor session) {
+		if ( event != null ) {
+			final EntityUpsertEvent entityUpsertEvent = (EntityUpsertEvent) event;
+			entityUpsertEvent.end();
+			if ( entityUpsertEvent.shouldCommit() ) {
+				entityUpsertEvent.sessionIdentifier = getSessionIdentifier( session );
+				entityUpsertEvent.entityName = entityName;
+				entityUpsertEvent.id = Objects.toString(id);
+				entityUpsertEvent.success = success;
+				entityUpsertEvent.commit();
+			}
+		}
+	}
+
+	@Override
 	public HibernateMonitoringEvent beginEntityDeleteEvent() {
 		if ( entityDeleteEventType.isEnabled() ) {
 			final EntityDeleteEvent event = new EntityDeleteEvent();
@@ -643,14 +675,14 @@ public class JfrEventManager implements EventManager {
 			boolean success,
 			SharedSessionContractImplementor session) {
 		if ( event != null ) {
-			final CollectionRecreateEvent entityInsertEvent = (CollectionRecreateEvent) event;
-			entityInsertEvent.end();
-			if ( entityInsertEvent.shouldCommit() ) {
-				entityInsertEvent.sessionIdentifier = getSessionIdentifier( session );
-				entityInsertEvent.role = role;
-				entityInsertEvent.id = Objects.toString(id);
-				entityInsertEvent.success = success;
-				entityInsertEvent.commit();
+			final CollectionRecreateEvent collectionRecreateEvent = (CollectionRecreateEvent) event;
+			collectionRecreateEvent.end();
+			if ( collectionRecreateEvent.shouldCommit() ) {
+				collectionRecreateEvent.sessionIdentifier = getSessionIdentifier( session );
+				collectionRecreateEvent.role = role;
+				collectionRecreateEvent.id = Objects.toString(id);
+				collectionRecreateEvent.success = success;
+				collectionRecreateEvent.commit();
 			}
 		}
 	}
@@ -674,14 +706,14 @@ public class JfrEventManager implements EventManager {
 			boolean success,
 			SharedSessionContractImplementor session) {
 		if ( event != null ) {
-			final CollectionUpdateEvent entityUpdateEvent = (CollectionUpdateEvent) event;
-			entityUpdateEvent.end();
-			if ( entityUpdateEvent.shouldCommit() ) {
-				entityUpdateEvent.sessionIdentifier = getSessionIdentifier( session );
-				entityUpdateEvent.role = role;
-				entityUpdateEvent.id = Objects.toString(id);
-				entityUpdateEvent.success = success;
-				entityUpdateEvent.commit();
+			final CollectionUpdateEvent collectionUpdateEvent = (CollectionUpdateEvent) event;
+			collectionUpdateEvent.end();
+			if ( collectionUpdateEvent.shouldCommit() ) {
+				collectionUpdateEvent.sessionIdentifier = getSessionIdentifier( session );
+				collectionUpdateEvent.role = role;
+				collectionUpdateEvent.id = Objects.toString(id);
+				collectionUpdateEvent.success = success;
+				collectionUpdateEvent.commit();
 			}
 		}
 	}
@@ -705,14 +737,14 @@ public class JfrEventManager implements EventManager {
 			boolean success,
 			SharedSessionContractImplementor session) {
 		if ( event != null ) {
-			final CollectionRemoveEvent entityDeleteEvent = (CollectionRemoveEvent) event;
-			entityDeleteEvent.end();
-			if ( entityDeleteEvent.shouldCommit() ) {
-				entityDeleteEvent.sessionIdentifier = getSessionIdentifier( session );
-				entityDeleteEvent.role = role;
-				entityDeleteEvent.id = Objects.toString(id);
-				entityDeleteEvent.success = success;
-				entityDeleteEvent.commit();
+			final CollectionRemoveEvent collectionRemoveEvent = (CollectionRemoveEvent) event;
+			collectionRemoveEvent.end();
+			if ( collectionRemoveEvent.shouldCommit() ) {
+				collectionRemoveEvent.sessionIdentifier = getSessionIdentifier( session );
+				collectionRemoveEvent.role = role;
+				collectionRemoveEvent.id = Objects.toString(id);
+				collectionRemoveEvent.success = success;
+				collectionRemoveEvent.commit();
 			}
 		}
 	}

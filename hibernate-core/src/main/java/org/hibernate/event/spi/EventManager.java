@@ -165,6 +165,10 @@ public interface EventManager {
 
 	void completeEntityUpdateEvent(HibernateMonitoringEvent event, Object id, String entityName, boolean success, SharedSessionContractImplementor session);
 
+	HibernateMonitoringEvent beginEntityUpsertEvent();
+
+	void completeEntityUpsertEvent(HibernateMonitoringEvent event, Object id, String entityName, boolean success, SharedSessionContractImplementor session);
+
 	HibernateMonitoringEvent beginEntityDeleteEvent();
 
 	void completeEntityDeleteEvent(HibernateMonitoringEvent event, Object id, String entityName, boolean success, SharedSessionContractImplementor session);

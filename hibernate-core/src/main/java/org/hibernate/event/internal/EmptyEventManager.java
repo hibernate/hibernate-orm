@@ -267,6 +267,16 @@ public final class EmptyEventManager implements EventManager {
 	}
 
 	@Override
+	public HibernateMonitoringEvent beginEntityUpsertEvent() {
+		return null;
+	}
+
+	@Override
+	public void completeEntityUpsertEvent(HibernateMonitoringEvent event, Object id, String entityName, boolean success, SharedSessionContractImplementor session) {
+
+	}
+
+	@Override
 	public HibernateMonitoringEvent beginEntityDeleteEvent() {
 		return null;
 	}

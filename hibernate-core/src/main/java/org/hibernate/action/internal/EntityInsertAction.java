@@ -181,7 +181,7 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 	}
 
 	protected boolean cacheInsert(EntityPersister persister, Object ck) {
-		SharedSessionContractImplementor session = getSession();
+		final SharedSessionContractImplementor session = getSession();
 		final EventManager eventManager = session.getEventManager();
 		final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
 		final EntityDataAccess cacheAccessStrategy = persister.getCacheAccessStrategy();
@@ -227,8 +227,8 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 	}
 
 	private void postCommitOnFailure(PostInsertEventListener listener, PostInsertEvent event) {
-		if ( listener instanceof PostCommitInsertEventListener ) {
-			((PostCommitInsertEventListener) listener).onPostInsertCommitFailed( event );
+		if ( listener instanceof PostCommitInsertEventListener postCommitInsertEventListener ) {
+			postCommitInsertEventListener.onPostInsertCommitFailed( event );
 		}
 		else {
 			//default to the legacy implementation that always fires the event
@@ -257,7 +257,7 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 		final EntityPersister persister = getPersister();
 		if ( success && isCachePutEnabled( persister, getSession() ) ) {
 			final EntityDataAccess cache = persister.getCacheAccessStrategy();
-			SessionFactoryImplementor factory = session.getFactory();
+			final SessionFactoryImplementor factory = session.getFactory();
 			final Object ck = cache.generateCacheKey( getId(), persister, factory, session.getTenantIdentifier() );
 			final boolean put = cacheAfterInsert( cache, ck );
 
@@ -273,7 +273,7 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 	}
 
 	protected boolean cacheAfterInsert(EntityDataAccess cache, Object ck) {
-		SharedSessionContractImplementor session = getSession();
+		final SharedSessionContractImplementor session = getSession();
 		final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
 		final EventManager eventManager = session.getEventManager();
 		final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();

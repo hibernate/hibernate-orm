@@ -15,6 +15,9 @@ import org.hibernate.event.spi.FlushEvent;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 
+/**
+ * An {@link EventManager} that ignores all events.
+ */
 public final class EmptyEventManager implements EventManager {
 
 	@Override
@@ -274,6 +277,36 @@ public final class EmptyEventManager implements EventManager {
 			Object id, String entityName,
 			boolean success,
 			SharedSessionContractImplementor session) {
+
+	}
+
+	@Override
+	public HibernateMonitoringEvent beginCollectionRecreateEvent() {
+		return null;
+	}
+
+	@Override
+	public void completeCollectionRecreateEvent(HibernateMonitoringEvent event, Object id, String role, boolean success, SharedSessionContractImplementor session) {
+
+	}
+
+	@Override
+	public HibernateMonitoringEvent beginCollectionUpdateEvent() {
+		return null;
+	}
+
+	@Override
+	public void completeCollectionUpdateEvent(HibernateMonitoringEvent event, Object id, String role, boolean success, SharedSessionContractImplementor session) {
+
+	}
+
+	@Override
+	public HibernateMonitoringEvent beginCollectionRemoveEvent() {
+		return null;
+	}
+
+	@Override
+	public void completeCollectionRemoveEvent(HibernateMonitoringEvent event, Object id, String role, boolean success, SharedSessionContractImplementor session) {
 
 	}
 }

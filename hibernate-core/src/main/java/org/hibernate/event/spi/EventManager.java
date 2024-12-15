@@ -169,6 +169,18 @@ public interface EventManager {
 
 	void completeEntityDeleteEvent(HibernateMonitoringEvent event, Object id, String entityName, boolean success, SharedSessionContractImplementor session);
 
+	HibernateMonitoringEvent beginCollectionRecreateEvent();
+
+	void completeCollectionRecreateEvent(HibernateMonitoringEvent event, Object id, String role, boolean success, SharedSessionContractImplementor session);
+
+	HibernateMonitoringEvent beginCollectionUpdateEvent();
+
+	void completeCollectionUpdateEvent(HibernateMonitoringEvent event, Object id, String role, boolean success, SharedSessionContractImplementor session);
+
+	HibernateMonitoringEvent beginCollectionRemoveEvent();
+
+	void completeCollectionRemoveEvent(HibernateMonitoringEvent event, Object id, String role, boolean success, SharedSessionContractImplementor session);
+
 	enum CacheActionDescription {
 		ENTITY_INSERT( "Entity Insert" ),
 		ENTITY_AFTER_INSERT( "Entity After Insert" ),

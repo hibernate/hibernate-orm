@@ -7,7 +7,9 @@ package org.hibernate.action.internal;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventManager;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.event.spi.HibernateMonitoringEvent;
 import org.hibernate.event.spi.PostCollectionRecreateEvent;
 import org.hibernate.event.spi.PostCollectionRecreateEventListener;
 import org.hibernate.event.spi.PreCollectionRecreateEvent;
@@ -42,14 +44,26 @@ public final class CollectionRecreateAction extends CollectionAction {
 		final PersistentCollection<?> collection = getCollection();
 		preRecreate();
 		final SharedSessionContractImplementor session = getSession();
-		getPersister().recreate( collection, getKey(), session);
+		final CollectionPersister persister = getPersister();
+		final Object key = getKey();
+		final EventManager eventManager = session.getEventManager();
+		final HibernateMonitoringEvent event = eventManager.beginCollectionRecreateEvent();
+		boolean success = false;
+		try {
+			persister.recreate( collection, key, session );
+			success = true;
+		}
+		finally {
+			eventManager.completeCollectionRecreateEvent( event, key, persister.getRole(), success, session );
+		}
+
 		session.getPersistenceContextInternal().getCollectionEntry( collection ).afterAction( collection );
 		evict();
 		postRecreate();
 
 		final StatisticsImplementor statistics = session.getFactory().getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {
-			statistics.recreateCollection( getPersister().getRole() );
+			statistics.recreateCollection( persister.getRole() );
 		}
 	}
 

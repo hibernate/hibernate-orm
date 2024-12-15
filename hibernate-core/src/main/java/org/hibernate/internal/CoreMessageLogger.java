@@ -799,7 +799,7 @@ public interface CoreMessageLogger extends BasicLogger {
 						Second-level cache hits (misses): %s (%s)
 						Entities loaded: %s
 						Entities fetched: %s (minimize this)
-						Entities updated, inserted, deleted: %s, %s, %s
+						Entities updated, upserted, inserted, deleted: %s, %s, %s, %s
 						Collections loaded: %s
 						Collections fetched: %s (minimize this)
 						Collections updated, removed, recreated: %s, %s, %s
@@ -833,6 +833,7 @@ public interface CoreMessageLogger extends BasicLogger {
 			long entityLoadCount,
 			long entityFetchCount,
 			long entityUpdateCount,
+			long entityUpsertCount,
 			long entityInsertCount,
 			long entityDeleteCount,
 			long collectionLoadCount,

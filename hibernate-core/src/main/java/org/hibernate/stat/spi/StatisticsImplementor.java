@@ -81,6 +81,13 @@ public interface StatisticsImplementor extends Statistics, Service {
 	void updateEntity(String entityName);
 
 	/**
+	 * Callback about an entity being upserted.
+	 *
+	 * @param entityName The name of the entity upserted.
+	 */
+	void upsertEntity(String entityName);
+
+	/**
 	 * Callback about an entity being inserted
 	 *
 	 * @param entityName The name of the entity inserted

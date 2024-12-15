@@ -157,6 +157,11 @@ public interface Statistics {
 	long getEntityUpdateCount();
 
 	/**
+	 * The global number of entity upserts.
+	 */
+	long getEntityUpsertCount();
+
+	/**
 	 * The global number of executed queries.
 	 */
 	long getQueryExecutionCount();

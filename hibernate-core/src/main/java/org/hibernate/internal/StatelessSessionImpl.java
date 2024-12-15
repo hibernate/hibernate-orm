@@ -31,6 +31,8 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
+import org.hibernate.event.spi.EventManager;
+import org.hibernate.event.spi.HibernateMonitoringEvent;
 import org.hibernate.event.spi.PostDeleteEvent;
 import org.hibernate.event.spi.PostDeleteEventListener;
 import org.hibernate.event.spi.PostInsertEvent;
@@ -184,23 +186,45 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			}
 			else {
 				getInterceptor().onInsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
-				persister.getInsertCoordinator().insert( entity, id, state, this );
+				final EventManager eventManager = getEventManager();
+				final HibernateMonitoringEvent event = eventManager.beginEntityInsertEvent();
+				boolean success = false;
+				try {
+					persister.getInsertCoordinator().insert( entity, id, state, this );
+					success = true;
+				}
+				finally {
+					eventManager.completeEntityInsertEvent( event, id, persister.getEntityName(), success, this );
+				}
 			}
 		}
-		forEachOwnedCollection( entity, id, persister,
-				(descriptor, collection) -> {
-					descriptor.recreate( collection, id, this);
-					final StatisticsImplementor statistics = getFactory().getStatistics();
-					if ( statistics.isStatisticsEnabled() ) {
-						statistics.recreateCollection( descriptor.getRole() );
-					}
-				} );
+		recreateCollections( entity, id, persister );
 		firePostInsert(entity, id, state, persister);
 		final StatisticsImplementor statistics = getFactory().getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {
 			statistics.insertEntity( persister.getEntityName() );
 		}
 		return id;
+	}
+
+	private void recreateCollections(Object entity, Object id, EntityPersister persister) {
+		forEachOwnedCollection( entity, id, persister,
+				(descriptor, collection) -> {
+					final EventManager eventManager = getEventManager();
+					final HibernateMonitoringEvent event = eventManager.beginCollectionRecreateEvent();
+					boolean success = false;
+					try {
+						descriptor.recreate( collection, id, this );
+						success = true;
+					}
+					finally {
+						eventManager.completeCollectionRecreateEvent( event, id, descriptor.getRole(), success, this );
+					}
+					final StatisticsImplementor statistics = getFactory().getStatistics();
+					if ( statistics.isStatisticsEnabled() ) {
+						statistics.recreateCollection( descriptor.getRole() );
+					}
+				} );
 	}
 
 	// deletes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -231,23 +255,45 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		final Object id = persister.getIdentifier( entity, this );
 		final Object version = persister.getVersion( entity );
 		if ( !firePreDelete(entity, id, persister) ) {
-			getInterceptor()
-					.onDelete( entity, id, persister.getPropertyNames(), persister.getPropertyTypes() );
-			forEachOwnedCollection( entity, id, persister,
-					(descriptor, collection) -> {
-						descriptor.remove( id, this );
-						final StatisticsImplementor statistics = getFactory().getStatistics();
-						if ( statistics.isStatisticsEnabled() ) {
-							statistics.removeCollection( descriptor.getRole() );
-						}
-					} );
-			persister.getDeleteCoordinator().delete( entity, id, version, this );
+			getInterceptor().onDelete( entity, id, persister.getPropertyNames(), persister.getPropertyTypes() );
+			removeCollections( entity, id, persister );
+			final EventManager eventManager = getEventManager();
+			final HibernateMonitoringEvent event = eventManager.beginEntityDeleteEvent();
+			boolean success = false;
+			try {
+				persister.getDeleteCoordinator().delete( entity, id, version, this );
+				success = true;
+			}
+			finally {
+				eventManager.completeEntityDeleteEvent( event, id, persister.getEntityName(), success, this );
+			}
 			firePostDelete(entity, id, persister);
 			final StatisticsImplementor statistics = getFactory().getStatistics();
 			if ( statistics.isStatisticsEnabled() ) {
 				statistics.deleteEntity( persister.getEntityName() );
 			}
 		}
+	}
+
+	private void removeCollections(Object entity, Object id, EntityPersister persister) {
+		forEachOwnedCollection( entity, id, persister,
+				(descriptor, collection) -> {
+					final EventManager eventManager = getEventManager();
+					final HibernateMonitoringEvent event = eventManager.beginCollectionRemoveEvent();
+					boolean success = false;
+					try {
+						descriptor.remove( id, this );
+						success = true;
+					}
+					finally {
+						eventManager.completeCollectionRemoveEvent( event, id, descriptor.getRole(), success, this );
+					}
+
+					final StatisticsImplementor statistics = getFactory().getStatistics();
+					if ( statistics.isStatisticsEnabled() ) {
+						statistics.removeCollection( descriptor.getRole() );
+					}
+				} );
 	}
 
 
@@ -289,25 +335,46 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			oldVersion = null;
 		}
 		if ( !firePreUpdate(entity, id, state, persister) ) {
-			getInterceptor()
-					.onUpdate( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
-			persister.getUpdateCoordinator().update( entity, id, null, state, oldVersion, null, null, false, this );
-			forEachOwnedCollection( entity, id, persister,
-					(descriptor, collection) -> {
-						// TODO: can we do better here?
-						descriptor.remove( id, this );
-						descriptor.recreate( collection, id, this );
-						final StatisticsImplementor statistics = getFactory().getStatistics();
-						if ( statistics.isStatisticsEnabled() ) {
-							statistics.updateCollection( descriptor.getRole() );
-						}
-					} );
+			getInterceptor().onUpdate( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
+			final EventManager eventManager = getEventManager();
+			final HibernateMonitoringEvent event = eventManager.beginEntityUpdateEvent();
+			boolean success = false;
+			try {
+				persister.getUpdateCoordinator().update( entity, id, null, state, oldVersion, null, null, false, this );
+				success = true;
+			}
+			finally {
+				eventManager.completeEntityUpdateEvent( event, id, persister.getEntityName(), success, this );
+			}
+			removeAndRecreateCollections( entity, id, persister );
 			firePostUpdate(entity, id, state, persister);
 			final StatisticsImplementor statistics = getFactory().getStatistics();
 			if ( statistics.isStatisticsEnabled() ) {
 				statistics.updateEntity( persister.getEntityName() );
 			}
 		}
+	}
+
+	private void removeAndRecreateCollections(Object entity, Object id, EntityPersister persister) {
+		forEachOwnedCollection( entity, id, persister,
+				(descriptor, collection) -> {
+					final EventManager eventManager = getEventManager();
+					final HibernateMonitoringEvent event = eventManager.beginCollectionRemoveEvent();
+					boolean success = false;
+					try {
+						// TODO: can we do better here?
+						descriptor.remove( id, this );
+						descriptor.recreate( collection, id, this );
+						success = true;
+					}
+					finally {
+						eventManager.completeCollectionRemoveEvent( event, id, descriptor.getRole(), success, this );
+					}
+					final StatisticsImplementor statistics = getFactory().getStatistics();
+					if ( statistics.isStatisticsEnabled() ) {
+						statistics.updateCollection( descriptor.getRole() );
+					}
+				} );
 	}
 
 	@Override
@@ -336,21 +403,23 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		final Object id = idToUpsert( entity, persister );
 		final Object[] state = persister.getValues( entity );
 		if ( !firePreUpsert(entity, id, state, persister) ) {
-			getInterceptor()
-					.onUpsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
+			getInterceptor().onUpsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
 			final Object oldVersion = versionToUpsert( entity, persister, state );
-			persister.getMergeCoordinator().update( entity, id, null, state, oldVersion, null, null, false, this );
-			// TODO: statistics for upsert!
-			forEachOwnedCollection( entity, id, persister,
-					(descriptor, collection) -> {
-						// TODO: can we do better here?
-						descriptor.remove( id, this );
-						descriptor.recreate( collection, id, this );
-						final StatisticsImplementor statistics = getFactory().getStatistics();
-						if ( statistics.isStatisticsEnabled() ) {
-							statistics.updateCollection( descriptor.getRole() );
-						}
-					} );
+			final EventManager eventManager = getEventManager();
+			final HibernateMonitoringEvent event = eventManager.beginEntityUpsertEvent();
+			boolean success = false;
+			try {
+				persister.getMergeCoordinator().update( entity, id, null, state, oldVersion, null, null, false, this );
+				success = true;
+			}
+			finally {
+				eventManager.completeEntityUpsertEvent( event, id, persister.getEntityName(), success, this );
+			}
+			final StatisticsImplementor statistics = getFactory().getStatistics();
+			if ( statistics.isStatisticsEnabled() ) {
+				statistics.upsertEntity( persister.getEntityName() );
+			}
+			removeAndRecreateCollections( entity, id, persister );
 			firePostUpsert(entity, id, state, persister);
 		}
 	}

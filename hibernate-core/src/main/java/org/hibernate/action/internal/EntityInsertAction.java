@@ -105,12 +105,17 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 		if ( !veto ) {
 			final EntityPersister persister = getPersister();
 			final Object instance = getInstance();
-			final GeneratedValues generatedValues = persister.getInsertCoordinator().insert(
-					instance,
-					id,
-					getState(),
-					session
-			);
+			final EventManager eventManager = session.getEventManager();
+			final HibernateMonitoringEvent event = eventManager.beginEntityInsertEvent();
+			boolean success = false;
+			final GeneratedValues generatedValues;
+			try {
+				generatedValues = persister.getInsertCoordinator().insert( instance, id, getState(), session );
+				success = true;
+			}
+			finally {
+				eventManager.completeEntityInsertEvent( event, id, persister.getEntityName(), success, session );
+			}
 			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 			final EntityEntry entry = persistenceContext.getEntry( instance );
 			if ( entry == null ) {

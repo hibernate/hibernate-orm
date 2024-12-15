@@ -234,4 +234,46 @@ public final class EmptyEventManager implements EventManager {
 			SharedSessionContractImplementor session) {
 
 	}
+
+	@Override
+	public HibernateMonitoringEvent beginEntityInsertEvent() {
+		return null;
+	}
+
+	@Override
+	public void completeEntityInsertEvent(
+			HibernateMonitoringEvent event,
+			Object id, String entityName,
+			boolean success,
+			SharedSessionContractImplementor session) {
+
+	}
+
+	@Override
+	public HibernateMonitoringEvent beginEntityUpdateEvent() {
+		return null;
+	}
+
+	@Override
+	public void completeEntityUpdateEvent(
+			HibernateMonitoringEvent event,
+			Object id, String entityName,
+			boolean success,
+			SharedSessionContractImplementor session) {
+
+	}
+
+	@Override
+	public HibernateMonitoringEvent beginEntityDeleteEvent() {
+		return null;
+	}
+
+	@Override
+	public void completeEntityDeleteEvent(
+			HibernateMonitoringEvent event,
+			Object id, String entityName,
+			boolean success,
+			SharedSessionContractImplementor session) {
+
+	}
 }

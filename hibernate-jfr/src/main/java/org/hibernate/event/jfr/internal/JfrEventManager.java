@@ -4,6 +4,7 @@
  */
 package org.hibernate.event.jfr.internal;
 
+import org.hibernate.LockMode;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.access.CachedDomainDataAccess;
 import org.hibernate.engine.spi.EntityEntry;
@@ -45,6 +46,7 @@ public class JfrEventManager implements EventManager {
 	private static final EventType entityUpdateEventType = EventType.getEventType( EntityUpdateEvent.class );
 	private static final EventType entityUpsertEventType = EventType.getEventType( EntityUpsertEvent.class );
 	private static final EventType entityDeleteEventType = EventType.getEventType( EntityDeleteEvent.class );
+	private static final EventType entityLockEventType = EventType.getEventType( EntityLockEvent.class );
 	private static final EventType collectionRecreateEventType = EventType.getEventType( CollectionRecreateEvent.class );
 	private static final EventType collectionUpdateEventType = EventType.getEventType( CollectionUpdateEvent.class );
 	private static final EventType collectionRemoveEventType = EventType.getEventType( CollectionRemoveEvent.class );
@@ -652,6 +654,34 @@ public class JfrEventManager implements EventManager {
 				entityDeleteEvent.id = Objects.toString(id);
 				entityDeleteEvent.success = success;
 				entityDeleteEvent.commit();
+			}
+		}
+	}
+
+	@Override
+	public HibernateMonitoringEvent beginEntityLockEvent() {
+		if ( entityLockEventType.isEnabled() ) {
+			final EntityLockEvent event = new EntityLockEvent();
+			event.begin();
+			return event;
+		}
+		else {
+			return null;
+		}
+	}
+
+	@Override
+	public void completeEntityLockEvent(HibernateMonitoringEvent event, Object id, String entityName, LockMode lockMode, boolean success, SharedSessionContractImplementor session) {
+		if ( event != null ) {
+			final EntityLockEvent entityLockEvent = (EntityLockEvent) event;
+			entityLockEvent.end();
+			if ( entityLockEvent.shouldCommit() ) {
+				entityLockEvent.sessionIdentifier = getSessionIdentifier( session );
+				entityLockEvent.entityName = entityName;
+				entityLockEvent.id = Objects.toString(id);
+				entityLockEvent.lockMode = lockMode;
+				entityLockEvent.success = success;
+				entityLockEvent.commit();
 			}
 		}
 	}

@@ -5,6 +5,7 @@
 package org.hibernate.event.spi;
 
 import org.hibernate.Incubating;
+import org.hibernate.LockMode;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.access.CachedDomainDataAccess;
 import org.hibernate.engine.spi.EntityEntry;
@@ -14,11 +15,20 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.JavaServiceLoadable;
 
 /**
- * Defines the contract for monitoring low-level events
- * involving interactions between the {@linkplain org.hibernate.Session}
- * and the database or second-level cache.
+ * Defines a contract for reporting and monitoring low-level events
+ * involving interactions between the {@linkplain org.hibernate.Session
+ * session} and the database or second-level cache.
+ * <p>
+ * For example, this interface is implemented by Hibernate JFR to report
+ * events to Java Flight Recorder.
+ * <p>
+ * Note that event reporting is different to aggregate <em>metrics</em>,
+ * which Hibernate exposes via the {@link org.hibernate.stat.Statistics}
+ * interface.
  *
  * @apiNote This an incubating API, subject to change.
+ *
+ * @since 6.4
  */
 @JavaServiceLoadable
 @Incubating
@@ -172,6 +182,10 @@ public interface EventManager {
 	HibernateMonitoringEvent beginEntityDeleteEvent();
 
 	void completeEntityDeleteEvent(HibernateMonitoringEvent event, Object id, String entityName, boolean success, SharedSessionContractImplementor session);
+
+	HibernateMonitoringEvent beginEntityLockEvent();
+
+	void completeEntityLockEvent(HibernateMonitoringEvent event, Object id, String entityName, LockMode lockMode, boolean success, SharedSessionContractImplementor session);
 
 	HibernateMonitoringEvent beginCollectionRecreateEvent();
 

@@ -4,6 +4,7 @@
  */
 package org.hibernate.event.internal;
 
+import org.hibernate.LockMode;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.access.CachedDomainDataAccess;
 import org.hibernate.engine.spi.EntityEntry;
@@ -287,6 +288,16 @@ public final class EmptyEventManager implements EventManager {
 			Object id, String entityName,
 			boolean success,
 			SharedSessionContractImplementor session) {
+
+	}
+
+	@Override
+	public HibernateMonitoringEvent beginEntityLockEvent() {
+		return null;
+	}
+
+	@Override
+	public void completeEntityLockEvent(HibernateMonitoringEvent event, Object id, String entityName, LockMode lockMode, boolean success, SharedSessionContractImplementor session) {
 
 	}
 

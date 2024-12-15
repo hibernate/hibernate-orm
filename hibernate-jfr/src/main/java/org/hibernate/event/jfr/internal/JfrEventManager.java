@@ -18,6 +18,8 @@ import org.hibernate.stat.internal.StatsHelper;
 
 import jdk.jfr.EventType;
 
+import java.util.Objects;
+
 
 @AllowNonPortable
 public class JfrEventManager implements EventManager {
@@ -39,6 +41,9 @@ public class JfrEventManager implements EventManager {
 	private static final EventType partialFlushEventType = EventType.getEventType( PartialFlushEvent.class );
 	private static final EventType dirtyCalculationEventType = EventType.getEventType( DirtyCalculationEvent.class );
 	private static final EventType prePartialFlushEventType = EventType.getEventType( PrePartialFlushEvent.class );
+	private static final EventType entityInsertEventType = EventType.getEventType( EntityInsertEvent.class );
+	private static final EventType entityUpdateEventType = EventType.getEventType( EntityUpdateEvent.class );
+	private static final EventType entityDeleteEventType = EventType.getEventType( EntityDeleteEvent.class );
 
 	@Override
 	public SessionOpenEvent beginSessionOpenEvent() {
@@ -523,6 +528,99 @@ public class JfrEventManager implements EventManager {
 		}
 	}
 
+	@Override
+	public HibernateMonitoringEvent beginEntityInsertEvent() {
+		if ( entityInsertEventType.isEnabled() ) {
+			final EntityInsertEvent event = new EntityInsertEvent();
+			event.begin();
+			return event;
+		}
+		else {
+			return null;
+		}
+	}
+
+	@Override
+	public void completeEntityInsertEvent(
+			HibernateMonitoringEvent event,
+			Object id, String entityName,
+			boolean success,
+			SharedSessionContractImplementor session) {
+		if ( event != null ) {
+			final EntityInsertEvent entityInsertEvent = (EntityInsertEvent) event;
+			entityInsertEvent.end();
+			if ( entityInsertEvent.shouldCommit() ) {
+				entityInsertEvent.sessionIdentifier = getSessionIdentifier( session );
+				entityInsertEvent.entityName = entityName;
+				entityInsertEvent.id = Objects.toString(id);
+				entityInsertEvent.success = success;
+				entityInsertEvent.commit();
+			}
+		}
+	}
+
+	@Override
+	public HibernateMonitoringEvent beginEntityUpdateEvent() {
+		if ( entityUpdateEventType.isEnabled() ) {
+			final EntityUpdateEvent event = new EntityUpdateEvent();
+			event.begin();
+			return event;
+		}
+		else {
+			return null;
+		}
+	}
+
+	@Override
+	public void completeEntityUpdateEvent(
+			HibernateMonitoringEvent event,
+			Object id, String entityName,
+			boolean success,
+			SharedSessionContractImplementor session) {
+		if ( event != null ) {
+			final EntityUpdateEvent entityUpdateEvent = (EntityUpdateEvent) event;
+			entityUpdateEvent.end();
+			if ( entityUpdateEvent.shouldCommit() ) {
+				entityUpdateEvent.sessionIdentifier = getSessionIdentifier( session );
+				entityUpdateEvent.entityName = entityName;
+				entityUpdateEvent.id = Objects.toString(id);
+				entityUpdateEvent.success = success;
+				entityUpdateEvent.commit();
+			}
+		}
+	}
+
+	@Override
+	public HibernateMonitoringEvent beginEntityDeleteEvent() {
+		if ( entityDeleteEventType.isEnabled() ) {
+			final EntityDeleteEvent event = new EntityDeleteEvent();
+			event.begin();
+			return event;
+		}
+		else {
+			return null;
+		}
+	}
+
+	@Override
+	public void completeEntityDeleteEvent(
+			HibernateMonitoringEvent event,
+			Object id, String entityName,
+			boolean success,
+			SharedSessionContractImplementor session) {
+		if ( event != null ) {
+			final EntityDeleteEvent entityDeleteEvent = (EntityDeleteEvent) event;
+			entityDeleteEvent.end();
+			if ( entityDeleteEvent.shouldCommit() ) {
+				entityDeleteEvent.sessionIdentifier = getSessionIdentifier( session );
+				entityDeleteEvent.entityName = entityName;
+				entityDeleteEvent.id = Objects.toString(id);
+				entityDeleteEvent.success = success;
+				entityDeleteEvent.commit();
+			}
+		}
+	}
+
 	private String getSessionIdentifier(SharedSessionContractImplementor session) {
 		if ( session == null ) {
 			return null;
@@ -533,4 +631,5 @@ public class JfrEventManager implements EventManager {
 	private String getEntityName(EntityPersister persister) {
 		return StatsHelper.getRootEntityRole( persister ).getFullPath();
 	}
+
 }

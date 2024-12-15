@@ -164,17 +164,27 @@ public class EntityUpdateAction extends EntityAction {
 			final Object instance = getInstance();
 			final Object previousVersion = getPreviousVersion();
 			final Object ck = lockCacheItem( previousVersion );
-			final GeneratedValues generatedValues = persister.getUpdateCoordinator().update(
-					instance,
-					id,
-					rowId,
-					state,
-					previousVersion,
-					previousState,
-					dirtyFields,
-					hasDirtyCollection,
-					session
-			);
+			final EventManager eventManager = session.getEventManager();
+			final HibernateMonitoringEvent event = eventManager.beginEntityUpdateEvent();
+			boolean success = false;
+			final GeneratedValues generatedValues;
+			try {
+				generatedValues = persister.getUpdateCoordinator().update(
+						instance,
+						id,
+						rowId,
+						state,
+						previousVersion,
+						previousState,
+						dirtyFields,
+						hasDirtyCollection,
+						session
+				);
+				success = true;
+			}
+			finally {
+				eventManager.completeEntityUpdateEvent( event, id, persister.getEntityName(), success, session );
+			}
 			final EntityEntry entry = session.getPersistenceContextInternal().getEntry( instance );
 			if ( entry == null ) {
 				throw new AssertionFailure( "possible non thread safe access to session" );

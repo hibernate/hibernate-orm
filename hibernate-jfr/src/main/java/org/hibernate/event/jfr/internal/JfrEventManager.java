@@ -44,6 +44,9 @@ public class JfrEventManager implements EventManager {
 	private static final EventType entityInsertEventType = EventType.getEventType( EntityInsertEvent.class );
 	private static final EventType entityUpdateEventType = EventType.getEventType( EntityUpdateEvent.class );
 	private static final EventType entityDeleteEventType = EventType.getEventType( EntityDeleteEvent.class );
+	private static final EventType collectionRecreateEventType = EventType.getEventType( CollectionRecreateEvent.class );
+	private static final EventType collectionUpdateEventType = EventType.getEventType( CollectionUpdateEvent.class );
+	private static final EventType collectionRemoveEventType = EventType.getEventType( CollectionRemoveEvent.class );
 
 	@Override
 	public SessionOpenEvent beginSessionOpenEvent() {
@@ -614,6 +617,99 @@ public class JfrEventManager implements EventManager {
 			if ( entityDeleteEvent.shouldCommit() ) {
 				entityDeleteEvent.sessionIdentifier = getSessionIdentifier( session );
 				entityDeleteEvent.entityName = entityName;
+				entityDeleteEvent.id = Objects.toString(id);
+				entityDeleteEvent.success = success;
+				entityDeleteEvent.commit();
+			}
+		}
+	}
+
+	@Override
+	public HibernateMonitoringEvent beginCollectionRecreateEvent() {
+		if ( collectionRecreateEventType.isEnabled() ) {
+			final CollectionRecreateEvent event = new CollectionRecreateEvent();
+			event.begin();
+			return event;
+		}
+		else {
+			return null;
+		}
+	}
+
+	@Override
+	public void completeCollectionRecreateEvent(
+			HibernateMonitoringEvent event,
+			Object id, String role,
+			boolean success,
+			SharedSessionContractImplementor session) {
+		if ( event != null ) {
+			final CollectionRecreateEvent entityInsertEvent = (CollectionRecreateEvent) event;
+			entityInsertEvent.end();
+			if ( entityInsertEvent.shouldCommit() ) {
+				entityInsertEvent.sessionIdentifier = getSessionIdentifier( session );
+				entityInsertEvent.role = role;
+				entityInsertEvent.id = Objects.toString(id);
+				entityInsertEvent.success = success;
+				entityInsertEvent.commit();
+			}
+		}
+	}
+
+	@Override
+	public HibernateMonitoringEvent beginCollectionUpdateEvent() {
+		if ( collectionUpdateEventType.isEnabled() ) {
+			final CollectionUpdateEvent event = new CollectionUpdateEvent();
+			event.begin();
+			return event;
+		}
+		else {
+			return null;
+		}
+	}
+
+	@Override
+	public void completeCollectionUpdateEvent(
+			HibernateMonitoringEvent event,
+			Object id, String role,
+			boolean success,
+			SharedSessionContractImplementor session) {
+		if ( event != null ) {
+			final CollectionUpdateEvent entityUpdateEvent = (CollectionUpdateEvent) event;
+			entityUpdateEvent.end();
+			if ( entityUpdateEvent.shouldCommit() ) {
+				entityUpdateEvent.sessionIdentifier = getSessionIdentifier( session );
+				entityUpdateEvent.role = role;
+				entityUpdateEvent.id = Objects.toString(id);
+				entityUpdateEvent.success = success;
+				entityUpdateEvent.commit();
+			}
+		}
+	}
+
+	@Override
+	public HibernateMonitoringEvent beginCollectionRemoveEvent() {
+		if ( collectionRemoveEventType.isEnabled() ) {
+			final CollectionRemoveEvent event = new CollectionRemoveEvent();
+			event.begin();
+			return event;
+		}
+		else {
+			return null;
+		}
+	}
+
+	@Override
+	public void completeCollectionRemoveEvent(
+			HibernateMonitoringEvent event,
+			Object id, String role,
+			boolean success,
+			SharedSessionContractImplementor session) {
+		if ( event != null ) {
+			final CollectionRemoveEvent entityDeleteEvent = (CollectionRemoveEvent) event;
+			entityDeleteEvent.end();
+			if ( entityDeleteEvent.shouldCommit() ) {
+				entityDeleteEvent.sessionIdentifier = getSessionIdentifier( session );
+				entityDeleteEvent.role = role;
 				entityDeleteEvent.id = Objects.toString(id);
 				entityDeleteEvent.success = success;
 				entityDeleteEvent.commit();

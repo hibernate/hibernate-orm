@@ -8,7 +8,9 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventManager;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.event.spi.HibernateMonitoringEvent;
 import org.hibernate.event.spi.PostCollectionRemoveEvent;
 import org.hibernate.event.spi.PostCollectionRemoveEventListener;
 import org.hibernate.event.spi.PreCollectionRemoveEvent;
@@ -108,8 +110,20 @@ public final class CollectionRemoveAction extends CollectionAction {
 			// is replaced by null or a different collection
 			// (if the collection is uninitialized, Hibernate has no way of
 			// knowing if the collection is actually empty without querying the db)
-			getPersister().remove( getKey(), session );
+			final CollectionPersister persister = getPersister();
+			final Object key = getKey();
+			final EventManager eventManager = session.getEventManager();
+			final HibernateMonitoringEvent event = eventManager.beginCollectionRemoveEvent();
+			boolean success = false;
+			try {
+				persister.remove( key, session );
+				success = true;
+			}
+			finally {
+				eventManager.completeCollectionRemoveEvent( event, key, persister.getRole(), success, session );
+			}
 		}
+
 		final PersistentCollection<?> collection = getCollection();
 		if ( collection != null ) {
 			session.getPersistenceContextInternal().getCollectionEntry( collection ).afterAction( collection );
@@ -130,12 +144,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 	}
 
 	private PreCollectionRemoveEvent newPreCollectionRemoveEvent() {
-		return new PreCollectionRemoveEvent(
-				getPersister(),
-				getCollection(),
-				eventSource(),
-				affectedOwner
-		);
+		return new PreCollectionRemoveEvent( getPersister(), getCollection(), eventSource(), affectedOwner );
 	}
 
 	private void postRemove() {
@@ -145,12 +154,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 	}
 
 	private PostCollectionRemoveEvent newPostCollectionRemoveEvent() {
-		return new PostCollectionRemoveEvent(
-				getPersister(),
-				getCollection(),
-				eventSource(),
-				affectedOwner
-		);
+		return new PostCollectionRemoveEvent( getPersister(), getCollection(), eventSource(), affectedOwner );
 	}
 
 	public Object getAffectedOwner() {

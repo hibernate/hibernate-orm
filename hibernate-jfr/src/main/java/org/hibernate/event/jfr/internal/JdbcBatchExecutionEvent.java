@@ -18,7 +18,7 @@ import jdk.jfr.StackTrace;
 @Label("JDBC Batch Execution")
 @Category("Hibernate ORM")
 @Description("JDBC Batch Execution")
-@StackTrace(false)
+@StackTrace
 @AllowNonPortable
 public class JdbcBatchExecutionEvent extends Event implements HibernateMonitoringEvent {
 	public static final String NAME = "org.hibernate.orm.JdbcBatchExecution";

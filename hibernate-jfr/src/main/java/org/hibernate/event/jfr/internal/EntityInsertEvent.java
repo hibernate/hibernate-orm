@@ -17,7 +17,7 @@ import org.hibernate.internal.build.AllowNonPortable;
 @Label("Entity Insert")
 @Category("Hibernate ORM")
 @Description("Entity Insert")
-@StackTrace(false)
+@StackTrace
 @AllowNonPortable
 public class EntityInsertEvent extends Event implements HibernateMonitoringEvent {
 	public static final String NAME = "org.hibernate.orm.EntityInsertEvent";

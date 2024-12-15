@@ -21,7 +21,7 @@ import jdk.jfr.StackTrace;
 @Label("Session Opened")
 @Category("Hibernate ORM")
 @Description("Hibernate Session opened")
-@StackTrace(false)
+@StackTrace
 @AllowNonPortable
 public class SessionOpenEvent extends Event implements HibernateMonitoringEvent {
 	public static final String NAME = "org.hibernate.orm.SessionOpen";

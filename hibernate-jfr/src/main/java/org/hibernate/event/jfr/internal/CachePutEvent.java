@@ -18,7 +18,7 @@ import jdk.jfr.StackTrace;
 @Label( "Cache Put Executed" )
 @Category( "Hibernate ORM" )
 @Description( "Cache Put Executed" )
-@StackTrace(false)
+@StackTrace
 @AllowNonPortable
 public class CachePutEvent extends Event implements HibernateMonitoringEvent {
 	public static final String NAME = "org.hibernate.orm.CachePut";

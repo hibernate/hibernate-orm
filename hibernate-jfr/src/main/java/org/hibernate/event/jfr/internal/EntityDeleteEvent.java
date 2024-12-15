@@ -17,7 +17,7 @@ import org.hibernate.internal.build.AllowNonPortable;
 @Label("Entity Delete")
 @Category("Hibernate ORM")
 @Description("Entity Delete")
-@StackTrace(false)
+@StackTrace
 @AllowNonPortable
 public class EntityDeleteEvent extends Event implements HibernateMonitoringEvent {
 	public static final String NAME = "org.hibernate.orm.EntityDeleteEvent";

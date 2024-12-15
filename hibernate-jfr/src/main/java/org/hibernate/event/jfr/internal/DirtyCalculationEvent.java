@@ -18,7 +18,7 @@ import jdk.jfr.StackTrace;
 @Label("DirtyCalculationEvent Execution")
 @Category("Hibernate ORM")
 @Description("DirtyCalculationEvent Execution")
-@StackTrace(false)
+@StackTrace
 @AllowNonPortable
 public class DirtyCalculationEvent extends Event implements HibernateMonitoringEvent {
 	public static final String NAME = "org.hibernate.orm.DirtyCalculationEvent";

@@ -18,7 +18,7 @@ import jdk.jfr.StackTrace;
 @Label( "PartialFlushEvent Execution" )
 @Category( "Hibernate ORM" )
 @Description( "PartialFlushEvent Execution" )
-@StackTrace(false)
+@StackTrace
 @AllowNonPortable
 public class PartialFlushEvent extends Event implements HibernateMonitoringEvent {
 	public static final String NAME = "org.hibernate.orm.PartialFlushEvent";

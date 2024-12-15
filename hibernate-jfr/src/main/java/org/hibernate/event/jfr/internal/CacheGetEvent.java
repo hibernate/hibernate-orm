@@ -18,7 +18,7 @@ import jdk.jfr.StackTrace;
 @Label( "Cache Get Executed" )
 @Category( "Hibernate ORM" )
 @Description( "Cache Get Executed" )
-@StackTrace(false)
+@StackTrace
 @AllowNonPortable
 public class CacheGetEvent extends Event implements HibernateMonitoringEvent {
 	public static final String NAME = "org.hibernate.orm.CacheGet";

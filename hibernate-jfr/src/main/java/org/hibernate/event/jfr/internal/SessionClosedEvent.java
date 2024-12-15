@@ -21,7 +21,7 @@ import jdk.jfr.StackTrace;
 @Label("Session Closed")
 @Category("Hibernate ORM")
 @Description("Hibernate Session closed")
-@StackTrace(false)
+@StackTrace
 @AllowNonPortable
 public class SessionClosedEvent extends Event implements HibernateMonitoringEvent {
 	public static final String NAME = "org.hibernate.orm.SessionClosed";

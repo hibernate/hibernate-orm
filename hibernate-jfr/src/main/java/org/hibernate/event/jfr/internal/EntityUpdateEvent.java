@@ -17,7 +17,7 @@ import org.hibernate.internal.build.AllowNonPortable;
 @Label("Entity Update")
 @Category("Hibernate ORM")
 @Description("Entity Update")
-@StackTrace(false)
+@StackTrace
 @AllowNonPortable
 public class EntityUpdateEvent extends Event implements HibernateMonitoringEvent {
 	public static final String NAME = "org.hibernate.orm.EntityUpdateEvent";

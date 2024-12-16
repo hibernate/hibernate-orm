@@ -12,7 +12,7 @@ if (currentBuild.getBuildCauses().toString().contains('BranchIndexingCause')) {
 
 pipeline {
     agent {
-        label 'Fedora'
+        label 'Release'
     }
     tools {
         jdk 'OpenJDK 17 Latest'

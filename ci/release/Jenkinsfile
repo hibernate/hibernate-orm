@@ -65,7 +65,7 @@ def checkoutReleaseScripts() {
 
 pipeline {
 	agent {
-		label 'Worker&&Containers'
+		label 'Release'
 	}
 	triggers {
 		// Run every week Sunday midnight

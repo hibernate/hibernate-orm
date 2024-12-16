@@ -31,8 +31,8 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.spi.EventMonitor;
+import org.hibernate.event.spi.DiagnosticEvent;
 import org.hibernate.event.spi.PostDeleteEvent;
 import org.hibernate.event.spi.PostDeleteEventListener;
 import org.hibernate.event.spi.PostInsertEvent;
@@ -186,15 +186,15 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			}
 			else {
 				getInterceptor().onInsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
-				final EventManager eventManager = getEventManager();
-				final HibernateMonitoringEvent event = eventManager.beginEntityInsertEvent();
+				final EventMonitor eventMonitor = getEventMonitor();
+				final DiagnosticEvent event = eventMonitor.beginEntityInsertEvent();
 				boolean success = false;
 				try {
 					persister.getInsertCoordinator().insert( entity, id, state, this );
 					success = true;
 				}
 				finally {
-					eventManager.completeEntityInsertEvent( event, id, persister.getEntityName(), success, this );
+					eventMonitor.completeEntityInsertEvent( event, id, persister.getEntityName(), success, this );
 				}
 			}
 		}
@@ -210,15 +210,15 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	private void recreateCollections(Object entity, Object id, EntityPersister persister) {
 		forEachOwnedCollection( entity, id, persister,
 				(descriptor, collection) -> {
-					final EventManager eventManager = getEventManager();
-					final HibernateMonitoringEvent event = eventManager.beginCollectionRecreateEvent();
+					final EventMonitor eventMonitor = getEventMonitor();
+					final DiagnosticEvent event = eventMonitor.beginCollectionRecreateEvent();
 					boolean success = false;
 					try {
 						descriptor.recreate( collection, id, this );
 						success = true;
 					}
 					finally {
-						eventManager.completeCollectionRecreateEvent( event, id, descriptor.getRole(), success, this );
+						eventMonitor.completeCollectionRecreateEvent( event, id, descriptor.getRole(), success, this );
 					}
 					final StatisticsImplementor statistics = getFactory().getStatistics();
 					if ( statistics.isStatisticsEnabled() ) {
@@ -257,15 +257,15 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		if ( !firePreDelete(entity, id, persister) ) {
 			getInterceptor().onDelete( entity, id, persister.getPropertyNames(), persister.getPropertyTypes() );
 			removeCollections( entity, id, persister );
-			final EventManager eventManager = getEventManager();
-			final HibernateMonitoringEvent event = eventManager.beginEntityDeleteEvent();
+			final EventMonitor eventMonitor = getEventMonitor();
+			final DiagnosticEvent event = eventMonitor.beginEntityDeleteEvent();
 			boolean success = false;
 			try {
 				persister.getDeleteCoordinator().delete( entity, id, version, this );
 				success = true;
 			}
 			finally {
-				eventManager.completeEntityDeleteEvent( event, id, persister.getEntityName(), success, this );
+				eventMonitor.completeEntityDeleteEvent( event, id, persister.getEntityName(), success, this );
 			}
 			firePostDelete(entity, id, persister);
 			final StatisticsImplementor statistics = getFactory().getStatistics();
@@ -278,15 +278,15 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	private void removeCollections(Object entity, Object id, EntityPersister persister) {
 		forEachOwnedCollection( entity, id, persister,
 				(descriptor, collection) -> {
-					final EventManager eventManager = getEventManager();
-					final HibernateMonitoringEvent event = eventManager.beginCollectionRemoveEvent();
+					final EventMonitor eventMonitor = getEventMonitor();
+					final DiagnosticEvent event = eventMonitor.beginCollectionRemoveEvent();
 					boolean success = false;
 					try {
 						descriptor.remove( id, this );
 						success = true;
 					}
 					finally {
-						eventManager.completeCollectionRemoveEvent( event, id, descriptor.getRole(), success, this );
+						eventMonitor.completeCollectionRemoveEvent( event, id, descriptor.getRole(), success, this );
 					}
 
 					final StatisticsImplementor statistics = getFactory().getStatistics();
@@ -336,15 +336,15 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 		if ( !firePreUpdate(entity, id, state, persister) ) {
 			getInterceptor().onUpdate( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
-			final EventManager eventManager = getEventManager();
-			final HibernateMonitoringEvent event = eventManager.beginEntityUpdateEvent();
+			final EventMonitor eventMonitor = getEventMonitor();
+			final DiagnosticEvent event = eventMonitor.beginEntityUpdateEvent();
 			boolean success = false;
 			try {
 				persister.getUpdateCoordinator().update( entity, id, null, state, oldVersion, null, null, false, this );
 				success = true;
 			}
 			finally {
-				eventManager.completeEntityUpdateEvent( event, id, persister.getEntityName(), success, this );
+				eventMonitor.completeEntityUpdateEvent( event, id, persister.getEntityName(), success, this );
 			}
 			removeAndRecreateCollections( entity, id, persister );
 			firePostUpdate(entity, id, state, persister);
@@ -358,8 +358,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	private void removeAndRecreateCollections(Object entity, Object id, EntityPersister persister) {
 		forEachOwnedCollection( entity, id, persister,
 				(descriptor, collection) -> {
-					final EventManager eventManager = getEventManager();
-					final HibernateMonitoringEvent event = eventManager.beginCollectionRemoveEvent();
+					final EventMonitor eventMonitor = getEventMonitor();
+					final DiagnosticEvent event = eventMonitor.beginCollectionRemoveEvent();
 					boolean success = false;
 					try {
 						// TODO: can we do better here?
@@ -368,7 +368,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 						success = true;
 					}
 					finally {
-						eventManager.completeCollectionRemoveEvent( event, id, descriptor.getRole(), success, this );
+						eventMonitor.completeCollectionRemoveEvent( event, id, descriptor.getRole(), success, this );
 					}
 					final StatisticsImplementor statistics = getFactory().getStatistics();
 					if ( statistics.isStatisticsEnabled() ) {
@@ -405,15 +405,15 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		if ( !firePreUpsert(entity, id, state, persister) ) {
 			getInterceptor().onUpsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
 			final Object oldVersion = versionToUpsert( entity, persister, state );
-			final EventManager eventManager = getEventManager();
-			final HibernateMonitoringEvent event = eventManager.beginEntityUpsertEvent();
+			final EventMonitor eventMonitor = getEventMonitor();
+			final DiagnosticEvent event = eventMonitor.beginEntityUpsertEvent();
 			boolean success = false;
 			try {
 				persister.getMergeCoordinator().update( entity, id, null, state, oldVersion, null, null, false, this );
 				success = true;
 			}
 			finally {
-				eventManager.completeEntityUpsertEvent( event, id, persister.getEntityName(), success, this );
+				eventMonitor.completeEntityUpsertEvent( event, id, persister.getEntityName(), success, this );
 			}
 			final StatisticsImplementor statistics = getFactory().getStatistics();
 			if ( statistics.isStatisticsEnabled() ) {

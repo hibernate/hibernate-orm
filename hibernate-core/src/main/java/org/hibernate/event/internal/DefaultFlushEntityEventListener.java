@@ -23,8 +23,8 @@ import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.spi.EventMonitor;
+import org.hibernate.event.spi.DiagnosticEvent;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.FlushEntityEvent;
 import org.hibernate.event.spi.FlushEntityEventListener;
@@ -472,8 +472,8 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		final SessionImplementor session = event.getSession();
 		final boolean dirtyCheckPossible;
 		int[] dirtyProperties = null;
-		final EventManager eventManager = session.getEventManager();
-		final HibernateMonitoringEvent dirtyCalculationEvent = eventManager.beginDirtyCalculationEvent();
+		final EventMonitor eventMonitor = session.getEventMonitor();
+		final DiagnosticEvent dirtyCalculationEvent = eventMonitor.beginDirtyCalculationEvent();
 		final EntityEntry entry = event.getEntityEntry();
 		final EntityPersister persister = entry.getPersister();
 		try {
@@ -524,7 +524,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			event.setDirtyCheckPossible( dirtyCheckPossible );
 		}
 		finally {
-			eventManager.completeDirtyCalculationEvent( dirtyCalculationEvent, session, persister, entry, dirtyProperties );
+			eventMonitor.completeDirtyCalculationEvent( dirtyCalculationEvent, session, persister, entry, dirtyProperties );
 			session.getEventListenerManager().dirtyCalculationEnd( dirtyProperties != null );
 		}
 		return dirtyProperties;

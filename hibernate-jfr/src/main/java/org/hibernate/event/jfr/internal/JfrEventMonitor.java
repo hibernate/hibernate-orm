@@ -10,8 +10,8 @@ import org.hibernate.cache.spi.access.CachedDomainDataAccess;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.AutoFlushEvent;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.spi.EventMonitor;
+import org.hibernate.event.spi.DiagnosticEvent;
 import org.hibernate.internal.build.AllowNonPortable;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -23,7 +23,7 @@ import java.util.Objects;
 
 
 @AllowNonPortable
-public class JfrEventManager implements EventManager {
+public class JfrEventMonitor implements EventMonitor {
 
 	private static final EventType sessionOpenEventType = EventType.getEventType( SessionOpenEvent.class );
 	private static final EventType sessionClosedEventType = EventType.getEventType( SessionClosedEvent.class );
@@ -65,7 +65,7 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeSessionOpenEvent(
-			HibernateMonitoringEvent monitoringEvent,
+			DiagnosticEvent monitoringEvent,
 			SharedSessionContractImplementor session) {
 		if ( monitoringEvent != null ) {
 			final SessionOpenEvent sessionOpenEvent = (SessionOpenEvent) monitoringEvent;
@@ -91,7 +91,7 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeSessionClosedEvent(
-			HibernateMonitoringEvent monitoringEvent,
+			DiagnosticEvent monitoringEvent,
 			SharedSessionContractImplementor session) {
 		if ( monitoringEvent != null ) {
 			final SessionClosedEvent sessionClosedEvent = (SessionClosedEvent) monitoringEvent;
@@ -117,7 +117,7 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeJdbcConnectionAcquisitionEvent(
-			HibernateMonitoringEvent monitoringEvent,
+			DiagnosticEvent monitoringEvent,
 			SharedSessionContractImplementor session,
 			Object tenantId) {
 		if ( monitoringEvent != null ) {
@@ -147,7 +147,7 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeJdbcConnectionReleaseEvent(
-			HibernateMonitoringEvent monitoringEvent,
+			DiagnosticEvent monitoringEvent,
 			SharedSessionContractImplementor session,
 			Object tenantId) {
 		if ( monitoringEvent != null ) {
@@ -177,7 +177,7 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeJdbcPreparedStatementCreationEvent(
-			HibernateMonitoringEvent monitoringEvent,
+			DiagnosticEvent monitoringEvent,
 			String preparedStatementSql) {
 		if ( monitoringEvent != null ) {
 			final JdbcPreparedStatementCreationEvent jdbcPreparedStatementCreation = (JdbcPreparedStatementCreationEvent) monitoringEvent;
@@ -203,7 +203,7 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeJdbcPreparedStatementExecutionEvent(
-			HibernateMonitoringEvent monitoringEvent,
+			DiagnosticEvent monitoringEvent,
 			String preparedStatementSql) {
 		if ( monitoringEvent != null ) {
 			final JdbcPreparedStatementExecutionEvent jdbcPreparedStatementExecutionEvent = (JdbcPreparedStatementExecutionEvent) monitoringEvent;
@@ -229,7 +229,7 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeJdbcBatchExecutionEvent(
-			HibernateMonitoringEvent monitoringEvent,
+			DiagnosticEvent monitoringEvent,
 			String statementSql) {
 		if ( monitoringEvent != null ) {
 			final JdbcBatchExecutionEvent jdbcBatchExecutionEvent = (JdbcBatchExecutionEvent) monitoringEvent;
@@ -242,7 +242,7 @@ public class JfrEventManager implements EventManager {
 	}
 
 	@Override
-	public HibernateMonitoringEvent beginCachePutEvent() {
+	public DiagnosticEvent beginCachePutEvent() {
 		if ( cachePutEventType.isEnabled() ) {
 			final CachePutEvent cachePutEvent = new CachePutEvent();
 			cachePutEvent.begin();
@@ -255,7 +255,7 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeCachePutEvent(
-			HibernateMonitoringEvent monitoringEvent,
+			DiagnosticEvent monitoringEvent,
 			SharedSessionContractImplementor session,
 			Region region,
 			boolean cacheContentChanged,
@@ -275,7 +275,7 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeCachePutEvent(
-			HibernateMonitoringEvent monitoringEvent,
+			DiagnosticEvent monitoringEvent,
 			SharedSessionContractImplementor session,
 			CachedDomainDataAccess cachedDomainDataAccess,
 			EntityPersister persister,
@@ -294,7 +294,7 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeCachePutEvent(
-			HibernateMonitoringEvent monitoringEvent,
+			DiagnosticEvent monitoringEvent,
 			SharedSessionContractImplementor session,
 			CachedDomainDataAccess cachedDomainDataAccess,
 			EntityPersister persister,
@@ -318,7 +318,7 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeCachePutEvent(
-			HibernateMonitoringEvent monitoringEvent,
+			DiagnosticEvent monitoringEvent,
 			SharedSessionContractImplementor session,
 			CachedDomainDataAccess cachedDomainDataAccess,
 			CollectionPersister persister,
@@ -339,7 +339,7 @@ public class JfrEventManager implements EventManager {
 	}
 
 	@Override
-	public HibernateMonitoringEvent beginCacheGetEvent() {
+	public DiagnosticEvent beginCacheGetEvent() {
 		if ( cacheGetEventType.isEnabled() ) {
 			final CacheGetEvent cacheGetEvent = new CacheGetEvent();
 			cacheGetEvent.begin();
@@ -352,7 +352,7 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeCacheGetEvent(
-			HibernateMonitoringEvent monitoringEvent,
+			DiagnosticEvent monitoringEvent,
 			SharedSessionContractImplementor session,
 			Region region,
 			boolean hit) {
@@ -370,7 +370,7 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeCacheGetEvent(
-			HibernateMonitoringEvent monitoringEvent,
+			DiagnosticEvent monitoringEvent,
 			SharedSessionContractImplementor session,
 			Region region,
 			EntityPersister persister,
@@ -392,7 +392,7 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeCacheGetEvent(
-			HibernateMonitoringEvent monitoringEvent,
+			DiagnosticEvent monitoringEvent,
 			SharedSessionContractImplementor session,
 			Region region,
 			CollectionPersister persister,
@@ -424,14 +424,14 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeFlushEvent(
-			HibernateMonitoringEvent flushEvent,
+			DiagnosticEvent flushEvent,
 			org.hibernate.event.spi.FlushEvent event) {
 		completeFlushEvent( flushEvent, event, false );
 	}
 
 	@Override
 	public void completeFlushEvent(
-			HibernateMonitoringEvent monitoringEvent,
+			DiagnosticEvent monitoringEvent,
 			org.hibernate.event.spi.FlushEvent hibernateFlushEvent,
 			boolean autoFlush) {
 		if ( monitoringEvent != null ) {
@@ -461,7 +461,7 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completePartialFlushEvent(
-			HibernateMonitoringEvent monitoringEvent,
+			DiagnosticEvent monitoringEvent,
 			AutoFlushEvent hibernateAutoFlushEvent) {
 		if ( monitoringEvent != null) {
 			final PartialFlushEvent jfrPartialFlushEvent = (PartialFlushEvent) monitoringEvent;
@@ -490,7 +490,7 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeDirtyCalculationEvent(
-			HibernateMonitoringEvent monitoringEvent,
+			DiagnosticEvent monitoringEvent,
 			SharedSessionContractImplementor session,
 			EntityPersister persister,
 			EntityEntry entry,
@@ -522,7 +522,7 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completePrePartialFlush(
-			HibernateMonitoringEvent monitoringEvent,
+			DiagnosticEvent monitoringEvent,
 			SharedSessionContractImplementor session) {
 		if ( monitoringEvent != null ) {
 			final PrePartialFlushEvent prePartialFlushEvent = (PrePartialFlushEvent) monitoringEvent;
@@ -535,7 +535,7 @@ public class JfrEventManager implements EventManager {
 	}
 
 	@Override
-	public HibernateMonitoringEvent beginEntityInsertEvent() {
+	public DiagnosticEvent beginEntityInsertEvent() {
 		if ( entityInsertEventType.isEnabled() ) {
 			final EntityInsertEvent event = new EntityInsertEvent();
 			event.begin();
@@ -548,7 +548,7 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeEntityInsertEvent(
-			HibernateMonitoringEvent event,
+			DiagnosticEvent event,
 			Object id, String entityName,
 			boolean success,
 			SharedSessionContractImplementor session) {
@@ -566,7 +566,7 @@ public class JfrEventManager implements EventManager {
 	}
 
 	@Override
-	public HibernateMonitoringEvent beginEntityUpdateEvent() {
+	public DiagnosticEvent beginEntityUpdateEvent() {
 		if ( entityUpdateEventType.isEnabled() ) {
 			final EntityUpdateEvent event = new EntityUpdateEvent();
 			event.begin();
@@ -579,7 +579,7 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeEntityUpdateEvent(
-			HibernateMonitoringEvent event,
+			DiagnosticEvent event,
 			Object id, String entityName,
 			boolean success,
 			SharedSessionContractImplementor session) {
@@ -597,7 +597,7 @@ public class JfrEventManager implements EventManager {
 	}
 
 	@Override
-	public HibernateMonitoringEvent beginEntityUpsertEvent() {
+	public DiagnosticEvent beginEntityUpsertEvent() {
 		if ( entityUpsertEventType.isEnabled() ) {
 			final EntityUpsertEvent event = new EntityUpsertEvent();
 			event.begin();
@@ -610,7 +610,7 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeEntityUpsertEvent(
-			HibernateMonitoringEvent event,
+			DiagnosticEvent event,
 			Object id, String entityName,
 			boolean success,
 			SharedSessionContractImplementor session) {
@@ -628,7 +628,7 @@ public class JfrEventManager implements EventManager {
 	}
 
 	@Override
-	public HibernateMonitoringEvent beginEntityDeleteEvent() {
+	public DiagnosticEvent beginEntityDeleteEvent() {
 		if ( entityDeleteEventType.isEnabled() ) {
 			final EntityDeleteEvent event = new EntityDeleteEvent();
 			event.begin();
@@ -641,7 +641,7 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeEntityDeleteEvent(
-			HibernateMonitoringEvent event,
+			DiagnosticEvent event,
 			Object id, String entityName,
 			boolean success,
 			SharedSessionContractImplementor session) {
@@ -659,7 +659,7 @@ public class JfrEventManager implements EventManager {
 	}
 
 	@Override
-	public HibernateMonitoringEvent beginEntityLockEvent() {
+	public DiagnosticEvent beginEntityLockEvent() {
 		if ( entityLockEventType.isEnabled() ) {
 			final EntityLockEvent event = new EntityLockEvent();
 			event.begin();
@@ -671,7 +671,7 @@ public class JfrEventManager implements EventManager {
 	}
 
 	@Override
-	public void completeEntityLockEvent(HibernateMonitoringEvent event, Object id, String entityName, LockMode lockMode, boolean success, SharedSessionContractImplementor session) {
+	public void completeEntityLockEvent(DiagnosticEvent event, Object id, String entityName, LockMode lockMode, boolean success, SharedSessionContractImplementor session) {
 		if ( event != null ) {
 			final EntityLockEvent entityLockEvent = (EntityLockEvent) event;
 			entityLockEvent.end();
@@ -687,7 +687,7 @@ public class JfrEventManager implements EventManager {
 	}
 
 	@Override
-	public HibernateMonitoringEvent beginCollectionRecreateEvent() {
+	public DiagnosticEvent beginCollectionRecreateEvent() {
 		if ( collectionRecreateEventType.isEnabled() ) {
 			final CollectionRecreateEvent event = new CollectionRecreateEvent();
 			event.begin();
@@ -700,7 +700,7 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeCollectionRecreateEvent(
-			HibernateMonitoringEvent event,
+			DiagnosticEvent event,
 			Object id, String role,
 			boolean success,
 			SharedSessionContractImplementor session) {
@@ -718,7 +718,7 @@ public class JfrEventManager implements EventManager {
 	}
 
 	@Override
-	public HibernateMonitoringEvent beginCollectionUpdateEvent() {
+	public DiagnosticEvent beginCollectionUpdateEvent() {
 		if ( collectionUpdateEventType.isEnabled() ) {
 			final CollectionUpdateEvent event = new CollectionUpdateEvent();
 			event.begin();
@@ -731,7 +731,7 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeCollectionUpdateEvent(
-			HibernateMonitoringEvent event,
+			DiagnosticEvent event,
 			Object id, String role,
 			boolean success,
 			SharedSessionContractImplementor session) {
@@ -749,7 +749,7 @@ public class JfrEventManager implements EventManager {
 	}
 
 	@Override
-	public HibernateMonitoringEvent beginCollectionRemoveEvent() {
+	public DiagnosticEvent beginCollectionRemoveEvent() {
 		if ( collectionRemoveEventType.isEnabled() ) {
 			final CollectionRemoveEvent event = new CollectionRemoveEvent();
 			event.begin();
@@ -762,7 +762,7 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeCollectionRemoveEvent(
-			HibernateMonitoringEvent event,
+			DiagnosticEvent event,
 			Object id, String role,
 			boolean success,
 			SharedSessionContractImplementor session) {

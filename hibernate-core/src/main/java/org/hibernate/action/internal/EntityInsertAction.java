@@ -15,8 +15,8 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.spi.EventMonitor;
+import org.hibernate.event.spi.DiagnosticEvent;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCommitInsertEventListener;
@@ -105,8 +105,8 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 		if ( !veto ) {
 			final EntityPersister persister = getPersister();
 			final Object instance = getInstance();
-			final EventManager eventManager = session.getEventManager();
-			final HibernateMonitoringEvent event = eventManager.beginEntityInsertEvent();
+			final EventMonitor eventMonitor = session.getEventMonitor();
+			final DiagnosticEvent event = eventMonitor.beginEntityInsertEvent();
 			boolean success = false;
 			final GeneratedValues generatedValues;
 			try {
@@ -114,7 +114,7 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 				success = true;
 			}
 			finally {
-				eventManager.completeEntityInsertEvent( event, id, persister.getEntityName(), success, session );
+				eventMonitor.completeEntityInsertEvent( event, id, persister.getEntityName(), success, session );
 			}
 			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 			final EntityEntry entry = persistenceContext.getEntry( instance );
@@ -187,8 +187,8 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 
 	protected boolean cacheInsert(EntityPersister persister, Object ck) {
 		final SharedSessionContractImplementor session = getSession();
-		final EventManager eventManager = session.getEventManager();
-		final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
+		final EventMonitor eventMonitor = session.getEventMonitor();
+		final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
 		final EntityDataAccess cacheAccessStrategy = persister.getCacheAccessStrategy();
 		boolean insert = false;
 		try {
@@ -197,13 +197,13 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 			return insert;
 		}
 		finally {
-			eventManager.completeCachePutEvent(
+			eventMonitor.completeCachePutEvent(
 					cachePutEvent,
 					session,
 					cacheAccessStrategy,
 					getPersister(),
 					insert,
-					EventManager.CacheActionDescription.ENTITY_INSERT
+					EventMonitor.CacheActionDescription.ENTITY_INSERT
 			);
 			session.getEventListenerManager().cachePutEnd();
 		}
@@ -280,8 +280,8 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 	protected boolean cacheAfterInsert(EntityDataAccess cache, Object ck) {
 		final SharedSessionContractImplementor session = getSession();
 		final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
-		final EventManager eventManager = session.getEventManager();
-		final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
+		final EventMonitor eventMonitor = session.getEventMonitor();
+		final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
 		boolean afterInsert = false;
 		try {
 			eventListenerManager.cachePutStart();
@@ -289,13 +289,13 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 			return afterInsert;
 		}
 		finally {
-			eventManager.completeCachePutEvent(
+			eventMonitor.completeCachePutEvent(
 					cachePutEvent,
 					session,
 					cache,
 					getPersister(),
 					afterInsert,
-					EventManager.CacheActionDescription.ENTITY_AFTER_INSERT
+					EventMonitor.CacheActionDescription.ENTITY_AFTER_INSERT
 			);
 			eventListenerManager.cachePutEnd();
 		}

@@ -17,8 +17,8 @@ import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.spi.EventMonitor;
+import org.hibernate.event.spi.DiagnosticEvent;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCommitUpdateEventListener;
@@ -164,8 +164,8 @@ public class EntityUpdateAction extends EntityAction {
 			final Object instance = getInstance();
 			final Object previousVersion = getPreviousVersion();
 			final Object ck = lockCacheItem( previousVersion );
-			final EventManager eventManager = session.getEventManager();
-			final HibernateMonitoringEvent event = eventManager.beginEntityUpdateEvent();
+			final EventMonitor eventMonitor = session.getEventMonitor();
+			final DiagnosticEvent event = eventMonitor.beginEntityUpdateEvent();
 			boolean success = false;
 			final GeneratedValues generatedValues;
 			try {
@@ -183,7 +183,7 @@ public class EntityUpdateAction extends EntityAction {
 				success = true;
 			}
 			finally {
-				eventManager.completeEntityUpdateEvent( event, id, persister.getEntityName(), success, session );
+				eventMonitor.completeEntityUpdateEvent( event, id, persister.getEntityName(), success, session );
 			}
 			final EntityEntry entry = session.getPersistenceContextInternal().getEntry( instance );
 			if ( entry == null ) {
@@ -329,8 +329,8 @@ public class EntityUpdateAction extends EntityAction {
 
 	protected boolean updateCache(EntityPersister persister, Object previousVersion, Object ck) {
 		final SharedSessionContractImplementor session = getSession();
-		final EventManager eventManager = session.getEventManager();
-		final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
+		final EventMonitor eventMonitor = session.getEventMonitor();
+		final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
 		final EntityDataAccess cacheAccessStrategy = persister.getCacheAccessStrategy();
 		boolean update = false;
 		try {
@@ -339,13 +339,13 @@ public class EntityUpdateAction extends EntityAction {
 			return update;
 		}
 		finally {
-			eventManager.completeCachePutEvent(
+			eventMonitor.completeCachePutEvent(
 					cachePutEvent,
 					session,
 					cacheAccessStrategy,
 					getPersister(),
 					update,
-					EventManager.CacheActionDescription.ENTITY_UPDATE
+					EventMonitor.CacheActionDescription.ENTITY_UPDATE
 			);
 			session.getEventListenerManager().cachePutEnd();
 		}
@@ -455,21 +455,21 @@ public class EntityUpdateAction extends EntityAction {
 
 	protected void cacheAfterUpdate(EntityDataAccess cache, Object ck, SharedSessionContractImplementor session) {
 		final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
-		final EventManager eventManager = session.getEventManager();
-		final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
+		final EventMonitor eventMonitor = session.getEventMonitor();
+		final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
 		boolean put = false;
 		try {
 			eventListenerManager.cachePutStart();
 			put = cache.afterUpdate( session, ck, cacheEntry, nextVersion, previousVersion, lock );
 		}
 		finally {
-			eventManager.completeCachePutEvent(
+			eventMonitor.completeCachePutEvent(
 					cachePutEvent,
 					session,
 					cache,
 					getPersister(),
 					put,
-					EventManager.CacheActionDescription.ENTITY_AFTER_UPDATE
+					EventMonitor.CacheActionDescription.ENTITY_AFTER_UPDATE
 			);
 			final StatisticsImplementor statistics = session.getFactory().getStatistics();
 			if ( put && statistics.isStatisticsEnabled() ) {

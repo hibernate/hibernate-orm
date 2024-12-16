@@ -15,8 +15,8 @@ import org.hibernate.ScrollMode;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.StatementPreparer;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.spi.EventMonitor;
+import org.hibernate.event.spi.DiagnosticEvent;
 import org.hibernate.resource.jdbc.spi.JdbcEventHandler;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
@@ -171,15 +171,15 @@ class StatementPreparerImpl implements StatementPreparer {
 				final PreparedStatement preparedStatement;
 				final JdbcSessionOwner jdbcSessionOwner = jdbcCoordinator.getJdbcSessionOwner();
 				final JdbcEventHandler observer = jdbcSessionOwner.getJdbcSessionContext().getEventHandler();
-				final EventManager eventManager = jdbcSessionOwner.getEventManager();
-				final HibernateMonitoringEvent jdbcPreparedStatementCreation = eventManager.beginJdbcPreparedStatementCreationEvent();
+				final EventMonitor eventMonitor = jdbcSessionOwner.getEventMonitor();
+				final DiagnosticEvent jdbcPreparedStatementCreation = eventMonitor.beginJdbcPreparedStatementCreationEvent();
 				try {
 					observer.jdbcPrepareStatementStart();
 					preparedStatement = doPrepare();
 					setStatementTimeout( preparedStatement );
 				}
 				finally {
-					eventManager.completeJdbcPreparedStatementCreationEvent( jdbcPreparedStatementCreation, sql );
+					eventMonitor.completeJdbcPreparedStatementCreationEvent( jdbcPreparedStatementCreation, sql );
 					observer.jdbcPrepareStatementEnd();
 				}
 				postProcess( preparedStatement );

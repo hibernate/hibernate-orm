@@ -10,7 +10,7 @@ import jdk.jfr.Event;
 import jdk.jfr.Label;
 import jdk.jfr.Name;
 import jdk.jfr.StackTrace;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.spi.DiagnosticEvent;
 import org.hibernate.internal.build.AllowNonPortable;
 
 @Name(CollectionUpdateEvent.NAME)
@@ -19,7 +19,7 @@ import org.hibernate.internal.build.AllowNonPortable;
 @Description("Collection Update")
 @StackTrace
 @AllowNonPortable
-public class CollectionUpdateEvent extends Event implements HibernateMonitoringEvent {
+public class CollectionUpdateEvent extends Event implements DiagnosticEvent {
 	public static final String NAME = "org.hibernate.orm.CollectionUpdateEvent";
 
 	@Label("Session Identifier")

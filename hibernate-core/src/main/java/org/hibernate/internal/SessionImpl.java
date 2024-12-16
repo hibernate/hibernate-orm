@@ -72,8 +72,8 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.resource.transaction.spi.TransactionObserver;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.spi.EventMonitor;
+import org.hibernate.event.spi.DiagnosticEvent;
 import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.AutoFlushEventListener;
 import org.hibernate.event.spi.ClearEvent;
@@ -241,7 +241,7 @@ public class SessionImpl
 	public SessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
 
-		final HibernateMonitoringEvent sessionOpenEvent = getEventManager().beginSessionOpenEvent();
+		final DiagnosticEvent sessionOpenEvent = getEventMonitor().beginSessionOpenEvent();
 		try {
 
 			persistenceContext = createPersistenceContext();
@@ -280,7 +280,7 @@ public class SessionImpl
 			}
 		}
 		finally {
-			getEventManager().completeSessionOpenEvent( sessionOpenEvent, this );
+			getEventMonitor().completeSessionOpenEvent( sessionOpenEvent, this );
 		}
 	}
 
@@ -411,8 +411,8 @@ public class SessionImpl
 			log.tracef( "Closing session [%s]", getSessionIdentifier() );
 		}
 
-		final EventManager eventManager = getEventManager();
-		final HibernateMonitoringEvent sessionClosedEvent = eventManager.beginSessionClosedEvent();
+		final EventMonitor eventMonitor = getEventMonitor();
+		final DiagnosticEvent sessionClosedEvent = eventMonitor.beginSessionClosedEvent();
 		try {
 			if ( isJpaBootstrap() ) {
 				// Original HEM close behavior
@@ -437,7 +437,7 @@ public class SessionImpl
 			if ( statistics.isStatisticsEnabled() ) {
 				statistics.closeSession();
 			}
-			eventManager.completeSessionClosedEvent( sessionClosedEvent, this );
+			eventMonitor.completeSessionClosedEvent( sessionClosedEvent, this );
 		}
 	}
 

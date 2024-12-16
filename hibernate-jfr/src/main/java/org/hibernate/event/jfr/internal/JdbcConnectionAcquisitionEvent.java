@@ -4,7 +4,7 @@
  */
 package org.hibernate.event.jfr.internal;
 
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.spi.DiagnosticEvent;
 import org.hibernate.internal.build.AllowNonPortable;
 
 import jdk.jfr.Category;
@@ -20,7 +20,7 @@ import jdk.jfr.StackTrace;
 @Description("JDBC Connection Obtained")
 @StackTrace
 @AllowNonPortable
-public class JdbcConnectionAcquisitionEvent extends Event implements HibernateMonitoringEvent {
+public class JdbcConnectionAcquisitionEvent extends Event implements DiagnosticEvent {
 	public static final String NAME = "org.hibernate.orm.JdbcConnectionAcquisition";
 
 	@Label("Session Identifier")

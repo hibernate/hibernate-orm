@@ -22,7 +22,7 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.event.internal.EmptyEventManager;
+import org.hibernate.event.internal.EmptyEventMonitor;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.*;
@@ -125,7 +125,7 @@ public final class FastSessionServices {
 	final MultiTenantConnectionProvider<Object> multiTenantConnectionProvider;
 	final ClassLoaderService classLoaderService;
 	final TransactionCoordinatorBuilder transactionCoordinatorBuilder;
-	final EventManager eventManager;
+	final EventMonitor eventMonitor;
 	final boolean isJtaTransactionAccessible;
 	final CacheMode initialSessionCacheMode;
 	final FlushMode initialSessionFlushMode;
@@ -235,8 +235,8 @@ public final class FastSessionServices {
 		this.xmlFormatMapper = sessionFactoryOptions.getXmlFormatMapper();
 		this.batchBuilder = serviceRegistry.getService( BatchBuilder.class );
 
-		final Collection<EventManager> eventManagers = classLoaderService.loadJavaServices( EventManager.class );
-		this.eventManager = eventManagers.isEmpty() ? new EmptyEventManager() : eventManagers.iterator().next();
+		final Collection<EventMonitor> eventMonitors = classLoaderService.loadJavaServices( EventMonitor.class );
+		this.eventMonitor = eventMonitors.isEmpty() ? new EmptyEventMonitor() : eventMonitors.iterator().next();
 	}
 
 	private static FlushMode initializeDefaultFlushMode(Map<String, Object> defaultSessionProperties) {

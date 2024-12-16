@@ -10,107 +10,107 @@ import org.hibernate.cache.spi.access.CachedDomainDataAccess;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.AutoFlushEvent;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.spi.EventMonitor;
+import org.hibernate.event.spi.DiagnosticEvent;
 import org.hibernate.event.spi.FlushEvent;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * An {@link EventManager} that ignores all events.
+ * An {@link EventMonitor} that ignores all events.
  */
-public final class EmptyEventManager implements EventManager {
+public final class EmptyEventMonitor implements EventMonitor {
 
 	@Override
-	public HibernateMonitoringEvent beginSessionOpenEvent() {
+	public DiagnosticEvent beginSessionOpenEvent() {
 		return null;
 	}
 
 	@Override
-	public void completeSessionOpenEvent(HibernateMonitoringEvent sessionOpenEvent, SharedSessionContractImplementor session) {
+	public void completeSessionOpenEvent(DiagnosticEvent sessionOpenEvent, SharedSessionContractImplementor session) {
 
 	}
 
 	@Override
-	public HibernateMonitoringEvent beginSessionClosedEvent() {
+	public DiagnosticEvent beginSessionClosedEvent() {
 		return null;
 	}
 
 	@Override
 	public void completeSessionClosedEvent(
-			HibernateMonitoringEvent sessionClosedEvent,
+			DiagnosticEvent sessionClosedEvent,
 			SharedSessionContractImplementor session) {
 
 	}
 
 	@Override
-	public HibernateMonitoringEvent beginJdbcConnectionAcquisitionEvent() {
+	public DiagnosticEvent beginJdbcConnectionAcquisitionEvent() {
 		return null;
 	}
 
 	@Override
 	public void completeJdbcConnectionAcquisitionEvent(
-			HibernateMonitoringEvent jdbcConnectionAcquisitionEvent,
+			DiagnosticEvent jdbcConnectionAcquisitionEvent,
 			SharedSessionContractImplementor session,
 			Object tenantId) {
 
 	}
 
 	@Override
-	public HibernateMonitoringEvent beginJdbcConnectionReleaseEvent() {
+	public DiagnosticEvent beginJdbcConnectionReleaseEvent() {
 		return null;
 	}
 
 	@Override
 	public void completeJdbcConnectionReleaseEvent(
-			HibernateMonitoringEvent jdbcConnectionReleaseEvent,
+			DiagnosticEvent jdbcConnectionReleaseEvent,
 			SharedSessionContractImplementor session,
 			Object tenantId) {
 
 	}
 
 	@Override
-	public HibernateMonitoringEvent beginJdbcPreparedStatementCreationEvent() {
+	public DiagnosticEvent beginJdbcPreparedStatementCreationEvent() {
 		return null;
 	}
 
 	@Override
 	public void completeJdbcPreparedStatementCreationEvent(
-			HibernateMonitoringEvent jdbcPreparedStatementCreation,
+			DiagnosticEvent jdbcPreparedStatementCreation,
 			String preparedStatementSql) {
 
 	}
 
 	@Override
-	public HibernateMonitoringEvent beginJdbcPreparedStatementExecutionEvent() {
+	public DiagnosticEvent beginJdbcPreparedStatementExecutionEvent() {
 		return null;
 	}
 
 	@Override
 	public void completeJdbcPreparedStatementExecutionEvent(
-			HibernateMonitoringEvent jdbcPreparedStatementExecutionEvent,
+			DiagnosticEvent jdbcPreparedStatementExecutionEvent,
 			String preparedStatementSql) {
 
 	}
 
 	@Override
-	public HibernateMonitoringEvent beginJdbcBatchExecutionEvent() {
+	public DiagnosticEvent beginJdbcBatchExecutionEvent() {
 		return null;
 	}
 
 	@Override
-	public void completeJdbcBatchExecutionEvent(HibernateMonitoringEvent jdbcBatchExecutionEvent, String statementSql) {
+	public void completeJdbcBatchExecutionEvent(DiagnosticEvent jdbcBatchExecutionEvent, String statementSql) {
 
 	}
 
 	@Override
-	public HibernateMonitoringEvent beginCachePutEvent() {
+	public DiagnosticEvent beginCachePutEvent() {
 		return null;
 	}
 
 	@Override
 	public void completeCachePutEvent(
-			HibernateMonitoringEvent cachePutEvent,
+			DiagnosticEvent cachePutEvent,
 			SharedSessionContractImplementor session,
 			Region region,
 			boolean cacheContentChanged,
@@ -120,7 +120,7 @@ public final class EmptyEventManager implements EventManager {
 
 	@Override
 	public void completeCachePutEvent(
-			HibernateMonitoringEvent cachePutEvent,
+			DiagnosticEvent cachePutEvent,
 			SharedSessionContractImplementor session,
 			CachedDomainDataAccess cachedDomainDataAccess,
 			EntityPersister persister,
@@ -131,7 +131,7 @@ public final class EmptyEventManager implements EventManager {
 
 	@Override
 	public void completeCachePutEvent(
-			HibernateMonitoringEvent cachePutEvent,
+			DiagnosticEvent cachePutEvent,
 			SharedSessionContractImplementor session,
 			CachedDomainDataAccess cachedDomainDataAccess,
 			EntityPersister persister,
@@ -143,7 +143,7 @@ public final class EmptyEventManager implements EventManager {
 
 	@Override
 	public void completeCachePutEvent(
-			HibernateMonitoringEvent cachePutEvent,
+			DiagnosticEvent cachePutEvent,
 			SharedSessionContractImplementor session,
 			CachedDomainDataAccess cachedDomainDataAccess,
 			CollectionPersister persister,
@@ -153,13 +153,13 @@ public final class EmptyEventManager implements EventManager {
 	}
 
 	@Override
-	public HibernateMonitoringEvent beginCacheGetEvent() {
+	public DiagnosticEvent beginCacheGetEvent() {
 		return null;
 	}
 
 	@Override
 	public void completeCacheGetEvent(
-			HibernateMonitoringEvent cacheGetEvent,
+			DiagnosticEvent cacheGetEvent,
 			SharedSessionContractImplementor session,
 			Region region,
 			boolean hit) {
@@ -168,7 +168,7 @@ public final class EmptyEventManager implements EventManager {
 
 	@Override
 	public void completeCacheGetEvent(
-			HibernateMonitoringEvent cacheGetEvent,
+			DiagnosticEvent cacheGetEvent,
 			SharedSessionContractImplementor session,
 			Region region,
 			EntityPersister persister,
@@ -179,7 +179,7 @@ public final class EmptyEventManager implements EventManager {
 
 	@Override
 	public void completeCacheGetEvent(
-			HibernateMonitoringEvent cacheGetEvent,
+			DiagnosticEvent cacheGetEvent,
 			SharedSessionContractImplementor session,
 			Region region,
 			CollectionPersister persister,
@@ -188,38 +188,38 @@ public final class EmptyEventManager implements EventManager {
 	}
 
 	@Override
-	public HibernateMonitoringEvent beginFlushEvent() {
+	public DiagnosticEvent beginFlushEvent() {
 		return null;
 	}
 
 	@Override
-	public void completeFlushEvent(HibernateMonitoringEvent flushEvent, FlushEvent event) {
+	public void completeFlushEvent(DiagnosticEvent flushEvent, FlushEvent event) {
 
 	}
 
 	@Override
-	public void completeFlushEvent(HibernateMonitoringEvent flushEvent, FlushEvent event, boolean autoFlush) {
+	public void completeFlushEvent(DiagnosticEvent flushEvent, FlushEvent event, boolean autoFlush) {
 
 	}
 
 	@Override
-	public HibernateMonitoringEvent beginPartialFlushEvent() {
+	public DiagnosticEvent beginPartialFlushEvent() {
 		return null;
 	}
 
 	@Override
-	public void completePartialFlushEvent(HibernateMonitoringEvent flushEvent, AutoFlushEvent event) {
+	public void completePartialFlushEvent(DiagnosticEvent flushEvent, AutoFlushEvent event) {
 
 	}
 
 	@Override
-	public HibernateMonitoringEvent beginDirtyCalculationEvent() {
+	public DiagnosticEvent beginDirtyCalculationEvent() {
 		return null;
 	}
 
 	@Override
 	public void completeDirtyCalculationEvent(
-			HibernateMonitoringEvent dirtyCalculationEvent,
+			DiagnosticEvent dirtyCalculationEvent,
 			SharedSessionContractImplementor session,
 			EntityPersister persister,
 			EntityEntry entry,
@@ -228,25 +228,25 @@ public final class EmptyEventManager implements EventManager {
 	}
 
 	@Override
-	public HibernateMonitoringEvent beginPrePartialFlush() {
+	public DiagnosticEvent beginPrePartialFlush() {
 		return null;
 	}
 
 	@Override
 	public void completePrePartialFlush(
-			HibernateMonitoringEvent prePartialFlush,
+			DiagnosticEvent prePartialFlush,
 			SharedSessionContractImplementor session) {
 
 	}
 
 	@Override
-	public HibernateMonitoringEvent beginEntityInsertEvent() {
+	public DiagnosticEvent beginEntityInsertEvent() {
 		return null;
 	}
 
 	@Override
 	public void completeEntityInsertEvent(
-			HibernateMonitoringEvent event,
+			DiagnosticEvent event,
 			Object id, String entityName,
 			boolean success,
 			SharedSessionContractImplementor session) {
@@ -254,13 +254,13 @@ public final class EmptyEventManager implements EventManager {
 	}
 
 	@Override
-	public HibernateMonitoringEvent beginEntityUpdateEvent() {
+	public DiagnosticEvent beginEntityUpdateEvent() {
 		return null;
 	}
 
 	@Override
 	public void completeEntityUpdateEvent(
-			HibernateMonitoringEvent event,
+			DiagnosticEvent event,
 			Object id, String entityName,
 			boolean success,
 			SharedSessionContractImplementor session) {
@@ -268,23 +268,23 @@ public final class EmptyEventManager implements EventManager {
 	}
 
 	@Override
-	public HibernateMonitoringEvent beginEntityUpsertEvent() {
+	public DiagnosticEvent beginEntityUpsertEvent() {
 		return null;
 	}
 
 	@Override
-	public void completeEntityUpsertEvent(HibernateMonitoringEvent event, Object id, String entityName, boolean success, SharedSessionContractImplementor session) {
+	public void completeEntityUpsertEvent(DiagnosticEvent event, Object id, String entityName, boolean success, SharedSessionContractImplementor session) {
 
 	}
 
 	@Override
-	public HibernateMonitoringEvent beginEntityDeleteEvent() {
+	public DiagnosticEvent beginEntityDeleteEvent() {
 		return null;
 	}
 
 	@Override
 	public void completeEntityDeleteEvent(
-			HibernateMonitoringEvent event,
+			DiagnosticEvent event,
 			Object id, String entityName,
 			boolean success,
 			SharedSessionContractImplementor session) {
@@ -292,42 +292,42 @@ public final class EmptyEventManager implements EventManager {
 	}
 
 	@Override
-	public HibernateMonitoringEvent beginEntityLockEvent() {
+	public DiagnosticEvent beginEntityLockEvent() {
 		return null;
 	}
 
 	@Override
-	public void completeEntityLockEvent(HibernateMonitoringEvent event, Object id, String entityName, LockMode lockMode, boolean success, SharedSessionContractImplementor session) {
+	public void completeEntityLockEvent(DiagnosticEvent event, Object id, String entityName, LockMode lockMode, boolean success, SharedSessionContractImplementor session) {
 
 	}
 
 	@Override
-	public HibernateMonitoringEvent beginCollectionRecreateEvent() {
+	public DiagnosticEvent beginCollectionRecreateEvent() {
 		return null;
 	}
 
 	@Override
-	public void completeCollectionRecreateEvent(HibernateMonitoringEvent event, Object id, String role, boolean success, SharedSessionContractImplementor session) {
+	public void completeCollectionRecreateEvent(DiagnosticEvent event, Object id, String role, boolean success, SharedSessionContractImplementor session) {
 
 	}
 
 	@Override
-	public HibernateMonitoringEvent beginCollectionUpdateEvent() {
+	public DiagnosticEvent beginCollectionUpdateEvent() {
 		return null;
 	}
 
 	@Override
-	public void completeCollectionUpdateEvent(HibernateMonitoringEvent event, Object id, String role, boolean success, SharedSessionContractImplementor session) {
+	public void completeCollectionUpdateEvent(DiagnosticEvent event, Object id, String role, boolean success, SharedSessionContractImplementor session) {
 
 	}
 
 	@Override
-	public HibernateMonitoringEvent beginCollectionRemoveEvent() {
+	public DiagnosticEvent beginCollectionRemoveEvent() {
 		return null;
 	}
 
 	@Override
-	public void completeCollectionRemoveEvent(HibernateMonitoringEvent event, Object id, String role, boolean success, SharedSessionContractImplementor session) {
+	public void completeCollectionRemoveEvent(DiagnosticEvent event, Object id, String role, boolean success, SharedSessionContractImplementor session) {
 
 	}
 }

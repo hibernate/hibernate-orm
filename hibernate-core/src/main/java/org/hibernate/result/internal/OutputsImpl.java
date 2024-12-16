@@ -16,8 +16,8 @@ import java.util.function.Supplier;
 import org.hibernate.JDBCException;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.spi.EventMonitor;
+import org.hibernate.event.spi.DiagnosticEvent;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.procedure.internal.ProcedureCallImpl;
 import org.hibernate.query.results.ResultSetMapping;
@@ -68,8 +68,8 @@ public class OutputsImpl implements Outputs {
 		if ( sqlStatementLogger.getLogSlowQuery() > 0 ) {
 			executeStartNanos = System.nanoTime();
 		}
-		final EventManager eventManager = context.getSession().getEventManager();
-		final HibernateMonitoringEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
+		final EventMonitor eventMonitor = context.getSession().getEventMonitor();
+		final DiagnosticEvent jdbcPreparedStatementExecutionEvent = eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			final boolean isResultSet = jdbcStatement.execute();
 			currentReturnState = buildCurrentReturnState( isResultSet );
@@ -78,7 +78,7 @@ public class OutputsImpl implements Outputs {
 			throw convert( e, "Error calling CallableStatement.getMoreResults" );
 		}
 		finally {
-			eventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, sql );
+			eventMonitor.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, sql );
 			sqlStatementLogger.logSlowQuery( sql, executeStartNanos, this.context.getSession().getJdbcSessionContext() );
 		}
 	}

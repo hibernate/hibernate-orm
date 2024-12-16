@@ -34,8 +34,8 @@ import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.spi.EventMonitor;
+import org.hibernate.event.spi.DiagnosticEvent;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.internal.log.LoggingHelper;
@@ -1506,10 +1506,10 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		// 		2) Session#clear + some form of load
 		//
 		// we need to be careful not to clobber the lock here in the cache so that it can be rolled back if need be
-		final EventManager eventManager = session.getEventManager();
+		final EventMonitor eventMonitor = session.getEventMonitor();
 		if ( persistenceContext.wasInsertedDuringTransaction( data.concreteDescriptor, data.entityKey.getIdentifier() ) ) {
 			boolean cacheContentChanged = false;
-			final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
+			final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
 			try {
 				// Updating the cache entry for entities that were inserted in this transaction
 				// only makes sense for transactional caches. Other implementations no-op for #update
@@ -1530,20 +1530,20 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 				}
 			}
 			finally {
-				eventManager.completeCachePutEvent(
+				eventMonitor.completeCachePutEvent(
 						cachePutEvent,
 						session,
 						cacheAccess,
 						data.concreteDescriptor,
 						cacheContentChanged,
-						EventManager.CacheActionDescription.ENTITY_UPDATE
+						EventMonitor.CacheActionDescription.ENTITY_UPDATE
 				);
 			}
 		}
 		else {
 			final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
 			boolean put = false;
-			final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
+			final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
 			try {
 				eventListenerManager.cachePutStart();
 				put = cacheAccess.putFromLoad(
@@ -1556,13 +1556,13 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 				);
 			}
 			finally {
-				eventManager.completeCachePutEvent(
+				eventMonitor.completeCachePutEvent(
 						cachePutEvent,
 						session,
 						cacheAccess,
 						data.concreteDescriptor,
 						put,
-						EventManager.CacheActionDescription.ENTITY_LOAD
+						EventMonitor.CacheActionDescription.ENTITY_LOAD
 				);
 				final StatisticsImplementor statistics = factory.getStatistics();
 				if ( put && statistics.isStatisticsEnabled() ) {

@@ -109,13 +109,19 @@ public final class StringUtil {
 	public static String getUpperUnderscoreCaseFromLowerCamelCase(String lowerCamelCaseString) {
 		final StringBuilder result = new StringBuilder();
 		int position = 0;
+		boolean wasLowerCase = false;
 		while ( position < lowerCamelCaseString.length() ) {
 			final int codePoint = lowerCamelCaseString.codePointAt( position );
-			if ( position>0 && isUpperCase( codePoint ) ) {
+			final boolean isUpperCase = isUpperCase( codePoint );
+			if ( wasLowerCase && isUpperCase ) {
 				result.append('_');
 			}
 			result.appendCodePoint( toUpperCase( codePoint ) );
 			position += charCount( codePoint );
+			wasLowerCase = !isUpperCase;
+		}
+		if ( result.toString().equals( lowerCamelCaseString ) ) {
+			result.insert(0, '_');
 		}
 		return result.toString();
 	}

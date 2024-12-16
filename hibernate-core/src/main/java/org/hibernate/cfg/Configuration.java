@@ -74,15 +74,28 @@ import jakarta.persistence.SharedCacheMode;
  * <li>{@linkplain #setProperty(String, String) configuration properties}
  *     from various sources, and
  * <li>entity O/R mappings, defined in either {@linkplain #addAnnotatedClass
- *    annotated classes}, or {@linkplain #addFile XML mapping documents}.
+ *     annotated classes}, or {@linkplain #addFile XML mapping documents}.
  * </ul>
  * <p>
  * Note that XML mappings may be expressed using the JPA {@code orm.xml}
  * format, or in Hibernate's legacy {@code .hbm.xml} format.
  * <p>
  * Configuration properties are enumerated by {@link AvailableSettings}.
+ * <p>
+ * When instantiated, an instance of {@code Configuration} has its properties
+ * initially populated from the {@linkplain Environment#getProperties()
+ * environment}, including:
+ * <ul>
+ * <li>JVM {@linkplain System#getProperties() system properties}, and
+ * <li>properties specified in {@code hibernate.properties}.
+ * </ul>
+ * <p>
+ * These initial properties may be completely discarded by calling
+ * {@link #setProperties(Properties)}, or they may be overridden
+ * individually by calling {@link #setProperty(String, String)}.
+ * <p>
  * <pre>
- *  SessionFactory factory = new Configuration()
+ * SessionFactory factory = new Configuration()
  *     // scan classes for mapping annotations
  *     .addAnnotatedClass(Item.class)
  *     .addAnnotatedClass(Bid.class)

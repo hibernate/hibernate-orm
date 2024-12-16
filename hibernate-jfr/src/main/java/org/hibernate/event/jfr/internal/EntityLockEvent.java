@@ -11,7 +11,7 @@ import jdk.jfr.Label;
 import jdk.jfr.Name;
 import jdk.jfr.StackTrace;
 import org.hibernate.LockMode;
-import org.hibernate.event.spi.DiagnosticEvent;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.internal.build.AllowNonPortable;
 
 @Name(EntityLockEvent.NAME)

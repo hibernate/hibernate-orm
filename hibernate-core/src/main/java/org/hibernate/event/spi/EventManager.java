@@ -4,6 +4,8 @@
  */
 package org.hibernate.event.spi;
 
+import org.hibernate.event.monitor.spi.EventMonitor;
+
 /**
  * @deprecated Renamed {@link EventMonitor}.
  */

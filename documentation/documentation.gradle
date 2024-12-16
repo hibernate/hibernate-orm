@@ -619,7 +619,7 @@ settingsDocumentation {
 			settingsClassName "org.hibernate.cfg.StatisticsSettings"
 		}
 		validation {
-			summary = "Jakarta Validation Integeration Settings"
+			summary = "Jakarta Validation Integration Settings"
 			description = "Settings used in the integration of Jakarta Validation"
 			settingsClassName "org.hibernate.cfg.ValidationSettings"
 		}

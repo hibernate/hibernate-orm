@@ -139,29 +139,22 @@ dependencies {
 	core project( ':hibernate-core' )
 	javadocSources project( path: ':hibernate-core', configuration: 'javadocSources' )
 
-	testing project( ':hibernate-testing' )
-	javadocSources project( path: ':hibernate-testing', configuration: 'javadocSources' )
-
 	envers project( ':hibernate-envers' )
 	javadocSources project( path: ':hibernate-envers', configuration: 'javadocSources' )
 
+	testing project( ':hibernate-testing' )
+
 	spatial project( ':hibernate-spatial' )
-	javadocSources project( path: ':hibernate-spatial', configuration: 'javadocSources' )
 
 	agroal project( ':hibernate-agroal' )
-	javadocSources project( path: ':hibernate-agroal', configuration: 'javadocSources' )
 
 	c3p0 project( ':hibernate-c3p0' )
-	javadocSources project( path: ':hibernate-c3p0', configuration: 'javadocSources' )
 
 	hikaricp project( ':hibernate-hikaricp' )
-	javadocSources project( path: ':hibernate-hikaricp', configuration: 'javadocSources' )
 
 	jcache project( ':hibernate-jcache' )
-	javadocSources project( path: ':hibernate-jcache', configuration: 'javadocSources' )
 
 	jpamodelgen project( ':hibernate-processor' )
-	javadocSources project( path: ':hibernate-processor', configuration: 'javadocSources' )
 
 	javadocClasspath libs.loggingAnnotations
 	javadocClasspath jakartaLibs.validation

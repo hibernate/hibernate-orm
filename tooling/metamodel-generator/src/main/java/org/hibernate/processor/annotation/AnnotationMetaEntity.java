@@ -88,6 +88,7 @@ import static org.hibernate.processor.util.TypeUtils.extendsClass;
 import static org.hibernate.processor.util.TypeUtils.findMappedSuperElement;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationMirror;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationValue;
+import static org.hibernate.processor.util.TypeUtils.getGeneratedClassFullyQualifiedName;
 import static org.hibernate.processor.util.TypeUtils.hasAnnotation;
 import static org.hibernate.processor.util.TypeUtils.implementsInterface;
 import static org.hibernate.processor.util.TypeUtils.primitiveClassMatchesKind;
@@ -175,6 +176,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		this.quarkusInjection = context.isQuarkusInjection();
 		this.importContext = parent != null ? parent : new ImportContextImpl( getPackageName( context, element ) );
 		jakartaDataStaticModel = jakartaDataStaticMetamodel;
+		importContext.importType(
+				getGeneratedClassFullyQualifiedName( element, getPackageName( context, element ),
+						jakartaDataStaticModel ) );
 	}
 
 	public static AnnotationMetaEntity create(TypeElement element, Context context) {

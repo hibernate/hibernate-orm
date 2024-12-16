@@ -7,7 +7,6 @@ package org.hibernate.processor;
 import org.hibernate.processor.annotation.InnerClassMetaAttribute;
 import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
-import org.hibernate.processor.util.StringUtil;
 
 import javax.annotation.processing.FilerException;
 import javax.lang.model.element.Element;
@@ -23,11 +22,10 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
+import static org.hibernate.processor.util.TypeUtils.getGeneratedClassFullyQualifiedName;
 import static org.hibernate.processor.util.TypeUtils.isMemberType;
 
 /**
@@ -185,20 +183,10 @@ public final class ClassWriter {
 	}
 
 	private static String getFullyQualifiedClassName(Metamodel entity) {
-		final String metaModelPackage = entity.getPackageName();
-		final String packageNamePrefix = !metaModelPackage.isEmpty() ? metaModelPackage + "." : "";
-		final String className;
-		if ( entity.getElement().getKind() == ElementKind.PACKAGE ) {
-			className = getGeneratedClassName( entity );
-		}
-		else {
-			className = Arrays.stream(
-							entity.getQualifiedName().substring( packageNamePrefix.length() ).split( "\\." ) )
-					.map( StringUtil::removeDollar )
-					.map( part -> entity.isJakartaDataStyle() ? '_' + part : part + '_' )
-					.collect( Collectors.joining( "." ) );
-		}
-		return packageNamePrefix + className;
+		return entity.getElement() instanceof PackageElement packageElement
+				? packageElement.getQualifiedName().toString() + "." + getGeneratedClassName( entity )
+				: getGeneratedClassFullyQualifiedName(
+						(TypeElement) entity.getElement(), entity.getPackageName(), entity.isJakartaDataStyle() );
 	}
 
 	private static String getGeneratedClassName(Metamodel entity) {

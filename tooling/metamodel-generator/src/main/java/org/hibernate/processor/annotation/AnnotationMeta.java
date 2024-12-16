@@ -110,8 +110,11 @@ public abstract class AnnotationMeta implements Metamodel {
 					if ( !isJakartaDataStyle()
 							&& statement instanceof SqmSelectStatement<?> selectStatement ) {
 						if ( isQueryMethodName( name ) ) {
+							final AnnotationValue annotationValue = getAnnotationValue( mirror, "resultClass" );
+							final String resultType = annotationValue != null
+									? annotationValue.getValue().toString()
+									: resultType( selectStatement, context );
 							putMember( name,
-									// TODO: respect @NamedQuery(resultClass)
 									new NamedQueryMethod(
 											this,
 											selectStatement,
@@ -119,7 +122,8 @@ public abstract class AnnotationMeta implements Metamodel {
 											isRepository(),
 											getSessionType(),
 											getSessionVariableName(),
-											context.addNonnullAnnotation()
+											context.addNonnullAnnotation(),
+											resultType
 									)
 							);
 						}

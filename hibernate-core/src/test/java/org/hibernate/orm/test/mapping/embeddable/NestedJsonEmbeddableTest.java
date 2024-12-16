@@ -453,6 +453,30 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 		public TheJson() {
 		}
 
+		public String getStringField() {
+			return stringField;
+		}
+
+		public void setStringField(String stringField) {
+			this.stringField = stringField;
+		}
+
+		public SimpleEmbeddable getSimpleEmbeddable() {
+			return simpleEmbeddable;
+		}
+
+		public void setSimpleEmbeddable(SimpleEmbeddable simpleEmbeddable) {
+			this.simpleEmbeddable = simpleEmbeddable;
+		}
+
+		public EmbeddableAggregate getNested() {
+			return nested;
+		}
+
+		public void setNested(EmbeddableAggregate nested) {
+			this.nested = nested;
+		}
+
 		public TheJson(String stringField, Integer integerField, String leaf, EmbeddableAggregate nested) {
 			this.stringField = stringField;
 			this.simpleEmbeddable = new SimpleEmbeddable( integerField, leaf );
@@ -471,6 +495,22 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 		private Integer integerField;
 		@JdbcTypeCode(SqlTypes.JSON)
 		private DoubleNested doubleNested;
+
+		public Integer getIntegerField() {
+			return integerField;
+		}
+
+		public void setIntegerField(Integer integerField) {
+			this.integerField = integerField;
+		}
+
+		public DoubleNested getDoubleNested() {
+			return doubleNested;
+		}
+
+		public void setDoubleNested(DoubleNested doubleNested) {
+			this.doubleNested = doubleNested;
+		}
 
 		public SimpleEmbeddable() {
 		}

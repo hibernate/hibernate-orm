@@ -461,37 +461,35 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public void close() {
-		if ( closed && !waitingForAutoClose ) {
-			return;
-		}
-
-		try {
-			delayedAfterCompletion();
-		}
-		catch ( HibernateException e ) {
-			if ( getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
-				throw getExceptionConverter().convert( e );
+		if ( !closed || waitingForAutoClose ) {
+			try {
+				delayedAfterCompletion();
 			}
-			else {
-				throw e;
+			catch ( HibernateException e ) {
+				if ( getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
+					throw getExceptionConverter().convert( e );
+				}
+				else {
+					throw e;
+				}
 			}
-		}
 
-		if ( sessionEventsManager != null ) {
-			sessionEventsManager.end();
-		}
-
-		if ( transactionCoordinator != null ) {
-			removeSharedSessionTransactionObserver( transactionCoordinator );
-		}
-
-		try {
-			if ( shouldCloseJdbcCoordinatorOnClose( isTransactionCoordinatorShared ) ) {
-				jdbcCoordinator.close();
+			if ( sessionEventsManager != null ) {
+				sessionEventsManager.end();
 			}
-		}
-		finally {
-			setClosed();
+
+			if ( transactionCoordinator != null ) {
+				removeSharedSessionTransactionObserver( transactionCoordinator );
+			}
+
+			try {
+				if ( shouldCloseJdbcCoordinatorOnClose( isTransactionCoordinatorShared ) ) {
+					jdbcCoordinator.close();
+				}
+			}
+			finally {
+				setClosed();
+			}
 		}
 	}
 
@@ -553,10 +551,9 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public boolean isTransactionInProgress() {
-		if ( waitingForAutoClose ) {
-			return factory.isOpen() && transactionCoordinator.isTransactionActive();
-		}
-		return !isClosed() && transactionCoordinator.isTransactionActive();
+		return waitingForAutoClose
+				? factory.isOpen() && transactionCoordinator.isTransactionActive()
+				: !isClosed() && transactionCoordinator.isTransactionActive();
 	}
 
 	@Override

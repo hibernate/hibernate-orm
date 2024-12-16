@@ -58,7 +58,7 @@ def checkoutReleaseScripts() {
 
 pipeline {
 	agent {
-		label 'Worker&&Containers'
+		label 'Release'
 	}
 	tools {
 		jdk 'OpenJDK 11 Latest'

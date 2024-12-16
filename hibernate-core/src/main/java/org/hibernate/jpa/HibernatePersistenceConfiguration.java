@@ -13,6 +13,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.CacheSettings;
+import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.cfg.JpaComplianceSettings;
 import org.hibernate.cfg.MappingSettings;
@@ -29,8 +30,42 @@ import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
 
 /**
- * Hibernate extension to the Jakarta Persistence {@link PersistenceConfiguration}
- * contract.
+ * Extends the Jakarta Persistence-defined {@link PersistenceConfiguration}
+ * with operations specific to Hibernate.
+ * <p>
+ * An instance of {@code Configuration} may be obtained simply by
+ * {@linkplain #HibernatePersistenceConfiguration(String) instantiation},
+ * and may be used to aggregate:
+ * <ul>
+ * <li>{@linkplain #property(String, Object) configuration properties}
+ *     from various sources, and
+ * <li>entity O/R mappings, defined in either
+ *     {@linkplain #managedClasses(Class...) annotated classes}, or
+ *     {@linkplain #mappingFiles(Collection) XML mapping documents}.
+ * </ul>
+ * <p>
+ * Standard JPA configuration properties are enumerated by the supertype
+ * {@link PersistenceConfiguration}. All configuration properties understood
+ * by Hibernate are enumerated by {@link AvailableSettings}.
+ * <p>
+ * <pre>
+ * SessionFactory factory = new HibernatePersistenceConfiguration()
+ *     // scan classes for mapping annotations
+ *     .managedClasses(Item.class, Bid.class, User.class)
+ *     // set a configuration property
+ *     .setProperty(PersistenceConfiguration.JDBC_DATASOURCE,
+ *                  "java:comp/env/jdbc/test")
+ *     .buildSessionFactory();
+ * </pre>
+ * <p>
+ * When instantiated, an instance of
+ * {@code HibernatePersistenceConfiguration} has its properties initially
+ * populated from the {@linkplain Environment#getProperties() environment},
+ * including:
+ * <ul>
+ * <li>JVM {@linkplain System#getProperties() system properties}, and
+ * <li>properties specified in {@code hibernate.properties}.
+ * </ul>
  *
  * @apiNote The specification explicitly encourages implementors to extend
  *          {@link PersistenceConfiguration} to accommodate vendor-specific

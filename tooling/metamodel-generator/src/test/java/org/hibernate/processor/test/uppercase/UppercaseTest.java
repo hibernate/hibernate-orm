@@ -25,5 +25,11 @@ public class UppercaseTest extends CompilationTest {
 		assertPresenceOfFieldInMetamodelFor( Person.class, "_SSN" );
 		assertPresenceOfFieldInMetamodelFor( Person.class, "UserID" );
 		assertPresenceOfFieldInMetamodelFor( Person.class, "USER_ID" );
+		assertPresenceOfFieldInMetamodelFor( Person.class, "fullName" );
+		assertPresenceOfFieldInMetamodelFor( Person.class, "FULL_NAME" );
+		assertPresenceOfFieldInMetamodelFor( Person.class, "X" );
+		assertPresenceOfFieldInMetamodelFor( Person.class, "_X" );
+		assertPresenceOfFieldInMetamodelFor( Person.class, "y" );
+		assertPresenceOfFieldInMetamodelFor( Person.class, "Y" );
 	}
 }

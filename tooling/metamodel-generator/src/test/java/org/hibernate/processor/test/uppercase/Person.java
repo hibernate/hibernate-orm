@@ -11,4 +11,7 @@ import jakarta.persistence.Id;
 public class Person {
 	@Id String SSN;
 	String UserID;
+	String fullName;
+	int X;
+	int y;
 }

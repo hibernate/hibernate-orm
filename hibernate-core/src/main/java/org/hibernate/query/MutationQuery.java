@@ -47,7 +47,7 @@ import jakarta.persistence.TemporalType;
  *     and ordinal parameters defined by the query.
  * </ul>
  * <pre>
- * session.createMutationQuery("delete Draft where lastUpdated < local date - ?1 year")
+ * session.createMutationQuery("delete Draft where lastUpdated &lt; local date - ?1 year")
  *         .setParameter(1, years)
  *         .executeUpdate();
  * </pre>

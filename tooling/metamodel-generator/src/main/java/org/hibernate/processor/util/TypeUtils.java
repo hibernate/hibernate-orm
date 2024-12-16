@@ -4,6 +4,7 @@
  */
 package org.hibernate.processor.util;
 
+import jakarta.persistence.AccessType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.processor.Context;
 import org.hibernate.processor.MetaModelGenerationException;
@@ -29,8 +30,6 @@ import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.SimpleTypeVisitor8;
 import javax.tools.Diagnostic;
-
-import jakarta.persistence.AccessType;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -38,6 +37,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static java.beans.Introspector.decapitalize;
+import static org.hibernate.internal.util.StringHelper.split;
 import static org.hibernate.processor.util.AccessTypeInformation.DEFAULT_ACCESS_TYPE;
 import static org.hibernate.processor.util.Constants.ACCESS;
 import static org.hibernate.processor.util.Constants.BASIC;
@@ -663,6 +663,16 @@ public final class TypeUtils {
 
 	public static boolean isMemberType(Element element) {
 		return element.getEnclosingElement() instanceof TypeElement;
+	}
+
+	public static String getGeneratedClassFullyQualifiedName(TypeElement element, String packageName, boolean jakartaDataStyle) {
+		final StringBuilder builder = new StringBuilder( !packageName.isEmpty() ? packageName + "." : "" );
+		final int length = builder.length();
+		for ( String s : split( ".", element.getQualifiedName().toString().substring( length ) ) ) {
+			String part = StringUtil.removeDollar( s );
+			builder.append( jakartaDataStyle ? '_' + part : part + '_' );
+		}
+		return builder.toString();
 	}
 
 	static class EmbeddedAttributeVisitor extends SimpleTypeVisitor8<@Nullable TypeElement, Element> {

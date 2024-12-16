@@ -397,7 +397,7 @@ public class SessionImpl
 	public void close() throws HibernateException {
 		if ( isClosed() ) {
 			if ( getFactory().getSessionFactoryOptions().getJpaCompliance().isJpaClosedComplianceEnabled() ) {
-				throw new IllegalStateException( "Illegal call to #close() on already closed Session/EntityManager" );
+				throw new IllegalStateException( "EntityManager was already closed" );
 			}
 			log.trace( "Already closed" );
 		}
@@ -465,13 +465,10 @@ public class SessionImpl
 		if ( isTransactionCoordinatorShared ) {
 			final ActionQueue actionQueue = getActionQueue();
 			if ( actionQueue.hasBeforeTransactionActions() || actionQueue.hasAfterTransactionActions() ) {
-				log.warn( "On close, shared Session had before/after transaction actions that have not yet been processed" );
+				log.warn( "Closing shared session with unprocessed transaction completion actions" );
 			}
-			return false;
 		}
-		else {
-			return true;
-		}
+		return !isTransactionCoordinatorShared;
 	}
 
 	@Override
@@ -493,18 +490,19 @@ public class SessionImpl
 
 	protected void checkSessionFactoryOpen() {
 		if ( !getFactory().isOpen() ) {
-			log.debug( "Forcing Session/EntityManager closed as SessionFactory/EntityManagerFactory has been closed" );
+			log.debug( "Forcing-closing session since factory is already closed" );
 			setClosed();
 		}
 	}
 
 	private void managedFlush() {
 		if ( isClosed() && !waitingForAutoClose ) {
-			log.trace( "Skipping auto-flush due to session closed" );
-			return;
+			log.trace( "Skipping auto-flush since the session is closed" );
 		}
-		log.trace( "Automatically flushing session" );
-		doFlush();
+		else {
+			log.trace( "Automatically flushing session" );
+			doFlush();
+		}
 	}
 
 	@Override

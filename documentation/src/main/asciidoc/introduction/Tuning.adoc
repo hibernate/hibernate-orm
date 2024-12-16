@@ -992,6 +992,17 @@ long publisherCacheMissCount =
 Hibernate's statistics enable observability.
 Both {micrometer}[Micrometer] and {smallrye-metrics}[SmallRye Metrics] are capable of exposing these metrics.
 
+[[jfr]]
+=== Using Java Flight Recorder
+
+Hibernate JFR is a separate module which reports events to link:https://developers.redhat.com/blog/2020/08/25/get-started-with-jdk-flight-recorder-in-openjdk-8u[Java Flight Recorder].
+This is different to reporting aggregated <<statistics,metrics>> via a tool like Micrometer, since JFR records information about the timing and duration of each discrete event, along with a stack trace.
+If anything, the information reported by JFR is a little _too_ detailed to make it really useful for performance tuning--it's perhaps more useful for _troubleshooting_.
+
+No special configuration is required to use Hibernate JFR.
+Just include `org.hibernate.orm:hibernate-jfr` as a runtime dependency.
+In particular, you _don't_ need to enable `hibernate.generate_statistics`.
+
 [[slow-queries]]
 === Tracking down slow queries
 

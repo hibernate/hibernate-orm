@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.event.spi;
+package org.hibernate.event.monitor.spi;
 
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
@@ -10,6 +10,7 @@ import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.access.CachedDomainDataAccess;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.JavaServiceLoadable;

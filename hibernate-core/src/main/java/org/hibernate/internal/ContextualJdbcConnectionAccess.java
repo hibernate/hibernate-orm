@@ -13,8 +13,8 @@ import org.hibernate.SessionEventListener;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.spi.EventMonitor;
-import org.hibernate.event.spi.DiagnosticEvent;
+import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 
 /**
  * @author Steve Ebersole

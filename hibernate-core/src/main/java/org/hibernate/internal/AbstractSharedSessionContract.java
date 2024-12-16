@@ -49,7 +49,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.internal.TransactionImpl;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
-import org.hibernate.event.spi.EventMonitor;
+import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.RootGraphImplementor;

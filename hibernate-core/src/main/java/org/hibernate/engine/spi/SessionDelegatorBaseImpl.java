@@ -34,7 +34,7 @@ import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.event.spi.EventMonitor;
+import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;

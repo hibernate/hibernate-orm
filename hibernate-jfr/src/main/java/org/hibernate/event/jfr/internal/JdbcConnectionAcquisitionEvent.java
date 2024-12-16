@@ -4,7 +4,7 @@
  */
 package org.hibernate.event.jfr.internal;
 
-import org.hibernate.event.spi.DiagnosticEvent;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.internal.build.AllowNonPortable;
 
 import jdk.jfr.Category;

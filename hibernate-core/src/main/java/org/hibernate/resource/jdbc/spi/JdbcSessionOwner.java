@@ -7,7 +7,7 @@ package org.hibernate.resource.jdbc.spi;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.EventMonitor;
+import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 
 import static java.lang.reflect.InvocationHandler.invokeDefault;

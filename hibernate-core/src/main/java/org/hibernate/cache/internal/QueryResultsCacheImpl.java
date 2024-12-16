@@ -15,8 +15,8 @@ import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.TimestampsCache;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.spi.EventMonitor;
-import org.hibernate.event.spi.DiagnosticEvent;
+import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 
 import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
 

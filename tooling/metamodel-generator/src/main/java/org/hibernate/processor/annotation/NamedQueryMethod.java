@@ -15,7 +15,6 @@ import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import java.util.TreeSet;
 
 import static org.hibernate.processor.util.StringUtil.nameToFieldName;
-import static org.hibernate.processor.util.SqmTypeUtils.resultType;
 
 /**
  * @author Gavin King
@@ -28,6 +27,7 @@ class NamedQueryMethod implements MetaAttribute {
 	private final boolean reactive;
 	private final String sessionVariableName;
 	private final boolean addNonnullAnnotation;
+	private final String resultClass;
 
 	public NamedQueryMethod(
 			AnnotationMeta annotationMeta,
@@ -36,7 +36,8 @@ class NamedQueryMethod implements MetaAttribute {
 			boolean belongsToRepository,
 			@Nullable String sessionType,
 			String sessionVariableName,
-			boolean addNonnullAnnotation) {
+			boolean addNonnullAnnotation,
+			String resultClass) {
 		this.annotationMeta = annotationMeta;
 		this.select = select;
 		this.name = name;
@@ -44,6 +45,7 @@ class NamedQueryMethod implements MetaAttribute {
 		this.reactive = Constants.MUTINY_SESSION.equals(sessionType);
 		this.sessionVariableName = sessionVariableName;
 		this.addNonnullAnnotation = addNonnullAnnotation;
+		this.resultClass = resultClass;
 	}
 
 	@Override
@@ -72,7 +74,7 @@ class NamedQueryMethod implements MetaAttribute {
 				.append(".createNamedQuery(")
 				.append(fieldName())
 				.append(", ")
-				.append( annotationMeta.importType( resultType( select, annotationMeta.getContext() ) ) )
+				.append( annotationMeta.importType( resultClass ) )
 				.append( ".class)");
 		for ( SqmParameter<?> param : sortedParameters ) {
 			declaration
@@ -123,7 +125,7 @@ class NamedQueryMethod implements MetaAttribute {
 		declaration
 				.append(annotationMeta.importType(Constants.LIST))
 				.append('<')
-				.append( annotationMeta.importType( resultType( select, annotationMeta.getContext() ) ) )
+				.append( annotationMeta.importType( resultClass ) )
 				.append("> ")
 				.append(name);
 		if ( reactive ) {

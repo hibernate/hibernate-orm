@@ -36,7 +36,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 
 import static java.beans.Introspector.decapitalize;
 import static org.hibernate.processor.util.AccessTypeInformation.DEFAULT_ACCESS_TYPE;
@@ -190,12 +189,7 @@ public final class TypeUtils {
 				return context.getTypeUtils().getDeclaredType(
 						typeElement,
 						declaredType.getTypeArguments().stream()
-								.map( new Function<TypeMirror, TypeMirror>() {
-											@Override
-											public @Nullable TypeMirror apply(TypeMirror arg) {
-												return extractClosestRealType( arg, context, beingVisited );
-											}
-										} )
+								.map( arg -> extractClosestRealType( arg, context, beingVisited ) )
 								.toArray( TypeMirror[]::new )
 				);
 			default:

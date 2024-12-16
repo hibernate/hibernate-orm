@@ -30,8 +30,8 @@ import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
 import org.hibernate.engine.jdbc.internal.JdbcServicesImpl;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
-import org.hibernate.event.internal.EmptyEventManager;
-import org.hibernate.event.spi.EventManager;
+import org.hibernate.event.internal.EmptyEventMonitor;
+import org.hibernate.event.spi.EventMonitor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.ConnectionInfoLogger;
 import org.hibernate.internal.util.StringHelper;
@@ -619,7 +619,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		private final JpaCompliance jpaCompliance;
 		private final SqlExceptionHelper sqlExceptionHelper;
 		TransactionCoordinator transactionCoordinator;
-		private final EmptyEventManager eventManager;
+		private final EmptyEventMonitor eventManager;
 
 		public TemporaryJdbcSessionOwner(
 				JdbcConnectionAccess jdbcConnectionAccess,
@@ -643,7 +643,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 							.getDefaultConnectionHandlingMode();
 
 			this.jpaCompliance = new MutableJpaComplianceImpl( Collections.emptyMap(), false );
-			this.eventManager = new EmptyEventManager();
+			this.eventManager = new EmptyEventMonitor();
 		}
 
 		@Override
@@ -692,7 +692,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		}
 
 		@Override
-		public EventManager getEventManager() {
+		public EventMonitor getEventMonitor() {
 			return eventManager;
 		}
 

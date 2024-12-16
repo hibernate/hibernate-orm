@@ -10,9 +10,9 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
-import org.hibernate.event.spi.EventManager;
+import org.hibernate.event.spi.EventMonitor;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.spi.DiagnosticEvent;
 import org.hibernate.event.spi.PostCommitInsertEventListener;
 import org.hibernate.event.spi.PostInsertEvent;
 import org.hibernate.event.spi.PostInsertEventListener;
@@ -82,8 +82,8 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 		// else inserted the same pk first, the insert would fail
 
 		if ( !isVeto() ) {
-			final EventManager eventManager = session.getEventManager();
-			final HibernateMonitoringEvent event = eventManager.beginEntityInsertEvent();
+			final EventMonitor eventMonitor = session.getEventMonitor();
+			final DiagnosticEvent event = eventMonitor.beginEntityInsertEvent();
 			boolean success = false;
 			final GeneratedValues generatedValues;
 			try {
@@ -92,7 +92,7 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 				success = true;
 			}
 			finally {
-				eventManager.completeEntityInsertEvent( event, generatedId, persister.getEntityName(), success, session );
+				eventMonitor.completeEntityInsertEvent( event, generatedId, persister.getEntityName(), success, session );
 			}
 			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 			if ( persister.getRowIdMapping() != null ) {

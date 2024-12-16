@@ -13,9 +13,9 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
-import org.hibernate.event.spi.EventManager;
+import org.hibernate.event.spi.EventMonitor;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.spi.DiagnosticEvent;
 import org.hibernate.event.spi.PostCommitDeleteEventListener;
 import org.hibernate.event.spi.PostDeleteEvent;
 import org.hibernate.event.spi.PostDeleteEventListener;
@@ -128,15 +128,15 @@ public class EntityDeleteAction extends EntityAction {
 		final Object ck = lockCacheItem();
 
 		if ( !isCascadeDeleteEnabled && !veto ) {
-			final EventManager eventManager = session.getEventManager();
-			final HibernateMonitoringEvent event = eventManager.beginEntityDeleteEvent();
+			final EventMonitor eventMonitor = session.getEventMonitor();
+			final DiagnosticEvent event = eventMonitor.beginEntityDeleteEvent();
 			boolean success = false;
 			try {
 				persister.getDeleteCoordinator().delete( instance, id, version, session );
 				success = true;
 			}
 			finally {
-				eventManager.completeEntityDeleteEvent( event, id, persister.getEntityName(), success, session );
+				eventMonitor.completeEntityDeleteEvent( event, id, persister.getEntityName(), success, session );
 			}
 		}
 

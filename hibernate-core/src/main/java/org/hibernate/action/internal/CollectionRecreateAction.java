@@ -7,9 +7,9 @@ package org.hibernate.action.internal;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.spi.EventManager;
+import org.hibernate.event.spi.EventMonitor;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.spi.DiagnosticEvent;
 import org.hibernate.event.spi.PostCollectionRecreateEvent;
 import org.hibernate.event.spi.PostCollectionRecreateEventListener;
 import org.hibernate.event.spi.PreCollectionRecreateEvent;
@@ -46,15 +46,15 @@ public final class CollectionRecreateAction extends CollectionAction {
 		final SharedSessionContractImplementor session = getSession();
 		final CollectionPersister persister = getPersister();
 		final Object key = getKey();
-		final EventManager eventManager = session.getEventManager();
-		final HibernateMonitoringEvent event = eventManager.beginCollectionRecreateEvent();
+		final EventMonitor eventMonitor = session.getEventMonitor();
+		final DiagnosticEvent event = eventMonitor.beginCollectionRecreateEvent();
 		boolean success = false;
 		try {
 			persister.recreate( collection, key, session );
 			success = true;
 		}
 		finally {
-			eventManager.completeCollectionRecreateEvent( event, key, persister.getRole(), success, session );
+			eventMonitor.completeCollectionRecreateEvent( event, key, persister.getRole(), success, session );
 		}
 
 		session.getPersistenceContextInternal().getCollectionEntry( collection ).afterAction( collection );

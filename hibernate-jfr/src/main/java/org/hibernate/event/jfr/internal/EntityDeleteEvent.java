@@ -10,7 +10,7 @@ import jdk.jfr.Event;
 import jdk.jfr.Label;
 import jdk.jfr.Name;
 import jdk.jfr.StackTrace;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.spi.DiagnosticEvent;
 import org.hibernate.internal.build.AllowNonPortable;
 
 @Name(EntityDeleteEvent.NAME)
@@ -19,7 +19,7 @@ import org.hibernate.internal.build.AllowNonPortable;
 @Description("Entity Delete")
 @StackTrace
 @AllowNonPortable
-public class EntityDeleteEvent extends Event implements HibernateMonitoringEvent {
+public class EntityDeleteEvent extends Event implements DiagnosticEvent {
 	public static final String NAME = "org.hibernate.orm.EntityDeleteEvent";
 
 	@Label("Session Identifier")

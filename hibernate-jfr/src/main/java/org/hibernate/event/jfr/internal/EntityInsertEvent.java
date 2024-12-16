@@ -10,7 +10,7 @@ import jdk.jfr.Event;
 import jdk.jfr.Label;
 import jdk.jfr.Name;
 import jdk.jfr.StackTrace;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.spi.DiagnosticEvent;
 import org.hibernate.internal.build.AllowNonPortable;
 
 @Name(EntityInsertEvent.NAME)
@@ -19,7 +19,7 @@ import org.hibernate.internal.build.AllowNonPortable;
 @Description("Entity Insert")
 @StackTrace
 @AllowNonPortable
-public class EntityInsertEvent extends Event implements HibernateMonitoringEvent {
+public class EntityInsertEvent extends Event implements DiagnosticEvent {
 	public static final String NAME = "org.hibernate.orm.EntityInsertEvent";
 
 	@Label("Session Identifier")

@@ -8,9 +8,9 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.spi.EventManager;
+import org.hibernate.event.spi.EventMonitor;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.spi.DiagnosticEvent;
 import org.hibernate.event.spi.PostCollectionUpdateEvent;
 import org.hibernate.event.spi.PostCollectionUpdateEventListener;
 import org.hibernate.event.spi.PreCollectionUpdateEvent;
@@ -65,8 +65,8 @@ public final class CollectionUpdateAction extends CollectionAction {
 			// Do nothing - we only need to notify the cache
 		}
 		else {
-			final EventManager eventManager = session.getEventManager();
-			final HibernateMonitoringEvent event = eventManager.beginCollectionUpdateEvent();
+			final EventMonitor eventMonitor = session.getEventMonitor();
+			final DiagnosticEvent event = eventMonitor.beginCollectionUpdateEvent();
 			boolean success = false;
 			try {
 				if ( !affectedByFilters && collection.empty() ) {
@@ -93,7 +93,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 				success = true;
 			}
 			finally {
-				eventManager.completeCollectionUpdateEvent( event, key, persister.getRole(), success, session );
+				eventMonitor.completeCollectionUpdateEvent( event, key, persister.getRole(), success, session );
 			}
 		}
 

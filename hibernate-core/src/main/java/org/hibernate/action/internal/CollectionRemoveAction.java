@@ -8,9 +8,9 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.spi.EventManager;
+import org.hibernate.event.spi.EventMonitor;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.spi.DiagnosticEvent;
 import org.hibernate.event.spi.PostCollectionRemoveEvent;
 import org.hibernate.event.spi.PostCollectionRemoveEventListener;
 import org.hibernate.event.spi.PreCollectionRemoveEvent;
@@ -112,15 +112,15 @@ public final class CollectionRemoveAction extends CollectionAction {
 			// knowing if the collection is actually empty without querying the db)
 			final CollectionPersister persister = getPersister();
 			final Object key = getKey();
-			final EventManager eventManager = session.getEventManager();
-			final HibernateMonitoringEvent event = eventManager.beginCollectionRemoveEvent();
+			final EventMonitor eventMonitor = session.getEventMonitor();
+			final DiagnosticEvent event = eventMonitor.beginCollectionRemoveEvent();
 			boolean success = false;
 			try {
 				persister.remove( key, session );
 				success = true;
 			}
 			finally {
-				eventManager.completeCollectionRemoveEvent( event, key, persister.getRole(), success, session );
+				eventMonitor.completeCollectionRemoveEvent( event, key, persister.getRole(), success, session );
 			}
 		}
 

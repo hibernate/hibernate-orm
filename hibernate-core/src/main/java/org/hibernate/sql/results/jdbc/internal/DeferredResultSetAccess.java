@@ -18,8 +18,8 @@ import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.spi.EventMonitor;
+import org.hibernate.event.spi.DiagnosticEvent;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.query.spi.Limit;
@@ -240,14 +240,14 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 			if ( sqlStatementLogger.getLogSlowQuery() > 0 ) {
 				executeStartNanos = System.nanoTime();
 			}
-			final EventManager eventManager = session.getEventManager();
-			final HibernateMonitoringEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
+			final EventMonitor eventMonitor = session.getEventMonitor();
+			final DiagnosticEvent jdbcPreparedStatementExecutionEvent = eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 			try {
 				eventListenerManager.jdbcExecuteStatementStart();
 				resultSet = wrapResultSet( preparedStatement.executeQuery() );
 			}
 			finally {
-				eventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, finalSql );
+				eventMonitor.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, finalSql );
 				eventListenerManager.jdbcExecuteStatementEnd();
 				sqlStatementLogger.logSlowQuery( finalSql, executeStartNanos, context() );
 			}

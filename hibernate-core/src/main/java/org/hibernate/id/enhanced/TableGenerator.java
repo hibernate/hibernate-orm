@@ -34,8 +34,8 @@ import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.spi.EventMonitor;
+import org.hibernate.event.spi.DiagnosticEvent;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.id.ExportableColumn;
 import org.hibernate.id.IdentifierGeneratorHelper;
@@ -623,8 +623,8 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 			SessionEventListenerManager listener,
 			SharedSessionContractImplementor session) throws SQLException {
 		logger.logStatement( sql, FormatStyle.BASIC.getFormatter() );
-		final EventManager eventManager = session.getEventManager();
-		final HibernateMonitoringEvent creationEvent = eventManager.beginJdbcPreparedStatementCreationEvent();
+		final EventMonitor eventMonitor = session.getEventMonitor();
+		final DiagnosticEvent creationEvent = eventMonitor.beginJdbcPreparedStatementCreationEvent();
 		final StatisticsImplementor stats = session.getFactory().getStatistics();
 		try {
 			listener.jdbcPrepareStatementStart();
@@ -634,7 +634,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 			return connection.prepareStatement( sql );
 		}
 		finally {
-			eventManager.completeJdbcPreparedStatementCreationEvent( creationEvent, sql );
+			eventMonitor.completeJdbcPreparedStatementCreationEvent( creationEvent, sql );
 			listener.jdbcPrepareStatementEnd();
 			if ( stats != null && stats.isStatisticsEnabled() ) {
 				stats.closeStatement();
@@ -647,14 +647,14 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 			SessionEventListenerManager listener,
 			String sql,
 			SharedSessionContractImplementor session) throws SQLException {
-		final EventManager eventManager = session.getEventManager();
-		final HibernateMonitoringEvent executionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
+		final EventMonitor eventMonitor = session.getEventMonitor();
+		final DiagnosticEvent executionEvent = eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			listener.jdbcExecuteStatementStart();
 			return ps.executeUpdate();
 		}
 		finally {
-			eventManager.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
+			eventMonitor.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
 			listener.jdbcExecuteStatementEnd();
 		}
 	}
@@ -664,14 +664,14 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 			SessionEventListenerManager listener,
 			String sql,
 			SharedSessionContractImplementor session) throws SQLException {
-		final EventManager eventManager = session.getEventManager();
-		final HibernateMonitoringEvent executionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
+		final EventMonitor eventMonitor = session.getEventMonitor();
+		final DiagnosticEvent executionEvent = eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			listener.jdbcExecuteStatementStart();
 			return ps.executeQuery();
 		}
 		finally {
-			eventManager.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
+			eventMonitor.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
 			listener.jdbcExecuteStatementEnd();
 		}
 	}

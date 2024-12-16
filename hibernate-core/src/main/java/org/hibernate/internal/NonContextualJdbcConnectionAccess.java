@@ -13,8 +13,8 @@ import org.hibernate.SessionEventListener;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.spi.EventMonitor;
+import org.hibernate.event.spi.DiagnosticEvent;
 
 /**
  * @author Steve Ebersole
@@ -37,14 +37,14 @@ public class NonContextualJdbcConnectionAccess implements JdbcConnectionAccess, 
 
 	@Override
 	public Connection obtainConnection() throws SQLException {
-		final EventManager eventManager = session.getEventManager();
-		final HibernateMonitoringEvent jdbcConnectionAcquisitionEvent = eventManager.beginJdbcConnectionAcquisitionEvent();
+		final EventMonitor eventMonitor = session.getEventMonitor();
+		final DiagnosticEvent jdbcConnectionAcquisitionEvent = eventMonitor.beginJdbcConnectionAcquisitionEvent();
 		try {
 			listener.jdbcConnectionAcquisitionStart();
 			return connectionProvider.getConnection();
 		}
 		finally {
-			eventManager.completeJdbcConnectionAcquisitionEvent(
+			eventMonitor.completeJdbcConnectionAcquisitionEvent(
 					jdbcConnectionAcquisitionEvent,
 					session,
 					null
@@ -55,14 +55,14 @@ public class NonContextualJdbcConnectionAccess implements JdbcConnectionAccess, 
 
 	@Override
 	public void releaseConnection(Connection connection) throws SQLException {
-		final EventManager eventManager = session.getEventManager();
-		final HibernateMonitoringEvent jdbcConnectionReleaseEvent = eventManager.beginJdbcConnectionReleaseEvent();
+		final EventMonitor eventMonitor = session.getEventMonitor();
+		final DiagnosticEvent jdbcConnectionReleaseEvent = eventMonitor.beginJdbcConnectionReleaseEvent();
 		try {
 			listener.jdbcConnectionReleaseStart();
 			connectionProvider.closeConnection( connection );
 		}
 		finally {
-			eventManager.completeJdbcConnectionReleaseEvent( jdbcConnectionReleaseEvent, session, null );
+			eventMonitor.completeJdbcConnectionReleaseEvent( jdbcConnectionReleaseEvent, session, null );
 			listener.jdbcConnectionReleaseEnd();
 		}
 	}

@@ -2612,7 +2612,7 @@ public class FunctionTests {
 	@RequiresDialect(PostgreSQLDialect.class)
 	@RequiresDialect(MySQLDialect.class)
 	@RequiresDialect(OracleDialect.class)
-	@RequiresDialect(DB2Dialect.class)
+	@RequiresDialect(value = DB2Dialect.class, majorVersion = 11)
 	@RequiresDialect(SQLServerDialect.class)
 	@RequiresDialect(H2Dialect.class)
 	@RequiresDialect(HANADialect.class)

@@ -38,11 +38,14 @@ public class IdGeneratorTypeWithBeanContainerTest {
 		SimpleEntity entity = new SimpleEntity();
 		scope.inTransaction(s -> s.persist(entity));
 		assertThat(entity.id, is(SimpleBeanContainer.INITIAL_VALUE));
+		SimpleEntity entity2 = new SimpleEntity();
+		scope.inTransaction(s -> s.persist(entity2));
+		assertThat(entity2.id, is(entity.id + 2));
 	}
 
 	@Entity
 	public static class SimpleEntity {
-		@Id @SimpleId
+		@Id @SimpleId(step = 2)
 		long id;
 		String data;
 	}

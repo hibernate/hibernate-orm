@@ -19,4 +19,7 @@ import org.hibernate.annotations.IdGeneratorType;
 @Retention(RetentionPolicy.RUNTIME)
 @IdGeneratorType(SimpleGenerator.class)
 public @interface SimpleId {
+
+	long step() default 1;
+
 }

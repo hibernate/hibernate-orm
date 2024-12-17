@@ -23,10 +23,7 @@ apply from: rootProject.file( 'gradle/releasable.gradle' )
 
 description = "Gradle plugin for integrating Hibernate aspects into your build"
 
-ext {
-	pluginId = 'org.hibernate.orm'
-	pluginVersion = project.version
-}
+def pluginId = 'org.hibernate.orm'
 
 dependencies {
 	implementation project(':hibernate-core')
@@ -50,7 +47,7 @@ dependencies {
 gradlePlugin {
 	plugins {
 		ormPlugin {
-			id = project.pluginId
+			id = pluginId
 			implementationClass = 'org.hibernate.orm.tooling.gradle.HibernateOrmPlugin'
 		}
 	}
@@ -70,7 +67,7 @@ pluginBundle {
 
 	plugins {
 		ormPlugin {
-			id = project.pluginId
+			id = pluginId
 			displayName = 'Gradle plugin for Hibernate ORM'
 			description = 'Applies Hibernate aspects into the build'
 		}
@@ -96,21 +93,6 @@ publishing {
 		maven {
 			name = 'localPluginRepository'
 			url = "${buildDir}/local-plugin-repository"
-		}
-	}
-}
-
-// local publishing (SNAPSHOT testing), cont.
-//		- https://github.com/gradle-nexus/publish-plugin/issues/143
-//		- https://github.com/gradle-nexus/publish-plugin/pull/144
-gradle.taskGraph.whenReady {
-	tasks.withType(PublishToMavenRepository) { PublishToMavenRepository t ->
-		if ( t.repository == null ) {
-			logger.info( "Task `{}` had null repository", t.path )
-		}
-		else if ( t.repository.name == "sonatype" ) {
-			logger.debug( "Disabling task `{}` because it publishes to Sonatype", t.path )
-			t.enabled = false
 		}
 	}
 }
@@ -153,20 +135,38 @@ tasks.publish.enabled !project.ormVersion.isSnapshot
 tasks.publishPlugins.enabled !project.ormVersion.isSnapshot
 
 gradle.taskGraph.whenReady { tg ->
-	if ( tg.hasTask( project.tasks.publishPlugins ) && project.tasks.publishPlugins.enabled  ) {
-		// look for sys-prop or env-var overrides of the tokens used for publishing
-		if ( project.properties.containsKey( 'gradle.publish.key' )
-				|| project.properties.containsKey( 'gradle.publish.secret' ) ) {
-			// nothing to do - already explicitly set
+	// verify credentials for publishing the plugin up front to avoid any work (only if we are publishing)
+	if ( tg.hasTask( ":publishPlugins" ) && project.tasks.publishPlugins.enabled  ) {
+		// we are publishing the plugin - make sure there is a credentials pair
+		//
+		// first, check the `GRADLE_PUBLISH_KEY` / `GRADLE_PUBLISH_SECRET` combo (env vars)
+		// and then the `gradle.publish.key` / `gradle.publish.secret` combo (project prop)
+		//		- see https://docs.gradle.org/current/userguide/publishing_gradle_plugins.html#account_setup
+		if ( System.getenv().get("GRADLE_PUBLISH_KEY") != null ) {
+			if ( System.getenv().get("GRADLE_PUBLISH_SECRET") != null ) {
+				throw new RuntimeException( "`GRADLE_PUBLISH_KEY` specified, but not `GRADLE_PUBLISH_SECRET` for publishing Gradle plugin" )
+			}
+		}
+		else if ( project.findProperty( 'gradle.publish.key' ) != null ) {
+			if ( project.findProperty( 'gradle.publish.secret' ) != null ) {
+				throw new RuntimeException( "`gradle.publish.key` specified, but not `gradle.publish.secret` for publishing Gradle plugin" )
+			}
 		}
 		else {
-			// use the values from the credentials provider, if any
-			if ( project.property( 'gradle.publish.key' ) == null ) {
-				throw new RuntimeException( "`-Pgradle.publish.key=...` not found" )
-			}
-			if ( project.property( 'gradle.publish.secret' ) == null ) {
-				throw new RuntimeException( "`-Pgradle.publish.secret=...` not found" )
-			}
+			throw new RuntimeException( "No credentials specified for publishing Gradle plugin" )
+		}
+	}
+
+	// local publishing (SNAPSHOT testing), cont.
+	//		- https://github.com/gradle-nexus/publish-plugin/issues/143
+	//		- https://github.com/gradle-nexus/publish-plugin/pull/144
+	tasks.withType(PublishToMavenRepository) { PublishToMavenRepository t ->
+		if ( t.repository == null ) {
+			logger.info( "Task `{}` had null repository", t.path )
+		}
+		else if ( t.repository.name == "sonatype" ) {
+			logger.debug( "Disabling task `{}` because it publishes to Sonatype", t.path )
+			t.enabled = false
 		}
 	}
 }

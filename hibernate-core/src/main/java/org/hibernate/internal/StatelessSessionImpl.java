@@ -155,14 +155,23 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			if ( !generator.generatesOnInsert() ) {
 				throw new IdentifierGenerationException( "Identifier generator must generate on insert" );
 			}
-			id = ( (BeforeExecutionGenerator) generator).generate( this, entity, null, INSERT );
+			id = ( (BeforeExecutionGenerator) generator ).generate( this, entity, null, INSERT );
+			persister.setIdentifier( entity, id, this );
 			if ( firePreInsert(entity, id, state, persister) ) {
 				return id;
 			}
 			else {
 				getInterceptor().onInsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
-				persister.getInsertCoordinator().insert( entity, id, state, this );
-				persister.setIdentifier( entity, id, this );
+				final EventMonitor eventMonitor = getEventMonitor();
+				final DiagnosticEvent event = eventMonitor.beginEntityInsertEvent();
+				boolean success = false;
+				try {
+					persister.getInsertCoordinator().insert( entity, id, state, this );
+					success = true;
+				}
+				finally {
+					eventMonitor.completeEntityInsertEvent( event, id, persister.getEntityName(), success, this );
+				}
 			}
 		}
 		else if ( generator.generatedOnExecution( entity, this ) ) {

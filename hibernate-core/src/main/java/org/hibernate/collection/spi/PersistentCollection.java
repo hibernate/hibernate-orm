@@ -516,7 +516,7 @@ public interface PersistentCollection<E> extends LazyInitializable {
 	 * @return {@code true} if the collection is newly instantiated
 	 */
 	default boolean isNewlyInstantiated() {
-		return getKey() == null && !isDirty();
+		return false;
 	}
 
 	/**
@@ -525,4 +525,13 @@ public interface PersistentCollection<E> extends LazyInitializable {
 	default String render() {
 		return getRole() + "#" + getKey() + "(initialized: " + wasInitialized() + ")";
 	}
+
+	default void queueRemoveOperation(Object o){
+
+	}
+
+	default void queueAddOperation(E o){
+
+	}
+
 }

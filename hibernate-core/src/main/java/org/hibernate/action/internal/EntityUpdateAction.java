@@ -254,8 +254,8 @@ public class EntityUpdateAction extends EntityAction {
 			final Object instance = getInstance();
 			final Object id = getId();
 			// get the updated snapshot of the entity state by cloning current state;
-			// it is safe to copy in place, since by this time no-one else (should have)
-			// has a reference  to the array
+			// it is safe to copy in place, since by this time no-one else should
+			// have a reference to the array
 			TypeHelper.deepCopy(
 					state,
 					persister.getPropertyTypes(),
@@ -264,12 +264,11 @@ public class EntityUpdateAction extends EntityAction {
 					session
 			);
 			if ( persister.hasUpdateGeneratedProperties() ) {
-				// this entity defines property generation, so process those generated
-				// values...
+				// this entity defines property generation, so process those generated values
 				persister.processUpdateGeneratedProperties( id, instance, state, generatedValues, session );
 			}
-			// have the entity entry doAfterTransactionCompletion post-update processing, passing it the
-			// update state and the new version (if one).
+			// have the entity entry doAfterTransactionCompletion post-update processing,
+			// passing it the update state and the new version (if there is one)
 			if ( persister.isVersionPropertyGenerated() ) {
 				nextVersion = getVersion( state, persister );
 			}
@@ -358,14 +357,8 @@ public class EntityUpdateAction extends EntityAction {
 			return false;
 		}
 		else {
-			final PreUpdateEvent event = new PreUpdateEvent(
-					getInstance(),
-					getId(),
-					state,
-					previousState,
-					getPersister(),
-					eventSource()
-			);
+			final PreUpdateEvent event =
+					new PreUpdateEvent( getInstance(), getId(), state, previousState, getPersister(), eventSource() );
 			boolean veto = false;
 			for ( PreUpdateEventListener listener : listenerGroup.listeners() ) {
 				veto |= listener.onPreUpdate( event );
@@ -380,15 +373,7 @@ public class EntityUpdateAction extends EntityAction {
 	}
 
 	private PostUpdateEvent newPostUpdateEvent() {
-		return new PostUpdateEvent(
-				getInstance(),
-				getId(),
-				state,
-				previousState,
-				dirtyFields,
-				getPersister(),
-				eventSource()
-		);
+		return new PostUpdateEvent( getInstance(), getId(), state, previousState, dirtyFields, getPersister(), eventSource() );
 	}
 
 	protected void postCommitUpdate(boolean success) {

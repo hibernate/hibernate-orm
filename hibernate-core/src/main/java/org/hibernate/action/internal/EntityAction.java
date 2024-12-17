@@ -185,8 +185,8 @@ public abstract class EntityAction
 		}
 	}
 
-	protected EventSource eventSource() {
-		return getSession();
+	protected final EventSource eventSource() {
+		return session;
 	}
 
 	/**

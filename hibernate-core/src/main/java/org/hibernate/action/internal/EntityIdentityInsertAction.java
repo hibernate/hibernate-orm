@@ -160,7 +160,7 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 
 	protected void postInsert() {
 		if ( isDelayed ) {
-			eventSource().getPersistenceContextInternal()
+			getSession().getPersistenceContextInternal()
 					.replaceDelayedEntityIdentityInsertKeys( delayedEntityKey, generatedId );
 		}
 		getFastSessionServices().eventListenerGroup_POST_INSERT
@@ -168,13 +168,7 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	}
 
 	PostInsertEvent newPostInsertEvent() {
-		return new PostInsertEvent(
-				getInstance(),
-				generatedId,
-				getState(),
-				getPersister(),
-				eventSource()
-		);
+		return new PostInsertEvent( getInstance(), generatedId, getState(), getPersister(), eventSource() );
 	}
 
 	protected void postCommitInsert(boolean success) {

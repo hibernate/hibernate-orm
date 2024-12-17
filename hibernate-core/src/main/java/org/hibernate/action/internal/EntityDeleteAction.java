@@ -219,13 +219,7 @@ public class EntityDeleteAction extends EntityAction {
 	}
 
 	PostDeleteEvent newPostDeleteEvent() {
-		return new PostDeleteEvent(
-				getInstance(),
-				getId(),
-				state,
-				getPersister(),
-				eventSource()
-		);
+		return new PostDeleteEvent( getInstance(), getId(), state, getPersister(), eventSource() );
 	}
 
 	protected void postCommitDelete(boolean success) {

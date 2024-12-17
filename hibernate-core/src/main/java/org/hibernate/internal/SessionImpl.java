@@ -846,16 +846,16 @@ public class SessionImpl
 	public void delete(String entityName, Object object, boolean isCascadeDeleteEnabled, DeleteContext transientEntities)
 			throws HibernateException {
 		checkOpenOrWaitingForAutoClose();
-		final boolean removingOrphanBeforeUpates = persistenceContext.isRemovingOrphanBeforeUpates();
+		final boolean removingOrphanBeforeUpdates = persistenceContext.isRemovingOrphanBeforeUpates();
 		final boolean traceEnabled = log.isTraceEnabled();
-		if ( traceEnabled && removingOrphanBeforeUpates ) {
+		if ( traceEnabled && removingOrphanBeforeUpdates ) {
 			logRemoveOrphanBeforeUpdates( "before continuing", entityName, object );
 		}
 		fireDelete(
-				new DeleteEvent( entityName, object, isCascadeDeleteEnabled, removingOrphanBeforeUpates, this ),
+				new DeleteEvent( entityName, object, isCascadeDeleteEnabled, removingOrphanBeforeUpdates, this ),
 				transientEntities
 		);
-		if ( traceEnabled && removingOrphanBeforeUpates ) {
+		if ( traceEnabled && removingOrphanBeforeUpdates ) {
 			logRemoveOrphanBeforeUpdates( "after continuing", entityName, object );
 		}
 	}

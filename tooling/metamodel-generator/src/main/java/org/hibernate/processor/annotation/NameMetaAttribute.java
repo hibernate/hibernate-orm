@@ -42,8 +42,11 @@ class NameMetaAttribute implements MetaAttribute {
 
 	@Override
 	public String getAttributeNameDeclarationString() {
-		return new StringBuilder()
-				.append("public static final ")
+		final StringBuilder declaration = new StringBuilder();
+		if ( !annotationMetaEntity.isJakartaDataStyle() ) {
+			declaration.append( "public static final " );
+		}
+		return declaration
 				.append(annotationMetaEntity.importType(String.class.getName()))
 				.append(" ")
 				.append(prefix)

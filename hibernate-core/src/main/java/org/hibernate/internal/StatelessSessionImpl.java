@@ -19,7 +19,9 @@ import org.hibernate.TransientObjectException;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
+import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.EntityDataAccess;
+import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
@@ -29,6 +31,7 @@ import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.event.monitor.spi.EventMonitor;
@@ -100,6 +103,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	private final LoadQueryInfluencers influencers;
 	private final PersistenceContext temporaryPersistenceContext;
 	private final boolean connectionProvided;
+	private final List<Runnable> afterCompletions = new ArrayList<>();
 
 	public StatelessSessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
@@ -269,6 +273,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		if ( !firePreDelete(entity, id, persister) ) {
 			getInterceptor().onDelete( entity, id, persister.getPropertyNames(), persister.getPropertyTypes() );
 			removeCollections( entity, id, persister );
+			final Object ck = lockCacheItem( id, version, persister );
 			final EventMonitor eventMonitor = getEventMonitor();
 			final DiagnosticEvent event = eventMonitor.beginEntityDeleteEvent();
 			boolean success = false;
@@ -279,6 +284,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			finally {
 				eventMonitor.completeEntityDeleteEvent( event, id, persister.getEntityName(), success, this );
 			}
+			removeCacheItem( ck, persister );
 			firePostDelete(entity, id, persister);
 			final StatisticsImplementor statistics = getFactory().getStatistics();
 			if ( statistics.isStatisticsEnabled() ) {
@@ -348,6 +354,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 		if ( !firePreUpdate(entity, id, state, persister) ) {
 			getInterceptor().onUpdate( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
+			final Object ck = lockCacheItem( id, oldVersion, persister );
 			final EventMonitor eventMonitor = getEventMonitor();
 			final DiagnosticEvent event = eventMonitor.beginEntityUpdateEvent();
 			boolean success = false;
@@ -358,6 +365,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			finally {
 				eventMonitor.completeEntityUpdateEvent( event, id, persister.getEntityName(), success, this );
 			}
+			removeCacheItem( ck, persister );
 			removeAndRecreateCollections( entity, id, persister );
 			firePostUpdate(entity, id, state, persister);
 			final StatisticsImplementor statistics = getFactory().getStatistics();
@@ -417,6 +425,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		if ( !firePreUpsert(entity, id, state, persister) ) {
 			getInterceptor().onUpsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
 			final Object oldVersion = versionToUpsert( entity, persister, state );
+			final Object ck = lockCacheItem( id, oldVersion, persister );
 			final EventMonitor eventMonitor = getEventMonitor();
 			final DiagnosticEvent event = eventMonitor.beginEntityUpsertEvent();
 			boolean success = false;
@@ -427,6 +436,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			finally {
 				eventMonitor.completeEntityUpsertEvent( event, id, persister.getEntityName(), success, this );
 			}
+			removeCacheItem( ck, persister );
 			final StatisticsImplementor statistics = getFactory().getStatistics();
 			if ( statistics.isStatisticsEnabled() ) {
 				statistics.upsertEntity( persister.getEntityName() );
@@ -1114,10 +1124,27 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public void afterTransactionCompletion(boolean successful, boolean delayed) {
+		processAfterCompletions();
 		afterTransactionCompletionEvents( successful );
 		if ( shouldAutoClose() && !isClosed() ) {
 			managedClose();
 		}
+	}
+
+	private void processAfterCompletions() {
+		for ( Runnable completion: afterCompletions ) {
+			try {
+				completion.run();
+			}
+			catch (CacheException ce) {
+				LOG.unableToReleaseCacheLock( ce );
+				// continue loop
+			}
+			catch (Exception e) {
+				throw new HibernateException( "Unable to perform afterTransactionCompletion callback: " + e.getMessage(), e );
+			}
+		}
+		afterCompletions.clear();
 	}
 
 	@Override
@@ -1159,4 +1186,28 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		return true;
 	}
 
+	protected Object lockCacheItem(Object id, Object previousVersion, EntityPersister persister) {
+		if ( persister.canWriteToCache() ) {
+			final SharedSessionContractImplementor session = getSession();
+			final EntityDataAccess cache = persister.getCacheAccessStrategy();
+			final Object ck = cache.generateCacheKey(
+					id,
+					persister,
+					session.getFactory(),
+					session.getTenantIdentifier()
+			);
+			final SoftLock lock = cache.lockItem( session, ck, previousVersion );
+			afterCompletions.add( () -> cache.unlockItem( this, ck, lock ) );
+			return ck;
+		}
+		else {
+			return null;
+		}
+	}
+
+	protected void removeCacheItem(Object ck, EntityPersister persister) {
+		if ( persister.canWriteToCache() ) {
+			persister.getCacheAccessStrategy().remove( this, ck );
+		}
+	}
 }

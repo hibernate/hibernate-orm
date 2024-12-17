@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import org.hamcrest.Matchers;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.jdbc.BlobProxy;
 import org.hibernate.envers.Audited;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
@@ -81,6 +82,8 @@ public class BasicBlobTest extends BaseEnversJPAFunctionalTestCase {
 			comment = "The driver closes the stream, so it cannot be reused by envers")
 	@SkipForDialect(value = SQLServerDialect.class,
 			comment = "The driver closes the stream, so it cannot be reused by envers")
+	@SkipForDialect(value = SybaseDialect.class,
+			comment = "The driver closes the stream, so it cannot be reused by envers")
 	public void testGenerateProxyStream() {
 		final Path path = Path.of( Thread.currentThread().getContextClassLoader()
 				.getResource( "org/hibernate/orm/test/envers/integration/blob/blob.txt" ).getPath() );
@@ -105,7 +108,7 @@ public class BasicBlobTest extends BaseEnversJPAFunctionalTestCase {
 				// H2, MySQL, Oracle, SQL Server work this way.
 				//
 				//
-				Blob blob = BlobProxy.generateProxy( stream, 9192L );
+				Blob blob = BlobProxy.generateProxy( stream, 1431 );
 
 				asset.setData( blob );
 				entityManager.persist( asset );

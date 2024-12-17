@@ -140,8 +140,9 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 					// We are dealing with embeddable (@Embeddable) and we request
 					// an array of objects. We use JsonParser to fetch values
 					// and build the array.(as opposed to let Jackson do it as we do not
-					// have proper obejct definition at that stage).
-
+					// have a proper object definition at that stage).
+					return ((JacksonOsonFormatMapper)mapper).readToArray(
+							getEmbeddableMappingType(), osonBytes, options );
 				}
 
 				JavaType <X> type = getJavaType();

@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
-import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -112,7 +111,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		influencers = new LoadQueryInfluencers( getFactory() );
 		setUpMultitenancy( factory, influencers );
 		setJdbcBatchSize( 0 );
-		setCacheMode( CacheMode.IGNORE );
 	}
 
 	@Override

@@ -258,7 +258,6 @@ public class SessionImpl
 				//There might be custom properties for this session that affect the LockOptions state
 				applyPropertiesToLockOptions( properties, this::getLockOptionsForWrite );
 			}
-			setCacheMode( fastSessionServices.initialSessionCacheMode );
 
 			// NOTE : pulse() already handles auto-join-ability correctly
 			getTransactionCoordinator().pulse();

@@ -41,21 +41,27 @@ public class BindingTypeHelper {
 			BindableType<T> declaredParameterType,
 			SessionFactoryImplementor sessionFactory) {
 		if ( precision != null ) {
-			final SqmExpressible<T> sqmExpressible = declaredParameterType.resolveExpressible( sessionFactory );
-			if ( !( JavaTypeHelper.isTemporal( sqmExpressible.getExpressibleJavaType() ) ) ) {
-				throw new UnsupportedOperationException(
-						"Cannot treat non-temporal parameter type with temporal precision"
-				);
+			final TemporalJavaType<T> temporalJtd;
+			if ( declaredParameterType != null ) {
+				final SqmExpressible<T> sqmExpressible = declaredParameterType.resolveExpressible( sessionFactory );
+				if ( !( JavaTypeHelper.isTemporal( sqmExpressible.getExpressibleJavaType() ) ) ) {
+					throw new UnsupportedOperationException(
+							"Cannot treat non-temporal parameter type with temporal precision"
+					);
+				}
+				temporalJtd = (TemporalJavaType<T>) sqmExpressible.getExpressibleJavaType();
+			}
+			else {
+				temporalJtd = null;
 			}
 
-			final TemporalJavaType<T> temporalJtd = (TemporalJavaType<T>) sqmExpressible.getExpressibleJavaType();
-			if ( temporalJtd.getPrecision() != precision ) {
+			if ( temporalJtd == null || temporalJtd.getPrecision() != precision ) {
 				final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
 				final TemporalJavaType<T> temporalTypeForPrecision;
 				// Special case java.util.Date, because TemporalJavaType#resolveTypeForPrecision doesn't support widening,
 				// since the main purpose of that method is to determine the final java type based on the reflective type
 				// + the explicit @Temporal(TemporalType...) configuration
-				if ( java.util.Date.class.isAssignableFrom( temporalJtd.getJavaTypeClass() ) ) {
+				if ( temporalJtd == null || java.util.Date.class.isAssignableFrom( temporalJtd.getJavaTypeClass() ) ) {
 					//noinspection unchecked
 					temporalTypeForPrecision = (TemporalJavaType<T>) typeConfiguration.getJavaTypeRegistry().getDescriptor(
 							TemporalJavaType.resolveJavaTypeClass( precision )

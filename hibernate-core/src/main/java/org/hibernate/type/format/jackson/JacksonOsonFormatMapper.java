@@ -1,38 +1,43 @@
 /*
- * SPDX-License-Identifier: Apache-2.0
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.format.jackson;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.format.AbstractJsonFormatMapper;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.io.IOException;
 import java.lang.reflect.Type;
 
-/**
- * @author Christian Beikov
- * @author Yanming Zhou
- */
-public final class JacksonJsonFormatMapper extends AbstractJsonFormatMapper {
+public class JacksonOsonFormatMapper extends AbstractJsonFormatMapper {
 
 	public static final String SHORT_NAME = "jackson";
 
 	private final ObjectMapper objectMapper;
+	private final EmbeddableMappingType embeddableMappingType;
 
-	public JacksonJsonFormatMapper() {
-		this(new ObjectMapper().findAndRegisterModules());
+
+
+	public JacksonOsonFormatMapper(ObjectMapper objectMapper, EmbeddableMappingType embeddableMappingType) {
+		this.objectMapper = objectMapper;
+		this.embeddableMappingType = embeddableMappingType;
+		this.objectMapper.setAnnotationIntrospector( new JacksonJakartaAnnotationIntrospector( this.embeddableMappingType ) );
+
 	}
 
-	public JacksonJsonFormatMapper(ObjectMapper objectMapper) {
+	public <T> JacksonOsonFormatMapper(ObjectMapper objectMapper, EmbeddableMappingType embeddableMappingType, JavaType<T> javaType) {
 		this.objectMapper = objectMapper;
+		this.embeddableMappingType = embeddableMappingType;
+		this.objectMapper.setAnnotationIntrospector( new JacksonJakartaAnnotationIntrospector( this.embeddableMappingType ) );
+
 	}
 
 	@Override
@@ -56,28 +61,15 @@ public final class JacksonJsonFormatMapper extends AbstractJsonFormatMapper {
 	}
 
 	@Override
-	public boolean supportsSourceType(Class<?> sourceType) {
-		return false;
-	}
-
-	@Override
-	public boolean supportsTargetType(Class<?> targetType) {
-		return false;
-	}
-
-	@Override
 	public <T> void writeToTarget(T value, JavaType<T> javaType, Object target, WrapperOptions options)
 			throws IOException {
 
 		ObjectWriter writer = objectMapper.writerFor( objectMapper.constructType( javaType.getJavaType() ) );
 		writer.writeValue( (JsonGenerator) target, value);
-
-
 	}
 
 	@Override
 	public <T> T readFromSource(JavaType<T> javaType, Object source, WrapperOptions options) throws IOException {
-
 		JsonParser osonParser = objectMapper.getFactory().createParser( (byte[]) source );
 
 		T t = objectMapper.readValue( osonParser, objectMapper.constructType( javaType.getJavaType()) );

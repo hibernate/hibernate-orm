@@ -457,8 +457,10 @@ public class DB2Dialect extends Dialect {
 		functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, true );
 
 		functionFactory.hex( "hex(?1)" );
-		functionFactory.sha( "hash(?1, 2)" );
-		functionFactory.md5( "hash(?1, 0)" );
+		if ( getDB2Version().isSameOrAfter( 11 ) ) {
+			functionFactory.sha( "hash(?1, 2)" );
+			functionFactory.md5( "hash(?1, 0)" );
+		}
 	}
 
 	/**

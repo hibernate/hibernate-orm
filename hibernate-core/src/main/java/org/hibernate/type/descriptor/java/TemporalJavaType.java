@@ -33,6 +33,18 @@ public interface TemporalJavaType<T> extends BasicJavaType<T> {
 		throw new UnsupportedOperationException( "Unsupported precision: " + requestedTemporalPrecision );
 	}
 
+	static Class<?> resolveJavaTypeClass(TemporalType requestedTemporalPrecision) {
+		switch ( requestedTemporalPrecision ) {
+			case DATE:
+				return java.sql.Date.class;
+			case TIME:
+				return java.sql.Time.class;
+			case TIMESTAMP:
+				return java.sql.Timestamp.class;
+		}
+		throw new UnsupportedOperationException( "Unsupported precision: " + requestedTemporalPrecision );
+	}
+
 	/**
 	 * The precision represented by this type
 	 */

@@ -60,7 +60,7 @@ public class EmbeddableAggregate {
 	private byte[] theBinary;
 	private Date theDate;
 	private Date theTime;
-	private Date theTimestamp;
+	private Timestamp theTimestamp;
 	private Instant theInstant;
 	private UUID theUuid;
 	private EntityOfBasics.Gender gender;
@@ -183,12 +183,12 @@ public class EmbeddableAggregate {
 		this.theTime = theTime;
 	}
 
-	@Temporal( TemporalType.TIMESTAMP )
-	public Date getTheTimestamp() {
+	//@Temporal( TemporalType.TIMESTAMP )
+	public Timestamp getTheTimestamp() {
 		return theTimestamp;
 	}
 
-	public void setTheTimestamp(Date theTimestamp) {
+	public void setTheTimestamp(Timestamp theTimestamp) {
 		this.theTimestamp = theTimestamp;
 	}
 

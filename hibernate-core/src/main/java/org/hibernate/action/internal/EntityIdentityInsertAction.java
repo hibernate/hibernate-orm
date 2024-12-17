@@ -25,7 +25,7 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
- * The action for performing entity insertions when entity is using IDENTITY column identifier generation
+ * The action for performing entity insertions when entity is using {@code IDENTITY} column identifier generation
  *
  * @see EntityInsertAction
  */
@@ -184,8 +184,8 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	}
 
 	private void postCommitInsertOnFailure(PostInsertEventListener listener, PostInsertEvent event) {
-		if ( listener instanceof PostCommitInsertEventListener ) {
-			((PostCommitInsertEventListener) listener).onPostInsertCommitFailed( event );
+		if ( listener instanceof PostCommitInsertEventListener postCommitInsertEventListener ) {
+			postCommitInsertEventListener.onPostInsertCommitFailed( event );
 		}
 		else {
 			//default to the legacy implementation that always fires the event

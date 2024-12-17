@@ -393,7 +393,7 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 	}
 
 	/**
-	 * After the save, will te version number be incremented
+	 * After the save, will the version number be incremented
 	 * if the instance is modified?
 	 *
 	 * @return True if the version will be incremented on an entity change after save;

@@ -171,8 +171,20 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			}
 			else {
 				getInterceptor().onInsert( entity, null, state, persister.getPropertyNames(), persister.getPropertyTypes() );
-				final GeneratedValues generatedValues = persister.getInsertCoordinator().insert( entity, state, this );
-				id = castNonNull( generatedValues ).getGeneratedValue( persister.getIdentifierMapping() );
+				final GeneratedValues generatedValues;
+				final EventMonitor eventMonitor = getEventMonitor();
+				final DiagnosticEvent event = eventMonitor.beginEntityInsertEvent();
+				boolean success = false;
+				Object generatedId = null;
+				try {
+					generatedValues = persister.getInsertCoordinator().insert( entity, state, this );
+					generatedId = castNonNull( generatedValues ).getGeneratedValue( persister.getIdentifierMapping() );
+					id = generatedId;
+					success = true;
+				}
+				finally {
+					eventMonitor.completeEntityInsertEvent( event, generatedId, persister.getEntityName(), success, this );
+				}
 				persister.setIdentifier( entity, id, this );
 			}
 		}

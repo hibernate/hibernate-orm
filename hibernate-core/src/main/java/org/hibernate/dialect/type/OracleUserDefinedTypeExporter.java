@@ -337,7 +337,7 @@ public class OracleUserDefinedTypeExporter extends StandardUserDefinedTypeExport
 			case DATE:
 				return "to_date(" + expression + ",'YYYY-MM-DD')";
 			case TIME:
-				return "to_timestamp(" + expression + ",'hh24:mi:ss')";
+				return "to_timestamp(CONCAT('1970-01-01 ', \" + expression + \"),'YYYY-MM-DD hh24:mi:ss')";
 			case TIMESTAMP:
 				return "to_timestamp(" + expression + ",'YYYY-MM-DD\"T\"hh24:mi:ss.FF9')";
 			case TIMESTAMP_WITH_TIMEZONE:

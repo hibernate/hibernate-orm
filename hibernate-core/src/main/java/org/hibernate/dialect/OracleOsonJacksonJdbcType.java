@@ -17,7 +17,7 @@ import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.format.FormatMapper;
-import org.hibernate.type.format.jackson.JacksonJsonFormatMapper;
+import org.hibernate.type.format.jackson.JacksonOsonFormatMapper;
 
 import java.io.InputStream;
 import java.io.PipedInputStream;
@@ -85,7 +85,7 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 				//       FormatMapper fm = options.getSession().getSessionFactory().getFastSessionServices().getJsonFormatMapper();
 				//
 				//     But this do not let use inject our ObjectMapper. For now create our own instance
-				FormatMapper mapper = new JacksonJsonFormatMapper(objectMapper);
+				FormatMapper mapper = new JacksonOsonFormatMapper(objectMapper,getEmbeddableMappingType(),getJavaType());
 
 				PipedOutputStream out = new PipedOutputStream();
 				PipedInputStream in = new PipedInputStream(out);
@@ -159,7 +159,7 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 				//       FormatMapper fm = options.getSession().getSessionFactory().getFastSessionServices().getJsonFormatMapper();
 				//
 				//     But this do not let use inject our ObjectMapper. For now create our own instance
-				FormatMapper mapper = new JacksonJsonFormatMapper(objectMapper);
+				FormatMapper mapper = new JacksonOsonFormatMapper(objectMapper, getEmbeddableMappingType(),getJavaType());
 
 				OracleJsonDatum ojd = rs.getObject( paramIndex, OracleJsonDatum.class );
 				if ( ojd == null ) {
@@ -185,7 +185,7 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 				//       FormatMapper fm = options.getSession().getSessionFactory().getFastSessionServices().getJsonFormatMapper();
 				//
 				//     But this do not let use inject our ObjectMapper. For now create our own instance
-				FormatMapper mapper = new JacksonJsonFormatMapper(objectMapper);
+				FormatMapper mapper = new JacksonOsonFormatMapper(objectMapper,getEmbeddableMappingType(),getJavaType());
 
 
 				OracleJsonDatum ojd = statement.getObject( index, OracleJsonDatum.class );
@@ -210,7 +210,7 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 				//       FormatMapper fm = options.getSession().getSessionFactory().getFastSessionServices().getJsonFormatMapper();
 				//
 				//     But this do not let use inject our ObjectMapper. For now create our own instance
-				FormatMapper mapper = new JacksonJsonFormatMapper(objectMapper);
+				FormatMapper mapper = new JacksonOsonFormatMapper(objectMapper,getEmbeddableMappingType(),getJavaType());
 
 				OracleJsonDatum ojd = statement.getObject( name, OracleJsonDatum.class );
 				if ( ojd == null ) {

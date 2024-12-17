@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.PropertyName;
 import com.fasterxml.jackson.databind.introspect.Annotated;
 import com.fasterxml.jackson.databind.introspect.AnnotatedField;
 import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
+import com.fasterxml.jackson.databind.introspect.AnnotatedMethod;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import com.fasterxml.jackson.databind.util.NameTransformer;
 import jakarta.persistence.Column;
@@ -48,13 +49,34 @@ public class JacksonJakartaAnnotationIntrospector extends JacksonAnnotationIntro
 		}
 		return super.findNameForDeserialization(a);
 	}
-
+	private String getFieldNameFromGetterName(String fieldName) {
+		// we assume that method is get|set<camelCase Nme>
+		// 1. we strip out get|set
+		// 2. lowercase on first letter
+		assert fieldName != null;
+		assert fieldName.substring( 0,3 ).equalsIgnoreCase( "get" ) ||
+			fieldName.substring( 0,3 ).equalsIgnoreCase( "set" );
+		fieldName = fieldName.substring( 3 );
+		return Character.toLowerCase(fieldName.charAt(0)) + fieldName.substring(1);
+	}
 	@Override
 	public NameTransformer findUnwrappingNameTransformer(AnnotatedMember member) {
-		if(member instanceof AnnotatedField ) {
+		if(member instanceof AnnotatedField) {
 			Embeddable embeddable = member.getType().getRawClass().getAnnotation(Embeddable.class);
 			if (embeddable != null) {
 				String propName = member.getName();
+				if(mappingTypeMap.get(propName) != null){
+					EmbeddableMappingTypeWithFlattening embeddableMappingTypeWithFlattening =
+							mappingTypeMap.get( propName );
+					if(embeddableMappingTypeWithFlattening.isShouldFlatten()) {
+						return NameTransformer.simpleTransformer( "","" );
+					}
+				}
+			}
+		} else if (member instanceof AnnotatedMethod) {
+			Embeddable embeddable = member.getType().getRawClass().getAnnotation(Embeddable.class);
+			if (embeddable != null) {
+				String propName = getFieldNameFromGetterName(member.getName());
 				if(mappingTypeMap.get(propName) != null){
 					EmbeddableMappingTypeWithFlattening embeddableMappingTypeWithFlattening =
 							mappingTypeMap.get( propName );

@@ -25,7 +25,10 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
-
+/**
+ * @author Emmanuel Jannetti
+ * @auther Bidyadhar Mohanty
+ */
 public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 
 	public static final String SHORT_NAME = "jackson";
@@ -121,8 +124,15 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 								case OracleJsonParser.Event.VALUE_INTERVALYM:
 									//break;  TODO should not be like that
 								default :
-									finalResult[selectableIndex] = mapping.getJdbcMapping().convertToDomainValue(
-											mapping.getJdbcMapping().getJdbcJavaType().fromString( osonParser.getText() ) );
+//									finalResult[selectableIndex] = mapping.getJdbcMapping().convertToDomainValue(
+//											mapping.getJdbcMapping().getJdbcJavaType().fromString( osonParser.getText() ) );
+//									Object f1 = mapping.getJdbcMapping().getJdbcJavaType().fromString( osonParser.getText() );
+//									Object f2 = mapping.getJdbcMapping().convertToDomainValue(mapping.getJdbcMapping().getJdbcJavaType().fromString( osonParser.getText() ));
+//									String s1 = osonParser.getText();
+//									Object o1 = mapping.getJdbcMapping().convertToDomainValue( osonParser.getText()  );
+//									Object o2 = mapping.getJdbcMapping().convertToRelationalValue( osonParser.getText()  );
+//									finalResult[selectableIndex] = mapping.getJdbcMapping().convertToDomainValue( osonParser.getText()  );
+									finalResult[selectableIndex] = mapping.getJdbcMapping().getJdbcJavaType().fromString( osonParser.getText() );
 							}
 					}
 					catch (Exception e) {
@@ -131,11 +141,11 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 					break;
 				case JsonToken.VALUE_TRUE:
 					selectableIndex = embeddableMappingType.getSelectableIndex( osonParser.currentName());
-					finalResult[selectableIndex] = Boolean.TRUE.toString();
+					finalResult[selectableIndex] = Boolean.TRUE;
 					break;
 				case JsonToken.VALUE_FALSE:
 					selectableIndex = embeddableMappingType.getSelectableIndex( osonParser.currentName());
-					finalResult[selectableIndex] = Boolean.TRUE.toString();
+					finalResult[selectableIndex] = Boolean.FALSE;
 					break;
 				case JsonToken.VALUE_NULL:
 					selectableIndex = embeddableMappingType.getSelectableIndex( osonParser.currentName());
@@ -159,8 +169,7 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 					break;
 				case JsonToken.VALUE_EMBEDDED_OBJECT:
 					selectableIndex = embeddableMappingType.getSelectableIndex( osonParser.currentName() );
-					// TODO: think twice about this conversion
-					finalResult[selectableIndex] =  new String( osonParser.getBinaryValue() );
+					finalResult[selectableIndex] = osonParser.getBinaryValue() ;
 					break;
 				case JsonToken.START_OBJECT:
 					if ( osonParser.currentName() == null ) {
@@ -177,7 +186,9 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 							final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) selectable.getJdbcMapping()
 									.getJdbcType();
 							final EmbeddableMappingType subMappingType = aggregateJdbcType.getEmbeddableMappingType();
-							consumeValuedToken( osonParser, osonParser.nextToken(), finalResult,
+							finalResult[selectableIndex] = new Object[subMappingType.getJdbcValueCount()];
+							consumeValuedToken( osonParser, osonParser.nextToken(),
+									(Object[]) finalResult[selectableIndex],
 									subMappingType,
 									options );
 						}

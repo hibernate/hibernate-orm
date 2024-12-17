@@ -206,6 +206,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 							case BINARY:
 							case VARBINARY:
 							case LONG32VARBINARY:
+							case UUID:
 								// We encode binary data as hex, so we have to decode here
 								if ( determineLength( column ) * 2 < 4000L ) {
 									return template.replace(
@@ -241,14 +242,10 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 									case VARBINARY:
 									case LONG32VARBINARY:
 									case UUID:
-										return template.replace(
-												placeholder,
-												jdbcType.getSqlTypeName() + "_from_json(json_query(" + parentPartExpression + columnExpression + "' returning " + jsonTypeName + "))"
-										);
 									default:
 										return template.replace(
 												placeholder,
-												"json_value(" + parentPartExpression + columnExpression + "' returning " + column.getColumnDefinition() + ')'
+												jdbcType.getSqlTypeName() + "_from_json(json_query(" + parentPartExpression + columnExpression + "' returning " + jsonTypeName + "))"
 										);
 								}
 							case JSON:

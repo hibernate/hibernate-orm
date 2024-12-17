@@ -557,6 +557,14 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 			this.theNested = new Nested( leaf );
 		}
 
+		public Nested getTheNested() {
+			return theNested;
+		}
+
+		public void setTheNested(Nested theNested) {
+			this.theNested = theNested;
+		}
+
 		@Override
 		public boolean equals(Object o) {
 			if ( this == o ) {
@@ -589,6 +597,14 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 			this.theLeaf = new Leaf( stringField );
 		}
 
+		public Leaf getTheLeaf() {
+			return theLeaf;
+		}
+
+		public void setTheLeaf(Leaf theLeaf) {
+			this.theLeaf = theLeaf;
+		}
+
 		@Override
 		public boolean equals(Object o) {
 			if ( this == o ) {
@@ -617,6 +633,14 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 		}
 
 		public Leaf(String stringField) {
+			this.stringField = stringField;
+		}
+
+		public String getStringField() {
+			return stringField;
+		}
+
+		public void setStringField(String stringField) {
 			this.stringField = stringField;
 		}
 

@@ -155,15 +155,17 @@ public abstract class AnnotationMeta implements Metamodel {
 	}
 
 	private void addAuxiliaryMembersForMirror(AnnotationMirror mirror, String prefix) {
-		mirror.getElementValues().forEach((key, value) -> {
-			if ( key.getSimpleName().contentEquals("name") ) {
-				final String name = value.getValue().toString();
-				if ( !name.isEmpty() ) {
-					putMember( prefix + name,
-							new NameMetaAttribute( this, name, prefix ) );
+		if ( !isJakartaDataStyle() ) {
+			mirror.getElementValues().forEach((key, value) -> {
+				if ( key.getSimpleName().contentEquals( "name" ) ) {
+					final String name = value.getValue().toString();
+					if ( !name.isEmpty() ) {
+						putMember( prefix + name,
+								new NameMetaAttribute( this, name, prefix ) );
+					}
 				}
-			}
-		});
+			});
+		}
 	}
 
 	protected String getSessionVariableName() {

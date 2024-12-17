@@ -148,10 +148,20 @@ class NamedQueryMethod implements MetaAttribute {
 				declaration
 						.append(", ");
 			}
-			declaration
-					.append(parameterType(param))
-					.append(" ")
-					.append(parameterName(param));
+			if ( param.allowMultiValuedBinding() ) {
+				declaration
+						.append(annotationMeta.importType(Constants.LIST))
+						.append('<')
+						.append( parameterType( param ) )
+						.append("> ")
+						.append( parameterName( param ) );
+			}
+			else {
+				declaration
+						.append( parameterType( param ) )
+						.append( " " )
+						.append( parameterName( param ) );
+			}
 		}
 		declaration
 				.append(')');

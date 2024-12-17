@@ -17,6 +17,7 @@ import org.hibernate.loader.ast.spi.MultiIdEntityLoader;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -229,7 +230,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 		if ( managedEntity == null
 				&& loadOptions.isSecondLevelCacheCheckingEnabled() ) {
 			// look for it in the SessionFactory
-			managedEntity = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache(
+			managedEntity = CacheEntityLoaderHelper.loadFromSecondLevelCache(
 					loadEvent,
 					getLoadable().getEntityPersister(),
 					entityKey
@@ -353,11 +354,8 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 		}
 
 		if ( cachedEntity == null && loadOptions.isSecondLevelCacheCheckingEnabled() ) {
-			cachedEntity = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache(
-					loadEvent,
-					getLoadable().getEntityPersister(),
-					entityKey
-			);
+			final EntityPersister persister = getLoadable().getEntityPersister();
+			cachedEntity = CacheEntityLoaderHelper.loadFromSecondLevelCache( loadEvent, persister, entityKey );
 		}
 
 		if ( cachedEntity != null ) {

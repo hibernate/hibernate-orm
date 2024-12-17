@@ -59,7 +59,6 @@ import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
-import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.LazyInitializer;
@@ -585,25 +584,26 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	private void forEachOwnedCollection(
 			Object entity, Object key,
 			EntityPersister persister, BiConsumer<CollectionPersister, PersistentCollection<?>> action) {
-		persister.visitAttributeMappings( att -> {
-			if ( att.isPluralAttributeMapping() ) {
-				final PluralAttributeMapping pluralAttributeMapping = att.asPluralAttributeMapping();
-				final CollectionPersister descriptor = pluralAttributeMapping.getCollectionDescriptor();
+		persister.visitAttributeMappings( attribute -> {
+			if ( attribute.isPluralAttributeMapping() ) {
+				final CollectionPersister descriptor =
+						attribute.asPluralAttributeMapping().getCollectionDescriptor();
 				if ( !descriptor.isInverse() ) {
-					final Object collection = att.getPropertyAccess().getGetter().get(entity);
-					final PersistentCollection<?> persistentCollection;
-					if (collection instanceof PersistentCollection) {
-						persistentCollection = (PersistentCollection<?>) collection;
+					final Object value = attribute.getPropertyAccess().getGetter().get(entity);
+					final PersistentCollection<?> collection;
+					if ( value instanceof PersistentCollection<?> persistentCollection ) {
 						if ( !persistentCollection.wasInitialized() ) {
 							return;
 						}
+						collection = persistentCollection;
 					}
 					else {
-						persistentCollection = collection == null
-								? instantiateEmpty(key, descriptor)
-								: wrap(descriptor, collection);
+						collection =
+								value == null
+										? instantiateEmpty( key, descriptor )
+										: wrap( descriptor, value );
 					}
-					action.accept(descriptor, persistentCollection);
+					action.accept( descriptor, collection );
 				}
 			}
 		} );

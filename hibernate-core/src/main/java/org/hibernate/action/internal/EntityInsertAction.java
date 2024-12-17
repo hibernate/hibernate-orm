@@ -30,7 +30,7 @@ import org.hibernate.stat.internal.StatsHelper;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
- * The action for performing an entity insertion, for entities not defined to use IDENTITY generation.
+ * The action for performing an entity insertion, for entities not defined to use {@code IDENTITY} generation.
  *
  * @see EntityIdentityInsertAction
  */

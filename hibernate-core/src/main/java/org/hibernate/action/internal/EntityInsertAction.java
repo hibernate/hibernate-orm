@@ -216,13 +216,7 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 	}
 
 	private PostInsertEvent newPostInsertEvent() {
-		return new PostInsertEvent(
-				getInstance(),
-				getId(),
-				getState(),
-				getPersister(),
-				eventSource()
-		);
+		return new PostInsertEvent( getInstance(), getId(), getState(), getPersister(), eventSource() );
 	}
 
 	protected void postCommitInsert(boolean success) {

@@ -484,8 +484,8 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
-	public void setCacheMode(CacheMode cm) {
-		delegate.setCacheMode( cm );
+	public void setCacheMode(CacheMode cacheMode) {
+		delegate.setCacheMode( cacheMode );
 	}
 
 	@Override

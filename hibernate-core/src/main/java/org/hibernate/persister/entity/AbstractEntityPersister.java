@@ -3563,8 +3563,8 @@ public abstract class AbstractEntityPersister
 
 			Object loaded = null;
 			if ( canReadFromCache && session.isEventSource() ) {
-				LoadEvent loadEvent = new LoadEvent( identifier, entity, session.asEventSource(), false );
-				loaded = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache( loadEvent, this, entityKey );
+				final LoadEvent loadEvent = new LoadEvent( identifier, entity, session.asEventSource(), false );
+				loaded = CacheEntityLoaderHelper.loadFromSecondLevelCache( loadEvent, this, entityKey );
 			}
 			if ( loaded == null ) {
 				loaded = determineLoaderToUse( session ).load( identifier, entity, LockOptions.NONE, session );

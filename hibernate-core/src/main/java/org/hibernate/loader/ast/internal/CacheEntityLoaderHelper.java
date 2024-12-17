@@ -5,9 +5,7 @@
 package org.hibernate.loader.ast.internal;
 
 import org.hibernate.HibernateException;
-import org.hibernate.Incubating;
 import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
@@ -23,17 +21,12 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
-import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.event.spi.PostLoadEvent;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.sql.results.LoadingLogger;
-import org.hibernate.stat.internal.StatsHelper;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
@@ -43,17 +36,17 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttrib
 import static org.hibernate.engine.internal.ManagedTypeHelper.isManagedEntity;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.Versioning.getVersion;
+import static org.hibernate.loader.ast.internal.CacheEntityLoaderHelper.EntityStatus.INCONSISTENT_RTN_CLASS_MARKER;
+import static org.hibernate.loader.ast.internal.CacheEntityLoaderHelper.EntityStatus.REMOVED_ENTITY_MARKER;
 import static org.hibernate.loader.ast.internal.LoaderHelper.upgradeLock;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
+import static org.hibernate.sql.results.LoadingLogger.LOADING_LOGGER;
+import static org.hibernate.stat.internal.StatsHelper.getRootEntityRole;
 
 /**
  * @author Vlad Mihalcea
  */
 public class CacheEntityLoaderHelper {
-
-	public static final CacheEntityLoaderHelper INSTANCE = new CacheEntityLoaderHelper();
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( CacheEntityLoaderHelper.class );
 
 	public enum EntityStatus {
 		MANAGED,
@@ -64,40 +57,35 @@ public class CacheEntityLoaderHelper {
 	private CacheEntityLoaderHelper() {
 	}
 
-	@Incubating
-	public PersistenceContextEntry loadFromSessionCache(
-			EntityKey keyToLoad,
-			LoadEventListener.LoadType options,
-			LockOptions lockOptions,
-			EventSource session) {
-		final Object old = session.getEntityUsingInterceptor( keyToLoad );
-		if ( old != null ) {
-			// this object was already loaded
-			final EntityEntry oldEntry = session.getPersistenceContext().getEntry( old );
-			if ( options.isCheckDeleted() ) {
-				if ( oldEntry.getStatus().isDeletedOrGone() ) {
-					LoadingLogger.LOGGER.debug(
-							"Load request found matching entity in context, but it is scheduled for removal; returning null" );
-					return new PersistenceContextEntry( old, EntityStatus.REMOVED_ENTITY_MARKER );
-				}
-			}
-			if ( options.isAllowNulls() ) {
-				final EntityPersister persister =
-						session.getFactory().getMappingMetamodel()
-								.getEntityDescriptor( keyToLoad.getEntityName() );
-				if ( ! persister.isInstance( old ) ) {
-					LOG.debugf(
-							"Load request found matching entity in context, but the matched entity was of an inconsistent return type.  " +
-									"Setting status as `%s`",
-							EntityStatus.INCONSISTENT_RTN_CLASS_MARKER
-					);
-					return new PersistenceContextEntry( old, EntityStatus.INCONSISTENT_RTN_CLASS_MARKER );
-				}
-			}
-			upgradeLock( old, oldEntry, lockOptions, session );
-		}
-		return new PersistenceContextEntry( old, EntityStatus.MANAGED );
-	}
+//	@Incubating
+//	public static PersistenceContextEntry loadFromSessionCache(
+//			EntityKey keyToLoad,
+//			LoadEventListener.LoadType options,
+//			LockOptions lockOptions,
+//			EventSource session) {
+//		final Object old = session.getEntityUsingInterceptor( keyToLoad );
+//		if ( old != null ) {
+//			// this object was already loaded
+//			final EntityEntry oldEntry = session.getPersistenceContext().getEntry( old );
+//			if ( options.isCheckDeleted() ) {
+//				if ( oldEntry.getStatus().isDeletedOrGone() ) {
+//					LOADING_LOGGER.foundEntityScheduledForRemoval();
+//					return new PersistenceContextEntry( old, REMOVED_ENTITY_MARKER );
+//				}
+//			}
+//			if ( options.isAllowNulls() ) {
+//				final EntityPersister persister =
+//						session.getFactory().getMappingMetamodel()
+//								.getEntityDescriptor( keyToLoad.getEntityName() );
+//				if ( ! persister.isInstance( old ) ) {
+//					LOADING_LOGGER.foundEntityWrongType();
+//					return new PersistenceContextEntry( old, INCONSISTENT_RTN_CLASS_MARKER );
+//				}
+//			}
+//			upgradeLock( old, oldEntry, lockOptions, session );
+//		}
+//		return new PersistenceContextEntry( old, EntityStatus.MANAGED );
+//	}
 
 	/**
 	 * Attempts to locate the entity in the session-level cache.
@@ -122,7 +110,7 @@ public class CacheEntityLoaderHelper {
 			final LoadEvent event,
 			final EntityKey keyToLoad,
 			final LoadEventListener.LoadType options) {
-		return INSTANCE.loadFromSessionCache( event, keyToLoad, options );
+		return loadFromSessionCache( event, keyToLoad, options );
 	}
 
 	/**
@@ -144,7 +132,7 @@ public class CacheEntityLoaderHelper {
 	 *
 	 * @throws HibernateException Generally indicates problems applying a lock-mode.
 	 */
-	public PersistenceContextEntry loadFromSessionCache(
+	public static PersistenceContextEntry loadFromSessionCache(
 			final LoadEvent event,
 			final EntityKey keyToLoad,
 			final LoadEventListener.LoadType options) throws HibernateException {
@@ -155,9 +143,8 @@ public class CacheEntityLoaderHelper {
 			final EntityEntry oldEntry = session.getPersistenceContext().getEntry( old );
 			if ( options.isCheckDeleted() ) {
 				if ( oldEntry.getStatus().isDeletedOrGone() ) {
-					LoadingLogger.LOGGER.debug(
-							"Load request found matching entity in context, but it is scheduled for removal; returning null" );
-					return new PersistenceContextEntry( old, EntityStatus.REMOVED_ENTITY_MARKER );
+					LOADING_LOGGER.foundEntityScheduledForRemoval();
+					return new PersistenceContextEntry( old, REMOVED_ENTITY_MARKER );
 				}
 			}
 			if ( options.isAllowNulls() ) {
@@ -165,10 +152,8 @@ public class CacheEntityLoaderHelper {
 						event.getFactory().getMappingMetamodel()
 								.getEntityDescriptor( keyToLoad.getEntityName() );
 				if ( !persister.isInstance( old ) ) {
-					LOG.debug(
-							"Load request found matching entity in context, but the matched entity was of an inconsistent return type; returning null"
-					);
-					return new PersistenceContextEntry( old, EntityStatus.INCONSISTENT_RTN_CLASS_MARKER );
+					LOADING_LOGGER.foundEntityWrongType();
+					return new PersistenceContextEntry( old, INCONSISTENT_RTN_CLASS_MARKER );
 				}
 			}
 			upgradeLock( old, oldEntry, event.getLockOptions(), event.getSession() );
@@ -185,7 +170,7 @@ public class CacheEntityLoaderHelper {
 	 *
 	 * @return The entity from the second-level cache, or null.
 	 */
-	public Object loadFromSecondLevelCache(
+	public static Object loadFromSecondLevelCache(
 			final LoadEvent event,
 			final EntityPersister persister,
 			final EntityKey entityKey) {
@@ -221,8 +206,8 @@ public class CacheEntityLoaderHelper {
 	 *
 	 * @return The entity from the second-level cache, or null.
 	 */
-	public Object loadFromSecondLevelCache(
-			final EventSource source,
+	public static Object loadFromSecondLevelCache(
+			final SharedSessionContractImplementor source,
 			final Object entity,
 			final LockMode lockMode,
 			final EntityPersister persister,
@@ -243,10 +228,10 @@ public class CacheEntityLoaderHelper {
 	}
 
 
-	private Object getFromSharedCache(
+	private static Object getFromSharedCache(
 			final Object entityId,
 			final EntityPersister persister,
-			SessionImplementor source) {
+			SharedSessionContractImplementor source) {
 		final EntityDataAccess cache = persister.getCacheAccessStrategy();
 		final SessionFactoryImplementor factory = source.getFactory();
 		final Object cacheKey = cache.generateCacheKey(
@@ -258,35 +243,30 @@ public class CacheEntityLoaderHelper {
 		final Object ce = fromSharedCache( source, cacheKey, persister, persister.getCacheAccessStrategy() );
 		final StatisticsImplementor statistics = factory.getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {
+			final NavigableRole rootEntityRole = getRootEntityRole( persister );
+			final String regionName = cache.getRegion().getName();
 			if ( ce == null ) {
-				statistics.entityCacheMiss(
-						StatsHelper.getRootEntityRole( persister ),
-						cache.getRegion().getName()
-				);
+				statistics.entityCacheMiss( rootEntityRole, regionName );
 			}
 			else {
-				statistics.entityCacheHit(
-						StatsHelper.getRootEntityRole( persister ),
-						cache.getRegion().getName()
-				);
+				statistics.entityCacheHit( rootEntityRole, regionName );
 			}
 		}
 		return ce;
 	}
 
-	private Object processCachedEntry(
+	private static Object processCachedEntry(
 			final Object instanceToLoad,
 			final EntityPersister persister,
 			final Object ce,
-			final EventSource source,
+			final SharedSessionContractImplementor source,
 			final EntityKey entityKey) {
 		final CacheEntry entry = (CacheEntry)
 				persister.getCacheEntryStructure().destructure( ce, source.getFactory() );
 		if ( entry.isReferenceEntry() ) {
 			if ( instanceToLoad != null ) {
-				throw new HibernateException(
-						"Attempt to load entity from cache using provided object instance, but cache " +
-								"is storing references: " + entityKey.getIdentifier() );
+				throw new HibernateException( "Attempt to load entity from cache using provided object instance, "
+						+ "but cache is storing references: " + entityKey.getIdentifier() );
 			}
 			else {
 				return convertCacheReferenceEntryToEntity(
@@ -317,13 +297,13 @@ public class CacheEntityLoaderHelper {
 		}
 	}
 
-	private Object convertCacheReferenceEntryToEntity(
+	private static Object convertCacheReferenceEntryToEntity(
 			ReferenceCacheEntryImpl referenceCacheEntry,
 			SharedSessionContractImplementor session,
 			EntityKey entityKey) {
 		final Object entity = referenceCacheEntry.getReference();
 		if ( entity == null ) {
-			throw new IllegalStateException( "Reference cache entry contained null : " + referenceCacheEntry );
+			throw new IllegalStateException( "Reference cache entry contained null: " + referenceCacheEntry );
 		}
 		else {
 			makeEntityCircularReferenceSafe( referenceCacheEntry, session, entity, entityKey );
@@ -331,7 +311,7 @@ public class CacheEntityLoaderHelper {
 		}
 	}
 
-	private void makeEntityCircularReferenceSafe(
+	private static void makeEntityCircularReferenceSafe(
 			ReferenceCacheEntryImpl referenceCacheEntry,
 			SharedSessionContractImplementor session,
 			Object entity,
@@ -358,25 +338,16 @@ public class CacheEntityLoaderHelper {
 		persistenceContext.initializeNonLazyCollections();
 	}
 
-	private Object convertCacheEntryToEntity(
+	private static Object convertCacheEntryToEntity(
 			CacheEntry entry,
 			Object entityId,
-			EventSource source,
+			SharedSessionContractImplementor source,
 			EntityPersister persister,
 			Object instanceToLoad,
 			EntityKey entityKey) {
-		final SessionFactoryImplementor factory = source.getFactory();
-
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracef(
-					"Converting second-level cache entry [%s] into entity : %s",
-					entry,
-					MessageHelper.infoString( persister, entityId, factory )
-			);
-		}
 
 		final EntityPersister subclassPersister =
-				factory.getRuntimeMetamodels().getMappingMetamodel()
+				source.getFactory().getRuntimeMetamodels().getMappingMetamodel()
 						.getEntityDescriptor( entry.getSubclass() );
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 		final EntityHolder oldHolder = persistenceContext.getEntityHolder( entityKey );
@@ -459,8 +430,6 @@ public class CacheEntityLoaderHelper {
 			);
 		}
 		final Object version = getVersion( values, subclassPersister );
-		LOG.tracef( "Cached Version : %s", version );
-
 		holder.setEntityEntry(
 				persistenceContext.addEntry(
 						entity,

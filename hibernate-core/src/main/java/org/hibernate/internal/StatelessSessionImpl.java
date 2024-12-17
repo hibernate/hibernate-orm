@@ -78,6 +78,7 @@ import static org.hibernate.engine.internal.Versioning.setVersion;
 import static org.hibernate.event.internal.DefaultInitializeCollectionEventListener.handlePotentiallyEmptyCollection;
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+import static org.hibernate.loader.ast.internal.CacheEntityLoaderHelper.loadFromSecondLevelCache;
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
@@ -111,6 +112,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		influencers = new LoadQueryInfluencers( getFactory() );
 		setUpMultitenancy( factory, influencers );
 		setJdbcBatchSize( 0 );
+		setCacheMode( CacheMode.IGNORE );
 	}
 
 	@Override
@@ -650,8 +652,17 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public Object get(String entityName, Object id, LockMode lockMode) {
 		checkOpen();
 
-		final Object result = getEntityPersister( entityName )
-				.load( id, null, getNullSafeLockMode( lockMode ), this );
+		final EntityPersister persister = getEntityPersister( entityName );
+		if ( persister.canReadFromCache() ) {
+			final Object cachedEntity =
+					loadFromSecondLevelCache( this, null, lockMode, persister,
+							generateEntityKey( id, persister ) );
+			if ( cachedEntity != null ) {
+				temporaryPersistenceContext.clear();
+				return cachedEntity;
+			}
+		}
+		final Object result = persister.load( id, null, getNullSafeLockMode( lockMode ), this );
 		if ( temporaryPersistenceContext.isLoadFinished() ) {
 			temporaryPersistenceContext.clear();
 		}
@@ -1006,16 +1017,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			object = lazyInitializer.getImplementation();
 		}
 		return guessEntityName( object );
-	}
-
-	@Override
-	public CacheMode getCacheMode() {
-		return CacheMode.IGNORE;
-	}
-
-	@Override
-	public void setCacheMode(CacheMode cm) {
-		throw new UnsupportedOperationException();
 	}
 
 	@Override

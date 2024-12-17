@@ -34,13 +34,13 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.pretty.MessageHelper.infoString;
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * Defines the default load event listeners used by hibernate for loading entities
@@ -306,7 +306,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			final Object proxy = holder == null ? null : holder.getProxy();
 			if ( proxy != null ) {
 				LOG.trace( "Entity proxy found in session cache" );
-				if ( LOG.isDebugEnabled() && HibernateProxy.extractLazyInitializer( proxy ).isUnwrap() ) {
+				if ( LOG.isDebugEnabled() && extractLazyInitializer( proxy ).isUnwrap() ) {
 					LOG.debug( "Ignoring NO_PROXY to honor laziness" );
 				}
 				return persistenceContext.narrowProxy( proxy, persister, keyToLoad, null );
@@ -336,7 +336,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 	}
 
 	private static Object proxyOrCached(LoadEvent event, EntityPersister persister, EntityKey keyToLoad) {
-		final Object cachedEntity = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache(
+		final Object cachedEntity = CacheEntityLoaderHelper.loadFromSecondLevelCache(
 				event.getSession(),
 				null,
 				LockMode.NONE,
@@ -366,7 +366,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		if ( LOG.isTraceEnabled() ) {
 			LOG.trace( "Entity proxy found in session cache" );
 		}
-		final LazyInitializer li = HibernateProxy.extractLazyInitializer( proxy );
+		final LazyInitializer li = extractLazyInitializer( proxy );
 		if ( li.isUnwrap() ) {
 			return li.getImplementation();
 		}
@@ -388,7 +388,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			return entity;
 		}
 		else {
-			if ( options != LoadEventListener.INTERNAL_LOAD_NULLABLE ) {
+			if ( options != INTERNAL_LOAD_NULLABLE ) {
 				// throw an appropriate exception
 				event.getFactory().getEntityNotFoundDelegate()
 						.handleEntityNotFound( persister.getEntityName(), keyToLoad.getIdentifier() );
@@ -520,7 +520,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		}
 		else {
 			final PersistenceContextEntry persistenceContextEntry
-					= CacheEntityLoaderHelper.INSTANCE.loadFromSessionCache( event, keyToLoad, options );
+					= CacheEntityLoaderHelper.loadFromSessionCache( event, keyToLoad, options );
 			final Object entity = persistenceContextEntry.getEntity();
 			if ( entity != null ) {
 				if ( persistenceContextEntry.isManaged() ) {
@@ -561,7 +561,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 	}
 
 	private Object loadFromCacheOrDatasource(LoadEvent event, EntityPersister persister, EntityKey keyToLoad) {
-		final Object entity = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache( event, persister, keyToLoad );
+		final Object entity = CacheEntityLoaderHelper.loadFromSecondLevelCache( event, persister, keyToLoad );
 		if ( entity == null ) {
 			return loadFromDatasource( event, persister );
 		}
@@ -589,7 +589,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 						+ infoString( persister, event.getEntityId(), event.getFactory() ) );
 		}
 
-		Object entity = persister.load(
+		final Object entity = persister.load(
 				event.getEntityId(),
 				event.getInstanceToLoad(),
 				event.getLockOptions(),
@@ -603,17 +603,15 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		//		persister/loader/initializer sensitive to this fact - possibly
 		//		passing LoadType along
 
-		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entity );
-		if ( lazyInitializer != null ) {
-			entity = lazyInitializer.getImplementation();
-		}
+		final LazyInitializer lazyInitializer = extractLazyInitializer( entity );
+		final Object impl = lazyInitializer != null ? lazyInitializer.getImplementation() : entity;
 
 		final StatisticsImplementor statistics = event.getFactory().getStatistics();
 		if ( event.isAssociationFetch() && statistics.isStatisticsEnabled() ) {
 			statistics.fetchEntity( event.getEntityClassName() );
 		}
 
-		return entity;
+		return impl;
 	}
 
 }

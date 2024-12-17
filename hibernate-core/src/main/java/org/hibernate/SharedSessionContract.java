@@ -43,6 +43,23 @@ public interface SharedSessionContract extends QueryProducer, AutoCloseable, Ser
 	Object getTenantIdentifierValue();
 
 	/**
+	 * Get the current {@linkplain CacheMode cache mode} for this session.
+	 *
+	 * @return the current cache mode
+	 */
+	CacheMode getCacheMode();
+
+	/**
+	 * Set the current {@linkplain CacheMode cache mode} for this session.
+	 * <p>
+	 * The cache mode determines the manner in which this session can interact with
+	 * the second level cache.
+	 *
+	 * @param cacheMode the new cache mode
+	 */
+	void setCacheMode(CacheMode cacheMode);
+
+	/**
 	 * End the session by releasing the JDBC connection and cleaning up.
 	 *
 	 * @throws HibernateException Indicates problems cleaning up.

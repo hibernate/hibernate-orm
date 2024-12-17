@@ -10,7 +10,6 @@ import jakarta.persistence.FlushModeType;
 import jakarta.persistence.TransactionRequiredException;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
@@ -371,16 +370,6 @@ public interface SharedSessionContractImplementor
 	 * Are entities and proxies loaded by this session read-only by default?
 	 */
 	boolean isDefaultReadOnly();
-
-	/**
-	 * Get the current {@link CacheMode} for this session.
-	 */
-	CacheMode getCacheMode();
-
-	/**
-	 * Set the current {@link CacheMode} for this session.
-	 */
-	void setCacheMode(CacheMode cm);
 
 	void setCriteriaCopyTreeEnabled(boolean jpaCriteriaCopyComplianceEnabled);
 

@@ -1290,7 +1290,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 	}
 
 	private Object resolveInstanceFromCache(EntityInitializerData data) {
-		return CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache(
+		return CacheEntityLoaderHelper.loadFromSecondLevelCache(
 				data.getRowProcessingState().getSession().asEventSource(),
 				null,
 				data.lockMode,

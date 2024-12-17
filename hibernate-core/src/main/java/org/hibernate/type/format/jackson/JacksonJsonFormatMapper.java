@@ -21,7 +21,7 @@ import java.lang.reflect.Type;
  * @author Christian Beikov
  * @author Yanming Zhou
  */
-public final class JacksonJsonFormatMapper extends AbstractJsonFormatMapper {
+public class JacksonJsonFormatMapper extends AbstractJsonFormatMapper {
 
 	public static final String SHORT_NAME = "jackson";
 

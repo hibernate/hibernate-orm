@@ -25,7 +25,6 @@ import java.util.List;
  * A stateless session comes some with designed-in limitations:
  * <ul>
  * <li>it does not have a first-level cache,
- * <li>nor interact with any second-level cache,
  * <li>nor does it implement transactional write-behind or automatic dirty
  *     checking.
  * </ul>
@@ -69,6 +68,13 @@ import java.util.List;
  * thus undermining the synchronous nature of operations performed through a
  * stateless session. A preferred approach is to explicitly batch operations via
  * {@link #insertMultiple}, {@link #updateMultiple}, or {@link #deleteMultiple}.
+ * <p>
+ * Since version 7, a stateless session makes use of the second-level cache by
+ * default. To bypass the second-level cache, call {@link #setCacheMode(CacheMode)},
+ * passing {@link CacheMode#IGNORE}, or set the configuration properties
+ * {@value org.hibernate.cfg.CacheSettings#JAKARTA_SHARED_CACHE_RETRIEVE_MODE}
+ * and {@value org.hibernate.cfg.CacheSettings#JAKARTA_SHARED_CACHE_STORE_MODE}
+ * to {@code BYPASS}.
  *
  * @author Gavin King
  */

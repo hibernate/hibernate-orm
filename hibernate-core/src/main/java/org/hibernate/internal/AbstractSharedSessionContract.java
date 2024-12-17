@@ -202,6 +202,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		entityNameResolver = new CoordinatingEntityNameResolver( factory, interceptor );
 		setCriteriaCopyTreeEnabled( factory.getSessionFactoryOptions().isCriteriaCopyTreeEnabled() );
 		setNativeJdbcParametersIgnored( factory.getSessionFactoryOptions().getNativeJdbcParametersIgnored() );
+		setCacheMode( fastSessionServices.initialSessionCacheMode );
 
 		final StatementInspector statementInspector = interpret( options.getStatementInspector() );
 

@@ -168,7 +168,7 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 					case TIMESTAMP_UTC:
 						return template.replace(
 								placeholder,
-								"cast(trim(trailing 'Z' from xmlcast(xmlquery(" + xmlExtractArguments( aggregateParentReadExpression, columnExpression ) + ") as varchar(35))) as " + column.getColumnDefinition() + ")"
+								"cast(replace(trim(trailing 'Z' from xmlcast(xmlquery(" + xmlExtractArguments( aggregateParentReadExpression, columnExpression ) + ") as varchar(35))),'T',' ') as " + column.getColumnDefinition() + ")"
 						);
 					case SQLXML:
 						return template.replace(
@@ -261,7 +261,8 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 				// We encode binary data as hex
 				return "hex(" + customWriteExpression + ")";
 			case UUID:
-				return "regexp_replace(lower(hex(" + customWriteExpression + ")),'^(.{8})(.{4})(.{4})(.{4})(.{12})$','$1-$2-$3-$4-$5')";
+				// Old DB2 didn't support regexp_replace yet
+				return "overlay(overlay(overlay(overlay(lower(hex(" + customWriteExpression + ")),'-',21,0,octets),'-',17,0,octets),'-',13,0,octets),'-',9,0,octets)";
 //			case ARRAY:
 //			case XML_ARRAY:
 //				return "(" + customWriteExpression + ") format json";
@@ -754,7 +755,7 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 		// xmlelement and xmltable don't seem to support the "varbinary", "binary" or "char for bit data" types
 		final String columTypeLC = columnType.toLowerCase( Locale.ROOT ).trim();
 		return columTypeLC.contains( "binary" )
-				|| columTypeLC.startsWith( "char" ) && columTypeLC.endsWith( " bit data" );
+				|| columTypeLC.contains( "char" ) && columTypeLC.endsWith( " bit data" );
 	}
 
 	interface JsonWriteExpression {

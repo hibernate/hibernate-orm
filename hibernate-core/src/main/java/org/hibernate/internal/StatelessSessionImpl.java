@@ -90,7 +90,8 @@ import static org.hibernate.engine.internal.Versioning.setVersion;
 import static org.hibernate.event.internal.DefaultInitializeCollectionEventListener.handlePotentiallyEmptyCollection;
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
-import static org.hibernate.loader.ast.internal.CacheEntityLoaderHelper.loadFromSecondLevelCache;
+import static org.hibernate.loader.internal.CacheLoadHelper.initializeCollectionFromCache;
+import static org.hibernate.loader.internal.CacheLoadHelper.loadFromSecondLevelCache;
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
@@ -832,17 +833,22 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			final CollectionPersister loadedPersister = ce.getLoadedPersister();
 			final Object loadedKey = ce.getLoadedKey();
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev( "Initializing collection {0}",
-						collectionInfoString( loadedPersister, collection, loadedKey, this ) );
+				LOG.trace( "Initializing collection "
+							+ collectionInfoString( loadedPersister, collection, loadedKey, this ) );
 			}
-			loadedPersister.initialize( loadedKey, this );
-			handlePotentiallyEmptyCollection( collection, persistenceContext, loadedKey, loadedPersister );
-			if ( LOG.isTraceEnabled() ) {
+			final boolean foundInCache =
+					initializeCollectionFromCache( loadedKey, loadedPersister, collection, this );
+			if ( foundInCache ) {
+				LOG.trace( "Collection initialized from cache" );
+			}
+			else {
+				loadedPersister.initialize( loadedKey, this );
+				handlePotentiallyEmptyCollection( collection, persistenceContext, loadedKey, loadedPersister );
 				LOG.trace( "Collection initialized" );
-			}
-			final StatisticsImplementor statistics = getFactory().getStatistics();
-			if ( statistics.isStatisticsEnabled() ) {
-				statistics.fetchCollection( loadedPersister.getRole() );
+				final StatisticsImplementor statistics = getFactory().getStatistics();
+				if ( statistics.isStatisticsEnabled() ) {
+					statistics.fetchCollection( loadedPersister.getRole() );
+				}
 			}
 		}
 	}
@@ -994,24 +1000,32 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 				}
 			}
 		}
-		else if ( association instanceof PersistentCollection<?> persistentCollection ) {
-			if ( !persistentCollection.wasInitialized() ) {
+		else if ( association instanceof PersistentCollection<?> collection ) {
+			if ( !collection.wasInitialized() ) {
 				final CollectionPersister collectionDescriptor = getFactory().getMappingMetamodel()
-						.getCollectionDescriptor( persistentCollection.getRole() );
-				final Object key = persistentCollection.getKey();
-				persistenceContext.addUninitializedCollection( collectionDescriptor, persistentCollection, key );
-				persistentCollection.setCurrentSession( this );
+						.getCollectionDescriptor( collection.getRole() );
+				final Object key = collection.getKey();
+				persistenceContext.addUninitializedCollection( collectionDescriptor, collection, key );
+				collection.setCurrentSession( this );
 				try {
-					collectionDescriptor.initialize( key, this );
-					handlePotentiallyEmptyCollection( persistentCollection, getPersistenceContextInternal(), key,
-							collectionDescriptor );
-					final StatisticsImplementor statistics = getFactory().getStatistics();
-					if ( statistics.isStatisticsEnabled() ) {
-						statistics.fetchCollection( collectionDescriptor.getRole() );
+					final boolean foundInCache =
+							initializeCollectionFromCache( key, collectionDescriptor, collection, this );
+					if ( foundInCache ) {
+						LOG.trace( "Collection fetched from cache" );
+					}
+					else {
+						collectionDescriptor.initialize( key, this );
+						handlePotentiallyEmptyCollection( collection, getPersistenceContextInternal(), key,
+								collectionDescriptor );
+						LOG.trace( "Collection fetched" );
+						final StatisticsImplementor statistics = getFactory().getStatistics();
+						if ( statistics.isStatisticsEnabled() ) {
+							statistics.fetchCollection( collectionDescriptor.getRole() );
+						}
 					}
 				}
 				finally {
-					persistentCollection.unsetSession( this );
+					collection.unsetSession( this );
 					if ( persistenceContext.isLoadFinished() ) {
 						persistenceContext.clear();
 					}

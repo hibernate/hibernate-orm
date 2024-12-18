@@ -20,6 +20,13 @@ public class PostLoadEvent extends AbstractEvent {
 		super(session);
 	}
 
+	public PostLoadEvent(Object id, EntityPersister persister, Object entity, EventSource session) {
+		super(session);
+		this.id = id;
+		this.persister = persister;
+		this.entity = entity;
+	}
+
 	public void reset() {
 		entity = null;
 		id = null;

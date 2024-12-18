@@ -40,7 +40,6 @@ import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.internal.util.ImmutableBitSet;
-import org.hibernate.loader.ast.internal.CacheEntityLoaderHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
@@ -87,6 +86,7 @@ import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCH
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+import static org.hibernate.loader.internal.CacheLoadHelper.loadFromSecondLevelCache;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
@@ -1290,7 +1290,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 	}
 
 	private Object resolveInstanceFromCache(EntityInitializerData data) {
-		return CacheEntityLoaderHelper.loadFromSecondLevelCache(
+		return loadFromSecondLevelCache(
 				data.getRowProcessingState().getSession().asEventSource(),
 				null,
 				data.lockMode,

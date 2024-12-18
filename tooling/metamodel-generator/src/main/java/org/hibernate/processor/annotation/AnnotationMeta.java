@@ -113,7 +113,7 @@ public abstract class AnnotationMeta implements Metamodel {
 							final AnnotationValue annotationValue = getAnnotationValue( mirror, "resultClass" );
 							final String resultType = annotationValue != null
 									? annotationValue.getValue().toString()
-									: resultType( selectStatement, context );
+									: resultType( selectStatement );
 							putMember( name,
 									new NamedQueryMethod(
 											this,
@@ -128,7 +128,7 @@ public abstract class AnnotationMeta implements Metamodel {
 							);
 						}
 						if ( getAnnotationValue( mirror, "resultClass" ) == null ) {
-							final String resultType = resultType( selectStatement, context );
+							final String resultType = resultType( selectStatement );
 							if ( resultType != null ) {
 								putMember( "QUERY_" + name,
 										new TypedMetaAttribute( this, name, "QUERY_", resultType,

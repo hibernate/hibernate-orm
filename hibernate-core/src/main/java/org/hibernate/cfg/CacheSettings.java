@@ -18,12 +18,28 @@ import org.hibernate.jpa.SpecHints;
  */
 public interface CacheSettings {
 	/**
-	 * When enabled, specifies that the second-level cache (which JPA calls the
-	 * "shared" cache) may be used, as per the rules defined in JPA 2 section 3.1.7.
+	 * Specifies the {@link jakarta.persistence.SharedCacheMode}.
 	 * <p>
-	 * See JPA 2 sections 9.4.3 and 8.2.1.7
+	 * Hibernate is designed to be used with
+	 * {@link jakarta.persistence.SharedCacheMode#ENABLE_SELECTIVE
+	 * ENABLE_SELECTIVE}, and we strongly discourage the use of
+	 * {@link jakarta.persistence.SharedCacheMode#ALL ALL} or
+	 * {@link jakarta.persistence.SharedCacheMode#DISABLE_SELECTIVE
+	 * DISABLE_SELECTIVE}, since in any multiuser system a cache is
+	 * <em>always</em> a potential source of bugs which are difficult
+	 * to isolate and reproduce. Caching should never be turned on
+	 * "by accident".
+	 * <p>
+	 * Setting the shared cache mode to
+	 * {@link jakarta.persistence.SharedCacheMode#NONE} has very
+	 * nearly the same effect as {@linkplain #USE_SECOND_LEVEL_CACHE
+	 * disabling the second-level cache}, globally suppressing every
+	 * occurrence of the {@link jakarta.persistence.Cacheable} and
+	 * {@link org.hibernate.annotations.Cache} annotations.
 	 *
 	 * @see jakarta.persistence.SharedCacheMode
+	 *
+	 * @settingDefault {@code ENABLE_SELECTIVE}
 	 */
 	String JAKARTA_SHARED_CACHE_MODE = "jakarta.persistence.sharedCache.mode";
 
@@ -35,6 +51,8 @@ public interface CacheSettings {
 	 * {@link jakarta.persistence.CacheRetrieveMode#USE}.
 	 *
 	 * @see SpecHints#HINT_SPEC_CACHE_RETRIEVE_MODE
+	 *
+	 * @settingDefault {@code USE}
 	 */
 	String JAKARTA_SHARED_CACHE_RETRIEVE_MODE = SpecHints.HINT_SPEC_CACHE_RETRIEVE_MODE;
 
@@ -46,6 +64,8 @@ public interface CacheSettings {
 	 * {@link jakarta.persistence.CacheStoreMode#USE}.
 	 *
 	 * @see SpecHints#HINT_SPEC_CACHE_RETRIEVE_MODE
+	 *
+	 * @settingDefault {@code USE}
 	 */
 	String JAKARTA_SHARED_CACHE_STORE_MODE = SpecHints.HINT_SPEC_CACHE_STORE_MODE;
 
@@ -222,10 +242,6 @@ public interface CacheSettings {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * Used to indicate whether second-level (what JPA terms shared cache)
-	 * caching is enabled as per the rules defined in JPA 2 section 3.1.7.
-	 * <p>
-	 * See JPA 2 sections 9.4.3 and 8.2.1.7
 	 * @see jakarta.persistence.SharedCacheMode
 	 *
 	 * @deprecated Use {@link #JAKARTA_SHARED_CACHE_MODE} instead

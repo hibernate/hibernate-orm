@@ -20,10 +20,12 @@ import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.nio.ByteBuffer;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.util.UUID;
 
 /**
  * @author Emmanuel Jannetti
@@ -106,15 +108,24 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 								(OracleJsonParser.Event)OsonParserKlassCurrentEventMethod.invoke( osonParser );
 						switch(event) {
 							case OracleJsonParser.Event.VALUE_DATE :
-
+									LocalDateTime localDate =
+										(LocalDateTime)OsonParserKlassGetLocalDateTimeMethod.invoke( osonParser );
+									finalResult[selectableIndex] =  java.sql.Date.valueOf(localDate.toLocalDate());
 								break;
 								case OracleJsonParser.Event.VALUE_TIMESTAMP:
 									LocalDateTime local =
 											(LocalDateTime)OsonParserKlassGetLocalDateTimeMethod.invoke( osonParser );
-									finalResult[selectableIndex] = Timestamp.valueOf(local);
+									if ("java.sql.Timestamp".equals(
+											embeddableMappingType.getJdbcValueSelectable( selectableIndex )
+													.getJdbcMapping().getJdbcJavaType().getJavaType().getTypeName())) {
+										finalResult[selectableIndex] = Timestamp.valueOf( local );
+									} else {
+										finalResult[selectableIndex] = local;
+									}
 									break;
 								case OracleJsonParser.Event.VALUE_TIMESTAMPTZ:
-									OffsetDateTime offsetDT = (OffsetDateTime)OsonParserKlassReadOffsetDateTimeMethod.invoke( osonParser );
+									OffsetDateTime offsetDT =
+											(OffsetDateTime)OsonParserKlassReadOffsetDateTimeMethod.invoke( osonParser );
 									finalResult[selectableIndex] = offsetDT;
 									break;
 								case OracleJsonParser.Event.VALUE_INTERVALDS:
@@ -169,7 +180,17 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 					break;
 				case JsonToken.VALUE_EMBEDDED_OBJECT:
 					selectableIndex = embeddableMappingType.getSelectableIndex( osonParser.currentName() );
-					finalResult[selectableIndex] = osonParser.getBinaryValue() ;
+					byte[] bytes = osonParser.getBinaryValue();
+					if ("java.util.UUID".equals(
+							embeddableMappingType.getJdbcValueSelectable( selectableIndex )
+									.getJdbcMapping().getJdbcJavaType().getJavaType().getTypeName())) {
+						ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
+						long mostSignificantBits = byteBuffer.getLong();
+						long leastSignificantBits = byteBuffer.getLong();
+						finalResult[selectableIndex] = new UUID(mostSignificantBits, leastSignificantBits);
+					} else {
+						finalResult[selectableIndex] = bytes;
+					}
 					break;
 				case JsonToken.START_OBJECT:
 					if ( osonParser.currentName() == null ) {

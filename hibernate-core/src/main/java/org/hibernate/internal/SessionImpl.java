@@ -138,7 +138,6 @@ import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
-import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
@@ -535,6 +534,7 @@ public class SessionImpl
 		autoClear = enabled;
 	}
 
+	@Override
 	public void afterOperation(boolean success) {
 		if ( !isTransactionInProgress() ) {
 			getJdbcCoordinator().afterTransaction();
@@ -619,9 +619,7 @@ public class SessionImpl
 
 	@Override
 	public void delayedAfterCompletion() {
-		if ( getTransactionCoordinator() instanceof JtaTransactionCoordinatorImpl impl ) {
-			impl.getSynchronizationCallbackCoordinator().processAnyDelayedAfterCompletion();
-		}
+		super.delayedAfterCompletion();
 	}
 
 	@Override
@@ -631,7 +629,9 @@ public class SessionImpl
 
 	@Override
 	public void checkOpenOrWaitingForAutoClose() {
-		super.checkOpenOrWaitingForAutoClose();
+		if ( !waitingForAutoClose ) {
+			checkOpen();
+		}
 	}
 
 	// lock() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -947,11 +947,6 @@ public class SessionImpl
 		fireLoad( new LoadEvent( id, object, this, getReadOnlyFromLoadQueryInfluencers() ), LoadEventListener.RELOAD );
 	}
 
-	@Override @Deprecated
-	public Object load(String entityName, Object id) throws HibernateException {
-		return byId( entityName ).getReference( id );
-	}
-
 	private <T> MultiIdentifierLoadAccess<T> multiloadAccessWithOptions(Class<T> entityClass, FindOption[] options) {
 		final MultiIdentifierLoadAccess<T> loadAccess = byMultipleIds( entityClass );
 		CacheStoreMode storeMode = getCacheStoreMode();
@@ -1026,7 +1021,7 @@ public class SessionImpl
 			final EntityPersister persister = requireEntityPersister( entityName );
 			log.debugf( "Initializing proxy: %s", infoString( persister, id, getFactory() ) );
 		}
-		final LoadEvent event = makeLoadEvent( entityName, id );
+		final LoadEvent event = makeLoadEvent( entityName, id, getReadOnlyFromLoadQueryInfluencers(), true );
 		fireLoadNoChecks( event, IMMEDIATE_LOAD );
 		final Object result = event.getResult();
 		releaseLoadEvent( event );
@@ -1046,12 +1041,12 @@ public class SessionImpl
 			clearedEffectiveGraph = false;
 		}
 		else {
-			log.debug("Clearing effective entity graph for subsequent-select");
+			log.debug("Clearing effective entity graph for subsequent select");
 			clearedEffectiveGraph = true;
 			effectiveEntityGraph.clear();
 		}
 		try {
-			final LoadEvent event = makeLoadEvent( entityName, id );
+			final LoadEvent event = makeLoadEvent( entityName, id, getReadOnlyFromLoadQueryInfluencers(), true );
 			fireLoadNoChecks( event, type );
 			final Object result = event.getResult();
 			if ( !nullable ) {
@@ -1113,16 +1108,40 @@ public class SessionImpl
 	 * Helper to avoid creating many new instances of {@link LoadEvent}.
 	 * It's an allocation hot spot.
 	 */
-	private LoadEvent makeLoadEvent(String entityName, Object id) {
-		LoadEvent event = loadEvent;
+	private LoadEvent makeLoadEvent(String entityName, Object id, Boolean readOnly, LockOptions lockOptions) {
+		final LoadEvent event = loadEvent;
 		if ( event == null ) {
-			return new LoadEvent( id, entityName, true, this, getReadOnlyFromLoadQueryInfluencers() );
+			return new LoadEvent( id, entityName, lockOptions, this, readOnly );
 		}
 		else {
 			loadEvent = null;
 			event.setEntityClassName( entityName );
 			event.setEntityId( id );
 			event.setInstanceToLoad( null );
+			event.setReadOnly( readOnly );
+			event.setLockOptions( lockOptions );
+			event.setAssociationFetch( false );
+			return event;
+		}
+	}
+
+	/**
+	 * Helper to avoid creating many new instances of {@link LoadEvent}.
+	 * It's an allocation hot spot.
+	 */
+	private LoadEvent makeLoadEvent(String entityName, Object id, Boolean readOnly, boolean isAssociationFetch) {
+		final LoadEvent event = loadEvent;
+		if ( event == null ) {
+			return new LoadEvent( id, entityName, isAssociationFetch, this, readOnly );
+		}
+		else {
+			loadEvent = null;
+			event.setEntityClassName( entityName );
+			event.setEntityId( id );
+			event.setInstanceToLoad( null );
+			event.setReadOnly( readOnly );
+			event.setLockOptions( LockMode.NONE.toLockOptions() );
+			event.setAssociationFetch( isAssociationFetch );
 			return event;
 		}
 	}
@@ -1142,6 +1161,8 @@ public class SessionImpl
 			event.setEntityId( null );
 			event.setInstanceToLoad( null );
 			event.setResult( null );
+			event.setLockOptions( null );
+			event.setReadOnly( null );
 			loadEvent = event;
 		}
 	}
@@ -1217,14 +1238,43 @@ public class SessionImpl
 	}
 
 	@Override
-	public void fireLoad(LoadEvent event, LoadType loadType) {
+	public Object load(LoadType loadType, Object id, String entityName, LockOptions lockOptions, Boolean readOnly) {
+		if ( lockOptions != null ) {
+			// TODO: I doubt that this branch is necessary, and it's probably even wrong
+			final LoadEvent event = makeLoadEvent( entityName, id, readOnly, lockOptions );
+			fireLoad( event, loadType );
+			final Object result = event.getResult();
+			releaseLoadEvent( event );
+			return result;
+		}
+		else {
+			boolean success = false;
+			try {
+				final LoadEvent event = makeLoadEvent( entityName, id, readOnly, false );
+				fireLoad( event, loadType );
+				final Object result = event.getResult();
+				releaseLoadEvent( event );
+				if ( !loadType.isAllowNulls() && result == null ) {
+					getSession().getFactory().getEntityNotFoundDelegate().handleEntityNotFound( entityName, id );
+				}
+				success = true;
+				return result;
+			}
+			finally {
+				// we might be called from outside transaction
+				afterOperation( success );
+			}
+		}
+	}
+
+	private void fireLoad(LoadEvent event, LoadType loadType) {
 		checkOpenOrWaitingForAutoClose();
 		fireLoadNoChecks( event, loadType );
 		delayedAfterCompletion();
 	}
 
 	/**
-	 * This version of {@link #fireLoad} is for use by internal methods only.
+	 * This version of {@link #load} is for use by internal methods only.
 	 * It skips the session open check, transaction sync checks, and so on,
 	 * which have been shown to be expensive (apparently they prevent these
 	 * hot methods from being inlined).

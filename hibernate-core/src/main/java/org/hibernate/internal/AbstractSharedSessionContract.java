@@ -535,12 +535,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
-	protected void checkOpenOrWaitingForAutoClose() {
-		if ( !waitingForAutoClose ) {
-			checkOpen();
-		}
-	}
-
 	@Override
 	public void markForRollbackOnly() {
 		try {
@@ -662,10 +656,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	protected void delayedAfterCompletion() {
-		if ( transactionCoordinator instanceof JtaTransactionCoordinatorImpl ) {
-			( (JtaTransactionCoordinatorImpl) transactionCoordinator )
-					.getSynchronizationCallbackCoordinator()
-					.processAnyDelayedAfterCompletion();
+		if ( transactionCoordinator instanceof JtaTransactionCoordinatorImpl jtaTransactionCoordinator ) {
+			jtaTransactionCoordinator.getSynchronizationCallbackCoordinator().processAnyDelayedAfterCompletion();
 		}
 	}
 

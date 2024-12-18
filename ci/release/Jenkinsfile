@@ -92,9 +92,9 @@ pipeline {
 		stage('Release check') {
 			steps {
 				script {
-                    print "INFO: params.RELEASE_VERSION = ${params.RELEASE_VERSION}"
-                    print "INFO: params.DEVELOPMENT_VERSION = ${params.DEVELOPMENT_VERSION}"
-                    print "INFO: params.RELEASE_DRY_RUN? = ${params.RELEASE_DRY_RUN}"
+					print "INFO: params.RELEASE_VERSION = ${params.RELEASE_VERSION}"
+					print "INFO: params.DEVELOPMENT_VERSION = ${params.DEVELOPMENT_VERSION}"
+					print "INFO: params.RELEASE_DRY_RUN? = ${params.RELEASE_DRY_RUN}"
 
 					checkoutReleaseScripts()
 
@@ -167,19 +167,20 @@ pipeline {
 							configFile(fileId: 'release.config.ssh', targetLocation: "${env.HOME}/.ssh/config"),
 							configFile(fileId: 'release.config.ssh.knownhosts', targetLocation: "${env.HOME}/.ssh/known_hosts")
 					]) {
-                        sshagent(['ed25519.Hibernate-CI.github.com', 'hibernate.filemgmt.jboss.org', 'hibernate-ci.frs.sourceforge.net']) {
-                            // set release version
-                            // update changelog from JIRA
-                            // tags the version
-                            // changes the version to the provided development version
-                            withEnv([
-                                    "BRANCH=${env.GIT_BRANCH}",
-                                    // Increase the amount of memory for this part since asciidoctor doc rendering consumes a lot of metaspace
-                                    "GRADLE_OPTS=-Dorg.gradle.jvmargs='-Dlog4j2.disableJmx -Xmx4g -XX:MaxMetaspaceSize=768m -XX:+HeapDumpOnOutOfMemoryError -Duser.language=en -Duser.country=US -Duser.timezone=UTC -Dfile.encoding=UTF-8'"
-                            ]) {
-                                sh ".release/scripts/prepare-release.sh ${env.PROJECT} ${env.RELEASE_VERSION} ${env.DEVELOPMENT_VERSION}"
-                            }
-                        }
+						sshagent(['ed25519.Hibernate-CI.github.com', 'hibernate.filemgmt.jboss.org', 'hibernate-ci.frs.sourceforge.net']) {
+							// set release version
+							// update changelog from JIRA
+							// tags the version
+							// changes the version to the provided development version
+							withEnv([
+									"BRANCH=${env.GIT_BRANCH}",
+									"DISABLE_REMOTE_GRADLE_CACHE=true",
+									// Increase the amount of memory for this part since asciidoctor doc rendering consumes a lot of metaspace
+									"GRADLE_OPTS=-Dorg.gradle.jvmargs='-Dlog4j2.disableJmx -Xmx4g -XX:MaxMetaspaceSize=768m -XX:+HeapDumpOnOutOfMemoryError -Duser.language=en -Duser.country=US -Duser.timezone=UTC -Dfile.encoding=UTF-8'"
+							]) {
+								sh ".release/scripts/prepare-release.sh ${env.PROJECT} ${env.RELEASE_VERSION} ${env.DEVELOPMENT_VERSION}"
+							}
+						}
 					}
 				}
 			}

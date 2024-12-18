@@ -1384,7 +1384,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 								sessionType,
 								operation,
 								context.addNonnullAnnotation(),
-								isIterableLifecycleParameter(parameterType),
+								lifecycleParameterKind(parameterType),
 								returnArgument,
 								hasGeneratedId(declaredType)
 						)
@@ -1405,16 +1405,18 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return false;
 	}
 
-	private static boolean isIterableLifecycleParameter(TypeMirror parameterType) {
+	private static LifecycleMethod.ParameterKind lifecycleParameterKind(TypeMirror parameterType) {
 		switch (parameterType.getKind()) {
 			case ARRAY:
-				return true;
+				return LifecycleMethod.ParameterKind.ARRAY;
 			case DECLARED:
 				final DeclaredType declaredType = (DeclaredType) parameterType;
 				final TypeElement typeElement = (TypeElement) declaredType.asElement();
-				return typeElement.getQualifiedName().contentEquals(LIST);
+				return typeElement.getQualifiedName().contentEquals(LIST)
+						? LifecycleMethod.ParameterKind.LIST
+						: LifecycleMethod.ParameterKind.NORMAL;
 			default:
-				return false;
+				return LifecycleMethod.ParameterKind.NORMAL;
 		}
 	}
 

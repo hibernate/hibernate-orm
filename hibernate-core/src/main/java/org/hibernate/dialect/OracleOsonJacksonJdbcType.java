@@ -147,7 +147,7 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 					// an array of objects. We use JsonParser to fetch values
 					// and build the array.(as opposed to let Jackson do it as we do not
 					// have a proper object definition at that stage).
-					return ((JacksonOsonFormatMapper)mapper).readToArray(
+					return ((JacksonOsonFormatMapper)mapper).toObjectArray(
 							getEmbeddableMappingType(), osonBytes, options );
 				}
 

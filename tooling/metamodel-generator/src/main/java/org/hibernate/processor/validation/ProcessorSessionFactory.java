@@ -380,7 +380,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 				}
 				superclass = typeElement.getSuperclass();
 			}
-			return ProcessorSessionFactory.getEntityName(result);
+			return getHibernateEntityName(result);
 		}
 
 		@Override
@@ -476,13 +476,13 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	}
 
 	@Override
-	boolean isEntityDefined(String entityName) {
-		return findEntityClass(entityName) != null;
+	boolean isEntityDefined(String jpaEntityName) {
+		return findEntityByUnqualifiedName(jpaEntityName) != null;
 	}
 
 	@Override
-	String qualifyName(String entityName) {
-		final TypeElement entityClass = findEntityClass(entityName);
+	String qualifyName(String jpaEntityName) {
+		final TypeElement entityClass = findEntityByUnqualifiedName(jpaEntityName);
 		return entityClass == null ? null : entityClass.getQualifiedName().toString();
 	}
 
@@ -493,17 +493,8 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 			&& findPropertyByPath(entityClass, fieldName, getDefaultAccessType(entityClass)) != null;
 	}
 
-	@Override
 	public TypeElement findEntityClass(String entityName) {
-		if (entityName == null) {
-			return null;
-		}
-		else if (entityName.indexOf('.')>0) {
-			return findEntityByQualifiedName(entityName);
-		}
-		else {
-			return findEntityByUnqualifiedName(entityName);
-		}
+		return entityName == null ? null : findEntityByQualifiedName( entityName );
 	}
 
 	private TypeElement findEntityByQualifiedName(String entityName) {
@@ -587,7 +578,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		if (symbol.getKind() == ElementKind.CLASS) {
 			final TypeElement type = (TypeElement) symbol;
 			return isEntity(type)
-				&& getEntityName(type).equals(entityName);
+				&& getJpaEntityName(type).equals(entityName);
 		}
 		else {
 			return false;
@@ -669,6 +660,11 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		return hasAnnotation(type, "Entity")
 			|| hasAnnotation(type, "Embeddable")
 			|| hasAnnotation(type, "MappedSuperclass");
+	}
+
+	@Override
+	protected boolean isEntity(String entityName) {
+		return isEntity(elementUtil.getTypeElement(entityName));
 	}
 
 	static boolean isEntity(TypeElement member) {
@@ -873,7 +869,12 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		}
 	}
 
-	static String getEntityName(TypeElement type) {
+	@Override
+	protected String getJpaEntityName(String typeName) {
+		return getJpaEntityName(findClassByQualifiedName(typeName));
+	}
+
+	static String getJpaEntityName(TypeElement type) {
 		if ( type == null ) {
 			return null;
 		}
@@ -886,8 +887,24 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		else {
 			final String name = (String)
 					getAnnotationMember(entityAnnotation, "name");
-			//entity names are unqualified class names
+			//JPA entity names are unqualified class names
 			return name==null ? simpleName(type) : name;
+		}
+	}
+
+	static String getHibernateEntityName(TypeElement type) {
+		if ( type == null ) {
+			return null;
+		}
+		final AnnotationMirror entityAnnotation =
+				getAnnotation(type, "Entity");
+		if (entityAnnotation==null) {
+			//not an entity!
+			return null;
+		}
+		else {
+			//entity names are qualified class names
+			return qualifiedName(type);
 		}
 	}
 
@@ -910,8 +927,8 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 						: classType;
 		final Element element = asElement(targetType);
 		return element != null && element.getKind() == ElementKind.CLASS
-				//entity names are unqualified class names
-				? getEntityName((TypeElement) element)
+				//entity names are qualified class names
+				? getHibernateEntityName((TypeElement) element)
 				: null;
 	}
 
@@ -925,8 +942,8 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 						: classType;
 		final Element element = asElement(targetType);
 		return element != null && element.getKind() == ElementKind.CLASS
-				//entity names are unqualified class names
-				? getEntityName((TypeElement) element)
+				//entity names are qualified class names
+				? getHibernateEntityName((TypeElement) element)
 				: null;
 	}
 
@@ -997,8 +1014,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 						else {
 							final TypeElement typeClass;
 							if ( type instanceof EntityType entityType ) {
-								final String entityName = entityType.getAssociatedEntityName();
-								typeClass = findEntityClass(entityName);
+								typeClass = findEntityClass(entityType.getAssociatedEntityName());
 							}
 							//TODO:
 	//						else if (type instanceof CompositeCustomType) {

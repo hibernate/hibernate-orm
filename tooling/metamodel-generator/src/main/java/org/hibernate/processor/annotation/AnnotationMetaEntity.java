@@ -2723,11 +2723,12 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		if ( returnType.getKind() == TypeKind.DECLARED ) {
 			final DeclaredType declaredType = (DeclaredType) returnType;
 			final TypeElement typeElement = (TypeElement) declaredType.asElement();
-			final AnnotationMirror mirror = getAnnotationMirror(typeElement, ENTITY );
-			if ( mirror != null ) {
-				final String entityName = entityName(declaredType, mirror);
-				return model.getHibernateEntityName().equals( entityName );
-			}
+//			final AnnotationMirror mirror = getAnnotationMirror(typeElement, ENTITY );
+//			if ( mirror != null ) {
+//				message( element, "entity return type '" + typeElement.getQualifiedName()
+//								+ "' was not annotated '@Entity'", Diagnostic.Kind.WARNING );
+//			}
+			return typeElement.getQualifiedName().contentEquals( model.getHibernateEntityName() );
 		}
 		return false;
 	}

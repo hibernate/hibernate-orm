@@ -154,10 +154,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 			return null;
 		}
 		final ManagedDomainType<?> managedType = managedTypeByName.get( entityName );
-		if ( !( managedType instanceof EntityDomainType<?> entityDomainType ) ) {
-			return null;
-		}
-		return entityDomainType;
+		return managedType instanceof EntityDomainType<?> entityDomainType ? entityDomainType : null;
 	}
 
 	@Override

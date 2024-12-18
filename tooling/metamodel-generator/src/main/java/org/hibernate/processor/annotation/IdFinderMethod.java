@@ -85,6 +85,13 @@ public class IdFinderMethod extends AbstractFinderMethod {
 
 	private void throwIfNull(StringBuilder declaration) {
 		if (containerType != null) {
+			if ( isReactive() ) {
+				declaration
+						.append("\n\t\t\t.map(")
+						.append(annotationMetaEntity.importType(containerType))
+						.append("::")
+						.append("ofNullable");
+			}
 			declaration
 					.append(')');
 		}
@@ -157,7 +164,7 @@ public class IdFinderMethod extends AbstractFinderMethod {
 			declaration
 					.append("\ttry {\n\t");
 		}
-		if (containerType != null) {
+		if (containerType != null && !isReactive()) {
 			declaration
 					.append("\treturn ")
 					.append(annotationMetaEntity.staticImport(containerType, "ofNullable"))

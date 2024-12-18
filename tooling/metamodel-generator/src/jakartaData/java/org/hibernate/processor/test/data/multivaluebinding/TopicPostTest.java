@@ -17,7 +17,6 @@ import java.util.List;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfMethodInMetamodelFor;
-import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsString;
 import static org.hibernate.processor.test.util.TestUtil.getMethodFromMetamodelFor;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;

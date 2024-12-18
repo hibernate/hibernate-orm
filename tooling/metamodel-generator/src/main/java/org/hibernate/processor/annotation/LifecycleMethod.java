@@ -4,8 +4,10 @@
  */
 package org.hibernate.processor.annotation;
 
+
 import javax.lang.model.element.ExecutableElement;
 
+import static org.hibernate.processor.util.Constants.LIST;
 import static org.hibernate.processor.util.Constants.UNI;
 
 public class LifecycleMethod extends AbstractAnnotatedMethod {
@@ -14,9 +16,15 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 	private final String parameterName;
 	private final String operationName;
 	private final boolean addNonnullAnnotation;
-	private final boolean iterateParameter;
+	private final ParameterKind parameterKind;
 	private final boolean returnArgument;
 	private final boolean hasGeneratedId;
+
+	public enum ParameterKind {
+		NORMAL,
+		ARRAY,
+		LIST
+	}
 
 	public LifecycleMethod(
 			AnnotationMetaEntity annotationMetaEntity,
@@ -28,7 +36,7 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 			String sessionType,
 			String operationName,
 			boolean addNonnullAnnotation,
-			boolean iterateParameter,
+			ParameterKind parameterKind,
 			boolean returnArgument,
 			boolean hasGeneratedId) {
 		super(annotationMetaEntity, method, sessionName, sessionType);
@@ -37,7 +45,7 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 		this.parameterName = parameterName;
 		this.operationName = operationName;
 		this.addNonnullAnnotation = addNonnullAnnotation;
-		this.iterateParameter = iterateParameter;
+		this.parameterKind = parameterKind;
 		this.returnArgument = returnArgument;
 		this.hasGeneratedId = hasGeneratedId;
 	}
@@ -98,9 +106,10 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 		if ( returnArgument ) {
 			if ( isReactive() ) {
 				declaration
-					.append(".replaceWith(")
-					.append(parameterName)
-					.append(")");
+						.append( "\n\t\t\t" )
+						.append(".replaceWith(")
+						.append(parameterName)
+						.append(")");
 			}
 			else {
 				declaration
@@ -112,65 +121,110 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 
 	private void delegateCall(StringBuilder declaration) {
 		if ( isReactive() ) {
-			declaration
-					.append("\treturn ")
-					.append(sessionName);
-			if ( isReactiveSessionAccess() ) {
-				declaration
-						.append(".chain(")
-						.append(localSessionName())
-						.append(" -> ")
-						.append(localSessionName());
-			}
-			declaration
-					.append('.')
-					.append(operationName)
-					.append('(')
-					.append(parameterName)
-					.append(')');
-			if ( isReactiveSessionAccess() ) {
-				declaration
-						.append(')');
-			}
+			// TODO: handle the case of an iterable parameter
+			delegateReactively( declaration );
 		}
 		else {
-			if ( iterateParameter ) {
-				declaration
-						.append("\t\tfor (var _entity : ")
-						.append(parameterName)
-						.append(") {\n\t");
-			}
-			if ( "upsert".equals(operationName) && hasGeneratedId ) {
-				declaration
-						.append("\t\tif (")
-						.append(sessionName)
-						.append(".getIdentifier(")
-						.append(iterateParameter ? "_entity" : parameterName)
-						.append(") == null)\n")
-						.append("\t\t\t")
-						.append(sessionName)
-						.append('.')
-						.append("insert")
-						.append('(')
-						.append(iterateParameter ? "_entity" : parameterName)
-						.append(')')
-						.append(";\n")
-						.append("\t\telse\n\t");
-			}
+			delegateBlockingly( declaration );
+		}
+	}
+
+	private void delegateBlockingly(StringBuilder declaration) {
+		if ( isGeneratedIdUpsert() ) {
 			declaration
-					.append("\t\t")
+					.append("\t\tif (")
+					.append(sessionName)
+					.append(".getIdentifier(")
+					.append(parameterName)
+					.append(") == null)\n")
+					.append("\t\t\t")
 					.append(sessionName)
 					.append('.')
-					.append(operationName)
-					.append('(')
-					.append(iterateParameter ? "_entity" : parameterName)
-					.append(')')
-					.append(";\n");
-			if ( iterateParameter ) {
-				declaration
-						.append("\t\t}\n");
-			}
+					.append("insert");
+			argument( declaration, "Multiple" );
+			declaration
+					.append(";\n")
+					.append("\t\telse\n\t");
 		}
+		declaration
+				.append("\t\t")
+				.append(sessionName)
+				.append('.')
+				.append(operationName);
+		argument( declaration, "Multiple" );
+		declaration
+				.append(";\n");
+	}
+
+	private void argument(StringBuilder declaration, String suffix) {
+		switch ( parameterKind ) {
+			case LIST:
+				declaration
+						.append(suffix)
+						.append("(")
+						.append(parameterName)
+						.append(")");
+				break;
+			case ARRAY:
+				declaration
+						.append(suffix)
+						.append("(")
+						.append(annotationMetaEntity.importType(LIST))
+						.append(".of(")
+						.append(parameterName)
+						.append("))");
+				break;
+			default:
+				declaration
+						.append('(')
+						.append(parameterName)
+						.append(')');
+		}
+	}
+
+	private void delegateReactively(StringBuilder declaration) {
+		declaration
+				.append("\treturn ");
+		if ( isReactiveSessionAccess() ) {
+			declaration
+					.append(sessionName)
+					.append(".chain(")
+					.append(localSessionName())
+					.append(" -> ");
+		}
+		if ( isGeneratedIdUpsert() ) {
+			declaration
+					.append("(")
+					.append(localSessionName())
+					.append(".getIdentifier(")
+					.append(parameterName)
+					.append(") == null ? ")
+					.append(localSessionName())
+					.append('.')
+					.append("insert")
+					.append('(')
+					.append(parameterName)
+					.append(')')
+					.append(" : ");
+		}
+		declaration
+				.append(localSessionName())
+				.append( '.' )
+				.append( operationName );
+		// note that there is no upsertAll() method
+		argument( declaration, "All" );
+		if ( isGeneratedIdUpsert() ) {
+			declaration
+					.append(')');
+		}
+		if ( isReactiveSessionAccess() ) {
+			declaration
+					.append(')');
+		}
+	}
+
+	private boolean isGeneratedIdUpsert() {
+		return "upsert".equals( operationName ) && hasGeneratedId;
 	}
 
 	private void preamble(StringBuilder declaration) {

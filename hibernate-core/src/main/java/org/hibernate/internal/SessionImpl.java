@@ -71,9 +71,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
-import org.hibernate.resource.transaction.spi.TransactionObserver;
-import org.hibernate.event.monitor.spi.EventMonitor;
-import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.AutoFlushEventListener;
 import org.hibernate.event.spi.ClearEvent;
@@ -92,7 +89,6 @@ import org.hibernate.event.spi.InitializeCollectionEvent;
 import org.hibernate.event.spi.InitializeCollectionEventListener;
 import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
-import org.hibernate.event.spi.LoadEventListener.LoadType;
 import org.hibernate.event.spi.LockEvent;
 import org.hibernate.event.spi.LockEventListener;
 import org.hibernate.event.spi.MergeContext;
@@ -101,6 +97,8 @@ import org.hibernate.event.spi.MergeEventListener;
 import org.hibernate.event.spi.PersistContext;
 import org.hibernate.event.spi.PersistEvent;
 import org.hibernate.event.spi.PersistEventListener;
+import org.hibernate.event.spi.PostLoadEvent;
+import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.event.spi.RefreshContext;
 import org.hibernate.event.spi.RefreshEvent;
 import org.hibernate.event.spi.RefreshEventListener;
@@ -108,6 +106,11 @@ import org.hibernate.event.spi.ReplicateEvent;
 import org.hibernate.event.spi.ReplicateEventListener;
 import org.hibernate.event.spi.ResolveNaturalIdEvent;
 import org.hibernate.event.spi.ResolveNaturalIdEventListener;
+import org.hibernate.loader.internal.CacheLoadHelper;
+import org.hibernate.resource.transaction.spi.TransactionObserver;
+import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
+import org.hibernate.event.spi.LoadEventListener.LoadType;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
@@ -235,6 +238,7 @@ public class SessionImpl
 	private final boolean autoClose;
 
 	private transient LoadEvent loadEvent; //cached LoadEvent instance
+	private transient PostLoadEvent postLoadEvent; //cached PostLoadEvent instance
 
 	private transient TransactionObserver transactionObserver;
 
@@ -1022,12 +1026,10 @@ public class SessionImpl
 			final EntityPersister persister = requireEntityPersister( entityName );
 			log.debugf( "Initializing proxy: %s", infoString( persister, id, getFactory() ) );
 		}
-		LoadEvent event = loadEvent;
-		loadEvent = null;
-		event = recycleEventInstance( event, id, entityName );
+		final LoadEvent event = makeLoadEvent( entityName, id );
 		fireLoadNoChecks( event, IMMEDIATE_LOAD );
 		final Object result = event.getResult();
-		finishWithEventInstance( event );
+		releaseLoadEvent( event );
 		final LazyInitializer lazyInitializer = extractLazyInitializer( result );
 		return lazyInitializer != null ? lazyInitializer.getImplementation() : result;
 	}
@@ -1049,15 +1051,13 @@ public class SessionImpl
 			effectiveEntityGraph.clear();
 		}
 		try {
-			LoadEvent event = loadEvent;
-			loadEvent = null;
-			event = recycleEventInstance( event, id, entityName );
+			final LoadEvent event = makeLoadEvent( entityName, id );
 			fireLoadNoChecks( event, type );
 			final Object result = event.getResult();
 			if ( !nullable ) {
 				UnresolvableObjectException.throwIfNull( result, id, entityName );
 			}
-			finishWithEventInstance( event );
+			releaseLoadEvent( event );
 			return result;
 		}
 		finally {
@@ -1076,14 +1076,50 @@ public class SessionImpl
 		}
 	}
 
+	@Override
+	public Object loadFromSecondLevelCache(
+			EntityPersister persister, EntityKey entityKey, Object instanceToLoad, LockMode lockMode) {
+		final Object entity =
+				CacheLoadHelper.loadFromSecondLevelCache( this, instanceToLoad, lockMode, persister, entityKey );
+		if ( entity != null ) {
+			final Object id = entityKey.getIdentifierValue();
+			final PostLoadEvent event = makePostLoadEvent( persister, id, entity );
+			fastSessionServices.eventListenerGroup_POST_LOAD
+					.fireEventOnEachListener( event, PostLoadEventListener::onPostLoad );
+			releasePostLoadEvent( event );
+		}
+		return entity;
+	}
+
 	/**
-	 * Helper to avoid creating many new instances of LoadEvent: it's an allocation hot spot.
+	 * Helper to avoid creating many new instances of {@link PostLoadEvent}.
+	 * It's an allocation hot spot.
 	 */
-	private LoadEvent recycleEventInstance(final LoadEvent event, final Object id, final String entityName) {
+	private PostLoadEvent makePostLoadEvent(EntityPersister persister, Object id, Object entity) {
+		final PostLoadEvent event = postLoadEvent;
+		if ( event == null ) {
+			return new PostLoadEvent( id, persister, entity, this );
+		}
+		else {
+			postLoadEvent = null;
+			event.setId( id );
+			event.setPersister( persister );
+			event.setEntity( entity );
+			return event;
+		}
+	}
+
+	/**
+	 * Helper to avoid creating many new instances of {@link LoadEvent}.
+	 * It's an allocation hot spot.
+	 */
+	private LoadEvent makeLoadEvent(String entityName, Object id) {
+		LoadEvent event = loadEvent;
 		if ( event == null ) {
 			return new LoadEvent( id, entityName, true, this, getReadOnlyFromLoadQueryInfluencers() );
 		}
 		else {
+			loadEvent = null;
 			event.setEntityClassName( entityName );
 			event.setEntityId( id );
 			event.setInstanceToLoad( null );
@@ -1091,7 +1127,16 @@ public class SessionImpl
 		}
 	}
 
-	private void finishWithEventInstance(LoadEvent event) {
+	private void releasePostLoadEvent(PostLoadEvent event) {
+		if ( postLoadEvent == null ) {
+			event.setEntity( null );
+			event.setId( null );
+			event.setPersister( null );
+			postLoadEvent = event;
+		}
+	}
+
+	private void releaseLoadEvent(LoadEvent event) {
 		if ( loadEvent == null ) {
 			event.setEntityClassName( null );
 			event.setEntityId( null );
@@ -1178,11 +1223,12 @@ public class SessionImpl
 		delayedAfterCompletion();
 	}
 
-	//Performance note:
-	// This version of #fireLoad is meant to be invoked by internal methods only,
-	// so to skip the session open, transaction synch, etc.. checks,
-	// which have been proven to be not particularly cheap:
-	// it seems they prevent these hot methods from being inlined.
+	/**
+	 * This version of {@link #fireLoad} is for use by internal methods only.
+	 * It skips the session open check, transaction sync checks, and so on,
+	 * which have been shown to be expensive (apparently they prevent these
+	 * hot methods from being inlined).
+	 */
 	private void fireLoadNoChecks(final LoadEvent event, final LoadType loadType) {
 		pulseTransactionCoordinator();
 		fastSessionServices.eventListenerGroup_LOAD

@@ -24,8 +24,7 @@ import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.loader.ast.internal.CacheEntityLoaderHelper;
-import org.hibernate.loader.ast.internal.CacheEntityLoaderHelper.PersistenceContextEntry;
+import org.hibernate.loader.internal.CacheLoadHelper.PersistenceContextEntry;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -39,6 +38,8 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
+import static org.hibernate.loader.internal.CacheLoadHelper.loadFromSecondLevelCache;
+import static org.hibernate.loader.internal.CacheLoadHelper.loadFromSessionCache;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
@@ -336,7 +337,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 	}
 
 	private static Object proxyOrCached(LoadEvent event, EntityPersister persister, EntityKey keyToLoad) {
-		final Object cachedEntity = CacheEntityLoaderHelper.loadFromSecondLevelCache(
+		final Object cachedEntity = loadFromSecondLevelCache(
 				event.getSession(),
 				null,
 				LockMode.NONE,
@@ -519,9 +520,9 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			return null;
 		}
 		else {
-			final PersistenceContextEntry persistenceContextEntry
-					= CacheEntityLoaderHelper.loadFromSessionCache( event, keyToLoad, options );
-			final Object entity = persistenceContextEntry.getEntity();
+			final PersistenceContextEntry persistenceContextEntry =
+					loadFromSessionCache( keyToLoad, event.getLockOptions(), options, event.getSession() );
+			final Object entity = persistenceContextEntry.entity();
 			if ( entity != null ) {
 				if ( persistenceContextEntry.isManaged() ) {
 					initializeIfNecessary( entity );
@@ -561,7 +562,8 @@ public class DefaultLoadEventListener implements LoadEventListener {
 	}
 
 	private Object loadFromCacheOrDatasource(LoadEvent event, EntityPersister persister, EntityKey keyToLoad) {
-		final Object entity = CacheEntityLoaderHelper.loadFromSecondLevelCache( event, persister, keyToLoad );
+		final Object entity = event.getSession()
+				.loadFromSecondLevelCache( persister, keyToLoad, event.getInstanceToLoad(), event.getLockMode() );
 		if ( entity == null ) {
 			return loadFromDatasource( event, persister );
 		}

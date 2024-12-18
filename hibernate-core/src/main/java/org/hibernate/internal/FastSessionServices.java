@@ -340,10 +340,6 @@ public final class FastSessionServices {
 		return this.jdbcValuesMappingProducerProvider;
 	}
 
-	public void firePostLoadEvent(final PostLoadEvent postLoadEvent) {
-		eventListenerGroup_POST_LOAD.fireEventOnEachListener( postLoadEvent, PostLoadEventListener::onPostLoad );
-	}
-
 	public FormatMapper getJsonFormatMapper() {
 		if ( jsonFormatMapper == null ) {
 			throw new HibernateException(

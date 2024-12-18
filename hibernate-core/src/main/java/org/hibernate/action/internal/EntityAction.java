@@ -11,9 +11,10 @@ import org.hibernate.engine.spi.ComparableExecutable;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.FastSessionServices;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.pretty.MessageHelper;
+
+import static org.hibernate.internal.util.StringHelper.unqualify;
+import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
  * Base class for actions relating to insert/update/delete of an entity
@@ -101,7 +102,7 @@ public abstract class EntityAction
 	}
 
 	public final DelayedPostInsertIdentifier getDelayedId() {
-		return id instanceof DelayedPostInsertIdentifier ? (DelayedPostInsertIdentifier) id : null;
+		return id instanceof DelayedPostInsertIdentifier identifier ? identifier : null;
 	}
 
 	/**
@@ -143,7 +144,7 @@ public abstract class EntityAction
 
 	@Override
 	public String toString() {
-		return StringHelper.unqualify( getClass().getName() ) + MessageHelper.infoString( entityName, id );
+		return unqualify( getClass().getName() ) + infoString( entityName, id );
 	}
 
 	@Override

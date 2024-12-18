@@ -156,7 +156,7 @@ gradle.taskGraph.whenReady { TaskExecutionGraph graph ->
 	else {
 		// signing was not explicitly requested and we are not publishing to OSSRH,
 		// 		- disable all Sign tasks
-		tasks.withType( Sign ).each { enabled = false }
+		tasks.withType( Sign ).each { t-> t.enabled = false }
 	}
 }
 

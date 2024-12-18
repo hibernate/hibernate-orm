@@ -57,9 +57,9 @@ pipeline {
 		stage('Release check') {
 			steps {
 				script {
-                    print "INFO: params.RELEASE_VERSION = ${params.RELEASE_VERSION}"
-                    print "INFO: params.DEVELOPMENT_VERSION = ${params.DEVELOPMENT_VERSION}"
-                    print "INFO: params.RELEASE_DRY_RUN? = ${params.RELEASE_DRY_RUN}"
+					print "INFO: params.RELEASE_VERSION = ${params.RELEASE_VERSION}"
+					print "INFO: params.DEVELOPMENT_VERSION = ${params.DEVELOPMENT_VERSION}"
+					print "INFO: params.RELEASE_DRY_RUN? = ${params.RELEASE_DRY_RUN}"
 
 					// Avoid doing a release for commits from a release
 					def lastCommitter = sh(script: 'git show -s --format=\'%an\'', returnStdout: true).trim()

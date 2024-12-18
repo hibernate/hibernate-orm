@@ -215,6 +215,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 				: IntegerJdbcType.INSTANCE;
 	}
 
+	// dupe of HibernateProcessor.ENTITY_INDEX for reasons of modularity
 	public static final String ENTITY_INDEX = "entity.index";
 
 	@Override @Nullable
@@ -520,7 +521,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		}
 
 		if ( indexing ) {
-			final TypeElement indexedEntity = findIndexedEntityByQualifiedName( entityName );
+			final TypeElement indexedEntity = findIndexedEntityByUnqualifiedName( entityName );
 			if ( indexedEntity != null ) {
 				entityCache.put(entityName, indexedEntity);
 				return indexedEntity;
@@ -544,7 +545,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		return null;
 	}
 
-	private @Nullable TypeElement findIndexedEntityByQualifiedName(String entityName) {
+	private @Nullable TypeElement findIndexedEntityByUnqualifiedName(String entityName) {
 		final String qualifiedName = entityNameMappings.get(entityName);
 		if ( qualifiedName != null ) {
 			return elementUtil.getTypeElement(qualifiedName);
@@ -564,7 +565,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		return null;
 	}
 
-	public static TypeElement findEntityByUnqualifiedName(String entityName, ModuleElement module) {
+	private static @Nullable TypeElement findEntityByUnqualifiedName(String entityName, ModuleElement module) {
 		for (Element element: module.getEnclosedElements()) {
 			if (element.getKind() == ElementKind.PACKAGE) {
 				final PackageElement pack = (PackageElement) element;

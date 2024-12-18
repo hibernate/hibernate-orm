@@ -64,7 +64,6 @@ import jakarta.persistence.AccessType;
 import static java.beans.Introspector.decapitalize;
 import static java.lang.Boolean.FALSE;
 import static java.util.Collections.emptyList;
-import static java.util.Objects.requireNonNullElse;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
@@ -2739,13 +2738,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		if ( queryParamType!=null
 				//TODO: arguments of functions get assigned "unknown" which sucks
 				&& !"unknown".equals(queryParamType) ) {
-			final String realQueryParamType =
-					requireNonNullElse( context.qualifiedNameForEntityName( queryParamType ), queryParamType );
 			if ( param.getName() != null ) {
-				checkNamedParameter(param, paramNames, paramTypes, method, mirror, value, realQueryParamType);
+				checkNamedParameter(param, paramNames, paramTypes, method, mirror, value, queryParamType);
 			}
 			else if ( param.getPosition() != null ) {
-				checkOrdinalParameter(param, paramNames, paramTypes, method, mirror, value, realQueryParamType);
+				checkOrdinalParameter(param, paramNames, paramTypes, method, mirror, value, queryParamType);
 			}
 		}
 	}

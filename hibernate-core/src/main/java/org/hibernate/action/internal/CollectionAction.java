@@ -14,9 +14,10 @@ import org.hibernate.engine.spi.ComparableExecutable;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.FastSessionServices;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.pretty.MessageHelper;
+
+import static org.hibernate.internal.util.StringHelper.unqualify;
+import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
  * Any action relating to insert/update/delete of a collection
@@ -61,14 +62,14 @@ public abstract class CollectionAction implements ComparableExecutable {
 		// guard against NullPointerException
 		if ( session != null ) {
 			this.session = session;
-			this.persister = session.getFactory().getRuntimeMetamodels().getMappingMetamodel().getCollectionDescriptor( collectionRole );
+			this.persister = session.getFactory().getMappingMetamodel().getCollectionDescriptor( collectionRole );
 		}
 	}
 
 	@Override
 	public final void beforeExecutions() throws CacheException {
 		// we need to obtain the lock before any actions are executed, since this may be an inverse="true"
-		// bidirectional association and it is one of the earlier entity actions which actually updates
+		// bidirectional association, and it is one of the earlier entity actions which actually updates
 		// the database (this action is responsible for second-level cache invalidation only)
 		if ( persister.hasCache() ) {
 			final CollectionDataAccess cache = persister.getCacheAccessStrategy();
@@ -147,7 +148,7 @@ public abstract class CollectionAction implements ComparableExecutable {
 
 	@Override
 	public String toString() {
-		return StringHelper.unqualify( getClass().getName() ) + MessageHelper.infoString( collectionRole, key );
+		return unqualify( getClass().getName() ) + infoString( collectionRole, key );
 	}
 
 	@Override

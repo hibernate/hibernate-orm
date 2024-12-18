@@ -13,6 +13,8 @@ import jakarta.persistence.RollbackException;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.cfg.AvailableSettings;
 
+import org.hibernate.dialect.MariaDBDialect;
+import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.TransactionSerializationException;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -32,6 +34,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.hibernate.testing.orm.junit.DialectContext.getDialect;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -136,7 +139,12 @@ public class BatchUpdateAndVersionTest {
 			fail();
 		}
 		catch (OptimisticLockException ole) {
-			assertTrue( ole.getCause() instanceof StaleObjectStateException );
+			if (getDialect() instanceof MariaDBDialect && getDialect().getVersion().isAfter( 11, 6, 2 )) {
+				// if @@innodb_snapshot_isolation is set, database throw an exception if record is not available anymore
+				assertTrue( ole.getCause() instanceof LockAcquisitionException );
+			} else {
+				assertTrue( ole.getCause() instanceof StaleObjectStateException );
+			}
 		}
 		//CockroachDB errors with a Serialization Exception
 		catch (RollbackException rbe) {

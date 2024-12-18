@@ -286,34 +286,28 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 	}
 
 	void convertExceptions(StringBuilder declaration) {
-		if (dataRepository) {
-			declaration
-					.append("\t}\n");
-			if ( singleResult() ) {
+		if ( dataRepository ) {
+			if ( !isReactive() ) {
 				declaration
-						.append("\tcatch (")
-						.append(annotationMetaEntity.importType("jakarta.persistence.NoResultException"))
-						.append(" exception) {\n")
-						.append("\t\tthrow new ")
-						.append(annotationMetaEntity.importType("jakarta.data.exceptions.EmptyResultException"))
-						.append("(exception.getMessage(), exception);\n")
-						.append("\t}\n")
-						.append("\tcatch (")
-						.append(annotationMetaEntity.importType("jakarta.persistence.NonUniqueResultException"))
-						.append(" exception) {\n")
-						.append("\t\tthrow new ")
-						.append(annotationMetaEntity.importType("jakarta.data.exceptions.NonUniqueResultException"))
-						.append("(exception.getMessage(), exception);\n")
-						.append("\t}\n");
+						.append(";\n")
+						.append( "\t}\n" );
 			}
+			if ( singleResult() ) {
+				handle( declaration, "jakarta.persistence.NoResultException",
+						"jakarta.data.exceptions.EmptyResultException" );
+				handle( declaration, "jakarta.persistence.NonUniqueResultException",
+						"jakarta.data.exceptions.NonUniqueResultException" );
+			}
+			handle( declaration, "jakarta.persistence.PersistenceException",
+					"jakarta.data.exceptions.DataException" );
+			if ( isReactive() ) {
+				declaration
+						.append( ";\n" );
+			}
+		}
+		else {
 			declaration
-					.append("\tcatch (")
-					.append(annotationMetaEntity.importType("jakarta.persistence.PersistenceException"))
-					.append(" exception) {\n")
-					.append("\t\tthrow new ")
-					.append(annotationMetaEntity.importType("jakarta.data.exceptions.DataException"))
-					.append("(exception.getMessage(), exception);\n")
-					.append("\t}\n");
+					.append(";\n");
 		}
 	}
 
@@ -392,7 +386,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			//SHOULD BE new CursoredPageRecord<>
 			"\t\treturn new CursoredPageRecord(_results.getResultList(), _cursors, _totalResults, pageRequest,\n" +
 			"\t\t\t\t_results.isLastPage() ? null : afterCursor(_cursors.get(_cursors.size()-1), pageRequest.page()+1, pageRequest.size(), pageRequest.requestTotal()),\n" +
-			"\t\t\t\t_results.isFirstPage() ? null : beforeCursor(_cursors.get(0), pageRequest.page()-1, pageRequest.size(), pageRequest.requestTotal()));";
+			"\t\t\t\t_results.isFirstPage() ? null : beforeCursor(_cursors.get(0), pageRequest.page()-1, pageRequest.size(), pageRequest.requestTotal()))";
 
 	static final String MAKE_KEYED_PAGE
 			= "\tvar _unkeyedPage =\n" +
@@ -418,7 +412,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 		if ( isJakartaCursoredPage(containerType) ) {
 			makeKeyedPage( declaration, paramTypes );
 		}
-		if ( dataRepository ) {
+		if ( dataRepository && !isReactive() ) {
 			declaration
 					.append("\ttry {\n");
 		}
@@ -430,7 +424,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			}
 			totalResults(declaration, paramTypes);
 		}
-		if ( dataRepository ) {
+		if ( dataRepository && !isReactive() ) {
 			declaration
 					.append('\t');
 		}
@@ -611,11 +605,11 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			if ( nullable ) {
 				unwrapQuery(declaration, unwrapped);
 				declaration
-						.append("\t\t\t.getSingleResultOrNull();");
+						.append("\t\t\t.getSingleResultOrNull()");
 			}
 			else {
 				declaration
-						.append("\t\t\t.getSingleResult();");
+						.append("\t\t\t.getSingleResult()");
 			}
 		}
 		else {
@@ -628,28 +622,28 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 						declaration
 								.append("\t\t\t.getResultList()\n\t\t\t.toArray(new ")
 								.append(annotationMetaEntity.importType(returnTypeName))
-								.append("[0]);");
+								.append("[0])");
 					}
 					break;
 				case OPTIONAL:
 					unwrapQuery(declaration, unwrapped);
 					declaration
-							.append("\t\t\t.uniqueResultOptional();");
+							.append("\t\t\t.uniqueResultOptional()");
 					break;
 				case STREAM:
 					declaration
-							.append("\t\t\t.getResultStream();");
+							.append("\t\t\t.getResultStream()");
 					break;
 				case LIST:
 					declaration
-							.append("\t\t\t.getResultList();");
+							.append("\t\t\t.getResultList()");
 					break;
 				case HIB_KEYED_RESULT_LIST:
 					unwrapQuery(declaration, unwrapped);
 					declaration
 							.append("\t\t\t.getKeyedResultList(")
 							.append(parameterName(HIB_KEYED_PAGE, paramTypes, paramNames))
-							.append(");");
+							.append(")");
 					break;
 				case JD_PAGE:
 					if ( isReactive() ) {
@@ -677,8 +671,6 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 						declaration
 								.append(')');
 					}
-					declaration
-							.append(';');
 					break;
 				case JD_CURSORED_PAGE:
 					if ( returnTypeName == null ) {
@@ -707,7 +699,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 						declaration
 								.append("\t\t\t.unwrap(")
 								.append(annotationMetaEntity.importType(containerType))
-								.append(".class);");
+								.append(".class)");
 
 					}
 					else {
@@ -715,11 +707,9 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 						if ( declaration.charAt(lastIndex) == '\n' )  {
 							declaration.setLength(lastIndex);
 						}
-						declaration.append(';');
 					}
 			}
 		}
-		declaration.append('\n');
 	}
 
 	private static String parameterName(String paramType, List<String> paramTypes, List<String> paramNames) {

@@ -89,43 +89,71 @@ public class IdFinderMethod extends AbstractFinderMethod {
 					.append(')');
 		}
 		else if (!nullable) {
-			declaration
-					.append(";\n");
-			if (dataRepository) {
+			if ( isReactive() ) {
 				declaration
-						.append("\t\tif (_result == null) throw new ")
-						.append(annotationMetaEntity.importType("jakarta.data.exceptions.EmptyResultException"))
-						.append("(\"No '")
-						.append(annotationMetaEntity.importType(entity))
-						.append("' for given id [\" + ")
-						.append(paramName)
-						.append(" + \"]\",\n\t\t\t\tnew ")
-						.append(annotationMetaEntity.importType("org.hibernate.ObjectNotFoundException"))
-						.append("((Object) ")
-						.append(paramName)
-						.append(", \"")
-						.append(entity)
-						.append("\"));\n")
-						.append("\t\treturn _result");
+						.append( "\n\t\t\t.replaceIfNullWith(() -> { " );
+				if ( dataRepository ) {
+					throwEmptyResult( declaration );
+				}
+				else {
+					throwObjectNotFound( declaration );
+				}
+				declaration
+						.append( "; })" );
 			}
 			else {
 				declaration
-						.append("\tif (_result == null) throw new ")
-						.append(annotationMetaEntity.importType("org.hibernate.ObjectNotFoundException"))
-						.append("((Object) ")
-						.append(paramName)
-						.append(", \"")
-						.append(entity)
-						.append("\");\n")
-						.append("\treturn _result");
+						.append( ";\n" );
+				if ( dataRepository ) {
+					declaration
+							.append( "\t\tif (_result == null) " );
+					throwEmptyResult( declaration );
+					declaration
+							.append( ";\n" )
+							.append( "\t\treturn _result" );
+				}
+				else {
+					declaration
+							.append( "\tif (_result == null) " );
+					throwObjectNotFound( declaration );
+					declaration
+							.append( ";\n" )
+							.append( "\treturn _result" );
+				}
 			}
 		}
+	}
+
+	private void throwEmptyResult(StringBuilder declaration) {
 		declaration
-				.append(";\n");
+				.append( "throw new " )
+				.append( annotationMetaEntity.importType( "jakarta.data.exceptions.EmptyResultException" ) )
+				.append( "(\"No '" )
+				.append( annotationMetaEntity.importType( entity ) )
+				.append( "' for given id [\" + " )
+				.append( paramName )
+				.append( " + \"]\",\n\t\t\t\t\tnew " )
+				.append( annotationMetaEntity.importType( "org.hibernate.ObjectNotFoundException" ) )
+				.append( "((Object) " )
+				.append( paramName )
+				.append( ", \"" )
+				.append( entity )
+				.append( "\"))");
+	}
+
+	private void throwObjectNotFound(StringBuilder declaration) {
+		declaration
+				.append( "throw new " )
+				.append( annotationMetaEntity.importType( "org.hibernate.ObjectNotFoundException" ) )
+				.append( "((Object) " )
+				.append( paramName )
+				.append( ", \"" )
+				.append( entity )
+				.append( "\")" );
 	}
 
 	private void varOrReturn(StringBuilder declaration) {
-		if (dataRepository) {
+		if (dataRepository && !isReactive()) {
 			declaration
 					.append("\ttry {\n\t");
 		}
@@ -135,7 +163,7 @@ public class IdFinderMethod extends AbstractFinderMethod {
 					.append(annotationMetaEntity.staticImport(containerType, "ofNullable"))
 					.append('(');
 		}
-		else if (!nullable) {
+		else if (!nullable && !isReactive()) {
 			declaration
 					.append("\tvar _result = ");
 		}

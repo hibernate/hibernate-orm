@@ -57,25 +57,41 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 		StringBuilder declaration = new StringBuilder();
 		preamble(declaration);
 		nullCheck(declaration, parameterName);
-		declaration.append("\ttry {\n");
+		if ( !isReactive() ) {
+			declaration.append( "\ttry {\n" );
+		}
 		delegateCall(declaration);
 		returnArgument(declaration);
-		declaration.append("\t}\n");
+		if ( !isReactive() ) {
+			if ( returnArgument ) {
+				declaration
+						.append( ";\n" );
+			}
+			declaration.append( "\t}\n" );
+		}
+		convertExceptions( declaration );
+		if ( isReactive() ) {
+			declaration
+					.append( ";\n" );
+		}
+		declaration.append("}");
+		return declaration.toString();
+	}
+
+	private void convertExceptions(StringBuilder declaration) {
 		if ( operationName.equals("insert") ) {
-			convertException(declaration,
+			handle( declaration,
 					"org.hibernate.exception.ConstraintViolationException",
 					"jakarta.data.exceptions.EntityExistsException");
 		}
 		else {
-			convertException(declaration,
+			handle( declaration,
 					"org.hibernate.StaleStateException",
 					"jakarta.data.exceptions.OptimisticLockingFailureException");
 		}
-		convertException(declaration,
+		handle( declaration,
 				"jakarta.persistence.PersistenceException",
 				"jakarta.data.exceptions.DataException");
-		declaration.append("}");
-		return declaration.toString();
 	}
 
 	private void returnArgument(StringBuilder declaration) {
@@ -91,21 +107,13 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 						.append("\t\treturn ")
 						.append(parameterName);
 			}
-			declaration
-					.append(";\n");
-		}
-		else {
-			if ( isReactive() ) {
-				declaration
-						.append(";\n");
-			}
 		}
 	}
 
 	private void delegateCall(StringBuilder declaration) {
 		if ( isReactive() ) {
 			declaration
-					.append("\t\treturn ")
+					.append("\treturn ")
 					.append(sessionName);
 			if ( isReactiveSessionAccess() ) {
 				declaration
@@ -188,21 +196,8 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 					+ '<' + (returnArgument ? entityType : "Void") + '>';
 		}
 		else {
-			return returnArgument
-					? entityType
-					: "void";
+			return returnArgument ? entityType : "void";
 		}
-	}
-
-	private void convertException(StringBuilder declaration, String exception, String convertedException) {
-		declaration
-				.append("\tcatch (")
-				.append(annotationMetaEntity.importType(exception))
-				.append(" exception) {\n")
-				.append("\t\tthrow new ")
-				.append(annotationMetaEntity.importType(convertedException))
-				.append("(exception.getMessage(), exception);\n")
-				.append("\t}\n");
 	}
 
 	private void notNull(StringBuilder declaration) {

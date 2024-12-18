@@ -156,8 +156,6 @@ public class QueryMethod extends AbstractQueryMethod {
 				declaration
 						.append(" > 0");
 			}
-			declaration
-					.append(";\n");
 		}
 		else {
 			final boolean mustUnwrap =

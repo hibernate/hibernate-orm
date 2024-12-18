@@ -185,8 +185,8 @@ public final class ClassWriter {
 	private static String getFullyQualifiedClassName(Metamodel entity) {
 		return entity.getElement() instanceof PackageElement packageElement
 				? packageElement.getQualifiedName().toString() + "." + getGeneratedClassName( entity )
-				: getGeneratedClassFullyQualifiedName(
-						(TypeElement) entity.getElement(), entity.getPackageName(), entity.isJakartaDataStyle() );
+				: getGeneratedClassFullyQualifiedName( (TypeElement) entity.getElement(),
+						entity.getPackageName(), entity.isJakartaDataStyle() );
 	}
 
 	private static String getGeneratedClassName(Metamodel entity) {

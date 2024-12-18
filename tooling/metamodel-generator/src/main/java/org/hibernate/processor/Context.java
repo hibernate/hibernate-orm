@@ -17,7 +17,6 @@ import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.ModuleElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
@@ -35,7 +34,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import static java.lang.Boolean.parseBoolean;
 import static java.util.Collections.emptyList;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
-import static org.hibernate.processor.validation.ProcessorSessionFactory.findEntityByUnqualifiedName;
 
 /**
  * @author Max Andersen
@@ -531,27 +529,6 @@ public final class Context {
 
 	private void addEnumValue(String qualifiedTypeName, String value) {
 		enumTypesByValue.computeIfAbsent( value, s -> new TreeSet<>() ).add( qualifiedTypeName );
-	}
-
-	public @Nullable TypeElement entityType(String entityName) {
-		final Elements elementUtils = getElementUtils();
-		final String qualifiedName = qualifiedNameForEntityName(entityName);
-		if ( qualifiedName != null ) {
-			return elementUtils.getTypeElement(qualifiedName);
-		}
-		TypeElement symbol =
-				findEntityByUnqualifiedName( entityName,
-						elementUtils.getModuleElement("") );
-		if ( symbol != null ) {
-			return symbol;
-		}
-		for ( ModuleElement module : elementUtils.getAllModuleElements() ) {
-			symbol = findEntityByUnqualifiedName( entityName, module );
-			if ( symbol != null ) {
-				return symbol;
-			}
-		}
-		return null;
 	}
 
 	public void setIndexing(boolean index) {

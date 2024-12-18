@@ -19,6 +19,7 @@ import org.hibernate.UnresolvableObjectException;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.collection.spi.CollectionSemantics;
@@ -597,6 +598,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			if ( attribute.isPluralAttributeMapping() ) {
 				final CollectionPersister descriptor =
 						attribute.asPluralAttributeMapping().getCollectionDescriptor();
+				final Object ck = lockCacheItem( key, descriptor );
 				if ( !descriptor.isInverse() ) {
 					final Object value = attribute.getPropertyAccess().getGetter().get(entity);
 					final PersistentCollection<?> collection;
@@ -614,6 +616,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 					}
 					action.accept( descriptor, collection );
 				}
+				removeCacheItem( ck, descriptor );
 			}
 		} );
 	}
@@ -1162,7 +1165,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public void flushBeforeTransactionCompletion() {
-		boolean flush;
+		final boolean flush;
 		try {
 			flush = !isClosed()
 					&& !isFlushModeNever()
@@ -1215,6 +1218,31 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	protected void removeCacheItem(Object ck, EntityPersister persister) {
 		if ( persister.canWriteToCache() ) {
+			persister.getCacheAccessStrategy().remove( this, ck );
+		}
+	}
+
+	protected Object lockCacheItem(Object key, CollectionPersister persister) {
+		if ( persister.hasCache() ) {
+			final SharedSessionContractImplementor session = getSession();
+			final CollectionDataAccess cache = persister.getCacheAccessStrategy();
+			final Object ck = cache.generateCacheKey(
+					key,
+					persister,
+					session.getFactory(),
+					session.getTenantIdentifier()
+			);
+			final SoftLock lock = cache.lockItem( session, ck, null );
+			afterCompletions.add( () -> cache.unlockItem( this, ck, lock ) );
+			return ck;
+		}
+		else {
+			return null;
+		}
+	}
+
+	protected void removeCacheItem(Object ck, CollectionPersister persister) {
+		if ( persister.hasCache() ) {
 			persister.getCacheAccessStrategy().remove( this, ck );
 		}
 	}

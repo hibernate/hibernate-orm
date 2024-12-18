@@ -19,6 +19,8 @@ import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.format.FormatMapper;
 import org.hibernate.type.format.jackson.JacksonOsonFormatMapper;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
@@ -87,11 +89,12 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 				//     But this do not let use inject our ObjectMapper. For now create our own instance
 				FormatMapper mapper = new JacksonOsonFormatMapper(objectMapper,getEmbeddableMappingType(),getJavaType());
 
-				PipedOutputStream out = new PipedOutputStream();
-				PipedInputStream in = new PipedInputStream(out);
+				ByteArrayOutputStream out = new ByteArrayOutputStream();
+                //TODO : really use streams
 				JsonGenerator osonGen = objectMapper.getFactory().createGenerator( out );
 				mapper.writeToTarget( value, javaType, osonGen, options );
 				osonGen.close();
+				ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
 				return in;
 			}
 

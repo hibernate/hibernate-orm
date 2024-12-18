@@ -63,7 +63,7 @@ tasks.register('publish') {
 
 nexusPublishing {
 	repositories {
-		sonatype
+		sonatype()
 	}
 }
 

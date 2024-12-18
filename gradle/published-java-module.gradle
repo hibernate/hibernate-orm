@@ -120,6 +120,7 @@ tasks.register('sign') {
 }
 
 var signingExtension = project.getExtensions().getByType(SigningExtension) as SigningExtension
+signingExtension.sign publishing.publications.publishedArtifacts
 
 gradle.taskGraph.whenReady { TaskExecutionGraph graph ->
 	boolean wasSigningRequested = false
@@ -140,7 +141,7 @@ gradle.taskGraph.whenReady { TaskExecutionGraph graph ->
 		if ( ossrhUser == null || ossrhPass == null ) {
 			throw new RuntimeException( "Cannot perform publishing to OSSRH without credentials." )
 		}
-		logger.lifecycle "Publishing groupId: '" + project.group + "', version: '" + project.version + "'"
+		logger.lifecycle "Publishing {} : {} : {}", project.group, project.name, project.version
 	}
 
 	if ( wasSigningRequested || wasPublishingRequested ) {
@@ -151,7 +152,6 @@ gradle.taskGraph.whenReady { TaskExecutionGraph graph ->
 		var signingKey = resolveSigningKey()
 		var signingPassword = resolveSigningPassphrase()
 		signingExtension.useInMemoryPgpKeys( signingKey, signingPassword )
-		signingExtension.sign publishing.publications.publishedArtifacts
 	}
 	else {
 		// signing was not explicitly requested and we are not publishing to OSSRH,

@@ -36,6 +36,12 @@ import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.event.monitor.spi.DiagnosticEvent;
+import org.hibernate.event.spi.PostCollectionRecreateEvent;
+import org.hibernate.event.spi.PostCollectionRecreateEventListener;
+import org.hibernate.event.spi.PostCollectionRemoveEvent;
+import org.hibernate.event.spi.PostCollectionRemoveEventListener;
+import org.hibernate.event.spi.PostCollectionUpdateEvent;
+import org.hibernate.event.spi.PostCollectionUpdateEventListener;
 import org.hibernate.event.spi.PostDeleteEvent;
 import org.hibernate.event.spi.PostDeleteEventListener;
 import org.hibernate.event.spi.PostInsertEvent;
@@ -44,6 +50,12 @@ import org.hibernate.event.spi.PostUpdateEvent;
 import org.hibernate.event.spi.PostUpdateEventListener;
 import org.hibernate.event.spi.PostUpsertEvent;
 import org.hibernate.event.spi.PostUpsertEventListener;
+import org.hibernate.event.spi.PreCollectionRecreateEvent;
+import org.hibernate.event.spi.PreCollectionRecreateEventListener;
+import org.hibernate.event.spi.PreCollectionRemoveEvent;
+import org.hibernate.event.spi.PreCollectionRemoveEventListener;
+import org.hibernate.event.spi.PreCollectionUpdateEvent;
+import org.hibernate.event.spi.PreCollectionUpdateEventListener;
 import org.hibernate.event.spi.PreDeleteEvent;
 import org.hibernate.event.spi.PreDeleteEventListener;
 import org.hibernate.event.spi.PreInsertEvent;
@@ -224,7 +236,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			}
 		}
 		recreateCollections( entity, id, persister );
-		firePostInsert(entity, id, state, persister);
+		firePostInsert( entity, id, state, persister );
 		final StatisticsImplementor statistics = getFactory().getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {
 			statistics.insertEntity( persister.getEntityName() );
@@ -235,6 +247,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	private void recreateCollections(Object entity, Object id, EntityPersister persister) {
 		forEachOwnedCollection( entity, id, persister,
 				(descriptor, collection) -> {
+					firePreRecreate( collection, descriptor );
 					final EventMonitor eventMonitor = getEventMonitor();
 					final DiagnosticEvent event = eventMonitor.beginCollectionRecreateEvent();
 					boolean success = false;
@@ -249,6 +262,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 					if ( statistics.isStatisticsEnabled() ) {
 						statistics.recreateCollection( descriptor.getRole() );
 					}
+					firePostRecreate( collection, descriptor );
 				} );
 	}
 
@@ -294,7 +308,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 				eventMonitor.completeEntityDeleteEvent( event, id, persister.getEntityName(), success, this );
 			}
 			removeCacheItem( ck, persister );
-			firePostDelete(entity, id, persister);
+			firePostDelete( entity, id, persister );
 			final StatisticsImplementor statistics = getFactory().getStatistics();
 			if ( statistics.isStatisticsEnabled() ) {
 				statistics.deleteEntity( persister.getEntityName() );
@@ -305,6 +319,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	private void removeCollections(Object entity, Object id, EntityPersister persister) {
 		forEachOwnedCollection( entity, id, persister,
 				(descriptor, collection) -> {
+					firePreRemove( collection, entity, descriptor );
 					final EventMonitor eventMonitor = getEventMonitor();
 					final DiagnosticEvent event = eventMonitor.beginCollectionRemoveEvent();
 					boolean success = false;
@@ -315,7 +330,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 					finally {
 						eventMonitor.completeCollectionRemoveEvent( event, id, descriptor.getRole(), success, this );
 					}
-
+					firePostRemove( collection, entity, descriptor );
 					final StatisticsImplementor statistics = getFactory().getStatistics();
 					if ( statistics.isStatisticsEnabled() ) {
 						statistics.removeCollection( descriptor.getRole() );
@@ -376,7 +391,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			}
 			removeCacheItem( ck, persister );
 			removeAndRecreateCollections( entity, id, persister );
-			firePostUpdate(entity, id, state, persister);
+			firePostUpdate( entity, id, state, persister );
 			final StatisticsImplementor statistics = getFactory().getStatistics();
 			if ( statistics.isStatisticsEnabled() ) {
 				statistics.updateEntity( persister.getEntityName() );
@@ -387,6 +402,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	private void removeAndRecreateCollections(Object entity, Object id, EntityPersister persister) {
 		forEachOwnedCollection( entity, id, persister,
 				(descriptor, collection) -> {
+					firePreUpdate( collection, descriptor );
 					final EventMonitor eventMonitor = getEventMonitor();
 					final DiagnosticEvent event = eventMonitor.beginCollectionRemoveEvent();
 					boolean success = false;
@@ -399,6 +415,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 					finally {
 						eventMonitor.completeCollectionRemoveEvent( event, id, descriptor.getRole(), success, this );
 					}
+					firePostUpdate( collection, descriptor );
 					final StatisticsImplementor statistics = getFactory().getStatistics();
 					if ( statistics.isStatisticsEnabled() ) {
 						statistics.updateCollection( descriptor.getRole() );
@@ -554,39 +571,63 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	private void firePostInsert(Object entity, Object id, Object[] state, EntityPersister persister) {
-		if ( !fastSessionServices.eventListenerGroup_POST_INSERT.isEmpty() ) {
-			final PostInsertEvent event = new PostInsertEvent( entity, id, state, persister, null );
-			for ( PostInsertEventListener listener : fastSessionServices.eventListenerGroup_POST_INSERT.listeners() ) {
-				listener.onPostInsert( event );
-			}
-		}
+		fastSessionServices.eventListenerGroup_POST_INSERT.fireLazyEventOnEachListener(
+				() -> new PostInsertEvent( entity, id, state, persister, null ),
+				PostInsertEventListener::onPostInsert );
 	}
 
 	private void firePostUpdate(Object entity, Object id, Object[] state, EntityPersister persister) {
-		if ( !fastSessionServices.eventListenerGroup_POST_UPDATE.isEmpty() ) {
-			final PostUpdateEvent event = new PostUpdateEvent( entity, id, state, null, null, persister, null );
-			for ( PostUpdateEventListener listener : fastSessionServices.eventListenerGroup_POST_UPDATE.listeners() ) {
-				listener.onPostUpdate( event );
-			}
-		}
+		fastSessionServices.eventListenerGroup_POST_UPDATE.fireLazyEventOnEachListener(
+				() -> new PostUpdateEvent( entity, id, state, null, null, persister, null ),
+				PostUpdateEventListener::onPostUpdate );
 	}
 
 	private void firePostUpsert(Object entity, Object id, Object[] state, EntityPersister persister) {
-		if ( !fastSessionServices.eventListenerGroup_POST_UPSERT.isEmpty() ) {
-			final PostUpsertEvent event = new PostUpsertEvent( entity, id, state, null, persister, null );
-			for ( PostUpsertEventListener listener : fastSessionServices.eventListenerGroup_POST_UPSERT.listeners() ) {
-				listener.onPostUpsert( event );
-			}
-		}
+		fastSessionServices.eventListenerGroup_POST_UPSERT.fireLazyEventOnEachListener(
+				() -> new PostUpsertEvent( entity, id, state, null, persister, null ),
+				PostUpsertEventListener::onPostUpsert );
 	}
 
 	private void firePostDelete(Object entity, Object id, EntityPersister persister) {
-		if (!fastSessionServices.eventListenerGroup_POST_DELETE.isEmpty()) {
-			final PostDeleteEvent event = new PostDeleteEvent( entity, id, null, persister, null );
-			for ( PostDeleteEventListener listener : fastSessionServices.eventListenerGroup_POST_DELETE.listeners() ) {
-				listener.onPostDelete( event );
-			}
-		}
+		fastSessionServices.eventListenerGroup_POST_DELETE.fireLazyEventOnEachListener(
+				() -> new PostDeleteEvent( entity, id, null, persister, null ),
+				PostDeleteEventListener::onPostDelete );
+	}
+
+	private void firePreRecreate(PersistentCollection<?> collection, CollectionPersister persister) {
+		fastSessionServices.eventListenerGroup_PRE_COLLECTION_RECREATE.fireLazyEventOnEachListener(
+				() -> new PreCollectionRecreateEvent(  persister, collection, null ),
+				PreCollectionRecreateEventListener::onPreRecreateCollection );
+	}
+
+	private void firePreUpdate(PersistentCollection<?> collection, CollectionPersister persister) {
+		fastSessionServices.eventListenerGroup_PRE_COLLECTION_UPDATE.fireLazyEventOnEachListener(
+				() -> new PreCollectionUpdateEvent(  persister, collection, null ),
+				PreCollectionUpdateEventListener::onPreUpdateCollection );
+	}
+
+	private void firePreRemove(PersistentCollection<?> collection, Object owner, CollectionPersister persister) {
+		fastSessionServices.eventListenerGroup_PRE_COLLECTION_REMOVE.fireLazyEventOnEachListener(
+				() -> new PreCollectionRemoveEvent(  persister, collection, null, owner ),
+				PreCollectionRemoveEventListener::onPreRemoveCollection );
+	}
+
+	private void firePostRecreate(PersistentCollection<?> collection, CollectionPersister persister) {
+		fastSessionServices.eventListenerGroup_POST_COLLECTION_RECREATE.fireLazyEventOnEachListener(
+				() -> new PostCollectionRecreateEvent(  persister, collection, null ),
+				PostCollectionRecreateEventListener::onPostRecreateCollection );
+	}
+
+	private void firePostUpdate(PersistentCollection<?> collection, CollectionPersister persister) {
+		fastSessionServices.eventListenerGroup_POST_COLLECTION_UPDATE.fireLazyEventOnEachListener(
+				() -> new PostCollectionUpdateEvent(  persister, collection, null ),
+				PostCollectionUpdateEventListener::onPostUpdateCollection );
+	}
+
+	private void firePostRemove(PersistentCollection<?> collection, Object owner, CollectionPersister persister) {
+		fastSessionServices.eventListenerGroup_POST_COLLECTION_REMOVE.fireLazyEventOnEachListener(
+				() -> new PostCollectionRemoveEvent(  persister, collection, null, owner ),
+				PostCollectionRemoveEventListener::onPostRemoveCollection );
 	}
 
 	// collections ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

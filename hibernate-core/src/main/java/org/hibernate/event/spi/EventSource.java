@@ -70,8 +70,6 @@ public interface EventSource extends SessionImplementor {
 	//       This should be removed once action/task ordering is improved.
 	void removeOrphanBeforeUpdates(String entityName, Object child);
 
-	Object load(String entityName, Object identifier);
-
 	/**
 	 * Attempts to load the entity from the second-level cache.
 	 *

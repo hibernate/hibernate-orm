@@ -18,8 +18,8 @@ public class LoadEvent extends AbstractEvent {
 	private Object entityId;
 	private String entityClassName;
 	private Object instanceToLoad;
-	private final LockOptions lockOptions;
-	private final boolean isAssociationFetch;
+	private LockOptions lockOptions;
+	private boolean isAssociationFetch;
 	private Object result;
 	private Boolean readOnly;
 
@@ -108,6 +108,10 @@ public class LoadEvent extends AbstractEvent {
 		return isAssociationFetch;
 	}
 
+	public void setAssociationFetch(boolean associationFetch) {
+		isAssociationFetch = associationFetch;
+	}
+
 	public Object getInstanceToLoad() {
 		return instanceToLoad;
 	}
@@ -118,6 +122,10 @@ public class LoadEvent extends AbstractEvent {
 
 	public LockOptions getLockOptions() {
 		return lockOptions;
+	}
+
+	public void setLockOptions(LockOptions lockOptions) {
+		this.lockOptions = lockOptions;
 	}
 
 	public LockMode getLockMode() {

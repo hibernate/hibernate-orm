@@ -3,6 +3,49 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.6.4.Final (December 18, 2024)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32370
+
+** Bug
+    * [HHH-18949] - Hibernate Processor should not insert underscores within uppercase names
+    * [HHH-18932] - Wrongly using FK column instead of PK when using joined alias
+    * [HHH-18912] - ORM release process
+    * [HHH-18904] - Bytecode Enhancement fails with UnsupportedEnhancementStrategy.FAIL for pre-persist method
+    * [HHH-18903] - Bytecode enhancement fails for entities that contain a method named get
+    * [HHH-18872] - ConcreteProxy type not restored from 2LC when loading a ManyToOne
+    * [HHH-18868] - Wrong behaviour of getAttribute method in impl. of ManagedType when scattered id attributes are used in MappedSuperclass
+    * [HHH-18863] - jpamodelgen 6.6 performance issue in Eclipse IDE
+    * [HHH-18850] - createCountQuery with Hibernate 6.6.2
+    * [HHH-18709] - CriteriaUpdate involving JSON field containing Map<String, Object> results in SemanticException
+    * [HHH-18689] - 'FULL' query cache sometimes incomplete
+    * [HHH-18629] - Inconsistent column alias generated while result class is used for placeholder
+    * [HHH-18583] - Joined + discriminator inheritance treat in where clause not restricting to subtype
+    * [HHH-18384] - @JoinColumnsOrFormulas broken
+    * [HHH-18274] - Problems with generics in queries; proposed partial solution
+    * [HHH-17838] - @OneToOne relationship + @Embeddable keys + FetchType.LAZY fail in most recent version
+    * [HHH-17612] - DefaultRevisionEntity: Illegal argument on static metamodel field injection
+    * [HHH-14725] - Using a InputStream with BlobProxy and Envers results in  java.sql.SQLException: could not reset reader
+    * [HHH-13815] - TransientObjectException after merging a bidirectional one-to-many with orphan deletion
+    * [HHH-13790] - Temporary session not being closed
+    * [HHH-13377] - Lazy loaded properties of bytecode enhanced entity are left stale after refresh of entity
+
+** Sub-task
+    * [HHH-18369] - Support Informix matches() function
+    * [HHH-18367] - Informix sum on case expression error
+    * [HHH-18365] - Informix function bit_length() error
+    * [HHH-18364] - Informix function locate() error
+    * [HHH-18363] - Informix component nullness check error
+    * [HHH-18362] - Informix function substring() error
+    * [HHH-18361] - Informix current_time error
+    * [HHH-18360] - Informix function str() error
+
+** Task
+    * [HHH-18917] - Follow all of the JavaBeans rules in enhance/internal/bytebuddy/EnhancerImpl when checking if a class can be enhanced
+    * [HHH-18906] - Allow specifying UnsupportedEnhancementStrategy for Hibernate testing
+
+
 Changes in 6.6.3.Final (November 21, 2024)
 ------------------------------------------------------------------------------------------------------------------------
 

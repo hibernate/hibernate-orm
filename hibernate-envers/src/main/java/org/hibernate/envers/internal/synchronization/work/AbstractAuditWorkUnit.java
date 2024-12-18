@@ -58,6 +58,8 @@ public abstract class AbstractAuditWorkUnit implements AuditWorkUnit {
 
 		data.put( configuration.getRevisionTypePropertyName(), revisionType );
 		data.put( configuration.getOriginalIdPropertyName(), originalId );
+		// The $type$ property holds the name of the (versions) entity
+		data.put( "$type$", configuration.getAuditEntityName( entityName ) );
 	}
 
 	@Override

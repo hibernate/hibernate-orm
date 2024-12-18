@@ -146,7 +146,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - rdbms: oracle_atps
+          - rdbms: oracle_atps_tls
           - rdbms: oracle_db19c
           - rdbms: oracle_db21c
           - rdbms: oracle_db23c
@@ -216,6 +216,9 @@ jobs:
           RUNID: ${{ github.run_number }}
           # These runners have no HOME variable set by default, we need to explicitly set it to make the build work
           HOME: /root
+          # Needed for TFO (TCP fast open)
+          LD_PRELOAD: /home/opc/libtfojdbc1.so
+          LD_LIBRARY_PATH: /home/opc
         run: ./ci/build-github.sh
         shell: bash
       # Upload build scan data.

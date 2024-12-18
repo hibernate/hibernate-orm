@@ -53,6 +53,8 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.SqlExpressible;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.procedure.internal.PostgreSQLCallableStatementSupport;
@@ -918,6 +920,17 @@ public class PostgreSQLDialect extends Dialect {
 		// TODO: adapt this to handle named enum types!
 		// Workaround for postgres bug #1453
 		return "cast(null as " + typeConfiguration.getDdlTypeRegistry().getDescriptor( sqlType ).getRawTypeName() + ")";
+	}
+
+	@Override
+	public String getSelectClauseNullString(SqlTypedMapping sqlType, TypeConfiguration typeConfiguration) {
+		final DdlTypeRegistry ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
+		final String castTypeName = ddlTypeRegistry
+				.getDescriptor( sqlType.getJdbcMapping().getJdbcType().getDdlTypeCode() )
+				.getCastTypeName( sqlType.toSize(), (SqlExpressible) sqlType.getJdbcMapping(), ddlTypeRegistry );
+		// PostgreSQL assumes a plain null literal in the select statement to be of type text,
+		// which can lead to issues in e.g. the union subclass strategy, so do a cast
+		return "cast(null as " + castTypeName + ")";
 	}
 
 	@Override

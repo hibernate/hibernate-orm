@@ -16,10 +16,11 @@ import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.format.FormatMapper;
 import org.hibernate.type.format.jackson.JacksonJsonFormatMapper;
+import org.hibernate.type.format.jackson.JacksonOsonFormatMapper;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.CallableStatement;
@@ -31,10 +32,6 @@ import java.sql.SQLException;
  * @author Emmanuel Jannetti
  */
 public class OracleOsonJacksonArrayJdbcType extends OracleJsonArrayJdbcType {
-	/**
-	 * Singleton access
-	 */
-	//public static final OracleOsonJacksonArrayJdbcType INSTANCE = new OracleOsonJacksonArrayJdbcType();
 
 	private static Method jacksonOsonObjectMapperGetter = null;
 
@@ -82,11 +79,12 @@ public class OracleOsonJacksonArrayJdbcType extends OracleJsonArrayJdbcType {
 				//     But this do not let use inject our ObjectMapper. For now create our own instance
 				FormatMapper mapper = new JacksonJsonFormatMapper(objectMapper);
 
-				PipedOutputStream out = new PipedOutputStream();
-				PipedInputStream in = new PipedInputStream(out);
+				ByteArrayOutputStream out = new ByteArrayOutputStream();
+
 				JsonGenerator osonGen = objectMapper.getFactory().createGenerator( out );
 				mapper.writeToTarget( value, javaType, osonGen, options );
 				osonGen.close();
+				ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
 				return in;
 			}
 			@Override
@@ -127,74 +125,49 @@ public class OracleOsonJacksonArrayJdbcType extends OracleJsonArrayJdbcType {
 
 		return new BasicExtractor<>( javaType, this ) {
 
-			private X fromOson(byte[] osonBytes, FormatMapper mapper, WrapperOptions options) throws Exception {
+			private X fromOson(byte[] osonBytes, WrapperOptions options) throws Exception {
+				// TODO : We should rely on
+				//       FormatMapper fm = options.getSession().getSessionFactory().getFastSessionServices().getJsonFormatMapper();
+				//
+				//     But this do not let use inject our ObjectMapper. For now create our own instance
+				FormatMapper mapper = new JacksonOsonFormatMapper(objectMapper);
 				return mapper.readFromSource(  getJavaType(), osonBytes, options);
+			}
+
+			private X doExtraction(OracleJsonDatum datum,  WrapperOptions options) throws SQLException {
+				if ( datum == null ) {
+					return null;
+				}
+				byte[] osonBytes = datum.shareBytes();
+				try {
+					return fromOson( osonBytes ,options);
+				}
+				catch (Exception e) {
+					throw new SQLException( e );
+				}
 			}
 
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				// TODO : We should rely on
-				//       FormatMapper fm = options.getSession().getSessionFactory().getFastSessionServices().getJsonFormatMapper();
-				//
-				//     But this do not let use inject our ObjectMapper. For now create our own instance
-				FormatMapper mapper = new JacksonJsonFormatMapper(objectMapper);
 
 				OracleJsonDatum ojd = rs.getObject( paramIndex, OracleJsonDatum.class );
-				if ( ojd == null ) {
-					return null;
-				}
-				byte[] osonBytes = ojd.shareBytes();
-
-				try {
-					return fromOson( osonBytes, mapper ,options);
-				}
-				catch (Exception e) {
-					throw new SQLException( e );
-				}
+				return doExtraction( ojd, options);
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				// TODO : We should rely on
-				//       FormatMapper fm = options.getSession().getSessionFactory().getFastSessionServices().getJsonFormatMapper();
-				//
-				//     But this do not let use inject our ObjectMapper. For now create our own instance
-				FormatMapper mapper = new JacksonJsonFormatMapper(objectMapper);
+
 
 				OracleJsonDatum ojd = statement.getObject( index, OracleJsonDatum.class );
-				if ( ojd == null ) {
-					return null;
-				}
-				byte[] osonBytes = ojd.shareBytes();
-				try {
-					return fromOson( osonBytes, mapper ,options);
-				}
-				catch (Exception e) {
-					throw new SQLException( e );
-				}
+				return doExtraction( ojd, options);
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 					throws SQLException {
-				// TODO : We should rely on
-				//       FormatMapper fm = options.getSession().getSessionFactory().getFastSessionServices().getJsonFormatMapper();
-				//
-				//     But this do not let use inject our ObjectMapper. For now create our own instance
-				FormatMapper mapper = new JacksonJsonFormatMapper(objectMapper);
-
 
 				OracleJsonDatum ojd = statement.getObject( name, OracleJsonDatum.class );
-				if ( ojd == null ) {
-					return null;
-				}
-				byte[] osonBytes = ojd.shareBytes();
-				try {
-					return fromOson( osonBytes, mapper ,options);
-				}
-				catch (Exception e) {
-					throw new SQLException( e );
-				}
+				return doExtraction( ojd, options);
 			}
 		};
 	}

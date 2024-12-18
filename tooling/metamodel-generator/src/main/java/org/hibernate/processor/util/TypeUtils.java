@@ -56,6 +56,7 @@ import static org.hibernate.processor.util.Constants.ONE_TO_MANY;
 import static org.hibernate.processor.util.Constants.ONE_TO_ONE;
 import static org.hibernate.processor.util.NullnessUtil.castNonNull;
 import static org.hibernate.processor.util.StringUtil.isProperty;
+import static org.hibernate.processor.util.StringUtil.removeDollar;
 
 /**
  * Utility class.
@@ -666,10 +667,9 @@ public final class TypeUtils {
 	}
 
 	public static String getGeneratedClassFullyQualifiedName(TypeElement element, String packageName, boolean jakartaDataStyle) {
-		final StringBuilder builder = new StringBuilder( !packageName.isEmpty() ? packageName + "." : "" );
-		final int length = builder.length();
-		for ( String s : split( ".", element.getQualifiedName().toString().substring( length ) ) ) {
-			String part = StringUtil.removeDollar( s );
+		final StringBuilder builder = new StringBuilder( packageName.isEmpty() ? "" : packageName + "." );
+		for ( String s : split( ".", element.getQualifiedName().toString().substring( builder.length() ) ) ) {
+			final String part = removeDollar( s );
 			builder.append( jakartaDataStyle ? '_' + part : part + '_' );
 		}
 		return builder.toString();

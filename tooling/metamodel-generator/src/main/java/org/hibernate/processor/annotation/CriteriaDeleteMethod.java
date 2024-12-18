@@ -77,7 +77,7 @@ public class CriteriaDeleteMethod extends AbstractCriteriaMethod {
 
 	private void execute(StringBuilder declaration) {
 		declaration
-				.append("\t\t\t.executeUpdate();\n");
+				.append("\t\t\t.executeUpdate()");
 	}
 
 	@Override

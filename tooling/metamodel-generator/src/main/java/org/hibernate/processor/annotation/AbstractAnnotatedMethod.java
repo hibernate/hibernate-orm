@@ -88,4 +88,26 @@ public abstract class AbstractAnnotatedMethod implements MetaAttribute {
 				.append(paramName)
 				.append("\");\n");
 	}
+
+	protected void handle(StringBuilder declaration, String handled, String rethrown) {
+		if ( isReactive() ) {
+			declaration.append( "\n\t\t\t.onFailure(" )
+					.append( annotationMetaEntity.importType( handled ) )
+					.append( ".class)\n" )
+					.append( "\t\t\t\t\t.transform((_ex) -> new " )
+					.append( annotationMetaEntity.importType( rethrown ) )
+					.append( "(_ex.getMessage(), _ex))" );
+
+		}
+		else {
+			declaration
+					.append( "\tcatch (" )
+					.append( annotationMetaEntity.importType( handled ) )
+					.append( " _ex) {\n" )
+					.append( "\t\tthrow new " )
+					.append( annotationMetaEntity.importType( rethrown ) )
+					.append( "(_ex.getMessage(), _ex);\n" )
+					.append( "\t}\n" );
+		}
+	}
 }

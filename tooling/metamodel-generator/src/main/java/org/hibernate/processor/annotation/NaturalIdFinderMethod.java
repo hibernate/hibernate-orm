@@ -90,11 +90,11 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 		if ( containerType == null ) {
 			//TODO we should probably throw if this returns null
 			declaration
-					.append("\t\t\t.load();\n");
+					.append("\t\t\t.load()");
 		}
 		else {
 			declaration
-					.append("\t\t\t.loadOptional();\n");
+					.append("\t\t\t.loadOptional()");
 		}
 	}
 
@@ -143,7 +143,7 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 		if (composite) {
 			declaration.append("\n\t\t\t)\n\t");
 		}
-		declaration.append(");\n");
+		declaration.append(')');
 	}
 
 	private boolean isComposite() {

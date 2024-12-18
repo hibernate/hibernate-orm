@@ -140,7 +140,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
-	public void insertMultiple(List<Object> entities) {
+	public void insertMultiple(List<?> entities) {
 		final Integer batchSize = getJdbcBatchSize();
 		setJdbcBatchSize( entities.size() );
 		try {
@@ -275,7 +275,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
-	public void deleteMultiple(List<Object> entities) {
+	public void deleteMultiple(List<?> entities) {
 		final Integer batchSize = getJdbcBatchSize();
 		setJdbcBatchSize( entities.size() );
 		try {
@@ -348,7 +348,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
-	public void updateMultiple(List<Object> entities) {
+	public void updateMultiple(List<?> entities) {
 		final Integer batchSize = getJdbcBatchSize();
 		setJdbcBatchSize( entities.size() );
 		try {
@@ -430,7 +430,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
-	public void upsertMultiple(List<Object> entities) {
+	public void upsertMultiple(List<?> entities) {
 		final Integer batchSize = getJdbcBatchSize();
 		setJdbcBatchSize( entities.size() );
 		try {

@@ -108,7 +108,7 @@ public interface StatelessSession extends SharedSessionContract {
 	 * @since 7.0
 	 */
 	@Incubating
-	void insertMultiple(List<Object> entities);
+	void insertMultiple(List<?> entities);
 
 	/**
 	 * Insert a record.
@@ -141,7 +141,7 @@ public interface StatelessSession extends SharedSessionContract {
 	 * @since 7.0
 	 */
 	@Incubating
-	void updateMultiple(List<Object> entities);
+	void updateMultiple(List<?> entities);
 
 	/**
 	 * Update a record.
@@ -172,7 +172,7 @@ public interface StatelessSession extends SharedSessionContract {
 	 * @since 7.0
 	 */
 	@Incubating
-	void deleteMultiple(List<Object> entities);
+	void deleteMultiple(List<?> entities);
 
 	/**
 	 * Delete a record.
@@ -220,7 +220,7 @@ public interface StatelessSession extends SharedSessionContract {
 	 * @since 7.0
 	 */
 	@Incubating
-	void upsertMultiple(List<Object> entities);
+	void upsertMultiple(List<?> entities);
 
 	/**
 	 * Use a SQL {@code merge into} statement to perform an upsert.

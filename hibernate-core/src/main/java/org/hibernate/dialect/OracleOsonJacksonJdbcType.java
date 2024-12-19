@@ -6,6 +6,7 @@ package org.hibernate.dialect;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import oracle.jdbc.OracleType;
 import oracle.sql.json.OracleJsonDatum;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -19,9 +20,7 @@ import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.format.FormatMapper;
 import org.hibernate.type.format.jackson.JacksonOsonFormatMapper;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.CallableStatement;
@@ -79,7 +78,7 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 
 		return new BasicBinder<>( javaType, this ) {
 
-			private <X> InputStream toOson(X value, JavaType<X> javaType, WrapperOptions options) throws Exception {
+			private <X> byte[] toOson(X value, JavaType<X> javaType, WrapperOptions options) throws Exception {
 
 				// TODO : We should rely on
 				//       FormatMapper fm = options.getSession().getSessionFactory().getFastSessionServices().getJsonFormatMapper();
@@ -88,19 +87,17 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 				FormatMapper mapper = new JacksonOsonFormatMapper(objectMapper,getEmbeddableMappingType());
 
 				ByteArrayOutputStream out = new ByteArrayOutputStream();
-				//TODO : really use streams
 				JsonGenerator osonGen = objectMapper.getFactory().createGenerator( out );
 				mapper.writeToTarget( value, javaType, osonGen, options );
-				osonGen.close();
-				ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
-				return in;
+				osonGen.close(); // until now
+				return out.toByteArray();
 			}
 
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
 				try {
-					st.setBinaryStream( index, toOson( value, getJavaType(), options ) );
+					st.setObject( index, toOson( value, getJavaType(), options ), OracleType.JSON);
 				}
 				catch (Exception e) {
 					throw new SQLException( e );
@@ -111,7 +108,7 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
 				try {
-					st.setBinaryStream( name, toOson( value, getJavaType(), options ) );
+					st.setObject( name, toOson( value, getJavaType(), options ), OracleType.JSON);
 				}
 				catch (Exception e) {
 					throw new SQLException( e );

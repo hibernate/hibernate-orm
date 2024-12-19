@@ -162,21 +162,23 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	}
 
 	private Object[] getValues(Object entity, EntityEntry entry, boolean mightBeDirty, SessionImplementor session) {
-		final Object[] loadedState = entry.getLoadedState();
 		if ( entry.getStatus() == Status.DELETED ) {
 			//grab its state saved at deletion
 			return entry.getDeletedState();
 		}
-		else if ( !mightBeDirty && loadedState != null ) {
-			return loadedState;
-		}
 		else {
-			final EntityPersister persister = entry.getPersister();
-			checkId( entity, persister, entry.getId(), entry.getStatus(), session );
-			// grab its current state
-			final Object[] values = persister.getValues( entity );
-			checkNaturalId( persister, entity, entry, values, loadedState, session );
-			return values;
+			final Object[] loadedState = entry.getLoadedState();
+			if ( !mightBeDirty && loadedState != null ) {
+				return loadedState;
+			}
+			else {
+				final EntityPersister persister = entry.getPersister();
+				checkId( entity, persister, entry.getId(), entry.getStatus(), session );
+				// grab its current state
+				final Object[] values = persister.getValues( entity );
+				checkNaturalId( persister, entity, entry, values, loadedState, session );
+				return values;
+			}
 		}
 	}
 
@@ -420,7 +422,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	protected final boolean isUpdateNecessary(FlushEntityEvent event) throws HibernateException {
 		return !event.isDirtyCheckPossible()
 			|| event.hasDirtyProperties()
-			|| hasDirtyCollections(event);
+			|| hasDirtyCollections( event );
 	}
 
 	private boolean hasDirtyCollections(FlushEntityEvent event) {
@@ -488,9 +490,9 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				dirtyCheckPossible = true;
 			}
 			else if ( entry.getStatus() == Status.DELETED && !entry.isModifiableEntity() ) {
-				// A non-modifiable (e.g., read-only or immutable) entity needs to be have
-				// references to transient entities set to null before being deleted. No other
-				// fields should be updated.
+				// A non-modifiable (e.g., read-only or immutable) entity needs to have
+				// references to transient entities set to null before being deleted.
+				// No other fields should be updated.
 				if ( values != entry.getDeletedState() ) {
 					throw new IllegalStateException(
 							"Entity has status Status.DELETED but values != entry.getDeletedState"

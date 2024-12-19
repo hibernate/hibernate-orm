@@ -60,11 +60,11 @@ public abstract class AbstractVisitor {
 	}
 
 	boolean includeEntityProperty(Object[] values, int i) {
-		return includeProperty(values, i);
+		return includeProperty( values, i );
 	}
 
 	boolean includeProperty(Object[] values, int i) {
-		return values[i]!= LazyPropertyInitializer.UNFETCHED_PROPERTY;
+		return values[i] != LazyPropertyInitializer.UNFETCHED_PROPERTY;
 	}
 
 	/**
@@ -72,7 +72,7 @@ public abstract class AbstractVisitor {
 	 * to processValue().
 	 */
 	Object processComponent(Object component, CompositeType componentType) throws HibernateException {
-		if ( component!=null ) {
+		if ( component != null ) {
 			processValues( componentType.getPropertyValues(component, session), componentType.getSubtypes() );
 		}
 		return null;

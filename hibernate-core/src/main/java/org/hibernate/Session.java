@@ -382,8 +382,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * the database?  In other words, would any DML operations be executed if
 	 * we flushed this session?
 	 *
-	 * @return {@code true} if the session contains pending changes; {@code false} otherwise.
-	 * @throws HibernateException could not perform dirtying checking
+	 * @return {@code true} if the session contains pending changes;
+	 *         {@code false} otherwise.
 	 */
 	boolean isDirty();
 

@@ -83,6 +83,7 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 		String currentKeyName = null;
 		List<Object> subArrayList = null;
 		BasicPluralType<?, ?> pluralType = null;
+		Object theOne;
 		while ( event != null ) {
 			switch ( event ) {
 				case OracleJsonParser.Event.KEY_NAME:
@@ -111,28 +112,31 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 					break;
 				case OracleJsonParser.Event.VALUE_DATE:
 					LocalDateTime localDateTime = osonParser.getLocalDateTime();
-					// check
-//					if (date) {
-//						finalResult[selectableIndex] = Date.valueOf( localDateTime.toLocalDate() );
-//					}
-//					else if(LocalDate)
-//					{
-//						finalResult[selectableIndex]= localDateTime.toLocalDate();
-//					}
+					Class underlyingType = null;
+					if(pluralType!=null) {
+						underlyingType = pluralType.getElementType().getJavaType();
+					} else {
+						underlyingType = (Class) mapping.getJdbcMapping().getJdbcJavaType().getJavaType();
+					}
+					if (java.sql.Date.class.isAssignableFrom( underlyingType )) {
+						theOne = Date.valueOf( localDateTime.toLocalDate());
+					} else if (java.time.LocalDate.class.isAssignableFrom( underlyingType )) {
+						theOne = localDateTime.toLocalDate();
+					} else {
+						throw new IllegalArgumentException("unexpected date type " + underlyingType);
+					}
 					if ( pluralType != null ) {
 						// dealing with arrays
-						subArrayList.add( Date.valueOf( localDateTime.toLocalDate() ) );
+						subArrayList.add( theOne );
 					}
 					else {
-						finalResult[selectableIndex] = Date.valueOf( localDateTime.toLocalDate() );
+						finalResult[selectableIndex] = theOne;
 					}
 					break;
 				case OracleJsonParser.Event.VALUE_TIMESTAMP:
 					LocalDateTime local = osonParser.getLocalDateTime();
-					Object theOne;
 					if ( "java.sql.Timestamp".equals(
-							embeddableMappingType.getJdbcValueSelectable( selectableIndex )
-									.getJdbcMapping().getJdbcJavaType().getJavaType().getTypeName() ) ) {
+							mapping.getJdbcMapping().getJdbcJavaType().getJavaType().getTypeName() ) ) {
 						theOne = Timestamp.valueOf( local );
 					}
 					else {
@@ -174,8 +178,7 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 								pluralType.getElementType().getJdbcJavaType().fromString( osonParser.getString() ) );
 					}
 					else {
-						finalResult[selectableIndex] = mapping.getJdbcMapping().getJdbcJavaType()
-								.fromString( osonParser.getString() );
+						finalResult[selectableIndex] = mapping.getJdbcMapping().getJdbcJavaType().wrap( osonParser.getString(),options );
 					}
 					break;
 				case OracleJsonParser.Event.VALUE_TRUE:
@@ -244,14 +247,20 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 					}
 					break;
 				case OracleJsonParser.Event.VALUE_BINARY:
-					byte[] bytes = osonParser.getBytes();
-					if ( "java.util.UUID".equals(
-							mapping.getJdbcMapping().getJdbcJavaType().getJavaType().getTypeName() ) ) {
+					if(pluralType!=null) {
+						underlyingType = pluralType.getElementType().getJavaType();
+					}
+					else {
+						underlyingType = (Class) mapping.getJdbcMapping().getJdbcJavaType().getJavaType();
+					}
+
+					if (java.util.UUID.class.isAssignableFrom( underlyingType ))  {
 						theOne = UUIDJavaType.INSTANCE.wrap( osonParser.getBytes(), options );
 					}
 					else {
-						theOne = bytes;
+						theOne = osonParser.getBytes();
 					}
+
 					if ( pluralType != null ) {
 						// dealing with arrays
 						subArrayList.add( theOne );

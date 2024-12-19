@@ -10,6 +10,7 @@ import jakarta.persistence.NamedQuery;
 
 @Entity
 @NamedQuery(name = "#getPostsByName", query = "from Post p where p.name in (:names)")
+@NamedQuery(name = "#getPostsByNameIgnoreCase", query = "from Post p where p.name = lower(:name)")
 public class Post {
 	@Id
 	Integer id;

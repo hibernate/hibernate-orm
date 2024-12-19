@@ -70,6 +70,7 @@ public interface Transaction extends EntityTransaction {
 	 *         is {@link TransactionStatus#ACTIVE} or
 	 *         {@link TransactionStatus#MARKED_ROLLBACK}
 	 */
+	@Override
 	default boolean isActive() {
 		return switch (getStatus()) {
 			case ACTIVE, MARKED_ROLLBACK -> true;
@@ -225,6 +226,7 @@ public interface Transaction extends EntityTransaction {
 	 *
 	 * @return the timeout, in seconds, or {@code null}
 	 */
+	@Override
 	@Nullable Integer getTimeout();
 
 	/**

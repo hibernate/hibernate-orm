@@ -181,7 +181,7 @@ tasks.withType( JavaCompile ) {
 	options.encoding = 'UTF-8'
 	options.warnings false
 	options.fork = true
-	options.forkOptions.memoryMaximumSize = '768m'
+	options.forkOptions.memoryMaximumSize = '896m'
 
 	options.compilerArgs += [
 			// disable adding @Generated annotation in the logger impls to make

@@ -20,21 +20,27 @@ import org.hibernate.graph.SubGraph;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.internal.DomainModelHelper;
 import org.hibernate.query.sqm.SqmPathSource;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
+import static org.hibernate.query.sqm.tree.SqmNode.log;
 
 /**
- *  Base class for {@link RootGraph} and {@link SubGraph} implementations.
+ * Base class for {@link RootGraph} and {@link SubGraph} implementations.
  *
  * @author Steve Ebersole
  */
 public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements GraphImplementor<J> {
 	private final ManagedDomainType<J> managedType;
-	private Map<PersistentAttribute<?,?>, AttributeNodeImplementor<?>> attrNodeMap;
+	private Map<PersistentAttribute<?, ?>, AttributeNodeImplementor<?>> attrNodeMap;
+	private Map<Class<? extends J>, SubGraphImplementor<? extends J>> subclassSubgraphs;
+
 
 	public AbstractGraph(ManagedDomainType<J> managedType, boolean mutable) {
 		super( mutable );
@@ -44,6 +50,7 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	protected AbstractGraph(GraphImplementor<J> original, boolean mutable) {
 		this( original.getGraphedType(), mutable );
 		this.attrNodeMap = new ConcurrentHashMap<>( original.getAttributeNodeList().size() );
+		this.subclassSubgraphs = Map.copyOf( original.getSubclassSubgraphs() );
 		original.visitAttributeNodes(
 				node -> attrNodeMap.put(
 						node.getAttributeDescriptor(),
@@ -53,6 +60,53 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	}
 
 	@Override
+	public Map<Class<? extends J>, SubGraphImplementor<? extends J>> getSubclassSubgraphs() {
+		return subclassSubgraphs == null ? emptyMap() : subclassSubgraphs;
+	}
+
+	@Override
+	public <S extends J> SubGraphImplementor<S> getSubclassSubgraph(Class<S> subtype) {
+		return subclassSubgraphs == null ? null : (SubGraphImplementor) subclassSubgraphs.get( subtype );
+	}
+
+	@Override
+	public <S extends J> SubGraphImplementor<S> addTreatedSubgraph(Class<S> subType) {
+		if ( subclassSubgraphs == null ) {
+			this.subclassSubgraphs = new HashMap<>();
+		}
+
+		final SubGraphImplementor<S> existingSubgraph = (SubGraphImplementor<S>) subclassSubgraphs.get( subType );
+
+		if ( existingSubgraph != null ) {
+			return existingSubgraph;
+		}
+
+		ManagedDomainType<S> subTypeEntityDomainType = DomainModelHelper.findSubType( this.managedType, subType );
+
+		SubGraphImplementor<S> subgraph = new SubGraphImpl<S>( subTypeEntityDomainType, (GraphImplementor) this, true );
+
+		subclassSubgraphs.put( subType, subgraph );
+
+		return subgraph;
+	}
+
+	@Override
+	public <S extends J> SubGraphImplementor<S> addSubclassSubgraph(SubGraphImplementor<S> subgraph) {
+		if ( subclassSubgraphs == null ) {
+			this.subclassSubgraphs = new HashMap<>();
+		}
+
+		SubGraphImplementor<? extends J> previous = subclassSubgraphs.put( subgraph.getClassType(), subgraph );
+
+		if ( previous != null ) {
+			log.debugf( "Adding sub-graph [%s] over-wrote existing [%s]", subgraph, previous );
+		}
+
+		return subgraph;
+	}
+
+
+	@Override
 	public ManagedDomainType<J> getGraphedType() {
 		return managedType;
 	}
@@ -60,7 +114,7 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	@Override
 	public RootGraphImplementor<J> makeRootGraph(String name, boolean mutable) {
 		if ( getGraphedType() instanceof EntityDomainType ) {
-			return new RootGraphImpl<>( name, this, mutable);
+			return new RootGraphImpl<>( name, this, mutable );
 		}
 
 		throw new CannotBecomeEntityGraphException(
@@ -75,9 +129,23 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 			return;
 		}
 
+		other
+				.getSubclassSubgraphs()
+				.forEach( (otherSubType, otherSubTypeSubgraph) -> {
+
+					var alreadyExistingSubtypeSubgraph = subclassSubgraphs.get( otherSubType );
+					if ( alreadyExistingSubtypeSubgraph == null ) {
+						subclassSubgraphs.put( otherSubType, otherSubTypeSubgraph );
+					}
+					else {
+						alreadyExistingSubtypeSubgraph.merge( (GraphImplementor) otherSubTypeSubgraph );
+					}
+
+				} );
+
 		for ( AttributeNodeImplementor<?> attributeNode : other.getAttributeNodeImplementors() ) {
 			final AttributeNodeImplementor<?> localAttributeNode = findAttributeNode(
-					(PersistentAttribute<? extends J,?>) attributeNode.getAttributeDescriptor()
+					(PersistentAttribute<? extends J, ?>) attributeNode.getAttributeDescriptor()
 			);
 			if ( localAttributeNode != null ) {
 				// keep the local one, but merge in the incoming one
@@ -110,8 +178,8 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 			attrNodeMap.put( incomingAttributeNode.getAttributeDescriptor(), attributeNode );
 		}
 		else {
-			@SuppressWarnings("rawtypes")
-			final AttributeNodeImplementor attributeNodeFinal = attributeNode;
+			@SuppressWarnings("rawtypes") final AttributeNodeImplementor attributeNodeFinal = attributeNode;
+			attributeNodeFinal.getSubgraph().merge( this );
 			incomingAttributeNode.visitSubGraphs(
 					// we assume the subGraph has been properly copied if needed
 					(subType, subGraph) -> attributeNodeFinal.addSubGraph( subGraph )
@@ -128,6 +196,7 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 		if ( attribute instanceof SqmPathSource && ( (SqmPathSource<?>) attribute ).isGeneric() ) {
 			attribute = managedType.findConcreteGenericAttribute( attributeName );
 		}
+
 		return attribute == null ? null : findAttributeNode( (PersistentAttribute<? extends J, AJ>) attribute );
 	}
 
@@ -138,7 +207,7 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked", "rawtypes"})
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public List<AttributeNode<?>> getGraphAttributeNodes() {
 		return (List) getAttributeNodeImplementors();
 	}
@@ -174,7 +243,7 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 		}
 
 		if ( attrNode == null ) {
-			attrNode = new AttributeNodeImpl<>(attribute, isMutable());
+			attrNode = new AttributeNodeImpl<>( attribute, isMutable() );
 			attrNodeMap.put( attribute, attrNode );
 		}
 

@@ -6,7 +6,6 @@
  */
 package org.hibernate.sql.results.internal;
 
-import java.util.Map;
 import java.util.Objects;
 
 import org.hibernate.engine.FetchTiming;
@@ -14,12 +13,13 @@ import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.graph.spi.SubGraphImplementor;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.sql.results.graph.EntityGraphTraversalState;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
@@ -51,40 +51,43 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 
 	@Override
 	public TraversalResult traverse(FetchParent fetchParent, Fetchable fetchable, boolean exploreKeySubgraph) {
-		assert !(fetchable instanceof CollectionPart);
+		assert !( fetchable instanceof CollectionPart );
 		if ( fetchable instanceof NonAggregatedIdentifierMapping ) {
 			return new TraversalResult( currentGraphContext, new FetchStrategy( FetchTiming.IMMEDIATE, true ) );
 		}
 
 		final GraphImplementor<?> previousContextRoot = currentGraphContext;
-		final AttributeNodeImplementor<?> attributeNode = appliesTo( fetchParent )
-				? currentGraphContext.findAttributeNode( fetchable.getFetchableName() )
-				: null;
+		final AttributeNodeImplementor<?> attributeNode = getAttributeNode( fetchParent, fetchable );
 
 		currentGraphContext = null;
 		final FetchStrategy fetchStrategy;
 		if ( attributeNode != null ) {
 			fetchStrategy = new FetchStrategy( FetchTiming.IMMEDIATE, true );
-			final Map<? extends Class<?>, ? extends SubGraphImplementor<?>> subgraphMap;
-			final Class<?> subgraphMapKey;
+			Class<?> subgraphType = null;
+			final var attributeNodeSubgraph = attributeNode.getSubgraph();
 			if ( fetchable instanceof PluralAttributeMapping ) {
 				final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
 				if ( exploreKeySubgraph ) {
-					subgraphMap = attributeNode.getKeySubGraphMap();
-					subgraphMapKey = getEntityCollectionPartJavaClass( pluralAttributeMapping.getIndexDescriptor() );
+					final var keySubgraphMap = attributeNode.getKeySubGraphMap();
+					final var subgraphMapKey = getEntityCollectionPartJavaClass( pluralAttributeMapping.getIndexDescriptor() );
+					currentGraphContext = keySubgraphMap.get( subgraphMapKey );
 				}
 				else {
-					subgraphMap = attributeNode.getSubGraphMap();
-					subgraphMapKey = getEntityCollectionPartJavaClass( pluralAttributeMapping.getElementDescriptor() );
+					subgraphType = getEntityCollectionPartJavaClass( pluralAttributeMapping.getElementDescriptor() );
 				}
 			}
 			else {
 				assert !exploreKeySubgraph;
-				subgraphMap = attributeNode.getSubGraphMap();
-				subgraphMapKey = fetchable.getJavaType().getJavaTypeClass();
+				subgraphType = fetchable.getJavaType().getJavaTypeClass();
 			}
-			if ( subgraphMap != null && subgraphMapKey != null ) {
-				currentGraphContext = subgraphMap.get( subgraphMapKey );
+
+			if ( attributeNodeSubgraph != null && subgraphType != null ) {
+				if ( subgraphType.equals( attributeNodeSubgraph.getClassType() ) ) {
+					currentGraphContext = attributeNodeSubgraph;
+				}
+				else {
+					currentGraphContext = attributeNodeSubgraph.getSubclassSubgraph( (Class) subgraphType );
+				}
 			}
 		}
 		else if ( graphSemantic == GraphSemantic.FETCH ) {
@@ -95,6 +98,46 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 		}
 		return new TraversalResult( previousContextRoot, fetchStrategy );
 	}
+
+	private AttributeNodeImplementor<?> getAttributeNode(FetchParent fetchParent, Fetchable fetchable) {
+		if ( !appliesTo( fetchParent ) ) {
+			return null;
+		}
+
+		AttributeNodeImplementor<?> attributeNode = currentGraphContext.findAttributeNode( fetchable.getFetchableName() );
+
+		if ( attributeNode != null ) {
+			return attributeNode;
+		}
+
+		if ( !( fetchable instanceof AttributeMapping ) ) {
+			return null;
+		}
+
+
+		AttributeMapping attributeMapping = (AttributeMapping) fetchable;
+		var declaringType = attributeMapping.getDeclaringType().getJavaType().getJavaTypeClass();
+		ManagedDomainType managedDeclaringType = metamodel.findManagedType( declaringType );
+
+		if ( managedDeclaringType == null ) {
+			return null;
+		}
+
+		var currentGraphSubTypes = currentGraphContext.getGraphedType().getSubTypes();
+
+		if ( !currentGraphSubTypes.contains( managedDeclaringType ) ) {
+			return null;
+		}
+
+		var subclassSubgraph = currentGraphContext.getSubclassSubgraph( managedDeclaringType.getJavaType() );
+
+		if ( subclassSubgraph == null ) {
+			return null;
+		}
+
+		return subclassSubgraph.findAttributeNode( fetchable.getFetchableName() );
+	}
+
 
 	private Class<?> getEntityCollectionPartJavaClass(CollectionPart collectionPart) {
 		if ( collectionPart instanceof EntityCollectionPart ) {

@@ -395,7 +395,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		public void begin() {
 			errorIfInvalid();
 			jtaTransactionAdapter.begin();
-			JtaTransactionCoordinatorImpl.this.joinJtaTransaction();
+			joinJtaTransaction();
 		}
 
 		protected void errorIfInvalid() {

@@ -98,7 +98,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 	@Override
 	public boolean isJoined() {
 		return physicalTransactionDelegate != null
-			&& getTransactionDriverControl().isActive( true );
+			&& getTransactionDriverControl().isActive();
 	}
 
 	@Override
@@ -181,7 +181,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 
 	private void afterCompletionCallback(boolean successful) {
 		log.tracef( "ResourceLocalTransactionCoordinatorImpl#afterCompletionCallback(%s)", successful );
-		final int statusToSend = successful ? Status.STATUS_COMMITTED : Status.STATUS_UNKNOWN;
+		final int statusToSend = successful ? Status.STATUS_COMMITTED : Status.STATUS_ROLLEDBACK;
 		synchronizationRegistry.notifySynchronizationsAfterTransactionCompletion( statusToSend );
 		transactionCoordinatorOwner.afterTransactionCompletion( successful, false );
 		for ( TransactionObserver observer : observers() ) {
@@ -236,24 +236,32 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 
 		@Override
 		public void commit() {
+			if ( rollbackOnly ) {
+				commitRollbackOnly();
+			}
+			else {
+				commitNoRollbackOnly();
+			}
+		}
+
+		private void commitNoRollbackOnly() {
 			try {
-				if ( rollbackOnly ) {
-					commitRollbackOnly();
-				}
-				else {
-					JdbcResourceLocalTransactionCoordinatorImpl.this.beforeCompletionCallback();
-					jdbcResourceTransaction.commit();
-					JdbcResourceLocalTransactionCoordinatorImpl.this.afterCompletionCallback( true );
-				}
+				beforeCompletionCallback();
+				jdbcResourceTransaction.commit();
+				afterCompletionCallback( true );
 			}
 			catch (RollbackException e) {
+				afterCompletionCallback( false );
 				throw e;
 			}
 			catch (RuntimeException e) {
+				// something went wrong, so make a last-ditch,
+				// hail-mary attempt to roll back the transaction
 				try {
 					rollback();
 				}
 				catch (RuntimeException e2) {
+					e.addSuppressed( e2 );
 					log.debug( "Encountered failure rolling back failed commit", e2 );
 				}
 				throw e;
@@ -261,19 +269,10 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		}
 
 		private void commitRollbackOnly() {
-			log.debug( "On commit, transaction was marked for roll-back only, rolling back" );
-			try {
-				rollback();
-				if ( jpaCompliance.isJpaTransactionComplianceEnabled() ) {
-					throw new RollbackException( "Transaction was marked for rollback-only" );
-				}
-			}
-			catch (RollbackException e) {
-				throw e;
-			}
-			catch (RuntimeException e) {
-				log.debug( "Encountered failure rolling back failed commit", e );
-				throw e;
+			log.debug( "On commit, transaction was marked for rollback only, rolling back" );
+			rollback();
+			if ( jpaCompliance.isJpaTransactionComplianceEnabled() ) {
+				throw new RollbackException( "Transaction was marked for rollback only" );
 			}
 		}
 
@@ -282,7 +281,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 			try {
 				if ( rollbackOnly || jdbcResourceTransaction.getStatus() == TransactionStatus.ACTIVE ) {
 					jdbcResourceTransaction.rollback();
-					JdbcResourceLocalTransactionCoordinatorImpl.this.afterCompletionCallback( false );
+					afterCompletionCallback( false );
 				}
 			}
 			finally {
@@ -292,14 +291,17 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 
 		@Override
 		public TransactionStatus getStatus() {
-			return rollbackOnly ? TransactionStatus.MARKED_ROLLBACK : jdbcResourceTransaction.getStatus();
+			final TransactionStatus status = jdbcResourceTransaction.getStatus();
+			return rollbackOnly && status == TransactionStatus.ACTIVE
+					? TransactionStatus.MARKED_ROLLBACK
+					: status;
 		}
 
 		@Override
 		public void markRollbackOnly() {
 			if ( getStatus() != TransactionStatus.ROLLED_BACK ) {
 				if ( log.isDebugEnabled() ) {
-					log.debug( "JDBC transaction marked for rollback-only (exception provided for stack trace)",
+					log.debug( "JDBC transaction marked for rollback only (exception provided for stack trace)",
 							new Exception( "exception just for purpose of providing stack trace" ) );
 				}
 				rollbackOnly = true;

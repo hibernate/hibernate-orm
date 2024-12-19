@@ -450,16 +450,18 @@ public class SessionImpl
 	private boolean isTransactionInProgressAndNotMarkedForRollback() {
 		if ( waitingForAutoClose ) {
 			return getSessionFactory().isOpen()
-				&& isTransactionActive();
+				&& isTransactionActiveAndNotMarkedForRollback();
 		}
 		else {
 			return !isClosed()
-				&& isTransactionActive();
+				&& isTransactionActiveAndNotMarkedForRollback();
 		}
 	}
 
-	private boolean isTransactionActive() {
-		return getTransactionCoordinator().isTransactionActive( false );
+	private boolean isTransactionActiveAndNotMarkedForRollback() {
+		final TransactionCoordinator transactionCoordinator = getTransactionCoordinator();
+		return transactionCoordinator.isJoined()
+			&& transactionCoordinator.getTransactionDriverControl().isActiveAndNoMarkedForRollback();
 	}
 
 	@Override

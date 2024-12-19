@@ -85,7 +85,11 @@ public class JtaTransactionAdapterTransactionManagerImpl implements JtaTransacti
 	@Override
 	public TransactionStatus getStatus() {
 		try {
-			return StatusTranslator.translate( transactionManager.getStatus() );
+			final TransactionStatus status = StatusTranslator.translate( transactionManager.getStatus() );
+			if ( status == null ) {
+				throw new TransactionException( "TransactionManager reported transaction status as unknown" );
+			}
+			return status;
 		}
 		catch (SystemException e) {
 			throw new TransactionException( "JTA TransactionManager#getStatus failed", e );

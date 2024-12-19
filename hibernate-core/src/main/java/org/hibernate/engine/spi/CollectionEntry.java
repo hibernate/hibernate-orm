@@ -91,7 +91,7 @@ public final class CollectionEntry implements Serializable {
 		this.loadedKey = loadedKey;
 
 		this.loadedPersister = loadedPersister;
-		this.role = ( loadedPersister == null ? null : loadedPersister.getRole() );
+		this.role = loadedPersister == null ? null : loadedPersister.getRole();
 
 		collection.setSnapshot( loadedKey, role, null );
 

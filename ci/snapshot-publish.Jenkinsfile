@@ -36,7 +36,7 @@ pipeline {
                     // https://docs.gradle.org/current/userguide/publishing_gradle_plugins.html#account_setup
                     usernamePassword(credentialsId: 'gradle-plugin-portal-api-key', passwordVariable: 'GRADLE_PUBLISH_SECRET', usernameVariable: 'GRADLE_PUBLISH_KEY'),
                     file(credentialsId: 'release.gpg.private-key', variable: 'SIGNING_GPG_PRIVATE_KEY_PATH'),
-                    string(credentialsId: 'release.gpg.passphrase', variable: 'SIGNING_GPG_PASSPHRASE')
+                    string(credentialsId: 'release.gpg.passphrase', variable: 'SIGNING_GPG_PASSPHRASE'),
                     gitUsernamePassword(credentialsId: 'username-and-token.Hibernate-CI.github.com', gitToolName: 'Default')
                 ]) {
 					withEnv([

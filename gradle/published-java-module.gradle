@@ -108,10 +108,12 @@ publishing {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Signing
 
+
 def signingKey = resolveSigningKey()
 def signingPassphrase = resolveSigningPassphrase()
 
 var signingExtension = project.getExtensions().getByType(SigningExtension) as SigningExtension
+var publishingExtension = project.getExtensions().getByType(PublishingExtension) as PublishingExtension
 signingExtension.sign publishingExtension.publications.publishedArtifacts
 signingExtension.useInMemoryPgpKeys(signingKey, signingPassphrase)
 

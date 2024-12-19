@@ -110,13 +110,21 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 					pluralType = null;
 					break;
 				case OracleJsonParser.Event.VALUE_DATE:
-					LocalDateTime localDate = osonParser.getLocalDateTime();
+					LocalDateTime localDateTime = osonParser.getLocalDateTime();
+					// check
+//					if (date) {
+//						finalResult[selectableIndex] = Date.valueOf( localDateTime.toLocalDate() );
+//					}
+//					else if(LocalDate)
+//					{
+//						finalResult[selectableIndex]= localDateTime.toLocalDate();
+//					}
 					if ( pluralType != null ) {
 						// dealing with arrays
-						subArrayList.add( Date.valueOf( localDate.toLocalDate() ) );
+						subArrayList.add( Date.valueOf( localDateTime.toLocalDate() ) );
 					}
 					else {
-						finalResult[selectableIndex] = Date.valueOf( localDate.toLocalDate() );
+						finalResult[selectableIndex] = Date.valueOf( localDateTime.toLocalDate() );
 					}
 					break;
 				case OracleJsonParser.Event.VALUE_TIMESTAMP:
@@ -212,6 +220,7 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 							theOne = mapping.getJdbcMapping().convertToDomainValue(
 									mapping.getJdbcMapping().getJdbcJavaType().wrap( osonParser.getFloat(), options ) );
 						}
+						finalResult[selectableIndex] = theOne;
 					}
 					break;
 				case OracleJsonParser.Event.VALUE_DOUBLE:

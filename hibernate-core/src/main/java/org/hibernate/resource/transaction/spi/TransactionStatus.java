@@ -50,6 +50,11 @@ public enum TransactionStatus {
 	 */
 	ROLLING_BACK;
 
+	public boolean isActive() {
+		return this == ACTIVE
+			|| this == MARKED_ROLLBACK;
+	}
+
 	public boolean isOneOf(TransactionStatus... statuses) {
 		for ( TransactionStatus status : statuses ) {
 			if ( this == status ) {
@@ -64,10 +69,8 @@ public enum TransactionStatus {
 	}
 
 	public boolean canRollback() {
-		return isOneOf(
-				TransactionStatus.ACTIVE,
-				TransactionStatus.FAILED_COMMIT,
-				TransactionStatus.MARKED_ROLLBACK
-		);
+		return this == ACTIVE
+			|| this == FAILED_COMMIT
+			|| this == MARKED_ROLLBACK;
 	}
 }

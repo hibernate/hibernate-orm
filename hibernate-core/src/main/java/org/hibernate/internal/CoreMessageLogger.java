@@ -342,6 +342,10 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToConstructCurrentSessionContext(String impl, @Cause Throwable e);
 
 	@LogMessage(level = WARN)
+	@Message(value = "Unable to close temporary session used to load lazy collection associated to no session", id = 303)
+	void unableToCloseTemporarySession();
+
+	@LogMessage(level = WARN)
 	@Message(value = "Could not copy system properties, system properties will be ignored", id = 304)
 	void unableToCopySystemProperties();
 

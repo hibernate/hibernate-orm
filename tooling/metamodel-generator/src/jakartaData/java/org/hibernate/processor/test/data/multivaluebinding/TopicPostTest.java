@@ -48,5 +48,9 @@ public class TopicPostTest extends CompilationTest {
 		else {
 			fail();
 		}
+
+		assertPresenceOfMethodInMetamodelFor( PostRepository.class, "getPostsByNameIgnoreCase", String.class );
+
+		assertPresenceOfMethodInMetamodelFor( Post.class, "getPostsByNameIgnoreCase", EntityManager.class, String.class );
 	}
 }

@@ -346,7 +346,7 @@ mssql_2017() {
 mssql_2022() {
     $CONTAINER_CLI rm -f mssql || true
     #This sha256 matches a specific tag of mcr.microsoft.com/mssql/server:2022-latest :
-    $CONTAINER_CLI run --name mssql -d -p 1433:1433 -e "SA_PASSWORD=Hibernate_orm_test" -e ACCEPT_EULA=Y ${DB_IMAGE_MSSQL_2022:-mcr.microsoft.com/mssql/server@sha256:5439be9edc3b514cf647bcd3651779fa13f487735a985f40cbdcfecc60fea273}
+    $CONTAINER_CLI run --name mssql -d -p 1433:1433 -e "SA_PASSWORD=Hibernate_orm_test" -e ACCEPT_EULA=Y ${DB_IMAGE_MSSQL_2022:-mcr.microsoft.com/mssql/server@sha256:b94071acd4612bfe60a73e265097c2b6388d14d9d493db8f37cf4479a4337480}
     sleep 5
     n=0
     until [ "$n" -ge 5 ]

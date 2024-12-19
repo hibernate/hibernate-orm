@@ -36,7 +36,7 @@ ext {
                         'connection.init_sql' : ''
                 ],
                 derby : [
-                        'db.dialect' : 'org.hibernate.dialect.DerbyDialect',
+                        'db.dialect' : 'org.hibernate.community.dialect.DerbyDialect',
                         'jdbc.driver': 'org.apache.derby.iapi.jdbc.AutoloadedDriver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
@@ -46,7 +46,7 @@ ext {
                         'connection.init_sql' : ''
                 ],
                 derby_old : [
-                        'db.dialect' : 'org.hibernate.dialect.DerbyDialect',
+                        'db.dialect' : 'org.hibernate.community.dialect.DerbyDialect',
                         'jdbc.driver': 'org.apache.derby.jdbc.EmbeddedDriver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',

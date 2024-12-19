@@ -141,7 +141,7 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 					.append(sessionName)
 					.append('.')
 					.append("insert");
-			argument( declaration, "Multiple" );
+			argument( declaration );
 			declaration
 					.append(";\n")
 					.append("\t\telse\n\t");
@@ -151,28 +151,47 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 				.append(sessionName)
 				.append('.')
 				.append(operationName);
-		argument( declaration, "Multiple" );
+		argument( declaration );
 		declaration
 				.append(";\n");
 	}
 
-	private void argument(StringBuilder declaration, String suffix) {
+	private void argument(StringBuilder declaration) {
 		switch ( parameterKind ) {
 			case LIST:
-				declaration
-						.append(suffix)
-						.append("(")
-						.append(parameterName)
-						.append(")");
+				if ( isReactive() ) {
+					declaration
+							.append("All")
+							.append("(")
+							.append(parameterName)
+							.append(".toArray()")
+							.append( ")" );
+				}
+				else {
+					declaration
+							.append("Multiple")
+							.append("(")
+							.append(parameterName)
+							.append(")");
+				}
 				break;
 			case ARRAY:
-				declaration
-						.append(suffix)
-						.append("(")
-						.append(annotationMetaEntity.importType(LIST))
-						.append(".of(")
-						.append(parameterName)
-						.append("))");
+				if ( isReactive() ) {
+					declaration
+							.append("All")
+							.append("(")
+							.append(parameterName)
+							.append(")");
+				}
+				else {
+					declaration
+							.append("Multiple")
+							.append("(")
+							.append(annotationMetaEntity.importType(LIST))
+							.append(".of(")
+							.append(parameterName)
+							.append("))");
+				}
 				break;
 			default:
 				declaration
@@ -212,7 +231,7 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 				.append( '.' )
 				.append( operationName );
 		// note that there is no upsertAll() method
-		argument( declaration, "All" );
+		argument( declaration );
 		if ( isGeneratedIdUpsert() ) {
 			declaration
 					.append(')');

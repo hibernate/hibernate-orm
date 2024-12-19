@@ -91,6 +91,9 @@ public interface Library2 {
 	@Insert
 	Uni<Publisher[]> insertAll(Publisher[] publishers);
 
+	@Delete
+	Uni<Void> deleteAll(List<Publisher> publishers);
+
 	@Save
 	Uni<Publisher> save(Publisher publisher);
 

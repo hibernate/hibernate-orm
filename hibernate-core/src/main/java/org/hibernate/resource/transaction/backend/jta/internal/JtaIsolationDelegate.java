@@ -203,7 +203,11 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 			}
 		}
 		catch (SQLException e) {
-			throw sqlExceptionConverter().apply( e, "unable to obtain isolated JDBC connection" );
+			final JDBCException jdbcException = sqlExceptionConverter().apply( e, "unable to obtain isolated JDBC connection" );
+			if ( jdbcException == null ) {
+				throw new HibernateException( "Unable to obtain isolated JDBC connection", e );
+			}
+			throw jdbcException;
 		}
 	}
 

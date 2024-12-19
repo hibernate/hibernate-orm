@@ -17,11 +17,10 @@ import org.hibernate.jenkins.pipeline.helpers.version.Version
 // Global build configuration
 env.PROJECT = "orm"
 env.JIRA_KEY = "HHH"
-def RELEASE_ON_PUSH = true // Set to `true` *only* on branches where you want a release on each push.
+def RELEASE_ON_SCHEDULE = true // Set to `true` *only* on branches where you want a scheduled release.
 
 print "INFO: env.PROJECT = ${env.PROJECT}"
 print "INFO: env.JIRA_KEY = ${env.JIRA_KEY}"
-print "INFO: RELEASE_ON_PUSH = ${RELEASE_ON_PUSH}"
 
 // --------------------------------------------
 // Build conditions
@@ -34,10 +33,17 @@ if (currentBuild.getBuildCauses().toString().contains('BranchIndexingCause')) {
 }
 
 def manualRelease = currentBuild.getBuildCauses().toString().contains( 'UserIdCause' )
+def cronRelease = currentBuild.getBuildCauses().toString().contains( 'TimerTriggerCause' )
 
 // Only do automatic release on branches where we opted in
-if ( !manualRelease && !RELEASE_ON_PUSH ) {
-	print "INFO: Build skipped because automated releases are disabled on this branch. See constant RELEASE_ON_PUSH in ci/release/Jenkinsfile"
+if ( !manualRelease && !cronRelease ) {
+	print "INFO: Build skipped because automated releases on push are disabled on this branch."
+	currentBuild.result = 'NOT_BUILT'
+	return
+}
+
+if ( !manualRelease && cronRelease && !RELEASE_ON_SCHEDULE ) {
+	print "INFO: Build skipped because automated releases are disabled on this branch. See constant RELEASE_ON_SCHEDULE in ci/release/Jenkinsfile"
 	currentBuild.result = 'NOT_BUILT'
 	return
 }
@@ -60,12 +66,15 @@ pipeline {
 	agent {
 		label 'Worker&&Containers'
 	}
+	triggers {
+		// Run every week Sunday midnight
+		cron('0 0 * * 0')
+	}
 	tools {
 		jdk 'OpenJDK 11 Latest'
 	}
 	options {
 		buildDiscarder logRotator(daysToKeepStr: '30', numToKeepStr: '10')
-		rateLimitBuilds(throttle: [count: 1, durationName: 'day', userBoost: true])
 		disableConcurrentBuilds(abortPrevious: false)
 		preserveStashes()
 	}

@@ -6,10 +6,6 @@
  */
 package org.hibernate.orm.test.boot.database.metadata;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
-import static org.junit.jupiter.api.Assertions.fail;
-
 import java.lang.reflect.Field;
 import java.util.stream.Stream;
 
@@ -49,6 +45,11 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import org.jboss.logging.Logger;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Steve Ebersole
@@ -200,6 +201,23 @@ public class MetadataAccessTests {
 			assertThat( expected.getCause() ).isInstanceOf( HibernateException.class );
 			final HibernateException cause = (HibernateException) expected.getCause();
 			assertThat( cause.getMessage() ).startsWith( "Unable to determine Dialect without JDBC metadata" );
+		}
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-18286")
+	void testDontIgnoreMetadataAccessFailureWhenConnectionCantBeObtained() {
+		StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder();
+		registryBuilder.clearSettings();
+
+		registryBuilder.applySetting( JdbcSettings.IGNORE_METADATA_ACCESS_FAILURE_ON_BOOT, false );
+
+		try (StandardServiceRegistry registry = registryBuilder.build()) {
+			assertThatExceptionOfType( ServiceException.class )
+					.isThrownBy( () -> registry.getService( JdbcEnvironment.class ) )
+					.havingCause()
+					.isInstanceOf( HibernateException.class )
+					.withMessage( "Unable to access JDBC metadata" );
 		}
 	}
 

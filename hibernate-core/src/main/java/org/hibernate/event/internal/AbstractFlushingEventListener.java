@@ -63,37 +63,30 @@ public abstract class AbstractFlushingEventListener {
 	 * @throws HibernateException Error flushing caches to execution queues.
 	 */
 	protected void flushEverythingToExecutions(FlushEvent event) throws HibernateException {
-
 		LOG.trace( "Flushing session" );
-
 		final EventSource session = event.getSession();
-
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		preFlush( session, persistenceContext );
-
 		flushEverythingToExecutions( event, persistenceContext, session );
 	}
 
 	protected void flushEverythingToExecutions(FlushEvent event, PersistenceContext persistenceContext, EventSource session) {
 		persistenceContext.setFlushing( true );
 		try {
-			int entityCount = flushEntities( event, persistenceContext );
-			int collectionCount = flushCollections( session, persistenceContext );
-
+			final int entityCount = flushEntities( event, persistenceContext );
+			final int collectionCount = flushCollections( session, persistenceContext );
 			event.setNumberOfEntitiesProcessed( entityCount );
 			event.setNumberOfCollectionsProcessed( collectionCount );
 		}
 		finally {
 			persistenceContext.setFlushing( false);
 		}
-
 		//some statistics
 		logFlushResults( event );
 	}
 
 	protected void preFlush(EventSource session, PersistenceContext persistenceContext) {
 		session.getInterceptor().preFlush( persistenceContext.managedEntitiesIterator() );
-
 		prepareEntityFlushes( session, persistenceContext );
 		// we could move this inside if we wanted to
 		// tolerate collection initializations during
@@ -134,9 +127,7 @@ public abstract class AbstractFlushingEventListener {
 	 * and also apply orphan delete
 	 */
 	private void prepareEntityFlushes(EventSource session, PersistenceContext persistenceContext) throws HibernateException {
-
 		LOG.debug( "Processing flush-time cascades" );
-
 		final PersistContext context = PersistContext.create();
 		// safe from concurrent modification because of how concurrentEntries() is implemented on IdentityMap
 		for ( Map.Entry<Object,EntityEntry> me : persistenceContext.reentrantSafeEntityEntries() ) {
@@ -146,7 +137,6 @@ public abstract class AbstractFlushingEventListener {
 				cascadeOnFlush( session, entry.getPersister(), me.getKey(), context );
 			}
 		}
-
 		checkForTransientReferences( session, persistenceContext );
 	}
 
@@ -194,14 +184,14 @@ public abstract class AbstractFlushingEventListener {
 	 * dirty check.
 	 */
 	private void prepareCollectionFlushes(PersistenceContext persistenceContext) throws HibernateException {
-
 		// Initialize dirty flags for arrays + collections with composite elements
 		// and reset reached, doupdate, etc.
-
 		LOG.debug( "Dirty checking collections" );
-		final Map<PersistentCollection<?>, CollectionEntry> collectionEntries = persistenceContext.getCollectionEntries();
+		final Map<PersistentCollection<?>, CollectionEntry> collectionEntries =
+				persistenceContext.getCollectionEntries();
 		if ( collectionEntries != null ) {
-			for ( Map.Entry<PersistentCollection<?>, CollectionEntry> entry : ( (IdentityMap<PersistentCollection<?>, CollectionEntry>) collectionEntries ).entryArray() ) {
+			for ( Map.Entry<PersistentCollection<?>, CollectionEntry> entry :
+					( (IdentityMap<PersistentCollection<?>, CollectionEntry>) collectionEntries ).entryArray() ) {
 				entry.getValue().preFlush( entry.getKey() );
 			}
 		}
@@ -214,36 +204,28 @@ public abstract class AbstractFlushingEventListener {
 	 */
 	private int flushEntities(final FlushEvent event, final PersistenceContext persistenceContext)
 			throws HibernateException {
-
 		LOG.trace( "Flushing entities and processing referenced collections" );
 
 		final EventSource source = event.getSession();
 		final EventListenerGroup<FlushEntityEventListener> flushListeners =
 				event.getFactory().getFastSessionServices().eventListenerGroup_FLUSH_ENTITY;
 
-		// Among other things, updateReachables() will recursively load all
-		// collections that are moving roles. This might cause entities to
-		// be loaded.
-
+		// Among other things, updateReachables() recursively loads all
+		// collections that are changing roles. This might cause entities
+		// to be loaded.
 		// So this needs to be safe from concurrent modification problems.
-
 		final Map.Entry<Object,EntityEntry>[] entityEntries = persistenceContext.reentrantSafeEntityEntries();
 		final int count = entityEntries.length;
 
 		FlushEntityEvent entityEvent = null; //allow reuse of the event as it's heavily allocated in certain use cases
 		int eventGenerationId = 0; //Used to double-check the instance reuse won't cause problems
-
 		for ( Map.Entry<Object,EntityEntry> me : entityEntries ) {
 			// Update the status of the object and if necessary, schedule an update
-
 			final EntityEntry entry = me.getValue();
 			final Status status = entry.getStatus();
-
 			if ( status != Status.LOADING && status != Status.GONE ) {
 				entityEvent = createOrReuseEventInstance( entityEvent, source, me.getKey(), entry );
-
 				entityEvent.setInstanceGenerationId( ++eventGenerationId );
-
 				flushListeners.fireEventOnEachListener( entityEvent, FlushEntityEventListener::onFlushEntity );
 				entityEvent.setAllowedToReuse( true );
 				assert entityEvent.getInstanceGenerationId() == eventGenerationId;
@@ -281,7 +263,6 @@ public abstract class AbstractFlushingEventListener {
 	private int flushCollections(final EventSource session, final PersistenceContext persistenceContext)
 			throws HibernateException {
 		LOG.trace( "Processing unreferenced collections" );
-
 		final Map<PersistentCollection<?>, CollectionEntry> collectionEntries = persistenceContext.getCollectionEntries();
 		final int count;
 		if ( collectionEntries == null ) {
@@ -300,7 +281,6 @@ public abstract class AbstractFlushingEventListener {
 		// Schedule updates to collections:
 
 		LOG.trace( "Scheduling collection removes/(re)creates/updates" );
-
 		final ActionQueue actionQueue = session.getActionQueue();
 		final Interceptor interceptor = session.getInterceptor();
 		persistenceContext.forEachCollectionEntry(
@@ -407,7 +387,6 @@ public abstract class AbstractFlushingEventListener {
 	 * 3. call Interceptor.postFlush()
 	 */
 	protected void postFlush(SessionImplementor session) throws HibernateException {
-
 		LOG.trace( "Post flush" );
 
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
@@ -429,13 +408,12 @@ public abstract class AbstractFlushingEventListener {
 					}
 					else {
 						//otherwise recreate the mapping between the collection and its key
-						final CollectionKey collectionKey = new CollectionKey(
-								collectionEntry.getLoadedPersister(),
-								key
-						);
+						final CollectionKey collectionKey =
+								new CollectionKey( collectionEntry.getLoadedPersister(), key );
 						persistenceContext.addCollectionByKey( collectionKey, persistentCollection );
 					}
-				}, true
+				},
+				true
 		);
 	}
 

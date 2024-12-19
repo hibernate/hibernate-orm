@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 
 import org.hibernate.Internal;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.archive.internal.RepeatableInputStreamAccess;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
 import org.hibernate.boot.internal.RootMappingDefaults;
@@ -571,7 +572,7 @@ public class MetadataBuildingProcess {
 		@Override
 		public void contributeBinding(InputStream xmlStream) {
 			final Origin origin = new Origin( SourceType.INPUT_STREAM, null );
-			final Binding<JaxbBindableMappingDescriptor> binding = mappingBinder.bind( xmlStream, origin );
+			final Binding<JaxbBindableMappingDescriptor> binding = mappingBinder.bind( new RepeatableInputStreamAccess( SourceType.INPUT_STREAM.toString(), xmlStream ), origin );
 
 			final JaxbBindableMappingDescriptor bindingRoot = binding.getRoot();
 			if ( bindingRoot instanceof JaxbHbmHibernateMapping ) {

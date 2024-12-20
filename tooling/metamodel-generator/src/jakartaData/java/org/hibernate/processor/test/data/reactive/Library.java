@@ -107,4 +107,13 @@ public interface Library {
 
 	@Find
 	Uni<List<Author>> authorsByCityAndPostcode(String address_city, String address_postcode);
+
+	@Query("update Author set address = :address where ssn = :id")
+	Uni<Void> updateAuthorAddress1(String id, Address address);
+
+	@Query("update Author set address = :address where ssn = :id")
+	Uni<Integer> updateAuthorAddress2(String id, Address address);
+
+	@Query("update Author set address = :address where ssn = :id")
+	Uni<Boolean> updateAuthorAddress3(String id, Address address);
 }

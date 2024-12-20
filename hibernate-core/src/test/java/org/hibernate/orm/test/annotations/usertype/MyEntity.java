@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.annotations.usertype;
 
 import jakarta.persistence.Entity;
@@ -6,17 +10,17 @@ import org.hibernate.annotations.Type;
 
 @Entity
 class MyEntity {
-    @Id
-    @Type(MyType.class)
-    MyId id;
+	@Id
+	@Type(MyType.class)
+	MyId id;
 
-    String content;
+	String content;
 
-    MyEntity(MyId id, String content) {
-        this.id = id;
-        this.content = content;
-    }
+	MyEntity(MyId id, String content) {
+		this.id = id;
+		this.content = content;
+	}
 
-    MyEntity() {
-    }
+	MyEntity() {
+	}
 }

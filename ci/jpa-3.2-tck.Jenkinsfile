@@ -136,7 +136,7 @@ pipeline {
 					sh """ \
 						rm -Rf ./results
 						docker rm -f tck || true
-						docker run -v ~/.m2/repository/org/hibernate:/home/jenkins/.m2/repository/org/hibernate:z ${dockerRunOptions} -e HOME=/home/jenkins -e RDBMS=${params.RDBMS} -e HIBERNATE_VERSION=$HIBERNATE_VERSION --name tck jakarta-tck-runner || true
+						docker run -v ~/.m2/repository/org/hibernate:/home/jenkins/.m2/repository/org/hibernate:z ${dockerRunOptions} -e MAVEN_OPTS=-Dmaven.repo.local=/home/jenkins/.m2 -e RDBMS=${params.RDBMS} -e HIBERNATE_VERSION=$HIBERNATE_VERSION --name tck jakarta-tck-runner || true
 						docker cp tck:/tck/persistence-tck/bin/target/failsafe-reports ./results
 						docker cp tck:/tck/persistence-tck/bin/target/test-reports ./results
 					"""

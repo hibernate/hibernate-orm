@@ -128,7 +128,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	}
 
 	public final boolean isModifiableEntity(EntityEntry entry) {
-		return ( entry == null ? entityPersister().isMutable() : entry.isModifiableEntity() );
+		return entry == null ? entityPersister().isMutable() : entry.isModifiableEntity();
 	}
 
 	@Override

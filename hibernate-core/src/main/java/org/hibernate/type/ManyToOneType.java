@@ -155,7 +155,7 @@ public class ManyToOneType extends EntityType {
 		else {
 			// the ids are fully resolved, so compare them with isDirty(), not isModified()
 			return getIdentifierOrUniqueKeyType( session.getFactory() )
-					.isDirty( old, getIdentifier( current, session ), session );
+					.isDirty( old, getIdentifierEvenIfTransient( current, session ), session );
 		}
 	}
 
@@ -240,8 +240,8 @@ public class ManyToOneType extends EntityType {
 			return false;
 		}
 		else {
-			final Object oldid = getIdentifier( old, session );
-			final Object newid = getIdentifier( current, session );
+			final Object oldid = getIdentifierEvenIfTransient( old, session );
+			final Object newid = getIdentifierEvenIfTransient( current, session );
 			return getIdentifierOrUniqueKeyType( session.getFactory() ).isDirty( oldid, newid, session );
 		}
 	}
@@ -259,8 +259,8 @@ public class ManyToOneType extends EntityType {
 			return false;
 		}
 		else {
-			final Object oldid = getIdentifier( old, session );
-			final Object newid = getIdentifier( current, session );
+			final Object oldid = getIdentifierEvenIfTransient( old, session );
+			final Object newid = getIdentifierEvenIfTransient( current, session );
 			return getIdentifierOrUniqueKeyType( session.getFactory() ).isDirty( oldid, newid, checkable, session );
 		}
 	}

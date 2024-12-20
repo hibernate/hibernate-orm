@@ -15,7 +15,9 @@ import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 
 /**
- * Represents a JPA callback using a dedicated listener
+ * Represents a JPA callback method declared by an entity listener class.
+ *
+ * @see jakarta.persistence.EntityListeners
  *
  * @author Kabir Khan
  * @author Steve Ebersole
@@ -49,15 +51,14 @@ public class ListenerCallback extends AbstractCallback {
 	}
 
 	@Override
-	public boolean performCallback(Object entity) {
+	public void performCallback(Object entity) {
 		try {
 			callbackMethod.invoke( listenerManagedBean.getBeanInstance(), entity );
-			return true;
 		}
 		catch (InvocationTargetException e) {
 			//keep runtime exceptions as is
-			if ( e.getTargetException() instanceof RuntimeException ) {
-				throw (RuntimeException) e.getTargetException();
+			if ( e.getTargetException() instanceof RuntimeException runtimeException ) {
+				throw runtimeException;
 			}
 			else {
 				throw new RuntimeException( e.getTargetException() );

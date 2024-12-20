@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.query;
 
@@ -12,7 +10,7 @@ import jakarta.persistence.Id;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -22,7 +20,7 @@ import static org.junit.Assert.assertNotNull;
  * @author Vlad Mihalcea
  * @see <a href="https://hibernate.atlassian.net/browse/JPA-31">JPA-31</a>
  */
-@TestForIssue(jiraKey = "JPA-31")
+@JiraKey(value = "JPA-31")
 public class NullParameterQueryTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

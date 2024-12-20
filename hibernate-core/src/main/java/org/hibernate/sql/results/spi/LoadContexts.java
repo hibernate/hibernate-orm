@@ -1,19 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.spi;
 
 import org.hibernate.engine.spi.CollectionKey;
-import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.StandardStack;
-import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 
@@ -29,7 +24,7 @@ public class LoadContexts {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( LoadContexts.class );
 
 	private final PersistenceContext persistenceContext;
-	private final StandardStack<JdbcValuesSourceProcessingState> jdbcValuesSourceProcessingStateStack = new StandardStack<>( JdbcValuesSourceProcessingState.class );
+	private final StandardStack<JdbcValuesSourceProcessingState> jdbcValuesSourceProcessingStateStack = new StandardStack<>();
 
 	public LoadContexts(PersistenceContext persistenceContext) {
 		this.persistenceContext = persistenceContext;
@@ -52,10 +47,6 @@ public class LoadContexts {
 
 	public LoadingCollectionEntry findLoadingCollectionEntry(final CollectionKey collectionKey) {
 		return jdbcValuesSourceProcessingStateStack.findCurrentFirstWithParameter( collectionKey, JdbcValuesSourceProcessingState::findLoadingCollectionLocally );
-	}
-
-	public Initializer findInitializer(final EntityUniqueKey key){
-		return jdbcValuesSourceProcessingStateStack.findCurrentFirstWithParameter( key, JdbcValuesSourceProcessingState::findInitializer );
 	}
 
 	/**

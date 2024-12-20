@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy.inlinedirtychecking;
 
@@ -16,58 +14,56 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.validation.constraints.NotNull;
 
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.internal.BytecodeProviderInitiator;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
-@RunWith(BytecodeEnhancerRunner.class)
+@DomainModel(
+		annotatedClasses = {
+				EntityWithMutableAttributesTest.User.class,
+				EntityWithMutableAttributesTest.Role.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, value = "100" ),
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @CustomEnhancementContext({ NoDirtyCheckEnhancementContext.class, DirtyCheckEnhancementContext.class })
-public class EntityWithMutableAttributesTest extends BaseNonConfigCoreFunctionalTestCase {
+public class EntityWithMutableAttributesTest {
 
-	boolean skipTest;
-
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, "100" );
-		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
-	}
-
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
+	@BeforeAll
+	static void beforeAll() {
 		String byteCodeProvider = Environment.getProperties().getProperty( AvailableSettings.BYTECODE_PROVIDER );
-		if ( byteCodeProvider != null && !BytecodeProviderInitiator.BYTECODE_PROVIDER_NAME_BYTEBUDDY.equals( byteCodeProvider ) ) {
-			// skip the test if the bytecode provider is Javassist
-			skipTest = true;
-		}
-		else {
-			sources.addAnnotatedClass( User.class );
-			sources.addAnnotatedClass( Role.class );
-		}
+		assumeFalse( byteCodeProvider != null && !BytecodeProviderInitiator.BYTECODE_PROVIDER_NAME_BYTEBUDDY.equals(
+				byteCodeProvider ) );
 	}
 
-	@Before
-	public void setUp() {
-		if ( skipTest ) {
-			return;
-		}
-		inTransaction(
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					User user = new User();
 					user.setId( 1 );
@@ -82,18 +78,15 @@ public class EntityWithMutableAttributesTest extends BaseNonConfigCoreFunctional
 
 					user.setRole( role );
 
-					session.save( role );
-					session.save( user );
+					session.persist( role );
+					session.persist( user );
 				}
 		);
 	}
 
-	@After
-	public void tearDown() {
-		if ( skipTest ) {
-			return;
-		}
-		inTransaction(
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "delete from User" ).executeUpdate();
 					session.createQuery( "delete from Role" ).executeUpdate();
@@ -102,13 +95,10 @@ public class EntityWithMutableAttributesTest extends BaseNonConfigCoreFunctional
 	}
 
 	@Test
-	public void testLoad() {
-		if ( skipTest ) {
-			return;
-		}
-		inTransaction(
+	public void testLoad(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
-					User user = session.load( User.class, 1 );
+					User user = session.getReference( User.class, 1 );
 					assertThat(
 							user, instanceOf( PersistentAttributeInterceptable.class )
 					);
@@ -122,18 +112,15 @@ public class EntityWithMutableAttributesTest extends BaseNonConfigCoreFunctional
 	}
 
 	@Test
-	public void testMutableAttributeIsUpdated() {
-		if ( skipTest ) {
-			return;
-		}
-		inTransaction(
+	public void testMutableAttributeIsUpdated(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
-					User user = session.load( User.class, 1 );
+					User user = session.getReference( User.class, 1 );
 					user.getDate().setTime( 0 );
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					User user = session.getReference( User.class, 1 );
 					assertThat( user.getDate().getTime(), is( 0L ) );

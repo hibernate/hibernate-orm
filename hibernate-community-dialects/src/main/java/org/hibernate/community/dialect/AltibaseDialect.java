@@ -1,23 +1,29 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
-import java.sql.*;
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
+import java.sql.Types;
 import java.time.temporal.TemporalAccessor;
 import java.util.Date;
 import java.util.TimeZone;
 
-import jakarta.persistence.TemporalType;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.community.dialect.sequence.*;
-import org.hibernate.dialect.*;
-import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.community.dialect.pagination.AltibaseLimitHandler;
+import org.hibernate.community.dialect.sequence.AltibaseSequenceSupport;
+import org.hibernate.community.dialect.sequence.SequenceInformationExtractorAltibaseDatabaseImpl;
+import org.hibernate.dialect.BooleanDecoder;
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.NationalizationSupport;
+import org.hibernate.dialect.NullOrdering;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.OracleTruncFunction;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
@@ -30,8 +36,12 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.query.sqm.*;
+import org.hibernate.query.sqm.CastType;
+import org.hibernate.query.sqm.IntervalType;
+import org.hibernate.query.common.TemporalUnit;
+import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
+import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -46,19 +56,34 @@ import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.type.SqlTypes.*;
+import jakarta.persistence.TemporalType;
+
+import static org.hibernate.type.SqlTypes.BINARY;
+import static org.hibernate.type.SqlTypes.BIT;
+import static org.hibernate.type.SqlTypes.BOOLEAN;
+import static org.hibernate.type.SqlTypes.DOUBLE;
+import static org.hibernate.type.SqlTypes.FLOAT;
+import static org.hibernate.type.SqlTypes.LONGVARBINARY;
+import static org.hibernate.type.SqlTypes.LONGVARCHAR;
+import static org.hibernate.type.SqlTypes.NCLOB;
+import static org.hibernate.type.SqlTypes.TIME;
+import static org.hibernate.type.SqlTypes.TIMESTAMP;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TINYINT;
+import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_END;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIMESTAMP;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
 
 /**
- * An SQL dialect for Altibase 7.3 and above.
+ * An SQL dialect for Altibase 7.1 and above.
  *
  * @author Geoffrey Park
  */
 public class AltibaseDialect extends Dialect {
 
-	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 7, 3 );
+	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 7, 1 );
 
 	@SuppressWarnings("unused")
 	public AltibaseDialect() {
@@ -66,7 +91,7 @@ public class AltibaseDialect extends Dialect {
 	}
 
 	public AltibaseDialect(DialectResolutionInfo info) {
-		this( info.makeCopy() );
+		this( info.makeCopyOrDefault( MINIMUM_VERSION ) );
 		registerKeywords( info );
 	}
 
@@ -217,6 +242,20 @@ public class AltibaseDialect extends Dialect {
 				new OracleTruncFunction( functionContributions.getTypeConfiguration() )
 		);
 		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
+
+		// Use `numor`, `numand`, and `numxor` because bitwise operators work only in binary columns in Altibase.
+		functionContributions.getFunctionRegistry().patternDescriptorBuilder( "bitand", "numand(?1,?2)" )
+							.setExactArgumentCount( 2 )
+							.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+							.register();
+		functionContributions.getFunctionRegistry().patternDescriptorBuilder( "bitor", "numor(?1,?2)" )
+							.setExactArgumentCount( 2 )
+							.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+							.register();
+		functionContributions.getFunctionRegistry().patternDescriptorBuilder( "bitxor", "numxor(?1,?2)" )
+							.setExactArgumentCount( 2 )
+							.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+							.register();
 	}
 
 	@Override
@@ -236,12 +275,13 @@ public class AltibaseDialect extends Dialect {
 
 	@Override
 	public String currentLocalTime() {
-		return currentTimestamp();
+		return currentLocalTimestamp();
 	}
 
 	@Override
 	public String currentLocalTimestamp() {
-		return currentTimestamp();
+		// Drop microseconds, because sysdate comes with microseconds.
+		return "trunc(sysdate,'second')";
 	}
 
 	@Override
@@ -260,9 +300,13 @@ public class AltibaseDialect extends Dialect {
 		};
 	}
 
+	/**
+	 * In Altibase, `timestampadd` and `datediff` with microseconds have limitations,
+	 * so use seconds as the native precision.
+	 */
 	@Override
 	public long getFractionalSecondPrecisionInNanos() {
-		return 1_000; //microseconds
+		return 1_000_000_000; //seconds
 	}
 
 	/**
@@ -305,7 +349,7 @@ public class AltibaseDialect extends Dialect {
 			case NANOSECOND:
 				return "timestampadd(MICROSECOND,(?2)/1e3,?3)";
 			case NATIVE:
-				return "timestampadd(MICROSECOND, ?2, ?3)";
+				return "timestampadd(SECOND, ?2, ?3)";
 			default:
 				return "timestampadd(?1, ?2, ?3)";
 		}
@@ -315,11 +359,10 @@ public class AltibaseDialect extends Dialect {
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		switch (unit) {
 			case SECOND:
+			case NATIVE:
 				return "datediff(?2, ?3, 'SECOND')";
 			case NANOSECOND:
 				return "datediff(?2, ?3, 'MICROSECOND')*1e3";
-			case NATIVE:
-				return "datediff(?2, ?3, 'MICROSECOND')";
 			default:
 				return "datediff(?2, ?3, '?1')";
 		}
@@ -350,20 +393,26 @@ public class AltibaseDialect extends Dialect {
 				}
 				break;
 			case INTEGER_BOOLEAN:
-				result = BooleanDecoder.toIntegerBoolean( from );
+				result = from == CastType.STRING
+						? buildStringToBooleanCastDecode( "1", "0" )
+						: BooleanDecoder.toIntegerBoolean( from );
 				if ( result != null ) {
 					return result;
 				}
 				break;
 			case YN_BOOLEAN:
-				result = BooleanDecoder.toYesNoBoolean( from );
+				result = from == CastType.STRING
+						? buildStringToBooleanCastDecode( "'Y'", "'N'" )
+						: BooleanDecoder.toYesNoBoolean( from );
 				if ( result != null ) {
 					return result;
 				}
 				break;
 			case BOOLEAN:
 			case TF_BOOLEAN:
-				result = BooleanDecoder.toTrueFalseBoolean( from );
+				result = from == CastType.STRING
+						? buildStringToBooleanCastDecode( "'T'", "'F'" )
+						: BooleanDecoder.toTrueFalseBoolean( from );
 				if ( result != null ) {
 					return result;
 				}
@@ -501,11 +550,6 @@ public class AltibaseDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsInsertReturningGeneratedKeys() {
-		return true;
-	}
-
-	@Override
 	public boolean supportsTruncateWithCast(){
 		return false;
 	}
@@ -536,6 +580,17 @@ public class AltibaseDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsFromClauseInUpdate() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsOuterJoinForUpdate() {
+		// "SELECT FOR UPDATE can only be used with a single-table SELECT statement"
+		return false;
+	}
+
+	@Override
 	public SequenceSupport getSequenceSupport() {
 		return AltibaseSequenceSupport.INSTANCE;
 	}
@@ -561,6 +616,11 @@ public class AltibaseDialect extends Dialect {
 	}
 
 	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+	}
+
+	@Override
 	public boolean supportsCurrentTimestampSelection() {
 		return true;
 	}
@@ -578,11 +638,6 @@ public class AltibaseDialect extends Dialect {
 	@Override
 	public String getCascadeConstraintsString() {
 		return " cascade constraints";
-	}
-
-	@Override
-	public boolean supportsValuesListForInsert() {
-		return false;
 	}
 
 	@Override
@@ -628,26 +683,39 @@ public class AltibaseDialect extends Dialect {
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
-
-			final int errorCode = JdbcExceptionHelper.extractErrorCode(sqlException );
-
-			if ( errorCode == 334393 || errorCode == 4164) {
-				// 334393 - response timeout , 4164 - query timeout.
-				return new LockTimeoutException(message, sqlException, sql );
+			final String constraintName;
+			switch ( JdbcExceptionHelper.extractErrorCode( sqlException ) ) {
+				case 334393:       // response timeout
+				case 4164:         // query timeout
+					return new LockTimeoutException(message, sqlException, sql );
+				case 69720:        // unique constraint violated
+					constraintName = getViolatedConstraintNameExtractor().extractConstraintName( sqlException );
+					return new ConstraintViolationException(
+							message,
+							sqlException,
+							sql,
+							ConstraintViolationException.ConstraintKind.UNIQUE,
+							constraintName
+					);
+				case 200820:        // Cannot insert NULL or update to NULL
+				case 200823:        // foreign key constraint violation
+				case 200822: 	    // failed on update or delete by foreign key constraint violation
+					constraintName = getViolatedConstraintNameExtractor().extractConstraintName( sqlException );
+					return new ConstraintViolationException( message, sqlException, sql, constraintName );
+				default:
+					return null;
 			}
-
-			// 200820 - Cannot insert NULL or update to NULL
-			// 69720 - Unique constraint violated
-			// 200823 - foreign key constraint violation
-			// 200822 - failed on update or delete by foreign key constraint violation
-			if ( errorCode == 200820 || errorCode == 69720 || errorCode == 200823 || errorCode == 200822 ) {
-				final String constraintName = getViolatedConstraintNameExtractor().extractConstraintName( sqlException );
-
-				return new ConstraintViolationException(message, sqlException, sql, constraintName );
-			}
-
-			return null;
 		};
+	}
+
+	@Override
+	public String getDual() {
+		return "dual";
+	}
+
+	@Override
+	public String getFromDualForSelectOnly() {
+		return " from " + getDual();
 	}
 
 }

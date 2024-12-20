@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.secondarytable;
 
 import org.hibernate.annotations.SecondaryRow;
@@ -18,10 +22,9 @@ import jakarta.persistence.Table;
 @SecondaryRow(table = "Optional", optional = true)
 @SequenceGenerator(name="RecordSeq", sequenceName = "RecordId", allocationSize = 1)
 public class Record {
-    @Id @GeneratedValue(generator = "RecordSeq")  long id;
-    String name;
-    @Column(table = "NonOptional") String text;
-    @Column(table = "NonOptional") boolean enabled;
-    @Column(table = "Optional", name="`comment`") String comment;
+	@Id @GeneratedValue(generator = "RecordSeq")  long id;
+	String name;
+	@Column(table = "NonOptional") String text;
+	@Column(table = "NonOptional") boolean enabled;
+	@Column(table = "Optional", name="`comment`") String comment;
 }
-

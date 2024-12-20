@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.jpa;
 
@@ -27,6 +25,7 @@ import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
+import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
 import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmEmptinessPredicate;
@@ -100,6 +99,15 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 		final SqmExpressibleAccessor<?> current = inferenceBasis;
 		inferenceBasis = null;
 		super.visitFunction( sqmFunction );
+		inferenceBasis = current;
+		return sqmFunction;
+	}
+
+	@Override
+	public Object visitSetReturningFunction(SqmSetReturningFunction<?> sqmFunction) {
+		final SqmExpressibleAccessor<?> current = inferenceBasis;
+		inferenceBasis = null;
+		super.visitSetReturningFunction( sqmFunction );
 		inferenceBasis = current;
 		return sqmFunction;
 	}

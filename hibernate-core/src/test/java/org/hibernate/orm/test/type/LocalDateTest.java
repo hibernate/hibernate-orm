@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.type;
 
@@ -21,7 +19,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
@@ -29,14 +27,14 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.runners.Parameterized;
 
 /**
  * Tests for storage of LocalDate properties.
  */
-@TestForIssue(jiraKey = "HHH-10371")
-@SkipForDialect(value = AbstractHANADialect.class,
+@JiraKey(value = "HHH-10371")
+@SkipForDialect(value = HANADialect.class,
 		comment = "HANA systematically returns the wrong date when the JVM default timezone is not UTC")
 @SkipForDialect(value = MySQLDialect.class,
 		comment = "HHH-13582: MySQL ConnectorJ 8.x returns the wrong date"

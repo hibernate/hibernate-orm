@@ -148,7 +148,7 @@ In these cases, you must explicitly tell Hibernate the `BasicType` to use, via t
 [[basic-type-annotation-example]]
 .Using `@org.hibernate.annotations.Type`
 ====
-[source, JAVA, indent=0]
+[source, java,, indent=0]
 ----
 include::{sourcedir}/basic/ExplicitTypeTest.java[tags=basic-type-annotation-example]
 ----
@@ -193,7 +193,7 @@ First, we need to extend the `AbstractSingleColumnStandardBasicType` like this:
 [[basic-custom-type-BitSetType-example]]
 .Custom `BasicType` implementation
 ====
-[source, JAVA, indent=0]
+[source, java,, indent=0]
 ----
 include::{sourcedir}/basic/bitset/BitSetType.java[tags=basic-custom-type-BitSetType-example]
 ----
@@ -206,7 +206,7 @@ On the Java side, we need to use a `BitSetJavaType` instance which can be implem
 [[basic-custom-type-BitSetJavaType-example]]
 .Custom `JavaType` implementation
 ====
-[source, JAVA, indent=0]
+[source, java,, indent=0]
 ----
 include::{sourcedir}/basic/bitset/BitSetJavaType.java[tags=basic-bitset-example-java-type]
 ----
@@ -219,14 +219,14 @@ The `BasicType` must be registered, and this can be done at bootstrapping time:
 [[basic-custom-type-register-BasicType-example]]
 .Register a Custom `BasicType` implementation
 ====
-[source, JAVA, indent=0]
+[source, java,, indent=0]
 ----
 include::{sourcedir}/basic/bitset/BitSetTypeTest.java[tags=basic-custom-type-register-BasicType-example]
 ----
 
 or using the `MetadataBuilder`
 
-[source, JAVA, indent=0]
+[source, java,, indent=0]
 ----
 include::{sourcedir}/../bootstrap/BootstrapTest.java[tags=basic-custom-type-register-BasicType-example]
 ----
@@ -237,7 +237,7 @@ With the new `BitSetType` being registered as `bitset`, the entity mapping looks
 [[basic-custom-type-BitSetType-mapping-example]]
 .Custom `BasicType` mapping
 ====
-[source, JAVA, indent=0]
+[source, java,, indent=0]
 ----
 include::{sourcedir}/basic/bitset/BitSetTypeTest.java[tags=basic-custom-type-BitSetType-mapping-example]
 ----
@@ -248,7 +248,7 @@ To validate this new `BasicType` implementation, we can test it as follows:
 [[basic-custom-type-BitSetType-persistence-example]]
 .Persisting the custom `BasicType`
 ====
-[source, JAVA, indent=0]
+[source, java,, indent=0]
 ----
 include::{sourcedir}/basic/bitset/BitSetTypeTest.java[tags=basic-custom-type-BitSetType-persistence-example]
 ----
@@ -259,7 +259,7 @@ When executing this unit test, Hibernate generates the following SQL statements:
 [[basic-custom-type-BitSetType-persistence-sql-example]]
 .Persisting the custom `BasicType`
 ====
-[source, JAVA, indent=0]
+[source, java,, indent=0]
 ----
 include::{originalextrasdir}/basic/basic-custom-type-BitSetType-persistence-sql-example.sql[]
 ----
@@ -275,7 +275,7 @@ The second approach is to implement the `UserType` interface.
 [[basic-custom-type-BitSetUserType-example]]
 .Custom `UserType` implementation
 ====
-[source, JAVA, indent=0]
+[source, java,, indent=0]
 ----
 include::{sourcedir}/basic/bitset/BitSetUserType.java[tags=basic-custom-type-BitSetUserType-example]
 ----
@@ -286,7 +286,7 @@ The entity mapping looks as follows:
 [[basic-custom-type-BitSetUserType-mapping-example]]
 .Custom `UserType` mapping
 ====
-[source, JAVA, indent=0]
+[source, java,, indent=0]
 ----
 include::{sourcedir}/basic/bitset/BitSetUserTypeTest.java[tags=basic-custom-type-BitSetUserType-mapping-example]
 ----
@@ -297,14 +297,14 @@ In this example, the `UserType` is registered under the `bitset` name, and this 
 [[basic-custom-type-register-UserType-example]]
 .Register a Custom `UserType` implementation
 ====
-[source, JAVA, indent=0]
+[source, java,, indent=0]
 ----
 include::{sourcedir}/basic/bitset/BitSetUserTypeTest.java[tags=basic-custom-type-register-UserType-example]
 ----
 
 or using the `MetadataBuilder`
 
-[source, JAVA, indent=0]
+[source, java,, indent=0]
 ----
 include::{sourcedir}/../bootstrap/BootstrapTest.java[tags=basic-custom-type-register-UserType-example]
 ----
@@ -315,7 +315,7 @@ When running the previous test case against the `BitSetUserType` entity mapping,
 [[basic-custom-type-BitSetUserType-persistence-sql-example]]
 .Persisting the custom `BasicType`
 ====
-[source, JAVA, indent=0]
+[source, java,, indent=0]
 ----
 include::{originalextrasdir}/basic/basic-custom-type-BitSetUserType-persistence-sql-example.sql[]
 ----

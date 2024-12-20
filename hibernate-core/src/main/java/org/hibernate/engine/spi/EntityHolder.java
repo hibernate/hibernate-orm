@@ -1,12 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
 import org.hibernate.Incubating;
+import org.hibernate.Internal;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
@@ -35,7 +34,7 @@ public interface EntityHolder {
 	 * The entity initializer that claims to initialize the entity for this holder.
 	 * Will be {@code null} if entity is initialized already or the entity holder is not claimed yet.
 	 */
-	@Nullable EntityInitializer getEntityInitializer();
+	@Nullable EntityInitializer<?> getEntityInitializer();
 
 	/**
 	 * The proxy if there is one and otherwise the entity.
@@ -45,6 +44,11 @@ public interface EntityHolder {
 		return proxy == null ? getEntity() : proxy;
 	}
 
+	@Nullable EntityEntry getEntityEntry();
+
+	@Internal
+	void setEntityEntry(@Nullable EntityEntry entry);
+
 	/**
 	 * Marks the entity holder as reloaded to potentially trigger follow-on locking.
 	 *
@@ -53,7 +57,17 @@ public interface EntityHolder {
 	void markAsReloaded(JdbcValuesSourceProcessingState processingState);
 
 	/**
+	 * Whether the entity is already initialized
+	 */
+	boolean isInitialized();
+
+	/**
 	 * Whether the entity is already initialized or will be initialized through an initializer eventually.
 	 */
 	boolean isEventuallyInitialized();
+
+	/**
+	 * Whether the entity is detached.
+	 */
+	boolean isDetached();
 }

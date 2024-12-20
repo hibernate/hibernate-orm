@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.bytecode;
 
@@ -26,11 +24,11 @@ public class ProxyBreakingTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		Hammer h = new Hammer();
-		s.save(h);
+		s.persist(h);
 		s.flush();
 		s.clear();
 		assertNotNull( "The proxy creation failure is breaking things", h.getId() );
-		h = (Hammer) s.load( Hammer.class, h.getId() );
+		h = (Hammer) s.getReference( Hammer.class, h.getId() );
 		assertFalse( Hibernate.isInitialized( h ) );
 		tx.rollback();
 		s.close();

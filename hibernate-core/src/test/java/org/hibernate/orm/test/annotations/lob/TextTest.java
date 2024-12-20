@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.lob;
 
@@ -44,7 +42,7 @@ public class TextTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		LongStringHolder entity = new LongStringHolder();
-		s.save(entity);
+		s.persist(entity);
 		s.getTransaction().commit();
 		s.close();
 
@@ -104,7 +102,7 @@ public class TextTest extends BaseCoreFunctionalTestCase {
 		assertNull(entity.getLongString());
 		assertNull(entity.getName());
 		assertNull(entity.getWhatEver());
-		s.delete(entity);
+		s.remove(entity);
 		s.getTransaction().commit();
 		s.close();
 	}

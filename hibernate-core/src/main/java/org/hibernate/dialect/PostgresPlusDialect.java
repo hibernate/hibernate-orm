@@ -1,13 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
 import java.sql.CallableStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
@@ -17,7 +14,14 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.query.sqm.CastType;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
+import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
+import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
+import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.sql.model.jdbc.OptionalTableUpdateOperation;
@@ -56,8 +60,27 @@ public class PostgresPlusDialect extends PostgreSQLDialect {
 		functionFactory.sysdate();
 		functionFactory.systimestamp();
 
-//		queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlCoalesceEmulation() );
-
+		if ( getVersion().isSameOrAfter( 14 ) ) {
+			// Support for these functions were apparently only added in version 14
+			functionFactory.bitand();
+			functionFactory.bitor();
+			functionContributions.getFunctionRegistry().patternDescriptorBuilder(
+							"bitxor",
+							"(bitor(?1,?2)-bitand(?1,?2))"
+					)
+					.setExactArgumentCount( 2 )
+					.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+					.register();
+		}
+		else {
+			functionContributions.getFunctionRegistry().patternDescriptorBuilder(
+							"bitxor",
+							"((?1|?2)-(?1&?2))"
+					)
+					.setExactArgumentCount( 2 )
+					.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+					.register();
+		}
 	}
 
 	@Override
@@ -95,16 +118,15 @@ public class PostgresPlusDialect extends PostgreSQLDialect {
 	}
 
 	@Override
+	public boolean isEmptyStringTreatedAsNull() {
+		return true;
+	}
+
+	@Override
 	public int registerResultSetOutParameter(CallableStatement statement, int col) throws SQLException {
 		statement.registerOutParameter( col, Types.REF );
 		col++;
 		return col;
-	}
-
-	@Override
-	public ResultSet getResultSet(CallableStatement ps) throws SQLException {
-		ps.execute();
-		return (ResultSet) ps.getObject( 1 );
 	}
 
 	@Override
@@ -120,5 +142,24 @@ public class PostgresPlusDialect extends PostgreSQLDialect {
 		// Postgres Plus does not support full merge semantics -
 		// https://www.enterprisedb.com/docs/migrating/oracle/oracle_epas_comparison/notable_differences/
 		return new OptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
+	}
+
+	@Override
+	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
+		return new StandardSqlAstTranslatorFactory() {
+			@Override
+			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
+					SessionFactoryImplementor sessionFactory, Statement statement) {
+				return new PostgreSQLSqlAstTranslator<>( sessionFactory, statement ) {
+					@Override
+					public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
+						if ( isIntegerDivisionEmulationRequired( arithmeticExpression ) ) {
+							appendSql( "floor" );
+						}
+						super.visitBinaryArithmeticExpression(arithmeticExpression);
+					}
+				};
+			}
+		};
 	}
 }

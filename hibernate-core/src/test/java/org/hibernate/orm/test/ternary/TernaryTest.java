@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.ternary;
 
@@ -39,7 +37,7 @@ public class TernaryTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void configure(Configuration configuration) {
 		super.configure( configuration );
-		configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
+		configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, false );
 	}
 
 	@Test
@@ -63,7 +61,7 @@ public class TernaryTest extends BaseCoreFunctionalTestCase {
 		tim.getManagerBySite().put(melb, tom);
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		tom = (Employee) s.get(Employee.class, "Tom");
@@ -77,13 +75,13 @@ public class TernaryTest extends BaseCoreFunctionalTestCase {
 		assertTrue( melb.getEmployees().contains(bob) );
 		assertTrue( melb.getManagers().contains(tom) );
 		t.commit();
-		s.close();		
+		s.close();
 
 		s = openSession();
 		t = s.beginTransaction();
-		List l = s.createQuery("from Employee e join e.managerBySite m where m.name='Bob'").list();
+		List l = s.createQuery("from Employee e join e.managerBySite m where m.name='Bob'", Object[].class).list();
 		assertEquals( l.size(), 0 );
-		l = s.createQuery("from Employee e join e.managerBySite m where m.name='Tom'").list();
+		l = s.createQuery("from Employee e join e.managerBySite m where m.name='Tom'", Object[].class).list();
 		assertEquals( l.size(), 2 );
 		t.commit();
 		s.close();
@@ -103,7 +101,7 @@ public class TernaryTest extends BaseCoreFunctionalTestCase {
 		}
 		assertTrue(total==3);
 
-		l = s.createQuery("from Employee e left join e.managerBySite m left join m.managerBySite m2").list();
+		l = s.createQuery("from Employee e left join e.managerBySite m left join m.managerBySite m2", Object[].class).list();
 
 		// clean up...
 		l = s.createQuery("from Employee e left join fetch e.managerBySite").list();
@@ -111,10 +109,10 @@ public class TernaryTest extends BaseCoreFunctionalTestCase {
 		while ( itr.hasNext() ) {
 			Employee emp = ( Employee ) itr.next();
 			emp.setManagerBySite( new HashMap() );
-			s.delete( emp );
+			s.remove( emp );
 		}
 		for ( Object entity : s.createQuery( "from Site" ).list() ) {
-			s.delete( entity );
+			s.remove( entity );
 		}
 		t.commit();
 		s.close();
@@ -124,7 +122,7 @@ public class TernaryTest extends BaseCoreFunctionalTestCase {
 	public void testIndexRelatedFunctions() {
 		Session session = openSession();
 		session.beginTransaction();
-		session.createQuery( "from Employee e join e.managerBySite as m where index(m) is not null" )
+		session.createQuery( "from Employee e join e.managerBySite as m where index(m) is not null", Object[].class )
 				.list();
 		session.createQuery( "from Employee e where minIndex(e.managerBySite) is not null" )
 				.list();
@@ -134,4 +132,3 @@ public class TernaryTest extends BaseCoreFunctionalTestCase {
 		session.close();
 	}
 }
-

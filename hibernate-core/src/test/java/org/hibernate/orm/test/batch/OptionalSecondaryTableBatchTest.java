@@ -1,14 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.batch;
 
 import java.util.List;
 
-import org.hibernate.annotations.Table;
+import org.hibernate.annotations.SecondaryRow;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -74,50 +72,6 @@ public class OptionalSecondaryTableBatchTest {
 		} );
 	}
 
-	@Test
-	public void testSaveOrUpdate(SessionFactoryScope scope) {
-		final List<Company> companies = scope.fromTransaction( (session) -> {
-			//noinspection CodeBlock2Expr
-			return session.createQuery( "from Company", Company.class ).list();
-		} );
-
-		scope.inTransaction( (session) -> {
-			for ( int i = 0 ; i < companies.size() ; i++ ) {
-				final Company company = companies.get( i );
-				company.taxNumber = 2 * i;
-				session.saveOrUpdate( company );
-			}
-		} );
-
-		scope.inTransaction( (session) -> {
-			for ( int i = 0 ; i < companies.size() ; i++ ) {
-				assertThat( session.get( Company.class, companies.get( i ).id ).taxNumber ).isEqualTo( 2 * i );
-			}
-		} );
-	}
-
-	@Test
-	public void testUpdate(SessionFactoryScope scope) {
-		final List<Company> companies = scope.fromTransaction( (session) -> {
-			//noinspection CodeBlock2Expr
-			return session.createQuery( "from Company", Company.class ).list();
-		} );
-
-		scope.inTransaction( (session) -> {
-			for ( int i = 0 ; i < companies.size() ; i++ ) {
-				final Company company = companies.get( i );
-				company.taxNumber = 2 * i;
-				session.update( company );
-			}
-		} );
-
-		scope.inTransaction( (session) -> {
-			for ( int i = 0; i < companies.size(); i++ ) {
-				assertThat( session.get( Company.class, companies.get( i ).id ).taxNumber ).isEqualTo( 2 * i );
-			}
-		} );
-	}
-
 
 	@BeforeEach
 	public void setupTestData(SessionFactoryScope scope) {
@@ -141,7 +95,7 @@ public class OptionalSecondaryTableBatchTest {
 
 	@Entity(name = "Company")
 	@SecondaryTable( name = "company_tax" )
-	@Table( appliesTo = "company_tax", optional = true)
+	@SecondaryRow(table = "company_tax", optional = true)
 	public static class Company {
 
 		@Id

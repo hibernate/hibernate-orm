@@ -1,16 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.predicate;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.internal.FilterImpl;
+import org.hibernate.Filter;
 import org.hibernate.internal.FilterJdbcParameter;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -36,7 +33,7 @@ public class FilterPredicate implements Predicate {
 		fragments.add( predicate );
 	}
 
-	public void applyFragment(String processedFragment, FilterImpl filter, List<String> parameterNames) {
+	public void applyFragment(String processedFragment, Filter filter, List<String> parameterNames) {
 		fragments.add( new FilterFragmentPredicate( processedFragment, filter, parameterNames ) );
 	}
 
@@ -101,11 +98,11 @@ public class FilterPredicate implements Predicate {
 	}
 
 	public static class FilterFragmentPredicate implements Predicate {
-		private final FilterImpl filter;
+		private final Filter filter;
 		private final String sqlFragment;
 		private final List<FilterFragmentParameter> parameters;
 
-		public FilterFragmentPredicate(String sqlFragment, FilterImpl filter, List<String> parameterNames) {
+		public FilterFragmentPredicate(String sqlFragment, Filter filter, List<String> parameterNames) {
 			this.filter = filter;
 			this.sqlFragment = sqlFragment;
 
@@ -116,16 +113,15 @@ public class FilterPredicate implements Predicate {
 				parameters = CollectionHelper.arrayList( parameterNames.size() );
 				for ( int i = 0; i < parameterNames.size(); i++ ) {
 					final String paramName = parameterNames.get( i );
-					final Object paramValue = filter.getParameter( paramName );
-					final FilterDefinition filterDefinition = filter.getFilterDefinition();
-					final JdbcMapping jdbcMapping = filterDefinition.getParameterJdbcMapping( paramName );
+					final Object paramValue = filter.getParameterValue( paramName );
+					final JdbcMapping jdbcMapping = filter.getFilterDefinition().getParameterJdbcMapping( paramName );
 
 					parameters.add( new FilterFragmentParameter( filter.getName(), paramName, jdbcMapping, paramValue ) );
 				}
 			}
 		}
 
-		public FilterImpl getFilter() {
+		public Filter getFilter() {
 			return filter;
 		}
 

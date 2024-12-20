@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.query;
 
@@ -29,14 +27,14 @@ import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.query.order.NullPrecedence;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 /**
  * @author Felix Feisst (feisst dot felix at gmail dot com)
  */
 @SuppressWarnings("rawtypes")
-@TestForIssue(jiraKey = "HHH-11895")
+@JiraKey(value = "HHH-11895")
 public class ComponentQueryTest extends BaseEnversJPAFunctionalTestCase {
 
 	@Embeddable
@@ -335,7 +333,7 @@ public class ComponentQueryTest extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11896")
+	@JiraKey(value = "HHH-11896")
 	public void testOnClauseOnSingleSymbol() {
 		List actual = getAuditReader().createQuery()
 				.forEntitiesAtRevision( Asset.class, 1 )
@@ -351,7 +349,7 @@ public class ComponentQueryTest extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11896")
+	@JiraKey(value = "HHH-11896")
 	public void testOnClauseOnMultiSymbol() {
 		List actual = getAuditReader().createQuery()
 				.forEntitiesAtRevision( Asset.class, 1 )

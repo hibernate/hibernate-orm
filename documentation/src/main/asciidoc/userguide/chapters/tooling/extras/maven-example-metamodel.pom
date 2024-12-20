@@ -9,7 +9,7 @@
                 <annotationProcessorPaths>
                     <path>
                         <groupId>org.hibernate.orm</groupId>
-                        <artifactId>hibernate-jpamodelgen</artifactId>
+                        <artifactId>hibernate-processor</artifactId>
                         <version>$currentHibernateVersion</version>
                         <!-- Optionally exclude transitive dependencies -->
                         <exclusions>

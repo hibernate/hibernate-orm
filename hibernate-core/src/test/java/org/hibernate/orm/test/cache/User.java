@@ -1,10 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.orm.test.cache;
 
 import jakarta.persistence.Column;
@@ -25,17 +22,17 @@ public class User {
 	@Id
 	int id;
 
-	
+
 	@Version
 	@Column(name="OPTLOCK")
 	private int version;
 
-	
-	
+
+
 	@Column
 	private String name;
-	
-	
+
+
 	@ManyToOne(fetch = FetchType.LAZY)
 	Company company;
 
@@ -66,8 +63,8 @@ public class User {
 	public void setCompany(Company group) {
 		this.company = group;
 	}
-	
-	
+
+
 
 	public int getVersion() {
 		return version;

@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-// $Id$
 package org.hibernate.orm.test.annotations.fkcircularity;
 
 import org.hibernate.boot.MetadataSources;
@@ -23,7 +19,7 @@ import org.junit.jupiter.api.Test;
  */
 public class FkCircularityTest {
 
-    @Test
+	@Test
 	public void testJoinedSublcassesInPK() {
 		MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() )
 			.addAnnotatedClass(A.class)
@@ -41,7 +37,7 @@ public class FkCircularityTest {
 		}
 	}
 
-    @Test
+	@Test
 	public void testDeepJoinedSuclassesHierachy() {
 		MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() )
 				.addAnnotatedClass(ClassA.class)

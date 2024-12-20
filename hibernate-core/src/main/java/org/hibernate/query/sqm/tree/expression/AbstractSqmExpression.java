@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
@@ -10,16 +8,18 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collection;
 
-import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmTreeCreationLogger;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.tree.jpa.AbstractJpaSelection;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType2;
 
@@ -28,7 +28,7 @@ import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType2;
  */
 public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> implements SqmExpression<T> {
 
-	public AbstractSqmExpression(SqmExpressible<? super T> type, NodeBuilder criteriaBuilder) {
+	public AbstractSqmExpression(@Nullable SqmExpressible<? super T> type, NodeBuilder criteriaBuilder) {
 		super( type, criteriaBuilder );
 	}
 
@@ -38,10 +38,10 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 	}
 
 	@Override
-	public void applyInferableType(SqmExpressible<?> type) {
+	public void applyInferableType(@Nullable SqmExpressible<?> type) {
 	}
 
-	protected void internalApplyInferableType(SqmExpressible<?> newType) {
+	protected void internalApplyInferableType(@Nullable SqmExpressible<?> newType) {
 		SqmTreeCreationLogger.LOGGER.debugf(
 				"Applying inferable type to SqmExpression [%s] : %s -> %s",
 				this,
@@ -93,7 +93,11 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 
 	@Override
 	public <X> SqmExpression<X> as(Class<X> type) {
-		return nodeBuilder().cast( this, type );
+		final BasicType<X> basicTypeForJavaType = nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( type );
+		if ( basicTypeForJavaType == null ) {
+			throw new IllegalArgumentException( "Can't cast expression to unknown type: " + type.getCanonicalName() );
+		}
+		return new AsWrapperSqmExpression<>( basicTypeForJavaType, this );
 	}
 
 	@Override
@@ -107,13 +111,28 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 	}
 
 	@Override
-	public SqmPredicate equalTo(Expression<T> that) {
-		return nodeBuilder().equal( this, that );
+	public SqmPredicate equalTo(Expression<?> value) {
+		return nodeBuilder().equal( this, value );
 	}
 
 	@Override
-	public SqmPredicate equalTo(T that) {
-		return nodeBuilder().equal( this, that );
+	public SqmPredicate equalTo(Object value) {
+		return nodeBuilder().equal( this, value );
+	}
+
+	@Override
+	public Predicate notEqualTo(Expression<?> value) {
+		return nodeBuilder().notEqual( this, value );
+	}
+
+	@Override
+	public Predicate notEqualTo(Object value) {
+		return nodeBuilder().notEqual( this, value );
+	}
+
+	@Override
+	public <X> SqmExpression<X> cast(Class<X> castTarget) {
+		return nodeBuilder().cast( this, castTarget );
 	}
 
 	@Override
@@ -138,13 +157,7 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 	}
 
 	@Override
-	public JpaSelection<T> alias(String name) {
-		setAlias( name );
-		return this;
-	}
-
-	@Override
-	public JavaType<T> getJavaTypeDescriptor() {
+	public @Nullable JavaType<T> getJavaTypeDescriptor() {
 		return getNodeType() == null ? null : getNodeType().getExpressibleJavaType();
 	}
 }

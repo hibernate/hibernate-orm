@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
@@ -17,8 +15,11 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.domain.SqmFunctionPath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.sql.ast.tree.expression.Expression;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * A SQM function
@@ -37,7 +38,7 @@ public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
 	public SqmFunction(
 			String functionName,
 			SqmFunctionDescriptor functionDescriptor,
-			SqmExpressible<T> type,
+			@Nullable SqmExpressible<T> type,
 			List<? extends SqmTypedNode<?>> arguments,
 			NodeBuilder criteriaBuilder) {
 		super( type, criteriaBuilder );
@@ -175,13 +176,22 @@ public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SemanticPathPart
 
+	private SqmFunctionPath<T> functionPath;
+
+	private SqmFunctionPath<T> getFunctionPath() {
+		SqmFunctionPath<T> path = functionPath;
+		if ( path == null ) {
+			path = functionPath = new SqmFunctionPath<T>( this );
+		}
+		return path;
+	}
 
 	@Override
 	public SemanticPathPart resolvePathPart(
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		throw new UnsupportedOperationException();
+		return getFunctionPath().resolvePathPart( name, isTerminal, creationState );
 	}
 
 	@Override
@@ -189,6 +199,6 @@ public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
 			SqmExpression<?> selector,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		throw new UnsupportedOperationException();
+		return getFunctionPath().resolveIndexedAccess( selector, isTerminal, creationState );
 	}
 }

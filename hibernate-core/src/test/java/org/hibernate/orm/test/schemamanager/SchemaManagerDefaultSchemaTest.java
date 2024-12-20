@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemamanager;
 
@@ -10,6 +8,7 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.SchemaValidationException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -59,6 +58,13 @@ public class SchemaManagerDefaultSchemaTest {
 		catch (SchemaManagementException e) {
 			assertTrue( e.getMessage().contains("ForTesting") );
 		}
+		try {
+			factory.getSchemaManager().validate();
+			fail();
+		}
+		catch (SchemaValidationException e) {
+			assertTrue( e.getMessage().contains("ForTesting") );
+		}
 	}
 
 	@Entity(name="BookForTesting")
@@ -79,4 +85,3 @@ public class SchemaManagerDefaultSchemaTest {
 		public Book favoriteBook;
 	}
 }
-

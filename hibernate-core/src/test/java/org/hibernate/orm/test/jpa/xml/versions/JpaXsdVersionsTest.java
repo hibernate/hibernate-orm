@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.xml.versions;
 
@@ -37,17 +35,13 @@ import org.junit.Test;
  * @author Steve Ebersole
  */
 public class JpaXsdVersionsTest {
-    @Test
+	@Test
 	public void testOrm1() {
 		PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( "orm1-test", "1.0" )
 				.addMappingFileName( "org/hibernate/orm/test/jpa/xml/versions/valid-orm-1_0.xml" );
 		HibernatePersistenceProvider hp = new HibernatePersistenceProvider();
-		EntityManagerFactory emf = hp.createContainerEntityManagerFactory( pui, getDefaultPuConfig() );
-		try {
-			emf.getMetamodel().entity( Lighter1.class ); // exception if not entity
-		}
-		finally {
-			emf.close();
+		try ( EntityManagerFactory emf = hp.createContainerEntityManagerFactory( pui, getDefaultPuConfig() ) ) {
+			emf.getMetamodel().entity(Lighter1.class); // exception if not entity
 		}
 	}
 
@@ -62,66 +56,44 @@ public class JpaXsdVersionsTest {
 		PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( "orm2-test", "2.0" )
 				.addMappingFileName( "org/hibernate/orm/test/jpa/xml/versions/valid-orm-2_0.xml" );
 		HibernatePersistenceProvider hp = new HibernatePersistenceProvider();
-		EntityManagerFactory emf = hp.createContainerEntityManagerFactory( pui, getDefaultPuConfig() );
-		try {
-			emf.getMetamodel().entity( Lighter.class ); // exception if not entity
-		}
-		finally {
-			emf.close();
+		try ( EntityManagerFactory emf = hp.createContainerEntityManagerFactory( pui, getDefaultPuConfig() ) ) {
+			emf.getMetamodel().entity(Lighter.class); // exception if not entity
 		}
 	}
 
-    @Test
+	@Test
 	public void testOrm21() {
 		PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( "orm2-test", "2.1" )
 				.addMappingFileName( "org/hibernate/orm/test/jpa/xml/versions/valid-orm-2_1.xml" );
 		HibernatePersistenceProvider hp = new HibernatePersistenceProvider();
-		EntityManagerFactory emf = hp.createContainerEntityManagerFactory( pui, getDefaultPuConfig() );
-		try {
-			emf.getMetamodel().entity( Lighter.class ); // exception if not entity
-		}
-		finally {
-			emf.close();
+		try ( EntityManagerFactory emf = hp.createContainerEntityManagerFactory( pui, getDefaultPuConfig() ) ) {
+			emf.getMetamodel().entity(Lighter.class); // exception if not entity
 		}
 	}
 
-    @Test
+	@Test
 	public void testOrm22() {
 		PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( "orm2-test", "2.2")
 				.addMappingFileName( "org/hibernate/orm/test/jpa/xml/versions/valid-orm-2_2.xml" );
 		HibernatePersistenceProvider hp = new HibernatePersistenceProvider();
-		EntityManagerFactory emf = hp.createContainerEntityManagerFactory( pui, getDefaultPuConfig() );
-		try {
-			emf.getMetamodel().entity( Lighter.class ); // exception if not entity
-		}
-		finally {
-			emf.close();
+		try ( EntityManagerFactory emf = hp.createContainerEntityManagerFactory( pui, getDefaultPuConfig() ) ) {
+			emf.getMetamodel().entity(Lighter.class); // exception if not entity
 		}
 	}
 
-    @Test
+	@Test
 	public void testInvalidOrm1() {
 		PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( "invalid-orm1-test", "1.0" )
 				.addMappingFileName( "org/hibernate/orm/test/jpa/xml/versions/invalid-orm-1_0.xml" );
 		HibernatePersistenceProvider hp = new HibernatePersistenceProvider();
-		EntityManagerFactory emf = null;
-		try {
-			emf = hp.createContainerEntityManagerFactory(
-					pui,
-					getDefaultPuConfig()
-			);
-			Assert.fail( "expecting 'invalid content' error" );
+		try ( EntityManagerFactory emf = hp.createContainerEntityManagerFactory( pui, getDefaultPuConfig() ) ) {
+			Assert.fail("expecting 'invalid content' error");
 		}
 		catch (InvalidMappingException | AnnotationException expected) {
 			// expected condition
 		}
 		catch (PersistenceException expected) {
 			// expected condition
-		}
-		finally {
-			if ( emf != null ) {
-				emf.close();
-			}
 		}
 	}
 
@@ -146,13 +118,23 @@ public class JpaXsdVersionsTest {
 			return persistenceSchemaVersion;
 		}
 
-		private final List<String> mappingFileNames = new ArrayList<String>();
+		@Override
+		public String getScopeAnnotationName() {
+			return null;
+		}
+
+		@Override
+		public List<String> getQualifierAnnotationNames() {
+			return List.of();
+		}
+
+		private final List<String> mappingFileNames = new ArrayList<>();
 
 		public List<String> getMappingFileNames() {
 			return mappingFileNames;
 		}
 
-		private final List<String> managedClassNames = new ArrayList<String>();
+		private final List<String> managedClassNames = new ArrayList<>();
 
 		private PersistenceUnitInfoImpl addMappingFileName(String mappingFileName) {
 			mappingFileNames.add( mappingFileName );
@@ -179,7 +161,7 @@ public class JpaXsdVersionsTest {
 			return null;
 		}
 
-		private final List<URL> jarFileUrls = new ArrayList<URL>();
+		private final List<URL> jarFileUrls = new ArrayList<>();
 
 		public List<URL> getJarFileUrls() {
 			return jarFileUrls;

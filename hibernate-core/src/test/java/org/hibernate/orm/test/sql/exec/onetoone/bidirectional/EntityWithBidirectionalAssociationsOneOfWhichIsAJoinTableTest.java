@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql.exec.onetoone.bidirectional;
 
@@ -60,9 +58,9 @@ public class EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest {
 					Female daughter = new Female( 3, parent );
 					daughter.setName( "Fab" );
 
-					session.save( parent );
-					session.save( son );
-					session.save( daughter );
+					session.persist( parent );
+					session.persist( son );
+					session.persist( daughter );
 				} );
 	}
 
@@ -152,8 +150,9 @@ public class EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest {
 							.getSingleResult();
 
 					statementInspector.assertExecutedCount( 2 );
-					// The join to the target table PARENT for Male#parent is added since it's explicitly joined in HQL
-					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 2 );
+					// The join to the target table PARENT for Male#parent is avoided,
+					// because the FK in the collection table is not-null and data from the target table is not needed
+					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 1 );
 					statementInspector.assertNumberOfOccurrenceInQuery( 1, "join", 3 );
 					assertThat( son.getParent(), CoreMatchers.notNullValue() );
 

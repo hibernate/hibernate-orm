@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql.check;
 
@@ -16,7 +14,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings( {"UnusedDeclaration"})
+@SuppressWarnings("unused")
 public abstract class ResultCheckStyleTest extends BaseCoreFunctionalTestCase {
 	public String getCacheConcurrencyStrategy() {
 		return null;
@@ -28,7 +26,7 @@ public abstract class ResultCheckStyleTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 		ExceptionCheckingEntity e = new ExceptionCheckingEntity();
 		e.setName( "dummy" );
-		s.save( e );
+		s.persist( e );
 		try {
 			s.flush();
 			fail( "expection flush failure!" );
@@ -47,7 +45,7 @@ public abstract class ResultCheckStyleTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 		ParamCheckingEntity e = new ParamCheckingEntity();
 		e.setName( "dummy" );
-		s.save( e );
+		s.persist( e );
 		try {
 			s.flush();
 			fail( "expection flush failure!" );
@@ -61,14 +59,14 @@ public abstract class ResultCheckStyleTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testUpdateFailureWithExceptionChecking() {
+	public void testMergeFailureWithExceptionChecking() {
 		Session s = openSession();
 		s.beginTransaction();
 		ExceptionCheckingEntity e = new ExceptionCheckingEntity();
 		e.setId( Long.valueOf( 1 ) );
 		e.setName( "dummy" );
-		s.update( e );
 		try {
+			s.merge( e );
 			s.flush();
 			fail( "expection flush failure!" );
 		}
@@ -87,8 +85,8 @@ public abstract class ResultCheckStyleTest extends BaseCoreFunctionalTestCase {
 		ParamCheckingEntity e = new ParamCheckingEntity();
 		e.setId( Long.valueOf( 1 ) );
 		e.setName( "dummy" );
-		s.update( e );
 		try {
+			s.merge( e );
 			s.flush();
 			fail( "expection flush failure!" );
 		}
@@ -107,7 +105,7 @@ public abstract class ResultCheckStyleTest extends BaseCoreFunctionalTestCase {
 		ExceptionCheckingEntity e = new ExceptionCheckingEntity();
 		e.setId( Long.valueOf( 1 ) );
 		e.setName( "dummy" );
-		s.delete( e );
+		s.remove( e );
 		try {
 			s.flush();
 			fail( "expection flush failure!" );
@@ -127,7 +125,7 @@ public abstract class ResultCheckStyleTest extends BaseCoreFunctionalTestCase {
 		ParamCheckingEntity e = new ParamCheckingEntity();
 		e.setId( Long.valueOf( 1 ) );
 		e.setName( "dummy" );
-		s.delete( e );
+		s.remove( e );
 		try {
 			s.flush();
 			fail( "expection flush failure!" );

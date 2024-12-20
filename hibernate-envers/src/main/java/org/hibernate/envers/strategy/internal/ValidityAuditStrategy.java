@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.strategy.internal;
 
@@ -15,6 +13,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
@@ -42,7 +41,7 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
-import org.hibernate.persister.entity.Queryable;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.sql.ComparisonRestriction;
@@ -162,7 +161,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		final String auditedEntityName = configuration.getAuditEntityName( entityName );
 
 		// Save the audit data
-		session.save( auditedEntityName, data );
+		session.persist( auditedEntityName, data );
 
 		// Update the end date of the previous row.
 		//
@@ -258,7 +257,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 
 		addEndRevisionNullRestriction( configuration, qb.getRootParameters() );
 
-		final List<Object> l = qb.toQuery( session ).setLockOptions( LockOptions.UPGRADE ).list();
+		final List<Object> l = qb.toQuery( session ).setHibernateFlushMode(FlushMode.MANUAL).setLockOptions( LockOptions.UPGRADE ).list();
 
 		// Update the last revision if one exists.
 		// HHH-5967: with collections, the same element can be added and removed multiple times. So even if it's an
@@ -270,7 +269,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		}
 
 		// Save the audit data
-		session.save( persistentCollectionChangeData.getEntityName(), persistentCollectionChangeData.getData() );
+		session.persist( persistentCollectionChangeData.getEntityName(), persistentCollectionChangeData.getData() );
 		sessionCacheCleaner.scheduleAuditDataRemoval( session, persistentCollectionChangeData.getData() );
 	}
 
@@ -374,7 +373,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 			}
 
 			// Saving the previous version
-			session.save( auditedEntityName, previousData );
+			session.persist( auditedEntityName, previousData );
 			sessionCacheCleaner.scheduleAuditDataRemoval( session, previousData );
 		}
 		else {
@@ -404,8 +403,8 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		return convertRevEndTimestampToDate( value );
 	}
 
-	private Queryable getQueryable(String entityName, SessionImplementor sessionImplementor) {
-		return (Queryable) sessionImplementor.getFactory()
+	private EntityPersister getEntityPersister(String entityName, SessionImplementor sessionImplementor) {
+		return sessionImplementor.getFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor( entityName );
 	}
@@ -432,7 +431,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		final Type propertyType = session.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor( entityName ).getPropertyType( propertyName );
-		if ( propertyType.isCollectionType() ) {
+		if ( propertyType instanceof CollectionType ) {
 			final CollectionType collectionType = (CollectionType) propertyType;
 			final Type collectionElementType = collectionType.getElementType( session.getSessionFactory() );
 			if ( collectionElementType instanceof ComponentType ) {
@@ -496,7 +495,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 			Object id,
 			Object revision) {
 
-		Queryable entity = getQueryable( entityName, session );
+		EntityPersister entity = getEntityPersister( entityName, session );
 		final List<UpdateContext> contexts = new ArrayList<>( 0 );
 
 		// HHH-9062 - update inherited
@@ -516,7 +515,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 					);
 					entityName = entity.getEntityMappingType().getSuperMappingType().getEntityName();
 					auditEntityName = configuration.getAuditEntityName( entityName );
-					entity = getQueryable( entityName, session );
+					entity = getEntityPersister( entityName, session );
 				}
 			}
 		}
@@ -544,11 +543,11 @@ public class ValidityAuditStrategy implements AuditStrategy {
 			Object id,
 			Object revision) {
 
-		final Queryable entity = getQueryable( entityName, session );
-		final Queryable rootEntity = getQueryable( entity.getRootEntityName(), session );
-		final Queryable auditEntity = getQueryable( auditEntityName, session );
-		final Queryable rootAuditEntity = getQueryable( auditEntity.getRootEntityName(), session );
-		final Queryable revisionEntity = getQueryable( configuration.getRevisionInfo().getRevisionInfoEntityName(), session );
+		final EntityPersister entity = getEntityPersister( entityName, session );
+		final EntityPersister rootEntity = getEntityPersister( entity.getRootEntityName(), session );
+		final EntityPersister auditEntity = getEntityPersister( auditEntityName, session );
+		final EntityPersister rootAuditEntity = getEntityPersister( auditEntity.getRootEntityName(), session );
+		final EntityPersister revisionEntity = getEntityPersister( configuration.getRevisionInfo().getRevisionInfoClass().getName(), session );
 
 		final Number revisionNumber = getRevisionNumber( configuration, revision );
 
@@ -610,8 +609,8 @@ public class ValidityAuditStrategy implements AuditStrategy {
 			Object id,
 			Object revision) {
 
-		final Queryable entity = getQueryable( entityName, session );
-		final Queryable auditEntity = getQueryable( auditEntityName, session );
+		final EntityPersister entity = getEntityPersister( entityName, session );
+		final EntityPersister auditEntity = getEntityPersister( auditEntityName, session );
 
 
 		// The expected SQL is an update statement as follows:
@@ -650,7 +649,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		return reader.getRevisionNumber( revisionEntity );
 	}
 
-	private String getUpdateTableName(Queryable rootEntity, Queryable rootAuditEntity, Queryable auditEntity) {
+	private String getUpdateTableName(EntityPersister rootEntity, EntityPersister rootAuditEntity, EntityPersister auditEntity) {
 		if ( rootEntity instanceof UnionSubclassEntityPersister ) {
 			// we need to specially handle union-subclass mappings
 			return auditEntity.getMappedTableDetails().getTableName();

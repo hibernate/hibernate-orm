@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.orderupdates;
 
 import java.io.Serializable;
@@ -7,7 +11,7 @@ import java.util.LinkedList;
 
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -39,7 +43,7 @@ import static jakarta.persistence.CascadeType.REMOVE;
 				@Setting(name = AvailableSettings.ORDER_UPDATES, value = "true")
 		}
 )
-@TestForIssue(jiraKey = "HHH-16368")
+@JiraKey(value = "HHH-16368")
 public class OrderUpdatesTest {
 
 	@Test
@@ -59,14 +63,16 @@ public class OrderUpdatesTest {
 					Child child1 = new Child();
 					child1.setName( "name1" );
 					child1.setValue( "value" );
-					parent1.addChild( child1 );
+					child1.setParent( parent1 );
 					child1 = session.merge( child1 );
+					parent1.addChild( child1 );
 
 					Child child2 = new Child();
 					child2.setName( "name1" );
 					child2.setValue( "value" );
-					parent2.addChild( child2 );
+					child2.setParent( parent2 );
 					child2 = session.merge( child2 );
+					parent2.addChild( child2 );
 
 					session.flush();
 

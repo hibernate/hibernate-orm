@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
@@ -12,7 +10,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -40,25 +37,17 @@ public class PostgreSQLCastingIntervalSecondJdbcType implements AdjustableJdbcTy
 
 	@Override
 	public JdbcType resolveIndicatedType(JdbcTypeIndicators indicators, JavaType<?> domainJtd) {
-		final int scale;
-		if ( indicators.getColumnScale() == JdbcTypeIndicators.NO_COLUMN_SCALE ) {
-			scale = domainJtd.getDefaultSqlScale(
-					indicators.getTypeConfiguration()
-							.getServiceRegistry()
-							.getService( JdbcServices.class )
-							.getDialect(),
-					this
-			);
-		}
-		else {
-			scale = indicators.getColumnScale();
-		}
+		final int scale = indicators.getColumnScale() == JdbcTypeIndicators.NO_COLUMN_SCALE
+				? domainJtd.getDefaultSqlScale( indicators.getDialect(), this )
+				: indicators.getColumnScale();
 		if ( scale > 6 ) {
 			// Since the maximum allowed scale on PostgreSQL is 6 (microsecond precision),
 			// we have to switch to the numeric type if the value is greater
 			return indicators.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( SqlTypes.NUMERIC );
 		}
-		return this;
+		else {
+			return this;
+		}
 	}
 
 	@Override

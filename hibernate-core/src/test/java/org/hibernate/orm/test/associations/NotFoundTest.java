@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.associations;
 
 import java.io.Serializable;
@@ -14,8 +18,6 @@ import org.hibernate.annotations.NotFoundAction;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.FailureExpected;
-import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.Jpa;
 
 import org.junit.jupiter.api.AfterEach;

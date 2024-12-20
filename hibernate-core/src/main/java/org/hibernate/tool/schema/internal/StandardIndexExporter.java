@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal;
 
@@ -17,6 +15,7 @@ import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.tool.schema.spi.Exporter;
 
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
 
 /**
@@ -47,6 +46,9 @@ public class StandardIndexExporter implements Exporter<Index> {
 				.append( " (" );
 		appendColumnList( index, createIndex );
 		createIndex.append( ")" );
+		if ( isNotEmpty( index.getOptions() ) ) {
+			createIndex.append( " " ).append( index.getOptions() );
+		}
 		return new String[] { createIndex.toString() };
 	}
 

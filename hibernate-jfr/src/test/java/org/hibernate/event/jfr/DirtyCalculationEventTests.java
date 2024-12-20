@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.event.jfr;
 
 import java.util.List;
@@ -44,7 +48,7 @@ public class DirtyCalculationEventTests {
 		jfrEvents.reset();
 		String sessionId = scope.fromTransaction(
 				session -> {
-					TestEntity testEntity = session.load( TestEntity.class, 1 );
+					TestEntity testEntity = session.getReference( TestEntity.class, 1 );
 					testEntity.setName( "new name" );
 					return session.getSessionIdentifier().toString();
 				}
@@ -62,7 +66,7 @@ public class DirtyCalculationEventTests {
 		RecordedEvent event = events.get( 0 );
 		assertThat( event.getEventType().getName() )
 				.isEqualTo( DirtyCalculationEvent.NAME );
-		assertThat( event.getLong( "executionTime" ) ).isGreaterThan( 0 );
+		assertThat( event.getDuration() ).isPositive();
 		assertThat( event.getString( "sessionIdentifier" ) )
 				.isEqualTo( sessionId );
 		assertThat( event.getString( "entityName" ) )

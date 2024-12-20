@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
 
@@ -79,15 +77,11 @@ public class XmlJdbcType implements AggregateJdbcType {
 		return XmlHelper.fromString( embeddableMappingType, (String) rawJdbcValue, false, options );
 	}
 
-	protected <X> String toString(X value, JavaType<X> javaType, WrapperOptions options) {
+	protected <X> String toString(X value, JavaType<X> javaType, WrapperOptions options) throws SQLException {
 		if ( embeddableMappingType != null ) {
 			return XmlHelper.toString( embeddableMappingType, value, options );
 		}
-		return options.getSessionFactory().getFastSessionServices().getXmlFormatMapper().toString(
-				value,
-				javaType,
-				options
-		);
+		return options.getXmlFormatMapper().toString( value, javaType, options );
 	}
 
 	protected <X> X fromString(String string, JavaType<X> javaType, WrapperOptions options) throws SQLException {
@@ -99,11 +93,15 @@ public class XmlJdbcType implements AggregateJdbcType {
 					options
 			);
 		}
-		return options.getSessionFactory().getFastSessionServices().getXmlFormatMapper().fromString(
-				string,
-				javaType,
-				options
-		);
+		if ( javaType.getJavaType() == SQLXML.class ) {
+			final SQLXML sqlxml =
+					options.getSession().getJdbcCoordinator().getLogicalConnection().getPhysicalConnection()
+							.createSQLXML();
+			sqlxml.setString( string );
+			//noinspection unchecked
+			return (X) sqlxml;
+		}
+		return options.getXmlFormatMapper().fromString( string, javaType, options );
 	}
 
 	@Override

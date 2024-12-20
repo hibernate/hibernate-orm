@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
 
@@ -67,6 +65,24 @@ public @interface SoftDelete {
 	 * @see SoftDeleteType#getDefaultColumnName()
 	 */
 	String columnName() default "";
+
+	/**
+	 * (Optional) The SQL fragment that is used when
+	 * 	generating the DDL for the column.
+	 * <p>
+	 * The DDL must be written in the native SQL dialect
+	 * of the target database (it is not portable across databases).
+	 *
+	 * @since 7.0
+	 */
+	String options() default "";
+
+	/**
+	 * (Optional) A comment to be applied to the column.
+	 *
+	 * @since 7.0
+	 */
+	String comment() default "";
 
 	/**
 	 * The strategy to use for storing/reading values to/from the database.

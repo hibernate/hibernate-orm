@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bootstrap.binding.annotations.embedded;
 
@@ -20,7 +18,7 @@ import org.hibernate.orm.test.bootstrap.binding.annotations.embedded.FloatLeg.Ra
 import org.hibernate.orm.test.bootstrap.binding.annotations.embedded.Leg.Frequency;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -66,7 +64,7 @@ public class EmbeddedTest {
 	public void cleanup(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			for ( Person person : session.createQuery( "from Person", Person.class ).getResultList() ) {
-				session.delete( person );
+				session.remove( person );
 			}
 			session.createQuery( "delete from InternetProvider" ).executeUpdate();
 			session.createQuery( "delete from Manager" ).executeUpdate();
@@ -100,15 +98,18 @@ public class EmbeddedTest {
 			assertNotNull( p );
 			assertNotNull( p.address );
 			assertEquals( "Springfield", p.address.city );
+			assertEquals( (Integer) 1, p.address.formula );
+
 			assertNotNull( p.address.country );
 			assertEquals( "DM", p.address.country.getIso2() );
 			assertNotNull( p.bornIn );
 			assertEquals( "US", p.bornIn.getIso2() );
+			assertEquals( (Integer) 2, p.addressBis.formula );
 		} );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8172")
+	@JiraKey(value = "HHH-8172")
 	public void testQueryWithEmbeddedIsNull(SessionFactoryScope scope) {
 		Person person = new Person();
 		Address a = new Address();
@@ -139,7 +140,7 @@ public class EmbeddedTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8172")
+	@JiraKey(value = "HHH-8172")
 	public void testQueryWithEmbeddedParameterAllNull(SessionFactoryScope scope) {
 		Person person = new Person();
 		Address a = new Address();
@@ -173,7 +174,7 @@ public class EmbeddedTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8172")
+	@JiraKey(value = "HHH-8172")
 	public void testQueryWithEmbeddedParameterOneNull(SessionFactoryScope scope) {
 		Person person = new Person();
 		Address a = new Address();
@@ -208,7 +209,7 @@ public class EmbeddedTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8172")
+	@JiraKey(value = "HHH-8172")
 	public void testQueryWithEmbeddedWithNullUsingSubAttributes(SessionFactoryScope scope) {
 		Person person = new Person();
 		Address a = new Address();
@@ -230,8 +231,8 @@ public class EmbeddedTest {
 
 		scope.inTransaction( session -> {
 			Query query = session.createQuery( "from Person p " +
-																  "where ( p.bornIn.iso2 is null or p.bornIn.iso2 = :i ) and " +
-																  "( p.bornIn.name is null or p.bornIn.name = :n )"
+																"where ( p.bornIn.iso2 is null or p.bornIn.iso2 = :i ) and " +
+																"( p.bornIn.name is null or p.bornIn.name = :n )"
 			);
 			query.setParameter( "i", person.bornIn.getIso2() );
 			query.setParameter( "n", person.bornIn.getName() );
@@ -344,7 +345,7 @@ public class EmbeddedTest {
 					assertNotNull( "Floating leg retrieved as null", floating );
 					assertEquals( Frequency.SEMIANNUALLY, fixed.getPaymentFrequency() );
 					assertEquals( Frequency.QUARTERLY, floating.getPaymentFrequency() );
-					session.delete( vanillaSwap );
+					session.remove( vanillaSwap );
 				}
 		);
 	}
@@ -441,7 +442,7 @@ public class EmbeddedTest {
 					assertEquals( 1.1, spreadDeal.getShortSwap().getFloatLeg().getRateSpread(), 0.01 );
 					assertEquals( 0.8, spreadDeal.getSwap().getFloatLeg().getRateSpread(), 0.01 );
 					assertEquals( 0.8, spreadDeal.getLongSwap().getFloatLeg().getRateSpread(), 0.01 );
-					session.delete( spreadDeal );
+					session.remove( spreadDeal );
 				}
 		);
 	}
@@ -468,7 +469,7 @@ public class EmbeddedTest {
 						Book loadedBook = session.get( Book.class, book.getIsbn() );
 						assertNotNull( loadedBook.getSummary() );
 						assertEquals( book.getSummary().getText(), loadedBook.getSummary().getText() );
-						session.delete( loadedBook );
+						session.remove( loadedBook );
 						tx.commit();
 					}
 					catch (Exception e) {
@@ -501,7 +502,7 @@ public class EmbeddedTest {
 					Book loadedBook = session.get( Book.class, book.getIsbn() );
 					assertNotNull( loadedBook.getSummary() );
 					assertEquals( loadedBook, loadedBook.getSummary().getSummarizedBook() );
-					session.delete( loadedBook );
+					session.remove( loadedBook );
 				}
 		);
 	}
@@ -541,9 +542,9 @@ public class EmbeddedTest {
 					);
 					assertNotNull( "2nd Many to one not set", internetProvider.getOwner().getOrigin() );
 					assertEquals( "Wrong 2nd link", nat.getName(), internetProvider.getOwner().getOrigin().getName() );
-					session.delete( internetProvider );
-					session.delete( internetProvider.getOwner().getCorporationType() );
-					session.delete( internetProvider.getOwner().getOrigin() );
+					session.remove( internetProvider );
+					session.remove( internetProvider.getOwner().getCorporationType() );
+					session.remove( internetProvider.getOwner().getOrigin() );
 				}
 		);
 	}
@@ -576,14 +577,14 @@ public class EmbeddedTest {
 					assertEquals( "Wrong number of elements", 1, topManagement.size() );
 					Manager manager = topManagement.iterator().next();
 					assertEquals( "Wrong element", "Bill", manager.getName() );
-					session.delete( manager );
-					session.delete( internetProvider );
+					session.remove( manager );
+					session.remove( internetProvider );
 				}
 		);
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9642")
+	@JiraKey(value = "HHH-9642")
 	public void testEmbeddedAndOneToManyHql(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -605,7 +606,7 @@ public class EmbeddedTest {
 		scope.inTransaction(
 				session -> {
 					InternetProvider internetProviderQueried =
-							(InternetProvider) session.createQuery( "from InternetProvider" ).uniqueResult();
+							session.createQuery( "from InternetProvider", InternetProvider.class ).uniqueResult();
 					assertFalse( Hibernate.isInitialized( internetProviderQueried.getOwner().getTopManagement() ) );
 
 				}
@@ -614,8 +615,7 @@ public class EmbeddedTest {
 		scope.inTransaction(
 				session -> {
 					InternetProvider internetProviderQueried =
-							(InternetProvider) session.createQuery(
-									"from InternetProvider i join fetch i.owner.topManagement" )
+							session.createQuery( "from InternetProvider i join fetch i.owner.topManagement", InternetProvider.class )
 									.uniqueResult();
 					assertTrue( Hibernate.isInitialized( internetProviderQueried.getOwner().getTopManagement() ) );
 
@@ -637,8 +637,8 @@ public class EmbeddedTest {
 				session -> {
 					InternetProvider internetProvider = session.get( InternetProvider.class, provider.getId() );
 					Manager manager = internetProvider.getOwner().getTopManagement().iterator().next();
-					session.delete( manager );
-					session.delete( internetProvider );
+					session.remove( manager );
+					session.remove( internetProvider );
 				}
 		);
 	}
@@ -767,7 +767,7 @@ public class EmbeddedTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-3868")
+	@JiraKey(value = "HHH-3868")
 	public void testTransientMergeComponentParent(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

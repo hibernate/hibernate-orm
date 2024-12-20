@@ -1,13 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.FlushModeType;
+import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
@@ -26,7 +25,7 @@ import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.event.spi.EventManager;
+import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
@@ -42,6 +41,7 @@ import org.hibernate.query.spi.QueryProducerImplementor;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
+import org.hibernate.type.format.FormatMapper;
 
 import java.util.List;
 import java.util.Set;
@@ -162,6 +162,11 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	@Override
 	public <T> QueryImplementor<T> createQuery(String queryString, Class<T> resultType) {
 		return queryDelegate().createQuery( queryString, resultType );
+	}
+
+	@Override
+	public <R> QueryImplementor<R> createQuery(TypedQueryReference<R> typedQueryReference) {
+		return queryDelegate().createQuery( typedQueryReference );
 	}
 
 	@Override @SuppressWarnings("rawtypes")
@@ -324,8 +329,8 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
-	public EventManager getEventManager() {
-		return delegate.getEventManager();
+	public EventMonitor getEventMonitor() {
+		return delegate.getEventMonitor();
 	}
 
 	@Override
@@ -479,8 +484,8 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
-	public void setCacheMode(CacheMode cm) {
-		delegate.setCacheMode( cm );
+	public void setCacheMode(CacheMode cacheMode) {
+		delegate.setCacheMode( cacheMode );
 	}
 
 	@Override
@@ -556,6 +561,17 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	@Override
 	public boolean autoFlushIfRequired(Set<String> querySpaces) throws HibernateException {
 		return delegate.autoFlushIfRequired( querySpaces );
+	}
+
+	@Override
+	public boolean autoFlushIfRequired(Set<String> querySpaces, boolean skipPreFlush)
+			throws HibernateException {
+		return delegate.autoFlushIfRequired( querySpaces, skipPreFlush );
+	}
+
+	@Override
+	public void autoPreFlush() {
+		delegate.autoPreFlush();
 	}
 
 	@Override
@@ -666,5 +682,15 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	@Override
 	public void disableFilter(String filterName) {
 		delegate.disableFilter( filterName );
+	}
+
+	@Override
+	public FormatMapper getJsonFormatMapper() {
+		return delegate.getJsonFormatMapper();
+	}
+
+	@Override
+	public FormatMapper getXmlFormatMapper() {
+		return delegate.getXmlFormatMapper();
 	}
 }

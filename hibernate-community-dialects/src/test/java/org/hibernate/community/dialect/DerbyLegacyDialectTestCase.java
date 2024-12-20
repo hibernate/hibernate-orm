@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -11,7 +9,7 @@ import org.hibernate.query.spi.Limit;
 
 import static org.junit.Assert.assertEquals;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
@@ -23,7 +21,7 @@ import org.junit.Test;
 public class DerbyLegacyDialectTestCase extends BaseUnitTestCase {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-3972" )
+	@JiraKey( value = "HHH-3972" )
 	public void testInsertLimitClause() {
 		final int limit = 50;
 		final String input = "select * from tablename t where t.cat = 5";
@@ -34,7 +32,7 @@ public class DerbyLegacyDialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-3972" )
+	@JiraKey( value = "HHH-3972" )
 	public void testInsertLimitWithOffsetClause() {
 		final int limit = 50;
 		final int offset = 200;
@@ -46,7 +44,7 @@ public class DerbyLegacyDialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-3972" )
+	@JiraKey( value = "HHH-3972" )
 	public void testInsertLimitWithForUpdateClause() {
 		final int limit = 50;
 		final int offset = 200;
@@ -59,7 +57,7 @@ public class DerbyLegacyDialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-3972" )
+	@JiraKey( value = "HHH-3972" )
 	public void testInsertLimitWithWithClause() {
 		final int limit = 50;
 		final int offset = 200;
@@ -72,7 +70,7 @@ public class DerbyLegacyDialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-3972" )
+	@JiraKey( value = "HHH-3972" )
 	public void testInsertLimitWithForUpdateAndWithClauses() {
 		final int limit = 50;
 		final int offset = 200;

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.entities.ids;
 
@@ -13,7 +11,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.UserType;
 
 /**
@@ -45,7 +43,8 @@ public class CustomEnumUserType implements UserType<CustomEnum> {
 	}
 
 	@Override
-	public CustomEnum nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public CustomEnum nullSafeGet(ResultSet rs, int position, WrapperOptions options)
+			throws SQLException {
 		String name = rs.getString( position );
 		if ( rs.wasNull() ) {
 			return null;
@@ -53,8 +52,8 @@ public class CustomEnumUserType implements UserType<CustomEnum> {
 		return CustomEnum.fromYesNo( name );
 	}
 
-	public void nullSafeSet(PreparedStatement st, CustomEnum value, int index, SharedSessionContractImplementor session)
-			throws HibernateException, SQLException {
+	public void nullSafeSet(PreparedStatement st, CustomEnum value, int index, WrapperOptions options)
+			throws SQLException {
 		if ( value == null ) {
 			st.setNull( index, Types.VARCHAR );
 		}

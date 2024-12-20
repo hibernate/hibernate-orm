@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.converted.converter.inheritence;
 
@@ -11,7 +9,7 @@ import jakarta.persistence.AttributeConverter;
 
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.boot.BootstrapContextImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
@@ -22,10 +20,10 @@ import static org.junit.Assert.assertEquals;
  * Test the ability to interpret and understand AttributeConverter impls when the base class does not
  * explicitly implement AttributeConverter but implements it via an interface or superclass. This also
  * involves resolving any TypeVariables to Class or ParameterizedType.
- * 
+ *
  * @author Svein Baardsen
  */
-@TestForIssue(jiraKey = "HHH-8854")
+@JiraKey(value = "HHH-8854")
 public class AttributeConverterOnSuperclassTest extends BaseUnitTestCase {
 
 	public static class StringIntegerAttributeConverter implements AttributeConverter<String, Integer> {
@@ -145,5 +143,5 @@ public class AttributeConverterOnSuperclassTest extends BaseUnitTestCase {
 			bootstrapContext.close();
 		}
 	}
-	
+
 }

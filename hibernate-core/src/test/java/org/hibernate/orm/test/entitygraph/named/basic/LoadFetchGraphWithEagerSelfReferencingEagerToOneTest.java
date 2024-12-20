@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.entitygraph.named.basic;
 
@@ -12,7 +10,7 @@ import java.util.List;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.SpecHints;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
@@ -37,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 		annotatedClasses = LoadFetchGraphWithEagerSelfReferencingEagerToOneTest.Sample.class,
 		properties = @Setting(name = AvailableSettings.MAX_FETCH_DEPTH, value = "")
 )
-@TestForIssue(jiraKey = "HHH-15391")
+@JiraKey(value = "HHH-15391")
 public class LoadFetchGraphWithEagerSelfReferencingEagerToOneTest {
 
 	@BeforeEach

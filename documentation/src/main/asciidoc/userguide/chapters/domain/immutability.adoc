@@ -37,7 +37,7 @@ If a specific entity is immutable, it is good practice to mark it with the `@Imm
 
 .Immutable entity
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{mutability-example-dir}/entity/EntityImmutabilityTest.java[tags=entity-immutability-example]
 ----
@@ -52,7 +52,7 @@ Considering the following entity is persisted in the database:
 
 .Persisting an immutable entity
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{mutability-example-dir}/entity/EntityImmutabilityTest.java[tags=entity-immutability-persist-example]
 ----
@@ -63,7 +63,7 @@ Hibernate will skip any modification, therefore no SQL `UPDATE` statement is exe
 
 .The immutable entity ignores any update
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{mutability-example-dir}/entity/EntityImmutabilityTest.java[tags=entity-immutability-update-example]
 ----
@@ -99,7 +99,7 @@ and internal-state sense.  E.g.
 
 .Immutable basic attribute
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{mutability-example-dir}/attribute/BasicAttributeMutabilityTests.java[tags=attribute-immutable-example]
 ----
@@ -109,7 +109,7 @@ Changes to the `theDate` attribute are ignored.
 
 .Immutable basic attribute change
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{mutability-example-dir}/attribute/BasicAttributeMutabilityTests.java[tags=attribute-immutable-managed-example]
 ----
@@ -135,7 +135,7 @@ TIP:: While most immutable changes are simply discarded, modifying an immutable 
 
 .Persisting an immutable collection
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{mutability-example-dir}/attribute/PluralAttributeMutabilityTest.java[tags=collection-immutability-persist-example]
 ----
@@ -147,7 +147,7 @@ For instance, we can still modify the entity name:
 
 .Changing the mutable entity
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{mutability-example-dir}/attribute/PluralAttributeMutabilityTest.java[tags=collection-entity-update-example]
 ----
@@ -162,7 +162,7 @@ However, when trying to modify the `events` collection:
 
 .Immutable collections cannot be modified
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{mutability-example-dir}/attribute/PluralAttributeMutabilityTest.java[tags=collection-immutability-update-example]
 ----
@@ -222,7 +222,7 @@ To understand the impact of internal-state mutability, consider the following en
 
 .Basic mutability model
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{mutability-example-dir}/MutabilityBaselineEntity.java[tags=mutability-base-entity-example]
 ----
@@ -233,7 +233,7 @@ update the value:
 
 .Changing immutable value
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{mutability-example-dir}/MutabilityBaselineEntity.java[tags=mutability-base-string-example]
 ----
@@ -247,7 +247,7 @@ with the immutable value, we can set the new value:
 
 .Changing mutable value - setting
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{mutability-example-dir}/MutabilityBaselineEntity.java[tags=mutability-base-date-set-example]
 ----
@@ -257,7 +257,7 @@ We can also mutate the existing value:
 
 .Changing mutable value - mutating
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{mutability-example-dir}/MutabilityBaselineEntity.java[tags=mutability-base-date-mutate-example]
 ----

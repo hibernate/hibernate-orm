@@ -1,22 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.exec.internal;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import org.hibernate.JDBCException;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
@@ -85,15 +82,15 @@ public class StandardJdbcMutationExecutor implements JdbcMutationExecutor {
 				}
 
 				session.getEventListenerManager().jdbcExecuteStatementStart();
-				final EventManager eventManager = session.getEventManager();
-				final HibernateMonitoringEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
+				final EventMonitor eventMonitor = session.getEventMonitor();
+				final DiagnosticEvent jdbcPreparedStatementExecutionEvent = eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 				try {
 					int rows = preparedStatement.executeUpdate();
 					expectationCheck.accept( rows, preparedStatement );
 					return rows;
 				}
 				finally {
-					eventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, finalSql );
+					eventMonitor.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, finalSql );
 					session.getEventListenerManager().jdbcExecuteStatementEnd();
 				}
 			}
@@ -109,10 +106,11 @@ public class StandardJdbcMutationExecutor implements JdbcMutationExecutor {
 			if ( exception instanceof ConstraintViolationException && jdbcMutation instanceof JdbcOperationQueryInsert ) {
 				final ConstraintViolationException constraintViolationException = (ConstraintViolationException) exception;
 				if ( constraintViolationException.getKind() == ConstraintViolationException.ConstraintKind.UNIQUE ) {
-					final String uniqueConstraintNameThatMayFail = ( (JdbcOperationQueryInsert) jdbcMutation ).getUniqueConstraintNameThatMayFail();
+					final JdbcOperationQueryInsert jdbcInsert = (JdbcOperationQueryInsert) jdbcMutation;
+					final String uniqueConstraintNameThatMayFail = jdbcInsert.getUniqueConstraintNameThatMayFail();
 					if ( uniqueConstraintNameThatMayFail != null ) {
-						if ( uniqueConstraintNameThatMayFail.isEmpty()
-								|| uniqueConstraintNameThatMayFail.equalsIgnoreCase( constraintViolationException.getConstraintName() ) ) {
+						final String violatedConstraintName = constraintViolationException.getConstraintName();
+						if ( constraintNameMatches( uniqueConstraintNameThatMayFail, violatedConstraintName ) ) {
 							return 0;
 						}
 					}
@@ -123,5 +121,12 @@ public class StandardJdbcMutationExecutor implements JdbcMutationExecutor {
 		finally {
 			executionContext.afterStatement( logicalConnection );
 		}
+	}
+
+	private static boolean constraintNameMatches(String uniqueConstraintNameThatMayFail, String violatedConstraintName) {
+		return uniqueConstraintNameThatMayFail.isEmpty()
+			|| uniqueConstraintNameThatMayFail.equalsIgnoreCase(violatedConstraintName)
+			|| violatedConstraintName != null && violatedConstraintName.indexOf('.') > 0
+				&& uniqueConstraintNameThatMayFail.equalsIgnoreCase(violatedConstraintName.substring(violatedConstraintName.lastIndexOf('.') + 1));
 	}
 }

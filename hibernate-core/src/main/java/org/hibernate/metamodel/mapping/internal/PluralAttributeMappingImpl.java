@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
@@ -45,10 +43,10 @@ import org.hibernate.metamodel.mapping.ordering.TranslationContext;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.mutation.CollectionMutationTarget;
-import org.hibernate.persister.entity.Joinable;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
+import org.hibernate.sql.ast.internal.TableGroupJoinHelper;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
@@ -74,6 +72,8 @@ import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
 import org.hibernate.sql.results.graph.collection.internal.SelectEagerCollectionFetch;
 
 import org.jboss.logging.Logger;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.boot.model.internal.SoftDeleteHelper.createNonSoftDeletedRestriction;
 import static org.hibernate.boot.model.internal.SoftDeleteHelper.resolveSoftDeleteMapping;
@@ -102,9 +102,6 @@ public class PluralAttributeMappingImpl
 
 	@SuppressWarnings("rawtypes")
 	private final CollectionMappingType collectionMappingType;
-	private final int stateArrayPosition;
-	private final PropertyAccess propertyAccess;
-	private final AttributeMetadata attributeMetadata;
 	private final String referencedPropertyName;
 	private final String mapKeyPropertyName;
 
@@ -147,11 +144,8 @@ public class PluralAttributeMappingImpl
 			ManagedMappingType declaringType,
 			CollectionPersister collectionDescriptor,
 			MappingModelCreationProcess creationProcess) {
-		super( attributeName, fetchableIndex, declaringType );
-		this.propertyAccess = propertyAccess;
-		this.attributeMetadata = attributeMetadata;
+		super( attributeName, fetchableIndex, declaringType, attributeMetadata, stateArrayPosition, propertyAccess );
 		this.collectionMappingType = collectionMappingType;
-		this.stateArrayPosition = stateArrayPosition;
 		this.elementDescriptor = elementDescriptor;
 		this.indexDescriptor = indexDescriptor;
 		this.identifierDescriptor = identifierDescriptor;
@@ -175,7 +169,7 @@ public class PluralAttributeMappingImpl
 			separateCollectionTable = null;
 		}
 		else {
-			separateCollectionTable = ( (Joinable) collectionDescriptor ).getTableName();
+			separateCollectionTable = collectionDescriptor.getTableName();
 		}
 
 		final int baseIndex;
@@ -214,10 +208,7 @@ public class PluralAttributeMappingImpl
 	 */
 	protected PluralAttributeMappingImpl(PluralAttributeMappingImpl original) {
 		super( original );
-		this.propertyAccess = original.propertyAccess;
-		this.attributeMetadata = original.attributeMetadata;
 		this.collectionMappingType = original.collectionMappingType;
-		this.stateArrayPosition = original.stateArrayPosition;
 		this.elementDescriptor = original.elementDescriptor;
 		this.indexDescriptor = original.indexDescriptor;
 		this.identifierDescriptor = original.identifierDescriptor;
@@ -381,21 +372,6 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
-	public int getStateArrayPosition() {
-		return stateArrayPosition;
-	}
-
-	@Override
-	public AttributeMetadata getAttributeMetadata() {
-		return attributeMetadata;
-	}
-
-	@Override
-	public PropertyAccess getPropertyAccess() {
-		return propertyAccess;
-	}
-
-	@Override
 	public Generator getGenerator() {
 		// can never be a generated value
 		return null;
@@ -505,6 +481,7 @@ public class PluralAttributeMappingImpl
 							fetchablePath,
 							this,
 							collectionTableGroup,
+							referencedPropertyName != null,
 							fetchParent,
 							creationState
 					);
@@ -546,8 +523,9 @@ public class PluralAttributeMappingImpl
 			NavigablePath fetchedPath,
 			PluralAttributeMapping fetchedAttribute,
 			FetchParent fetchParent,
-			DomainResult<?> collectionKeyResult) {
-		return new DelayedCollectionFetch( fetchedPath, fetchedAttribute, fetchParent, collectionKeyResult );
+			DomainResult<?> collectionKeyResult,
+			boolean unfetched) {
+		return new DelayedCollectionFetch( fetchedPath, fetchedAttribute, fetchParent, collectionKeyResult, unfetched );
 	}
 
 	/**
@@ -568,12 +546,14 @@ public class PluralAttributeMappingImpl
 			NavigablePath fetchedPath,
 			PluralAttributeMapping fetchedAttribute,
 			TableGroup collectionTableGroup,
+			boolean needsCollectionKeyResult,
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
 		return new EagerCollectionFetch(
 				fetchedPath,
 				fetchedAttribute,
 				collectionTableGroup,
+				needsCollectionKeyResult,
 				fetchParent,
 				creationState
 		);
@@ -655,23 +635,32 @@ public class PluralAttributeMappingImpl
 		// Lazy property. A null foreign key domain result will lead to
 		// returning a domain result assembler that returns LazyPropertyInitializer.UNFETCHED_PROPERTY
 		final EntityMappingType containingEntityMapping = findContainingEntityMapping();
+		final boolean unfetched;
 		if ( fetchParent.getReferencedModePart() == containingEntityMapping
 				&& containingEntityMapping.getEntityPersister().getPropertyLaziness()[getStateArrayPosition()] ) {
 			collectionKeyDomainResult = null;
+			unfetched = true;
 		}
 		else {
-			collectionKeyDomainResult = getKeyDescriptor().createTargetDomainResult(
-					fetchablePath,
-					sqlAstCreationState.getFromClauseAccess().getTableGroup( fetchParent.getNavigablePath() ),
-					fetchParent,
-					creationState
-			);
+			if ( referencedPropertyName != null ) {
+				collectionKeyDomainResult = getKeyDescriptor().createTargetDomainResult(
+						fetchablePath,
+						sqlAstCreationState.getFromClauseAccess().getTableGroup( fetchParent.getNavigablePath() ),
+						fetchParent,
+						creationState
+				);
+			}
+			else {
+				collectionKeyDomainResult = null;
+			}
+			unfetched = false;
 		}
 		return buildDelayedCollectionFetch(
 				fetchablePath,
 				this,
 				fetchParent,
-				collectionKeyDomainResult
+				collectionKeyDomainResult,
+				unfetched
 		);
 	}
 
@@ -694,9 +683,9 @@ public class PluralAttributeMappingImpl
 	public TableGroupJoin createTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAliasBase explicitSqlAliasBase,
-			SqlAstJoinType requestedJoinType,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase explicitSqlAliasBase,
+			@Nullable SqlAstJoinType requestedJoinType,
 			boolean fetched,
 			boolean addsPredicate,
 			SqlAstCreationState creationState) {
@@ -726,6 +715,7 @@ public class PluralAttributeMappingImpl
 				tableGroup,
 				true,
 				creationState.getLoadQueryInfluencers().getEnabledFilters(),
+				false,
 				null,
 				creationState
 		);
@@ -745,6 +735,16 @@ public class PluralAttributeMappingImpl
 				creationState
 		);
 
+		if ( fetched ) {
+			if ( orderByFragment != null ) {
+				creationState.applyOrdering( tableGroup, orderByFragment );
+			}
+
+			if ( manyToManyOrderByFragment != null ) {
+				creationState.applyOrdering( tableGroup, manyToManyOrderByFragment );
+			}
+		}
+
 		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
 				navigablePath,
 				determineSqlJoinType( lhs, requestedJoinType, fetched ),
@@ -752,13 +752,7 @@ public class PluralAttributeMappingImpl
 				collectionPredicateCollector.getPredicate()
 		);
 		if ( predicateCollector != collectionPredicateCollector ) {
-			final TableGroupJoin joinForPredicate;
-			if ( !tableGroup.getNestedTableGroupJoins().isEmpty() || tableGroup.getTableGroupJoins().isEmpty() ) {
-				joinForPredicate = tableGroupJoin;
-			}
-			else {
-				joinForPredicate = tableGroup.getTableGroupJoins().get( tableGroup.getTableGroupJoins().size() - 1 );
-			}
+			final TableGroupJoin joinForPredicate = TableGroupJoinHelper.determineJoinForPredicateApply( tableGroupJoin );
 			joinForPredicate.applyPredicate( predicateCollector.getPredicate() );
 		}
 		return tableGroupJoin;
@@ -818,7 +812,7 @@ public class PluralAttributeMappingImpl
 		}
 	}
 
-	public SqlAstJoinType determineSqlJoinType(TableGroup lhs, SqlAstJoinType requestedJoinType, boolean fetched) {
+	public SqlAstJoinType determineSqlJoinType(TableGroup lhs, @Nullable SqlAstJoinType requestedJoinType, boolean fetched) {
 		if ( hasSoftDelete() ) {
 			return SqlAstJoinType.LEFT;
 		}
@@ -840,11 +834,11 @@ public class PluralAttributeMappingImpl
 	public TableGroup createRootTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAliasBase explicitSqlAliasBase,
-			SqlAstJoinType requestedJoinType,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase explicitSqlAliasBase,
+			@Nullable SqlAstJoinType requestedJoinType,
 			boolean fetched,
-			Consumer<Predicate> predicateConsumer,
+			@Nullable Consumer<Predicate> predicateConsumer,
 			SqlAstCreationState creationState) {
 		return createRootTableGroupJoin(
 				navigablePath,
@@ -877,8 +871,10 @@ public class PluralAttributeMappingImpl
 		if ( collectionDescriptor.isOneToMany() ) {
 			tableGroup = createOneToManyTableGroup(
 					lhs.canUseInnerJoins() && joinType == SqlAstJoinType.INNER,
+					joinType,
 					navigablePath,
 					fetched,
+					addsPredicate,
 					explicitSourceAlias,
 					sqlAliasBase,
 					creationState
@@ -912,8 +908,10 @@ public class PluralAttributeMappingImpl
 
 	private TableGroup createOneToManyTableGroup(
 			boolean canUseInnerJoins,
+			SqlAstJoinType joinType,
 			NavigablePath navigablePath,
 			boolean fetched,
+			boolean addsPredicate,
 			String sourceAlias,
 			SqlAliasBase explicitSqlAliasBase,
 			SqlAstCreationState creationState) {
@@ -936,6 +934,12 @@ public class PluralAttributeMappingImpl
 				elementTableGroup,
 				creationState.getCreationContext().getSessionFactory()
 		);
+		// For inner joins we never need join nesting
+		final boolean nestedJoin = joinType != SqlAstJoinType.INNER
+				// For outer joins we need nesting if there might be an on-condition that refers to the element table
+				&& ( addsPredicate
+				|| isAffectedByEnabledFilters( creationState.getLoadQueryInfluencers(), creationState.applyOnlyLoadByKeyFilters() )
+				|| collectionDescriptor.hasWhereRestrictions() );
 
 		if ( indexDescriptor instanceof TableGroupJoinProducer ) {
 			final TableGroupJoin tableGroupJoin = ( (TableGroupJoinProducer) indexDescriptor ).createTableGroupJoin(
@@ -943,12 +947,12 @@ public class PluralAttributeMappingImpl
 					tableGroup,
 					null,
 					sqlAliasBase,
-					SqlAstJoinType.INNER,
+					joinType,
 					fetched,
 					false,
 					creationState
 			);
-			tableGroup.registerIndexTableGroup( tableGroupJoin );
+			tableGroup.registerIndexTableGroup( tableGroupJoin, nestedJoin );
 		}
 
 		return tableGroup;
@@ -970,7 +974,7 @@ public class PluralAttributeMappingImpl
 				this,
 				creationState.getSqlAliasBaseGenerator()
 		);
-		final String collectionTableName = ( (Joinable) collectionDescriptor ).getTableName();
+		final String collectionTableName = collectionDescriptor.getTableName();
 		final TableReference collectionTableReference = new NamedTableReference(
 				collectionTableName,
 				sqlAliasBase.generateNewAlias(),
@@ -994,7 +998,7 @@ public class PluralAttributeMappingImpl
 		final boolean nestedJoin = joinType != SqlAstJoinType.INNER
 				// For outer joins we need nesting if there might be an on-condition that refers to the element table
 				&& ( addsPredicate
-				|| isAffectedByEnabledFilters( creationState.getLoadQueryInfluencers() )
+				|| isAffectedByEnabledFilters( creationState.getLoadQueryInfluencers(), creationState.applyOnlyLoadByKeyFilters() )
 				|| collectionDescriptor.hasWhereRestrictions() );
 
 		if ( elementDescriptor instanceof TableGroupJoinProducer ) {
@@ -1038,7 +1042,9 @@ public class PluralAttributeMappingImpl
 		if ( getCollectionDescriptor().isOneToMany() ) {
 			return createOneToManyTableGroup(
 					canUseInnerJoins,
+					SqlAstJoinType.INNER,
 					navigablePath,
+					false,
 					false,
 					explicitSourceAlias,
 					explicitSqlAliasBase,
@@ -1065,8 +1071,8 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
-	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers) {
-		return getCollectionDescriptor().isAffectedByEnabledFilters( influencers );
+	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
+		return getCollectionDescriptor().isAffectedByEnabledFilters( influencers, onlyApplyForLoadByKeyFilters );
 	}
 
 	@Override

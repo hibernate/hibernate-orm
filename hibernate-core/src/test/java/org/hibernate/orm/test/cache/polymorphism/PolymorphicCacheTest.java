@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cache.polymorphism;
 
@@ -26,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @JiraKey( "HHH-9028" )
 @JiraKey( "HHH-9107" )
-@DomainModel( annotatedClasses = { Cacheable.class, CachedItem1.class, CachedItem2.class } )
+@DomainModel( annotatedClasses = { Cacheable.class, CachedItem1.class, CachedItem2.class, CacheHolder.class } )
 @SessionFactory
 public class PolymorphicCacheTest {
 	@BeforeEach
@@ -39,7 +37,12 @@ public class PolymorphicCacheTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> session.createQuery( "delete Cacheable" ).executeUpdate() );
+		scope.inTransaction(
+				session -> {
+					session.createMutationQuery("delete from CacheHolder").executeUpdate();
+					session.createMutationQuery( "delete Cacheable" ).executeUpdate();
+				}
+		);
 	}
 
 	@Test
@@ -124,7 +127,7 @@ public class PolymorphicCacheTest {
 
 			} );
 		} );
-		
+
 		// test deleting
 		scope.inSession( (session) -> {
 			scope.inTransaction( session, (s) -> {
@@ -138,6 +141,29 @@ public class PolymorphicCacheTest {
 				assertThat( cachedItem2 ).isNotNull();
 			} );
 		} );
+	}
+
+	@Test
+	@JiraKey("HHH-10162")
+	public void testPolymorphismAndCacheWithHolder(SessionFactoryScope scope) {
+		scope.inTransaction(
+				s -> {
+					final CachedItem1 item3 = new CachedItem1(3, "name3");
+					final CacheHolder holder = new CacheHolder( "holder", item3 );
+					s.persist( item3 );
+					s.persist( holder );
+				}
+		);
+
+		scope.inTransaction(
+				s -> {
+					CacheHolder cacheHolder = s.get( CacheHolder.class, "holder" );
+					Assertions.assertTrue(
+							cacheHolder.getItem() instanceof CachedItem1,
+							"Relation was not fetched from L2 cache"
+					);
+				}
+		);
 	}
 
 }

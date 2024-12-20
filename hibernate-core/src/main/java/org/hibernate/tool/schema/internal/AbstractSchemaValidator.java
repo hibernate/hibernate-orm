@@ -1,15 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal;
 
 import java.util.Locale;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -32,6 +29,9 @@ import org.hibernate.tool.schema.spi.SchemaValidator;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
+import static org.hibernate.tool.schema.internal.ColumnDefinitions.hasMatchingType;
 
 /**
  * Base implementation of {@link SchemaValidator}.
@@ -57,7 +57,7 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 			ExecutionOptions options,
 			ContributableMatcher contributableInclusionFilter) {
 		SqlStringGenerationContext context = SqlStringGenerationContextImpl.fromConfigurationMap(
-				tool.getServiceRegistry().getService( JdbcEnvironment.class ),
+				tool.getServiceRegistry().requireService( JdbcEnvironment.class ),
 				metadata.getDatabase(),
 				options.getConfigurationValues()
 		);
@@ -93,15 +93,15 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 			ContributableMatcher contributableInclusionFilter,
 			Dialect dialect) {
 		for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
-			if ( options.getSchemaFilter().includeNamespace( namespace ) ) {
+			if ( schemaFilter.includeNamespace( namespace ) ) {
 				validateTables( metadata, databaseInformation, options, contributableInclusionFilter, dialect, namespace );
 			}
 		}
 
 		for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
-			if ( options.getSchemaFilter().includeNamespace( namespace ) ) {
+			if ( schemaFilter.includeNamespace( namespace ) ) {
 				for ( Sequence sequence : namespace.getSequences() ) {
-					if ( ! options.getSchemaFilter().includeSequence( sequence ) ) {
+					if ( !schemaFilter.includeSequence( sequence ) ) {
 						continue;
 					}
 
@@ -139,7 +139,9 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 		}
 
 		for ( Column column : table.getColumns() ) {
-			final ColumnInformation existingColumn = tableInformation.getColumn( Identifier.toIdentifier( column.getQuotedName() ) );
+			final ColumnInformation existingColumn =
+					//QUESTION: should this use metadata.getDatabase().toIdentifier( column.getQuotedName() )
+					tableInformation.getColumn( toIdentifier( column.getQuotedName() ) );
 			if ( existingColumn == null ) {
 				throw new SchemaManagementException(
 						String.format(
@@ -160,7 +162,7 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 			Metadata metadata,
 			ExecutionOptions options,
 			Dialect dialect) {
-		if ( !ColumnDefinitions.hasMatchingType( column, columnInformation, metadata, dialect ) ) {
+		if ( !hasMatchingType( column, columnInformation, metadata, dialect ) ) {
 			throw new SchemaManagementException(
 					String.format(
 							"Schema-validation: wrong column type encountered in column [%s] in " +

@@ -1,8 +1,12 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.query;
 
 import java.util.Set;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -25,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		annotatedClasses = { CompareEntityValuedPathsTest.Person.class }
 )
 @SessionFactory(useCollectingStatementInspector = true)
-@TestForIssue(jiraKey = "HHH-15349")
+@JiraKey(value = "HHH-15349")
 public class CompareEntityValuedPathsTest {
 
 	@Test

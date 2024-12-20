@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.filter.hql;
 
@@ -45,9 +43,9 @@ public class BasicFilteredBulkManipulationTest extends AbstractStatefulStateless
 	void testBasicFilteredHqlDelete(
 			BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( session -> {
-			session.save( new Person( "Steve", 'M' ) );
-			session.save( new Person( "Emmanuel", 'M' ) );
-			session.save( new Person( "Gail", 'F' ) );
+			session.persist( new Person( "Steve", 'M' ) );
+			session.persist( new Person( "Emmanuel", 'M' ) );
+			session.persist( new Person( "Gail", 'F' ) );
 		} );
 		inTransaction.accept(scope, session -> {
 			session.enableFilter( "sex" ).setParameter( "sexCode", 'M' );
@@ -60,8 +58,8 @@ public class BasicFilteredBulkManipulationTest extends AbstractStatefulStateless
 	@MethodSource("transactionKind")
 	void testBasicFilteredHqlUpdate(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( session -> {
-			session.save( new Person( "Shawn", 'M' ) );
-			session.save( new Person( "Sally", 'F' ) );
+			session.persist( new Person( "Shawn", 'M' ) );
+			session.persist( new Person( "Sally", 'F' ) );
 		} );
 
 		inTransaction.accept(scope, session -> {

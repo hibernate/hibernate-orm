@@ -17,7 +17,7 @@
     <sql-query name="simpleScalar" callable="true">
         <return-scalar column="name" type="string"/>
         <return-scalar column="`value`" type="long"/>
-        { ? = call simpleScalar(:number) }
+        { ? = call simpleScalar(:p_number) }
     </sql-query>
 
     <sql-query name="paramhandling" callable="true">

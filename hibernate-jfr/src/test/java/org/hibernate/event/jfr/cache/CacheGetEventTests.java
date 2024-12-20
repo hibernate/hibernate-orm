@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.event.jfr.cache;
 
 import java.util.List;
@@ -68,7 +72,7 @@ public class CacheGetEventTests {
 					RecordedEvent event = events.get( 0 );
 					assertThat( event.getEventType().getName() )
 							.isEqualTo( CacheGetEvent.NAME );
-					assertThat( event.getLong( "executionTime" ) ).isGreaterThan( 0 );
+					assertThat( event.getDuration() ).isPositive();
 					assertThat( event.getString( "sessionIdentifier" ) )
 							.isEqualTo( session.getSessionIdentifier().toString() );
 					assertThat( event.getString( "entityName" ) )

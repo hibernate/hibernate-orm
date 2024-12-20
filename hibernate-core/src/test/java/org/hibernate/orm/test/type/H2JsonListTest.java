@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.type;
 
@@ -11,6 +9,7 @@ import java.util.UUID;
 
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.type.SqlTypes;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -74,7 +73,7 @@ public class H2JsonListTest {
 					.executeUpdate();
 		} );
 		scope.inTransaction( session -> {
-			final Path path = session.createNativeQuery(
+			final Path path = (Path) session.createNativeQuery(
 					"select * from paths_clob where id = 99",
 					Path.class
 			).getSingleResult();
@@ -104,10 +103,11 @@ public class H2JsonListTest {
 					.executeUpdate();
 		} );
 		scope.inTransaction( session -> {
-			final PathClob path = session.createNativeQuery(
+			final NativeQueryImplementor<PathClob> nativeQuery = session.createNativeQuery(
 					"select * from paths_clob where id = 99",
 					PathClob.class
-			).getSingleResult();
+			);
+			final PathClob path = nativeQuery.getSingleResult();
 			assertThat( path ).isNotNull();
 			assertThat( path.getRelativePaths() ).hasSize( 2 );
 		} );

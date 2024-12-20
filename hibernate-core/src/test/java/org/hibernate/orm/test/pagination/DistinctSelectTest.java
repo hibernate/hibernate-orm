@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.pagination;
 
@@ -16,7 +14,7 @@ import org.hibernate.Transaction;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertFalse;
@@ -24,10 +22,10 @@ import static org.junit.Assert.assertFalse;
 /**
  * HHH-5715 bug test case: Duplicated entries when using select distinct with join and pagination. The bug has to do
  * with new {@link SQLServerDialect} that uses row_number function for pagination
- * 
+ *
  * @author Valotasios Yoryos
  */
-@TestForIssue( jiraKey = "HHH-5715" )
+@JiraKey( value = "HHH-5715" )
 public class DistinctSelectTest extends BaseCoreFunctionalTestCase {
 	private static final int NUM_OF_USERS = 30;
 
@@ -50,13 +48,13 @@ public class DistinctSelectTest extends BaseCoreFunctionalTestCase {
 		for (int i = 0; i < 5; i++) {
 			Tag tag = new Tag("Tag: " + SafeRandomUUIDGenerator.safeRandomUUID());
 			tags.add(tag);
-			s.save(tag);
+			s.persist(tag);
 		}
 
 		for (int i = 0; i < NUM_OF_USERS; i++) {
 			Entry e = new Entry("Entry: " + SafeRandomUUIDGenerator.safeRandomUUID());
 			e.getTags().addAll(tags);
-			s.save(e);
+			s.persist(e);
 		}
 		t.commit();
 		s.close();

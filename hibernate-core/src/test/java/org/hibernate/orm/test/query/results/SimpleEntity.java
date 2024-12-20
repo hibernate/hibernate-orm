@@ -1,14 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.results;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
 
 /**
@@ -16,6 +14,17 @@ import jakarta.persistence.Table;
  */
 @Entity(name = "SimpleEntity")
 @Table(name = "simple_entity")
+@NamedQuery(name= Queries.NAMED_ENTITY, query = Queries.ENTITY)
+@NamedQuery(name= Queries.NAMED_ENTITY_NO_SELECT, query = Queries.ENTITY_NO_SELECT)
+@NamedQuery(name= Queries.NAMED_COMPOSITE, query = Queries.COMPOSITE)
+@NamedQuery(name= Queries.NAMED_NAME, query = Queries.NAME)
+@NamedQuery(name= Queries.NAMED_COMP_VAL, query = Queries.COMP_VAL)
+@NamedQuery(name= Queries.NAMED_ID_NAME, query = Queries.ID_NAME)
+@NamedQuery(name= Queries.NAMED_ID_COMP_VAL, query = Queries.ID_COMP_VAL)
+@NamedQuery(name= Queries.NAMED_ID_NAME_DTO, query = Queries.ID_NAME_DTO)
+@NamedQuery(name= Queries.NAMED_ID_COMP_VAL_DTO, query = Queries.ID_COMP_VAL_DTO)
+@NamedQuery(name= Queries.NAMED_NAME_DTO, query = Queries.NAME_DTO)
+@NamedQuery(name= Queries.NAMED_COMP_VAL_DTO, query = Queries.COMP_VAL_DTO)
 public class SimpleEntity {
 	@Id
 	public Integer id;

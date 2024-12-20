@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.write;
 
@@ -47,7 +45,7 @@ public class OptionalTableUpdateTests {
 	private static void verifySecondaryRows(String table, int expectedCount, SessionFactoryScope sfScope) {
 		final String sql = "select count(1) from " + table;
 		sfScope.inTransaction( (session) -> {
-			final int count = session.createNativeQuery( sql, Integer.class ).getSingleResult();
+			final int count = (int) session.createNativeQuery( sql, Integer.class ).getSingleResult();
 			assertThat( count ).isEqualTo( expectedCount );
 		} );
 	}
@@ -99,9 +97,9 @@ public class OptionalTableUpdateTests {
 	@Table( name = "entities" )
 	@SecondaryTable( name = "supplements" )
 	public static class TheEntity {
-	    @Id
-	    private Integer id;
-	    @Basic
+		@Id
+		private Integer id;
+		@Basic
 		private String name;
 		@Basic
 		@Column( table = "supplements" )

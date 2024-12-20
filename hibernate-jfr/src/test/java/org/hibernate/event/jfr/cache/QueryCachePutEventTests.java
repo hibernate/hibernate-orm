@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.event.jfr.cache;
 
 import java.util.List;
@@ -5,7 +9,7 @@ import java.util.List;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.event.jfr.internal.CachePutEvent;
 import org.hibernate.event.jfr.internal.JdbcBatchExecutionEvent;
-import org.hibernate.event.jfr.internal.JfrEventManager;
+import org.hibernate.event.jfr.internal.JfrEventMonitor;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -75,13 +79,13 @@ public class QueryCachePutEventTests {
 					RecordedEvent event = events.get( 0 );
 					assertThat( event.getEventType().getName() )
 							.isEqualTo( CachePutEvent.NAME );
-					assertThat( event.getLong( "executionTime" ) ).isGreaterThan( 0 );
+					assertThat( event.getDuration() ).isPositive();
 					assertThat( event.getString( "sessionIdentifier" ) )
 							.isEqualTo( session.getSessionIdentifier().toString() );
 					assertThat( event.getBoolean( "cacheChanged" ) ).isTrue();
 					assertThat( event.getString( "regionName" ) ).isNotNull();
 					assertThat( event.getBoolean( "isNaturalId" ) ).isFalse();
-					assertThat( event.getString( "description" ) ).isEqualTo( JfrEventManager.CacheActionDescription.QUERY_RESULT.getText() );
+					assertThat( event.getString( "description" ) ).isEqualTo( JfrEventMonitor.CacheActionDescription.QUERY_RESULT.getText() );
 				}
 		);
 

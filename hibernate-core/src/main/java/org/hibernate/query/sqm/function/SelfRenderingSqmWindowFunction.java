@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.function;
 
@@ -31,28 +29,6 @@ public class SelfRenderingSqmWindowFunction<T> extends SelfRenderingSqmFunction<
 	private final SqmPredicate filter;
 	private final Boolean respectNulls;
 	private final Boolean fromFirst;
-
-	/**
-	 * @deprecated Use {@link #SelfRenderingSqmWindowFunction(SqmFunctionDescriptor, FunctionRenderer, List, SqmPredicate, Boolean, Boolean, ReturnableType, ArgumentsValidator, FunctionReturnTypeResolver, NodeBuilder, String)} instead
-	 */
-	@Deprecated(forRemoval = true)
-	public SelfRenderingSqmWindowFunction(
-			SqmFunctionDescriptor descriptor,
-			FunctionRenderingSupport renderingSupport,
-			List<? extends SqmTypedNode<?>> arguments,
-			SqmPredicate filter,
-			Boolean respectNulls,
-			Boolean fromFirst,
-			ReturnableType<T> impliedResultType,
-			ArgumentsValidator argumentsValidator,
-			FunctionReturnTypeResolver returnTypeResolver,
-			NodeBuilder nodeBuilder,
-			String name) {
-		super( descriptor, renderingSupport, arguments, impliedResultType, argumentsValidator, returnTypeResolver, nodeBuilder, name );
-		this.filter = filter;
-		this.respectNulls = respectNulls;
-		this.fromFirst = fromFirst;
-	}
 
 	public SelfRenderingSqmWindowFunction(
 			SqmFunctionDescriptor descriptor,

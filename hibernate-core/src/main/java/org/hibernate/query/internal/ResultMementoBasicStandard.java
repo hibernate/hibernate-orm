@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.internal;
 
@@ -14,8 +12,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.named.ResultMementoBasic;
 import org.hibernate.query.results.ResultBuilderBasicValued;
-import org.hibernate.query.results.complete.CompleteResultBuilderBasicValuedConverted;
-import org.hibernate.query.results.complete.CompleteResultBuilderBasicValuedStandard;
+import org.hibernate.query.results.internal.complete.CompleteResultBuilderBasicValuedConverted;
+import org.hibernate.query.results.internal.complete.CompleteResultBuilderBasicValuedStandard;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.BasicType;
@@ -82,9 +80,10 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 			builder = new CompleteResultBuilderBasicValuedStandard( explicitColumnName, null, null );
 		}
 		else if ( AttributeConverter.class.isAssignableFrom( definedType ) ) {
-			final Class<? extends AttributeConverter<?, ?>> converterClass = (Class<? extends AttributeConverter<?, ?>>) definedType;
+			final Class<? extends AttributeConverter<?, ?>> converterClass =
+					(Class<? extends AttributeConverter<?, ?>>) definedType;
 			final ManagedBean<? extends AttributeConverter<?,?>> converterBean = sessionFactory.getServiceRegistry()
-					.getService( ManagedBeanRegistry.class )
+					.requireService( ManagedBeanRegistry.class )
 					.getBean( converterClass );
 			final JavaType<? extends AttributeConverter<?,?>> converterJtd = typeConfiguration
 					.getJavaTypeRegistry()
@@ -105,14 +104,14 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 			final JavaType<?> explicitJavaType;
 
 			// see if this is a registered BasicType...
-			final BasicType<Object> registeredBasicType = typeConfiguration.getBasicTypeRegistry().getRegisteredType( definition.type().getName() );
+			final BasicType<Object> registeredBasicType = typeConfiguration.getBasicTypeRegistry().getRegisteredType( definedType.getName() );
 			if ( registeredBasicType != null ) {
 				explicitType = registeredBasicType;
 				explicitJavaType = registeredBasicType.getJavaTypeDescriptor();
 			}
 			else {
 				final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeRegistry();
-				final JavaType<Object> registeredJtd = jtdRegistry.getDescriptor( definition.type() );
+				final JavaType<Object> registeredJtd = jtdRegistry.getDescriptor( definedType );
 				final ManagedBeanRegistry beanRegistry =
 						sessionFactory.getServiceRegistry().requireService( ManagedBeanRegistry.class );
 				if ( BasicType.class.isAssignableFrom( registeredJtd.getJavaTypeClass() ) ) {
@@ -130,7 +129,7 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 				}
 				else {
 					explicitType = null;
-					explicitJavaType = jtdRegistry.getDescriptor( definition.type() );
+					explicitJavaType = jtdRegistry.getDescriptor( definedType );
 				}
 			}
 

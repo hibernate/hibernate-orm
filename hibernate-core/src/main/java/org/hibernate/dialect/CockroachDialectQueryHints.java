@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.dialect;
+
+import org.hibernate.internal.util.StringHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +47,7 @@ class CockroachDialectQueryHints {
 	}
 
 	private IndexHint parseIndexHints(String hint) {
-		var parts = hint.split( "@" );
+		var parts = StringHelper.split( "@", hint );
 		if ( parts.length == 2 ) {
 			return new IndexHint( parts[0], hint );
 		}
@@ -84,7 +83,7 @@ class CockroachDialectQueryHints {
 		StringBuilder buffer = new StringBuilder();
 		int start = 0;
 		while ( m.find() ) {
-			buffer.append( query.substring( start, m.start() ) );
+			buffer.append(query, start, m.start());
 
 			if ( m.group( 1 ) == null ) {
 				buffer.append( " inner" );

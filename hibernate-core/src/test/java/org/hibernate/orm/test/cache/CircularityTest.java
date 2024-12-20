@@ -1,10 +1,14 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.cache;
 
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
@@ -26,7 +30,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 		},
 		integrationSettings = @Setting(name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true")
 )
-@TestForIssue(jiraKey = "HHH-16197")
+@JiraKey(value = "HHH-16197")
 public class CircularityTest {
 
 	private static final String CHILD_ID = "c1";

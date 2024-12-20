@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal;
 
@@ -14,9 +12,7 @@ import org.hibernate.type.Type;
 /**
  * An interceptor that does nothing.
  * This is an internal class and should not be used as a base to implement a custom Interceptor;
- * it is similar to the public, deprecated {@link org.hibernate.EmptyInterceptor} but overrides
- * the default methods for sake of efficiency: this wasn't possible on the original deprecated
- * copy as that wouldn't have been backwards compatible. For this reason this copy is internal.
+ * it overrides the default methods for sake of efficiency.
  *
  * Implementors of Interceptor don't need a base class anymore since we now have default
  * implementations of the contract defined in the interface.

@@ -1,8 +1,12 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.query;
 
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -16,13 +20,12 @@ import jakarta.persistence.Table;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 @DomainModel(
 		annotatedClasses = { SelectCaseWhenNullLiteralTest.Person.class }
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-15343")
+@JiraKey(value = "HHH-15343")
 public class SelectCaseWhenNullLiteralTest {
 
 	@BeforeEach
@@ -51,6 +54,30 @@ public class SelectCaseWhenNullLiteralTest {
 					List result = session.createQuery( "select case when 1=1 then 1 else null end from Person p" ).list();
 					assertThat( result.size(), is( 1 ) );
 					assertThat( result.get( 0 ), is( 1 ) );
+				}
+		);
+	}
+
+	@Test
+	@JiraKey( "HHH-18556" )
+	public void testSelectCaseWhenNullLiteralWithParameters(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					List result = session.createQuery( "select case when 1=1 then ?1 else null end from Person p" )
+							.setParameter( 1, 2 )
+							.list();
+					assertThat( result.size(), is( 1 ) );
+					assertThat( result.get( 0 ), is( 2 ) );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					List result = session.createQuery( "select count(case when 1=1 then ?1 else null end) from Person p" )
+							.setParameter( 1, 2 )
+							.list();
+					assertThat( result.size(), is( 1 ) );
+					assertThat( result.get( 0 ), is( 1L ) );
 				}
 		);
 	}

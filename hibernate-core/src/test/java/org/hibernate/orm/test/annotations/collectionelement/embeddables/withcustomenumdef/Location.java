@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.collectionelement.embeddables.withcustomenumdef;
 
@@ -54,17 +52,17 @@ public class Location {
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if (! obj.getClass().equals( Location.class )) {
 			return false;
 		}
-		
+
 		Location loc = (Location) obj;
 		if (name != null ? !name.equals(loc.name) : loc.name != null) return false;
 		if (type != null ? !type.equals(loc.type) : loc.type != null) return false;
-		
+
 		return true;
 	}
 

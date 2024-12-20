@@ -1,11 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cfg;
 
+import org.hibernate.Incubating;
+import org.hibernate.annotations.CacheLayout;
 import org.hibernate.cache.internal.NoCachingRegionFactory;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
@@ -18,12 +18,28 @@ import org.hibernate.jpa.SpecHints;
  */
 public interface CacheSettings {
 	/**
-	 * When enabled, specifies that the second-level cache (which JPA calls the
-	 * "shared" cache) may be used, as per the rules defined in JPA 2 section 3.1.7.
+	 * Specifies the {@link jakarta.persistence.SharedCacheMode}.
 	 * <p>
-	 * See JPA 2 sections 9.4.3 and 8.2.1.7
+	 * Hibernate is designed to be used with
+	 * {@link jakarta.persistence.SharedCacheMode#ENABLE_SELECTIVE
+	 * ENABLE_SELECTIVE}, and we strongly discourage the use of
+	 * {@link jakarta.persistence.SharedCacheMode#ALL ALL} or
+	 * {@link jakarta.persistence.SharedCacheMode#DISABLE_SELECTIVE
+	 * DISABLE_SELECTIVE}, since in any multiuser system a cache is
+	 * <em>always</em> a potential source of bugs which are difficult
+	 * to isolate and reproduce. Caching should never be turned on
+	 * "by accident".
+	 * <p>
+	 * Setting the shared cache mode to
+	 * {@link jakarta.persistence.SharedCacheMode#NONE} has very
+	 * nearly the same effect as {@linkplain #USE_SECOND_LEVEL_CACHE
+	 * disabling the second-level cache}, globally suppressing every
+	 * occurrence of the {@link jakarta.persistence.Cacheable} and
+	 * {@link org.hibernate.annotations.Cache} annotations.
 	 *
 	 * @see jakarta.persistence.SharedCacheMode
+	 *
+	 * @settingDefault {@code ENABLE_SELECTIVE}
 	 */
 	String JAKARTA_SHARED_CACHE_MODE = "jakarta.persistence.sharedCache.mode";
 
@@ -35,6 +51,8 @@ public interface CacheSettings {
 	 * {@link jakarta.persistence.CacheRetrieveMode#USE}.
 	 *
 	 * @see SpecHints#HINT_SPEC_CACHE_RETRIEVE_MODE
+	 *
+	 * @settingDefault {@code USE}
 	 */
 	String JAKARTA_SHARED_CACHE_RETRIEVE_MODE = SpecHints.HINT_SPEC_CACHE_RETRIEVE_MODE;
 
@@ -46,6 +64,8 @@ public interface CacheSettings {
 	 * {@link jakarta.persistence.CacheStoreMode#USE}.
 	 *
 	 * @see SpecHints#HINT_SPEC_CACHE_RETRIEVE_MODE
+	 *
+	 * @settingDefault {@code USE}
 	 */
 	String JAKARTA_SHARED_CACHE_STORE_MODE = SpecHints.HINT_SPEC_CACHE_STORE_MODE;
 
@@ -79,11 +99,21 @@ public interface CacheSettings {
 	String USE_QUERY_CACHE = "hibernate.cache.use_query_cache";
 
 	/**
+	 * Specifies the default {@link org.hibernate.annotations.CacheLayout} to use for the query cache.
+	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyQueryCacheLayout(CacheLayout)
+	 * @see org.hibernate.annotations.QueryCacheLayout
+	 * @since 6.5
+	 */
+	@Incubating
+	String QUERY_CACHE_LAYOUT = "hibernate.cache.query_cache_layout";
+
+	/**
 	 * The {@link RegionFactory} implementation, either:
 	 * <ul>
 	 *     <li>an instance of {@link RegionFactory},
 	 *     <li>a {@link Class} implementing {@link RegionFactory}, or
-	 *     <li>he name of a class implementing {@link RegionFactory}.
+	 *     <li>the name of a class implementing {@link RegionFactory}.
 	 * </ul>
 	 * <p>
 	 * Defaults to {@link NoCachingRegionFactory}, so that caching is disabled.
@@ -212,10 +242,6 @@ public interface CacheSettings {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * Used to indicate whether second-level (what JPA terms shared cache)
-	 * caching is enabled as per the rules defined in JPA 2 section 3.1.7.
-	 * <p>
-	 * See JPA 2 sections 9.4.3 and 8.2.1.7
 	 * @see jakarta.persistence.SharedCacheMode
 	 *
 	 * @deprecated Use {@link #JAKARTA_SHARED_CACHE_MODE} instead

@@ -1,16 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.hikaricp.internal;
 
 import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.HikariCPSettings;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 
@@ -20,17 +18,17 @@ import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderI
 
 /**
  * Utility class to map Hibernate properties to HikariCP configuration properties.
- * 
+ *
  * @author Brett Wooldridge
  * @author Luca Burgazzoli
  * @author Brett Meyer
  */
 public class HikariConfigurationUtil {
-	public static final String CONFIG_PREFIX = "hibernate.hikari.";
+	public static final String CONFIG_PREFIX = HikariCPSettings.HIKARI_CONFIG_PREFIX + ".";
 
 	/**
 	 * Create/load a HikariConfig from Hibernate properties.
-	 * 
+	 *
 	 * @param props a map of Hibernate properties
 	 * @return a HikariConfig
 	 */

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.entity;
 
@@ -18,7 +16,6 @@ import org.hibernate.Remove;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.DynamicFilterAliasGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -35,7 +32,6 @@ import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -49,8 +45,7 @@ import static org.hibernate.internal.util.collections.ArrayHelper.toBooleanArray
 import static org.hibernate.internal.util.collections.ArrayHelper.toIntArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toStringArray;
 import static org.hibernate.internal.util.collections.CollectionHelper.toSmallMap;
-import static org.hibernate.jdbc.Expectations.appropriateExpectation;
-import static org.hibernate.persister.entity.DiscriminatorHelper.NOT_NULL_DISCRIMINATOR;
+import static org.hibernate.jdbc.Expectations.createExpectation;
 import static org.hibernate.persister.entity.DiscriminatorHelper.NULL_DISCRIMINATOR;
 import static org.hibernate.sql.model.ast.builder.TableMutationBuilder.NULL;
 
@@ -87,10 +82,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	private final String[] subclassClosure;
 
 	private final String[] subclassTableNameClosure;
-	//	private final boolean[] subclassTableIsLazyClosure;
-	private final boolean[] isInverseSubclassTable;
 	private final boolean[] isNullableSubclassTable;
-//	private final boolean[] subclassTableSequentialSelect;
 	private final String[][] subclassTableKeyColumnClosure;
 	private final boolean[] isClassOrSuperclassTable;
 	private final boolean[] isClassOrSuperclassJoin;
@@ -117,21 +109,11 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	private final String[] constraintOrderedTableNames;
 	private final String[][] constraintOrderedKeyColumnNames;
 
-	@Deprecated(since = "6.0")
-	public SingleTableEntityPersister(
-			final PersistentClass persistentClass,
-			final EntityDataAccess cacheAccessStrategy,
-			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
-			final PersisterCreationContext creationContext) throws HibernateException {
-		this( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, (RuntimeModelCreationContext) creationContext );
-	}
-
 	public SingleTableEntityPersister(
 			final PersistentClass persistentClass,
 			final EntityDataAccess cacheAccessStrategy,
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
 			final RuntimeModelCreationContext creationContext) throws HibernateException {
-
 		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext );
 
 		final Dialect dialect = creationContext.getDialect();
@@ -170,28 +152,16 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		deleteExpectations = new Expectation[joinSpan];
 
 		customSQLInsert[0] = persistentClass.getCustomSQLInsert();
-		insertCallable[0] = customSQLInsert[0] != null && persistentClass.isCustomInsertCallable();
-		insertExpectations[0] = appropriateExpectation(
-				persistentClass.getCustomSQLInsertCheckStyle() == null
-						? ExecuteUpdateResultCheckStyle.determineDefault( customSQLInsert[0], insertCallable[0] )
-						: persistentClass.getCustomSQLInsertCheckStyle()
-		);
+		insertCallable[0] = persistentClass.isCustomInsertCallable();
+		insertExpectations[0] = createExpectation( persistentClass.getInsertExpectation(), insertCallable[0] );
 
 		customSQLUpdate[0] = persistentClass.getCustomSQLUpdate();
-		updateCallable[0] = customSQLUpdate[0] != null && persistentClass.isCustomUpdateCallable();
-		updateExpectations[0] = appropriateExpectation(
-				persistentClass.getCustomSQLUpdateCheckStyle() == null
-						? ExecuteUpdateResultCheckStyle.determineDefault( customSQLUpdate[0], updateCallable[0] )
-						: persistentClass.getCustomSQLUpdateCheckStyle()
-		);
+		updateCallable[0] = persistentClass.isCustomUpdateCallable();
+		updateExpectations[0] = createExpectation( persistentClass.getUpdateExpectation(), updateCallable[0] );
 
 		customSQLDelete[0] = persistentClass.getCustomSQLDelete();
-		deleteCallable[0] = customSQLDelete[0] != null && persistentClass.isCustomDeleteCallable();
-		deleteExpectations[0] = appropriateExpectation(
-				persistentClass.getCustomSQLDeleteCheckStyle() == null
-						? ExecuteUpdateResultCheckStyle.determineDefault( customSQLDelete[0], deleteCallable[0] )
-						: persistentClass.getCustomSQLDeleteCheckStyle()
-		);
+		deleteCallable[0] = persistentClass.isCustomDeleteCallable();
+		deleteExpectations[0] = createExpectation( persistentClass.getDeleteExpectation(), deleteCallable[0] );
 
 		// JOINS
 
@@ -207,28 +177,16 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			cascadeDeleteEnabled[j] = join.getKey().isCascadeDeleteEnabled() && dialect.supportsCascadeDelete();
 
 			customSQLInsert[j] = join.getCustomSQLInsert();
-			insertCallable[j] = customSQLInsert[j] != null && join.isCustomInsertCallable();
-			insertExpectations[j] = appropriateExpectation(
-					join.getCustomSQLInsertCheckStyle() == null
-							? ExecuteUpdateResultCheckStyle.determineDefault( customSQLInsert[j], insertCallable[j] )
-							: join.getCustomSQLInsertCheckStyle()
-			);
+			insertCallable[j] = join.isCustomInsertCallable();
+			insertExpectations[j] = createExpectation( join.getInsertExpectation(), insertCallable[j] );
 
 			customSQLUpdate[j] = join.getCustomSQLUpdate();
-			updateCallable[j] = customSQLUpdate[j] != null && join.isCustomUpdateCallable();
-			updateExpectations[j] = appropriateExpectation(
-					join.getCustomSQLUpdateCheckStyle() == null
-							? ExecuteUpdateResultCheckStyle.determineDefault( customSQLUpdate[j], updateCallable[j] )
-							: join.getCustomSQLUpdateCheckStyle()
-			);
+			updateCallable[j] = join.isCustomUpdateCallable();
+			updateExpectations[j] = createExpectation( join.getUpdateExpectation(), updateCallable[j] );
 
 			customSQLDelete[j] = join.getCustomSQLDelete();
-			deleteCallable[j] = customSQLDelete[j] != null && join.isCustomDeleteCallable();
-			deleteExpectations[j] = appropriateExpectation(
-					join.getCustomSQLDeleteCheckStyle() == null
-							? ExecuteUpdateResultCheckStyle.determineDefault( customSQLDelete[j], deleteCallable[j] )
-							: join.getCustomSQLDeleteCheckStyle()
-			);
+			deleteCallable[j] = join.isCustomDeleteCallable();
+			deleteExpectations[j] = createExpectation( join.getDeleteExpectation(), deleteCallable[j] );
 
 			keyColumnNames[j] = new String[join.getKey().getColumnSpan()];
 
@@ -248,33 +206,20 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 		spaces = ArrayHelper.join( qualifiedTableNames, toStringArray( persistentClass.getSynchronizedTables() ) );
 
-//		final boolean lazyAvailable = isInstrumented();
-
 		final ArrayList<String> subclassTables = new ArrayList<>();
 		final ArrayList<String[]> joinKeyColumns = new ArrayList<>();
 		final ArrayList<Boolean> isConcretes = new ArrayList<>();
 		final ArrayList<Boolean> isClassOrSuperclassJoins = new ArrayList<>();
-//		final ArrayList<Boolean> isDeferreds = new ArrayList<>();
-		final ArrayList<Boolean> isInverses = new ArrayList<>();
 		final ArrayList<Boolean> isNullables = new ArrayList<>();
-//		final ArrayList<Boolean> isLazies = new ArrayList<>();
 		subclassTables.add( qualifiedTableNames[0] );
 		joinKeyColumns.add( getIdentifierColumnNames() );
 		isConcretes.add( true );
 		isClassOrSuperclassJoins.add( true );
-//		isDeferreds.add( false );
-		isInverses.add( false );
 		isNullables.add( false );
-//		isLazies.add( false );
 		for ( Join join : persistentClass.getSubclassJoinClosure() ) {
 			isConcretes.add( persistentClass.isClassOrSuperclassTable( join.getTable() ) );
 			isClassOrSuperclassJoins.add( persistentClass.isClassOrSuperclassJoin( join ) );
-			isInverses.add( join.isInverse() );
 			isNullables.add( join.isOptional() );
-//			isLazies.add( lazyAvailable && join.isLazy() );
-
-//			boolean isDeferred = join.isSequentialSelect() && !persistentClass.isClassOrSuperclassJoin( join );
-//			isDeferreds.add( isDeferred );
 
 			final String joinTableName = determineTableName( join.getTable() );
 			subclassTables.add( joinTableName );
@@ -287,13 +232,10 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			joinKeyColumns.add( keyCols );
 		}
 
-//		subclassTableSequentialSelect = ArrayHelper.toBooleanArray( isDeferreds );
 		subclassTableNameClosure = toStringArray( subclassTables );
-//		subclassTableIsLazyClosure = ArrayHelper.toBooleanArray( isLazies );
 		subclassTableKeyColumnClosure = to2DStringArray( joinKeyColumns );
 		isClassOrSuperclassTable = toBooleanArray( isConcretes );
 		isClassOrSuperclassJoin = toBooleanArray( isClassOrSuperclassJoins );
-		isInverseSubclassTable = toBooleanArray( isInverses );
 		isNullableSubclassTable = toBooleanArray( isNullables );
 
 		// DISCRIMINATOR
@@ -336,7 +278,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			discriminatorType = null;
 			discriminatorValue = null;
 			discriminatorSQLValue = null;
-//			discriminatorFormula = null;
 			discriminatorFormulaTemplate = null;
 		}
 
@@ -350,11 +291,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 		//TODO: code duplication with JoinedSubclassEntityPersister
 
-//		final ArrayList<Integer> columnJoinNumbers = new ArrayList<>();
-//		final ArrayList<Integer> formulaJoinedNumbers = new ArrayList<>();
 		final ArrayList<Integer> propertyJoinNumbers = new ArrayList<>();
-
-//		final HashMap<String, Integer> propertyTableNumbersByNameAndSubclassLocal = new HashMap<>();
 		final Map<Object, String> subclassesByDiscriminatorValueLocal = new HashMap<>();
 
 		for ( Property property : persistentClass.getSubclassPropertyClosure() ) {
@@ -418,11 +355,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	@Override
 	public boolean isInverseTable(int j) {
 		return isInverseTable[j];
-	}
-
-	@Override
-	protected boolean isInverseSubclassTable(int j) {
-		return isInverseSubclassTable[j];
 	}
 
 	@Override
@@ -490,17 +422,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public String getSubclassForDiscriminatorValue(Object value) {
-		if ( value == null ) {
-			return subclassesByDiscriminatorValue.get( NULL_DISCRIMINATOR );
-		}
-		else {
-			final String result = subclassesByDiscriminatorValue.get( value );
-			return result == null ? subclassesByDiscriminatorValue.get( NOT_NULL_DISCRIMINATOR ) : result;
-		}
-	}
-
-	@Override
 	public String[] getPropertySpaces() {
 		return spaces;
 	}
@@ -543,23 +464,12 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	// Execute the SQL:
 
 	@Override
-	public String fromTableFragment(String name) {
-		return getTableName() + ' ' + name;
-	}
-
-	@Override
 	public boolean needsDiscriminator() {
 		return forceDiscriminator || isInherited();
 	}
 
-	@Override
-	public String getSubclassPropertyTableName(int i) {
+	public String getAttributeMutationTableName(int i) {
 		return subclassTableNameClosure[subclassPropertyTableNumberClosure[i]];
-	}
-
-	@Override
-	protected int getSubclassPropertyTableNumber(int i) {
-		return subclassPropertyTableNumberClosure[i];
 	}
 
 	@Override
@@ -625,18 +535,12 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public boolean hasSkippableTables() {
-		// todo (6.x) : cache this?
-		return hasAnySkippableTables( isNullableTable, isInverseTable );
-	}
-
-	@Override
 	protected boolean isNullableSubclassTable(int j) {
 		return isNullableSubclassTable[j];
 	}
 
 	@Override
-	protected boolean hasMultipleTables() {
+	public boolean hasMultipleTables() {
 		return getTableSpan() > 1;
 	}
 
@@ -646,7 +550,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public String[][] getContraintOrderedTableKeyColumnClosure() {
+	public String[][] getConstraintOrderedTableKeyColumnClosure() {
 		return constraintOrderedKeyColumnNames;
 	}
 

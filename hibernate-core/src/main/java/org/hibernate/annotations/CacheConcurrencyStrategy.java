@@ -1,12 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.cache.spi.access.AccessType;
 
 /**
@@ -140,20 +137,13 @@ public enum CacheConcurrencyStrategy {
 	 *         return {@code null} for {@link #NONE}.
 	 */
 	public AccessType toAccessType() {
-		switch ( this ) {
-			case NONE:
-				return null;
-			case READ_ONLY:
-				return AccessType.READ_ONLY;
-			case NONSTRICT_READ_WRITE:
-				return AccessType.NONSTRICT_READ_WRITE;
-			case READ_WRITE:
-				return AccessType.READ_WRITE;
-			case TRANSACTIONAL:
-				return AccessType.TRANSACTIONAL;
-			default:
-				throw new AssertionFailure( "unknown CacheConcurrencyStrategy" );
-		}
+		return switch (this) {
+			case NONE -> null;
+			case READ_ONLY -> AccessType.READ_ONLY;
+			case NONSTRICT_READ_WRITE -> AccessType.NONSTRICT_READ_WRITE;
+			case READ_WRITE -> AccessType.READ_WRITE;
+			case TRANSACTIONAL -> AccessType.TRANSACTIONAL;
+		};
 	}
 
 	/**
@@ -170,18 +160,12 @@ public enum CacheConcurrencyStrategy {
 			return NONE;
 		}
 		else {
-			switch ( accessType ) {
-				case READ_ONLY:
-					return READ_ONLY;
-				case READ_WRITE:
-					return READ_WRITE;
-				case NONSTRICT_READ_WRITE:
-					return NONSTRICT_READ_WRITE;
-				case TRANSACTIONAL:
-					return TRANSACTIONAL;
-				default:
-					return NONE;
-			}
+			return switch (accessType) {
+				case READ_ONLY -> READ_ONLY;
+				case READ_WRITE -> READ_WRITE;
+				case NONSTRICT_READ_WRITE -> NONSTRICT_READ_WRITE;
+				case TRANSACTIONAL -> TRANSACTIONAL;
+			};
 		}
 	}
 

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id.enhanced;
 
@@ -15,6 +13,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.generator.Generator;
+import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.enhanced.ImplicitDatabaseObjectNamingStrategy;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
@@ -23,8 +24,8 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.mapping.KeyValue;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -50,18 +51,13 @@ public class CustomNamingStrategyTests {
 	@Test
 	public void testIt(DomainModelScope domainModelScope, ServiceRegistryScope serviceRegistryScope) {
 		domainModelScope.withHierarchy( TheEntity.class, (entityDescriptor) -> {
-			final IdentifierGeneratorFactory identifierGeneratorFactory = domainModelScope.getDomainModel()
-					.getMetadataBuildingOptions()
-					.getIdentifierGeneratorFactory();
-
 			final JdbcServices jdbcServices = serviceRegistryScope.getRegistry().getService( JdbcServices.class );
 			final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 
-			final SequenceStyleGenerator generator = (SequenceStyleGenerator) entityDescriptor.getIdentifier().createIdentifierGenerator(
-					identifierGeneratorFactory,
-					jdbcEnvironment.getDialect(),
-					entityDescriptor
-			);
+			KeyValue keyValue = entityDescriptor.getIdentifier();
+			Dialect dialect = jdbcEnvironment.getDialect();
+			final Generator generator1 = keyValue.createGenerator( dialect, entityDescriptor);
+			final SequenceStyleGenerator generator = (SequenceStyleGenerator) (generator1 instanceof IdentifierGenerator ? (IdentifierGenerator) generator1 : null);
 
 			final String sequenceName = generator.getDatabaseStructure().getPhysicalName().getObjectName().getText();
 			assertThat( sequenceName ).isEqualTo( "ents_ids_seq" );
@@ -107,10 +103,10 @@ public class CustomNamingStrategyTests {
 	@Entity( name = "TheEntity" )
 	@Table( name = "ents" )
 	public static class TheEntity {
-	    @Id
+		@Id
 		@GeneratedValue( strategy = GenerationType.SEQUENCE )
-	    private Integer id;
-	    @Basic
+		private Integer id;
+		@Basic
 		private String name;
 
 		private TheEntity() {

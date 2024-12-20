@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.idgen.enhanced;
 
@@ -27,7 +25,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -42,7 +40,7 @@ import static org.junit.Assert.fail;
  *
  * @author Richard Barnes 4 May 2016
  */
-@TestForIssue(jiraKey = "HHH-3628")
+@JiraKey(value = "HHH-3628")
 public class HiloOptimizerConcurrencyTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	private boolean createSchema = true;
@@ -69,7 +67,7 @@ public class HiloOptimizerConcurrencyTest extends BaseNonConfigCoreFunctionalTes
 			try {
 				session1.beginTransaction();
 				HibPerson p = new HibPerson();
-				session1.save( p );
+				session1.persist( p );
 			}
 			finally {
 				session1.getTransaction().commit();
@@ -82,7 +80,7 @@ public class HiloOptimizerConcurrencyTest extends BaseNonConfigCoreFunctionalTes
 			try {
 				session2.beginTransaction();
 				HibPerson p = new HibPerson();
-				session2.save( p );
+				session2.persist( p );
 			}
 			finally {
 				session2.getTransaction().commit();
@@ -99,7 +97,7 @@ public class HiloOptimizerConcurrencyTest extends BaseNonConfigCoreFunctionalTes
 						try {
 							session1.beginTransaction();
 							HibPerson p = new HibPerson();
-							session1.save( p );
+							session1.persist( p );
 						}
 						finally {
 							session1.getTransaction().commit();
@@ -110,7 +108,7 @@ public class HiloOptimizerConcurrencyTest extends BaseNonConfigCoreFunctionalTes
 					try {
 						session1.beginTransaction();
 						HibPerson p = new HibPerson();
-						session1.save( p );
+						session1.persist( p );
 					}
 					finally {
 						session1.getTransaction().commit();
@@ -130,7 +128,7 @@ public class HiloOptimizerConcurrencyTest extends BaseNonConfigCoreFunctionalTes
 					try {
 						session2.beginTransaction();
 						HibPerson p = new HibPerson();
-						session2.save( p );
+						session2.persist( p );
 					}
 					finally {
 						session2.getTransaction().commit();
@@ -180,7 +178,7 @@ public class HiloOptimizerConcurrencyTest extends BaseNonConfigCoreFunctionalTes
 			try {
 				session1.beginTransaction();
 				HibPerson p = new HibPerson();
-				session1.save( p );
+				session1.persist( p );
 			}
 			finally {
 				session1.getTransaction().commit();
@@ -193,7 +191,7 @@ public class HiloOptimizerConcurrencyTest extends BaseNonConfigCoreFunctionalTes
 			session2.beginTransaction();
 			try {
 				HibPerson p = new HibPerson();
-				session2.save( p );
+				session2.persist( p );
 			}
 			finally {
 				session2.getTransaction().commit();
@@ -203,7 +201,7 @@ public class HiloOptimizerConcurrencyTest extends BaseNonConfigCoreFunctionalTes
 				session1.beginTransaction();
 				try {
 					HibPerson p = new HibPerson();
-					session1.save( p );
+					session1.persist( p );
 				}
 				finally {
 					session1.getTransaction().commit();
@@ -212,7 +210,7 @@ public class HiloOptimizerConcurrencyTest extends BaseNonConfigCoreFunctionalTes
 			session2.beginTransaction();
 			try {
 				HibPerson p = new HibPerson();
-				session2.save( p );
+				session2.persist( p );
 			}
 			finally {
 				session2.getTransaction().commit();
@@ -220,7 +218,7 @@ public class HiloOptimizerConcurrencyTest extends BaseNonConfigCoreFunctionalTes
 			session1.beginTransaction();
 			try {
 				HibPerson p = new HibPerson();
-				session1.save( p );
+				session1.persist( p );
 			}
 			finally {
 				session1.getTransaction().commit();

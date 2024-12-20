@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql.hand;
 
@@ -11,7 +9,6 @@ import java.math.BigDecimal;
 import java.util.Currency;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.usertype.CompositeUserType;
 
@@ -25,17 +22,15 @@ public class MonetaryAmountUserType implements CompositeUserType<MonetaryAmount>
 
 	@Override
 	public Object getPropertyValue(MonetaryAmount component, int property) throws HibernateException {
-		switch ( property ) {
-			case 0:
-				return component.getCurrency();
-			case 1:
-				return component.getValue();
-		}
-		throw new HibernateException( "Illegal property index: " + property );
+		return switch ( property ) {
+			case 0 -> component.getCurrency();
+			case 1 -> component.getValue();
+			default -> throw new HibernateException( "Illegal property index: " + property );
+		};
 	}
 
 	@Override
-	public MonetaryAmount instantiate(ValueAccess valueAccess, SessionFactoryImplementor sessionFactory) {
+	public MonetaryAmount instantiate(ValueAccess valueAccess) {
 		final BigDecimal value = valueAccess.getValue(0, BigDecimal.class);
 		final Currency currency = valueAccess.getValue(1, Currency.class);
 

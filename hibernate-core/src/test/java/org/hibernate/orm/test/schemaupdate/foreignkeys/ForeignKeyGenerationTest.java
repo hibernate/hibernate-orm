@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemaupdate.foreignkeys;
 
@@ -24,7 +22,7 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
@@ -57,7 +55,7 @@ public class ForeignKeyGenerationTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9591")
+	@JiraKey(value = "HHH-9591")
 	public void oneToOneTest() throws Exception {
 		createSchema( new Class[] {User.class, UserSetting.class, Group.class} );
 
@@ -83,7 +81,7 @@ public class ForeignKeyGenerationTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10396")
+	@JiraKey(value = "HHH-10396")
 	public void oneToManyTest() throws Exception {
 		createSchema( new Class[] {User.class, UserSetting.class, Group.class} );
 
@@ -101,15 +99,15 @@ public class ForeignKeyGenerationTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10385")
+	@JiraKey(value = "HHH-10385")
 	public void oneToManyWithJoinTableTest() throws Exception {
 		createSchema( new Class[] {Person.class, Phone.class} );
 
 		/*
 			The generated SQL for the foreign keys should be:
-            alter table PERSON_PHONE add constraint PERSON_ID_FK foreign key (PERSON_ID) references PERSON
-            alter table PERSON_PHONE add constraint PHONE_ID_FK foreign key (PHONE_ID) references PHONE
-        */
+			alter table PERSON_PHONE add constraint PERSON_ID_FK foreign key (PERSON_ID) references PERSON
+			alter table PERSON_PHONE add constraint PHONE_ID_FK foreign key (PHONE_ID) references PHONE
+		*/
 		checkAlterTableStatement( new AlterTableStatement(
 				ssr,
 				"PERSON_PHONE",
@@ -127,15 +125,15 @@ public class ForeignKeyGenerationTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10386")
+	@JiraKey(value = "HHH-10386")
 	public void manyToManyTest() throws Exception {
 		createSchema( new Class[] {Project.class, Employee.class} );
 
-                /*
+				/*
 				The generated SQL for the foreign keys should be:
-                alter table EMPLOYEE_PROJECT add constraint FK_EMPLOYEE foreign key (EMPLOYEE_ID) references EMPLOYEE
-                alter table EMPLOYEE_PROJECT add constraint FK_PROJECT foreign key (PROJECT_ID) references PROJECT
-                */
+				alter table EMPLOYEE_PROJECT add constraint FK_EMPLOYEE foreign key (EMPLOYEE_ID) references EMPLOYEE
+				alter table EMPLOYEE_PROJECT add constraint FK_PROJECT foreign key (PROJECT_ID) references PROJECT
+				*/
 		checkAlterTableStatement( new AlterTableStatement(
 				ssr,
 				"EMPLOYEE_PROJECT",

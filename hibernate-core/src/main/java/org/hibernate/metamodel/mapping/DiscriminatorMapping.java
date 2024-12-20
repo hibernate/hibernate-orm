@@ -1,16 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping;
 
+import org.hibernate.HibernateException;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -29,6 +32,15 @@ public interface DiscriminatorMapping extends VirtualModelPart, BasicValuedModel
 	 * Information about the value mappings
 	 */
 	DiscriminatorConverter<?,?> getValueConverter();
+
+	/**
+	 * Retrieve the {@linkplain DiscriminatorValueDetails details} for a particular discriminator value.
+	 *
+	 * @throws HibernateException if there is value matching the provided one
+	 */
+	default DiscriminatorValueDetails resolveDiscriminatorValue(Object discriminatorValue) {
+		return getValueConverter().getDetailsForDiscriminatorValue( discriminatorValue );
+	}
 
 	JdbcMapping getUnderlyingJdbcMapping();
 
@@ -59,4 +71,13 @@ public interface DiscriminatorMapping extends VirtualModelPart, BasicValuedModel
 			JdbcMapping jdbcMappingToUse,
 			TableGroup tableGroup,
 			SqlAstCreationState creationState);
+
+	@Override
+	BasicFetch<?> generateFetch(
+			FetchParent fetchParent,
+			NavigablePath fetchablePath,
+			FetchTiming fetchTiming,
+			boolean selected,
+			String resultVariable,
+			DomainResultCreationState creationState);
 }

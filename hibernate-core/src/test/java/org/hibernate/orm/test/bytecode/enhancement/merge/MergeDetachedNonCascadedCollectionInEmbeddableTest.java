@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.merge;
 
@@ -16,40 +14,44 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.hibernate.orm.test.bytecode.enhancement.merge.MergeDetachedNonCascadedCollectionInEmbeddableTest.*;
 import static org.junit.Assert.assertNotSame;
+
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Gail Badner
  */
-@TestForIssue(jiraKey = "HHH-12637")
-@RunWith(BytecodeEnhancerRunner.class)
-public class MergeDetachedNonCascadedCollectionInEmbeddableTest extends BaseCoreFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Heading.class, Grouping.class, Thing.class };
-	}
+@JiraKey("HHH-12637")
+@DomainModel(
+		annotatedClasses = {
+				Heading.class, Grouping.class, Thing.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class MergeDetachedNonCascadedCollectionInEmbeddableTest {
 
 	@Test
-	public void testMergeDetached() {
-		final Heading heading = doInHibernate( this::sessionFactory, session -> {
+	public void testMergeDetached(SessionFactoryScope scope) {
+		final Heading heading = scope.fromTransaction( session -> {
 			Heading entity = new Heading();
 			entity.name = "new";
 			entity.setGrouping( new Grouping() );
 			Thing thing = new Thing();
 			entity.getGrouping().getThings().add( thing );
-			session.save( thing );
-			session.save( entity );
+			session.persist( thing );
+			session.persist( entity );
 			return entity;
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			heading.name = "updated";
 			Heading headingMerged = (Heading) session.merge( heading );
 			assertNotSame( heading, headingMerged );

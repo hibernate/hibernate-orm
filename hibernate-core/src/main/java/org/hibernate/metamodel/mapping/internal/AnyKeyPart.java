@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
@@ -18,7 +16,6 @@ import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
@@ -48,6 +45,8 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	private final String table;
 	private final String column;
 	private final DiscriminatedAssociationModelPart anyPart;
+	private final String customReadExpression;
+	private final String customWriteExpression;
 	private final String columnDefinition;
 	private final Long length;
 	private final Integer precision;
@@ -63,6 +62,8 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 			DiscriminatedAssociationModelPart anyPart,
 			String table,
 			String column,
+			String customReadExpression,
+			String customWriteExpression,
 			String columnDefinition,
 			Long length,
 			Integer precision,
@@ -76,6 +77,8 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 		this.table = table;
 		this.column = column;
 		this.anyPart = anyPart;
+		this.customReadExpression = customReadExpression;
+		this.customWriteExpression = customWriteExpression;
 		this.columnDefinition = columnDefinition;
 		this.length = length;
 		this.precision = precision;
@@ -124,12 +127,12 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 
 	@Override
 	public String getCustomReadExpression() {
-		return null;
+		return customReadExpression;
 	}
 
 	@Override
 	public String getCustomWriteExpression() {
-		return null;
+		return customWriteExpression;
 	}
 
 	@Override
@@ -242,7 +245,8 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 				fetchablePath,
 				this,
 				fetchTiming,
-				creationState
+				creationState,
+				!sqlSelection.isVirtual()
 		);
 	}
 
@@ -254,12 +258,6 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	@Override
 	public FetchTiming getTiming() {
 		return FetchTiming.IMMEDIATE;
-	}
-
-	@Override
-	public int forEachSelectable(int offset, SelectableConsumer consumer) {
-		consumer.accept( offset, this );
-		return getJdbcTypeCount();
 	}
 
 	@Override
@@ -333,7 +331,9 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				jdbcMapping,
-				navigablePath
+				navigablePath,
+				false,
+				!sqlSelection.isVirtual()
 		);
 	}
 

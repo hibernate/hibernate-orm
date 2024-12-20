@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.namingstrategy.complete;
 
@@ -14,7 +12,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Selectable;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.anyOf;
@@ -28,7 +26,7 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "" )
+@JiraKey( value = "" )
 public class LegacyJpaNamingWithHbmBindingTests extends BaseHbmBindingTests {
 	@Override
 	protected ImplicitNamingStrategy getImplicitNamingStrategyToUse() {

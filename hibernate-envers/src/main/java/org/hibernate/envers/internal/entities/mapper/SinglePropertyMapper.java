@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper;
 
@@ -107,20 +105,16 @@ public class SinglePropertyMapper extends AbstractPropertyMapper implements Simp
 			map.put( propertyData.getBeanName(), value );
 		}
 		else {
-			doPrivileged( () -> {
-				final Setter setter = ReflectionTools.getSetter(
-						obj.getClass(),
-						propertyData,
-						enversService.getServiceRegistry()
-				);
+			final Setter setter = ReflectionTools.getSetter(
+					obj.getClass(),
+					propertyData,
+					enversService.getServiceRegistry()
+			);
 
-				// We only set a null value if the field is not primitive. Otherwise, we leave it intact.
-				if ( value != null || !isPrimitive( setter, propertyData, obj.getClass() ) ) {
-					setter.set( obj, value );
-				}
-
-				return null;
-			} );
+			// We only set a null value if the field is not primitive. Otherwise, we leave it intact.
+			if ( value != null || !isPrimitive( setter, propertyData, obj.getClass() ) ) {
+				setter.set( obj, value );
+			}
 		}
 	}
 

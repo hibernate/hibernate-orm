@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.tm;
 
@@ -19,7 +17,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.resource.transaction.jta.JtaPlatformStandardTestingImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.junit.jupiter.api.AfterEach;
@@ -49,7 +47,7 @@ public class JtaBeforeCompletionFailureTest extends BaseSessionFactoryFunctional
 	public void setUp() {
 		inTransaction(
 				session ->
-						session.save( newEntity( 1 ) )
+						session.persist( newEntity( 1 ) )
 		);
 
 	}
@@ -63,7 +61,7 @@ public class JtaBeforeCompletionFailureTest extends BaseSessionFactoryFunctional
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9888")
+	@JiraKey(value = "HHH-9888")
 	public void testUniqueConstraintViolationDuringManagedFlush() throws Exception {
 		final TransactionManager tm = JtaPlatformStandardTestingImpl.INSTANCE.transactionManager();
 		assertEquals( Status.STATUS_NO_TRANSACTION, tm.getStatus() );
@@ -73,7 +71,7 @@ public class JtaBeforeCompletionFailureTest extends BaseSessionFactoryFunctional
 
 		try (Session session = sessionFactory().openSession()) {
 
-			session.save( newEntity( 2 ) );
+			session.persist( newEntity( 2 ) );
 
 			// complete the transaction ("CMT" style) - this leads to the managed flush
 			// which should lead to the UK violation

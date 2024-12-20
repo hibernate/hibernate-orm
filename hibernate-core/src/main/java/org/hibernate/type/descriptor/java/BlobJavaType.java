@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
@@ -17,12 +15,14 @@ import org.hibernate.SharedSessionContract;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.BlobImplementer;
-import org.hibernate.engine.jdbc.BlobProxy;
-import org.hibernate.engine.jdbc.WrappedBlob;
-import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
+import org.hibernate.engine.jdbc.proxy.BlobProxy;
+import org.hibernate.engine.jdbc.LobCreator;
+import org.hibernate.engine.jdbc.internal.StreamBackedBinaryStream;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+
+import static org.hibernate.type.descriptor.java.DataHelper.extractBytes;
 
 /**
  * Descriptor for {@link Blob} handling.
@@ -32,6 +32,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  *
  * @author Steve Ebersole
  * @author Brett Meyer
+ * @author Loïc Lefèvre
  */
 public class BlobJavaType extends AbstractClassJavaType<Blob> {
 	public static final BlobJavaType INSTANCE = new BlobJavaType();
@@ -73,7 +74,7 @@ public class BlobJavaType extends AbstractClassJavaType<Blob> {
 	public String toString(Blob value) {
 		final byte[] bytes;
 		try {
-			bytes = DataHelper.extractBytes( value.getBinaryStream() );
+			bytes = extractBytes( value.getBinaryStream() );
 		}
 		catch ( SQLException e ) {
 			throw new HibernateException( "Unable to access blob stream", e );
@@ -110,37 +111,47 @@ public class BlobJavaType extends AbstractClassJavaType<Blob> {
 		}
 
 		try {
-			if ( BinaryStream.class.isAssignableFrom( type ) ) {
-				if (value instanceof BlobImplementer) {
+			if ( Blob.class.isAssignableFrom( type ) ) {
+				return (X) options.getLobCreator().toJdbcBlob( value );
+			}
+			else if ( byte[].class.isAssignableFrom( type )) {
+				if (value instanceof BlobImplementer blobImplementer) {
+					// if the incoming Blob is a wrapper, just grab the bytes from its BinaryStream
+					return (X) blobImplementer.getUnderlyingStream().getBytes();
+				}
+				else {
+					try {
+						// otherwise extract the bytes from the stream manually
+						return (X) value.getBinaryStream().readAllBytes();
+					}
+					catch ( IOException e ) {
+						throw new HibernateException( "IOException occurred reading a binary value", e );
+					}
+				}
+			}
+			else if ( BinaryStream.class.isAssignableFrom( type ) ) {
+				if (value instanceof BlobImplementer blobImplementer) {
+					return (X) blobImplementer.getUnderlyingStream();
+				}
+				else {
+					return (X) new StreamBackedBinaryStream( value.getBinaryStream(), value.length() );
+				}
+			}
+			else if ( InputStream.class.isAssignableFrom( type ) ) {
+				if (value instanceof BlobImplementer blobImplementer) {
 					// if the incoming Blob is a wrapper, just pass along its BinaryStream
-					return (X) ( (BlobImplementer) value ).getUnderlyingStream();
+					return (X) blobImplementer.getUnderlyingStream().getInputStream();
 				}
 				else {
 					// otherwise we need to build a BinaryStream...
-					return (X) new BinaryStreamImpl( DataHelper.extractBytes( value.getBinaryStream() ) );
+					return (X) value.getBinaryStream();
 				}
-			}
-			else if ( byte[].class.isAssignableFrom( type )) {
-				if (value instanceof BlobImplementer) {
-					// if the incoming Blob is a wrapper, just grab the bytes from its BinaryStream
-					return (X) ( (BlobImplementer) value ).getUnderlyingStream().getBytes();
-				}
-				else {
-					// otherwise extract the bytes from the stream manually
-					return (X) DataHelper.extractBytes( value.getBinaryStream() );
-				}
-			}
-			else if (Blob.class.isAssignableFrom( type )) {
-				final Blob blob =  value instanceof WrappedBlob
-						? ( (WrappedBlob) value ).getWrappedBlob()
-						: value;
-				return (X) blob;
 			}
 		}
 		catch ( SQLException e ) {
 			throw new HibernateException( "Unable to access blob stream", e );
 		}
-		
+
 		throw unknownUnwrap( type );
 	}
 
@@ -149,26 +160,27 @@ public class BlobJavaType extends AbstractClassJavaType<Blob> {
 		if ( value == null ) {
 			return null;
 		}
-
-		// Support multiple return types from
-		// org.hibernate.type.descriptor.sql.BlobTypeDescriptor
-		if ( Blob.class.isAssignableFrom( value.getClass() ) ) {
-			return options.getLobCreator().wrap( (Blob) value );
-		}
-		else if ( byte[].class.isAssignableFrom( value.getClass() ) ) {
-			return options.getLobCreator().createBlob( ( byte[] ) value);
-		}
-		else if ( InputStream.class.isAssignableFrom( value.getClass() ) ) {
-			InputStream inputStream = ( InputStream ) value;
-			try {
-				return options.getLobCreator().createBlob( inputStream, inputStream.available() );
+		else {
+			final LobCreator lobCreator = options.getLobCreator();
+			if ( value instanceof Blob blob ) {
+				return lobCreator.wrap( blob );
 			}
-			catch ( IOException e ) {
+			else if ( value instanceof byte[] bytes ) {
+				return lobCreator.createBlob( bytes );
+			}
+			else if ( value instanceof BinaryStream binaryStream) {
+				return binaryStream.asBlob( lobCreator );
+			}
+			else if ( value instanceof InputStream inputStream ) {
+				// A JDBC Blob object needs to know its length, but
+				// there's no way to get an accurate length from an
+				// InputStream without reading the whole stream
+				return lobCreator.createBlob( extractBytes( inputStream ) );
+			}
+			else {
 				throw unknownWrap( value.getClass() );
 			}
 		}
-
-		throw unknownWrap( value.getClass() );
 	}
 
 	@Override

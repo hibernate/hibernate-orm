@@ -15,8 +15,4 @@
 })
 package org.hibernate.orm.test.annotations.fetchprofile;
 
-import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfile;
-
-
-

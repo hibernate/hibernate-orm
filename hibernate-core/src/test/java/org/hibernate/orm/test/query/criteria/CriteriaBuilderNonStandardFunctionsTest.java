@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.criteria;
 
@@ -16,11 +14,13 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 
+import jakarta.persistence.criteria.ParameterExpression;
 import org.hibernate.dialect.CockroachDialect;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.criteria.JpaExpression;
+import org.hibernate.query.common.TemporalUnit;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -237,7 +237,7 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 			Expression<String> theString = from.get( "theString" );
 			query.multiselect(
 					cb.overlay( theString, "33", 6 ),
-					cb.overlay( theString, from.get( "theInt" ).as( String.class ), 6 ),
+					cb.overlay( theString, ( (JpaExpression) from.get( "theInt" ) ).cast( String.class ), 6 ),
 					cb.overlay( theString, "1234", from.get( "theInteger" ), 2 )
 			).where( cb.equal( from.get( "id" ), 4 ) );
 
@@ -300,7 +300,7 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 			Expression<String> theString = from.get( "theString" );
 			query.multiselect(
 					cb.replace( theString, "thi", "12345" ),
-					cb.replace( theString, "t", from.get( "theInteger" ).as( String.class ) )
+					cb.replace( theString, "t", ( (JpaExpression) from.get( "theInteger" ) ).cast( String.class ) )
 			).where( cb.equal( from.get( "id" ), 4 ) );
 
 			Tuple result = session.createQuery( query ).getSingleResult();
@@ -511,6 +511,22 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 			assertEquals( eob.getTheLocalDateTime().truncatedTo( ChronoUnit.HOURS ), result.get( 4 ) );
 			assertEquals( eob.getTheLocalDateTime().truncatedTo( ChronoUnit.MINUTES ), result.get( 5 ) );
 			assertEquals( eob.getTheLocalDateTime().truncatedTo( ChronoUnit.SECONDS ), result.get( 6 ) );
+		} );
+	}
+
+	@Test
+	@JiraKey("HHH-16954")
+	public void testParameterList(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+			CriteriaQuery<Tuple> query = cb.createTupleQuery();
+			Root<EntityOfBasics> from = query.from(EntityOfBasics.class);
+			ParameterExpression<List<Integer>> ids = cb.listParameter(Integer.class);
+			query.where( from.get("id").in(ids));
+			assertEquals(3,
+					session.createQuery( query )
+							.setParameter(ids, List.of(2, 3, 5))
+							.getResultCount());
 		} );
 	}
 }

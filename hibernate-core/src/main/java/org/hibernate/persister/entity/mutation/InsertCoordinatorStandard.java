@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.entity.mutation;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,6 +16,7 @@ import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
+import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
@@ -28,7 +28,7 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
@@ -56,7 +56,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 	private final MutationOperationGroup staticInsertGroup;
 	private final BasicBatchKey batchKey;
 
-	public InsertCoordinatorStandard(AbstractEntityPersister entityPersister, SessionFactoryImplementor factory) {
+	public InsertCoordinatorStandard(EntityPersister entityPersister, SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
 
 		if ( entityPersister.isIdentifierAssignedByInsert() || entityPersister.hasInsertGeneratedProperties() ) {
@@ -64,10 +64,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 			batchKey = null;
 		}
 		else {
-			batchKey = new BasicBatchKey(
-					entityPersister.getEntityName() + "#INSERT",
-					null
-			);
+			batchKey = new BasicBatchKey( entityPersister.getEntityName() + "#INSERT" );
 		}
 
 		if ( entityPersister.getEntityMetamodel().isDynamicInsert() ) {
@@ -122,10 +119,10 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 			SharedSessionContractImplementor session) {
 		// apply any pre-insert in-memory value generation
 		final boolean needsDynamicInsert = preInsertInMemoryValueGeneration( values, entity, session );
-
-		final EntityMetamodel entityMetamodel = entityPersister().getEntityMetamodel();
-		final boolean forceIdentifierBinding = entityPersister().getGenerator().generatedOnExecution() && id != null;
-		if ( entityMetamodel.isDynamicInsert() || needsDynamicInsert || forceIdentifierBinding ) {
+		final EntityPersister persister = entityPersister();
+		final boolean forceIdentifierBinding = persister.getGenerator().generatedOnExecution() && id != null;
+		if ( persister.getEntityMetamodel().isDynamicInsert()
+				|| needsDynamicInsert || forceIdentifierBinding ) {
 			return doDynamicInserts( id, values, entity, session, forceIdentifierBinding );
 		}
 		else {
@@ -134,7 +131,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 	}
 
 	protected boolean preInsertInMemoryValueGeneration(Object[] values, Object entity, SharedSessionContractImplementor session) {
-		final AbstractEntityPersister persister = entityPersister();
+		final EntityPersister persister = entityPersister();
 		final EntityMetamodel entityMetamodel = persister.getEntityMetamodel();
 		boolean foundStateDependentGenerator = false;
 		if ( entityMetamodel.hasPreInsertGeneratedValues() ) {
@@ -142,8 +139,8 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 			for ( int i = 0; i < generators.length; i++ ) {
 				final Generator generator = generators[i];
 				if ( generator != null
-						&& !generator.generatedOnExecution( entity, session )
-						&& generator.generatesOnInsert() ) {
+						&& generator.generatesOnInsert()
+						&& generator.generatedBeforeExecution( entity, session ) ) {
 					values[i] = ( (BeforeExecutionGenerator) generator ).generate( session, entity, values[i], INSERT );
 					persister.setPropertyValue( entity, i, values[i] );
 					foundStateDependentGenerator = foundStateDependentGenerator || generator.generatedOnExecution();
@@ -153,7 +150,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 		return foundStateDependentGenerator;
 	}
 
-	protected static class InsertValuesAnalysis implements ValuesAnalysis {
+	public static class InsertValuesAnalysis implements ValuesAnalysis {
 		private final List<TableMapping> tablesWithNonNullValues = new ArrayList<>();
 
 		public InsertValuesAnalysis(EntityMutationTarget mutationTarget, Object[] values) {
@@ -195,15 +192,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 					object,
 					insertValuesAnalysis,
 					tableInclusionChecker,
-					(statementDetails, affectedRowCount, batchPosition) -> {
-						statementDetails.getExpectation().verifyOutcome(
-								affectedRowCount,
-								statementDetails.getStatement(),
-								batchPosition,
-								statementDetails.getSqlString()
-						);
-						return true;
-					},
+					InsertCoordinatorStandard::verifyOutcome,
 					session
 			);
 		}
@@ -303,7 +292,8 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 			SharedSessionContractImplementor session,
 			boolean forceIdentifierBinding) {
 		final boolean[] insertability = getPropertiesToInsert( values );
-		final MutationOperationGroup insertGroup = generateDynamicInsertSqlGroup( insertability, object, session, forceIdentifierBinding );
+		final MutationOperationGroup insertGroup =
+				generateDynamicInsertSqlGroup( insertability, object, session, forceIdentifierBinding );
 
 		final MutationExecutor mutationExecutor = executor( session, insertGroup, true );
 
@@ -318,21 +308,24 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 					object,
 					insertValuesAnalysis,
 					tableInclusionChecker,
-					(statementDetails, affectedRowCount, batchPosition) -> {
-						statementDetails.getExpectation().verifyOutcome(
-								affectedRowCount,
-								statementDetails.getStatement(),
-								batchPosition,
-								statementDetails.getSqlString()
-						);
-						return true;
-					},
+					InsertCoordinatorStandard::verifyOutcome,
 					session
 			);
 		}
 		finally {
 			mutationExecutor.release();
 		}
+	}
+
+	private static boolean verifyOutcome(PreparedStatementDetails statementDetails, int affectedRowCount, int batchPosition)
+			throws SQLException {
+		statementDetails.getExpectation().verifyOutcome(
+				affectedRowCount,
+				statementDetails.getStatement(),
+				batchPosition,
+				statementDetails.getSqlString()
+		);
+		return true;
 	}
 
 	private MutationExecutor executor(SharedSessionContractImplementor session, MutationOperationGroup group, boolean dynamicUpdate) {
@@ -414,11 +407,11 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 				else {
 					final Generator generator = attributeMapping.getGenerator();
 					if ( isValueGenerated( generator ) ) {
-						if ( session != null && !generator.generatedOnExecution( object, session ) ) {
+						if ( session != null && generator.generatedBeforeExecution( object, session ) ) {
 							attributeInclusions[attributeIndex] = true;
 							attributeMapping.forEachInsertable( insertGroupBuilder );
 						}
-						else if ( isValueGenerationInSql( generator, factory().getJdbcServices().getDialect() ) ) {
+						else if ( isValueGenerationInSql( generator, factory.getJdbcServices().getDialect() ) ) {
 							handleValueGeneration( attributeMapping, insertGroupBuilder, (OnExecutionGenerator) generator );
 						}
 					}
@@ -437,14 +430,16 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 			if ( tableMapping.isIdentifierTable() && entityPersister().isIdentifierAssignedByInsert() && !forceIdentifierBinding ) {
 				assert entityPersister().getInsertDelegate() != null;
 				final OnExecutionGenerator generator = (OnExecutionGenerator) entityPersister().getGenerator();
-				if ( generator.referenceColumnsInSql( dialect() ) ) {
+				if ( generator.referenceColumnsInSql( dialect ) ) {
 					final BasicEntityIdentifierMapping identifierMapping = (BasicEntityIdentifierMapping) entityPersister().getIdentifierMapping();
 					final String[] columnValues = generator.getReferencedColumnValues( dialect );
-					tableMapping.getKeyMapping().forEachKeyColumn( (i, column) -> tableInsertBuilder.addKeyColumn(
-							column.getColumnName(),
-							columnValues[i],
-							identifierMapping.getJdbcMapping()
-					) );
+					if ( columnValues != null ) {
+						tableMapping.getKeyMapping().forEachKeyColumn( (i, column) -> tableInsertBuilder.addKeyColumn(
+								column.getColumnName(),
+								columnValues[i],
+								identifierMapping.getJdbcMapping()
+						) );
+					}
 				}
 			}
 			else {
@@ -455,8 +450,8 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 
 	private static boolean isValueGenerated(Generator generator) {
 		return generator != null
-				&& generator.generatesOnInsert()
-				&& generator.generatedOnExecution();
+			&& generator.generatesOnInsert()
+			&& generator.generatedOnExecution();
 	}
 
 	private static boolean isValueGenerationInSql(Generator generator, Dialect dialect) {

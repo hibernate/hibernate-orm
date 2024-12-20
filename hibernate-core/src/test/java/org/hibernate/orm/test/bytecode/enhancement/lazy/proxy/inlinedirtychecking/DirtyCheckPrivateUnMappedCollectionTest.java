@@ -1,10 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy.inlinedirtychecking;
+
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,55 +18,52 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.bytecode.internal.BytecodeProviderInitiator;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Andrea Boriero
  */
-@RunWith(BytecodeEnhancerRunner.class)
+@DomainModel(
+		annotatedClasses = {
+				DirtyCheckPrivateUnMappedCollectionTest.Measurement.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, value = "100" ),
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @CustomEnhancementContext({ DirtyCheckEnhancementContext.class })
-@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
-public class DirtyCheckPrivateUnMappedCollectionTest extends BaseNonConfigCoreFunctionalTestCase {
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
+public class DirtyCheckPrivateUnMappedCollectionTest {
 
-	boolean skipTest;
-
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, "100" );
-		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
-	}
-
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
+	@BeforeAll
+	static void beforeAll() {
 		String byteCodeProvider = Environment.getProperties().getProperty( AvailableSettings.BYTECODE_PROVIDER );
-		if ( byteCodeProvider != null && !BytecodeProviderInitiator.BYTECODE_PROVIDER_NAME_BYTEBUDDY.equals( byteCodeProvider ) ) {
-			// skip the test if the bytecode provider is Javassist
-			skipTest = true;
-		}
-		else {
-			sources.addAnnotatedClass( Measurement.class );
-		}
+		assumeFalse( byteCodeProvider != null && !BytecodeProviderInitiator.BYTECODE_PROVIDER_NAME_BYTEBUDDY.equals(
+				byteCodeProvider ) );
 	}
 
 	@Test
-	public void testIt() {
-		if ( skipTest ) {
-			return;
-		}
-		inTransaction(
+	public void testIt(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Tag tag = new Tag();
 					tag.setName( "tag1" );
@@ -74,7 +71,7 @@ public class DirtyCheckPrivateUnMappedCollectionTest extends BaseNonConfigCoreFu
 					Measurement measurementDescriptor = new Measurement();
 					measurementDescriptor.addTag( tag );
 
-					session.save( measurementDescriptor );
+					session.persist( measurementDescriptor );
 				}
 		);
 	}

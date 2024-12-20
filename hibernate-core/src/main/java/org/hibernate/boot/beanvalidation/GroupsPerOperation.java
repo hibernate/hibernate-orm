@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.beanvalidation;
 
@@ -13,9 +11,11 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.ClassLoaderAccess;
-import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.internal.util.StringHelper;
 
 import jakarta.validation.groups.Default;
+
+import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
 
 /**
  * @author Emmanuel Bernard
@@ -28,26 +28,25 @@ public class GroupsPerOperation {
 	private static final Class<?>[] DEFAULT_GROUPS = new Class<?>[] { Default.class };
 	private static final Class<?>[] EMPTY_GROUPS = new Class<?>[] { };
 
-	private final Map<Operation, Class<?>[]> groupsPerOperation = CollectionHelper.mapOfSize( 4 );
+	private final Map<Operation, Class<?>[]> groupsPerOperation = mapOfSize( 4 );
 
 	private GroupsPerOperation() {
 	}
 
-	public static GroupsPerOperation from(Map settings, ClassLoaderAccess classLoaderAccess) {
-		GroupsPerOperation groupsPerOperation = new GroupsPerOperation();
-
+	public static GroupsPerOperation from(Map<String,Object> settings, ClassLoaderAccess classLoaderAccess) {
+		final GroupsPerOperation groupsPerOperation = new GroupsPerOperation();
 		applyOperationGrouping( groupsPerOperation, Operation.INSERT, settings, classLoaderAccess );
 		applyOperationGrouping( groupsPerOperation, Operation.UPDATE, settings, classLoaderAccess );
 		applyOperationGrouping( groupsPerOperation, Operation.DELETE, settings, classLoaderAccess );
+		applyOperationGrouping( groupsPerOperation, Operation.UPSERT, settings, classLoaderAccess );
 		applyOperationGrouping( groupsPerOperation, Operation.DDL, settings, classLoaderAccess );
-
 		return groupsPerOperation;
 	}
 
 	private static void applyOperationGrouping(
 			GroupsPerOperation groupsPerOperation,
 			Operation operation,
-			Map settings,
+			Map<String,Object> settings,
 			ClassLoaderAccess classLoaderAccess) {
 		groupsPerOperation.groupsPerOperation.put(
 				operation,
@@ -55,7 +54,8 @@ public class GroupsPerOperation {
 		);
 	}
 
-	public static Class<?>[] buildGroupsForOperation(Operation operation, Map settings, ClassLoaderAccess classLoaderAccess) {
+	public static Class<?>[] buildGroupsForOperation(
+			Operation operation, Map<String,Object> settings, ClassLoaderAccess classLoaderAccess) {
 		Object property = settings.get( operation.getJakartaGroupPropertyName() );
 		if ( property == null ) {
 			property = settings.get( operation.getGroupPropertyName() );
@@ -65,21 +65,20 @@ public class GroupsPerOperation {
 			return operation == Operation.DELETE ? EMPTY_GROUPS : DEFAULT_GROUPS;
 		}
 
-		if ( property instanceof Class<?>[] ) {
-			return (Class<?>[]) property;
+		if ( property instanceof Class<?>[] classes ) {
+			return classes;
 		}
 
-		if ( property instanceof String ) {
-			String stringProperty = (String) property;
-			String[] groupNames = stringProperty.split( "," );
+		if ( property instanceof String string ) {
+			final String[] groupNames = StringHelper.split( ",", string );
 			if ( groupNames.length == 1 && groupNames[0].isEmpty() ) {
 				return EMPTY_GROUPS;
 			}
 
-			List<Class<?>> groupsList = new ArrayList<>(groupNames.length);
-			for (String groupName : groupNames) {
-				String cleanedGroupName = groupName.trim();
-				if ( cleanedGroupName.length() > 0) {
+			final List<Class<?>> groupsList = new ArrayList<>( groupNames.length );
+			for ( String groupName : groupNames ) {
+				final String cleanedGroupName = groupName.trim();
+				if ( !cleanedGroupName.isEmpty() ) {
 					try {
 						groupsList.add( classLoaderAccess.classForName( cleanedGroupName ) );
 					}
@@ -88,21 +87,24 @@ public class GroupsPerOperation {
 					}
 				}
 			}
-			return groupsList.toArray( new Class<?>[groupsList.size()] );
+			return groupsList.toArray( new Class<?>[0] );
 		}
 
 		//null is bad and excluded by instanceof => exception is raised
-		throw new HibernateException( JAKARTA_JPA_GROUP_PREFIX + operation.getJakartaGroupPropertyName() + " is of unknown type: String or Class<?>[] only");
+		throw new HibernateException( JAKARTA_JPA_GROUP_PREFIX
+				+ operation.getJakartaGroupPropertyName()
+				+ " is of unknown type: String or Class<?>[] only");
 	}
 
 	public Class<?>[] get(Operation operation) {
 		return groupsPerOperation.get( operation );
 	}
 
-	public static enum Operation {
+	public enum Operation {
 		INSERT( "persist", JPA_GROUP_PREFIX + "pre-persist", JAKARTA_JPA_GROUP_PREFIX + "pre-persist" ),
 		UPDATE( "update", JPA_GROUP_PREFIX + "pre-update", JAKARTA_JPA_GROUP_PREFIX + "pre-update" ),
 		DELETE( "remove", JPA_GROUP_PREFIX + "pre-remove", JAKARTA_JPA_GROUP_PREFIX + "pre-remove" ),
+		UPSERT( "upsert", JPA_GROUP_PREFIX + "pre-upsert", JAKARTA_JPA_GROUP_PREFIX + "pre-upsert" ),
 		DDL( "ddl", HIBERNATE_GROUP_PREFIX + "ddl", HIBERNATE_GROUP_PREFIX + "ddl" );
 
 

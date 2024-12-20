@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
@@ -26,6 +24,11 @@ public class InetAddressJavaType extends AbstractClassJavaType<InetAddress> {
 
 	public InetAddressJavaType() {
 		super( InetAddress.class );
+	}
+
+	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
 	}
 
 	@Override
@@ -71,20 +74,20 @@ public class InetAddressJavaType extends AbstractClassJavaType<InetAddress> {
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof InetAddress) {
-			return (InetAddress) value;
+		if (value instanceof InetAddress inetAddress) {
+			return inetAddress;
 		}
-		if (value instanceof byte[]) {
+		if (value instanceof byte[] bytes) {
 			try {
-				return InetAddress.getByAddress( (byte[]) value );
+				return InetAddress.getByAddress( bytes );
 			}
 			catch (UnknownHostException e) {
 				throw new IllegalArgumentException( e );
 			}
 		}
-		if (value instanceof String) {
+		if (value instanceof String string) {
 			try {
-				return InetAddress.getByName( (String) value );
+				return InetAddress.getByName( string );
 			}
 			catch (UnknownHostException e) {
 				throw new IllegalArgumentException( e );

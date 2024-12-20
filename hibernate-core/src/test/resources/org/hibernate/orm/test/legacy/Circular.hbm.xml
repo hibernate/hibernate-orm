@@ -8,7 +8,7 @@
 <!DOCTYPE hibernate-mapping PUBLIC
 	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
 	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
-<hibernate-mapping default-lazy="false" default-cascade="save-update">
+<hibernate-mapping default-lazy="false" default-cascade="merge,persist">
 
     <class name="org.hibernate.orm.test.legacy.Circular" dynamic-update="true">
         <id name="id" column="id_" length="64" unsaved-value="null">

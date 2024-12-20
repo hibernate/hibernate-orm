@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id: MoreStuff.java 4599 2004-09-26 05:18:27Z oneovthafew $
 package org.hibernate.orm.test.legacy;
 import java.io.Serializable;
 import java.util.Collection;
@@ -16,15 +12,15 @@ public class MoreStuff implements Serializable {
 	private int intId;
 	private Collection stuffs;
 	private String name;
-	
+
 	public boolean equals(Object other) {
 		return ( (MoreStuff) other ).getIntId()==intId && ( (MoreStuff) other ).getStringId().equals(stringId);
 	}
-	
+
 	public int hashCode() {
 		return stringId.hashCode();
 	}
-	
+
 	/**
 	 * Returns the stuffs.
 	 * @return Collection
@@ -32,7 +28,7 @@ public class MoreStuff implements Serializable {
 	public Collection getStuffs() {
 		return stuffs;
 	}
-	
+
 	/**
 	 * Sets the stuffs.
 	 * @param stuffs The stuffs to set
@@ -40,7 +36,7 @@ public class MoreStuff implements Serializable {
 	public void setStuffs(Collection stuffs) {
 		this.stuffs = stuffs;
 	}
-	
+
 	/**
 	 * Returns the name.
 	 * @return String
@@ -48,7 +44,7 @@ public class MoreStuff implements Serializable {
 	public String getName() {
 		return name;
 	}
-	
+
 	/**
 	 * Sets the name.
 	 * @param name The name to set
@@ -56,7 +52,7 @@ public class MoreStuff implements Serializable {
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
 	/**
 	 * Returns the intId.
 	 * @return int
@@ -64,7 +60,7 @@ public class MoreStuff implements Serializable {
 	public int getIntId() {
 		return intId;
 	}
-	
+
 	/**
 	 * Returns the stringId.
 	 * @return String
@@ -72,7 +68,7 @@ public class MoreStuff implements Serializable {
 	public String getStringId() {
 		return stringId;
 	}
-	
+
 	/**
 	 * Sets the intId.
 	 * @param intId The intId to set
@@ -80,7 +76,7 @@ public class MoreStuff implements Serializable {
 	public void setIntId(int intId) {
 		this.intId = intId;
 	}
-	
+
 	/**
 	 * Sets the stringId.
 	 * @param stringId The stringId to set
@@ -88,11 +84,5 @@ public class MoreStuff implements Serializable {
 	public void setStringId(String stringId) {
 		this.stringId = stringId;
 	}
-	
+
 }
-
-
-
-
-
-

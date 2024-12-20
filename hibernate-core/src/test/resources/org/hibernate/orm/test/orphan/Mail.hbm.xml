@@ -24,7 +24,7 @@
 
         <many-to-one name="user"
                  class="User"
-                 cascade="save-update"
+                 cascade="persist,merge"
                  column="userid"
                  not-null="true"
                  property-ref="userid"/>

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
 
@@ -33,6 +31,7 @@ import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 
 import static org.hibernate.internal.util.StringHelper.coalesce;
+import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.query.sqm.ComparisonOperator.EQUAL;
 
 /**
@@ -93,7 +92,13 @@ public class SoftDeleteHelper {
 		softDeleteColumn.setLength( 1 );
 		softDeleteColumn.setNullable( false );
 		softDeleteColumn.setUnique( false );
-		softDeleteColumn.setComment( "Soft-delete indicator" );
+		softDeleteColumn.setOptions( softDeleteConfig.options() );
+		if ( isBlank( softDeleteConfig.comment() ) ) {
+			softDeleteColumn.setComment( "Soft-delete indicator" );
+		}
+		else {
+			softDeleteColumn.setComment( softDeleteConfig.comment() );
+		}
 
 		softDeleteColumn.setValue( softDeleteIndicatorValue );
 		softDeleteIndicatorValue.addColumn( softDeleteColumn );

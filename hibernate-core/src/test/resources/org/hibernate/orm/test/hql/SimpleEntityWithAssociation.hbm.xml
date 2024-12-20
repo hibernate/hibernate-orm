@@ -26,7 +26,7 @@
             <key column="SIMPLE_1_ID"/>
             <one-to-many class="SimpleAssociatedEntity"/>
         </set>
-        <set name="manyToManyAssociatedEntities" cascade="save-update" inverse="false" lazy="true" table="MANY_TO_MANY">
+        <set name="manyToManyAssociatedEntities" cascade="merge, persist" inverse="false" lazy="true" table="MANY_TO_MANY">
             <key column="IN_ID"/>
             <many-to-many class="SimpleEntityWithAssociation" column="OUT_ID"/>
         </set>

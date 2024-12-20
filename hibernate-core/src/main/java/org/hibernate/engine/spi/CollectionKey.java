@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
@@ -26,7 +24,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public final class CollectionKey implements Serializable {
 	private final String role;
 	private final Object key;
-	private final Type keyType;
+	private final @Nullable Type keyType;
 	private final SessionFactoryImplementor factory;
 	private final int hashCode;
 
@@ -34,7 +32,7 @@ public final class CollectionKey implements Serializable {
 		this(
 				persister.getRole(),
 				key,
-				persister.getKeyType(),
+				persister.getKeyType().getTypeForEqualsHashCode(),
 				persister.getFactory()
 		);
 	}
@@ -42,7 +40,7 @@ public final class CollectionKey implements Serializable {
 	private CollectionKey(
 			String role,
 			@Nullable Object key,
-			Type keyType,
+			@Nullable Type keyType,
 			SessionFactoryImplementor factory) {
 		this.role = role;
 		if ( key == null ) {
@@ -58,7 +56,7 @@ public final class CollectionKey implements Serializable {
 	private int generateHashCode() {
 		int result = 17;
 		result = 37 * result + role.hashCode();
-		result = 37 * result + keyType.getHashCode( key, factory );
+		result = 37 * result + ( keyType == null ? key.hashCode() : keyType.getHashCode( key, factory ) );
 		return result;
 	}
 
@@ -90,7 +88,7 @@ public final class CollectionKey implements Serializable {
 		final CollectionKey that = (CollectionKey) other;
 		return that.role.equals( role )
 				&& ( this.key == that.key ||
-					keyType.isEqual( this.key, that.key, factory ) );
+					keyType == null ? this.key.equals( that.key ) : keyType.isEqual( this.key, that.key, factory ) );
 	}
 
 	@Override

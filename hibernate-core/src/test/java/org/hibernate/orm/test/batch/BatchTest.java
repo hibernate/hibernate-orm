@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.batch;
 
@@ -39,7 +37,7 @@ public class BatchTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	public void configure(Configuration cfg) {
-		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "20" );
+		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, 20 );
 	}
 
 	@Test
@@ -79,7 +77,7 @@ public class BatchTest extends BaseCoreFunctionalTestCase {
 			DataPoint dp = new DataPoint();
 			dp.setX( new BigDecimal( i * 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
 			dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-			s.save( dp );
+			s.persist( dp );
 			if ( ( i + 1 ) % nBeforeFlush == 0 ) {
 				s.flush();
 				s.clear();
@@ -114,7 +112,7 @@ public class BatchTest extends BaseCoreFunctionalTestCase {
 				.scroll( ScrollMode.FORWARD_ONLY )) {
 			while ( sr.next() ) {
 				DataPoint dp = (DataPoint) sr.get();
-				s.delete( dp );
+				s.remove( dp );
 				if ( ++i % nBeforeFlush == 0 ) {
 					s.flush();
 					s.clear();
@@ -125,4 +123,3 @@ public class BatchTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 }
-

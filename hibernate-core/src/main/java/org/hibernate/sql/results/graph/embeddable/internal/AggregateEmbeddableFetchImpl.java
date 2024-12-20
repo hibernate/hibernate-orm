@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
 
@@ -26,12 +24,16 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.InitializerParent;
+import org.hibernate.sql.results.graph.InitializerProducer;
+import org.hibernate.sql.results.graph.basic.BasicFetch;
+import org.hibernate.sql.results.graph.embeddable.AggregateEmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
-import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * A Fetch for an embeddable that is mapped as aggregate e.g. STRUCT, JSON or XML.
@@ -40,13 +42,15 @@ import org.hibernate.type.spi.TypeConfiguration;
  * uses {@link org.hibernate.sql.results.graph.DomainResultCreationState#visitNestedFetches(FetchParent)}
  * for creating the fetches for the attributes of the embeddable.
  */
-public class AggregateEmbeddableFetchImpl extends AbstractFetchParent implements EmbeddableResultGraphNode, Fetch {
+public class AggregateEmbeddableFetchImpl extends AbstractFetchParent
+		implements AggregateEmbeddableResultGraphNode, Fetch, InitializerProducer<AggregateEmbeddableFetchImpl> {
 	private final FetchParent fetchParent;
 	private final FetchTiming fetchTiming;
 	private final TableGroup tableGroup;
 	private final boolean hasTableGroup;
-	private final SqlSelection aggregateSelection;
 	private final EmbeddableMappingType fetchContainer;
+	private final BasicFetch<?> discriminatorFetch;
+	private final int[] aggregateValuesArrayPositions;
 
 	public AggregateEmbeddableFetchImpl(
 			NavigablePath navigablePath,
@@ -91,13 +95,20 @@ public class AggregateEmbeddableFetchImpl extends AbstractFetchParent implements
 		final TypeConfiguration typeConfiguration = sqlAstCreationState.getCreationContext()
 				.getSessionFactory()
 				.getTypeConfiguration();
-		this.aggregateSelection = sqlExpressionResolver.resolveSqlSelection(
+		final SqlSelection aggregateSelection = sqlExpressionResolver.resolveSqlSelection(
 				expression,
 				typeConfiguration.getJavaTypeRegistry().resolveDescriptor( Object[].class ),
 				fetchParent,
 				typeConfiguration
 		);
+		this.discriminatorFetch = creationState.visitEmbeddableDiscriminatorFetch( this, true );
+		this.aggregateValuesArrayPositions = AggregateEmbeddableResultGraphNode.determineAggregateValuesArrayPositions( fetchParent, aggregateSelection );
 		resetFetches( creationState.visitNestedFetches( this ) );
+	}
+
+	@Override
+	public int[] getAggregateValuesArrayPositions() {
+		return aggregateValuesArrayPositions;
 	}
 
 	@Override
@@ -138,7 +149,8 @@ public class AggregateEmbeddableFetchImpl extends AbstractFetchParent implements
 				final NavigablePath navigablePath = tableGroupJoin.getNavigablePath();
 				if ( tableGroupJoin.getJoinedGroup().isFetched()
 						&& fetchable.getFetchableName().equals( navigablePath.getLocalName() )
-						&& tableGroupJoin.getJoinedGroup().getModelPart() == fetchable ) {
+						&& tableGroupJoin.getJoinedGroup().getModelPart() == fetchable
+						&& castNonNull( navigablePath.getParent() ).equals( getNavigablePath() ) ) {
 					return navigablePath;
 				}
 			}
@@ -153,22 +165,28 @@ public class AggregateEmbeddableFetchImpl extends AbstractFetchParent implements
 
 	@Override
 	public DomainResultAssembler createAssembler(
-			FetchParentAccess parentAccess,
+			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
-		final EmbeddableInitializer initializer = creationState.resolveInitializer(
-				getNavigablePath(),
-				getReferencedModePart(),
-				() -> new AggregateEmbeddableFetchInitializer(
-						parentAccess,
-						this,
-						creationState,
-						aggregateSelection
-				)
-		).asEmbeddableInitializer();
+		return new EmbeddableAssembler( creationState.resolveInitializer( this, parent, this ).asEmbeddableInitializer() );
+	}
 
-		assert initializer != null;
+	@Override
+	public EmbeddableInitializer<?> createInitializer(
+			AggregateEmbeddableFetchImpl resultGraphNode,
+			InitializerParent<?> parent,
+			AssemblerCreationState creationState) {
+		return resultGraphNode.createInitializer( parent, creationState );
+	}
 
-		return new EmbeddableAssembler( initializer );
+	@Override
+	public EmbeddableInitializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {
+		return new AggregateEmbeddableInitializerImpl(
+				this,
+				discriminatorFetch,
+				parent,
+				creationState,
+				false
+		);
 	}
 
 	@Override

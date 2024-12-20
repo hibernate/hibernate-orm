@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.aggregate;
 
@@ -11,10 +9,17 @@ import java.util.List;
 
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.mapping.SelectableMapping;
-import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.type.SqlTypes.ARRAY;
+import static org.hibernate.type.SqlTypes.JSON;
+import static org.hibernate.type.SqlTypes.JSON_ARRAY;
+import static org.hibernate.type.SqlTypes.SQLXML;
+import static org.hibernate.type.SqlTypes.XML_ARRAY;
 
 public class AggregateSupportImpl implements AggregateSupport {
 
@@ -25,24 +30,25 @@ public class AggregateSupportImpl implements AggregateSupport {
 			String template,
 			String placeholder,
 			String aggregateParentReadExpression,
-			String column,
-			ColumnTypeInformation aggregateColumnType,
-			ColumnTypeInformation columnType) {
+			String columnExpression,
+			int aggregateColumnTypeCode,
+			SqlTypedMapping column,
+			TypeConfiguration typeConfiguration) {
 		throw new UnsupportedOperationException( "Dialect does not support aggregateComponentCustomReadExpression: " + getClass().getName() );
 	}
 
 	@Override
 	public String aggregateComponentAssignmentExpression(
 			String aggregateParentAssignmentExpression,
-			String column,
-			ColumnTypeInformation aggregateColumnType,
-			ColumnTypeInformation columnType) {
+			String columnExpression,
+			int aggregateColumnTypeCode,
+			Column column) {
 		throw new UnsupportedOperationException( "Dialect does not support aggregateComponentAssignmentExpression: " + getClass().getName() );
 	}
 
 	@Override
 	public String aggregateCustomWriteExpression(
-			ColumnTypeInformation aggregateColumnType,
+			AggregateColumn aggregateColumn,
 			List<Column> aggregatedColumns) {
 		return null;
 	}
@@ -76,14 +82,18 @@ public class AggregateSupportImpl implements AggregateSupport {
 	public List<AuxiliaryDatabaseObject> aggregateAuxiliaryDatabaseObjects(
 			Namespace namespace,
 			String aggregatePath,
-			ColumnTypeInformation aggregateColumnType,
+			AggregateColumn aggregateColumn,
 			List<Column> aggregatedColumns) {
 		return Collections.emptyList();
 	}
 
 	@Override
 	public int aggregateComponentSqlTypeCode(int aggregateColumnSqlTypeCode, int columnSqlTypeCode) {
-		return columnSqlTypeCode;
+		return switch (aggregateColumnSqlTypeCode) {
+			case JSON -> columnSqlTypeCode == ARRAY ? JSON_ARRAY : columnSqlTypeCode;
+			case SQLXML -> columnSqlTypeCode == ARRAY ? XML_ARRAY : columnSqlTypeCode;
+			default -> columnSqlTypeCode;
+		};
 	}
 
 	@Override

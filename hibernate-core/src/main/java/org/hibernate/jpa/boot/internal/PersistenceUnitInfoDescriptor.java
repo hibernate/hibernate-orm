@@ -1,14 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.boot.internal;
 
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 
@@ -16,12 +12,13 @@ import jakarta.persistence.PersistenceException;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
 import jakarta.persistence.spi.PersistenceUnitInfo;
-import jakarta.persistence.spi.PersistenceUnitTransactionType;
+import jakarta.persistence.PersistenceUnitTransactionType;
 
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.internal.enhance.EnhancingClassTransformerImpl;
+import org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelper;
 
 /**
  * @author Steve Ebersole
@@ -60,7 +57,12 @@ public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor 
 	}
 
 	@Override
-	public PersistenceUnitTransactionType getTransactionType() {
+	public PersistenceUnitTransactionType getPersistenceUnitTransactionType() {
+		return PersistenceUnitTransactionTypeHelper.toNewForm( getTransactionType() );
+	}
+
+	@Override @SuppressWarnings("removal")
+	public jakarta.persistence.spi.PersistenceUnitTransactionType getTransactionType() {
 		return persistenceUnitInfo.getTransactionType();
 	}
 
@@ -117,11 +119,15 @@ public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor 
 	@Override
 	public void pushClassTransformer(EnhancementContext enhancementContext) {
 		if ( this.classTransformer != null ) {
-			throw new PersistenceException( "Persistence unit [" + persistenceUnitInfo.getPersistenceUnitName() + "] can only have a single class transformer." );
+			throw new PersistenceException( "Persistence unit ["
+					+ persistenceUnitInfo.getPersistenceUnitName()
+					+ "] can only have a single class transformer." );
 		}
-		// During testing, we will return a null temp class loader in cases where we don't care about enhancement
+		// During testing, we will return a null temp class loader
+		// in cases where we don't care about enhancement
 		if ( persistenceUnitInfo.getNewTempClassLoader() != null ) {
-			final EnhancingClassTransformerImpl classTransformer = new EnhancingClassTransformerImpl( enhancementContext );
+			final EnhancingClassTransformerImpl classTransformer =
+					new EnhancingClassTransformerImpl( enhancementContext );
 			this.classTransformer = classTransformer;
 			persistenceUnitInfo.addTransformer( classTransformer );
 		}

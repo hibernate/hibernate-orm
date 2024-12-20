@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.insert;
 
@@ -16,7 +14,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.values.AbstractGeneratedValuesMutationDelegate;
 import org.hibernate.generator.values.GeneratedValues;
-import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 
@@ -30,13 +27,6 @@ import org.hibernate.pretty.MessageHelper;
  */
 public abstract class AbstractReturningDelegate extends AbstractGeneratedValuesMutationDelegate
 		implements InsertGeneratedIdentifierDelegate {
-	/**
-	 * @deprecated Use {@link #AbstractReturningDelegate(EntityPersister, EventType, boolean, boolean)} instead.
-	 */
-	@Deprecated( forRemoval = true, since = "6.5" )
-	public AbstractReturningDelegate(PostInsertIdentityPersister persister) {
-		super( persister, EventType.INSERT );
-	}
 
 	public AbstractReturningDelegate(
 			EntityPersister persister,
@@ -53,8 +43,21 @@ public abstract class AbstractReturningDelegate extends AbstractGeneratedValuesM
 			Object entity,
 			SharedSessionContractImplementor session) {
 		session.getJdbcServices().getSqlStatementLogger().logStatement( statementDetails.getSqlString() );
-		valueBindings.beforeStatement( statementDetails );
-		return executeAndExtractReturning( statementDetails.getSqlString(), statementDetails.getStatement(), session );
+		try {
+			valueBindings.beforeStatement( statementDetails );
+			return executeAndExtractReturning(
+					statementDetails.getSqlString(),
+					statementDetails.getStatement(),
+					session
+			);
+		}
+		finally {
+			if ( statementDetails.getStatement() != null ) {
+				statementDetails.releaseStatement( session );
+			}
+			valueBindings.afterStatement( statementDetails.getMutatingTableDetails() );
+			session.getJdbcCoordinator().afterStatementExecution();
+		}
 	}
 
 	@Override
@@ -77,18 +80,6 @@ public abstract class AbstractReturningDelegate extends AbstractGeneratedValuesM
 					sql
 			);
 		}
-	}
-
-	/**
-	 * @deprecated
-	 */
-	@Deprecated( forRemoval = true, since = "6.5" )
-	protected Object executeAndExtract(
-			String sql,
-			PreparedStatement preparedStatement,
-			SharedSessionContractImplementor session) {
-		final GeneratedValues generatedValues = executeAndExtractReturning( sql, preparedStatement, session );
-		return generatedValues.getGeneratedValue( persister.getIdentifierMapping() );
 	}
 
 	protected abstract GeneratedValues executeAndExtractReturning(

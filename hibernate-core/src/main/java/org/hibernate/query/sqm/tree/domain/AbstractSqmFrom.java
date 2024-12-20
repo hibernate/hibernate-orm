@@ -1,12 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -15,7 +14,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import org.hibernate.metamodel.mapping.ModelPartContainer;
+import org.hibernate.Internal;
 import org.hibernate.metamodel.model.domain.BagPersistentAttribute;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
@@ -24,42 +23,47 @@ import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SetPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.JpaCrossJoin;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaDerivedJoin;
-import org.hibernate.query.criteria.JpaJoinedFrom;
-import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
-import org.hibernate.query.sqm.tree.from.SqmCteJoin;
-import org.hibernate.query.sqm.tree.from.SqmDerivedJoin;
-import org.hibernate.query.sqm.tree.select.SqmSubQuery;
-import org.hibernate.spi.NavigablePath;
-import org.hibernate.query.SemanticException;
-import org.hibernate.query.criteria.JpaEntityJoin;
+import org.hibernate.query.criteria.JpaFunctionJoin;
 import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.criteria.JpaSelection;
+import org.hibernate.query.criteria.JpaSetReturningFunction;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
+import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
+import org.hibernate.query.sqm.tree.from.SqmCteJoin;
+import org.hibernate.query.sqm.tree.from.SqmDerivedJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.sqm.tree.from.SqmFunctionJoin;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.select.SqmSubQuery;
+import org.hibernate.spi.NavigablePath;
 
 import jakarta.persistence.criteria.Fetch;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Subquery;
 import jakarta.persistence.metamodel.CollectionAttribute;
+import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.ListAttribute;
 import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.persistence.metamodel.SetAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
+
+import static org.hibernate.query.sqm.internal.SqmUtil.findCompatibleFetchJoin;
 
 /**
  * Convenience base class for SqmFrom implementations
@@ -70,7 +74,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	private String alias;
 
 	private List<SqmJoin<T, ?>> joins;
-	private List<SqmFrom<?, ?>> treats;
+	private List<SqmTreatedFrom<?,?,?>> treats;
 
 	protected AbstractSqmFrom(
 			NavigablePath navigablePath,
@@ -136,7 +140,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		}
 		if ( treats != null ) {
 			target.treats = new ArrayList<>( treats.size() );
-			for ( SqmFrom<?, ?> treat : treats ) {
+			for ( SqmTreatedFrom<?,?,?> treat : treats ) {
 				target.treats.add( treat.copy( context ) );
 			}
 		}
@@ -161,9 +165,8 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		SqmPath<?> resolvedPath = null;
 		for ( SqmJoin<?, ?> sqmJoin : getSqmJoins() ) {
 			// We can only match singular joins here, as plural path parts are interpreted like sub-queries
-			if ( sqmJoin instanceof SqmSingularJoin<?, ?>
+			if ( sqmJoin instanceof SqmSingularJoin<?, ?> attributeJoin
 					&& name.equals( sqmJoin.getReferencedPathSource().getPathName() ) ) {
-				final SqmAttributeJoin<?, ?> attributeJoin = (SqmAttributeJoin<?, ?>) sqmJoin;
 				if ( attributeJoin.getOn() == null ) {
 					// todo (6.0): to match the expectation of the JPA spec I think we also have to check
 					//  that the join type is INNER or the default join type for the attribute,
@@ -193,46 +196,9 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		if ( resolvedPath != null ) {
 			return resolvedPath;
 		}
-		final SqmPath<?> sqmPath = get( name );
+		final SqmPath<?> sqmPath = get( name, true );
 		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
 		return sqmPath;
-	}
-
-	private ModelPartContainer findModelPartContainer(SqmAttributeJoin<?, ?> attributeJoin, SqmCreationState creationState) {
-		final SqmFrom<?, ?> lhs = attributeJoin.getLhs();
-		if ( lhs instanceof SqmAttributeJoin<?, ?> ) {
-			final SqmAttributeJoin<?, ?> lhsAttributeJoin = (SqmAttributeJoin<?, ?>) lhs;
-			if ( lhsAttributeJoin.getReferencedPathSource() instanceof EntityDomainType<?> ) {
-				final String entityName = ( (EntityDomainType<?>) lhsAttributeJoin.getReferencedPathSource() ).getHibernateEntityName();
-				return (ModelPartContainer) creationState.getCreationContext()
-						.getJpaMetamodel()
-						.getMappingMetamodel()
-						.getEntityDescriptor( entityName )
-						.findSubPart( attributeJoin.getAttribute().getName(), null );
-			}
-			else {
-				return (ModelPartContainer) findModelPartContainer( lhsAttributeJoin, creationState )
-						.findSubPart( attributeJoin.getAttribute().getName(), null );
-			}
-		}
-		else {
-			final String entityName;
-			if ( lhs instanceof SqmRoot<?> ) {
-				entityName = ( (SqmRoot<?>) lhs ).getEntityName();
-			}
-			else if ( lhs instanceof SqmEntityJoin<?> ) {
-				entityName = ( (SqmEntityJoin<?>) lhs ).getEntityName();
-			}
-			else {
-				assert lhs instanceof SqmCrossJoin<?>;
-				entityName = ( (SqmCrossJoin<?>) lhs ).getEntityName();
-			}
-			return (ModelPartContainer) creationState.getCreationContext()
-					.getJpaMetamodel()
-					.getMappingMetamodel()
-					.getEntityDescriptor( entityName )
-					.findSubPart( attributeJoin.getAttribute().getName(), null );
-		}
 	}
 
 	@Override
@@ -254,6 +220,28 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		findRoot().addOrderedJoin( join );
 	}
 
+	@Internal
+	public void removeLeftFetchJoins() {
+		if ( joins != null ) {
+			for ( SqmJoin<T, ?> join : new ArrayList<>(joins) ) {
+				if ( join instanceof SqmAttributeJoin<T, ?> attributeJoin ) {
+					if ( attributeJoin.isFetched() ) {
+						if ( join.getSqmJoinType() == SqmJoinType.LEFT ) {
+							joins.remove( join );
+							final List<SqmJoin<?, ?>> orderedJoins = findRoot().getOrderedJoins();
+							if (orderedJoins != null) {
+								orderedJoins.remove( join );
+							}
+						}
+						else {
+							attributeJoin.clearFetched();
+						}
+					}
+				}
+			}
+		}
+	}
+
 	@Override
 	public void visitSqmJoins(Consumer<SqmJoin<T, ?>> consumer) {
 		if ( joins != null ) {
@@ -262,21 +250,15 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
-	public boolean hasTreats() {
-		return treats != null && !treats.isEmpty();
-	}
-
-	@Override
-	public List<SqmFrom<?, ?>> getSqmTreats() {
+	public List<SqmTreatedFrom<?,?,?>> getSqmTreats() {
 		return treats == null ? Collections.emptyList() : treats;
 	}
 
-	protected <S, X extends SqmFrom<?, S>> X findTreat(EntityDomainType<S> targetType, String alias) {
+	protected <S extends T, X extends SqmTreatedFrom<O,T,S>> X findTreat(ManagedDomainType<S> targetType, String alias) {
 		if ( treats != null ) {
 			for ( SqmFrom<?, ?> treat : treats ) {
 				if ( treat.getModel() == targetType ) {
-					if ( treat.getExplicitAlias() == null && alias == null
-							|| Objects.equals( treat.getExplicitAlias(), alias ) ) {
+					if ( Objects.equals( treat.getExplicitAlias(), alias ) ) {
 						//noinspection unchecked
 						return (X) treat;
 					}
@@ -286,7 +268,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		return null;
 	}
 
-	protected <X extends SqmFrom<?, ?>> X addTreat(X treat) {
+	protected <X extends SqmTreatedFrom<?,?,?>> X addTreat(X treat) {
 		if ( treats == null ) {
 			treats = new ArrayList<>();
 		}
@@ -317,10 +299,17 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 
 	@Override
 	public Set<Join<T, ?>> getJoins() {
-		//noinspection unchecked
-		return (Set<Join<T, ?>>) (Set<?>) getSqmJoins().stream()
-				.filter( sqmJoin -> sqmJoin instanceof SqmAttributeJoin && !( (SqmAttributeJoin<?, ?>) sqmJoin ).isFetched() )
+		return getSqmJoins().stream()
+				.filter( sqmJoin -> sqmJoin instanceof SqmAttributeJoin<?,?> attributeJoin
+						&& !attributeJoin.isFetched() )
 				.collect( Collectors.toSet() );
+	}
+
+	@Override
+	public boolean hasImplicitlySelectableJoin() {
+		return getSqmJoins().stream()
+				.anyMatch( sqmJoin -> sqmJoin instanceof SqmAttributeJoin<?,?> attributeJoin
+						&& attributeJoin.isImplicitlySelectable() );
 	}
 
 	@Override
@@ -333,6 +322,30 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		final SqmSingularJoin<T, A> join = buildSingularJoin( (SingularPersistentAttribute<? super T, A>) attribute, SqmJoinType.from( jt ), false );
 		addSqmJoin( join );
 		return join;
+	}
+
+	@Override
+	public <X> SqmEntityJoin<T, X> join(Class<X> targetEntityClass, SqmJoinType joinType) {
+		return join( nodeBuilder().getJpaMetamodel().entity( targetEntityClass ), joinType );
+	}
+
+	@Override
+	public <X> SqmEntityJoin<T, X> join(EntityDomainType<X> targetEntityDescriptor) {
+		return join( targetEntityDescriptor, SqmJoinType.INNER );
+	}
+
+	@Override
+	public <X> SqmEntityJoin<T, X> join(EntityDomainType<X> targetEntityDescriptor, SqmJoinType joinType) {
+		//noinspection unchecked
+		final SqmRoot<T> root = (SqmRoot<T>) findRoot();
+		final SqmEntityJoin<T, X> sqmEntityJoin = new SqmEntityJoin<>(
+				targetEntityDescriptor,
+				null,
+				joinType,
+				root
+		);
+		root.addSqmJoin( sqmEntityJoin );
+		return sqmEntityJoin;
 	}
 
 	@Override
@@ -386,7 +399,6 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <K, V> SqmMapJoin<T, K, V> join(MapAttribute<? super T, K, V> attribute, JoinType jt) {
 		final SqmMapJoin<T, K, V> join = buildMapJoin(
 				(MapPersistentAttribute<? super T, K, V>) attribute,
@@ -405,8 +417,8 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	@Override
 	@SuppressWarnings("unchecked")
 	public <X, Y> SqmAttributeJoin<X, Y> join(String attributeName, JoinType jt) {
-		final SqmPathSource<?> subPathSource =
-				getReferencedPathSource().getSubPathSource( attributeName, nodeBuilder().getJpaMetamodel() );
+		final SqmPathSource<Y> subPathSource = (SqmPathSource<Y>) getReferencedPathSource()
+				.getSubPathSource( attributeName );
 		return (SqmAttributeJoin<X, Y>) buildJoin( subPathSource, SqmJoinType.from( jt ), false );
 	}
 
@@ -418,8 +430,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	@Override
 	@SuppressWarnings("unchecked")
 	public <X, Y> SqmBagJoin<X, Y> joinCollection(String attributeName, JoinType jt) {
-		final SqmPathSource<?> joinedPathSource =
-				getReferencedPathSource().getSubPathSource( attributeName, nodeBuilder().getJpaMetamodel() );
+		final SqmPathSource<?> joinedPathSource = getReferencedPathSource().getSubPathSource( attributeName );
 
 		if ( joinedPathSource instanceof BagPersistentAttribute ) {
 			final SqmBagJoin<T, Y> join = buildBagJoin(
@@ -450,8 +461,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	@Override
 	@SuppressWarnings("unchecked")
 	public <X, Y> SqmSetJoin<X, Y> joinSet(String attributeName, JoinType jt) {
-		final SqmPathSource<?> joinedPathSource =
-				getReferencedPathSource().getSubPathSource( attributeName, nodeBuilder().getJpaMetamodel() );
+		final SqmPathSource<?> joinedPathSource = getReferencedPathSource().getSubPathSource( attributeName );
 
 		if ( joinedPathSource instanceof SetPersistentAttribute ) {
 			final SqmSetJoin<T, Y> join = buildSetJoin(
@@ -482,8 +492,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	@Override
 	@SuppressWarnings("unchecked")
 	public <X, Y> SqmListJoin<X, Y> joinList(String attributeName, JoinType jt) {
-		final SqmPathSource<?> joinedPathSource =
-				getReferencedPathSource().getSubPathSource( attributeName, nodeBuilder().getJpaMetamodel() );
+		final SqmPathSource<?> joinedPathSource = getReferencedPathSource().getSubPathSource( attributeName );
 
 		if ( joinedPathSource instanceof ListPersistentAttribute ) {
 			final SqmListJoin<T, Y> join = buildListJoin(
@@ -514,8 +523,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	@Override
 	@SuppressWarnings("unchecked")
 	public <X, K, V> SqmMapJoin<X, K, V> joinMap(String attributeName, JoinType jt) {
-		final SqmPathSource<?> joinedPathSource =
-				getReferencedPathSource().getSubPathSource( attributeName, nodeBuilder().getJpaMetamodel() );
+		final SqmPathSource<?> joinedPathSource = getReferencedPathSource().getSubPathSource( attributeName );
 
 		if ( joinedPathSource instanceof MapPersistentAttribute<?, ?, ?> ) {
 			final SqmMapJoin<T, K, V> join = buildMapJoin(
@@ -539,25 +547,25 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
-	public <X> JpaEntityJoin<X> join(Class<X> entityJavaType) {
+	public <R> SqmEntityJoin<T, R> join(Class<R> entityJavaType) {
 		return join( nodeBuilder().getDomainModel().entity( entityJavaType ) );
 	}
 
 	@Override
-	public <X> JpaEntityJoin<X> join(EntityDomainType<X> entity) {
-		return join( entity, SqmJoinType.INNER );
+	public <R> SqmEntityJoin<T, R> join(EntityType<R> entityType) {
+		return join( entityType, JoinType.INNER );
 	}
 
 	@Override
-	public <X> JpaEntityJoin<X> join(Class<X> entityJavaType, SqmJoinType joinType) {
+	public <Y> SqmEntityJoin<T, Y> join(Class<Y> entityJavaType, JoinType joinType) {
 		return join( nodeBuilder().getDomainModel().entity( entityJavaType ), joinType );
 	}
 
 	@Override
-	public <X> JpaEntityJoin<X> join(EntityDomainType<X> entity, SqmJoinType joinType) {
-		final SqmEntityJoin<X> join = new SqmEntityJoin<>( entity, null, joinType, findRoot() );
+	public <Y> SqmEntityJoin<T, Y> join(EntityType<Y> entity, JoinType joinType) {
 		//noinspection unchecked
-		addSqmJoin( (SqmJoin<T, ?>) join );
+		final SqmEntityJoin<T,Y> join = new SqmEntityJoin<>( entity, null, joinType, (SqmRoot<T>) findRoot() );
+		addSqmJoin( join );
 		return join;
 	}
 
@@ -588,34 +596,116 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 
 	public <X> JpaDerivedJoin<X> join(Subquery<X> subquery, SqmJoinType joinType, boolean lateral, String alias) {
 		validateComplianceFromSubQuery();
-		final JpaDerivedJoin<X> join = new SqmDerivedJoin<>( (SqmSubQuery<X>) subquery, alias, joinType, lateral, findRoot() );
+		//noinspection unchecked
+		final JpaDerivedJoin<X> join = new SqmDerivedJoin<>( (SqmSubQuery<X>) subquery, alias, joinType, lateral, (SqmRoot<X>) findRoot() );
 		//noinspection unchecked
 		addSqmJoin( (SqmJoin<T, ?>) join );
 		return join;
 	}
 
 	@Override
-	public <X> JpaJoinedFrom<?, X> join(JpaCteCriteria<X> cte) {
+	public <X> SqmJoin<?, X> join(JpaCteCriteria<X> cte) {
 		return join( cte, SqmJoinType.INNER, null );
 	}
 
 	@Override
-	public <X> JpaJoinedFrom<?, X> join(JpaCteCriteria<X> cte, SqmJoinType joinType) {
+	public <X> SqmJoin<?, X> join(JpaCteCriteria<X> cte, SqmJoinType joinType) {
 		return join( cte, joinType, null );
 	}
 
-	public <X> JpaJoinedFrom<?, X> join(JpaCteCriteria<X> cte, SqmJoinType joinType, String alias) {
+	public <X> SqmJoin<?, X> join(JpaCteCriteria<X> cte, SqmJoinType joinType, String alias) {
 		validateComplianceFromSubQuery();
-		final JpaJoinedFrom<?, X> join = new SqmCteJoin<>( ( SqmCteStatement<X> ) cte, alias, joinType, findRoot() );
+		//noinspection unchecked
+		final SqmJoin<?, X> join = new SqmCteJoin<>( ( SqmCteStatement<X> ) cte, alias, joinType, (SqmRoot<X>) findRoot() );
 		//noinspection unchecked
 		addSqmJoin( (SqmJoin<T, ?>) join );
 		return join;
+	}
+
+	@Override
+	public <X> JpaFunctionJoin<X> joinLateral(JpaSetReturningFunction<X> function, SqmJoinType joinType) {
+		return join( function, joinType, true );
+	}
+
+	@Override
+	public <X> JpaFunctionJoin<X> joinLateral(JpaSetReturningFunction<X> function) {
+		return join( function, SqmJoinType.INNER, true );
+	}
+
+	@Override
+	public <X> JpaFunctionJoin<X> join(JpaSetReturningFunction<X> function, SqmJoinType joinType) {
+		return join( function, joinType, false );
+	}
+
+	@Override
+	public <X> JpaFunctionJoin<X> join(JpaSetReturningFunction<X> function) {
+		return join( function, SqmJoinType.INNER, false );
+	}
+
+	@Override
+	public <X> JpaFunctionJoin<X> join(JpaSetReturningFunction<X> function, SqmJoinType joinType, boolean lateral) {
+		validateComplianceFromFunction();
+		//noinspection unchecked
+		final SqmFunctionJoin<X> join = new SqmFunctionJoin<>( (SqmSetReturningFunction<X>) function, alias, joinType, lateral, (SqmRoot<Object>) findRoot() );
+		//noinspection unchecked
+		addSqmJoin( (SqmJoin<T, ?>) join );
+		return join;
+	}
+
+	@Override
+	public <X> JpaFunctionJoin<X> joinArray(String arrayAttributeName) {
+		return joinArray( arrayAttributeName, SqmJoinType.INNER );
+	}
+
+	@Override
+	public <X> JpaFunctionJoin<X> joinArray(String arrayAttributeName, SqmJoinType joinType) {
+		return join( nodeBuilder().unnestArray( get( arrayAttributeName ) ), joinType, true );
+	}
+
+	@Override
+	public <X> JpaFunctionJoin<X> joinArray(SingularAttribute<? super T, X[]> arrayAttribute) {
+		return joinArray( arrayAttribute, SqmJoinType.INNER );
+	}
+
+	@Override
+	public <X> JpaFunctionJoin<X> joinArray(SingularAttribute<? super T, X[]> arrayAttribute, SqmJoinType joinType) {
+		return join( nodeBuilder().unnestArray( get( arrayAttribute ) ), joinType, true );
+	}
+
+	@Override
+	public <X> JpaFunctionJoin<X> joinArrayCollection(String collectionAttributeName) {
+		return joinArrayCollection( collectionAttributeName, SqmJoinType.INNER );
+	}
+
+	@Override
+	public <X> JpaFunctionJoin<X> joinArrayCollection(String collectionAttributeName, SqmJoinType joinType) {
+		return join( nodeBuilder().unnestCollection( get( collectionAttributeName ) ), joinType, true );
+	}
+
+	@Override
+	public <X> JpaFunctionJoin<X> joinArrayCollection(SingularAttribute<? super T, ? extends Collection<X>> collectionAttribute) {
+		return joinArrayCollection( collectionAttribute, SqmJoinType.INNER );
+	}
+
+	@Override
+	public <X> JpaFunctionJoin<X> joinArrayCollection(
+			SingularAttribute<? super T, ? extends Collection<X>> collectionAttribute,
+			SqmJoinType joinType) {
+		return join( nodeBuilder().unnestCollection( get( collectionAttribute ) ), joinType, true );
 	}
 
 	private void validateComplianceFromSubQuery() {
 		if ( nodeBuilder().isJpaQueryComplianceEnabled() ) {
 			throw new IllegalStateException(
 					"The JPA specification does not support subqueries in the from clause. " +
+							"Please disable the JPA query compliance if you want to use this feature." );
+		}
+	}
+
+	private void validateComplianceFromFunction() {
+		if ( nodeBuilder().isJpaQueryComplianceEnabled() ) {
+			throw new IllegalStateException(
+					"The JPA specification does not support functions in the from clause. " +
 							"Please disable the JPA query compliance if you want to use this feature." );
 		}
 	}
@@ -637,7 +727,8 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	public Set<Fetch<T, ?>> getFetches() {
 		//noinspection unchecked
 		return (Set<Fetch<T, ?>>) (Set<?>) getSqmJoins().stream()
-				.filter( sqmJoin -> sqmJoin instanceof SqmAttributeJoin && ( (SqmAttributeJoin<?, ?>) sqmJoin ).isFetched() )
+				.filter( sqmJoin -> sqmJoin instanceof SqmAttributeJoin<?,?> attributeJoin
+						&& attributeJoin.isFetched() )
 				.collect( Collectors.toSet() );
 	}
 
@@ -648,8 +739,18 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 
 	@Override
 	public <A> SqmSingularJoin<T, A> fetch(SingularAttribute<? super T, A> attribute, JoinType jt) {
+		final SingularPersistentAttribute<? super T, A> persistentAttribute = (SingularPersistentAttribute<? super T, A>) attribute;
+		final SqmAttributeJoin<T, A> compatibleFetchJoin = findCompatibleFetchJoin(
+				this,
+				persistentAttribute,
+				SqmJoinType.from( jt )
+		);
+		if ( compatibleFetchJoin != null ) {
+			return (SqmSingularJoin<T, A>) compatibleFetchJoin;
+		}
+
 		final SqmSingularJoin<T, A> join = buildSingularJoin(
-				(SingularPersistentAttribute<? super T, A>) attribute,
+				persistentAttribute,
 				SqmJoinType.from( jt ),
 				true
 		);
@@ -692,6 +793,11 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 			SqmPathSource<A> joinedPathSource,
 			SqmJoinType joinType,
 			boolean fetched) {
+		final SqmAttributeJoin<T, A> compatibleFetchJoin = findCompatibleFetchJoin( this, joinedPathSource, joinType );
+		if ( compatibleFetchJoin != null ) {
+			return compatibleFetchJoin;
+		}
+
 		final SqmAttributeJoin<T, A> sqmJoin;
 		if ( joinedPathSource instanceof SingularPersistentAttribute<?, ?> ) {
 			sqmJoin = buildSingularJoin(
@@ -820,6 +926,36 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 				fetched,
 				nodeBuilder()
 		);
+	}
+
+	@Override
+	public <S extends T> SqmTreatedFrom<O,T,S> treatAs(Class<S> treatJavaType) {
+		return (SqmTreatedFrom<O,T,S>) super.treatAs( treatJavaType );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedFrom<O,T,S> treatAs(EntityDomainType<S> treatTarget) {
+		return (SqmTreatedFrom<O,T,S>) super.treatAs( treatTarget );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedFrom<O,T,S> treatAs(Class<S> treatJavaType, String alias) {
+		return (SqmTreatedFrom<O,T,S>) super.treatAs( treatJavaType, alias );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedFrom<O,T,S> treatAs(EntityDomainType<S> treatTarget, String alias) {
+		return (SqmTreatedFrom<O,T,S>) super.treatAs( treatTarget, alias );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedFrom<O,T,S> treatAs(Class<S> treatJavaType, String alias, boolean fetch) {
+		return (SqmTreatedFrom<O,T,S>) super.treatAs( treatJavaType, alias, fetch );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedFrom<O,T,S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch) {
+		return (SqmTreatedFrom<O,T,S>) super.treatAs( treatTarget, alias, fetch );
 	}
 
 	@Override

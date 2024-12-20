@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -16,13 +14,15 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.*;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.H2AggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.hint.IndexQueryHintHandler;
 import org.hibernate.dialect.identity.H2FinalTableIdentityColumnSupport;
 import org.hibernate.dialect.identity.H2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -46,13 +46,15 @@ import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.sqm.CastType;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.dialect.NullOrdering;
-import org.hibernate.query.sqm.TemporalUnit;
-import org.hibernate.query.sqm.mutation.internal.temptable.BeforeUseAction;
+import org.hibernate.query.common.TemporalUnit;
+import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -69,8 +71,9 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
-import org.hibernate.type.descriptor.jdbc.H2FormatJsonJdbcType;
+import org.hibernate.type.descriptor.jdbc.EnumJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.OrdinalEnumJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimeAsTimestampWithTimeZoneJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimeUtcAsJdbcTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimeUtcAsOffsetTimeJdbcType;
@@ -78,12 +81,14 @@ import org.hibernate.type.descriptor.jdbc.TimestampUtcAsInstantJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NativeEnumDdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
 
-import static org.hibernate.query.sqm.TemporalUnit.SECOND;
+import static org.hibernate.query.common.TemporalUnit.SECOND;
 import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
@@ -117,6 +122,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
  * A legacy {@linkplain Dialect SQL dialect} for H2.
  *
  * @author Thomas Mueller
+ * @author Jürgen Kreitler
  */
 public class H2LegacyDialect extends Dialect {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( H2LegacyDialect.class );
@@ -185,7 +191,7 @@ public class H2LegacyDialect extends Dialect {
 			return 0;
 		}
 
-		final String[] bits = databaseVersion.split("[. ]");
+		final String[] bits = StringHelper.split( ". ", databaseVersion );
 		return bits.length > 2 ? Integer.parseInt( bits[2] ) : 0;
 	}
 
@@ -262,6 +268,8 @@ public class H2LegacyDialect extends Dialect {
 				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
 			}
 		}
+		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this ) );
+		ddlTypeRegistry.addDescriptor( new NativeOrdinalEnumDdlTypeImpl( this ) );
 	}
 
 	@Override
@@ -287,8 +295,17 @@ public class H2LegacyDialect extends Dialect {
 			jdbcTypeRegistry.addDescriptorIfAbsent( H2DurationIntervalSecondJdbcType.INSTANCE );
 		}
 		if ( getVersion().isSameOrAfter( 1, 4, 200 ) ) {
-			jdbcTypeRegistry.addDescriptorIfAbsent( H2FormatJsonJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptorIfAbsent( H2JsonJdbcType.INSTANCE );
+			// Replace the standard array constructor
+			jdbcTypeRegistry.addTypeConstructor( H2JsonArrayJdbcTypeConstructor.INSTANCE );
 		}
+		jdbcTypeRegistry.addDescriptor( EnumJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( OrdinalEnumJdbcType.INSTANCE );
+	}
+
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		return H2AggregateSupport.valueOf( this );
 	}
 
 	@Override
@@ -324,6 +341,7 @@ public class H2LegacyDialect extends Dialect {
 		functionFactory.bitand();
 		functionFactory.bitor();
 		functionFactory.bitxor();
+		functionFactory.bitnot();
 		functionFactory.bitAndOr();
 		functionFactory.yearMonthDay();
 		functionFactory.hourMinuteSecond();
@@ -379,7 +397,7 @@ public class H2LegacyDialect extends Dialect {
 				functionFactory.arrayPrepend_operator();
 				functionFactory.arrayAppend_operator();
 				functionFactory.arrayContains_h2( getMaximumArraySize() );
-				functionFactory.arrayOverlaps_h2( getMaximumArraySize() );
+				functionFactory.arrayIntersects_h2( getMaximumArraySize() );
 				functionFactory.arrayGet_h2();
 				functionFactory.arraySet_h2( getMaximumArraySize() );
 				functionFactory.arrayRemove_h2( getMaximumArraySize() );
@@ -389,15 +407,36 @@ public class H2LegacyDialect extends Dialect {
 				functionFactory.arrayTrim_trim_array();
 				functionFactory.arrayFill_h2();
 				functionFactory.arrayToString_h2( getMaximumArraySize() );
+
+				if ( getVersion().isSameOrAfter( 2, 2, 220 ) ) {
+					functionFactory.jsonValue_h2();
+					functionFactory.jsonQuery_h2();
+					functionFactory.jsonExists_h2();
+					functionFactory.jsonArrayAgg_h2();
+					functionFactory.jsonObjectAgg_h2();
+				}
 			}
 			else {
+				functionFactory.jsonObject();
+				functionFactory.jsonArray();
+
 				// Use group_concat until 2.x as listagg was buggy
 				functionFactory.listagg_groupConcat();
 			}
+
+			functionFactory.xmlelement_h2();
+			functionFactory.xmlcomment();
+			functionFactory.xmlforest_h2();
+			functionFactory.xmlconcat_h2();
+			functionFactory.xmlpi_h2();
 		}
 		else {
 			functionFactory.listagg_groupConcat();
 		}
+
+		functionFactory.unnest_h2( getMaximumArraySize() );
+		functionFactory.generateSeries_h2( getMaximumSeriesSize() );
+		functionFactory.jsonTable_h2( getMaximumArraySize() );
 	}
 
 	/**
@@ -408,6 +447,21 @@ public class H2LegacyDialect extends Dialect {
 	 */
 	protected int getMaximumArraySize() {
 		return 1000;
+	}
+
+	/**
+	 * Since H2 doesn't support ordinality for the {@code system_range} function or {@code lateral},
+	 * it's impossible to use {@code system_range} for non-constant cases.
+	 * Luckily, correlation can be emulated, but requires that there is an upper bound on the amount
+	 * of elements that the series can return.
+	 */
+	protected int getMaximumSeriesSize() {
+		return 10000;
+	}
+
+	@Override
+	public @Nullable String getDefaultOrdinalityColumnName() {
+		return "nord";
 	}
 
 	@Override
@@ -503,6 +557,16 @@ public class H2LegacyDialect extends Dialect {
 		return unit == SECOND
 				? "(" + super.extractPattern(unit) + "+extract(nanosecond from ?2)/1e9)"
 				: super.extractPattern(unit);
+	}
+
+	@Override
+	public String castPattern(CastType from, CastType to) {
+		if ( from == CastType.STRING && to == CastType.BOOLEAN ) {
+			return "cast(?1 as ?2)";
+		}
+		else {
+			return super.castPattern( from, to );
+		}
 	}
 
 	@Override
@@ -888,7 +952,7 @@ public class H2LegacyDialect extends Dialect {
 
 	@Override
 	public String getQueryHintString(String query, String hints) {
-		return IndexQueryHintHandler.INSTANCE.addQueryHints( query, hints );
+		return addQueryHints( query, hints );
 	}
 
 	@Override
@@ -933,6 +997,18 @@ public class H2LegacyDialect extends Dialect {
 	}
 
 	@Override
+	public String getEnumTypeDeclaration(String name, String[] values) {
+		StringBuilder type = new StringBuilder();
+		type.append( "enum (" );
+		String separator = "";
+		for ( String value : values ) {
+			type.append( separator ).append('\'').append( value ).append('\'');
+			separator = ",";
+		}
+		return type.append( ')' ).toString();
+	}
+
+	@Override
 	public String getDisableConstraintsStatement() {
 		return "set referential_integrity false";
 	}
@@ -955,5 +1031,30 @@ public class H2LegacyDialect extends Dialect {
 	@Override
 	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
 		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+	}
+
+	@Override
+	public String getCaseInsensitiveLike() {
+		if ( getVersion().isSameOrAfter( 1, 4, 194 ) ) {
+			return "ilike";
+		}
+		else {
+			return super.getCaseInsensitiveLike();
+		}
+	}
+
+	@Override
+	public boolean supportsCaseInsensitiveLike() {
+		return getVersion().isSameOrAfter( 1, 4, 194 );
+	}
+
+	@Override
+	public boolean supportsValuesList() {
+		return true;
+	}
+
+	@Override
+	public String getDual() {
+		return "dual";
 	}
 }

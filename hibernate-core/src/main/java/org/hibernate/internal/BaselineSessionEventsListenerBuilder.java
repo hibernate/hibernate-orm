@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal;
 
@@ -21,22 +19,13 @@ public class BaselineSessionEventsListenerBuilder {
 
 	private static final SessionEventListener[] EMPTY = new SessionEventListener[0];
 
-	private final boolean logSessionMetrics;
 	private final Class<? extends SessionEventListener> autoListener;
 
-	public BaselineSessionEventsListenerBuilder(
-			boolean logSessionMetrics,
-			Class<? extends SessionEventListener> autoListener) {
-		this.logSessionMetrics = logSessionMetrics;
+	public BaselineSessionEventsListenerBuilder(Class<? extends SessionEventListener> autoListener) {
 		this.autoListener = autoListener;
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
-	public boolean isLogSessionMetrics() {
-		return logSessionMetrics;
-	}
-
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public Class<? extends SessionEventListener> getAutoListener() {
 		return autoListener;
 	}
@@ -50,24 +39,26 @@ public class BaselineSessionEventsListenerBuilder {
 	}
 
 	public SessionEventListener[] buildBaseline() {
-		final boolean addStats = logSessionMetrics && StatisticalLoggingSessionEventListener.isLoggingEnabled();
-		final boolean addAutoListener = autoListener != null;
 		final SessionEventListener[] arr;
-		if ( addStats && addAutoListener ) {
-			arr = new SessionEventListener[2];
-			arr[0] = buildStatsListener();
-			arr[1] = buildAutoListener( autoListener );
+		if ( autoListener != null ) {
+			if ( StatisticalLoggingSessionEventListener.isLoggingEnabled() ) {
+				arr = new SessionEventListener[2];
+				arr[0] = buildStatsListener();
+				arr[1] = buildAutoListener( autoListener );
+			}
+			else {
+				arr = new SessionEventListener[1];
+				arr[0] = buildAutoListener( autoListener );
+			}
 		}
-		else if ( !addStats && addAutoListener ) {
-			arr = new SessionEventListener[1];
-			arr[0] = buildAutoListener( autoListener );
-		}
-		else if ( addStats && !addAutoListener ) {
-			arr = new SessionEventListener[1];
-			arr[0] = buildStatsListener();
-		}
-		else {//if ( !addStats && !addAutoListener )
-			arr = EMPTY;
+		else {
+			if ( StatisticalLoggingSessionEventListener.isLoggingEnabled() ) {
+				arr = new SessionEventListener[1];
+				arr[0] = buildStatsListener();
+			}
+			else {
+				arr = EMPTY;
+			}
 		}
 		return arr;
 	}
@@ -78,7 +69,7 @@ public class BaselineSessionEventsListenerBuilder {
 		}
 		catch (Exception e) {
 			throw new HibernateException(
-					"Unable to instantiate specified auto SessionEventListener : " + autoListener.getName(),
+					"Unable to instantiate specified auto SessionEventListener: " + autoListener.getName(),
 					e
 			);
 		}

@@ -16,7 +16,7 @@
             <param name="sequence">hbmentity_id_sequence</param>
         </generator>
     </id>
-    <many-to-one name="association" cascade="persist,save-update" not-null="true"/>
+    <many-to-one name="association" cascade="persist,merge" not-null="true"/>
     </class>
 
 </hibernate-mapping>

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.pagination;
 
@@ -33,20 +31,19 @@ public class Oracle12LimitHandler extends AbstractLimitHandler {
 
 	@Override
 	public String processSql(String sql, Limit limit, QueryOptions queryOptions) {
+		final boolean hasFirstRow = hasFirstRow( limit );
+		final boolean hasMaxRows = hasMaxRows( limit );
+
+		if ( !hasFirstRow && !hasMaxRows ) {
+			return sql;
+		}
+
 		return processSql(
 				sql,
-				hasFirstRow( limit ),
-				hasMaxRows( limit ),
+				hasFirstRow,
+				hasMaxRows,
 				queryOptions.getLockOptions()
 		);
-	}
-
-	/**
-	 * @deprecated Use {@link #processSql(String, boolean, boolean, LockOptions)} instead
-	 */
-	@Deprecated(forRemoval = true)
-	protected String processSql(String sql, boolean hasFirstRow, LockOptions lockOptions) {
-		return processSql( sql, hasFirstRow, true, lockOptions );
 	}
 
 	protected String processSql(String sql, boolean hasFirstRow, boolean hasMaxRows, LockOptions lockOptions) {
@@ -66,14 +63,6 @@ public class Oracle12LimitHandler extends AbstractLimitHandler {
 			}
 		}
 		return processSqlOffsetFetch( sql, hasFirstRow, hasMaxRows );
-	}
-
-	/**
-	 * @deprecated Use {@link #processSqlOffsetFetch(String, boolean, boolean)} instead
-	 */
-	@Deprecated(forRemoval = true)
-	protected String processSqlOffsetFetch(String sql, boolean hasFirstRow) {
-		return processSqlOffsetFetch( sql, hasFirstRow, true );
 	}
 
 	protected String processSqlOffsetFetch(String sql, boolean hasFirstRow, boolean hasMaxRows) {
@@ -99,15 +88,7 @@ public class Oracle12LimitHandler extends AbstractLimitHandler {
 			offsetFetchString = " fetch first ? rows only";
 		}
 
-		return sql + offsetFetchString;
-	}
-
-	/**
-	 * @deprecated Use {@link #processSql(String, int, boolean, boolean)} instead
-	 */
-	@Deprecated(forRemoval = true)
-	protected String processSql(String sql, int forUpdateIndex, boolean hasFirstRow) {
-		return processSql( sql, forUpdateIndex, hasFirstRow, true );
+		return insertAtEnd(offsetFetchString, sql);
 	}
 
 	protected String processSql(String sql, int forUpdateIndex, boolean hasFirstRow, boolean hasMaxRows) {

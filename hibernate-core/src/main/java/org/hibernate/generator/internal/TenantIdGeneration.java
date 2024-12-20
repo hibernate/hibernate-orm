@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.generator.internal;
 
@@ -51,24 +49,26 @@ public class TenantIdGeneration implements BeforeExecutionGenerator {
 	@Override
 	public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
 		final SessionFactoryImplementor sessionFactory = session.getSessionFactory();
-		final JavaType<Object> tenantIdentifierJavaType = sessionFactory.getTenantIdentifierJavaType();
-
 		final Object tenantId = session.getTenantIdentifierValue();
 		if ( currentValue != null ) {
-			final CurrentTenantIdentifierResolver<Object> resolver = sessionFactory.getCurrentTenantIdentifierResolver();
+			final CurrentTenantIdentifierResolver<Object> resolver =
+					sessionFactory.getCurrentTenantIdentifierResolver();
 			if ( resolver != null && resolver.isRoot( tenantId ) ) {
 				// the "root" tenant is allowed to set the tenant id explicitly
 				return currentValue;
 			}
-			if ( !tenantIdentifierJavaType.areEqual( currentValue, tenantId ) ) {
-				throw new PropertyValueException(
-						"assigned tenant id differs from current tenant id: " +
-								tenantIdentifierJavaType.toString( currentValue ) +
-								"!=" +
-								tenantIdentifierJavaType.toString( tenantId ),
-						entityName,
-						propertyName
-				);
+			else {
+				final JavaType<Object> tenantIdJavaType = sessionFactory.getTenantIdentifierJavaType();
+				if ( !tenantIdJavaType.areEqual( currentValue, tenantId ) ) {
+					throw new PropertyValueException(
+							"assigned tenant id differs from current tenant id ["
+									+ tenantIdJavaType.toString( currentValue )
+									+ " != "
+									+ tenantIdJavaType.toString( tenantId ) + "]",
+							entityName,
+							propertyName
+					);
+				}
 			}
 		}
 		return tenantId;

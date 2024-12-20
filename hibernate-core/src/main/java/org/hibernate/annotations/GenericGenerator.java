@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
 
@@ -56,15 +54,19 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p>
  * The disadvantage of this approach is the use of stringly-typed names. An
  * alternative, completely typesafe, way to declare a generator and associate
- * it with an entity is provided by the {@link IdGeneratorType} meta-annotation.
+ * it with an entity is provided by the {@link IdGeneratorType @IdGeneratorType}
+ * meta-annotation.
  *
  * @see jakarta.persistence.GeneratedValue
+ *
+ * @deprecated Use the new approach based on {@link IdGeneratorType}.
  *
  * @author Emmanuel Bernard
  */
 @Target({PACKAGE, TYPE, METHOD, FIELD})
 @Retention(RUNTIME)
 @Repeatable(GenericGenerators.class)
+@Deprecated(since = "6.5")
 public @interface GenericGenerator {
 	/**
 	 * The name of the identifier generator. This is the name that may be specified by

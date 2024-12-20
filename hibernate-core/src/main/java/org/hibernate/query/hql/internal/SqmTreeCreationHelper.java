@@ -1,12 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.hql.internal;
 
 import java.util.Locale;
+import java.util.Set;
 
 import org.hibernate.grammars.hql.HqlParser;
 import org.hibernate.jpa.spi.JpaCompliance;
@@ -21,14 +20,112 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import static org.hibernate.grammars.hql.HqlParser.IDENTIFIER;
-
 /**
  * Helper for dealing with SQM tree creation
  *
  * @author Steve Ebersole
  */
 public class SqmTreeCreationHelper {
+
+	// The list is from the spec section 4.4.1
+	private static final Set<String> RESERVED_WORDS = Set.of(
+			"abs",
+			"all",
+			"and",
+			"any",
+			"as",
+			"asc",
+			"avg",
+			"between",
+			"bit_length",
+			"both",
+			"by",
+			"case",
+			"ceiling",
+			"char_length",
+			"character_length",
+			"class",
+			"coalesce",
+			"concat",
+			"count",
+			"current_date",
+			"current_time",
+			"current_timestamp",
+			"delete",
+			"desc",
+			"distinct",
+			"else",
+			"empty",
+			"end",
+			"entry",
+			"escape",
+			"exists",
+			"exp",
+			"extract",
+			"false",
+			"fetch",
+			"first",
+			"floor",
+			"from",
+			"function",
+			"group",
+			"having",
+			"in",
+			"index",
+			"inner",
+			"is",
+			"join",
+			"key",
+			"leading",
+			"last",
+			"left",
+			"length",
+			"like",
+			"local",
+			"ln",
+			"locate",
+			"lower",
+			"max",
+			"member",
+			"min",
+			"mod",
+			"new",
+			"not",
+			"null",
+			"nulls",
+			"nullif",
+			"object",
+			"of",
+			"on",
+			"or",
+			"order",
+			"outer",
+			"position",
+			"power",
+			"replace",
+			"right",
+			"round",
+			"select",
+			"set",
+			"sign",
+			"size",
+			"some",
+			"sqrt",
+			"substring",
+			"sum",
+			"then",
+			"trailing",
+			"treat",
+			"trim",
+			"true",
+			"type",
+			"unknown",
+			"update",
+			"upper",
+			"value",
+			"when",
+			"where"
+	);
 
 	/**
 	 * Handle secondary query roots using cross-join semantics.
@@ -46,7 +143,7 @@ public class SqmTreeCreationHelper {
 		SqmTreeCreationLogger.LOGGER.debugf( "Handling secondary root path as cross-join - %s", sqmRoot.getEntityName() );
 
 		final String alias = extractAlias( fromRootContext.variable(), sqmBuilder );
-		final SqmEntityJoin<E> pseudoCrossJoin = new SqmEntityJoin<>(
+		final SqmEntityJoin<?,E> pseudoCrossJoin = new SqmEntityJoin<>(
 				sqmRoot.getManagedType(),
 				alias,
 				SqmJoinType.CROSS,
@@ -110,7 +207,7 @@ public class SqmTreeCreationHelper {
 			// which JPA disallows...
 			if ( sqmBuilder.getCreationOptions().useStrictJpaCompliance() ) {
 				final Token identificationVariableToken = identifierContext.getStart();
-				if ( identificationVariableToken.getType() != IDENTIFIER ) {
+				if ( RESERVED_WORDS.contains( identificationVariableToken.getText().toLowerCase( Locale.ENGLISH ) ) ) {
 					throw new StrictJpaComplianceViolation(
 							String.format(
 									Locale.ROOT,
@@ -130,7 +227,7 @@ public class SqmTreeCreationHelper {
 			// which JPA disallows...
 			if ( sqmBuilder.getCreationOptions().useStrictJpaCompliance() ) {
 				final Token identificationVariableToken = identifierContext.getStart();
-				if ( identificationVariableToken.getType() != IDENTIFIER ) {
+				if ( RESERVED_WORDS.contains( identificationVariableToken.getText().toLowerCase( Locale.ENGLISH ) ) ) {
 					throw new StrictJpaComplianceViolation(
 							String.format(
 									Locale.ROOT,

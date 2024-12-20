@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.entity;
 
@@ -30,11 +28,9 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.StaticFilterAliasGenerator;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.JoinedList;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.mapping.Column;
@@ -47,10 +43,8 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.TableDetails;
-import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -65,7 +59,7 @@ import org.hibernate.type.StandardBasicTypes;
 
 import static org.hibernate.internal.util.collections.ArrayHelper.to2DStringArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toStringArray;
-import static org.hibernate.jdbc.Expectations.appropriateExpectation;
+import static org.hibernate.jdbc.Expectations.createExpectation;
 
 /**
  * An {@link EntityPersister} implementing the
@@ -96,18 +90,6 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	private final String[] constraintOrderedTableNames;
 	private final String[][] constraintOrderedKeyColumnNames;
 
-	//INITIALIZATION:
-
-	@Deprecated(since = "6.0")
-	public UnionSubclassEntityPersister(
-			final PersistentClass persistentClass,
-			final EntityDataAccess cacheAccessStrategy,
-			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
-			final PersisterCreationContext creationContext) throws HibernateException {
-		this( persistentClass,cacheAccessStrategy,naturalIdRegionAccessStrategy,
-				(RuntimeModelCreationContext) creationContext );
-	}
-
 	public UnionSubclassEntityPersister(
 			final PersistentClass persistentClass,
 			final EntityDataAccess cacheAccessStrategy,
@@ -125,41 +107,20 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		subclassTableNames = new String[]{tableName};
 		//Custom SQL
 
-		String sql;
-		boolean callable;
-		ExecuteUpdateResultCheckStyle checkStyle;
-		sql = persistentClass.getCustomSQLInsert();
-		callable = sql != null && persistentClass.isCustomInsertCallable();
-		checkStyle = sql == null
-				? ExecuteUpdateResultCheckStyle.COUNT
-				: persistentClass.getCustomSQLInsertCheckStyle() == null
-				? ExecuteUpdateResultCheckStyle.determineDefault( sql, callable )
-				: persistentClass.getCustomSQLInsertCheckStyle();
-		customSQLInsert = new String[] {sql};
-		insertCallable = new boolean[] {callable};
-		insertExpectations = new Expectation[] { appropriateExpectation( checkStyle ) };
+		customSQLInsert = new String[] { persistentClass.getCustomSQLInsert() };
+		insertCallable = new boolean[] { persistentClass.isCustomInsertCallable() };
+		insertExpectations = new Expectation[] { createExpectation( persistentClass.getInsertExpectation(),
+				persistentClass.isCustomInsertCallable() ) };
 
-		sql = persistentClass.getCustomSQLUpdate();
-		callable = sql != null && persistentClass.isCustomUpdateCallable();
-		checkStyle = sql == null
-				? ExecuteUpdateResultCheckStyle.COUNT
-				: persistentClass.getCustomSQLUpdateCheckStyle() == null
-				? ExecuteUpdateResultCheckStyle.determineDefault( sql, callable )
-				: persistentClass.getCustomSQLUpdateCheckStyle();
-		customSQLUpdate = new String[] {sql};
-		updateCallable = new boolean[] {callable};
-		updateExpectations = new Expectation[] { appropriateExpectation( checkStyle ) };
+		customSQLUpdate = new String[] { persistentClass.getCustomSQLUpdate() };
+		updateCallable = new boolean[] { persistentClass.isCustomUpdateCallable() };
+		updateExpectations = new Expectation[] { createExpectation( persistentClass.getUpdateExpectation(),
+				persistentClass.isCustomUpdateCallable() ) };
 
-		sql = persistentClass.getCustomSQLDelete();
-		callable = sql != null && persistentClass.isCustomDeleteCallable();
-		checkStyle = sql == null
-				? ExecuteUpdateResultCheckStyle.COUNT
-				: persistentClass.getCustomSQLDeleteCheckStyle() == null
-				? ExecuteUpdateResultCheckStyle.determineDefault( sql, callable )
-				: persistentClass.getCustomSQLDeleteCheckStyle();
-		customSQLDelete = new String[] {sql};
-		deleteCallable = new boolean[] {callable};
-		deleteExpectations = new Expectation[] { appropriateExpectation( checkStyle ) };
+		customSQLDelete = new String[] { persistentClass.getCustomSQLDelete() };
+		deleteCallable = new boolean[] { persistentClass.isCustomDeleteCallable() };
+		deleteExpectations = new Expectation[] { createExpectation( persistentClass.getDeleteExpectation(),
+				persistentClass.isCustomDeleteCallable() ) };
 
 		discriminatorValue = persistentClass.getSubclassId();
 		discriminatorSQLValue = String.valueOf( persistentClass.getSubclassId() );
@@ -336,11 +297,6 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public String getSubclassForDiscriminatorValue(Object value) {
-		return subclassByDiscriminatorValue.get( value );
-	}
-
-	@Override
 	public String[] getPropertySpaces() {
 		return spaces;
 	}
@@ -378,23 +334,8 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	// Execute the SQL:
 
 	@Override
-	public String fromTableFragment(String name) {
-		return getTableName() + ' ' + name;
-	}
-
-	@Override
-	public String getSubclassPropertyTableName(int i) {
+	public String getAttributeMutationTableName(int i) {
 		return getTableName();//ie. the subquery! yuck!
-	}
-
-	@Override
-	public String getAttributeMutationTableName(int attributeIndex) {
-		return getRootTableName();
-	}
-
-	@Override
-	protected int getSubclassPropertyTableNumber(int i) {
-		return 0;
 	}
 
 	@Override
@@ -414,7 +355,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	protected boolean hasMultipleTables() {
+	public boolean hasMultipleTables() {
 		// This could also just be true all the time...
 		return isAbstract() || hasSubclasses();
 	}
@@ -460,19 +401,13 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	protected EntityDiscriminatorMapping generateDiscriminatorMapping(
-			PersistentClass bootEntityDescriptor,
-			MappingModelCreationProcess modelCreationProcess) {
-		return hasSubclasses() ? super.generateDiscriminatorMapping( bootEntityDescriptor, modelCreationProcess ) : null;
+	protected EntityDiscriminatorMapping generateDiscriminatorMapping(PersistentClass bootEntityDescriptor) {
+		return hasSubclasses() ? super.generateDiscriminatorMapping( bootEntityDescriptor ) : null;
 	}
 
 	@Override
 	public int getTableSpan() {
 		return 1;
-	}
-
-	protected boolean[] getTableHasColumns() {
-		return ArrayHelper.TRUE;
 	}
 
 	@Override
@@ -577,9 +512,9 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		subMappingTypesAndThis.add( this );
 		subMappingTypesAndThis.addAll( subMappingTypes );
 		for ( EntityMappingType mappingType : subMappingTypesAndThis ) {
-			final AbstractEntityPersister persister = (AbstractEntityPersister) mappingType;
+			final EntityPersister persister = (EntityPersister) mappingType;
 			final String subclassTableName;
-			if ( persister.hasSubclasses() ) {
+			if ( mappingType.hasSubclasses() ) {
 				subclassTableName = persister.getRootTableName();
 			}
 			else {
@@ -687,7 +622,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public String[][] getContraintOrderedTableKeyColumnClosure() {
+	public String[][] getConstraintOrderedTableKeyColumnClosure() {
 		return constraintOrderedKeyColumnNames;
 	}
 

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.spi;
 
@@ -12,6 +10,7 @@ import org.hibernate.Incubating;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.QueryParameter;
+import org.hibernate.query.internal.QueryParameterBindingsImpl;
 
 /**
  * Manages all the parameter bindings for a particular query.
@@ -88,6 +87,10 @@ public interface QueryParameterBindings {
 	QueryKey.ParameterBindingsMemento NO_PARAMETER_BINDING_MEMENTO = new QueryKey.ParameterBindingsMemento(){
 	};
 
+	/**
+	 * @deprecated Use {@link #empty()} instead.
+	 */
+	@Deprecated(forRemoval = true, since = "6.6")
 	QueryParameterBindings NO_PARAM_BINDINGS = new QueryParameterBindings() {
 		@Override
 		public boolean isBound(QueryParameterImplementor parameter) {
@@ -123,8 +126,12 @@ public interface QueryParameterBindings {
 		}
 
 		@Override
-		public QueryKey.ParameterBindingsMemento generateQueryKeyMemento(SharedSessionContractImplementor persistenceContext) {
+		public QueryKey.ParameterBindingsMemento generateQueryKeyMemento(SharedSessionContractImplementor session) {
 			return NO_PARAMETER_BINDING_MEMENTO;
 		}
 	};
+
+	static QueryParameterBindings empty() {
+		return QueryParameterBindingsImpl.EMPTY;
+	}
 }

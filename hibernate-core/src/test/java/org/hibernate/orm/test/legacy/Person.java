@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.legacy;
 
@@ -12,43 +10,43 @@ package org.hibernate.orm.test.legacy;
  */
 public class Person extends Party {
 
-   String id;
-   String givenName;
-   String lastName;
-   String nationalID;
+String id;
+String givenName;
+String lastName;
+String nationalID;
 
 
-  String getId() {
-    return id;
-  }
+String getId() {
+	return id;
+}
 
-  void  setId(String newValue) {
-    id = newValue;
-  }
+void  setId(String newValue) {
+	id = newValue;
+}
 
-  String getGivenName() {
-    return givenName;
-  }
+String getGivenName() {
+	return givenName;
+}
 
-  void  setGivenName(String newValue) {
-    givenName = newValue;
-  }
+void  setGivenName(String newValue) {
+	givenName = newValue;
+}
 
-  String getLastName() {
-    return lastName;
-  }
+String getLastName() {
+	return lastName;
+}
 
-  void  setLastName(String newValue) {
-    lastName = newValue;
-  }
+void  setLastName(String newValue) {
+	lastName = newValue;
+}
 
-  String getNationalID() {
-    return nationalID;
-  }
+String getNationalID() {
+	return nationalID;
+}
 
-  void  setNationalID(String newValue) {
-    nationalID = newValue;
-  }
+void  setNationalID(String newValue) {
+	nationalID = newValue;
+}
 
 
 }

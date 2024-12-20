@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id;
 
@@ -12,7 +10,6 @@ import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Selectable;
@@ -22,13 +19,14 @@ import org.hibernate.mapping.ValueVisitor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
+import org.hibernate.type.MappingContext;
 
 /**
  * @author Steve Ebersole
  */
 public class ExportableColumn extends Column {
 
-	public ExportableColumn(Database database, Table table, String name, BasicType type) {
+	public ExportableColumn(Database database, Table table, String name, BasicType<?> type) {
 		this(
 				database,
 				table,
@@ -44,7 +42,7 @@ public class ExportableColumn extends Column {
 			Database database,
 			Table table,
 			String name,
-			BasicType type,
+			BasicType<?> type,
 			String dbTypeDeclaration) {
 		super( name );
 		setValue( new ValueImpl( this, table, type, database ) );
@@ -54,10 +52,10 @@ public class ExportableColumn extends Column {
 	public static class ValueImpl implements Value {
 		private final ExportableColumn column;
 		private final Table table;
-		private final BasicType type;
+		private final BasicType<?> type;
 		private final Database database;
 
-		public ValueImpl(ExportableColumn column, Table table, BasicType type, Database database) {
+		public ValueImpl(ExportableColumn column, Table table, BasicType<?> type, Database database) {
 			this.column = column;
 			this.table = table;
 			this.type = type;
@@ -139,7 +137,7 @@ public class ExportableColumn extends Column {
 		}
 
 		@Override
-		public void createUniqueKey() {
+		public void createUniqueKey(MetadataBuildingContext context) {
 		}
 
 		@Override
@@ -148,7 +146,7 @@ public class ExportableColumn extends Column {
 		}
 
 		@Override
-		public boolean isValid(Mapping mapping) throws MappingException {
+		public boolean isValid(MappingContext mappingContext) throws MappingException {
 			return false;
 		}
 
@@ -179,11 +177,6 @@ public class ExportableColumn extends Column {
 		@Override
 		public boolean isColumnUpdateable(int index) {
 			return true;
-		}
-
-		@Override
-		public MetadataBuildingContext getBuildingContext() {
-			return table.getIdentifierValue().getBuildingContext();
 		}
 	}
 

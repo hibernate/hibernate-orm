@@ -3,10 +3,20 @@ import java.util.function.Function
 import org.asciidoctor.gradle.jvm.AsciidoctorTask
 import org.asciidoctor.gradle.jvm.pdf.AsciidoctorPdfTask
 
+buildscript {
+	configurations.all {
+		resolutionStrategy.dependencySubstitution {
+			substitute module( 'com.burgstaller:okhttp-digest:1.10' ) using module(
+					'io.github.rburgst:okhttp-digest:1.21'
+			) because 'okhttp-digest only version 1.21 is available on Maven Central. Old version was on jcenter, which asciidoctor-gradle-plugin depends on transitively through simplified-jruby-gradle-plugin via http-builder-ng-okhttp '
+		}
+	}
+}
+
 plugins {
-	id 'org.asciidoctor.jvm.convert' version '3.3.2'
-	id 'org.asciidoctor.jvm.pdf' version '3.3.2'
-	id "org.asciidoctor.jvm.gems" version "3.3.2"
+	id 'org.asciidoctor.jvm.convert' version '4.0.2'
+	id 'org.asciidoctor.jvm.pdf' version '4.0.2'
+	id "org.asciidoctor.jvm.gems" version "4.0.2"
 	id "org.hibernate.orm.build.settings-doc"
 }
 
@@ -42,8 +52,6 @@ configurations {
 	agroal
 	c3p0
 	hikaricp
-	proxool
-	vibur
 
 	jcache
 
@@ -62,8 +70,6 @@ configurations {
 		extendsFrom agroal
 		extendsFrom c3p0
 		extendsFrom hikaricp
-		extendsFrom proxool
-		extendsFrom vibur
 		extendsFrom jcache
 		extendsFrom jpamodelgen
 	}
@@ -123,47 +129,32 @@ dependencies {
 	reportAggregation project(':hibernate-hikaricp')
 	reportAggregation project(':hibernate-jcache')
 	reportAggregation project(':hibernate-micrometer')
-	reportAggregation project(':hibernate-proxool')
 	reportAggregation project(':hibernate-spatial')
-	reportAggregation project(':hibernate-vibur')
 	reportAggregation project(':hibernate-ant')
-	reportAggregation project(':hibernate-enhance-maven-plugin')
-	reportAggregation project(':hibernate-jpamodelgen')
+	reportAggregation project(':hibernate-maven-plugin')
+	reportAggregation project(':hibernate-processor')
 
 	asciidoctorGems 'rubygems:rouge:4.1.1'
 
 	core project( ':hibernate-core' )
 	javadocSources project( path: ':hibernate-core', configuration: 'javadocSources' )
 
-	testing project( ':hibernate-testing' )
-	javadocSources project( path: ':hibernate-testing', configuration: 'javadocSources' )
-
 	envers project( ':hibernate-envers' )
 	javadocSources project( path: ':hibernate-envers', configuration: 'javadocSources' )
 
+	testing project( ':hibernate-testing' )
+
 	spatial project( ':hibernate-spatial' )
-	javadocSources project( path: ':hibernate-spatial', configuration: 'javadocSources' )
 
 	agroal project( ':hibernate-agroal' )
-	javadocSources project( path: ':hibernate-agroal', configuration: 'javadocSources' )
 
 	c3p0 project( ':hibernate-c3p0' )
-	javadocSources project( path: ':hibernate-c3p0', configuration: 'javadocSources' )
 
 	hikaricp project( ':hibernate-hikaricp' )
-	javadocSources project( path: ':hibernate-hikaricp', configuration: 'javadocSources' )
-
-	proxool project( ':hibernate-proxool' )
-	javadocSources project( path: ':hibernate-proxool', configuration: 'javadocSources' )
-
-	vibur project( ':hibernate-vibur' )
-	javadocSources project( path: ':hibernate-vibur', configuration: 'javadocSources' )
 
 	jcache project( ':hibernate-jcache' )
-	javadocSources project( path: ':hibernate-jcache', configuration: 'javadocSources' )
 
-	jpamodelgen project( ':hibernate-jpamodelgen' )
-	javadocSources project( path: ':hibernate-jpamodelgen', configuration: 'javadocSources' )
+	jpamodelgen project( ':hibernate-processor' )
 
 	javadocClasspath libs.loggingAnnotations
 	javadocClasspath jakartaLibs.validation
@@ -171,11 +162,11 @@ dependencies {
 	javadocClasspath jakartaLibs.jacc
 	javadocClasspath jakartaLibs.jsonbApi
 	javadocClasspath libs.ant
-	javadocClasspath dbLibs.postgresql
+	javadocClasspath jdbcLibs.postgresql
 	javadocClasspath libs.jackson
 	javadocClasspath gradleApi()
 	javadocClasspath libs.jacksonXml
-	javadocClasspath dbLibs.oracle
+	javadocClasspath jdbcLibs.oracle
 }
 
 
@@ -293,7 +284,7 @@ def buildTutorialZipTask = tasks.register( 'buildTutorialZip', Zip ) { task ->
 			version: project.version,
 			slf4j: "2.0.7",
 			junit: testLibs.versions.junit4.get(),
-			h2: dbLibs.versions.h2.get()
+			h2: jdbcLibs.versions.h2.get()
 	)
 }
 
@@ -456,6 +447,54 @@ def renderQueryLanguageGuidePdfTask = tasks.register( 'renderQueryLanguageGuideP
 	attributes jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
 }
 
+def renderRepositoriesHtmlTask = tasks.register( 'renderRepositoriesHtml', AsciidoctorTask ) { task ->
+	task.group = "Documentation"
+	task.description = 'Renders the Hibernate Data Repositories document in HTML format using Asciidoctor.'
+
+	task.inputs.property "hibernate-version", project.ormVersion
+
+	task.sourceDir = file( 'src/main/asciidoc/repositories' )
+	task.sources 'Hibernate_Data_Repositories.adoc'
+
+	task.outputDir = layout.buildDirectory.dir( "asciidoc/repositories/html_single" )
+
+	task.attributes linkcss: true,
+			stylesheet: "css/hibernate.css",
+			docinfo: 'private',
+			jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
+
+	task.resources {
+		from( 'src/main/asciidoc/repositories/' ) {
+			include 'images/**'
+		}
+		from( 'src/main/style/asciidoctor' ) {
+			include 'images/**'
+		}
+		from( 'src/main/style/asciidoctor' ) {
+			include 'css/**'
+		}
+		from( 'src/main/style/asciidoctor' ) {
+			include 'js/**'
+		}
+	}
+}
+
+def renderRepositoriesPdfTask = tasks.register( 'renderRepositoriesPdf', AsciidoctorPdfTask ) { task ->
+	group = "Documentation"
+	description = 'Renders the Hibernate Data Repositories document in PDF format using Asciidoctor.'
+
+	inputs.property "hibernate-version", project.ormVersion
+
+	sourceDir = file( 'src/main/asciidoc/repositories' )
+	baseDir = file( 'src/main/asciidoc/repositories' )
+	sources {
+		include 'Hibernate_Data_Repositories.adoc'
+	}
+	outputDir = layout.buildDirectory.dir( "asciidoc/repositories/pdf" )
+
+	attributes jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
+}
+
 //noinspection GroovyUnusedAssignment
 def renderQueryLanguageGuidesTask = tasks.register( 'renderQueryLanguageGuides' ) { task ->
 	group = "Documentation"
@@ -465,6 +504,17 @@ def renderQueryLanguageGuidesTask = tasks.register( 'renderQueryLanguageGuides' 
 
 	tasks.buildDocs.dependsOn task
 }
+
+//noinspection GroovyUnusedAssignment
+def renderRepositoriesTask = tasks.register( 'renderRepositories' ) { task ->
+	group = "Documentation"
+	description = 'Renders Hibernate Data Repositories documentation in all formats.'
+	task.dependsOn renderRepositoriesHtmlTask
+	task.dependsOn renderRepositoriesPdfTask
+
+	tasks.buildDocs.dependsOn task
+}
+
 
 
 // User Guide ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -496,15 +546,9 @@ settingsDocumentation {
 			description = "Settings related to integrating with the C3P0 Connection pool"
 			settingsClassName "org.hibernate.cfg.C3p0Settings"
 		}
-		proxool {
-			explicitPosition = 5
-			summary = "Proxool Connection Pool Settings"
-			description = "Settings related to integrating with the Proxool Connection pool"
-			settingsClassName "org.hibernate.cfg.ProxoolSettings"
-		}
 		transaction {
 			explicitPosition = 6
-			summary = "Proxool Connection Pool Settings"
+			summary = "Transaction Environment Settings"
 			description = "Settings which control how Hibernate interacts with and manages transactions"
 			settingsClassName "org.hibernate.cfg.TransactionSettings"
 		}
@@ -568,7 +612,7 @@ settingsDocumentation {
 			settingsClassName "org.hibernate.cfg.StatisticsSettings"
 		}
 		validation {
-			summary = "Jakarta Validation Integeration Settings"
+			summary = "Jakarta Validation Integration Settings"
 			description = "Settings used in the integration of Jakarta Validation"
 			settingsClassName "org.hibernate.cfg.ValidationSettings"
 		}
@@ -634,7 +678,7 @@ def renderUserGuideHtmlTask = tasks.register( 'renderUserGuideHtml', Asciidoctor
 			   stylesheet: "css/hibernate.css",
 			   docinfo: 'private',
 			   jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/",
-			   'generated-report-dir': layout.buildDirectory.dir( 'orm/generated' )
+			   'generated-report-dir': layout.buildDirectory.dir( 'orm/generated' ).get()
 
 	resources {
 		from( 'src/main/asciidoc/userguide/' ) {
@@ -809,6 +853,7 @@ def buildDocsTask = tasks.register( 'buildDocs' ) { task ->
 	task.dependsOn renderIntroductionGuidesTask
 	task.dependsOn renderUserGuidesTask
 	task.dependsOn renderQueryLanguageGuidesTask
+	task.dependsOn renderRepositoriesTask
 	task.dependsOn renderIntegrationGuidesTask
 	task.dependsOn renderTopicalGuidesTask
 	task.dependsOn generateReportsTask

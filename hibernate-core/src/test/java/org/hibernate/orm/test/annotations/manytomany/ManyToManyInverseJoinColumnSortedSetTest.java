@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.manytomany;
 
@@ -15,7 +13,7 @@ import java.util.TreeSet;
 
 import org.hibernate.annotations.SortNatural;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -25,7 +23,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 
-@TestForIssue(jiraKey = "HHH-16031")
+@JiraKey(value = "HHH-16031")
 public class ManyToManyInverseJoinColumnSortedSetTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testDefault() {
@@ -76,7 +74,7 @@ public class ManyToManyInverseJoinColumnSortedSetTest extends BaseCoreFunctional
 	}
 
 	@Override
-    protected Class[] getAnnotatedClasses() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				ContainingEntity.class,
 				ContainedEntity.class

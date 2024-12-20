@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
@@ -59,6 +57,14 @@ public class PostgreSQLStructPGObjectJdbcType extends AbstractPostgreSQLStructJd
 	}
 
 	@Override
+	protected String getRawStructFromJdbcValue(Object rawJdbcValue) {
+		if ( rawJdbcValue instanceof PGobject ) {
+			return ( (PGobject) rawJdbcValue ).getValue();
+		}
+		return (String) rawJdbcValue;
+	}
+
+	@Override
 	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
 		return new BasicBinder<>( javaType, this ) {
 			@Override
@@ -70,7 +76,7 @@ public class PostgreSQLStructPGObjectJdbcType extends AbstractPostgreSQLStructJd
 						options
 				);
 				final PGobject holder = new PGobject();
-				holder.setType( getTypeName() );
+				holder.setType( getStructTypeName() );
 				holder.setValue( stringValue );
 				st.setObject( index, holder );
 			}
@@ -84,9 +90,14 @@ public class PostgreSQLStructPGObjectJdbcType extends AbstractPostgreSQLStructJd
 						options
 				);
 				final PGobject holder = new PGobject();
-				holder.setType( getTypeName() );
+				holder.setType( getStructTypeName() );
 				holder.setValue( stringValue );
 				st.setObject( name, holder );
+			}
+
+			@Override
+			public Object getBindValue(X value, WrapperOptions options) throws SQLException {
+				return ( (PostgreSQLStructPGObjectJdbcType) getJdbcType() ).getBindValue( value, options );
 			}
 		};
 	}

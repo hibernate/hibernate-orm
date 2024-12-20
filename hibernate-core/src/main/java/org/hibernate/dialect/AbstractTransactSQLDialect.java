@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
@@ -19,9 +17,9 @@ import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.TrimSpec;
-import org.hibernate.query.sqm.mutation.internal.temptable.AfterUseAction;
+import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.hibernate.dialect.temptable.TemporaryTable;
-import org.hibernate.query.sqm.mutation.internal.temptable.BeforeUseAction;
+import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
@@ -60,36 +58,25 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 	protected String columnType(int sqlTypeCode) {
 		// note that 'real' is double precision on SQL Server, single precision on Sybase
 		// but 'float' is single precision on Sybase, double precision on SQL Server
-		switch ( sqlTypeCode ) {
-			case BOOLEAN:
-				return "bit";
+		return switch (sqlTypeCode) {
+			case BOOLEAN -> "bit";
 
-			case TINYINT:
-				//'tinyint' is an unsigned type in Sybase and
-				//SQL Server, holding values in the range 0-255
-				//see HHH-6779
-				return "smallint";
-			case INTEGER:
-				//it's called 'int' not 'integer'
-				return "int";
+			// 'tinyint' is an unsigned type in Sybase and
+			// SQL Server, holding values in the range 0-255
+			// see HHH-6779
+			case TINYINT -> "smallint";
 
-			case DATE:
-			case TIME:
-			case TIMESTAMP:
-			case TIME_WITH_TIMEZONE:
-			case TIMESTAMP_WITH_TIMEZONE:
-				return "datetime";
+			//it's called 'int' not 'integer'
+			case INTEGER -> "int";
 
-			case BLOB:
-				return "image";
-			case CLOB:
-				return "text";
-			case NCLOB:
-				return "ntext";
+			case DATE, TIME, TIMESTAMP, TIME_WITH_TIMEZONE, TIMESTAMP_WITH_TIMEZONE -> "datetime";
 
-			default:
-				return super.columnType( sqlTypeCode );
-		}
+			case BLOB -> "image";
+			case CLOB -> "text";
+			case NCLOB -> "ntext";
+
+			default -> super.columnType( sqlTypeCode );
+		};
 	}
 
 	@Override
@@ -150,6 +137,8 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 		functionFactory.datepartDatename();
 		functionFactory.lastDay_eomonth();
 
+		functionFactory.bitandorxornot_operator();
+
 		functionContributions.getFunctionRegistry().register( "least", new CaseLeastGreatestEmulation( true ) );
 		functionContributions.getFunctionRegistry().register( "greatest", new CaseLeastGreatestEmulation( false ) );
 		functionContributions.getFunctionRegistry().register( "str", new TransactSQLStrFunction( functionContributions.getTypeConfiguration() ) );
@@ -170,29 +159,18 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 		return replaceLtrimRtrim( specification, isWhitespace );
 	}
 
-	/**
-	 * @deprecated Use {@link #replaceLtrimRtrim(TrimSpec, boolean)} instead.
-	 */
-	@Deprecated( forRemoval = true )
-	public static String replaceLtrimRtrim(TrimSpec specification, char character) {
-		return replaceLtrimRtrim( specification, character == ' ' );
-	}
-
 	public static String replaceLtrimRtrim(TrimSpec specification, boolean isWhitespace) {
-		switch ( specification ) {
-			case LEADING:
-				return isWhitespace
-						? "ltrim(?1)"
-						: "substring(?1,patindex('%[^'+?2+']%',?1),len(?1+'x')-1-patindex('%[^'+?2+']%',?1)+1)";
-			case TRAILING:
-				return isWhitespace
-						? "rtrim(?1)"
-						: "substring(?1,1,len(?1+'x')-1-patindex('%[^'+?2+']%',reverse(?1))+1)";
-			default:
-				return isWhitespace
-						? "ltrim(rtrim(?1))"
-						: "substring(?1,patindex('%[^'+?2+']%',?1),len(?1+'x')-1-patindex('%[^'+?2+']%',?1)-patindex('%[^'+?2+']%',reverse(?1))+2)";
-		}
+		return switch (specification) {
+			case LEADING -> isWhitespace
+					? "ltrim(?1)"
+					: "substring(?1,patindex('%[^'+?2+']%',?1),len(?1+'x')-1-patindex('%[^'+?2+']%',?1)+1)";
+			case TRAILING -> isWhitespace
+					? "rtrim(?1)"
+					: "substring(?1,1,len(?1+'x')-1-patindex('%[^'+?2+']%',reverse(?1))+1)";
+			default -> isWhitespace
+					? "ltrim(rtrim(?1))"
+					: "substring(?1,patindex('%[^'+?2+']%',?1),len(?1+'x')-1-patindex('%[^'+?2+']%',?1)-patindex('%[^'+?2+']%',reverse(?1))+2)";
+		};
 	}
 
 	@Override

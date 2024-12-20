@@ -24,11 +24,11 @@
 		<property name="created" not-null="true"/>
 		<set name="children"
 			inverse="true"
-			cascade="persist,merge,save-update,evict">
+			cascade="persist,merge,evict">
 			<key column="parent"/>
 			<one-to-many class="Node"/>
 		</set>
-		<set name="cascadingChildren" inverse="false" cascade="persist,merge,save-update,evict,delete">
+		<set name="cascadingChildren" inverse="false" cascade="persist,merge,evict,delete">
             <key column="CASC_PARENT"/>
             <one-to-many class="Node"/>
         </set>
@@ -47,7 +47,7 @@
 		<many-to-one name="parent" class="NumberedNode"/>
 		<set name="children"
 			inverse="true"
-			cascade="persist,merge,save-update">
+			cascade="persist,merge">
 			<key column="parent"/>
 			<one-to-many class="NumberedNode"/>
 		</set>

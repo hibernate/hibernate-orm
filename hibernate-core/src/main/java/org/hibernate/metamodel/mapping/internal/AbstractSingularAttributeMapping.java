@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
@@ -22,8 +20,6 @@ public abstract class AbstractSingularAttributeMapping
 		extends AbstractStateArrayContributorMapping
 		implements SingularAttributeMapping {
 
-	private final PropertyAccess propertyAccess;
-
 	public AbstractSingularAttributeMapping(
 			String name,
 			int stateArrayPosition,
@@ -32,8 +28,7 @@ public abstract class AbstractSingularAttributeMapping
 			FetchOptions mappedFetchOptions,
 			ManagedMappingType declaringType,
 			PropertyAccess propertyAccess) {
-		super( name, attributeMetadata, mappedFetchOptions, stateArrayPosition, fetchableIndex, declaringType );
-		this.propertyAccess = propertyAccess;
+		super( name, attributeMetadata, mappedFetchOptions, stateArrayPosition, fetchableIndex, declaringType, propertyAccess );
 	}
 
 	public AbstractSingularAttributeMapping(
@@ -45,8 +40,7 @@ public abstract class AbstractSingularAttributeMapping
 			FetchStyle fetchStyle,
 			ManagedMappingType declaringType,
 			PropertyAccess propertyAccess) {
-		super( name, attributeMetadata, fetchTiming, fetchStyle, stateArrayPosition, fetchableIndex, declaringType );
-		this.propertyAccess = propertyAccess;
+		super( name, attributeMetadata, fetchTiming, fetchStyle, stateArrayPosition, fetchableIndex, declaringType, propertyAccess );
 	}
 
 	/**
@@ -54,12 +48,6 @@ public abstract class AbstractSingularAttributeMapping
 	 */
 	protected AbstractSingularAttributeMapping( AbstractSingularAttributeMapping original ) {
 		super( original );
-		this.propertyAccess = original.propertyAccess;
-	}
-
-	@Override
-	public PropertyAccess getPropertyAccess() {
-		return propertyAccess;
 	}
 
 	@Override

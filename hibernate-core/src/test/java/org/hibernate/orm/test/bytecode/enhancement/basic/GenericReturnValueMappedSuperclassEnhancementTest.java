@@ -1,12 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.basic;
 
-import static org.junit.Assert.assertEquals;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
@@ -17,16 +16,16 @@ import jakarta.persistence.MappedSuperclass;
 
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.junit.Test;
-import org.junit.runner.RunWith;
 
-@RunWith(BytecodeEnhancerRunner.class)
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.junit.jupiter.api.Test;
+
+@BytecodeEnhanced
 public class GenericReturnValueMappedSuperclassEnhancementTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12579")
+	@JiraKey("HHH-12579")
 	public void enhanceClassWithGenericReturnValueOnMappedSuperclass() {
 		SimpleEntity implementation = new SimpleEntity();
 

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.array;
 
@@ -109,13 +107,13 @@ public class ArrayConstructorFunction extends AbstractSqmSelfRenderingFunctionDe
 					if ( firstType == null ) {
 						firstType = argumentType;
 					}
-					else if ( firstType != argumentType ) {
+					else if ( firstType.getSingleJdbcMapping() != argumentType.getSingleJdbcMapping() ) {
 						throw new FunctionArgumentException(
 								String.format(
 										"All array arguments must have a type compatible to the first argument type [%s], but argument %d has type '%s'",
-										firstType,
+										firstType.getSingleJdbcMapping(),
 										i + 1,
-										argumentType
+										argumentType.getSingleJdbcMapping()
 								)
 						);
 					}

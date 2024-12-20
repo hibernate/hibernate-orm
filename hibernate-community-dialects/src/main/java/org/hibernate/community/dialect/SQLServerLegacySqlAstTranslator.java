@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -13,27 +11,29 @@ import org.hibernate.LockOptions;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.MutationStatement;
+import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.DerivedTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.UnionTableReference;
 import org.hibernate.sql.ast.tree.insert.ConflictClause;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
@@ -135,7 +135,7 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 	protected void visitConflictClause(ConflictClause conflictClause) {
 		if ( conflictClause != null ) {
 			if ( conflictClause.isDoUpdate() && conflictClause.getConstraintName() != null ) {
-				throw new IllegalQueryOperationException( "Insert conflict do update clause with constraint name is not supported" );
+				throw new IllegalQueryOperationException( "Insert conflict 'do update' clause with constraint name is not supported" );
 			}
 		}
 	}
@@ -184,17 +184,24 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 		}
 	}
 
-	protected boolean renderPrimaryTableReference(TableGroup tableGroup, LockMode lockMode) {
-		if ( shouldInlineCte( tableGroup ) ) {
-			inlineCteTableGroup( tableGroup, lockMode );
-			return false;
-		}
-		final TableReference tableReference = tableGroup.getPrimaryTableReference();
-		if ( tableReference instanceof NamedTableReference ) {
-			return renderNamedTableReference( (NamedTableReference) tableReference, lockMode );
-		}
+	@Override
+	protected void renderDerivedTableReference(DerivedTableReference tableReference) {
 		tableReference.accept( this );
-		return false;
+	}
+
+	@Override
+	public void renderNamedSetReturningFunction(String functionName, List<? extends SqlAstNode> sqlAstArguments, AnonymousTupleTableGroupProducer tupleType, String tableIdentifierVariable, SqlAstNodeRenderingMode argumentRenderingMode) {
+		final ModelPart ordinalitySubPart = tupleType.findSubPart( CollectionPart.Nature.INDEX.getName(), null );
+		if ( ordinalitySubPart != null ) {
+			appendSql( "(select t.*, row_number() over(order by (select 1)) " );
+			appendSql( ordinalitySubPart.asBasicValuedModelPart().getSelectionExpression() );
+			appendSql( " from " );
+			renderSimpleNamedFunction( functionName, sqlAstArguments, argumentRenderingMode );
+			append( " t)" );
+		}
+		else {
+			super.renderNamedSetReturningFunction( functionName, sqlAstArguments, tupleType, tableIdentifierVariable, argumentRenderingMode );
+		}
 	}
 
 	@Override
@@ -291,6 +298,15 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 				}
 			}
 		}
+	}
+
+	@Override
+	protected LockStrategy determineLockingStrategy(
+			QuerySpec querySpec,
+			ForUpdateClause forUpdateClause,
+			Boolean followOnLocking) {
+		// No need for follow on locking
+		return LockStrategy.CLAUSE;
 	}
 
 	@Override
@@ -476,10 +492,28 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 				&& lhsExpressionType.getSingleJdbcMapping().getJdbcType().getDdlTypeCode() == SqlTypes.SQLXML ) {
 			// In SQL Server, XMLTYPE is not "comparable", so we have to cast the two parts to varchar for this purpose
 			switch ( operator ) {
-				case EQUAL:
-				case NOT_DISTINCT_FROM:
-				case NOT_EQUAL:
 				case DISTINCT_FROM:
+					if ( !supportsDistinctFromPredicate() ) {
+						appendSql( "not " );
+					}
+				case NOT_DISTINCT_FROM: {
+					if ( !supportsDistinctFromPredicate() ) {
+						appendSql( "exists (select cast(" );
+						getClauseStack().push( Clause.SELECT );
+						visitSqlSelectExpression( lhs );
+						appendSql( " as nvarchar(max))" );
+						appendSql( getFromDualForSelectOnly() );
+						appendSql( " intersect select cast(" );
+						visitSqlSelectExpression( rhs );
+						appendSql( " as nvarchar(max))" );
+						appendSql( getFromDualForSelectOnly() );
+						getClauseStack().pop();
+						appendSql( CLOSE_PARENTHESIS );
+						return;
+					}
+				}
+				case EQUAL:
+				case NOT_EQUAL:
 					appendSql( "cast(" );
 					lhs.accept( this );
 					appendSql( " as nvarchar(max))" );
@@ -493,7 +527,17 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 					break;
 			}
 		}
-		renderComparisonEmulateIntersect( lhs, operator, rhs );
+		if ( supportsDistinctFromPredicate() ) {
+			renderComparisonStandard( lhs, operator, rhs );
+		}
+		else {
+			renderComparisonEmulateIntersect( lhs, operator, rhs );
+		}
+	}
+
+	@Override
+	protected boolean supportsDistinctFromPredicate() {
+		return getDialect().getVersion().isSameOrAfter( 16 );
 	}
 
 	@Override
@@ -523,9 +567,9 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 	@Override
 	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
 		appendSql( OPEN_PARENTHESIS );
-		arithmeticExpression.getLeftHandOperand().accept( this );
+		visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
 		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
-		arithmeticExpression.getRightHandOperand().accept( this );
+		visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
 		appendSql( CLOSE_PARENTHESIS );
 	}
 

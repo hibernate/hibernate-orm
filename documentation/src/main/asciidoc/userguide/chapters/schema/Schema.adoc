@@ -22,7 +22,7 @@ Considering the following Domain Model:
 [[schema-generation-domain-model-example]]
 .Schema generation Domain Model
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-schemagen}/BaseSchemaGeneratorTest.java[tags=schema-generation-domain-model-example]
 ----
@@ -49,7 +49,7 @@ For instance, considering the following `schema-generation.sql` import file:
 [[schema-generation-import-file-example]]
 .Schema generation import file
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-schemagen-resources}/schema-generation.sql[]
 ----
@@ -80,7 +80,7 @@ Considering the following HBM mapping:
 [[schema-generation-database-object-example]]
 .Schema generation HBM database-object
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-schemagen-resources}/org/hibernate/orm/test/schema/SchemaGenerationTest.hbm.xml[]
 ----
@@ -96,7 +96,7 @@ Hibernate offers the `@Check` annotation so that you can specify an arbitrary SQ
 [[schema-generation-database-checks-example]]
 .Database check entity mapping example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-schemagen}/CheckTest.java[tag=schema-generation-database-checks-example]
 ----
@@ -108,7 +108,7 @@ a `ConstraintViolationException` is going to be thrown.
 [[stag::schema-generation-database-checks-persist-example]]
 .Database check failure example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-schemagen}/CheckTest.java[tag=schema-generation-database-checks-persist-example]
 ----
@@ -127,7 +127,7 @@ With Hibernate, you can specify a default value for a given database column usin
 [[schema-generation-column-default-value-mapping-example]]
 .`@ColumnDefault` mapping example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-schemagen}/ColumnDefaultTest.java[tag=schema-generation-column-default-value-mapping-example]
 ----
@@ -150,7 +150,7 @@ This way, when the `name` and or `clientId` attribute is null, the database will
 [[schema-generation-column-default-value-persist-example]]
 .`@ColumnDefault` mapping example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-schemagen}/ColumnDefaultTest.java[tag=schema-generation-column-default-value-persist-example]
 ----
@@ -176,7 +176,7 @@ Considering the following entity mapping, Hibernate generates the unique constra
 [[schema-generation-columns-unique-constraint-mapping-example]]
 .`@UniqueConstraint` mapping example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-schemagen}/UniqueConstraintTest.java[tag=schema-generation-columns-unique-constraint-mapping-example]
 ----
@@ -193,7 +193,7 @@ it's no longer possible to add two books with the same title and for the same au
 [[schema-generation-columns-unique-constraint-persist-example]]
 .`@UniqueConstraintTest` persist example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-schemagen}/UniqueConstraintTest.java[tag=schema-generation-columns-unique-constraint-persist-example]
 ----
@@ -218,7 +218,7 @@ Considering the following entity mapping. Hibernate generates the index when cre
 [[schema-generation-columns-index-mapping-example]]
 .`@Index` mapping example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-schemagen}/IndexTest.java[tag=schema-generation-columns-index-mapping-example]
 ----

@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.cache;
 
 import java.io.Serializable;
@@ -6,14 +10,13 @@ import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -42,7 +45,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 				@Setting(name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true")
 		}
 )
-@TestForIssue(jiraKey = "HHH-16493")
+@JiraKey(value = "HHH-16493")
 public class CacheOneToManyAndIdClassTest {
 
 	public static final Long CONTENT_ID = 200l;

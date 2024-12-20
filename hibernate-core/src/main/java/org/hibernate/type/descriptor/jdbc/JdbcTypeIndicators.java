@@ -1,15 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
 
 import jakarta.persistence.EnumType;
 import jakarta.persistence.TemporalType;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.Incubating;
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.dialect.Dialect;
@@ -70,10 +67,17 @@ public interface JdbcTypeIndicators {
 	}
 
 	/**
-	 * @see org.hibernate.cfg.MappingSettings#PREFER_JAVA_TYPE_JDBC_TYPES
+	 * @see org.hibernate.cfg.MappingSettings#JAVA_TIME_USE_DIRECT_JDBC
 	 */
 	default boolean isPreferJavaTimeJdbcTypesEnabled() {
 		return getCurrentBaseSqlTypeIndicators().isPreferJavaTimeJdbcTypesEnabled();
+	}
+
+	/**
+	 * @see org.hibernate.cfg.MappingSettings#PREFER_NATIVE_ENUM_TYPES
+	 */
+	default boolean isPreferNativeEnumTypesEnabled() {
+		return getCurrentBaseSqlTypeIndicators().isPreferNativeEnumTypesEnabled();
 	}
 
 	/**
@@ -135,6 +139,26 @@ public interface JdbcTypeIndicators {
 	}
 
 	/**
+	 * When mapping a basic array or collection type to the database what is the preferred SQL type code to use,
+	 * given the element SQL type code?
+	 * <p>
+	 * Returns a key into the {@link JdbcTypeRegistry}.
+	 *
+	 * @see org.hibernate.dialect.Dialect#getPreferredSqlTypeCodeForArray()
+	 *
+	 * @since 7.0
+	 */
+	default int getPreferredSqlTypeCodeForArray(int elementSqlTypeCode) {
+		return resolveJdbcTypeCode(
+				switch ( elementSqlTypeCode ) {
+					case SqlTypes.JSON -> SqlTypes.JSON_ARRAY;
+					case SqlTypes.SQLXML -> SqlTypes.XML_ARRAY;
+					default -> getExplicitJdbcTypeCode();
+				}
+		);
+	}
+
+	/**
 	 * Useful for resolutions based on column length.
 	 * <p>
 	 * E.g. for choosing between a {@code VARCHAR} ({@code String}) and {@code CHAR(1)} ({@code Character}/{@code char}).
@@ -192,7 +216,7 @@ public interface JdbcTypeIndicators {
 
 	/**
 	 * Resolves the given type code to a possibly different type code, based on context.
-	 *
+	 * <p>
 	 * A database might not support a certain type code in certain scenarios like within a UDT
 	 * and has to resolve to a different type code in such a scenario.
 	 *
@@ -201,6 +225,29 @@ public interface JdbcTypeIndicators {
 	 */
 	default int resolveJdbcTypeCode(int jdbcTypeCode) {
 		return jdbcTypeCode;
+	}
+
+	/**
+	 * Should native queries return JDBC datetime types
+	 * instead of using {@code java.time} types.
+	 *
+	 * @since 7.0
+	 *
+	 * @see org.hibernate.cfg.QuerySettings#NATIVE_PREFER_JDBC_DATETIME_TYPES
+	 */
+	default boolean preferJdbcDatetimeTypes() {
+		return false;
+	}
+
+	/**
+	 * Whether to use the legacy format for serializing/deserializing XML data.
+	 *
+	 * @since 7.0
+	 * @see org.hibernate.cfg.MappingSettings#XML_FORMAT_MAPPER_LEGACY_FORMAT
+	 */
+	@Incubating
+	default boolean isXmlFormatMapperLegacyFormatEnabled() {
+		return getCurrentBaseSqlTypeIndicators().isXmlFormatMapperLegacyFormatEnabled();
 	}
 
 	/**
@@ -214,47 +261,36 @@ public interface JdbcTypeIndicators {
 
 	/**
 	 * @return the SQL column type used for storing times under the
-	 *         given {@linkplain  TimeZoneStorageStrategy storage strategy}
+	 *         given {@linkplain TimeZoneStorageStrategy storage strategy}
 	 *
 	 * @see SqlTypes#TIME_WITH_TIMEZONE
 	 * @see SqlTypes#TIME
 	 * @see SqlTypes#TIME_UTC
 	 */
 	static int getZonedTimeSqlType(TimeZoneStorageStrategy storageStrategy) {
-		switch ( storageStrategy ) {
-			case NATIVE:
-				return SqlTypes.TIME_WITH_TIMEZONE;
-			case COLUMN:
-			case NORMALIZE:
-				return SqlTypes.TIME;
-			case NORMALIZE_UTC:
-				return SqlTypes.TIME_UTC;
-			default:
-				throw new AssertionFailure( "unknown time zone storage strategy" );
-		}
+		return switch (storageStrategy) {
+			case NATIVE -> SqlTypes.TIME_WITH_TIMEZONE;
+			case COLUMN, NORMALIZE -> SqlTypes.TIME;
+			case NORMALIZE_UTC -> SqlTypes.TIME_UTC;
+		};
 	}
 
 	/**
 	 * @return the SQL column type used for storing datetimes under the
-	 *         given {@linkplain  TimeZoneStorageStrategy storage strategy}
+	 *         given {@linkplain TimeZoneStorageStrategy storage strategy}
 	 *
 	 * @see SqlTypes#TIME_WITH_TIMEZONE
 	 * @see SqlTypes#TIMESTAMP
 	 * @see SqlTypes#TIMESTAMP_UTC
 	 */
 	static int getZonedTimestampSqlType(TimeZoneStorageStrategy storageStrategy) {
-		switch ( storageStrategy ) {
-			case NATIVE:
-				return SqlTypes.TIMESTAMP_WITH_TIMEZONE;
-			case COLUMN:
-			case NORMALIZE:
-				return SqlTypes.TIMESTAMP;
-			case NORMALIZE_UTC:
+		return switch (storageStrategy) {
+			case NATIVE -> SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+			case COLUMN, NORMALIZE -> SqlTypes.TIMESTAMP;
+			case NORMALIZE_UTC ->
 				// sensitive to hibernate.type.preferred_instant_jdbc_type
-				return SqlTypes.TIMESTAMP_UTC;
-			default:
-				throw new AssertionFailure( "unknown time zone storage strategy" );
-		}
+					SqlTypes.TIMESTAMP_UTC;
+		};
 	}
 
 	/**
@@ -279,17 +315,13 @@ public interface JdbcTypeIndicators {
 	 */
 	default int getDefaultZonedTimestampSqlType() {
 		final TemporalType temporalPrecision = getTemporalPrecision();
-		switch ( temporalPrecision == null ? TemporalType.TIMESTAMP : temporalPrecision ) {
-			case TIME:
-				return getZonedTimeSqlType( getDefaultTimeZoneStorageStrategy() );
-			case DATE:
-				return Types.DATE;
-			case TIMESTAMP:
+		return switch (temporalPrecision == null ? TemporalType.TIMESTAMP : temporalPrecision) {
+			case TIME -> getZonedTimeSqlType( getDefaultTimeZoneStorageStrategy() );
+			case DATE -> Types.DATE;
+			case TIMESTAMP ->
 				// sensitive to hibernate.timezone.default_storage
-				return getZonedTimestampSqlType( getDefaultTimeZoneStorageStrategy() );
-			default:
-				throw new IllegalArgumentException( "Unexpected jakarta.persistence.TemporalType : " + temporalPrecision);
-		}
+					getZonedTimestampSqlType( getDefaultTimeZoneStorageStrategy() );
+		};
 	}
 
 	Dialect getDialect();

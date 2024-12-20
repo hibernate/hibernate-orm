@@ -17,10 +17,10 @@
 		</id>
         <version name="version" column="VERS" type="long" />
         <property name="name" column="NAME" type="string" />
-        <many-to-one name="parent" class="VersionedNode" cascade="persist,merge,save-update,evict,delete"/>
+        <many-to-one name="parent" class="VersionedNode" cascade="persist,merge,evict,delete"/>
         <set name="children"
 			inverse="true"
-			cascade="persist,merge,save-update,evict,delete">
+			cascade="persist,merge,evict,delete">
 			<key column="parent"/>
 			<one-to-many class="VersionedNode"/>
 		</set>

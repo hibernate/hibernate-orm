@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.internal;
 
@@ -23,8 +21,8 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.Resolution;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.NaturalIdLogging;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
@@ -267,7 +265,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 
 		final SessionFactoryImplementor factory = s.getFactory();
 		final StatisticsImplementor statistics = factory.getStatistics();
-		final EventManager eventManager = s.getEventManager();
+		final EventMonitor eventMonitor = s.getEventMonitor();
 		switch ( source ) {
 			case LOAD: {
 				if ( CacheHelper.fromSharedCache( s, cacheKey, persister, cacheAccess ) != null ) {
@@ -275,7 +273,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 					return;
 				}
 				boolean put = false;
-				final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
+				final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
 				try {
 					put = cacheAccess.putFromLoad(
 							s,
@@ -292,14 +290,14 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 					}
 				}
 				finally {
-					eventManager.completeCachePutEvent(
+					eventMonitor.completeCachePutEvent(
 							cachePutEvent,
 							session(),
 							cacheAccess,
 							rootEntityPersister,
 							put,
 							true,
-							EventManager.CacheActionDescription.ENTITY_LOAD
+							EventMonitor.CacheActionDescription.ENTITY_LOAD
 					);
 				}
 
@@ -307,7 +305,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 			}
 			case INSERT: {
 				boolean put = false;
-				final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
+				final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
 
 				try {
 					put = cacheAccess.insert( s, cacheKey, id );
@@ -319,14 +317,14 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 					}
 				}
 				finally {
-					eventManager.completeCachePutEvent(
+					eventMonitor.completeCachePutEvent(
 							cachePutEvent,
 							session(),
 							cacheAccess,
 							rootEntityPersister,
 							put,
 							true,
-							EventManager.CacheActionDescription.ENTITY_INSERT
+							EventMonitor.CacheActionDescription.ENTITY_INSERT
 					);
 				}
 
@@ -360,7 +358,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 
 				final SoftLock lock = cacheAccess.lockItem( s, cacheKey, null );
 				boolean put = false;
-				final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
+				final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
 				try {
 					put = cacheAccess.update( s, cacheKey, id );
 					if ( put && statistics.isStatisticsEnabled() ) {
@@ -371,14 +369,14 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 					}
 				}
 				finally {
-					eventManager.completeCachePutEvent(
+					eventMonitor.completeCachePutEvent(
 							cachePutEvent,
 							session(),
 							cacheAccess,
 							rootEntityPersister,
 							put,
 							true,
-							EventManager.CacheActionDescription.ENTITY_UPDATE
+							EventMonitor.CacheActionDescription.ENTITY_UPDATE
 					);
 				}
 
@@ -387,7 +385,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 							cacheAccess.unlockItem( s, previousCacheKey, removalLock );
 							if (success) {
 								boolean putAfterUpdate = false;
-								final HibernateMonitoringEvent cachePutEventAfterUpdate = eventManager.beginCachePutEvent();
+								final DiagnosticEvent cachePutEventAfterUpdate = eventMonitor.beginCachePutEvent();
 								try {
 									putAfterUpdate = cacheAccess.afterUpdate(
 											s,
@@ -404,14 +402,14 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 									}
 								}
 								finally {
-									eventManager.completeCachePutEvent(
+									eventMonitor.completeCachePutEvent(
 											cachePutEventAfterUpdate,
 											session(),
 											cacheAccess,
 											rootEntityPersister,
 											putAfterUpdate,
 											true,
-											EventManager.CacheActionDescription.ENTITY_AFTER_UPDATE
+											EventMonitor.CacheActionDescription.ENTITY_AFTER_UPDATE
 									);
 								}
 							}
@@ -433,6 +431,11 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 
 	@Override
 	public void removeSharedResolution(Object id, Object naturalId, EntityMappingType entityDescriptor) {
+		removeSharedResolution( id, naturalId, entityDescriptor, false );
+	}
+
+	@Override
+	public void removeSharedResolution(Object id, Object naturalId, EntityMappingType entityDescriptor, boolean delayToAfterTransactionCompletion) {
 		final NaturalIdMapping naturalIdMapping = entityDescriptor.getNaturalIdMapping();
 		if ( naturalIdMapping == null ) {
 			// nothing to do
@@ -453,7 +456,18 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 		final EntityPersister persister = locatePersisterForKey( entityDescriptor.getEntityPersister() );
 
 		final Object naturalIdCacheKey = cacheAccess.generateCacheKey( naturalId, persister, session() );
-		cacheAccess.evict( naturalIdCacheKey );
+		if ( delayToAfterTransactionCompletion ) {
+			session().asEventSource().getActionQueue().registerProcess(
+				(success, session) -> {
+					if ( success ) {
+						cacheAccess.evict( naturalIdCacheKey );
+					}
+				}
+			);
+		}
+		else {
+			cacheAccess.evict( naturalIdCacheKey );
+		}
 
 //			if ( sessionCachedNaturalIdValues != null
 //					&& !Arrays.equals( sessionCachedNaturalIdValues, deletedNaturalIdValues ) ) {
@@ -479,7 +493,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 			cacheResolution( pk, naturalIdValuesFromCurrentObjectState, persister );
 			stashInvalidNaturalIdReference( persister, cachedNaturalIdValues );
 
-			removeSharedResolution( pk, cachedNaturalIdValues, persister );
+			removeSharedResolution( pk, cachedNaturalIdValues, persister, false );
 		}
 	}
 
@@ -513,11 +527,11 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 	}
 
 	/**
-	 * It is only valid to define natural ids at the root of an entity hierarchy.  This method makes sure we are 
+	 * It is only valid to define natural ids at the root of an entity hierarchy.  This method makes sure we are
 	 * using the root persister.
 	 *
 	 * @param persister The persister representing the entity type.
-	 * 
+	 *
 	 * @return The root persister.
 	 */
 	protected EntityPersister locatePersisterForKey(EntityPersister persister) {
@@ -639,7 +653,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 		if ( pk != null ) {
 			if ( statisticsEnabled ) {
 				statistics.naturalIdCacheHit(
-						StatsHelper.INSTANCE.getRootEntityRole( persister ),
+						StatsHelper.getRootEntityRole( persister ),
 						naturalIdCacheAccessStrategy.getRegion().getName()
 				);
 			}
@@ -667,7 +681,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 		}
 		else if ( statisticsEnabled ) {
 			statistics.naturalIdCacheMiss(
-					StatsHelper.INSTANCE.getRootEntityRole( persister ),
+					StatsHelper.getRootEntityRole( persister ),
 					naturalIdCacheAccessStrategy.getRegion().getName()
 			);
 		}
@@ -781,7 +795,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 			final Resolution cachedNaturalId = new ResolutionImpl( getEntityDescriptor(), naturalIdValues, persistenceContext );
 			pkToNaturalIdMap.put( pk, cachedNaturalId );
 			naturalIdToPkMap.put( cachedNaturalId, pk );
-			
+
 			return true;
 		}
 

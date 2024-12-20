@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemaupdate.index;
 
@@ -12,14 +10,15 @@ import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.annotations.Index;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
@@ -30,7 +29,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue( jiraKey = "HHH-11815")
+@JiraKey( value = "HHH-11815")
 public class ComponentIndexTest {
 	private StandardServiceRegistry ssr;
 	private Metadata metadata;
@@ -72,6 +71,7 @@ public class ComponentIndexTest {
 	}
 
 	@Entity(name = "user")
+	@Table(indexes = @Index(name = "city_index", columnList = "city"))
 	public class User {
 		@Id
 		private Long id;
@@ -81,7 +81,6 @@ public class ComponentIndexTest {
 
 	@Embeddable
 	public class Address {
-		@Index( name = "city_index")
 		private String city;
 		private String street;
 		private String postalCode;

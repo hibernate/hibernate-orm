@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.fetchprofile;
 
@@ -60,12 +58,12 @@ public class MoreFetchProfileTest extends BaseCoreFunctionalTestCase {
 		}
 		final Order order = c.getOrders().iterator().next();
 		c.getOrders().remove( order );
-		s.delete( c );
+		s.remove( c );
 		final Order lastOrder = c.getLastOrder();
 		c.setLastOrder( null );
-		s.delete( order.getCountry() );
-		s.delete( lastOrder );
-		s.delete( order );
+		s.remove( order.getCountry() );
+		s.remove( lastOrder );
+		s.remove( order );
 
 		transaction.commit();
 		s.close();

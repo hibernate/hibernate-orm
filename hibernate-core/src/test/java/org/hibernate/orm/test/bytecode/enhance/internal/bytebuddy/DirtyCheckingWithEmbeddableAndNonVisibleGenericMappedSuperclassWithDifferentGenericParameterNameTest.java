@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhance.internal.bytebuddy;
 
@@ -20,11 +18,10 @@ import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.TRACKER_GET_N
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.TRACKER_HAS_CHANGED_NAME;
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.TRACKER_SUSPEND_NAME;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
@@ -33,7 +30,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 
 @JiraKey("HHH-17035")
-@RunWith(BytecodeEnhancerRunner.class)
+@BytecodeEnhanced
 @EnhancementOptions(inlineDirtyChecking = true)
 public class DirtyCheckingWithEmbeddableAndNonVisibleGenericMappedSuperclassWithDifferentGenericParameterNameTest {
 

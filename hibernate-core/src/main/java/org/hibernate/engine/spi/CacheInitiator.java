@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
@@ -26,9 +24,9 @@ public class CacheInitiator implements SessionFactoryServiceInitiator<CacheImple
 	@Override
 	public CacheImplementor initiateService(SessionFactoryServiceInitiatorContext context) {
 		final RegionFactory regionFactory = context.getServiceRegistry().getService( RegionFactory.class );
-		return ( !(regionFactory instanceof NoCachingRegionFactory) )
-				? new EnabledCaching( context.getSessionFactory() )
-				: new DisabledCaching( context.getSessionFactory() );
+		return regionFactory instanceof NoCachingRegionFactory
+				? new DisabledCaching( context.getSessionFactory() )
+				: new EnabledCaching( context.getSessionFactory() );
 	}
 
 	@Override

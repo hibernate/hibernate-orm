@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query;
 
@@ -12,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SybaseDialect;
@@ -23,7 +22,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
 import org.hibernate.testing.orm.junit.DialectContext;
@@ -80,6 +79,9 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 		else if ( DialectContext.getDialect() instanceof AbstractTransactSQLDialect ) {
 			baseQuery = "update ae1_0 set name=? from AnEntity ae1_0";
 		}
+		else if (DialectContext.getDialect() instanceof InformixDialect ) {
+			baseQuery = "update AnEntity set name=?";
+		}
 		else {
 			baseQuery = "update AnEntity ae1_0 set name=?";
 		}
@@ -95,7 +97,7 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12075")
+	@JiraKey(value = "HHH-12075")
 	public void testCreateQuerySetTimeout() {
 		doInHibernate(
 				this::sessionFactory, session -> {
@@ -120,7 +122,7 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12075")
+	@JiraKey(value = "HHH-12075")
 	public void testCreateQuerySetTimeoutHint() {
 		doInHibernate(
 				this::sessionFactory, session -> {
@@ -145,7 +147,7 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12075")
+	@JiraKey(value = "HHH-12075")
 	public void testCreateNativeQuerySetTimeout() {
 		doInHibernate(
 				this::sessionFactory, session -> {
@@ -170,7 +172,7 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12075")
+	@JiraKey(value = "HHH-12075")
 	public void testCreateNativeQuerySetTimeoutHint() {
 		doInHibernate(
 				this::sessionFactory, session -> {
@@ -195,7 +197,7 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12075")
+	@JiraKey(value = "HHH-12075")
 	public void testCreateSQLQuerySetTimeout() {
 		doInHibernate(
 				this::sessionFactory, session -> {
@@ -220,7 +222,7 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12075")
+	@JiraKey(value = "HHH-12075")
 	public void testCreateSQLQuerySetTimeoutHint() {
 		doInHibernate(
 				this::sessionFactory, session -> {

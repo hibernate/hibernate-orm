@@ -1,12 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
 import java.util.Objects;
+
+import org.hibernate.dialect.Dialect;
 
 /**
  * Represents a table or column level {@code check} constraint.
@@ -16,10 +16,17 @@ import java.util.Objects;
 public class CheckConstraint {
 	private String name;
 	private String constraint;
+	private String options;
 
 	public CheckConstraint(String name, String constraint) {
 		this.name = name;
 		this.constraint = constraint;
+	}
+
+	public CheckConstraint(String name, String constraint, String options) {
+		this.name = name;
+		this.constraint = constraint;
+		this.options = options;
 	}
 
 	public CheckConstraint(String constraint) {
@@ -54,16 +61,31 @@ public class CheckConstraint {
 		this.constraint = constraint;
 	}
 
+	public String getOptions() {
+		return options;
+	}
+
+	public void setOptions(String options) {
+		this.options = options;
+	}
+
+	/**
+	 * @deprecated use {@link #constraintString(Dialect)} instead.
+	 */
+	@Deprecated(since = "7.0")
 	public String constraintString() {
 		return name == null
 				? " check (" + constraint + ")"
 				: " constraint " + name + " check (" + constraint + ")";
 	}
 
+	public String constraintString(Dialect dialect) {
+		return dialect.getCheckConstraintString( this );
+	}
+
 	@Override
 	public boolean equals(Object object) {
-		if ( object instanceof CheckConstraint ) {
-			CheckConstraint other = (CheckConstraint) object;
+		if ( object instanceof CheckConstraint other ) {
 			return Objects.equals( name, other.name )
 				&& Objects.equals( constraint, other.constraint );
 		}

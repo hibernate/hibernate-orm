@@ -1,91 +1,101 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.sqm.tree.from.SqmTreatedAttributeJoin;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.descriptor.java.JavaType;
 
-import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Predicate;
 
 /**
  * Models a join based on a mapped attribute reference.
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractSqmAttributeJoin<O,T>
-		extends AbstractSqmQualifiedJoin<O,T>
-		implements SqmAttributeJoin<O,T> {
+public abstract class AbstractSqmAttributeJoin<L, R>
+		extends AbstractSqmJoin<L, R>
+		implements SqmAttributeJoin<L, R> {
 
-	private final boolean fetched;
-
-	public AbstractSqmAttributeJoin(
-			SqmFrom<?,O> lhs,
-			SqmJoinable joinedNavigable,
-			String alias,
-			SqmJoinType joinType,
-			boolean fetched,
-			NodeBuilder nodeBuilder) {
-		this(
-				lhs,
-				joinedNavigable.createNavigablePath( lhs, alias ),
-				joinedNavigable,
-				alias == SqmCreationHelper.IMPLICIT_ALIAS ? null : alias,
-				joinType,
-				fetched,
-				nodeBuilder
-		);
-	}
+	private final boolean implicitJoin;
+	private boolean fetchJoin;
 
 	protected AbstractSqmAttributeJoin(
-			SqmFrom<?,O> lhs,
+			SqmFrom<?, L> lhs,
 			NavigablePath navigablePath,
-			SqmJoinable joinedNavigable,
+			SqmPathSource<R> joinedNavigable,
 			String alias,
 			SqmJoinType joinType,
-			boolean fetched,
+			boolean fetchJoin,
 			NodeBuilder nodeBuilder) {
-		//noinspection unchecked
 		super(
 				navigablePath,
-				(SqmPathSource<T>) joinedNavigable,
+				joinedNavigable,
 				lhs,
-				alias,
+				isImplicitAlias( alias ) ? null : alias,
 				joinType,
 				nodeBuilder
 		);
-		this.fetched = fetched;
+		this.fetchJoin = fetchJoin;
+		validateFetchAlias( alias );
+		implicitJoin = isImplicitAlias( alias ); //TODO: add a parameter
+	}
+
+	@SuppressWarnings("StringEquality")
+	private static boolean isImplicitAlias(String alias) {
+		return alias == SqmCreationHelper.IMPLICIT_ALIAS;
 	}
 
 	@Override
-	public SqmFrom<?, O> getLhs() {
-		//noinspection unchecked
-		return (SqmFrom<?, O>) super.getLhs();
+	public boolean isImplicitJoin() {
+		return implicitJoin;
 	}
 
 	@Override
-	public JavaType<T> getNodeJavaType() {
+	public SqmFrom<?, L> getLhs() {
+		return super.getLhs();
+	}
+
+	@Override
+	public JavaType<R> getNodeJavaType() {
 		return getJavaTypeDescriptor();
 	}
 
+	@Override
 	public boolean isFetched() {
-		return fetched;
+		return fetchJoin;
+	}
+
+	@Override
+	public SqmAttributeJoin<L,R> alias(String name) {
+		validateFetchAlias( name );
+		return (SqmAttributeJoin<L, R>) super.alias( name );
+	}
+
+	@Override
+	public void clearFetched() {
+		fetchJoin = false;
+	}
+
+	private void validateFetchAlias(String alias) {
+		if ( fetchJoin && alias != null && nodeBuilder().isJpaQueryComplianceEnabled() ) {
+			throw new IllegalStateException(
+					"The JPA specification does not permit specifying an alias for fetch joins."
+			);
+		}
 	}
 
 	@Override
@@ -98,37 +108,23 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 	// JPA
 
 	@Override
-	public PersistentAttribute<? super O, ?> getAttribute() {
+	public PersistentAttribute<? super L, ?> getAttribute() {
 		//noinspection unchecked
-		return (PersistentAttribute<? super O, ?>) getReferencedPathSource();
+		return (PersistentAttribute<? super L, ?>) getReferencedPathSource();
 	}
 
 	@Override
-	public SqmAttributeJoin<O, T> on(JpaExpression<Boolean> restriction) {
-		super.on( restriction );
-		return this;
+	public SqmAttributeJoin<L, R> on(JpaExpression<Boolean> restriction) {
+		return (SqmAttributeJoin<L, R>) super.on( restriction );
 	}
 
 	@Override
-	public SqmAttributeJoin<O, T> on(Expression<Boolean> restriction) {
-		super.on( restriction );
-		return this;
+	public SqmAttributeJoin<L, R> on(JpaPredicate... restrictions) {
+		return (SqmAttributeJoin<L, R>) super.on( restrictions );
 	}
 
 	@Override
-	public SqmAttributeJoin<O, T> on(JpaPredicate... restrictions) {
-		super.on( restrictions );
-		return this;
-	}
-
-	@Override
-	public SqmAttributeJoin<O, T> on(Predicate... restrictions) {
-		super.on( restrictions );
-		return this;
-	}
-
-	@Override
-	public SqmFrom<?, O> getParent() {
+	public SqmFrom<?, L> getParent() {
 		return getLhs();
 	}
 
@@ -136,4 +132,24 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 	public JoinType getJoinType() {
 		return getSqmJoinType().getCorrespondingJpaJoinType();
 	}
+
+	@Override
+	public abstract <S extends R> SqmTreatedAttributeJoin<L,R,S> treatAs(Class<S> treatJavaType);
+
+	@Override
+	public abstract <S extends R> SqmTreatedAttributeJoin<L, R, S> treatAs(EntityDomainType<S> treatTarget);
+
+	@Override
+	public abstract <S extends R> SqmTreatedAttributeJoin<L, R, S> treatAs(Class<S> treatJavaType, String alias);
+
+	@Override
+	public abstract <S extends R> SqmTreatedAttributeJoin<L, R, S> treatAs(EntityDomainType<S> treatTarget, String alias);
+
+	@Override
+	public abstract <S extends R> SqmTreatedAttributeJoin<L, R, S> treatAs(Class<S> treatJavaType, String alias, boolean fetched);
+
+	@Override
+	public abstract <S extends R> SqmTreatedAttributeJoin<L, R, S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetched);
+
+
 }

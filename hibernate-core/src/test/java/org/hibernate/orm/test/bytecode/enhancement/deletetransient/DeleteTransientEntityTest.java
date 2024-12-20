@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.deletetransient;
 
@@ -13,39 +11,37 @@ import org.hibernate.orm.test.deletetransient.Note;
 import org.hibernate.orm.test.deletetransient.Person;
 import org.hibernate.orm.test.deletetransient.Suite;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Steve Ebersole
  */
-@RunWith(BytecodeEnhancerRunner.class)
+@DomainModel(
+		xmlMappings = {
+				"org/hibernate/orm/test/deletetransient/Person.hbm.xml"
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @CustomEnhancementContext({ NoDirtyCheckingContext.class, DirtyCheckEnhancementContext.class })
-public class DeleteTransientEntityTest extends BaseCoreFunctionalTestCase {
+public class DeleteTransientEntityTest {
 
-	@Override
-	protected String getBaseForMappings() {
-		return "org/hibernate/orm/test/";
-	}
-
-	@Override
-	public String[] getMappings() {
-		return new String[] { "deletetransient/Person.hbm.xml" };
-	}
-
-	@Override
-	protected boolean isCleanupTestDataRequired() {
-		return true;
+	@AfterEach
+	void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.createQuery( "from java.lang.Object", Object.class ).list().forEach( session::remove ) );
 	}
 
 	@Test
-	public void testTransientEntityDeletionNoCascades() {
-		inTransaction(
+	public void testTransientEntityDeletionNoCascades(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.remove( new Address() );
 				}
@@ -53,8 +49,8 @@ public class DeleteTransientEntityTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testTransientEntityDeletionCascadingToTransientAssociation() {
-		inTransaction(
+	public void testTransientEntityDeletionCascadingToTransientAssociation(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Person p = new Person();
 					p.getAddresses().add( new Address() );
@@ -64,8 +60,8 @@ public class DeleteTransientEntityTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testTransientEntityDeleteCascadingToCircularity() {
-		inTransaction(
+	public void testTransientEntityDeleteCascadingToCircularity(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Person p1 = new Person();
 					Person p2 = new Person();
@@ -77,35 +73,35 @@ public class DeleteTransientEntityTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testTransientEntityDeletionCascadingToDetachedAssociation() {
+	public void testTransientEntityDeletionCascadingToDetachedAssociation(SessionFactoryScope scope) {
 		Address address = new Address();
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					address.setInfo( "123 Main St." );
 					session.persist( address );
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Person p = new Person();
 					p.getAddresses().add( address );
-					session.delete( p );
+					session.remove( p );
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Long count = (Long) session.createQuery( "select count(*) from Address" ).list().get( 0 );
-					assertEquals( "delete not cascaded properly across transient entity", 0, count.longValue() );
+					assertEquals( 0, count.longValue(), "delete not cascaded properly across transient entity" );
 
 				}
 		);
 	}
 
 	@Test
-	public void testTransientEntityDeletionCascadingToPersistentAssociation() {
-		Long id = fromTransaction(
+	public void testTransientEntityDeletionCascadingToPersistentAssociation(SessionFactoryScope scope) {
+		Long id = scope.fromTransaction(
 				session -> {
 					Address address = new Address();
 					address.setInfo( "123 Main St." );
@@ -114,49 +110,49 @@ public class DeleteTransientEntityTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Address address = session.get( Address.class, id );
 					Person p = new Person();
 					p.getAddresses().add( address );
-					session.delete( p );
+					session.remove( p );
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Long count = (Long) session.createQuery( "select count(*) from Address" ).list().get( 0 );
-					assertEquals( "delete not cascaded properly across transient entity", 0, count.longValue() );
+					assertEquals( 0, count.longValue(), "delete not cascaded properly across transient entity" );
 				}
 		);
 	}
 
 	@Test
 	@SuppressWarnings({ "unchecked" })
-	public void testCascadeAllFromClearedPersistentAssnToTransientEntity() {
+	public void testCascadeAllFromClearedPersistentAssnToTransientEntity(SessionFactoryScope scope) {
 		final Person p = new Person();
 		Address address = new Address();
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					address.setInfo( "123 Main St." );
 					p.getAddresses().add( address );
-					session.save( p );
+					session.persist( p );
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Suite suite = new Suite();
 					address.getSuites().add( suite );
 					p.getAddresses().clear();
-					session.saveOrUpdate( p );
+					session.merge( p );
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Person person =  session.get( p.getClass(), p.getId() );
-					assertEquals( "persistent collection not cleared", 0, person.getAddresses().size() );
+					assertEquals( 0, person.getAddresses().size(), "persistent collection not cleared" );
 					Long count = (Long) session.createQuery( "select count(*) from Address" ).list().get( 0 );
 					assertEquals( 1, count.longValue() );
 					count = (Long) session.createQuery( "select count(*) from Suite" ).list().get( 0 );
@@ -167,36 +163,36 @@ public class DeleteTransientEntityTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SuppressWarnings({ "unchecked" })
-	public void testCascadeAllDeleteOrphanFromClearedPersistentAssnToTransientEntity() {
+	public void testCascadeAllDeleteOrphanFromClearedPersistentAssnToTransientEntity(SessionFactoryScope scope) {
 		Address address = new Address();
 		address.setInfo( "123 Main St." );
 		Suite suite = new Suite();
 		address.getSuites().add( suite );
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 
-					session.save( address );
+					session.persist( address );
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Note note = new Note();
 					note.setDescription( "a description" );
 					suite.getNotes().add( note );
 					address.getSuites().clear();
-					session.saveOrUpdate( address );
+					session.merge( address );
 				}
 		);
 
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Long count = (Long) session.createQuery( "select count(*) from Suite" ).list().get( 0 );
 					assertEquals(
-							"all-delete-orphan not cascaded properly to cleared persistent collection entities",
 							0,
-							count.longValue()
+							count.longValue(),
+							"all-delete-orphan not cascaded properly to cleared persistent collection entities"
 					);
 					count = (Long) session.createQuery( "select count(*) from Note" ).list().get( 0 );
 					assertEquals( 0, count.longValue() );

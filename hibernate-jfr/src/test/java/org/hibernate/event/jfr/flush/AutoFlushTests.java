@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.event.jfr.flush;
 
 import java.util.List;
@@ -50,7 +54,7 @@ public class AutoFlushTests {
 					RecordedEvent event = events.get( 0 );
 					assertThat( event.getEventType().getName() )
 							.isEqualTo( FlushEvent.NAME );
-					assertThat( event.getLong( "executionTime" ) ).isGreaterThan( 0 );
+					assertThat( event.getDuration() ).isPositive();
 					assertThat( event.getString( "sessionIdentifier" ) )
 							.isEqualTo( session.getSessionIdentifier().toString() );
 					assertThat( event.getInt( "numberOfEntitiesProcessed" ) )
@@ -69,7 +73,7 @@ public class AutoFlushTests {
 					event = events.get( 0 );
 					assertThat( event.getEventType().getName() )
 							.isEqualTo( PartialFlushEvent.NAME );
-					assertThat( event.getLong( "executionTime" ) ).isGreaterThan( 0 );
+					assertThat( event.getDuration() ).isPositive();
 					assertThat( event.getString( "sessionIdentifier" ) )
 							.isEqualTo( session.getSessionIdentifier().toString() );
 					assertThat( event.getInt( "numberOfEntitiesProcessed" ) )

@@ -1,18 +1,18 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.select;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaCrossJoin;
@@ -23,7 +23,7 @@ import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.JpaSubQuery;
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
@@ -35,18 +35,18 @@ import org.hibernate.query.sqm.tree.domain.SqmBagJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedBagJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedCrossJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedEntityJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedListJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedMapJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedRoot;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedSetJoin;
-import org.hibernate.query.sqm.tree.domain.SqmCorrelatedSingularJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedSingularValuedJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
 import org.hibernate.query.sqm.tree.domain.SqmListJoin;
 import org.hibernate.query.sqm.tree.domain.SqmMapJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
-import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
+import org.hibernate.query.sqm.tree.domain.SqmSingularValuedJoin;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
@@ -64,11 +64,17 @@ import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.ListJoin;
 import jakarta.persistence.criteria.MapJoin;
 import jakarta.persistence.criteria.Order;
+import jakarta.persistence.criteria.ParameterExpression;
 import jakarta.persistence.criteria.PluralJoin;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Selection;
 import jakarta.persistence.criteria.SetJoin;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.persistence.criteria.Subquery;
+import jakarta.persistence.metamodel.EntityType;
+
+import static org.hibernate.query.sqm.spi.SqmCreationHelper.combinePredicates;
 
 /**
  * @author Steve Ebersole
@@ -108,6 +114,15 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 		super( resultType, builder );
 		this.parent = parent;
 		applyInferableType( resultType );
+	}
+
+	public SqmSubQuery(
+			SqmQuery<?> parent,
+			EntityType<T> resultType,
+			NodeBuilder builder) {
+		super( resultType.getJavaType(), builder );
+		this.parent = parent;
+		applyInferableType( resultType.getJavaType() );
 	}
 
 	public SqmSubQuery(
@@ -186,6 +201,32 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	}
 
 	@Override
+	protected <X> JpaCteCriteria<X> withInternal(String name, AbstractQuery<X> criteria) {
+		if ( !( criteria instanceof SqmSubQuery<?> ) || ( (SqmSubQuery<X>) criteria ).getParent() != parent ) {
+			throw new IllegalArgumentException(
+					"Invalid query type provided to subquery 'with' method, " +
+							"expecting a subquery with the same parent to use as CTE"
+			);
+		}
+		return super.withInternal( name, criteria );
+	}
+
+	@Override
+	protected <X> JpaCteCriteria<X> withInternal(
+			String name,
+			AbstractQuery<X> baseCriteria,
+			boolean unionDistinct,
+			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
+		if ( !( baseCriteria instanceof SqmSubQuery<?> ) || ( (SqmSubQuery<X>) baseCriteria ).getParent() != parent ) {
+			throw new IllegalArgumentException(
+					"Invalid query type provided to subquery 'with' method, " +
+							"expecting a subquery with the same parent to use as CTE"
+			);
+		}
+		return super.withInternal( name, baseCriteria, unionDistinct, recursiveCriteriaProducer );
+	}
+
+	@Override
 	public SqmQuery<?> getContainingQuery() {
 		return parent;
 	}
@@ -258,13 +299,12 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 					break;
 				}
 				default: {
-					setResultType( (Class<T>) Object[].class );
-					resultSelection = ( Selection<? extends T> ) nodeBuilder().array( selections );
+					resultSelection = ( Selection<? extends T> ) nodeBuilder().array( selectionList );
 				}
 			}
 		}
 		else if ( Tuple.class.isAssignableFrom( resultType ) ) {
-			resultSelection = ( Selection<? extends T> ) nodeBuilder().tuple( selections );
+			resultSelection = ( Selection<? extends T> ) nodeBuilder().tuple( selectionList );
 		}
 		else if ( resultType.isArray() ) {
 			resultSelection = nodeBuilder().array( resultType, selections );
@@ -462,7 +502,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	}
 
 	@Override
-	public <X, Y> SqmAttributeJoin<X, Y> correlate(Join<X, Y> join) {
+	public <X, Y> SqmCorrelatedJoin<X, Y> correlate(Join<X, Y> join) {
 		if ( join instanceof PluralJoin<?, ?, ?> ) {
 			final PluralJoin<?, ?, ?> pluralJoin = (PluralJoin<?, ?, ?>) join;
 			switch ( pluralJoin.getModel().getCollectionType() ) {
@@ -476,41 +516,41 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 					return correlate( (MapJoin<X, ?, Y>) join );
 			}
 		}
-		final SqmCorrelatedSingularJoin<X, Y> correlated = ( (SqmSingularJoin<X, Y>) join ).createCorrelation();
+		final SqmCorrelatedSingularValuedJoin<X, Y> correlated = ( (SqmSingularValuedJoin<X, Y>) join ).createCorrelation();
 		getQuerySpec().addRoot( correlated.getCorrelatedRoot() );
 		return correlated;
 	}
 
 	@Override
-	public <X, Y> SqmBagJoin<X, Y> correlate(CollectionJoin<X, Y> parentCollection) {
+	public <X, Y> SqmCorrelatedBagJoin<X, Y> correlate(CollectionJoin<X, Y> parentCollection) {
 		final SqmCorrelatedBagJoin<X, Y> correlated = ( (SqmBagJoin<X, Y>) parentCollection ).createCorrelation();
 		getQuerySpec().addRoot( correlated.getCorrelatedRoot() );
 		return correlated;
 	}
 
 	@Override
-	public <X, Y> SqmSetJoin<X, Y> correlate(SetJoin<X, Y> parentSet) {
+	public <X, Y> SqmCorrelatedSetJoin<X, Y> correlate(SetJoin<X, Y> parentSet) {
 		final SqmCorrelatedSetJoin<X, Y> correlated = ( (SqmSetJoin<X, Y>) parentSet ).createCorrelation();
 		getQuerySpec().addRoot( correlated.getCorrelatedRoot() );
 		return correlated;
 	}
 
 	@Override
-	public <X, Y> SqmListJoin<X, Y> correlate(ListJoin<X, Y> parentList) {
+	public <X, Y> SqmCorrelatedListJoin<X, Y> correlate(ListJoin<X, Y> parentList) {
 		final SqmCorrelatedListJoin<X, Y> correlated = ( (SqmListJoin<X, Y>) parentList ).createCorrelation();
 		getQuerySpec().addRoot( correlated.getCorrelatedRoot() );
 		return correlated;
 	}
 
 	@Override
-	public <X, K, V> SqmMapJoin<X, K, V> correlate(MapJoin<X, K, V> parentMap) {
+	public <X, K, V> SqmCorrelatedMapJoin<X, K, V> correlate(MapJoin<X, K, V> parentMap) {
 		final SqmCorrelatedMapJoin<X, K, V> correlated = ( (SqmMapJoin<X, K, V>) parentMap ).createCorrelation();
 		getQuerySpec().addRoot( correlated.getCorrelatedRoot() );
 		return correlated;
 	}
 
 	@Override
-	public <X> SqmCrossJoin<X> correlate(JpaCrossJoin<X> parentCrossJoin) {
+	public <X> SqmCorrelatedCrossJoin<X> correlate(JpaCrossJoin<X> parentCrossJoin) {
 		final SqmCorrelatedCrossJoin<X> correlated =
 				((SqmCrossJoin<X>) parentCrossJoin).createCorrelation();
 		getQuerySpec().addRoot( correlated.getCorrelatedRoot() );
@@ -518,9 +558,8 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	}
 
 	@Override
-	public <X> SqmEntityJoin<X> correlate(JpaEntityJoin<X> parentEntityJoin) {
-		final SqmCorrelatedEntityJoin<X> correlated =
-				((SqmEntityJoin<X>) parentEntityJoin).createCorrelation();
+	public <X> JpaEntityJoin<T, X> correlate(JpaEntityJoin<T, X> parentEntityJoin) {
+		final SqmCorrelatedEntityJoin<T,X> correlated = ((SqmEntityJoin<T,X>) parentEntityJoin).createCorrelation();
 		getQuerySpec().addRoot( correlated.getCorrelatedRoot() );
 		return correlated;
 	}
@@ -571,12 +610,12 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	}
 
 	@Override
-	public SqmPredicate equalTo(Expression<T> that) {
+	public SqmPredicate equalTo(Expression<?> that) {
 		return nodeBuilder().equal( this, that );
 	}
 
 	@Override
-	public SqmPredicate equalTo(T that) {
+	public SqmPredicate equalTo(Object that) {
 		return nodeBuilder().equal( this, that );
 	}
 
@@ -592,7 +631,8 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 
 	@Override
 	public SqmInPredicate<?> in(Collection<?> values) {
-		return nodeBuilder().in( this, values );
+		//noinspection unchecked
+		return nodeBuilder().in( this, (Collection<T>) values );
 	}
 
 	@Override
@@ -601,28 +641,25 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	}
 
 	@Override
-	public SqmExpressible<T> getNodeType() {
+	public @Nullable SqmExpressible<T> getNodeType() {
 		return expressibleType;
 	}
 
 	@Override
-	public void applyInferableType(SqmExpressible<?> type) {
+	public void applyInferableType(@Nullable SqmExpressible<?> type) {
 		//noinspection unchecked
 		expressibleType = (SqmExpressible<T>) type;
-		if ( expressibleType != null && expressibleType.getExpressibleJavaType() != null ) {
-			setResultType( expressibleType.getExpressibleJavaType().getJavaTypeClass() );
-		}
 	}
 
 	private void applyInferableType(Class<T> type) {
-		final EntityDomainType<T> entityDescriptor = nodeBuilder().getSessionFactory().getRuntimeMetamodels()
-				.getJpaMetamodel()
-				.findEntityType( type );
-		if ( entityDescriptor != null ) {
-			this.expressibleType = entityDescriptor;
-		}
-		else {
-			this.expressibleType = nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( type );
+		if ( type != null ) {
+			final EntityDomainType<T> entityDescriptor = nodeBuilder().getDomainModel().findEntityType( type );
+			if ( entityDescriptor != null ) {
+				this.expressibleType = entityDescriptor;
+			}
+			else {
+				this.expressibleType = nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( type );
+			}
 		}
 	}
 
@@ -682,6 +719,46 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	@Override
 	public <U> SqmSubQuery<U> subquery(Class<U> type) {
 		return new SqmSubQuery<>( this, type, nodeBuilder() );
+	}
+
+	@Override
+	public <U> Subquery<U> subquery(EntityType<U> type) {
+		return new SqmSubQuery<>( this, type, nodeBuilder() );
+	}
+
+	@Override
+	public Subquery<T> where(List<Predicate> restrictions) {
+		//noinspection rawtypes,unchecked
+		getQuerySpec().getWhereClause().applyPredicates( (List) restrictions );
+		return this;
+	}
+
+	@Override
+	public Subquery<T> having(List<Predicate> restrictions) {
+		//noinspection unchecked,rawtypes
+		final SqmPredicate combined = combinePredicates( getQuerySpec().getHavingClausePredicate(), (List) restrictions );
+		getQuerySpec().setHavingClausePredicate( combined );
+		return this;
+	}
+
+	@Override
+	public Set<ParameterExpression<?>> getParameters() {
+		return Collections.emptySet();
+	}
+
+	@Override
+	public Predicate notEqualTo(Expression<?> value) {
+		return nodeBuilder().notEqual( this, value );
+	}
+
+	@Override
+	public Predicate notEqualTo(Object value) {
+		return nodeBuilder().notEqual( this, value );
+	}
+
+	@Override
+	public <X> SqmExpression<X> cast(Class<X> targetType) {
+		return nodeBuilder().cast( this, targetType );
 	}
 
 	@Override

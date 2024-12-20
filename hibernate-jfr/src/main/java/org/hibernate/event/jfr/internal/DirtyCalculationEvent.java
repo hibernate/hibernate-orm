@@ -1,12 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.jfr.internal;
 
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.internal.build.AllowNonPortable;
 
 import jdk.jfr.Category;
@@ -20,16 +18,13 @@ import jdk.jfr.StackTrace;
 @Label("DirtyCalculationEvent Execution")
 @Category("Hibernate ORM")
 @Description("DirtyCalculationEvent Execution")
-@StackTrace(false)
+@StackTrace
 @AllowNonPortable
-public class DirtyCalculationEvent extends Event implements HibernateMonitoringEvent {
+public class DirtyCalculationEvent extends Event implements DiagnosticEvent {
 	public static final String NAME = "org.hibernate.orm.DirtyCalculationEvent";
 
 	@Label("Session Identifier")
 	public String sessionIdentifier;
-
-	@Label("PartialFlushEvent time")
-	public long executionTime;
 
 	@Label("Entity Name")
 	public String entityName;
@@ -45,5 +40,4 @@ public class DirtyCalculationEvent extends Event implements HibernateMonitoringE
 		return NAME;
 	}
 
-	public transient long startedAt;
 }

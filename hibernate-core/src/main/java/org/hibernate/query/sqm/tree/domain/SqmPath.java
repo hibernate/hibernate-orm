@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
@@ -14,10 +12,10 @@ import java.util.function.Consumer;
 import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.SemanticException;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -27,7 +25,12 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import jakarta.persistence.metamodel.MapAttribute;
+import jakarta.persistence.metamodel.PluralAttribute;
+import jakarta.persistence.metamodel.SingularAttribute;
 
 /**
  * Models a reference to a part of the application's domain model as part of an SQM tree.
@@ -104,7 +107,7 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	SqmPathSource<T> getNodeType();
 
 	@Override
-	default void applyInferableType(SqmExpressible<?> type) {
+	default void applyInferableType(@Nullable SqmExpressible<?> type) {
 		// do nothing
 	}
 
@@ -114,10 +117,18 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	}
 
 	@Override
-	<S extends T> SqmPath<S> treatAs(Class<S> treatJavaType);
+	<S extends T> SqmTreatedPath<T,S> treatAs(Class<S> treatJavaType);
 
 	@Override
-	<S extends T> SqmPath<S> treatAs(EntityDomainType<S> treatTarget);
+	<S extends T> SqmTreatedPath<T,S> treatAs(EntityDomainType<S> treatTarget);
+
+	<S extends T> SqmTreatedPath<T,S> treatAs(Class<S> treatJavaType, String alias);
+
+	<S extends T> SqmTreatedPath<T,S> treatAs(EntityDomainType<S> treatTarget, String alias);
+
+	<S extends T> SqmTreatedPath<T,S> treatAs(Class<S> treatJavaType, String alias, boolean fetch);
+
+	<S extends T> SqmTreatedPath<T,S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch);
 
 	default SqmRoot<?> findRoot() {
 		final SqmPath<?> lhs = getLhs();
@@ -153,10 +164,10 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	<Y> SqmPath<Y> get(SingularAttribute<? super T, Y> attribute);
 
 	@Override
-	<E, C extends Collection<E>> SqmExpression<C> get(PluralAttribute<T, C, E> collection);
+	<E, C extends Collection<E>> SqmExpression<C> get(PluralAttribute<? super T, C, E> collection);
 
 	@Override
-	<K, V, M extends Map<K, V>> SqmExpression<M> get(MapAttribute<T, K, V> map);
+	<K, V, M extends Map<K, V>> SqmExpression<M> get(MapAttribute<? super T, K, V> map);
 
 	@Override
 	SqmExpression<Class<? extends T>> type();
@@ -164,6 +175,18 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	@Override
 	<Y> SqmPath<Y> get(String attributeName);
 
+	/**
+	 * Same as {@link #get(String)}, but if {@code includeSubtypes} is set to {@code true}
+	 * and this path is polymorphic, also try finding subtype attributes.
+	 *
+	 * @see SqmPathSource#findSubPathSource(String, boolean)
+	 */
+	default <Y> SqmPath<Y> get(String attributeName, boolean includeSubtypes) {
+		return get( attributeName );
+	}
+
 	@Override
 	SqmPath<T> copy(SqmCopyContext context);
+
+
 }

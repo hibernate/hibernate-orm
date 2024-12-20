@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.internal;
 
@@ -14,6 +12,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.internal.MapMember;
+import org.hibernate.type.CollectionType;
 
 /**
  * @author Steve Ebersole
@@ -87,7 +86,7 @@ public abstract class BaseAttributeMetadata<X, Y> implements AttributeMetadata<X
 	}
 
 	public boolean isPlural() {
-		return propertyMapping.getType().isCollectionType();
+		return propertyMapping.getType() instanceof CollectionType;
 	}
 
 	public Property getPropertyMapping() {

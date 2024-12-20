@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.formula;
 
@@ -14,7 +12,7 @@ import jakarta.persistence.Id;
 
 import org.hibernate.annotations.Formula;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -61,7 +59,7 @@ public class FormulaWithPartitionByTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10754" )
+	@JiraKey( value = "HHH-10754" )
 	void testFormulaAnnotationWithPartitionBy(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final List<DisplayItem> displayItems = session.createQuery( "select di from DisplayItem di order by di.id", DisplayItem.class).getResultList();

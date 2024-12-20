@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.unionsubclass;
 
@@ -17,7 +15,7 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.query.Query;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLServerSnapshotIsolationConnectionProvider;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.junit.jupiter.api.Test;
@@ -63,7 +61,7 @@ public class UnionSubclassTest extends BaseSessionFactoryFunctionalTest {
 		inTransaction(
 				s -> {
 					Location mel = new Location( "Earth" );
-					s.save( mel );
+					s.persist( mel );
 
 					Human gavin = new Human();
 					gavin.setIdentity( "gavin" );
@@ -83,8 +81,8 @@ public class UnionSubclassTest extends BaseSessionFactoryFunctionalTest {
 					criteria.from( Human.class );
 					Human gavin = s.createQuery( criteria ).uniqueResult();
 					assertEquals( 2, gavin.getInfo().size() );
-					s.delete( gavin );
-					s.delete( gavin.getLocation() );
+					s.remove( gavin );
+					s.remove( gavin.getLocation() );
 				}
 		);
 	}
@@ -94,7 +92,7 @@ public class UnionSubclassTest extends BaseSessionFactoryFunctionalTest {
 		inTransaction(
 				s -> {
 					Location mel = new Location( "Earth" );
-					s.save( mel );
+					s.persist( mel );
 
 					Human gavin = new Human();
 					gavin.setIdentity( "gavin" );
@@ -123,9 +121,9 @@ public class UnionSubclassTest extends BaseSessionFactoryFunctionalTest {
 					for ( Human h : list ) {
 						assertTrue( Hibernate.isInitialized( h.getLocation() ) );
 						assertTrue( Hibernate.isInitialized( h.getLocation().getBeings() ) );
-						s.delete( h );
+						s.remove( h );
 					}
-					s.delete( s.get( Location.class, mel.getId() ) );
+					s.remove( s.get( Location.class, mel.getId() ) );
 				}
 		);
 	}
@@ -136,8 +134,8 @@ public class UnionSubclassTest extends BaseSessionFactoryFunctionalTest {
 				s -> {
 					Location mel = new Location( "Melbourne, Australia" );
 					Location mars = new Location( "Mars" );
-					s.save( mel );
-					s.save( mars );
+					s.persist( mel );
+					s.persist( mars );
 
 					Human gavin = new Human();
 					gavin.setIdentity( "gavin" );
@@ -203,9 +201,9 @@ public class UnionSubclassTest extends BaseSessionFactoryFunctionalTest {
 					criteria.orderBy( criteriaBuilder.asc( root.get( "identity" ) ) );
 					x23y4 = s.createQuery( criteria ).list().get( 0 );
 //					x23y4 = (Alien) s.createCriteria( Alien.class ).addOrder( Order.asc( "identity" ) ).list().get( 0 );
-					s.delete( x23y4.getHive() );
-					s.delete( s.get( Location.class, mel.getId() ) );
-					s.delete( s.get( Location.class, mars.getId() ) );
+					s.remove( x23y4.getHive() );
+					s.remove( s.get( Location.class, mel.getId() ) );
+					s.remove( s.get( Location.class, mars.getId() ) );
 					assertTrue( s.createQuery( "from Being" ).list().isEmpty() );
 				}
 		);
@@ -217,8 +215,8 @@ public class UnionSubclassTest extends BaseSessionFactoryFunctionalTest {
 				s -> {
 					Location mel = new Location( "Melbourne, Australia" );
 					Location mars = new Location( "Mars" );
-					s.save( mel );
-					s.save( mars );
+					s.persist( mel );
+					s.persist( mars );
 
 					Human gavin = new Human();
 					gavin.setIdentity( "gavin" );
@@ -242,7 +240,7 @@ public class UnionSubclassTest extends BaseSessionFactoryFunctionalTest {
 					thing.setDescription( "some thing" );
 					thing.setOwner( gavin );
 					gavin.getThings().add( thing );
-					s.save( thing );
+					s.persist( thing );
 					s.flush();
 
 					s.clear();
@@ -303,14 +301,14 @@ public class UnionSubclassTest extends BaseSessionFactoryFunctionalTest {
 					assertEquals( "x23y4$$hu%3", thing.getOwner().getIdentity()
 					);
 
-					s.delete( thing );
+					s.remove( thing );
 					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 					CriteriaQuery<Alien> criteria = criteriaBuilder.createQuery( Alien.class );
 					criteria.from( Alien.class );
 					x23y4 = s.createQuery( criteria ).uniqueResult();
-					s.delete( x23y4.getHive() );
-					s.delete( s.get( Location.class, mel.getId() ) );
-					s.delete( s.get( Location.class, mars.getId() ) );
+					s.remove( x23y4.getHive() );
+					s.remove( s.get( Location.class, mel.getId() ) );
+					s.remove( s.get( Location.class, mars.getId() ) );
 					assertTrue( s.createQuery( "from Being" ).list().isEmpty() );
 
 				}
@@ -324,9 +322,9 @@ public class UnionSubclassTest extends BaseSessionFactoryFunctionalTest {
 					Location mel = new Location( "Melbourne, Australia" );
 					Location atl = new Location( "Atlanta, GA" );
 					Location mars = new Location( "Mars" );
-					s.save( mel );
-					s.save( atl );
-					s.save( mars );
+					s.persist( mel );
+					s.persist( atl );
+					s.persist( mars );
 
 					Human gavin = new Human();
 					gavin.setIdentity( "gavin" );
@@ -417,14 +415,14 @@ public class UnionSubclassTest extends BaseSessionFactoryFunctionalTest {
 
 					atl.addBeing( gavin );
 					assertEquals( 1, s.createQuery( "from Human h where h.location.name like '%GA'" ).list().size() );
-					s.delete( gavin );
+					s.remove( gavin );
 
 					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 					CriteriaQuery<Alien> criteria = criteriaBuilder.createQuery( Alien.class );
 					criteria.from( Alien.class );
 
 					x23y4 = s.createQuery( criteria ).uniqueResult();
-					s.delete( x23y4.getHive() );
+					s.remove( x23y4.getHive() );
 					assertTrue( s.createQuery( "from Being" ).list().isEmpty() );
 
 					s.createQuery( "delete from Location" ).executeUpdate();
@@ -458,15 +456,15 @@ public class UnionSubclassTest extends BaseSessionFactoryFunctionalTest {
 					q.setParameter( "name2", "steve" );
 					final List result = q.list();
 					assertEquals( 2, result.size() );
-					s.delete( result.get( 0 ) );
-					s.delete( result.get( 1 ) );
-					s.delete( ( (Human) result.get( 0 ) ).getLocation() );
+					s.remove( result.get( 0 ) );
+					s.remove( result.get( 1 ) );
+					s.remove( ( (Human) result.get( 0 ) ).getLocation() );
 				}
 		);
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11740")
+	@JiraKey(value = "HHH-11740")
 	public void testBulkOperationsWithDifferentConnections() throws Exception {
 		inTransaction(
 				s -> {
@@ -502,6 +500,9 @@ public class UnionSubclassTest extends BaseSessionFactoryFunctionalTest {
 		// connections.
 
 		inTransaction( s1 -> {
+			// Force connection acquisition
+			s1.getJdbcCoordinator().getLogicalConnection().getPhysicalConnection();
+
 			// Transaction used by s1 is already started.
 			// Assert that the Connection is already physically connected.
 			assertTrue( s1.getJdbcCoordinator().getLogicalConnection().isPhysicallyConnected() );
@@ -520,28 +521,30 @@ public class UnionSubclassTest extends BaseSessionFactoryFunctionalTest {
 			// for a bulk operation.
 
 			inTransaction( s2 -> {
-							   // Check same assertions for s2 as was done for s1.
+				// Force connection acquisition
+				s2.getJdbcCoordinator().getLogicalConnection().getPhysicalConnection();
+							// Check same assertions for s2 as was done for s1.
 				assertTrue( s2.getJdbcCoordinator().getLogicalConnection().isPhysicallyConnected() );
-							   assertEquals(
-									   PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION,
-									   s2.getJdbcCoordinator().getLogicalConnection().getConnectionHandlingMode()
-							   );
+							assertEquals(
+									PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION,
+									s2.getJdbcCoordinator().getLogicalConnection().getConnectionHandlingMode()
+							);
 
-							   // Get the Connection s2 will use.
-							   Connection connection2 = s2.getJdbcCoordinator().getLogicalConnection().getPhysicalConnection();
+							// Get the Connection s2 will use.
+							Connection connection2 = s2.getJdbcCoordinator().getLogicalConnection().getPhysicalConnection();
 
-							   // Assert that connection2 is not the same as connection1
-							   assertNotSame( connection1, connection2 );
+							// Assert that connection2 is not the same as connection1
+							assertNotSame( connection1, connection2 );
 
-							   // Execute a bulk operation on s2 (using connection2)
-							   assertEquals(
-									   1,
-									   s2.createQuery( "delete from Being where species = 'Martian'" ).executeUpdate()
-							   );
+							// Execute a bulk operation on s2 (using connection2)
+							assertEquals(
+									1,
+									s2.createQuery( "delete from Being where species = 'Martian'" ).executeUpdate()
+							);
 
-							   // Assert the Connection has not changed
-							   assertSame( connection2, s2.getJdbcCoordinator().getLogicalConnection().getPhysicalConnection() );
-						   }
+							// Assert the Connection has not changed
+							assertSame( connection2, s2.getJdbcCoordinator().getLogicalConnection().getPhysicalConnection() );
+						}
 			);
 
 			// Assert that the Connection used by s1 has hot changed.
@@ -570,4 +573,3 @@ public class UnionSubclassTest extends BaseSessionFactoryFunctionalTest {
 				} );
 	}
 }
-

@@ -1,14 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.identity;
 
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.id.insert.GetGeneratedKeysDelegate;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -125,29 +122,12 @@ public interface IdentityColumnSupport {
 	}
 
 	/**
-	 * The Delegate for dealing with IDENTITY columns using JDBC3 getGeneratedKeys
+	 * The delegate for dealing with {@code IDENTITY} columns using
+	 * {@link java.sql.PreparedStatement#getGeneratedKeys}.
 	 *
 	 * @param persister The persister
-	 * @param dialect The dialect against which to generate the delegate
 	 *
-	 * @return the dialect specific GetGeneratedKeys delegate
-	 *
-	 * @deprecated Use {@link #buildGetGeneratedKeysDelegate(EntityPersister, Dialect)} instead.
-	 */
-	@Deprecated( forRemoval = true, since = "6.5" )
-	default GetGeneratedKeysDelegate buildGetGeneratedKeysDelegate(
-			PostInsertIdentityPersister persister,
-			Dialect dialect) {
-		return buildGetGeneratedKeysDelegate( persister );
-	}
-
-	/**
-	 * The Delegate for dealing with IDENTITY columns using JDBC3 getGeneratedKeys
-	 *
-	 * @param persister The persister
-	 * @param dialect The dialect against which to generate the delegate
-	 *
-	 * @return the dialect specific GetGeneratedKeys delegate
+	 * @return the dialect-specific {@link GetGeneratedKeysDelegate}
 	 */
 	GetGeneratedKeysDelegate buildGetGeneratedKeysDelegate(EntityPersister persister);
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.inheritance.discriminator;
 
@@ -20,7 +18,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -35,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Davide D'Alto
  */
-@TestForIssue(jiraKey = "HHH-12332")
+@JiraKey(value = "HHH-12332")
 @DomainModel(
 		annotatedClasses = {
 				TablePerClassInheritanceTest.Person.class,
@@ -79,7 +77,7 @@ public class TablePerClassInheritanceTest {
 		scope.inTransaction(
 				session -> {
 					List<Person> people = session.createQuery( "FROM Person p", Person.class ).getResultList();
-					people.forEach( person -> session.delete( person ) );
+					people.forEach( person -> session.remove( person ) );
 
 				}
 		);

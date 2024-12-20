@@ -1,13 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cfg;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.invoke.MethodHandles;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
@@ -51,7 +50,7 @@ import org.jboss.logging.Logger;
  * <tr>
  *   <td>{@value #CONNECTION_PROVIDER}</td>
  *   <td>name of a {@link org.hibernate.engine.jdbc.connections.spi.ConnectionProvider}
- *   subclass (if not specified heuristics are used)</td>
+ *   subclass (if not specified, heuristics are used)</td>
  * </tr>
  * <tr><td>{@value #USER}</td><td>database username</td></tr>
  * <tr><td>{@value #PASS}</td><td>database password</td></tr>
@@ -132,7 +131,7 @@ import org.jboss.logging.Logger;
  */
 @Internal
 public final class Environment implements AvailableSettings {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, Environment.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, Environment.class.getName());
 
 	private static final Properties GLOBAL_PROPERTIES;
 
@@ -164,9 +163,9 @@ public final class Environment implements AvailableSettings {
 		}
 
 		try {
-			Properties systemProperties = System.getProperties();
-		    // Must be thread-safe in case an application changes System properties during Hibernate initialization.
-		    // See HHH-8383.
+			final Properties systemProperties = System.getProperties();
+			// Must be thread-safe in case an application changes System properties during Hibernate initialization.
+			// See HHH-8383.
 			synchronized (systemProperties) {
 				GLOBAL_PROPERTIES.putAll(systemProperties);
 			}
@@ -184,11 +183,11 @@ public final class Environment implements AvailableSettings {
 	}
 
 	/**
-	 * The {@link System#getProperties() system properties}, extended with all
-	 * additional properties specified in {@code hibernate.properties}.
+	 * The {@linkplain System#getProperties() system properties}, extended
+	 * with all additional properties specified in {@code hibernate.properties}.
 	 */
 	public static Properties getProperties() {
-		Properties copy = new Properties();
+		final Properties copy = new Properties();
 		copy.putAll(GLOBAL_PROPERTIES);
 		return copy;
 	}

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.action.internal;
 
@@ -13,9 +11,10 @@ import org.hibernate.engine.spi.ComparableExecutable;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.FastSessionServices;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.pretty.MessageHelper;
+
+import static org.hibernate.internal.util.StringHelper.unqualify;
+import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
  * Base class for actions relating to insert/update/delete of an entity
@@ -103,7 +102,7 @@ public abstract class EntityAction
 	}
 
 	public final DelayedPostInsertIdentifier getDelayedId() {
-		return id instanceof DelayedPostInsertIdentifier ? (DelayedPostInsertIdentifier) id : null;
+		return id instanceof DelayedPostInsertIdentifier identifier ? identifier : null;
 	}
 
 	/**
@@ -145,7 +144,7 @@ public abstract class EntityAction
 
 	@Override
 	public String toString() {
-		return StringHelper.unqualify( getClass().getName() ) + MessageHelper.infoString( entityName, id );
+		return unqualify( getClass().getName() ) + infoString( entityName, id );
 	}
 
 	@Override
@@ -187,8 +186,8 @@ public abstract class EntityAction
 		}
 	}
 
-	protected EventSource eventSource() {
-		return getSession();
+	protected final EventSource eventSource() {
+		return session;
 	}
 
 	/**

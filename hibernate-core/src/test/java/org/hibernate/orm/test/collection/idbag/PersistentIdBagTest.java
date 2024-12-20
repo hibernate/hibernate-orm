@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.collection.idbag;
 
@@ -39,7 +37,7 @@ public class PersistentIdBagTest {
 
 		scope.inTransaction(
 				session -> {
-					session.save( parent );
+					session.persist( parent );
 					session.flush();
 					// at this point, the list on parent has now been replaced with a PersistentBag...
 					PersistentIdentifierBag children = (PersistentIdentifierBag) parent.getChildren();
@@ -58,7 +56,7 @@ public class PersistentIdBagTest {
 					assertFalse( children.isDirty() );
 
 					children.clear();
-					session.delete( child );
+					session.remove( child );
 					assertTrue( children.isDirty() );
 
 					session.flush();
@@ -66,7 +64,7 @@ public class PersistentIdBagTest {
 					children.clear();
 					assertFalse( children.isDirty() );
 
-					session.delete( parent );
+					session.remove( parent );
 				}
 		);
 	}

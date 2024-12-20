@@ -1,7 +1,11 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.jpa.criteria;
 
 import org.hibernate.query.QueryArgumentException;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.BeforeAll;
@@ -25,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 				ObjectParameterTypeForEmbeddableTest.TestEntity.class
 		}
 )
-@TestForIssue(jiraKey = "HHH-16247")
+@JiraKey(value = "HHH-16247")
 public class ObjectParameterTypeForEmbeddableTest {
 
 	@BeforeAll

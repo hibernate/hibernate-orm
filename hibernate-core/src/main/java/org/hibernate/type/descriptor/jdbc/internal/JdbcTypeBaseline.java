@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc.internal;
 
@@ -18,6 +16,7 @@ import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.DateJdbcType;
 import org.hibernate.type.descriptor.jdbc.DecimalJdbcType;
 import org.hibernate.type.descriptor.jdbc.DoubleJdbcType;
+import org.hibernate.type.descriptor.jdbc.DurationJdbcType;
 import org.hibernate.type.descriptor.jdbc.FloatJdbcType;
 import org.hibernate.type.descriptor.jdbc.InstantJdbcType;
 import org.hibernate.type.descriptor.jdbc.IntegerJdbcType;
@@ -81,16 +80,17 @@ public class JdbcTypeBaseline {
 		target.addDescriptor( TimestampWithTimeZoneJdbcType.INSTANCE );
 		target.addDescriptor( TimeJdbcType.INSTANCE );
 		target.addDescriptor( TimeWithTimeZoneJdbcType.INSTANCE );
+		target.addDescriptor( DurationJdbcType.INSTANCE );
 
 		target.addDescriptor( BinaryJdbcType.INSTANCE );
 		target.addDescriptor( VarbinaryJdbcType.INSTANCE );
 		target.addDescriptor( LongVarbinaryJdbcType.INSTANCE );
-		target.addDescriptor( new LongVarbinaryJdbcType(SqlTypes.LONG32VARBINARY) );
+		target.addDescriptor( new LongVarbinaryJdbcType( SqlTypes.LONG32VARBINARY) );
 
 		target.addDescriptor( CharJdbcType.INSTANCE );
 		target.addDescriptor( VarcharJdbcType.INSTANCE );
 		target.addDescriptor( LongVarcharJdbcType.INSTANCE );
-		target.addDescriptor( new LongVarcharJdbcType(SqlTypes.LONG32VARCHAR) );
+		target.addDescriptor( new LongVarcharJdbcType( SqlTypes.LONG32VARCHAR) );
 
 		target.addDescriptor( BlobJdbcType.DEFAULT );
 		target.addDescriptor( ClobJdbcType.DEFAULT );
@@ -101,7 +101,7 @@ public class JdbcTypeBaseline {
 		target.addDescriptor( Types.NVARCHAR, VarcharJdbcType.INSTANCE );
 		target.addDescriptor( Types.LONGNVARCHAR, LongVarcharJdbcType.INSTANCE );
 		target.addDescriptor( Types.NCLOB, ClobJdbcType.DEFAULT );
-		target.addDescriptor( new LongVarcharJdbcType(SqlTypes.LONG32NVARCHAR) );
+		target.addDescriptor( new LongVarcharJdbcType( SqlTypes.LONG32NVARCHAR) );
 
 		target.addDescriptor( RowIdJdbcType.INSTANCE );
 	}

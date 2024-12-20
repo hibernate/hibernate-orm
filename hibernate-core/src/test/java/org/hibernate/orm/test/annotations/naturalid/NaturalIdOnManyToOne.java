@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.naturalid;
 import jakarta.persistence.Entity;
@@ -17,20 +15,20 @@ import org.hibernate.annotations.NaturalIdCache;
 @NaturalIdCache
 /**
  * Test case for NaturalId annotation - ANN-750
- * 
+ *
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
 class NaturalIdOnManyToOne {
 
-    @Id
-    @GeneratedValue
-    int id;
+	@Id
+	@GeneratedValue
+	int id;
 
-    @NaturalId
-    @ManyToOne
-    Citizen citizen;
-    
+	@NaturalId
+	@ManyToOne
+	Citizen citizen;
+
 	public int getId() {
 		return id;
 	}
@@ -46,4 +44,4 @@ class NaturalIdOnManyToOne {
 	public void setCitizen(Citizen citizen) {
 		this.citizen = citizen;
 	}
-} 
+}

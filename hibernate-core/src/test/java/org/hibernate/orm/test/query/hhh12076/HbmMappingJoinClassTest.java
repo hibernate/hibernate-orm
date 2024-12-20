@@ -1,14 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hhh12076;
 
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -18,7 +16,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 
-@TestForIssue(jiraKey = "HHH-12076")
+@JiraKey(value = "HHH-12076")
 @DomainModel(
 		xmlMappings = {
 				"org/hibernate/query/hhh12076/Claim.hbm.xml",
@@ -41,17 +39,15 @@ public class HbmMappingJoinClassTest {
 			TaskStatus taskStatus = new TaskStatus();
 			taskStatus.setName( "Enabled" );
 			taskStatus.setDisplayName( "Enabled" );
-			session.save( taskStatus );
+			session.persist( taskStatus );
 
 			for ( long i = 0; i < 10; i++ ) {
 				SettlementTask settlementTask = new SettlementTask();
-				settlementTask.setId( i );
 				Settlement settlement = new Settlement();
 				settlementTask.setLinked( settlement );
 				settlementTask.setStatus( taskStatus );
 
 				Claim claim = new Claim();
-				claim.setId( i );
 				settlement.setClaim( claim );
 
 				for ( int j = 0; j < 2; j++ ) {
@@ -63,9 +59,9 @@ public class HbmMappingJoinClassTest {
 					settlement.getExtensions().add( gapAssessmentExtension );
 					settlement.getExtensions().add( ewtAssessmentExtension );
 				}
-				session.save( claim );
-				session.save( settlement );
-				session.save( settlementTask );
+				session.persist( claim );
+				session.persist( settlement );
+				session.persist( settlementTask );
 			}
 		} );
 	}

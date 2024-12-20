@@ -1,18 +1,30 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.type;
 
-import java.util.Map;
 
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
+
+import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
+import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.type.BasicType;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -25,38 +37,27 @@ import jakarta.persistence.Query;
 import jakarta.persistence.Table;
 import jakarta.persistence.TypedQuery;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
-
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
 
 /**
  * @author Jordan Gigov
  * @author Christian Beikov
  */
-@SkipForDialect(value = SybaseASEDialect.class, comment = "Sybase or the driver are trimming trailing zeros in byte arrays")
-public class DoubleArrayTest extends BaseNonConfigCoreFunctionalTestCase {
+@BootstrapServiceRegistry(
+		// Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
+		integrators = SharedDriverManagerTypeCacheClearingIntegrator.class
+)
+@DomainModel(annotatedClasses = DoubleArrayTest.TableWithDoubleArrays.class)
+@SessionFactory
+public class DoubleArrayTest {
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[]{ TableWithDoubleArrays.class };
-	}
+	private BasicType<Double[]> arrayType;
 
-	@Override
-	protected void addSettings(Map<String, Object> settings) {
-		// Make sure this stuff runs on a dedicated connection pool,
-		// otherwise we might run into ORA-21700: object does not exist or is marked for delete
-		// because the JDBC connection or database session caches something that should have been invalidated
-		settings.put( AvailableSettings.CONNECTION_PROVIDER, "" );
-	}
-
-	public void startUp() {
-		super.startUp();
-		inTransaction( em -> {
+	@BeforeAll
+	public void startUp(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
+			arrayType = em.getTypeConfiguration().getBasicTypeForJavaType( Double[].class );
 			em.persist( new TableWithDoubleArrays( 1L, new Double[]{} ) );
 			em.persist( new TableWithDoubleArrays( 2L, new Double[]{ 512.5, 112.0, null, -0.5 } ) );
 			em.persist( new TableWithDoubleArrays( 3L, null ) );
@@ -77,8 +78,8 @@ public class DoubleArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testLoadValueWithInexactFloatRepresentation() {
-		inSession( em -> {
+	public void testLoadValueWithInexactFloatRepresentation(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			TableWithDoubleArrays tableRecord;
 			tableRecord = em.find( TableWithDoubleArrays.class, 6L );
 			assertThat( tableRecord.getTheArray(), is( new Double[]{ 0.12 } ) );
@@ -86,8 +87,8 @@ public class DoubleArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testById() {
-		inSession( em -> {
+	public void testById(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			TableWithDoubleArrays tableRecord;
 			tableRecord = em.find( TableWithDoubleArrays.class, 1L );
 			assertThat( tableRecord.getTheArray(), is( new Double[]{} ) );
@@ -101,8 +102,8 @@ public class DoubleArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testQueryById() {
-		inSession( em -> {
+	public void testQueryById(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			TypedQuery<TableWithDoubleArrays> tq = em.createNamedQuery( "TableWithDoubleArrays.JPQL.getById", TableWithDoubleArrays.class );
 			tq.setParameter( "id", 2L );
 			TableWithDoubleArrays tableRecord = tq.getSingleResult();
@@ -111,9 +112,8 @@ public class DoubleArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect( value = AbstractHANADialect.class, comment = "For some reason, HANA can't intersect VARBINARY values, but funnily can do a union...")
-	public void testQuery() {
-		inSession( em -> {
+	public void testQuery(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			TypedQuery<TableWithDoubleArrays> tq = em.createNamedQuery( "TableWithDoubleArrays.JPQL.getByData", TableWithDoubleArrays.class );
 			tq.setParameter( "data", new Double[]{} );
 			TableWithDoubleArrays tableRecord = tq.getSingleResult();
@@ -122,8 +122,8 @@ public class DoubleArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testNativeQueryById() {
-		inSession( em -> {
+	public void testNativeQueryById(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			TypedQuery<TableWithDoubleArrays> tq = em.createNamedQuery( "TableWithDoubleArrays.Native.getById", TableWithDoubleArrays.class );
 			tq.setParameter( "id", 2L );
 			TableWithDoubleArrays tableRecord = tq.getSingleResult();
@@ -132,13 +132,20 @@ public class DoubleArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect( value = HSQLDialect.class, comment = "HSQL does not like plain parameters in the distinct from predicate")
-	@SkipForDialect( value = OracleDialect.class, comment = "Oracle requires a special function to compare XML")
-	public void testNativeQuery() {
-		inSession( em -> {
-			final String op = em.getJdbcServices().getDialect().supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
+	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQL does not like plain parameters in the distinct from predicate")
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle requires a special function to compare XML")
+	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 requires a special function to compare XML")
+	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "SQL Server requires a special function to compare XML")
+	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase ASE requires a special function to compare XML")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA requires a special function to compare LOBs")
+	@SkipForDialect(dialectClass = MariaDBDialect.class, reason = "MariaDB requires a special function to compare LOBs")
+	public void testNativeQuery(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final Dialect dialect = em.getDialect();
+			final String op = dialect.supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
+			final String param = arrayType.getJdbcType().wrapWriteExpression( ":data", dialect );
 			TypedQuery<TableWithDoubleArrays> tq = em.createNativeQuery(
-					"SELECT * FROM table_with_double_arrays t WHERE the_array " + op + " :data",
+					"SELECT * FROM table_with_double_arrays t WHERE the_array " + op + " " + param,
 					TableWithDoubleArrays.class
 			);
 			tq.setParameter( "data", new Double[]{ 512.5, 112.0, null, -0.5 } );
@@ -148,13 +155,13 @@ public class DoubleArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialectFeature(DialectChecks.SupportsArrayDataTypes.class)
-	public void testNativeQueryUntyped() {
-		inSession( em -> {
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTypedArrays.class)
+	public void testNativeQueryUntyped(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			Query q = em.createNamedQuery( "TableWithDoubleArrays.Native.getByIdUntyped" );
 			q.setParameter( "id", 2L );
 			Object[] tuple = (Object[]) q.getSingleResult();
-			assertThat( tuple[1], is( new Double[]{ 512.5, 112.0, null, -0.5 } ) );
+			assertThat( tuple[1], is( new Double[] { 512.5, 112.0, null, -0.5 } ) );
 		} );
 	}
 

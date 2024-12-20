@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.proxy.narrow;
 
@@ -35,10 +33,10 @@ public class ProxyNarrowingTest {
 		Integer entityReferenceId = scope.fromTransaction(
 				session -> {
 					ConcreteEntity entity = new ConcreteEntity();
-					session.save( entity );
+					session.persist( entity );
 
 					LazyAbstractEntityReference reference = new LazyAbstractEntityReference( entity );
-					session.save( reference );
+					session.persist( reference );
 					Integer id = reference.getId();
 
 					session.flush();
@@ -63,7 +61,7 @@ public class ProxyNarrowingTest {
 					assertTrue( Hibernate.isInitialized( abstractEntityProxy ) );
 
 					// load the concrete class via session.load to trigger the StatefulPersistenceContext.narrowProxy code
-					ConcreteEntity concreteEntityProxy = session.load(
+					ConcreteEntity concreteEntityProxy = session.getReference(
 							ConcreteEntity.class,
 							abstractEntityProxy.getId()
 					);
@@ -73,8 +71,8 @@ public class ProxyNarrowingTest {
 					assertTrue( session.contains( concreteEntityProxy ) );
 
 					// clean up
-					session.delete( reference );
-					session.delete( concreteEntityProxy );
+					session.remove( reference );
+					session.remove( concreteEntityProxy );
 				}
 		);
 	}

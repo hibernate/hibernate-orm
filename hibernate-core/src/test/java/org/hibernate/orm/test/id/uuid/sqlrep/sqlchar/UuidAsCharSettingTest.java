@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id.uuid.sqlrep.sqlchar;
 
@@ -73,11 +71,11 @@ public class UuidAsCharSettingTest {
 
 		final UUIDPair uuidPair = scope.fromTransaction( session -> {
 			final Node root = new Node( "root" );
-			session.save( root );
+			session.persist( root );
 			assertThat( root.id, notNullValue());
 
 			final Node child = new Node( "child", root );
-			session.save( child );
+			session.persist( child );
 			assertThat( child.id, notNullValue() );
 
 			return new UUIDPair( root.id, child.id );

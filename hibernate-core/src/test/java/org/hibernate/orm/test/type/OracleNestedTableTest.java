@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.type;
 
 import java.sql.Connection;
@@ -85,7 +89,7 @@ public class OracleNestedTableTest {
 				ResultSet tableInfo = c.getMetaData().getColumns(null, null, "CONTAINERWITHARRAYS", "ACTIVITYTYPES" );
 				while ( tableInfo.next() ) {
 					String type = tableInfo.getString(6);
-					assertEquals( "ACTIVITYTYPEARRAY", type );
+					assertEquals( "ACTIVITYTYPEBYTEARRAY", type );
 					return;
 				}
 				fail("nested table column not exported");

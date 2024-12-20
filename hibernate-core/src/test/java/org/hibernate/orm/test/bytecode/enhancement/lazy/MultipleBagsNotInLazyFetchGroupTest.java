@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy;
 
@@ -10,13 +8,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.hibernate.boot.SessionFactoryBuilder;
-
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
@@ -24,65 +21,59 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * @author Christian Beikov
  */
-@RunWith( BytecodeEnhancerRunner.class )
-public class MultipleBagsNotInLazyFetchGroupTest extends BaseNonConfigCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				MultipleBagsNotInLazyFetchGroupTest.StringsEntity.class
+		}
+)
+@SessionFactory(applyCollectionsInDefaultFetchGroup = false)
+@BytecodeEnhanced
+public class MultipleBagsNotInLazyFetchGroupTest {
 
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{StringsEntity.class};
-    }
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		assertFalse( scope.getSessionFactory().getSessionFactoryOptions().isCollectionsInDefaultFetchGroupEnabled() );
 
-    @Override
-    protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
-        super.configureSessionFactoryBuilder( sfb );
-        sfb.applyCollectionsInDefaultFetchGroup( false );
-    }
+		scope.inTransaction( em -> {
+			StringsEntity entity = new StringsEntity();
+			entity.id = 1L;
+			entity.text = "abc";
+			entity.someStrings = new ArrayList<>( Arrays.asList( "a", "b", "c" ) );
+			entity.someStrings2 = new ArrayList<>( Arrays.asList( "a", "b", "c" ) );
+			em.persist( entity );
+		} );
+	}
 
-    @Before
-    public void prepare() {
-        assertFalse( sessionFactory().getSessionFactoryOptions().isCollectionsInDefaultFetchGroupEnabled() );
+	@Test
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			StringsEntity entity = entityManager.getReference( StringsEntity.class, 1L );
+			assertEquals( 3, entity.someStrings.size() );
+			assertEquals( 3, entity.someStrings2.size() );
+		} );
+	}
 
-        doInJPA( this::sessionFactory, em -> {
-            StringsEntity entity = new StringsEntity();
-            entity.id = 1L;
-            entity.text = "abc";
-            entity.someStrings = new ArrayList<>( Arrays.asList( "a", "b", "c" ) );
-            entity.someStrings2 = new ArrayList<>( Arrays.asList( "a", "b", "c" ) );
-            em.persist( entity );
-        } );
-    }
+	// --- //
 
-    @Test
-    public void test() {
-        doInJPA( this::sessionFactory, entityManager -> {
-            StringsEntity entity = entityManager.getReference( StringsEntity.class, 1L );
-            assertEquals( 3, entity.someStrings.size() );
-            assertEquals( 3, entity.someStrings2.size() );
-        } );
-    }
+	@Entity
+	@Table(name = "STRINGS_ENTITY")
+	static class StringsEntity {
 
-    // --- //
+		@Id
+		Long id;
 
-    @Entity
-    @Table( name = "STRINGS_ENTITY" )
-    private static class StringsEntity {
+		String text;
 
-        @Id
-        Long id;
+		@ElementCollection(fetch = FetchType.EAGER)
+		List<String> someStrings;
 
-        String text;
-
-        @ElementCollection(fetch = FetchType.EAGER)
-        List<String> someStrings;
-
-        @ElementCollection(fetch = FetchType.EAGER)
-        List<String> someStrings2;
-    }
+		@ElementCollection(fetch = FetchType.EAGER)
+		List<String> someStrings2;
+	}
 }

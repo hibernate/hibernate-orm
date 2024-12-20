@@ -1,12 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
 
-import jakarta.persistence.JoinTable;
+import java.util.Map;
+
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -17,10 +16,11 @@ import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 
-import java.util.Map;
+import jakarta.persistence.JoinTable;
 
 import static org.hibernate.boot.model.internal.ToOneBinder.getReferenceEntityName;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.internal.util.StringHelper.isNotBlank;
 
 /**
  * For {@link jakarta.persistence.ManyToOne} and {@link jakarta.persistence.OneToOne}
@@ -86,17 +86,26 @@ public class ImplicitToOneJoinTableSecondPass implements SecondPass {
 	private TableBinder createTableBinder() {
 		final TableBinder tableBinder = new TableBinder();
 		tableBinder.setBuildingContext( context );
-		if ( !joinTable.schema().isEmpty() ) {
-			tableBinder.setSchema( joinTable.schema() );
+
+		final String schema = joinTable.schema();
+		if ( isNotBlank( schema ) ) {
+			tableBinder.setSchema( schema );
 		}
-		if ( !joinTable.catalog().isEmpty() ) {
-			tableBinder.setCatalog( joinTable.catalog() );
+
+		final String catalog = joinTable.catalog();
+		if ( isNotBlank( catalog ) ) {
+			tableBinder.setCatalog( catalog );
 		}
-		if ( !joinTable.name().isEmpty() ) {
-			tableBinder.setName( joinTable.name() );
+
+		final String tableName = joinTable.name();
+		if ( isNotBlank( tableName ) ) {
+			tableBinder.setName( tableName );
 		}
+
 		tableBinder.setUniqueConstraints( joinTable.uniqueConstraints() );
 		tableBinder.setJpaIndex( joinTable.indexes() );
+		tableBinder.setOptions( joinTable.options() );
+
 		return tableBinder;
 	}
 

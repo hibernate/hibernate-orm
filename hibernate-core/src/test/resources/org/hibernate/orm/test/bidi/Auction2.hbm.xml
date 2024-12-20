@@ -13,7 +13,7 @@
 	package="org.hibernate.orm.test.bidi">
 
 	<class name="Auction" table="TAuction2">
-		<id name="id">
+		<id name="id" column="c_id">
 			<generator class="native"/>
 		</id>
 		<property name="description"/>
@@ -27,7 +27,7 @@
 	</class>
 	
 	<class name="Bid" table="TBid2">
-		<id name="id">
+		<id name="id" column="c_id">
 			<generator class="native"/>
 		</id>
 		<property name="amount" scale="19" precision="31"/>
@@ -37,7 +37,7 @@
 				column="auctionId" 
 				cascade="persist"/>
 		<property name="successful">
-			<formula>exists(select a.id from TAuction2 a where a.successfulBid=id)</formula>
+			<formula>exists(select a.c_id from TAuction2 a where a.successfulBid=c_id)</formula>
 		</property>
 	</class>
 

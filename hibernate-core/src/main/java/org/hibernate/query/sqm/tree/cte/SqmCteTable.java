@@ -1,14 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.cte;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaCteCriteriaType;
@@ -18,7 +17,6 @@ import org.hibernate.query.derived.CteTupleTableGroupProducer;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -57,7 +55,8 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 			String name,
 			SqmCteStatement<X> cteStatement,
 			SqmSelectQuery<X> selectStatement) {
-		final SqmSelectableNode<?>[] sqmSelectableNodes = selectStatement.getQuerySpec()
+		final SqmSelectableNode<?>[] sqmSelectableNodes = selectStatement.getQueryPart()
+				.getFirstQuerySpec()
 				.getSelectClause()
 				.getSelectionItems()
 				.toArray( SqmSelectableNode[]::new );
@@ -69,7 +68,15 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 			String aliasStem,
 			List<SqlSelection> sqlSelections,
 			FromClauseAccess fromClauseAccess) {
-		return new CteTupleTableGroupProducer( this, aliasStem, sqlSelections, fromClauseAccess );
+		return new CteTupleTableGroupProducer( this, aliasStem, toSqlTypedMappings( sqlSelections ), fromClauseAccess );
+	}
+
+	@Override
+	public CteTupleTableGroupProducer resolveTableGroupProducer(
+			String aliasStem,
+			SqlTypedMapping[] sqlTypedMappings,
+			FromClauseAccess fromClauseAccess) {
+		return new CteTupleTableGroupProducer( this, aliasStem, sqlTypedMappings, fromClauseAccess );
 	}
 
 	public String getCteName() {

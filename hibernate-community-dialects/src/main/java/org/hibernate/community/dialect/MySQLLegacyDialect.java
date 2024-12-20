@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -18,8 +16,9 @@ import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.*;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.MySQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.hint.IndexQueryHintHandler;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.MySQLIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -41,15 +40,17 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.dialect.NullOrdering;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.query.sqm.mutation.internal.temptable.AfterUseAction;
-import org.hibernate.query.sqm.mutation.internal.temptable.BeforeUseAction;
+import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
+import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -72,6 +73,8 @@ import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NativeEnumDdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import jakarta.persistence.TemporalType;
@@ -112,6 +115,8 @@ import static org.hibernate.type.SqlTypes.VARCHAR;
  */
 public class MySQLLegacyDialect extends Dialect {
 
+	private static final DatabaseVersion DEFAULT_VERSION = DatabaseVersion.make( 5, 0 );
+
 	private final MySQLStorageEngine storageEngine = createStorageEngine();
 	private final SizeStrategy sizeStrategy = new SizeStrategyImpl() {
 		@Override
@@ -138,7 +143,7 @@ public class MySQLLegacyDialect extends Dialect {
 	private final boolean noBackslashEscapesEnabled;
 
 	public MySQLLegacyDialect() {
-		this( DatabaseVersion.make( 5, 0 ) );
+		this( DEFAULT_VERSION );
 	}
 
 	public MySQLLegacyDialect(DatabaseVersion version) {
@@ -167,7 +172,7 @@ public class MySQLLegacyDialect extends Dialect {
 
 	protected static DatabaseVersion createVersion(DialectResolutionInfo info) {
 		final String versionString = info.getDatabaseVersion();
-		final String[] components = versionString.split( "\\." );
+		final String[] components = StringHelper.split( ".", versionString );
 		if ( components.length >= 3 ) {
 			try {
 				final int majorVersion = Integer.parseInt( components[0] );
@@ -179,7 +184,7 @@ public class MySQLLegacyDialect extends Dialect {
 				// Ignore
 			}
 		}
-		return info.makeCopy();
+		return info.makeCopyOrDefault( DEFAULT_VERSION );
 	}
 
 	@Override
@@ -260,7 +265,10 @@ public class MySQLLegacyDialect extends Dialect {
 				//MySQL doesn't let you cast to DOUBLE/FLOAT
 				//but don't just return 'decimal' because
 				//the default scale is 0 (no decimal places)
-				return "decimal($p,$s)";
+				return getMySQLVersion().isSameOrAfter( 8, 0, 17 )
+					// In newer versions of MySQL, casting to float/double is supported
+					? super.castType( sqlTypeCode )
+					: "decimal($p,$s)";
 			case CHAR:
 			case NCHAR:
 			case VARCHAR:
@@ -377,6 +385,14 @@ public class MySQLLegacyDialect extends Dialect {
 						.withTypeCapacity( maxLobLen, "text" )
 						.build()
 		);
+
+		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this ) );
+		ddlTypeRegistry.addDescriptor( new NativeOrdinalEnumDdlTypeImpl( this ) );
+	}
+
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		return MySQLAggregateSupport.forMySQL( this );
 	}
 
 	@Deprecated
@@ -509,8 +525,30 @@ public class MySQLLegacyDialect extends Dialect {
 	}
 
 	@Override
+	public int resolveSqlTypeLength(
+			String columnTypeName,
+			int jdbcTypeCode,
+			int precision,
+			int scale,
+			int displaySize) {
+		// It seems MariaDB/MySQL return the precision in bytes depending on the charset,
+		// so to detect whether we have a single character here, we check the display size
+		if ( jdbcTypeCode == Types.CHAR && precision <= 4 ) {
+			return displaySize;
+		}
+		else {
+			return precision;
+		}
+	}
+
+	@Override
 	public int getPreferredSqlTypeCodeForBoolean() {
 		return Types.BIT;
+	}
+
+	@Override
+	public int getPreferredSqlTypeCodeForArray() {
+		return getMySQLVersion().isSameOrAfter( 5, 7 ) ? SqlTypes.JSON_ARRAY : super.getPreferredSqlTypeCodeForArray();
 	}
 
 //	@Override
@@ -580,10 +618,7 @@ public class MySQLLegacyDialect extends Dialect {
 		BasicTypeRegistry basicTypeRegistry = functionContributions.getTypeConfiguration().getBasicTypeRegistry();
 
 		SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
-		functionRegistry.noArgsBuilder( "localtime" )
-				.setInvariantType(basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP ))
-				.setUseParenthesesWhenNoArgs( false )
-				.register();
+
 		// pi() produces a value with 7 digits unless we're explicit
 		if ( getMySQLVersion().isSameOrAfter( 8 ) ) {
 			functionRegistry.patternDescriptorBuilder( "pi", "cast(pi() as double)" )
@@ -627,6 +662,41 @@ public class MySQLLegacyDialect extends Dialect {
 		functionRegistry.registerAlternateKey( "char", "chr" );
 
 		functionFactory.listagg_groupConcat();
+
+		if ( getMySQLVersion().isSameOrAfter( 5, 7 ) ) {
+			functionFactory.jsonValue_mysql();
+			functionFactory.jsonQuery_mysql();
+			functionFactory.jsonExists_mysql();
+			functionFactory.jsonObject_mysql();
+			functionFactory.jsonArray_mysql();
+			functionFactory.jsonArrayAgg_mysql();
+			functionFactory.jsonObjectAgg_mysql();
+			functionFactory.jsonSet_mysql();
+			functionFactory.jsonRemove_mysql();
+			functionFactory.jsonReplace_mysql();
+			functionFactory.jsonInsert_mysql();
+			functionFactory.jsonMergepatch_mysql();
+			functionFactory.jsonArrayAppend_mysql();
+			functionFactory.jsonArrayInsert_mysql();
+
+			if ( getMySQLVersion().isSameOrAfter( 8 ) ) {
+				functionFactory.unnest_emulated();
+				functionFactory.jsonTable_mysql();
+			}
+			if ( supportsRecursiveCTE() ) {
+				functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, false );
+			}
+		}
+	}
+
+	/**
+	 * MySQL doesn't support the {@code generate_series} function or {@code lateral} recursive CTEs,
+	 * so it has to be emulated with a top level recursive CTE which requires an upper bound on the amount
+	 * of elements that the series can return.
+	 */
+	protected int getMaximumSeriesSize() {
+		// The maximum recursion depth of MySQL
+		return 1000;
 	}
 
 	@Override
@@ -637,6 +707,7 @@ public class MySQLLegacyDialect extends Dialect {
 
 		if ( getMySQLVersion().isSameOrAfter( 5, 7 ) ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON, MySQLCastingJsonJdbcType.INSTANCE );
+			jdbcTypeRegistry.addTypeConstructorIfAbsent( MySQLCastingJsonArrayJdbcTypeConstructor.INSTANCE );
 		}
 
 		// MySQL requires a custom binder for binding untyped nulls with the NULL type
@@ -813,7 +884,7 @@ public class MySQLLegacyDialect extends Dialect {
 	public String getQueryHintString(String query, String hints) {
 		return getMySQLVersion().isBefore( 5 )
 				? super.getQueryHintString( query, hints )
-				: IndexQueryHintHandler.INSTANCE.addQueryHints( query, hints );
+				: addQueryHints( query, hints );
 	}
 
 	/**
@@ -1403,6 +1474,23 @@ public class MySQLLegacyDialect extends Dialect {
 	@Override
 	public boolean supportsFromClauseInUpdate() {
 		return true;
+	}
+
+	@Override
+	public String appendCheckConstraintOptions(CheckConstraint checkConstraint, String sqlCheckConstraint) {
+		if ( StringHelper.isNotEmpty( checkConstraint.getOptions() ) ) {
+			return sqlCheckConstraint + " " + checkConstraint.getOptions();
+		}
+		return sqlCheckConstraint;
+	}
+	@Override
+	public String getDual() {
+		return "dual";
+	}
+
+	@Override
+	public String getFromDualForSelectOnly() {
+		return getVersion().isSameOrAfter( 8 ) ? "" : ( " from " + getDual() );
 	}
 
 }

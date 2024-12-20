@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi.entry;
 
@@ -12,7 +10,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
@@ -123,12 +120,12 @@ public class StandardCacheEntryImpl implements CacheEntry {
 			final Object id,
 			final EntityPersister persister,
 			final Interceptor interceptor,
-			final EventSource session) throws HibernateException {
+			final SharedSessionContractImplementor session) throws HibernateException {
 		if ( !persister.getEntityName().equals( subclass ) ) {
 			throw new AssertionFailure( "Tried to assemble a different subclass instance" );
 		}
 
-		//assembled state gets put in a new array (we read from cache by value!)
+		// assembled state gets put in a new array (we read from cache by value!)
 		final Object[] state = CacheEntryHelper.assemble(
 				disassembledState,
 				persister.getPropertyTypes(),
@@ -137,18 +134,20 @@ public class StandardCacheEntryImpl implements CacheEntry {
 
 		//persister.setIdentifier(instance, id); //before calling interceptor, for consistency with normal load
 
-		//TODO: reuse the PreLoadEvent
-		final PreLoadEvent preLoadEvent = new PreLoadEvent( session )
-				.setEntity( instance )
-				.setState( state )
-				.setId( id )
-				.setPersister( persister );
+		if ( session instanceof EventSource eventSource ) {
+			//TODO: reuse the PreLoadEvent
+			final PreLoadEvent preLoadEvent =
+					new PreLoadEvent( eventSource )
+							.setEntity( instance )
+							.setState( state )
+							.setId( id )
+							.setPersister( persister );
+			session.getFactory()
+					.getFastSessionServices()
+					.eventListenerGroup_PRE_LOAD
+					.fireEventOnEachListener( preLoadEvent, PreLoadEventListener::onPreLoad );
 
-		session
-				.getFactory()
-				.getFastSessionServices()
-				.eventListenerGroup_PRE_LOAD
-				.fireEventOnEachListener( preLoadEvent, PreLoadEventListener::onPreLoad );
+		}
 
 		persister.setPropertyValues( instance, state );
 

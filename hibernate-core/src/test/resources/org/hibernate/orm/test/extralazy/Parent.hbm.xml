@@ -17,7 +17,7 @@
 			<generator class="uuid.hex" />
 		</id>	
 				
-		<map name="children" lazy="extra" inverse="true" cascade="save-update">
+		<map name="children" lazy="extra" inverse="true" cascade="persist, merge">
 			<key column="PARENT_ID" />	
 			<map-key type="string" formula="firstName"/>
 			<one-to-many class="Child" />

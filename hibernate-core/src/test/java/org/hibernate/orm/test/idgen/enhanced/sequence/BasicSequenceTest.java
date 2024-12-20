@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.idgen.enhanced.sequence;
 
@@ -10,7 +8,7 @@ import org.hibernate.id.IdentifierGeneratorHelper.BasicHolder;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.persister.entity.EntityPersister;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -37,7 +35,7 @@ public class BasicSequenceTest {
 
 	@Test
 	public void testNormalBoundary(SessionFactoryScope scope) {
-        final EntityPersister persister = scope.getSessionFactory()
+		final EntityPersister persister = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor(Entity.class.getName());
 		assertThat( persister.getGenerator(), instanceOf( SequenceStyleGenerator.class ) );
@@ -50,7 +48,7 @@ public class BasicSequenceTest {
 				(s) -> {
 					for ( int i = 0; i < count; i++ ) {
 						final Entity entity = new Entity( "" + ( i + 1 ) );
-						s.save( entity );
+						s.persist( entity );
 
 						long expectedId = i + 1;
 
@@ -64,11 +62,11 @@ public class BasicSequenceTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-6790")
+	@JiraKey(value = "HHH-6790")
 	public void testSequencePerEntity(SessionFactoryScope scope) {
 		final String overriddenEntityName = "SpecialEntity";
 
-        final EntityPersister persister = scope.getSessionFactory()
+		final EntityPersister persister = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor(overriddenEntityName);
 		assertThat( persister.getGenerator(), instanceOf( SequenceStyleGenerator.class ) );
@@ -80,9 +78,9 @@ public class BasicSequenceTest {
 		scope.inTransaction(
 				(s) -> {
 					Entity entity1 = new Entity( "1" );
-					s.save( overriddenEntityName, entity1 );
+					s.persist( overriddenEntityName, entity1 );
 					Entity entity2 = new Entity( "2" );
-					s.save( overriddenEntityName, entity2 );
+					s.persist( overriddenEntityName, entity2 );
 
 					assertEquals( 1, entity1.getId().intValue() );
 					assertEquals( 2, entity2.getId().intValue() );

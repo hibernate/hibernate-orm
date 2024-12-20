@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal;
 
@@ -28,7 +26,6 @@ import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
@@ -41,7 +38,7 @@ import org.hibernate.tool.schema.extract.spi.IndexInformation;
 import org.hibernate.tool.schema.extract.spi.NameSpaceTablesInformation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
-import org.hibernate.tool.schema.internal.exec.GenerationTarget;
+import org.hibernate.tool.schema.spi.GenerationTarget;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
 import org.hibernate.tool.schema.spi.CommandAcceptanceException;
 import org.hibernate.tool.schema.spi.ContributableMatcher;
@@ -59,6 +56,8 @@ import static org.hibernate.engine.config.spi.StandardConverters.STRING;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.tool.schema.UniqueConstraintSchemaUpdateStrategy.DROP_RECREATE_QUIETLY;
 import static org.hibernate.tool.schema.UniqueConstraintSchemaUpdateStrategy.SKIP;
+import static org.hibernate.tool.schema.internal.SchemaCreatorImpl.createUserDefinedTypes;
+import static org.hibernate.tool.schema.internal.SchemaDropperImpl.dropUserDefinedTypes;
 
 /**
  * Base implementation of {@link SchemaMigrator}.
@@ -75,13 +74,6 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 	public AbstractSchemaMigrator(HibernateSchemaManagementTool tool, SchemaFilter schemaFilter) {
 		this.tool = tool;
 		this.schemaFilter = schemaFilter == null ? DefaultSchemaFilter.INSTANCE : schemaFilter;
-	}
-
-	/**
-	 * For testing.
-	 */
-	public void setUniqueConstraintStrategy(UniqueConstraintSchemaUpdateStrategy uniqueConstraintStrategy) {
-		this.uniqueConstraintStrategy = uniqueConstraintStrategy;
 	}
 
 	@Override
@@ -152,7 +144,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 
 	private SqlStringGenerationContext sqlGenerationContext(Metadata metadata, ExecutionOptions options) {
 		return SqlStringGenerationContextImpl.fromConfigurationMapForMigration(
-				tool.getServiceRegistry().getService( JdbcEnvironment.class ),
+				tool.getServiceRegistry().requireService( JdbcEnvironment.class ),
 				metadata.getDatabase(),
 				options.getConfigurationValues()
 		);
@@ -202,6 +194,9 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			}
 		}
 
+		// Drop all UDTs
+		dropUserDefinedTypes( metadata, options, schemaFilter, dialect, formatter, sqlGenerationContext, targets );
+
 		// Create before-table AuxiliaryDatabaseObjects
 		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
 			if ( auxiliaryDatabaseObject.beforeTablesOnCreation()
@@ -215,6 +210,9 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 				);
 			}
 		}
+
+		// Recreate all UDTs
+		createUserDefinedTypes( metadata, options, schemaFilter, dialect, formatter, sqlGenerationContext, targets );
 
 		boolean tryToCreateCatalogs = false;
 		boolean tryToCreateSchemas = false;
@@ -244,7 +242,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 					sqlGenerationContext, targets
 			);
 			tablesInformation.put( namespace, nameSpaceTablesInformation );
-			if ( options.getSchemaFilter().includeNamespace( namespace ) ) {
+			if ( schemaFilter.includeNamespace( namespace ) ) {
 				for ( Sequence sequence : namespace.getSequences() ) {
 					if ( contributableInclusionFilter.matches( sequence ) ) {
 						checkExportIdentifier( sequence, exportIdentifiers);
@@ -259,10 +257,10 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 
 		//NOTE : Foreign keys must be created *after* all tables of all namespaces for cross namespace fks. see HHH-10420
 		for ( Namespace namespace : database.getNamespaces() ) {
-			if ( options.getSchemaFilter().includeNamespace( namespace ) ) {
+			if ( schemaFilter.includeNamespace( namespace ) ) {
 				final NameSpaceTablesInformation nameSpaceTablesInformation = tablesInformation.get( namespace );
 				for ( Table table : namespace.getTables() ) {
-					if ( options.getSchemaFilter().includeTable( table ) && contributableInclusionFilter.matches( table ) ) {
+					if ( schemaFilter.includeTable( table ) && contributableInclusionFilter.matches( table ) ) {
 						final TableInformation tableInformation = nameSpaceTablesInformation.getTableInformation( table );
 						if ( tableInformation == null || tableInformation.isPhysicalTable() ) {
 							applyForeignKeys( table, tableInformation, dialect, metadata, formatter, options,
@@ -387,7 +385,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		}
 
 		if ( uniqueConstraintStrategy != SKIP ) {
-			final Exporter<Constraint> exporter = dialect.getUniqueKeyExporter();
+			final Exporter<UniqueKey> exporter = dialect.getUniqueKeyExporter();
 			for ( UniqueKey uniqueKey : table.getUniqueKeys().values() ) {
 				// Skip if index already exists. Most of the time, this
 				// won't work since most Dialects use Constraints. However,
@@ -420,8 +418,9 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 	}
 
 	private UniqueConstraintSchemaUpdateStrategy determineUniqueConstraintSchemaUpdateStrategy() {
-		final String updateStrategy = tool.getServiceRegistry().getService( ConfigurationService.class )
-				.getSetting( UNIQUE_CONSTRAINT_SCHEMA_UPDATE_STRATEGY, STRING );
+		final String updateStrategy =
+				tool.getServiceRegistry().requireService( ConfigurationService.class )
+						.getSetting( UNIQUE_CONSTRAINT_SCHEMA_UPDATE_STRATEGY, STRING );
 		return UniqueConstraintSchemaUpdateStrategy.interpret( updateStrategy );
 	}
 

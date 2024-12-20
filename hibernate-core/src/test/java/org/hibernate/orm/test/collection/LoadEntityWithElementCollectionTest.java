@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.collection;
 
 import java.util.HashSet;
@@ -7,7 +11,6 @@ import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostUpdateEvent;
 import org.hibernate.event.spi.PostUpdateEventListener;
-import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -51,11 +54,6 @@ public class LoadEntityWithElementCollectionTest {
 		@Override
 		public void onPostUpdate(PostUpdateEvent event) {
 			isPostUpdateCalled = true;
-		}
-
-		@Override
-		public boolean requiresPostCommitHandling(EntityPersister persister) {
-			return false;
 		}
 
 		public boolean isPostUpdateCalled() {

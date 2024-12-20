@@ -1,15 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cut;
 
 import java.io.Serializable;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.usertype.CompositeUserType;
 
@@ -22,32 +19,19 @@ public class CompositeDateTimeUserType implements CompositeUserType<CompositeDat
 
 	@Override
 	public Object getPropertyValue(CompositeDateTime dateTime, int property) throws HibernateException {
-		switch ( property ) {
-			case 0:
-				return dateTime.getYear();
-
-			case 1:
-				return dateTime.getMonth();
-
-			case 2:
-				return dateTime.getDay();
-
-			case 3:
-				return dateTime.getHour();
-
-			case 4:
-				return dateTime.getMinute();
-
-			case 5:
-				return dateTime.getSecond();
-
-			default:
-				throw new HibernateException( "This type has only 6 fields." );
-		}
+		return switch ( property ) {
+			case 0 -> dateTime.getYear();
+			case 1 -> dateTime.getMonth();
+			case 2 -> dateTime.getDay();
+			case 3 -> dateTime.getHour();
+			case 4 -> dateTime.getMinute();
+			case 5 -> dateTime.getSecond();
+			default -> throw new HibernateException( "This type has only 6 fields." );
+		};
 	}
 
 	@Override
-	public CompositeDateTime instantiate(ValueAccess values, SessionFactoryImplementor sessionFactory) {
+	public CompositeDateTime instantiate(ValueAccess values) {
 		Integer year = values.getValue( 0, Integer.class );
 		Integer month = values.getValue( 1, Integer.class );
 		Integer day = values.getValue( 2, Integer.class );

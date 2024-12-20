@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
@@ -24,7 +22,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 public class OracleJdbcHelper {
 
 	public static boolean isUsable(ServiceRegistry serviceRegistry) {
-		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		final ClassLoaderService classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
 		try {
 			classLoaderService.classForName( "oracle.jdbc.OracleConnection" );
 			return true;
@@ -47,7 +45,7 @@ public class OracleJdbcHelper {
 	}
 
 	private static <X> X create(ServiceRegistry serviceRegistry, String className) {
-		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		final ClassLoaderService classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
 		try {
 			return classLoaderService.<X>classForName( className ).getConstructor().newInstance();
 		}

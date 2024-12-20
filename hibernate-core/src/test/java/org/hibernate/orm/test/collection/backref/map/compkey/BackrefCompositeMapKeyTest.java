@@ -1,15 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.collection.backref.map.compkey;
 
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.SerializationHelper;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -18,6 +15,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
@@ -50,7 +48,7 @@ public class BackrefCompositeMapKeyTest {
 
 					prod.getParts().remove( mapKey );
 
-					session.delete( prod );
+					session.remove( prod );
 				}
 		);
 
@@ -81,7 +79,7 @@ public class BackrefCompositeMapKeyTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( session.get( Product.class, "Widget" ) )
+						session.remove( session.get( Product.class, "Widget" ) )
 		);
 	}
 
@@ -106,14 +104,14 @@ public class BackrefCompositeMapKeyTest {
 				session -> {
 					assertNull( session.get( Part.class, "Widge" ) );
 					assertNotNull( session.get( Part.class, "Get" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
+					session.remove( session.get( Product.class, "Widget" ) );
 				}
 		);
 
 	}
 
 	@Test
-	public void testOrphanDeleteAfterLock(SessionFactoryScope scope) {
+	public void testCannotLockDetachedEntity(SessionFactoryScope scope) {
 		Product prod = new Product( "Widget" );
 		MapKey mapKey = new MapKey( "Top" );
 		scope.inTransaction(
@@ -129,78 +127,18 @@ public class BackrefCompositeMapKeyTest {
 
 		scope.inTransaction(
 				session -> {
-					session.lock( prod, LockMode.READ );
-					prod.getParts().remove( mapKey );
+					assertThrows(IllegalArgumentException.class,
+								() -> session.lock( prod, LockMode.READ ),
+								"Given entity is not associated with the persistence context"
+					);
 				}
 		);
 
 		scope.inTransaction(
 				session -> {
-					assertNull( session.get( Part.class, "Widge" ) );
+					assertNotNull( session.get( Part.class, "Widge" ) );
 					assertNotNull( session.get( Part.class, "Get" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
-				}
-		);
-	}
-
-	@Test
-	public void testOrphanDeleteOnSaveOrUpdate(SessionFactoryScope scope) {
-		Product prod = new Product( "Widget" );
-		MapKey mapKey = new MapKey( "Top" );
-		scope.inTransaction(
-				session -> {
-					Part part = new Part( "Widge", "part if a Widget" );
-					prod.getParts().put( mapKey, part );
-					Part part2 = new Part( "Get", "another part if a Widget" );
-					prod.getParts().put( new MapKey( "Bottom" ), part2 );
-					session.persist( prod );
-				}
-		);
-
-		prod.getParts().remove( mapKey );
-
-		scope.inTransaction(
-				session ->
-						session.saveOrUpdate( prod )
-		);
-
-		scope.inTransaction(
-				session -> {
-					assertNull( session.get( Part.class, "Widge" ) );
-					assertNotNull( session.get( Part.class, "Get" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
-				}
-		);
-	}
-
-	@Test
-	public void testOrphanDeleteOnSaveOrUpdateAfterSerialization(SessionFactoryScope scope) {
-		Product prod = new Product( "Widget" );
-		MapKey mapKey = new MapKey( "Top" );
-		scope.inTransaction(
-				session -> {
-					Part part = new Part( "Widge", "part if a Widget" );
-					prod.getParts().put( mapKey, part );
-					Part part2 = new Part( "Get", "another part if a Widget" );
-					prod.getParts().put( new MapKey( "Bottom" ), part2 );
-					session.persist( prod );
-				}
-		);
-
-		prod.getParts().remove( mapKey );
-
-		Product cloned = (Product) SerializationHelper.clone( prod );
-
-		scope.inTransaction(
-				session ->
-						session.saveOrUpdate( cloned )
-		);
-
-		scope.inTransaction(
-				session -> {
-					assertNull( session.get( Part.class, "Widge" ) );
-					assertNotNull( session.get( Part.class, "Get" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
+					session.remove( session.get( Product.class, "Widget" ) );
 				}
 		);
 	}
@@ -243,7 +181,7 @@ public class BackrefCompositeMapKeyTest {
 					assertTrue( Hibernate.isInitialized( prod.getParts() ) );
 					assertNull( prod.getParts().get( new MapKey( "Top" ) ) );
 					assertNotNull( session.get( Part.class, "Get" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
+					session.remove( session.get( Product.class, "Widget" ) );
 				}
 		);
 	}
@@ -274,7 +212,7 @@ public class BackrefCompositeMapKeyTest {
 				session -> {
 					assertNull( session.get( Part.class, "Widge" ) );
 					assertNotNull( session.get( Part.class, "Get" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
+					session.remove( session.get( Product.class, "Widget" ) );
 				}
 		);
 	}

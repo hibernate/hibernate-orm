@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
@@ -18,9 +16,16 @@ import jakarta.persistence.FlushModeType;
  * <p>
  * For example, {@link #COMMIT} specifies that the session flushes
  * automatically when the transaction is about to commit.
+ * <p>
+ * This enumeration represents options which may be
+ * {@linkplain Session#setHibernateFlushMode set at the session
+ * level}, and competes with the JPA-defined enumeration
+ * {@link jakarta.persistence.FlushModeType}. Alternatively, a
+ * {@link org.hibernate.query.QueryFlushMode QueryFlushMode} may
+ * be specified for a given query.
  *
  * @see Session#setHibernateFlushMode
- * @see org.hibernate.query.CommonQueryContract#setHibernateFlushMode
+ * @see org.hibernate.query.QueryFlushMode
  *
  * @author Gavin King
  */
@@ -83,18 +88,12 @@ public enum FlushMode {
 	}
 
 	private int level() {
-		switch (this) {
-			case ALWAYS:
-				return 20;
-			case AUTO:
-				return 10;
-			case COMMIT:
-				return 5;
-			case MANUAL:
-				return 0;
-			default:
-				throw new AssertionFailure("Impossible FlushMode");
-		}
+		return switch (this) {
+			case ALWAYS -> 20;
+			case AUTO -> 10;
+			case COMMIT -> 5;
+			case MANUAL -> 0;
+		};
 	}
 
 	public static FlushMode fromJpaFlushMode(FlushModeType flushModeType) {

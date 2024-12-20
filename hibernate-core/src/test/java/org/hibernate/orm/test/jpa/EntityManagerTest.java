@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa;
 
@@ -19,11 +17,11 @@ import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
+import org.hibernate.jpa.HibernateHints;
 import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import jakarta.persistence.EntityExistsException;
@@ -62,8 +60,8 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Override
-	public Map<Class, String> getCachedClasses() {
-		Map<Class, String> result = new HashMap<Class, String>();
+	public Map<Class<?>, String> getCachedClasses() {
+		Map<Class<?>, String> result = new HashMap<>();
 		result.put( Item.class, "read-write" );
 		return result;
 	}
@@ -299,7 +297,7 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "EJB-9" )
+	@JiraKey( value = "EJB-9" )
 	public void testGet() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -333,7 +331,7 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 			// success
 		}
 
-		assertTrue( properties.containsKey( org.hibernate.cfg.AvailableSettings.FLUSH_MODE ) );
+		assertTrue( properties.containsKey(HibernateHints.HINT_FLUSH_MODE) );
 	}
 
 	@Test
@@ -346,7 +344,7 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 		em.getTransaction().commit();
 
 		em.clear();
-		assertEquals( em.getProperties().get( org.hibernate.cfg.AvailableSettings.FLUSH_MODE ), "AUTO" );
+		assertEquals( em.getProperties().get(HibernateHints.HINT_FLUSH_MODE), "AUTO" );
 		assertNotNull(
 				"With default settings the entity should be persisted on commit.",
 				em.find( Wallet.class, wallet.getSerial() )
@@ -373,7 +371,7 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 				"With a flush mode of manual the entity should not have been persisted.",
 				em.find( Wallet.class, wallet.getSerial() )
 		);
-		assertEquals( "MANUAL", em.getProperties().get( AvailableSettings.FLUSH_MODE ) );
+		assertEquals( "MANUAL", em.getProperties().get(HibernateHints.HINT_FLUSH_MODE) );
 		em.close();
 	}
 
@@ -404,40 +402,40 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 		}
 	}
 
-    @Test
-    public void testPersistExisting() throws Exception {
-        EntityManager em = getOrCreateEntityManager();
-        em.getTransaction().begin();
-        Wallet w = new Wallet();
-        w.setBrand( "Lacoste" );
-        w.setModel( "Minimic" );
-        w.setSerial( "0100202002" );
-        em.persist( w );
-        w = new Wallet();
-        w.setBrand( "Lacoste" );
-        w.setModel( "Minimic" );
-        w.setSerial( "0100202002" );
-        try {
-            em.persist( w );
-        }
-        catch ( EntityExistsException eee ) {
-            //success
-            if ( em.getTransaction() != null ) {
-                em.getTransaction().rollback();
-            }
-            em.close();
-            return;
-        }
-        try {
-            em.getTransaction().commit();
-            fail( "Should have raised an exception" );
-        }
-        catch ( PersistenceException pe ) {
-        }
-        finally {
-            em.close();
-        }
-    }
+	@Test
+	public void testPersistExisting() throws Exception {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Wallet w = new Wallet();
+		w.setBrand( "Lacoste" );
+		w.setModel( "Minimic" );
+		w.setSerial( "0100202002" );
+		em.persist( w );
+		w = new Wallet();
+		w.setBrand( "Lacoste" );
+		w.setModel( "Minimic" );
+		w.setSerial( "0100202002" );
+		try {
+			em.persist( w );
+		}
+		catch ( EntityExistsException eee ) {
+			//success
+			if ( em.getTransaction() != null ) {
+				em.getTransaction().rollback();
+			}
+			em.close();
+			return;
+		}
+		try {
+			em.getTransaction().commit();
+			fail( "Should have raised an exception" );
+		}
+		catch ( PersistenceException pe ) {
+		}
+		finally {
+			em.close();
+		}
+	}
 
 	@Test
 	public void testFactoryClosed() throws Exception {
@@ -489,7 +487,7 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11958" )
+	@JiraKey( value = "HHH-11958" )
 	public void testReadonlyHibernateQueryHint() {
 
 		EntityManager em = getOrCreateEntityManager();

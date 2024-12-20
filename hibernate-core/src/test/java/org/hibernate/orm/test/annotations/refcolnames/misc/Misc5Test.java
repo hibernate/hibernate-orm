@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.annotations.refcolnames.misc;
 
 import jakarta.persistence.Column;
@@ -9,7 +13,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -21,9 +25,9 @@ import java.util.Set;
 
 @DomainModel(annotatedClasses = {Misc5Test.Animal.class})
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-14014")
+@JiraKey(value = "HHH-14014")
 public class Misc5Test {
-	@Test 
+	@Test
 	void test(SessionFactoryScope scope) {
 		scope.inTransaction(x -> {
 			Animal a = new Animal();

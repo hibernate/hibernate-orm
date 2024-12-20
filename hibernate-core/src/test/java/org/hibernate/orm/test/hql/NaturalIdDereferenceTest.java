@@ -1,16 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.orm.test.hql;
 
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -278,7 +275,7 @@ public class NaturalIdDereferenceTest {
 		scope.inTransaction(
 				session -> {
 					Query query = session.createQuery( "SELECT b.normalBook FROM BookRefRef a " +
-															   "JOIN BookRef b ON b.naturalBook.isbn = a.naturalBookRef.naturalBook.isbn" );
+															"JOIN BookRef b ON b.naturalBook.isbn = a.naturalBookRef.naturalBook.isbn" );
 					query.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					assertEquals( 2, sqlStatementInterceptor.getNumberOfJoins( 0 ) );
@@ -330,7 +327,7 @@ public class NaturalIdDereferenceTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13752")
+	@JiraKey(value = "HHH-13752")
 	public void deleteWithNaturalIdBasedJoinTable(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

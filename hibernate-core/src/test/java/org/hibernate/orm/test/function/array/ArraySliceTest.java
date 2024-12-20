@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.function.array;
 
@@ -37,6 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 @DomainModel(annotatedClasses = EntityWithArrays.class)
 @SessionFactory
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsStructuralArrays.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsArraySlice.class)
 // Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
 @BootstrapServiceRegistry(integrators = SharedDriverManagerTypeCacheClearingIntegrator.class)
 @SkipForDialect(dialectClass = CockroachDialect.class, reason = "See https://github.com/cockroachdb/cockroach/issues/32551")
@@ -136,6 +135,23 @@ public class ArraySliceTest {
 					cb.collectionSlice( root.get( "theCollection" ), 1, 1 )
 			);
 			em.createQuery( cq ).getResultList();
+		} );
+	}
+
+	@Test
+	public void testSliceSyntax(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			//tag::hql-array-slice-hql-example[]
+			List<Tuple> results = em.createQuery( "select e.id, e.theArray[1:1] from EntityWithArrays e order by e.id", Tuple.class )
+					.getResultList();
+			//end::hql-array-slice-hql-example[]
+			assertEquals( 3, results.size() );
+			assertEquals( 1L, results.get( 0 ).get( 0 ) );
+			assertArrayEquals( new String[0], results.get( 0 ).get( 1, String[].class ) );
+			assertEquals( 2L, results.get( 1 ).get( 0 ) );
+			assertArrayEquals( new String[] { "abc" }, results.get( 1 ).get( 1, String[].class ) );
+			assertEquals( 3L, results.get( 2 ).get( 0 ) );
+			assertNull( results.get( 2 ).get( 1, String[].class ) );
 		} );
 	}
 

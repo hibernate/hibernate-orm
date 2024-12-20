@@ -1,18 +1,29 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.type;
 
-import java.util.Map;
-
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
+
+import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
+import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.type.BasicType;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -25,38 +36,27 @@ import jakarta.persistence.Query;
 import jakarta.persistence.Table;
 import jakarta.persistence.TypedQuery;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
-
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
 
 /**
  * @author Jordan Gigov
  * @author Christian Beikov
  */
-@SkipForDialect(value = SybaseASEDialect.class, comment = "Sybase or the driver are trimming trailing zeros in byte arrays")
-public class LongArrayTest extends BaseNonConfigCoreFunctionalTestCase {
+@BootstrapServiceRegistry(
+		// Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
+		integrators = SharedDriverManagerTypeCacheClearingIntegrator.class
+)
+@DomainModel(annotatedClasses = LongArrayTest.TableWithLongArrays.class)
+@SessionFactory
+public class LongArrayTest {
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[]{ TableWithLongArrays.class };
-	}
+	private BasicType<Long[]> arrayType;
 
-	@Override
-	protected void addSettings(Map<String, Object> settings) {
-		// Make sure this stuff runs on a dedicated connection pool,
-		// otherwise we might run into ORA-21700: object does not exist or is marked for delete
-		// because the JDBC connection or database session caches something that should have been invalidated
-		settings.put( AvailableSettings.CONNECTION_PROVIDER, "" );
-	}
-
-	public void startUp() {
-		super.startUp();
-		inTransaction( em -> {
+	@BeforeAll
+	public void startUp(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
+			arrayType = em.getTypeConfiguration().getBasicTypeForJavaType( Long[].class );
 			em.persist( new TableWithLongArrays( 1L, new Long[]{} ) );
 
 			em.persist( new TableWithLongArrays( 2L, new Long[]{ 4L, 8L, 15L, 16L, 23L, 42L } ) );
@@ -77,8 +77,8 @@ public class LongArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testById() {
-		inSession( em -> {
+	public void testById(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			TableWithLongArrays tableRecord;
 			tableRecord = em.find( TableWithLongArrays.class, 1L );
 			assertThat( tableRecord.getTheArray(), is( new Long[]{} ) );
@@ -95,8 +95,8 @@ public class LongArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testQueryById() {
-		inSession( em -> {
+	public void testQueryById(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			TypedQuery<TableWithLongArrays> tq = em.createNamedQuery( "TableWithLongArrays.JPQL.getById", TableWithLongArrays.class );
 			tq.setParameter( "id", 2L );
 			TableWithLongArrays tableRecord = tq.getSingleResult();
@@ -105,9 +105,8 @@ public class LongArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect( value = AbstractHANADialect.class, comment = "For some reason, HANA can't intersect VARBINARY values, but funnily can do a union...")
-	public void testQuery() {
-		inSession( em -> {
+	public void testQuery(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			TypedQuery<TableWithLongArrays> tq = em.createNamedQuery( "TableWithLongArrays.JPQL.getByData", TableWithLongArrays.class );
 			tq.setParameter( "data", new Long[]{ 4L, 8L, 15L, 16L, null, 23L, 42L } );
 			TableWithLongArrays tableRecord = tq.getSingleResult();
@@ -116,8 +115,8 @@ public class LongArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testNativeQueryById() {
-		inSession( em -> {
+	public void testNativeQueryById(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			TypedQuery<TableWithLongArrays> tq = em.createNamedQuery( "TableWithLongArrays.Native.getById", TableWithLongArrays.class );
 			tq.setParameter( "id", 2L );
 			TableWithLongArrays tableRecord = tq.getSingleResult();
@@ -126,13 +125,20 @@ public class LongArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect( value = HSQLDialect.class, comment = "HSQL does not like plain parameters in the distinct from predicate")
-	@SkipForDialect( value = OracleDialect.class, comment = "Oracle requires a special function to compare XML")
-	public void testNativeQuery() {
-		inSession( em -> {
-			final String op = em.getJdbcServices().getDialect().supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
+	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQL does not like plain parameters in the distinct from predicate")
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle requires a special function to compare XML")
+	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 requires a special function to compare XML")
+	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "SQL Server requires a special function to compare XML")
+	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase ASE requires a special function to compare XML")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA requires a special function to compare LOBs")
+	@SkipForDialect(dialectClass = MariaDBDialect.class, reason = "MariaDB requires a special function to compare LOBs")
+	public void testNativeQuery(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final Dialect dialect = em.getDialect();
+			final String op = dialect.supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
+			final String param = arrayType.getJdbcType().wrapWriteExpression( ":data", dialect );
 			TypedQuery<TableWithLongArrays> tq = em.createNativeQuery(
-					"SELECT * FROM table_with_bigint_arrays t WHERE the_array " + op + " :data",
+					"SELECT * FROM table_with_bigint_arrays t WHERE the_array " + op + " " + param,
 					TableWithLongArrays.class
 			);
 			tq.setParameter( "data", new Long[]{ 4L, 8L, 15L, 16L, null, 23L, 42L } );
@@ -142,13 +148,13 @@ public class LongArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialectFeature(DialectChecks.SupportsArrayDataTypes.class)
-	public void testNativeQueryUntyped() {
-		inSession( em -> {
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTypedArrays.class)
+	public void testNativeQueryUntyped(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			Query q = em.createNamedQuery( "TableWithLongArrays.Native.getByIdUntyped" );
 			q.setParameter( "id", 2L );
 			Object[] tuple = (Object[]) q.getSingleResult();
-			assertThat( tuple[1], is( new Long[]{ 4L, 8L, 15L, 16L, 23L, 42L } ) );
+			assertThat( tuple[1], is( new Long[] { 4L, 8L, 15L, 16L, 23L, 42L } ) );
 		} );
 	}
 

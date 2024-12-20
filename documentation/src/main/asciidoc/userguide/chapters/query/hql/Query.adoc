@@ -38,7 +38,7 @@ The code examples featured in this chapter, and the next, make use of the follow
 [[hql-examples-domain-model-example]]
 .Examples domain model
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-model}/Person.java[tags=hql-examples-domain-model-example]
 
@@ -80,7 +80,7 @@ Named queries may be defined using the Jakarta Persistence annotation `@NamedQue
 [[jpa-read-only-entities-native-example]]
 .Declaring a named query with a query hint
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-model}/Person.java[tags=jpa-read-only-entities-native-example]
 ----
@@ -93,7 +93,7 @@ which allows the specification of additional properties of the query, including 
 [[jpql-api-hibernate-named-query-example]]
 .Declaring a named query using the typesafe annotation
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-model}/Phone.java[tags=jpql-api-hibernate-named-query-example, indent=0]
 ----
@@ -127,7 +127,7 @@ That way, you'll obtain a `TypedQuery<T>`, and avoid some later typecasting.
 [[jpql-api-example]]
 .Obtaining a Jakarta Persistence `Query` or `TypedQuery` reference
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-query}/HQLTest.java[tags=jpql-api-example]
 ----
@@ -136,7 +136,7 @@ include::{example-dir-query}/HQLTest.java[tags=jpql-api-example]
 [[jpql-api-named-query-example]]
 .Obtaining a Jakarta Persistence `Query` or `TypedQuery` reference for a named query
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-model}/Person.java[tags=jpql-api-named-query-example, indent=0]
 
@@ -162,7 +162,7 @@ Hibernate's `Query` interface offers additional operations not available via `Ty
 [[hql-api-example]]
 .Obtaining a Hibernate `Query`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-query}/HQLTest.java[tags=hql-api-example]
 ----
@@ -171,7 +171,7 @@ include::{example-dir-query}/HQLTest.java[tags=hql-api-example]
 [[hql-api-named-query-example]]
 .Obtaining a Hibernate `Query` for a named query
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-query}/HQLTest.java[tags=hql-api-named-query-example]
 ----
@@ -195,7 +195,7 @@ If the query has parameters, arguments must be bound to each parameter before th
 [[jpql-api-parameter-example]]
 .Named parameter binding
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-query}/HQLTest.java[tags=jpql-api-parameter-example]
 ----
@@ -207,7 +207,7 @@ Just like with named parameters, a ordinal parameter may appear multiple times i
 [[jpql-api-ordinal-parameter-example]]
 .Ordinal parameter binding
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-query}/HQLTest.java[tags=jpql-api-ordinal-parameter-example]
 ----
@@ -231,7 +231,7 @@ The `Query` interface is used to control the execution of the query.
 [[jpql-api-list-example]]
 .Executing a query using `getResultList()`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-query}/HQLTest.java[tags=jpql-api-list-example]
 ----
@@ -240,7 +240,7 @@ include::{example-dir-query}/HQLTest.java[tags=jpql-api-list-example]
 [[jpql-api-unique-result-example]]
 .Executing a query using `getSingleResult()`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-query}/HQLTest.java[tags=jpql-api-single-result-example]
 ----
@@ -249,7 +249,7 @@ include::{example-dir-query}/HQLTest.java[tags=jpql-api-single-result-example]
 [[jpql-api-stream-example]]
 .Executing a query using `getResultStream()`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-query}/HQLTest.java[tags=jpql-api-stream-example]
 ----
@@ -269,7 +269,7 @@ The very important methods `Query#setMaxResults()` and `Query#setFirstResult()` 
 [[jpql-api-basic-usage-example]]
 .Limits and pagination
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-query}/HQLTest.java[tags=jpql-api-basic-usage-example]
 ----
@@ -284,7 +284,7 @@ For example, we may want to specify an execution timeout or control caching.
 [[jpql-api-hint-usage-example]]
 .`Query` execution using a query hint
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-query}/HQLTest.java[tags=jpql-api-hint-usage-example]
 ----
@@ -353,7 +353,7 @@ For complete details, see the https://docs.jboss.org/hibernate/orm/{majorMinorVe
 [[hql-api-basic-usage-example]]
 .Advanced query control
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-query}/HQLTest.java[tags=hql-api-basic-usage-example]
 ----
@@ -376,7 +376,7 @@ See the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hi
 //[[hql-api-parameter-example]]
 //.Hibernate name parameter binding
 //====
-//[source, JAVA, indent=0]
+//[source, java, indent=0]
 //----
 //include::{sourcedir}/HQLTest.java[tags=hql-api-parameter-example]
 //----
@@ -388,7 +388,7 @@ See the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hi
 //[[hql-api-parameter-inferred-type-example]]
 //.Hibernate name parameter binding (inferred type)
 //====
-//[source, JAVA, indent=0]
+//[source, java, indent=0]
 //----
 //include::{sourcedir}/HQLTest.java[tags=hql-api-parameter-inferred-type-example]
 //----
@@ -399,7 +399,7 @@ See the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hi
 //[[hql-api-parameter-short-form-example]]
 //.Hibernate name parameter binding (short forms)
 //====
-//[source, JAVA, indent=0]
+//[source, java, indent=0]
 //----
 //include::{sourcedir}/HQLTest.java[tags=hql-api-parameter-short-form-example]
 //----
@@ -411,7 +411,7 @@ See the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hi
 //
 //There was no way to relate two such ordinal parameters as being "the same" aside from binding the same value to each and, for this reason, this form is no longer supported.
 //
-//[source, JAVA, indent=0]
+//[source, java, indent=0]
 //----
 //include::{sourcedir}/HQLTest.java[tags=hql-api-ordinal-parameter-example]
 //----
@@ -425,7 +425,7 @@ See the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hi
 //[[hql-api-list-example]]
 //.Hibernate `list()` result
 //====
-//[source, JAVA, indent=0]
+//[source, java, indent=0]
 //----
 //include::{sourcedir}/HQLTest.java[tags=hql-api-list-example]
 //----
@@ -436,7 +436,7 @@ See the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hi
 //[[hql-api-unique-result-example]]
 //.Hibernate `uniqueResult()`
 //====
-//[source, JAVA, indent=0]
+//[source, java, indent=0]
 //----
 //include::{sourcedir}/HQLTest.java[tags=hql-api-unique-result-example]
 //----
@@ -460,7 +460,7 @@ Read-only entities are skipped by the dirty checking mechanism as illustrated by
 [[hql-read-only-entities-example]]
 .Read-only entities query example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-query}/HQLTest.java[tags=hql-read-only-entities-example]
 ----
@@ -478,7 +478,7 @@ The method `Query#setReadOnly()` is an alternative to using a Jakarta Persistenc
 [[hql-read-only-entities-native-example]]
 .Read-only entities native query example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-query}/HQLTest.java[tags=hql-read-only-entities-native-example]
 ----
@@ -498,7 +498,7 @@ Depending on the specified `ScrollMode`, and on the capabilities of the JDBC dri
 [[hql-api-scroll-example]]
 .Scrolling through a `ResultSet` containing entities
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-query}/HQLTest.java[tags=hql-api-scroll-example]
 ----
@@ -531,7 +531,7 @@ For that, use `getResultList().stream()`.
 [[hql-api-stream-projection-example]]
 .Hibernate `getResultStream()` with a projection result type
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-query}/HQLTest.java[tags=hql-api-stream-projection-example]
 ----
@@ -540,7 +540,7 @@ include::{example-dir-query}/HQLTest.java[tags=hql-api-stream-projection-example
 [[hql-api-stream-example]]
 .Hibernate `getResultStream()` with an entity result type
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-query}/HQLTest.java[tags=hql-api-stream-example]
 ----
@@ -583,7 +583,7 @@ it does not expose a `#executeUpdate` method.  This allows for earlier validatio
 [[hql-examples-selection-query]]
 .Selection query validation
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-query}/SelectionQueryExampleTests.java[tags=example-hql-selection-query]
 
@@ -596,7 +596,7 @@ include::{example-dir-query}/SelectionQueryExampleTests.java[tags=example-hql-se
 [[hql-examples-named-selection-query]]
 .NamedQuery selection validation
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-query}/SelectionQueryExampleTests.java[tags=example-hql-named-selection-query]
 
@@ -616,7 +616,7 @@ For example, in terms of execution, it only exposes `#executeUpdate` method.  Th
 [[hql-examples-mutation-query]]
 .Mutation query validation
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-query}/MutationQueryExampleTests.java[tags=example-hql-mutation-query]
 
@@ -630,7 +630,7 @@ include::{example-dir-query}/MutationQueryExampleTests.java[tags=example-hql-mut
 [[hql-examples-named-mutation-query]]
 .NamedQuery mutation validation
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-query}/MutationQueryExampleTests.java[tags=example-hql-named-mutation-query]
 

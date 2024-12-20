@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.various;
 
@@ -17,11 +15,10 @@ import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedNameImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.id.enhanced.SequenceStructure;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
@@ -32,7 +29,7 @@ import static org.junit.Assert.assertEquals;
 public class ExportIdentifierTest extends BaseUnitTestCase {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12935" )
+	@JiraKey( value = "HHH-12935" )
 	public void testUniqueExportableIdentifier() {
 		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 		final MetadataBuilderImpl.MetadataBuildingOptionsImpl options = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( ssr );
@@ -52,7 +49,6 @@ public class ExportIdentifierTest extends BaseUnitTestCase {
 			int namespaceSize = 0;
 			for ( Namespace namespace : database.getNamespaces() ) {
 				final SequenceStructure sequenceStructure = new SequenceStructure(
-						ssr.getService( JdbcEnvironment.class ),
 						"envers",
 						new QualifiedNameImpl(
 								namespace.getName(),

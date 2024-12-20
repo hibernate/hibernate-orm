@@ -1,21 +1,18 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.fetch.depth;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import jakarta.persistence.EntityManagerFactory;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.tool.schema.Action;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -88,12 +85,12 @@ public class NoDepthTests {
 		par.addAsResource( "units/many2many/fetch-depth.xml", "META-INF/persistence.xml" );
 
 		try ( final ShrinkWrapClassLoader classLoader = new ShrinkWrapClassLoader( par ) ) {
-			final Map<String, ?> settings = CollectionHelper.toMap(
+			final Map<String, Object> settings = new HashMap<>( Map.of(
 					CLASSLOADERS, Arrays.asList( classLoader, getClass().getClassLoader() ),
 					MAX_FETCH_DEPTH, configureMax ? "10" : "",
 					HBM2DDL_AUTO, Action.CREATE_DROP,
 					FORMAT_SQL, "true"
-			);
+			) );
 			ServiceRegistryUtil.applySettings( settings );
 
 			final EntityManagerFactory emf = createEntityManagerFactory( "fetch-depth", settings );

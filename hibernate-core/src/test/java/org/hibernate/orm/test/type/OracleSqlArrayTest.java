@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.type;
 
 import java.math.BigInteger;
@@ -58,7 +62,7 @@ public class OracleSqlArrayTest {
 				ResultSet tableInfo = c.getMetaData().getColumns(null, null, "CONTAINERWITHARRAYS", "BIGINTEGERS" );
 				while ( tableInfo.next() ) {
 					String type = tableInfo.getString(6);
-					assertEquals( "BIGINTEGERARRAY", type );
+					assertEquals( "BIGINTEGERBIGDECIMALARRAY", type );
 					return;
 				}
 				fail("named array column not exported");
@@ -86,7 +90,7 @@ public class OracleSqlArrayTest {
 				ResultSet tableInfo = c.getMetaData().getColumns(null, null, "CONTAINERWITHARRAYS", "ACTIVITYKINDS" );
 				while ( tableInfo.next() ) {
 					String type = tableInfo.getString(6);
-					assertEquals( "ACTIVITYKINDARRAY", type );
+					assertEquals( "ACTIVITYKINDBYTEARRAY", type );
 					return;
 				}
 				fail("named array column not exported");

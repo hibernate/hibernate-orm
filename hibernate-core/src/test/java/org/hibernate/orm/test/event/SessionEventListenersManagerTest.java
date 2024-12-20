@@ -1,12 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.event;
 
-import org.hibernate.BaseSessionEventListener;
 import org.hibernate.SessionEventListener;
 import org.hibernate.engine.internal.SessionEventListenerManagerImpl;
 
@@ -45,7 +42,7 @@ public class SessionEventListenersManagerTest extends BaseUnitTestCase {
 		Assert.assertEquals( "e", sb.toString() );
 	}
 
-	private static class TestSessionEventListener extends BaseSessionEventListener {
+	private static class TestSessionEventListener implements SessionEventListener {
 
 		private final StringBuilder sb;
 		private final char theChar;

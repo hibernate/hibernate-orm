@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.basic;
 
@@ -18,8 +16,8 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import org.hibernate.annotations.Type;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.UserType;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -129,8 +127,7 @@ public class RepeatedMappingUserTypeTests {
 		public SortedSet<Integer> nullSafeGet(
 				ResultSet rs,
 				int position,
-				SharedSessionContractImplementor session,
-				Object owner) throws SQLException {
+				WrapperOptions options) throws SQLException {
 			return convertToEntityAttribute( rs.getString( position ) );
 		}
 
@@ -139,7 +136,7 @@ public class RepeatedMappingUserTypeTests {
 				PreparedStatement st,
 				SortedSet<Integer> values,
 				int index,
-				SharedSessionContractImplementor session) throws SQLException {
+				WrapperOptions options) throws SQLException {
 			if ( values == null || values.isEmpty() ) {
 				st.setNull( index, SqlTypes.VARCHAR );
 				return;

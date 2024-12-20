@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bootstrap.binding.annotations.override;
 
@@ -10,7 +8,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.mapping.Table;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.orm.test.util.SchemaUtil;
 import org.junit.Assert;
@@ -20,7 +18,7 @@ import org.junit.Test;
  * @author Lukasz Antoniak
  */
 @RequiresDialect(H2Dialect.class)
-@TestForIssue(jiraKey = "HHH-6662")
+@JiraKey(value = "HHH-6662")
 public class AssociationOverrideSchemaTest extends BaseNonConfigCoreFunctionalTestCase {
 	public static final String SCHEMA_NAME = "OTHER_SCHEMA";
 	public static final String TABLE_NAME = "BLOG_TAGS";

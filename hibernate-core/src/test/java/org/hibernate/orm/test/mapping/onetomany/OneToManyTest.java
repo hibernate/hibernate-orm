@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.onetomany;
 
@@ -70,11 +68,11 @@ public class OneToManyTest {
 					card.getFields().forEach(
 							cardField -> {
 								Key key = cardField.key;
-								session.delete( cardField );
-								session.delete( key );
+								session.remove( cardField );
+								session.remove( key );
 							}
 					);
-					session.delete( card );
+					session.remove( card );
 				}
 		);
 	}

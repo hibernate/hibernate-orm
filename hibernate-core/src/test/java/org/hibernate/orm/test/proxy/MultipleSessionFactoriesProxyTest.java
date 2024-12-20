@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.proxy;
 
@@ -18,7 +16,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.SerializationHelper;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -48,11 +46,11 @@ public class MultipleSessionFactoriesProxyTest extends BaseCoreFunctionalTestCas
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.SESSION_FACTORY_NAME, "sf-name" ); // explicitly define the session factory name
-		cfg.setProperty( Environment.SESSION_FACTORY_NAME_IS_JNDI, "false" ); // do not bind it to jndi
+		cfg.setProperty( Environment.SESSION_FACTORY_NAME_IS_JNDI, false ); // do not bind it to jndi
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-17172")
+	@JiraKey(value = "HHH-17172")
 	public void testProxySerializationWithMultipleSessionFactories() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -65,7 +63,7 @@ public class MultipleSessionFactoriesProxyTest extends BaseCoreFunctionalTestCas
 		s.flush();
 		s.clear();
 
-		container = s.load( Container.class, container.getId() );
+		container = s.getReference( Container.class, container.getId() );
 		assertFalse( Hibernate.isInitialized( container ) );
 		container.getId();
 		assertFalse( Hibernate.isInitialized( container ) );

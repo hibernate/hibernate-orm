@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id: Address.java 9914 2006-05-09 09:37:18Z max.andersen@jboss.com $
 package org.hibernate.orm.test.onetoone.joined;
 
 
@@ -17,7 +13,7 @@ public class Address {
 	public String street;
 	public String state;
 	public String zip;
-	
+
 	public String toString() {
 		return this.getClass() + ":" + street;
 	}

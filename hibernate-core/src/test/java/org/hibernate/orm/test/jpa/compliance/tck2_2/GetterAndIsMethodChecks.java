@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.compliance.tck2_2;
 
@@ -12,7 +10,7 @@ import jakarta.persistence.OneToOne;
 
 import org.hibernate.boot.MetadataSources;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
@@ -20,7 +18,7 @@ import org.junit.Test;
 /**
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "12096")
+@JiraKey( value = "12096")
 public class GetterAndIsMethodChecks extends BaseUnitTestCase {
 
 	@Test

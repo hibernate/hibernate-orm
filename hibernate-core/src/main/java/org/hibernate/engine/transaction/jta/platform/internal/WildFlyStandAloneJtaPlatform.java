@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.transaction.jta.platform.internal;
 
@@ -11,7 +9,6 @@ import jakarta.transaction.UserTransaction;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformException;
-import org.hibernate.internal.util.NullnessUtil;
 
 /**
  * Return a standalone JTA transaction manager for WildFly transaction client
@@ -26,10 +23,11 @@ public class WildFlyStandAloneJtaPlatform extends AbstractJtaPlatform {
 	@Override
 	protected TransactionManager locateTransactionManager() {
 		try {
-			final Class wildflyTmClass = NullnessUtil.castNonNull( serviceRegistry()
-					.getService( ClassLoaderService.class ) )
-					.classForName( WILDFLY_TM_CLASS_NAME );
-			return (TransactionManager) wildflyTmClass.getMethod( "getInstance" ).invoke( null );
+			return (TransactionManager) serviceRegistry()
+					.requireService( ClassLoaderService.class )
+					.classForName( WILDFLY_TM_CLASS_NAME )
+					.getMethod( "getInstance" )
+					.invoke( null );
 		}
 		catch (Exception e) {
 			throw new JtaPlatformException(
@@ -42,10 +40,9 @@ public class WildFlyStandAloneJtaPlatform extends AbstractJtaPlatform {
 	@Override
 	protected UserTransaction locateUserTransaction() {
 		try {
-			final Class jbossUtClass = NullnessUtil.castNonNull( serviceRegistry()
-					.getService( ClassLoaderService.class ) )
-					.classForName( WILDFLY_UT_CLASS_NAME );
-			return (UserTransaction) jbossUtClass.getMethod( "getInstance" ).invoke( null );
+			return (UserTransaction) serviceRegistry()
+					.requireService( ClassLoaderService.class )
+					.classForName( WILDFLY_UT_CLASS_NAME ).getMethod( "getInstance" ).invoke( null );
 		}
 		catch (Exception e) {
 			throw new JtaPlatformException(

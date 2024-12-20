@@ -1,12 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cfg;
 
-import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.jpa.LegacySpecHints;
 import org.hibernate.jpa.SpecHints;
 
@@ -62,14 +59,14 @@ public interface AvailableSettings
 	/**
 	 * @deprecated Use {@link #JAKARTA_LOCK_SCOPE} instead
 	 */
-	@Deprecated
+	@Deprecated(since="6.3")
 	@SuppressWarnings("DeprecatedIsStillUsed")
 	String JPA_LOCK_SCOPE = LegacySpecHints.HINT_JAVAEE_LOCK_SCOPE;
 
 	/**
 	 * @deprecated Use {@link #JAKARTA_LOCK_TIMEOUT} instead
 	 */
-	@Deprecated
+	@Deprecated(since="6.3")
 	@SuppressWarnings("DeprecatedIsStillUsed")
 	String JPA_LOCK_TIMEOUT = LegacySpecHints.HINT_JAVAEE_LOCK_TIMEOUT;
 
@@ -124,37 +121,28 @@ public interface AvailableSettings
 	String DELAY_ENTITY_LOADER_CREATIONS = "hibernate.loader.delay_entity_loader_creations";
 
 	/**
-	 * When enabled, allows calls to {@link jakarta.persistence.EntityManager#refresh(Object)}
-	 * and {@link org.hibernate.Session#refresh(Object)} on a detached entity instance.
-	 * <p>
-	 * Values are {@code true}, which allows refreshing a detached instance and {@code false},
-	 * which does not. When refreshing is disallowed, an {@link IllegalArgumentException}
-	 * is thrown.
-	 * <p>
-	 * The default behavior is to allow refreshing a detached instance unless Hibernate
-	 * is bootstrapped via JPA.
-	 *
-	 * @since 5.2
-	 */
-	String ALLOW_REFRESH_DETACHED_ENTITY = "hibernate.allow_refresh_detached_entity";
-	/**
-	 * Setting that specifies how Hibernate will respond when multiple representations of
-	 * the same persistent entity ("entity copy") are detected while merging.
+	 * Specifies how Hibernate should behave when multiple representations of the same
+	 * persistent entity instance, that is, multiple detached objects with the same
+	 * persistent identity, are encountered while cascading a
+	 * {@link org.hibernate.Session#merge(Object) merge()} operation.
 	 * <p>
 	 * The possible values are:
 	 * <ul>
-	 *     <li>disallow (the default): throws {@link IllegalStateException} if an entity
-	 *         copy is detected
-	 *     <li>allow: performs the merge operation on each entity copy that is detected
-	 *     <li>log: (provided for testing only) performs the merge operation on each entity
-	 *         copy that is detected and logs information about the entity copies. This
-	 *         setting requires DEBUG logging be enabled for
+	 *     <li>{@code disallow} (the default): throw {@link IllegalStateException} if
+	 *         multiple copies of the same entity are encountered
+	 *     <li>{@code allow}: perform the merge operation for every copy encountered,
+	 *         making no attempt to reconcile conflicts (this may result in lost updates)
+	 *     <li>{@code log}: (provided for testing only) perform the merge operation for
+	 *         every copy encountered and log information about the copies. This setting
+	 *         requires that {@code DEBUG} logging be enabled for
 	 *         {@link org.hibernate.event.internal.EntityCopyAllowedLoggedObserver}.
 	 * </ul>
 	 * <p>
-	 * Alternatively, the application may customize the behavior by providing an
+	 * Alternatively, the application may customize the behavior by providing a custom
 	 * implementation of {@link org.hibernate.event.spi.EntityCopyObserver} and setting
-	 * the property {@value #MERGE_ENTITY_COPY_OBSERVER} to the class name.
+	 * the property {@value #MERGE_ENTITY_COPY_OBSERVER} to the class name. This, in
+	 * principle, allows the application program to specify rules for reconciling
+	 * conflicts.
 	 * <p>
 	 * When this property is set to {@code allow} or {@code log}, Hibernate will merge
 	 * each entity copy detected while cascading the merge operation. In the process of
@@ -164,6 +152,8 @@ public interface AvailableSettings
 	 * merging an entity copy will be overwritten when another entity copy is merged.
 	 *
 	 * @since 4.3
+	 *
+	 * @see org.hibernate.event.spi.EntityCopyObserver
 	 */
 	@SuppressWarnings("JavaDoc")
 	String MERGE_ENTITY_COPY_OBSERVER = "hibernate.event.merge.entity_copy_observer";
@@ -180,6 +170,7 @@ public interface AvailableSettings
 	/**
 	 * When enabled, specifies that the generated identifier of an entity is unset
 	 * when the entity is {@linkplain org.hibernate.Session#remove(Object) deleted}.
+	 * If the entity is versioned, the version is also reset to its default value.
 	 *
 	 * @settingDefault {@code false} - generated identifiers are not unset
 	 *
@@ -191,7 +182,7 @@ public interface AvailableSettings
 	 * Setting to identify a {@link org.hibernate.CustomEntityDirtinessStrategy} to use.
 	 * May specify either a class name or an instance.
 	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyCustomEntityDirtinessStrategy(CustomEntityDirtinessStrategy)
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyCustomEntityDirtinessStrategy
 	 */
 	String CUSTOM_ENTITY_DIRTINESS_STRATEGY = "hibernate.entity_dirtiness_strategy";
 
@@ -200,25 +191,4 @@ public interface AvailableSettings
 	 * {@code hibernate.event.listener.eventType packageName.ClassName1, packageName.ClassName2}
 	 */
 	String EVENT_LISTENER_PREFIX = "hibernate.event.listener";
-
-	/**
-	 * @deprecated There are much better ways to control the flush mode of a session,
-	 *             for example, {@link org.hibernate.SessionBuilder#flushMode} or
-	 *             {@link org.hibernate.Session#setHibernateFlushMode}.
-	 *
-	 * @see org.hibernate.jpa.HibernateHints#HINT_FLUSH_MODE
-	 */
-	@Deprecated(since = "6.2", forRemoval = true)
-	@SuppressWarnings("DeprecatedIsStillUsed")
-	String FLUSH_MODE = "org.hibernate.flushMode";
-
-	/**
-	 * Specifies a class which implements {@link org.hibernate.jpa.spi.IdentifierGeneratorStrategyProvider},
-	 * and has a constructor with no parameters.
-	 *
-	 * @deprecated use {@link org.hibernate.id.factory.spi.GenerationTypeStrategyRegistration} instead
-	 */
-	@Deprecated(since = "6.0")
-	@SuppressWarnings("DeprecatedIsStillUsed")
-	String IDENTIFIER_GENERATOR_STRATEGY_PROVIDER = "hibernate.identifier_generator_strategy_provider";
 }

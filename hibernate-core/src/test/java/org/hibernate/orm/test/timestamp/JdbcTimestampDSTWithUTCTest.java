@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.timestamp;
 
@@ -17,7 +15,7 @@ import java.util.TimeZone;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.MySQLDialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -41,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Vlad Mihalcea
  */
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJdbcDriverProxying.class)
-@TestForIssue(jiraKey = "HHH-12988")
+@JiraKey(value = "HHH-12988")
 @SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true)
 @DomainModel(
 		annotatedClasses = JdbcTimestampDSTWithUTCTest.Person.class
@@ -166,4 +164,3 @@ public class JdbcTimestampDSTWithUTCTest {
 		}
 	}
 }
-

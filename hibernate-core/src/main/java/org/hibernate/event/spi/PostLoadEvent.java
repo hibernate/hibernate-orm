@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
 
@@ -22,6 +20,13 @@ public class PostLoadEvent extends AbstractEvent {
 		super(session);
 	}
 
+	public PostLoadEvent(Object id, EntityPersister persister, Object entity, EventSource session) {
+		super(session);
+		this.id = id;
+		this.persister = persister;
+		this.entity = entity;
+	}
+
 	public void reset() {
 		entity = null;
 		id = null;
@@ -31,11 +36,11 @@ public class PostLoadEvent extends AbstractEvent {
 	public Object getEntity() {
 		return entity;
 	}
-	
+
 	public EntityPersister getPersister() {
 		return persister;
 	}
-	
+
 	public Object getId() {
 		return id;
 	}
@@ -44,7 +49,7 @@ public class PostLoadEvent extends AbstractEvent {
 		this.entity = entity;
 		return this;
 	}
-	
+
 	public PostLoadEvent setId(Object id) {
 		this.id = id;
 		return this;
@@ -54,5 +59,5 @@ public class PostLoadEvent extends AbstractEvent {
 		this.persister = persister;
 		return this;
 	}
-	
+
 }

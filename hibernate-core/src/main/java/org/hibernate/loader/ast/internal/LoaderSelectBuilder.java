@@ -1,13 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.ast.internal;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -29,7 +26,6 @@ import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.Loader;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
@@ -69,6 +65,7 @@ import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.InArrayPredicate;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
+import org.hibernate.sql.ast.tree.predicate.PredicateContainer;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
@@ -89,7 +86,7 @@ import org.hibernate.sql.results.internal.StandardEntityGraphTraversalStateImpl;
 import org.jboss.logging.Logger;
 
 import static java.util.Collections.singletonList;
-import static org.hibernate.query.results.ResultsHelper.attributeName;
+import static org.hibernate.query.results.internal.ResultsHelper.attributeName;
 
 /**
  * Builder for SQL AST trees used by {@link Loader} implementations.
@@ -686,69 +683,39 @@ public class LoaderSelectBuilder {
 			TableGroup tableGroup,
 			PluralAttributeMapping pluralAttributeMapping,
 			SqlAstCreationState astCreationState) {
-		final NavigablePath parentNavigablePath = tableGroup.getNavigablePath().getParent();
-		if ( parentNavigablePath == null ) {
-			pluralAttributeMapping.applyBaseRestrictions(
-					querySpec::applyPredicate,
-					tableGroup,
-					true,
-					loadQueryInfluencers.getEnabledFilters(),
-					null,
-					astCreationState
-			);
-			pluralAttributeMapping.applyBaseManyToManyRestrictions(
-					querySpec::applyPredicate,
-					tableGroup,
-					true,
-					loadQueryInfluencers.getEnabledFilters(),
-					null,
-					astCreationState
-			);
-		}
-		else {
-			final TableGroup parentTableGroup = astCreationState.getFromClauseAccess().getTableGroup(
-					parentNavigablePath );
-			final TableGroupJoin pluralTableGroupJoin = parentTableGroup.findTableGroupJoin( tableGroup );
-			assert pluralTableGroupJoin != null;
-
-			final TableGroupJoin joinForPredicate;
-			if ( !tableGroup.getNestedTableGroupJoins().isEmpty() || tableGroup.getTableGroupJoins().isEmpty() ) {
-				joinForPredicate = pluralTableGroupJoin;
-			}
-			else {
-				joinForPredicate = tableGroup.getTableGroupJoins().get( tableGroup.getTableGroupJoins().size() - 1 );
-			}
-
-			pluralAttributeMapping.applyBaseRestrictions(
-					joinForPredicate::applyPredicate,
-					tableGroup,
-					true,
-					loadQueryInfluencers.getEnabledFilters(),
-					null,
-					astCreationState
-			);
-			pluralAttributeMapping.applyBaseManyToManyRestrictions(
-					joinForPredicate::applyPredicate,
-					tableGroup,
-					true,
-					loadQueryInfluencers.getEnabledFilters(),
-					null,
-					astCreationState
-			);
-		}
+		// Only apply restrictions for root table groups,
+		// because for table group joins the restriction is applied via PluralAttributeMappingImpl.createTableGroupJoin
+		assert tableGroup.getNavigablePath().getParent() == null;
+		pluralAttributeMapping.applyBaseRestrictions(
+				querySpec::applyPredicate,
+				tableGroup,
+				true,
+				loadQueryInfluencers.getEnabledFilters(),
+				false,
+				null,
+				astCreationState
+		);
+		pluralAttributeMapping.applyBaseManyToManyRestrictions(
+				querySpec::applyPredicate,
+				tableGroup,
+				true,
+				loadQueryInfluencers.getEnabledFilters(),
+				null,
+				astCreationState
+		);
 	}
 
 	private void applyFiltering(
-			QuerySpec querySpec,
+			PredicateContainer predicateContainer,
 			TableGroup tableGroup,
 			Restrictable restrictable,
 			SqlAstCreationState astCreationState) {
 		restrictable.applyBaseRestrictions(
-				querySpec::applyPredicate,
+				predicateContainer::applyPredicate,
 				tableGroup,
 				true,
-				// HHH-16179 Session.find should not apply filters
-				Collections.emptyMap(),//loadQueryInfluencers.getEnabledFilters(),
+				loadQueryInfluencers.getEnabledFilters(),
+				true,
 				null,
 				astCreationState
 		);
@@ -993,27 +960,6 @@ public class LoaderSelectBuilder {
 						creationState
 				);
 
-				if ( fetch.getTiming() == FetchTiming.IMMEDIATE && isFetchablePluralAttributeMapping ) {
-					final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
-					if ( joined ) {
-						final TableGroup joinTableGroup = creationState.getFromClauseAccess()
-								.getTableGroup( fetchablePath );
-						final QuerySpec querySpec = creationState.getInflightQueryPart().getFirstQuerySpec();
-						applyFiltering(
-								querySpec,
-								joinTableGroup,
-								pluralAttributeMapping,
-								creationState
-						);
-						applyOrdering(
-								querySpec,
-								fetchablePath,
-								pluralAttributeMapping,
-								creationState
-						);
-					}
-				}
-
 				fetches.add( fetch );
 			}
 			finally {
@@ -1046,19 +992,6 @@ public class LoaderSelectBuilder {
 		}
 
 		return true;
-	}
-
-	private void applyOrdering(
-			QuerySpec querySpec,
-			NavigablePath navigablePath,
-			PluralAttributeMapping pluralAttributeMapping,
-			LoaderSqlAstCreationState sqlAstCreationState) {
-		assert pluralAttributeMapping.getAttributeName().equals( navigablePath.getLocalName() );
-
-		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup( navigablePath );
-		assert tableGroup != null;
-
-		applyOrdering( querySpec, tableGroup, pluralAttributeMapping, sqlAstCreationState );
 	}
 
 	private SelectStatement generateSelect(SubselectFetch subselect) {
@@ -1269,4 +1202,3 @@ public class LoaderSelectBuilder {
 		BAG
 	}
 }
-

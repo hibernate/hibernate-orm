@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.jaxb.internal;
 
@@ -14,7 +12,6 @@ import java.net.UnknownHostException;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.MappingNotFoundException;
 import org.hibernate.boot.jaxb.Origin;
-import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.spi.Binder;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.jaxb.spi.XmlSource;

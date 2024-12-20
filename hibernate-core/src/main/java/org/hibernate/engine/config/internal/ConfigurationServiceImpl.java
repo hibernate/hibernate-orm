@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.config.internal;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Collections;
 import java.util.Map;
 
@@ -13,7 +12,6 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
@@ -29,6 +27,7 @@ import org.checkerframework.checker.nullness.qual.PolyNull;
  */
 public class ConfigurationServiceImpl implements ConfigurationService, ServiceRegistryAwareService {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			ConfigurationServiceImpl.class.getName()
 	);
@@ -93,7 +92,8 @@ public class ConfigurationServiceImpl implements ConfigurationService, ServiceRe
 		}
 		else {
 			try {
-				target = NullnessUtil.castNonNull( serviceRegistry.getService( ClassLoaderService.class ) ).classForName( candidate.toString() );
+				target = serviceRegistry.requireService( ClassLoaderService.class )
+						.classForName( candidate.toString() );
 			}
 			catch ( ClassLoadingException e ) {
 				LOG.debugf( "Unable to locate %s implementation class %s", expected.getName(), candidate.toString() );

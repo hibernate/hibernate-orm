@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.inheritance.discriminator;
 
@@ -16,6 +14,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
@@ -34,6 +33,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 		CaseStatementWithTypeTest.JoinedParent.class,
 		CaseStatementWithTypeTest.JoinedChildA.class,
 		CaseStatementWithTypeTest.JoinedChildB.class,
+		CaseStatementWithTypeTest.JoinedDiscParent.class,
+		CaseStatementWithTypeTest.JoinedDiscChildA.class,
+		CaseStatementWithTypeTest.JoinedDiscChildB.class,
 		CaseStatementWithTypeTest.UnionParent.class,
 		CaseStatementWithTypeTest.UnionChildA.class,
 		CaseStatementWithTypeTest.UnionChildB.class,
@@ -48,6 +50,8 @@ public class CaseStatementWithTypeTest {
 			session.persist( new SingleChildB( 2L ) );
 			session.persist( new JoinedChildA( 1L ) );
 			session.persist( new JoinedChildB( 2L ) );
+			session.persist( new JoinedDiscChildA( 1L ) );
+			session.persist( new JoinedDiscChildB( 2L ) );
 			session.persist( new UnionChildA( 1L ) );
 			session.persist( new UnionChildB( 2L ) );
 		} );
@@ -58,6 +62,7 @@ public class CaseStatementWithTypeTest {
 		scope.inTransaction( session -> {
 			session.createMutationQuery( "delete from SingleParent" ).executeUpdate();
 			session.createMutationQuery( "delete from JoinedParent" ).executeUpdate();
+			session.createMutationQuery( "delete from JoinedDiscParent" ).executeUpdate();
 			session.createMutationQuery( "delete from UnionParent" ).executeUpdate();
 		} );
 	}
@@ -72,6 +77,12 @@ public class CaseStatementWithTypeTest {
 	public void testJoinedInheritance(SessionFactoryScope scope) {
 		executeQuery( scope, JoinedParent.class, JoinedChildA.class, JoinedChildB.class, false );
 		executeQuery( scope, JoinedParent.class, JoinedChildA.class, JoinedChildB.class, true );
+	}
+
+	@Test
+	public void testJoinedInheritanceAndDiscriminator(SessionFactoryScope scope) {
+		executeQuery( scope, JoinedDiscParent.class, JoinedDiscChildA.class, JoinedDiscChildB.class, false );
+		executeQuery( scope, JoinedDiscParent.class, JoinedDiscChildA.class, JoinedDiscChildB.class, true );
 	}
 
 	@Test
@@ -174,6 +185,41 @@ public class CaseStatementWithTypeTest {
 		}
 
 		public JoinedChildB(Long id) {
+			super( id );
+		}
+	}
+
+	@Entity( name = "JoinedDiscParent" )
+	@Inheritance( strategy = InheritanceType.JOINED )
+	@DiscriminatorColumn
+	public static class JoinedDiscParent {
+		@Id
+		private Long id;
+
+		public JoinedDiscParent() {
+		}
+
+		public JoinedDiscParent(Long id) {
+			this.id = id;
+		}
+	}
+
+	@Entity( name = "JoinedDiscChildA" )
+	public static class JoinedDiscChildA extends JoinedDiscParent {
+		public JoinedDiscChildA() {
+		}
+
+		public JoinedDiscChildA(Long id) {
+			super( id );
+		}
+	}
+
+	@Entity( name = "JoinedDiscChildB" )
+	public static class JoinedDiscChildB extends JoinedDiscParent {
+		public JoinedDiscChildB() {
+		}
+
+		public JoinedDiscChildB(Long id) {
 			super( id );
 		}
 	}

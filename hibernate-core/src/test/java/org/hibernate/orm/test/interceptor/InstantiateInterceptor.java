@@ -1,24 +1,18 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
- */
-
-/**
- * @author Gail Badner
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.interceptor;
 
 import org.hibernate.CallbackException;
-import org.hibernate.EmptyInterceptor;
+import org.hibernate.Interceptor;
 import org.hibernate.metamodel.RepresentationMode;
 
-public class InstantiateInterceptor extends EmptyInterceptor {
+public class InstantiateInterceptor implements Interceptor {
 	private String injectedString;
 
 	public InstantiateInterceptor(String injectedString) {
-		this.injectedString = injectedString;		
+		this.injectedString = injectedString;
 	}
 
 	@Override

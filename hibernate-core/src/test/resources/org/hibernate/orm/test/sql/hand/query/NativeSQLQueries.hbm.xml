@@ -18,51 +18,51 @@
 <hibernate-mapping package="org.hibernate.orm.test.sql.hand" default-access="field">
 	   
 	<class name="Organization" table="ORGANIZATION">
-		<id name="id" unsaved-value="0" column="ORGID">
+		<id name="id" unsaved-value="0" column="orgid">
 			<generator class="increment"/>
 		</id>
-		<property name="name" column="NAME" not-null="true"/>
+		<property name="name" column="name" not-null="true"/>
 		<set lazy="true" name="employments" 
 			inverse="true">
-			<key column="EMPLOYER"/> <!-- only needed for DDL generation -->
+			<key column="employer"/> <!-- only needed for DDL generation -->
 			<one-to-many class="Employment"/>
 		</set>
 	</class>
 	
 	<class name="Person" table="PERSON">
-		<id name="id" unsaved-value="0" column="PERID">
+		<id name="id" unsaved-value="0" column="perid">
 			<generator class="increment"/>
 		</id>
-		<property name="name" column="NAME" not-null="true"/>
+		<property name="name" column="name" not-null="true"/>
 	</class>
 
 	<class name="Group" table="GROUPP">
-		<id name="id" unsaved-value="0" column="ID">
+		<id name="id" unsaved-value="0" column="id">
 			<generator class="increment"/>
 		</id>
-		<property name="name" column="NAME" not-null="true"/>
+		<property name="name" column="name" not-null="true"/>
 		<list name="persons" table="GROUP_PERSON"
 			cascade="none" inverse="false" lazy="true">
-			<key column="GROUP_ID"	/>
-			<list-index column="POS" />
-			<many-to-many class="Person" column="PERSON_ID" />
+			<key column="group_id"	/>
+			<list-index column="pos" />
+			<many-to-many class="Person" column="person_id" />
 		</list>
 	</class>
 	
 	<class name="Employment" table="EMPLOYMENT">
-		<id name="employmentId" unsaved-value="0" column="EMPID">
+		<id name="employmentId" unsaved-value="0" column="empid">
 			<generator class="increment"/>
 		</id>
-		<many-to-one name="employee" column="EMPLOYEE" not-null="true" update="false"/>
-		<many-to-one name="employer" column="EMPLOYER" not-null="true" update="false"/>
-		<property name="startDate" column="STARTDATE" not-null="false"/>
-		<property name="endDate" column="ENDDATE" insert="false"/>
-		<property name="regionCode" column="REGIONCODE" update="false"/>
+		<many-to-one name="employee" column="employee" not-null="true" update="false"/>
+		<many-to-one name="employer" column="employer" not-null="true" update="false"/>
+		<property name="startDate" column="start_date" not-null="false"/>
+		<property name="endDate" column="end_date" insert="false"/>
+		<property name="regionCode" column="region_code" update="false"/>
 		<component name="salary" class="org.hibernate.orm.test.sql.hand.MonetaryAmountUserType">
-			<property name="value" column="AMOUNT">
+			<property name="value" column="amount">
 				<type name="float"/>
 			</property>
-			<property name="currency" column="CURRENCY"/>
+			<property name="currency" column="currency"/>
 		</component>
 	</class>
 	
@@ -73,8 +73,8 @@
 	  </composite-id>
 	  
 	  <many-to-one name="product">
-	    <column name="PROD_ORGID"/>
-	    <column name="PROD_NO"/>
+	    <column name="prod_orgid"/>
+	    <column name="prod_no"/>
 	  </many-to-one>
 	  <many-to-one name="person"/>
 	</class>
@@ -89,8 +89,8 @@
 	  
 	  <set name="orders" inverse="true">
 	  	<key>
-	  		<column name="PROD_ORGID"/>
-	  		<column name="PROD_NO"/>	  		
+	  		<column name="prod_orgid"/>
+	  		<column name="prod_no"/>
 	  	</key>
 	  	<one-to-many class="Order"/>
 	  </set>
@@ -129,18 +129,18 @@
         <id name="id" column="id">
             <generator class="increment"/>
         </id>
-        <property name="description" column="DESCRIPTION" type="text" length="15000"/>
+        <property name="description" column="description" type="text" length="15000"/>
     </class>
 
     <class name="ImageHolder" table="IMAGE_HOLDER">
         <id name="id" column="id">
             <generator class="increment"/>
         </id>
-        <property name="photo" column="PHOTO" type="image" length="15000"/>
+        <property name="photo" column="photo" type="image" length="15000"/>
     </class>    
 
     <resultset name="org-emp-regionCode">
-        <return-scalar column="regionCode" type="string"/>
+        <return-scalar column="region_code" type="string"/>
         <return alias="org" class="Organization"/>
         <return-join alias="emp" property="org.employments"/>
     </resultset>
@@ -176,7 +176,7 @@
             <return-property name="name" column="name"/>
             <return-property name="length" column="flength"/>
         </return>
-        <return-scalar column="scalarName"/>
+        <return-scalar column="scalar_name"/>
     </resultset>
 
     <sql-query name="spaceship" resultset-ref="spaceship-vol">
@@ -192,14 +192,14 @@
 	</sql-query>
 
     <sql-query name="orgNamesOnly">
-		<return-scalar column="NAME" type="string"/>
-		SELECT org.NAME FROM ORGANIZATION org
+		<return-scalar column="name" type="string"/>
+		SELECT org.name FROM ORGANIZATION org
 	</sql-query>
 
 	<sql-query name="orgNamesAndOrgs">
 		<return-scalar column="thename" type="string"/>
 		<return alias="org" class="Organization"/>
-		SELECT org.NAME AS thename, org.NAME AS {org.name}, org.ORGID AS {org.id} 
+		SELECT org.name AS thename, org.name AS {org.name}, org.orgid AS {org.id}
 		FROM ORGANIZATION org
 		ORDER BY thename
 	</sql-query>
@@ -207,7 +207,7 @@
 	<sql-query name="orgsAndOrgNames">
 		<return alias="org" class="Organization"/>
 		<return-scalar column="thename" type="string"/>
-		SELECT org.NAME AS thename, org.NAME AS {org.name}, org.ORGID AS {org.id} 
+		SELECT org.name AS thename, org.name AS {org.name}, org.orgid AS {org.id}
 		FROM ORGANIZATION org
 		ORDER BY thename
 	</sql-query>	
@@ -215,7 +215,7 @@
 	<sql-query name="orgIdsAndOrgNames">
 		<return-scalar column="orgid" type="long"/>
 		<return-scalar column="thename" type="string"/>
-		SELECT NAME AS thename, ORGID AS orgid
+		SELECT name AS thename, orgid AS orgid
 		FROM ORGANIZATION
 		ORDER BY thename
 	</sql-query>
@@ -233,82 +233,82 @@
 
 	<sql-query name="organizationEmploymentsExplicitAliases">
 		<load-collection alias="empcol" role="Organization.employments"/>
-		SELECT empcol.EMPLOYER as {empcol.key}, empcol.EMPID as {empcol.element}, {empcol.element.*} 
+		SELECT empcol.employer as {empcol.key}, empcol.empid as {empcol.element}, {empcol.element.*}
 		FROM EMPLOYMENT empcol
-		WHERE EMPLOYER = :id
-		ORDER BY STARTDATE ASC, EMPLOYEE ASC
+		WHERE employer = :id
+		ORDER BY start_date ASC, employee ASC
 	</sql-query>	
 
 	<sql-query name="organizationreturnproperty">
 		<return alias="org" class="Organization">
-            <return-property name="id" column="ORGID"/>
-            <return-property name="name" column="NAME"/>
+            <return-property name="id" column="orgid"/>
+            <return-property name="name" column="name"/>
 		</return>
 		<return-join alias="emp" property="org.employments">
-			<return-property name="key" column="EMPLOYER"/>
-			<return-property name="element" column="EMPID"/>			
-			<return-property name="element.employee" column="EMPLOYEE"/>
-			<return-property name="element.employer" column="EMPLOYER"/>			
-			<return-property name="element.startDate" column="XSTARTDATE"/>
-			<return-property name="element.endDate" column="ENDDATE"/>			
-			<return-property name="element.regionCode" column="REGIONCODE"/>			
-			<return-property name="element.employmentId" column="EMPID"/>						
-			<return-property name="element.salary.value" column="AMOUNT1"/>
-			<return-property name="element.salary.currency" column="CURRENCY"/>
+			<return-property name="key" column="employer"/>
+			<return-property name="element" column="empid"/>
+			<return-property name="element.employee" column="employee"/>
+			<return-property name="element.employer" column="employer"/>
+			<return-property name="element.startDate" column="xstart_date"/>
+			<return-property name="element.endDate" column="end_date"/>
+			<return-property name="element.regionCode" column="region_code"/>
+			<return-property name="element.employmentId" column="empid"/>
+			<return-property name="element.salary.value" column="amount1"/>
+			<return-property name="element.salary.currency" column="currency"/>
 		</return-join>
-		SELECT org.ORGID as orgid,
-            org.NAME as name,
-            emp.EMPID as empid,
-            emp.EMPLOYEE as employee,
-            emp.EMPLOYER as employer,
-            emp.STARTDATE as xstartDate,
-            emp.ENDDATE as endDate,
-            emp.REGIONCODE as regionCode,
-            emp.AMOUNT as AMOUNT1,
-            emp.CURRENCY as CURRENCY
+		SELECT org.orgid as orgid,
+            org.name as name,
+            emp.empid as empid,
+            emp.employee as employee,
+            emp.employer as employer,
+            emp.start_date as xstart_date,
+            emp.end_date as end_date,
+            emp.region_code as region_code,
+            emp.amount as amount1,
+            emp.currency as currency
         FROM ORGANIZATION org
-			LEFT OUTER JOIN EMPLOYMENT emp ON org.ORGID = emp.EMPLOYER
-		ORDER BY org.NAME DESC
+			LEFT OUTER JOIN EMPLOYMENT emp ON org.orgid = emp.employer
+		ORDER BY org.name DESC
 	</sql-query>
 
     
 	<sql-query name="organizationautodetect" resultset-ref="org-description">
 	<!--  equal to "organizationpropertyreturn" but since no {} nor return-property are used hibernate will fallback to use the columns directly from the mapping -->
-        SELECT org.ORGID as orgid,
-            org.NAME as name,
-            emp.EMPID as empid,
-            emp.EMPLOYEE as employee,
-            emp.EMPLOYER as employer,
-            emp.STARTDATE as startDate,
-            emp.ENDDATE as endDate,
-            emp.REGIONCODE as regionCode,
-            emp.AMOUNT as AMOUNT,
-            emp.CURRENCY as CURRENCY
+        SELECT org.orgid as orgid,
+            org.name as name,
+            emp.empid as empid,
+            emp.employee as employee,
+            emp.employer as employer,
+            emp.start_date as start_date,
+            emp.end_date as end_date,
+            emp.region_code as region_code,
+            emp.amount as amount,
+            emp.currency as currency
 		FROM ORGANIZATION org
-			LEFT OUTER JOIN EMPLOYMENT emp ON org.ORGID = emp.EMPLOYER
+			LEFT OUTER JOIN EMPLOYMENT emp ON org.orgid = emp.employer
 	</sql-query>
 
 	<sql-query name="manyToManyFetch">
         <![CDATA[
-        	SELECT 	groupp.ID as group_id,
-        			groupp.NAME as group_name,
-        			group_person.PERSON_ID as group_person_personId,
-        			group_person.GROUP_ID as group_person_groupId,
-        			group_person.POS as group_person_pos,
-        			person.PERID as person_id,
-        			person.NAME as person_name
+        	SELECT 	groupp.id as group_id,
+        			groupp.name as group_name,
+        			group_person.person_id as group_person_person_id,
+        			group_person.group_id as group_person_group_id,
+        			group_person.pos as group_person_pos,
+        			person.perid as person_id,
+        			person.name as person_name
 			FROM 	GROUPP groupp,
 					GROUP_PERSON group_person,
 					PERSON person
-			WHERE 	groupp.ID = group_person.GROUP_ID
-					and person.PERID = group_person.PERSON_ID
+			WHERE 	groupp.id = group_person.group_id
+					and person.perid = group_person.person_id
        ]]>
         <return alias="groupp" class="Group">
             <return-property name="id" column="group_id" />
             <return-property name="name" column="group_name" />
         </return>
         <return-join alias="group_person" property="groupp.persons">
-            <return-property name="key" column="group_person_groupId" />
+            <return-property name="key" column="group_person_group_id" />
             <return-property name="index" column="group_person_pos" />
             <return-property name="element" column="person_id" />
             <return-property name="element.id" column="person_id" />

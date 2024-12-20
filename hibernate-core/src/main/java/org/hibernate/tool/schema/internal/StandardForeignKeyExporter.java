@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal;
 
@@ -17,6 +15,8 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.tool.schema.spi.Exporter;
+
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 /**
  * An {@link Exporter} for {@linkplain ForeignKey foreign key constraints}.
@@ -78,10 +78,14 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 				);
 
 		if ( dialect.supportsCascadeDelete() ) {
-			OnDeleteAction onDeleteAction = foreignKey.getOnDeleteAction();
+			final OnDeleteAction onDeleteAction = foreignKey.getOnDeleteAction();
 			if ( onDeleteAction != null && onDeleteAction != OnDeleteAction.NO_ACTION ) {
 				buffer.append( " on delete " ).append( onDeleteAction.toSqlString() );
 			}
+		}
+
+		if ( isNotEmpty( foreignKey.getOptions() ) ) {
+			buffer.append( " " ).append( foreignKey.getOptions() );
 		}
 
 		return new String[] { buffer.toString() };

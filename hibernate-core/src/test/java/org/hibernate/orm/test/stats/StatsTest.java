@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.stats;
 
@@ -36,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class StatsTest {
 
 //	@Test
-//	@SuppressWarnings( {"UnusedAssignment"})
+//	@SuppressWarnings("unused")
 //	public void testCollectionFetchVsLoad() throws Exception {
 //		SessionFactory sf = buildBaseConfiguration()
 //				.setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
@@ -128,7 +126,7 @@ public class StatsTest {
 //		assertEquals( 1, sf.getStatistics().getCollectionLoadCount() );
 //		assertEquals( "Should do explicit collection load, not part of the first one", 1, sf.getStatistics().getCollectionFetchCount() );
 //		for ( Object o : europe2.getCountries() ) {
-//			s.delete( o );
+//			s.remove( o );
 //		}
 //		cleanDb( s );
 //		tx.commit();

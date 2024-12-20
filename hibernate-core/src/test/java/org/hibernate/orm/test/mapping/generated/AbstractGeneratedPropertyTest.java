@@ -1,15 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.generated;
 import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
@@ -30,7 +28,7 @@ public abstract class AbstractGeneratedPropertyTest extends BaseCoreFunctionalTe
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-2627" )
+	@JiraKey( value = "HHH-2627" )
 	public final void testGeneratedProperty() {
 		// The following block is repeated 300 times to reproduce HHH-2627.
 		// Without the fix, Oracle will run out of cursors using 10g with
@@ -43,7 +41,7 @@ public abstract class AbstractGeneratedPropertyTest extends BaseCoreFunctionalTe
 			entity.setName( "entity-1" );
 			Session s = openSession();
 			Transaction t = s.beginTransaction();
-			s.save( entity );
+			s.persist( entity );
 			s.flush();
 			assertNotNull( "no timestamp retrieved", entity.getLastModified() );
 			t.commit();
@@ -62,7 +60,7 @@ public abstract class AbstractGeneratedPropertyTest extends BaseCoreFunctionalTe
 
 			s = openSession();
 			t = s.beginTransaction();
-			s.delete( entity );
+			s.remove( entity );
 			t.commit();
 			s.close();
 		}

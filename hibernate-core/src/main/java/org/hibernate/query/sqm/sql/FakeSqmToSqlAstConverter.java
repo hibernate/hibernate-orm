@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.sql;
 
@@ -20,6 +18,7 @@ import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
@@ -29,6 +28,8 @@ import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.QueryTransformer;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+
+import jakarta.annotation.Nullable;
 
 /**
  *
@@ -69,6 +70,11 @@ public class FakeSqmToSqlAstConverter extends BaseSemanticQueryWalker implements
 	}
 
 	@Override
+	public boolean applyOnlyLoadByKeyFilters() {
+		return false;
+	}
+
+	@Override
 	public void registerLockMode(String identificationVariable, LockMode explicitLockMode) {
 		creationState.registerLockMode( identificationVariable, explicitLockMode );
 	}
@@ -87,12 +93,27 @@ public class FakeSqmToSqlAstConverter extends BaseSemanticQueryWalker implements
 	}
 
 	@Override
+	public Stack<SqmQueryPart> getSqmQueryPartStack() {
+		return null;
+	}
+
+	@Override
 	public SqmQueryPart<?> getCurrentSqmQueryPart() {
 		return null;
 	}
 
 	@Override
 	public void registerQueryTransformer(QueryTransformer transformer) {
+	}
+
+	@Override
+	public @Nullable SqlAstJoinType getCurrentlyProcessingJoinType() {
+		return null;
+	}
+
+	@Override
+	public boolean isInTypeInference() {
+		return false;
 	}
 
 	@Override

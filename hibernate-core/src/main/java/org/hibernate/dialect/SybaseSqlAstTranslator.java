@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
@@ -86,7 +84,7 @@ public class SybaseSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	protected void visitConflictClause(ConflictClause conflictClause) {
 		if ( conflictClause != null ) {
 			if ( conflictClause.isDoUpdate() && conflictClause.getConstraintName() != null ) {
-				throw new IllegalQueryOperationException( "Insert conflict do update clause with constraint name is not supported" );
+				throw new IllegalQueryOperationException( "Insert conflict 'do update' clause with constraint name is not supported" );
 			}
 		}
 	}
@@ -183,6 +181,15 @@ public class SybaseSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	}
 
 	@Override
+	protected LockStrategy determineLockingStrategy(
+			QuerySpec querySpec,
+			ForUpdateClause forUpdateClause,
+			Boolean followOnLocking) {
+		// No need for follow on locking
+		return LockStrategy.CLAUSE;
+	}
+
+	@Override
 	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
 		// Sybase does not support the FOR UPDATE clause
 	}
@@ -197,7 +204,7 @@ public class SybaseSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 		append( '(' );
 		visitValuesListEmulateSelectUnion( tableReference.getValuesList() );
 		append( ')' );
-		renderDerivedTableReference( tableReference );
+		renderDerivedTableReferenceIdentificationVariable( tableReference );
 	}
 
 	@Override
@@ -241,9 +248,9 @@ public class SybaseSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	@Override
 	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
 		appendSql( OPEN_PARENTHESIS );
-		arithmeticExpression.getLeftHandOperand().accept( this );
+		visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
 		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
-		arithmeticExpression.getRightHandOperand().accept( this );
+		visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
 		appendSql( CLOSE_PARENTHESIS );
 	}
 

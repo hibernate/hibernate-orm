@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
@@ -55,14 +53,16 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.procedure.internal.DB2CallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.mutation.internal.cte.CteInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.cte.CteMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -79,15 +79,16 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorDB2DatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.tool.schema.internal.StandardTableExporter;
+import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.JavaObjectType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
-import org.hibernate.type.descriptor.jdbc.CharJdbcType;
-import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
-import org.hibernate.type.descriptor.jdbc.DecimalJdbcType;
 import org.hibernate.type.descriptor.jdbc.InstantJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.LocalDateJdbcType;
 import org.hibernate.type.descriptor.jdbc.LocalDateTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.LocalTimeJdbcType;
@@ -96,7 +97,6 @@ import org.hibernate.type.descriptor.jdbc.OffsetDateTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.OffsetTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
-import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.XmlJdbcType;
 import org.hibernate.type.descriptor.jdbc.ZonedDateTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -108,6 +108,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
@@ -127,7 +128,10 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithNanos;
 
 /**
- * A {@linkplain Dialect SQL dialect} for DB2 for LUW (Linux, Unix, and Windows) version 10.5 and above.
+ * A {@linkplain Dialect SQL dialect} for Db2 for LUW (Linux, Unix, and Windows) version 10.5 and above.
+ * <p>
+ * Please refer to the
+ * <a href="https://www.ibm.com/docs/en/db2/12.1">Db2 documentation</a>.
  *
  * @author Gavin King
  *
@@ -150,6 +154,17 @@ public class DB2Dialect extends Dialect {
 			? LegacyDB2LimitHandler.INSTANCE
 			: DB2LimitHandler.INSTANCE;
 	private final UniqueDelegate uniqueDelegate = createUniqueDelegate();
+	private final StandardTableExporter db2TableExporter = new StandardTableExporter( this ) {
+		@Override
+		protected void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn) {
+			final JdbcType jdbcType = aggregateColumn.getType().getJdbcType();
+			if ( jdbcType.isLob() || jdbcType.isXml() ) {
+				// LOB or XML columns can't have check constraints
+				return;
+			}
+			super.applyAggregateColumnCheck( buf, aggregateColumn );
+		}
+	};
 
 	public DB2Dialect() {
 		this( MINIMUM_VERSION );
@@ -168,26 +183,16 @@ public class DB2Dialect extends Dialect {
 		return MINIMUM_VERSION;
 	}
 
-	@Override
-	protected void registerDefaultKeywords() {
-		super.registerDefaultKeywords();
-		//not keywords, at least not in DB2 11,
-		//but perhaps they were in older versions?
-		registerKeyword( "current" );
-		registerKeyword( "date" );
-		registerKeyword( "time" );
-		registerKeyword( "timestamp" );
-		registerKeyword( "fetch" );
-		registerKeyword( "first" );
-		registerKeyword( "rows" );
-		registerKeyword( "only" );
-	}
-
 	/**
 	 * DB2 LUW Version
 	 */
 	public DatabaseVersion getDB2Version() {
 		return this.getVersion();
+	}
+
+	@Override
+	public Exporter<Table> getTableExporter() {
+		return this.db2TableExporter;
 	}
 
 	@Override
@@ -197,36 +202,39 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	protected String columnType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case BOOLEAN:
+		return switch (sqlTypeCode) {
+			case BOOLEAN ->
 				// prior to DB2 11, the 'boolean' type existed,
 				// but was not allowed as a column type
-				return getDB2Version().isBefore( 11 ) ? "smallint" : super.columnType( sqlTypeCode );
-			case TINYINT:
-				// no tinyint
-				return "smallint";
-			case NUMERIC:
-				// HHH-12827: map them both to the same type to avoid problems with schema update
-				// Note that 31 is the maximum precision DB2 supports
-				return columnType( DECIMAL );
-			case BLOB:
-				return "blob";
-			case CLOB:
-				return "clob";
-			case TIMESTAMP_WITH_TIMEZONE:
-				return "timestamp($p)";
-			case TIME:
-			case TIME_WITH_TIMEZONE:
-				return "time";
-			case BINARY:
+					getDB2Version().isBefore( 11 )
+							? "smallint"
+							: super.columnType( sqlTypeCode );
+
+			case TINYINT -> "smallint"; // no tinyint
+
+			// HHH-12827: map them both to the same type to avoid problems with schema update
+			// Note that 31 is the maximum precision DB2 supports
+			case NUMERIC -> columnType( DECIMAL );
+
+			case BLOB -> "blob";
+			case CLOB -> "clob";
+
+			case TIMESTAMP_WITH_TIMEZONE -> "timestamp($p)";
+			case TIME, TIME_WITH_TIMEZONE -> "time";
+
+			case BINARY ->
 				// should use 'binary' since version 11
-				return getDB2Version().isBefore( 11 ) ? "char($l) for bit data" : super.columnType( sqlTypeCode );
-			case VARBINARY:
+					getDB2Version().isBefore( 11 )
+							? "char($l) for bit data"
+							: super.columnType( sqlTypeCode );
+			case VARBINARY ->
 				// should use 'varbinary' since version 11
-				return getDB2Version().isBefore( 11 ) ? "varchar($l) for bit data" : super.columnType( sqlTypeCode );
-			default:
-				return super.columnType( sqlTypeCode );
-		}
+					getDB2Version().isBefore( 11 )
+							? "varchar($l) for bit data"
+							: super.columnType( sqlTypeCode );
+
+			default -> super.columnType( sqlTypeCode );
+		};
 	}
 
 	@Override
@@ -417,6 +425,57 @@ public class DB2Dialect extends Dialect {
 
 		functionFactory.windowFunctions();
 		functionFactory.listagg( null );
+
+		if ( getDB2Version().isSameOrAfter( 11 ) ) {
+			functionFactory.jsonValue_db2();
+			functionFactory.jsonQuery_no_passing();
+			functionFactory.jsonExists_no_passing();
+			functionFactory.jsonObject_db2();
+			functionFactory.jsonArray_db2();
+			functionFactory.jsonArrayAgg_db2();
+			functionFactory.jsonObjectAgg_db2();
+			functionFactory.jsonTable_db2( getMaximumSeriesSize() );
+		}
+
+		functionFactory.xmlelement();
+		functionFactory.xmlcomment();
+		functionFactory.xmlforest();
+		functionFactory.xmlconcat();
+		functionFactory.xmlpi();
+		if ( getDB2Version().isSameOrAfter( 11 ) ) {
+			functionFactory.xmlquery_db2();
+			functionFactory.xmlexists();
+		}
+		else {
+			functionFactory.xmlquery_db2_legacy();
+			functionFactory.xmlexists_db2_legacy();
+		}
+		functionFactory.xmlagg();
+		functionFactory.xmltable_db2();
+
+		functionFactory.unnest_db2( getMaximumSeriesSize() );
+		functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, true );
+
+		functionFactory.hex( "hex(?1)" );
+		if ( getDB2Version().isSameOrAfter( 11 ) ) {
+			functionFactory.sha( "hash(?1, 2)" );
+			functionFactory.md5( "hash(?1, 0)" );
+		}
+	}
+
+	/**
+	 * DB2 doesn't support the {@code generate_series} function or {@code lateral} recursive CTEs,
+	 * so it has to be emulated with a top level recursive CTE which requires an upper bound on the amount
+	 * of elements that the series can return.
+	 */
+	protected int getMaximumSeriesSize() {
+		return 10000;
+	}
+
+	@Override
+	public int getPreferredSqlTypeCodeForArray() {
+		// Even if DB2 11 supports JSON functions, it's not possible to unnest a JSON array to rows, so stick to XML
+		return SqlTypes.XML_ARRAY;
 	}
 
 	@Override
@@ -437,7 +496,7 @@ public class DB2Dialect extends Dialect {
 		return 1_000_000_000; //seconds
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		if ( getDB2Version().isBefore( 11 ) ) {
 			return timestampdiffPatternV10( unit, fromTemporalType, toTemporalType );
@@ -450,33 +509,25 @@ public class DB2Dialect extends Dialect {
 			toExpression = "?3";
 		}
 		else {
-			switch ( fromTemporalType ) {
-				case DATE:
-					fromExpression = "cast(?2 as timestamp)";
-					break;
-				case TIME:
-					fromExpression = "timestamp('1970-01-01',?2)";
-					break;
-				default:
-					fromExpression = "?2";
-					break;
-			}
-			switch ( toTemporalType ) {
-				case DATE:
-					toExpression = "cast(?3 as timestamp)";
-					break;
-				case TIME:
-					toExpression = "timestamp('1970-01-01',?3)";
-					break;
-				default:
-					toExpression = "?3";
-					break;
-			}
+			fromExpression = switch (fromTemporalType) {
+				case DATE -> "cast(?2 as timestamp)";
+				case TIME -> "timestamp('1970-01-01',?2)";
+				default -> "?2";
+			};
+			toExpression = switch (toTemporalType) {
+				case DATE -> "cast(?3 as timestamp)";
+				case TIME -> "timestamp('1970-01-01',?3)";
+				default -> "?3";
+			};
 		}
 		switch ( unit ) {
 			case NATIVE:
 			case NANOSECOND:
-				pattern.append( "(seconds_between(" );
+				pattern.append( "(seconds_between(date_trunc('second'," );
+				pattern.append( toExpression );
+				pattern.append( "),date_trunc('second'," );
+				pattern.append( fromExpression );
+				pattern.append( "))" );
 				break;
 			//note: DB2 does have weeks_between()
 			case MONTH:
@@ -484,14 +535,18 @@ public class DB2Dialect extends Dialect {
 				// the months_between() function results
 				// in a non-integral value, so trunc() it
 				pattern.append( "trunc(months_between(" );
+				pattern.append( toExpression );
+				pattern.append( ',' );
+				pattern.append( fromExpression );
+				pattern.append( ')' );
 				break;
 			default:
 				pattern.append( "?1s_between(" );
+				pattern.append( toExpression );
+				pattern.append( ',' );
+				pattern.append( fromExpression );
+				pattern.append( ')' );
 		}
-		pattern.append( toExpression );
-		pattern.append( ',' );
-		pattern.append( fromExpression );
-		pattern.append( ')' );
 		switch ( unit ) {
 			case NATIVE:
 				pattern.append( "+(microsecond(");
@@ -517,6 +572,7 @@ public class DB2Dialect extends Dialect {
 		return pattern.toString();
 	}
 
+	@SuppressWarnings("deprecation")
 	public static String timestampdiffPatternV10(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		final boolean isTime = fromTemporalType == TemporalType.TIME || toTemporalType == TemporalType.TIME;
 		final String fromExpression;
@@ -607,7 +663,7 @@ public class DB2Dialect extends Dialect {
 		}
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		final StringBuilder pattern = new StringBuilder();
 		final String timestampExpression;
@@ -654,6 +710,7 @@ public class DB2Dialect extends Dialect {
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			TemporalAccessor temporalAccessor,
+			@SuppressWarnings("deprecation")
 			TemporalType precision,
 			TimeZone jdbcTimeZone) {
 		switch ( precision ) {
@@ -678,7 +735,12 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	public void appendDateTimeLiteral(SqlAppender appender, Date date, TemporalType precision, TimeZone jdbcTimeZone) {
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			Date date,
+			@SuppressWarnings("deprecation")
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
 		switch ( precision ) {
 			case DATE:
 				appender.appendSql( "date '" );
@@ -704,6 +766,7 @@ public class DB2Dialect extends Dialect {
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			Calendar calendar,
+			@SuppressWarnings("deprecation")
 			TemporalType precision,
 			TimeZone jdbcTimeZone) {
 		switch ( precision ) {
@@ -821,31 +884,32 @@ public class DB2Dialect extends Dialect {
 	}
 
 	public static String selectNullString(int sqlType) {
-		String literal;
-		switch ( sqlType ) {
-			case Types.VARCHAR:
-			case Types.CHAR:
-				literal = "''";
-				break;
-			case Types.DATE:
-				literal = "'2000-1-1'";
-				break;
-			case Types.TIME:
-				literal = "'00:00:00'";
-				break;
-			case Types.TIMESTAMP:
-			case Types.TIMESTAMP_WITH_TIMEZONE:
-				literal = "'2000-1-1 00:00:00'";
-				break;
-			default:
-				literal = "0";
-		}
+		final String literal = switch (sqlType) {
+			case Types.VARCHAR, Types.CHAR -> "''";
+			case Types.DATE -> "'2000-1-1'";
+			case Types.TIME -> "'00:00:00'";
+			case Types.TIMESTAMP, Types.TIMESTAMP_WITH_TIMEZONE -> "'2000-1-1 00:00:00'";
+			default -> "0";
+		};
 		return "nullif(" + literal + "," + literal + ')';
 	}
 
 	@Override
+	public Boolean supportsRefCursors() {
+		// DB2 supports the binding with Types.REF_CURSOR but doesn't support statement.getObject(position, ResultSet.class)
+		return false;
+	}
+
+	@Override
 	public int registerResultSetOutParameter(CallableStatement statement, int col) throws SQLException {
+		statement.registerOutParameter( col++, Types.REF_CURSOR );
 		return col;
+	}
+
+	@Override
+	public int registerResultSetOutParameter(CallableStatement statement, String name) throws SQLException {
+		statement.registerOutParameter( name, Types.REF_CURSOR );
+		return 1;
 	}
 
 	@Override
@@ -857,6 +921,16 @@ public class DB2Dialect extends Dialect {
 		}
 
 		return ps.getResultSet();
+	}
+
+	@Override
+	public ResultSet getResultSet(CallableStatement statement, int position) throws SQLException {
+		return (ResultSet) statement.getObject( position );
+	}
+
+	@Override
+	public ResultSet getResultSet(CallableStatement statement, String name) throws SQLException {
+		return (ResultSet) statement.getObject( name );
 	}
 
 	@Override
@@ -873,6 +947,11 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public boolean supportsAlterColumnType() {
 		return true;
+	}
+
+	@Override
+	public boolean supportsIfExistsBeforeTableName() {
+		return getVersion().isSameOrAfter( 11, 5 );
 	}
 
 	@Override
@@ -929,6 +1008,11 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
+	public boolean useInputStreamToInsertBlob() {
+		return false;
+	}
+
+	@Override
 	public boolean doesReadCommittedCauseWritersToBlockReaders() {
 		return true;
 	}
@@ -948,24 +1032,7 @@ public class DB2Dialect extends Dialect {
 			jdbcTypeRegistry.addDescriptor( Types.BOOLEAN, SmallIntJdbcType.INSTANCE );
 			// Binary literals were only added in 11. See https://www.ibm.com/support/knowledgecenter/SSEPGG_11.1.0/com.ibm.db2.luw.sql.ref.doc/doc/r0000731.html#d79816e393
 			jdbcTypeRegistry.addDescriptor( Types.VARBINARY, VarbinaryJdbcType.INSTANCE_WITHOUT_LITERALS );
-			if ( getDB2Version().isBefore( 9, 7 ) ) {
-				jdbcTypeRegistry.addDescriptor( Types.NUMERIC, DecimalJdbcType.INSTANCE );
-			}
 		}
-		// See HHH-12753
-		// It seems that DB2's JDBC 4.0 support as of 9.5 does not
-		// support the N-variant methods like NClob or NString.
-		// Therefore here we overwrite the sql type descriptors to
-		// use the non-N variants which are supported.
-		jdbcTypeRegistry.addDescriptor( Types.NCHAR, CharJdbcType.INSTANCE );
-		jdbcTypeRegistry.addDescriptor(
-				Types.NCLOB,
-				useInputStreamToInsertBlob()
-						? ClobJdbcType.STREAM_BINDING
-						: ClobJdbcType.CLOB_BINDING
-		);
-		jdbcTypeRegistry.addDescriptor( Types.NVARCHAR, VarcharJdbcType.INSTANCE );
-		jdbcTypeRegistry.addDescriptor( Types.NUMERIC, DecimalJdbcType.INSTANCE );
 
 		jdbcTypeRegistry.addDescriptor( XmlJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( DB2StructJdbcType.INSTANCE );
@@ -1029,7 +1096,9 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public AggregateSupport getAggregateSupport() {
-		return DB2AggregateSupport.INSTANCE;
+		return getDB2Version().isSameOrAfter( 11 )
+				? DB2AggregateSupport.JSON_INSTANCE
+				: DB2AggregateSupport.INSTANCE;
 	}
 
 	@Override
@@ -1053,34 +1122,25 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return new TemplatedViolatedConstraintNameExtractor(
-				sqle -> {
-					switch ( JdbcExceptionHelper.extractErrorCode( sqle ) ) {
-						case -803:
-							return extractUsingTemplate( "SQLERRMC=1;", ",", sqle.getMessage() );
-						default:
-							return null;
-					}
+				sqle -> switch ( extractErrorCode( sqle ) ) {
+					case -803 -> extractUsingTemplate( "SQLERRMC=1;", ",", sqle.getMessage() );
+					default -> null;
 				}
 		);
 	}
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
-		return (sqlException, message, sql) -> {
-			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
-			switch ( errorCode ) {
-				case -952:
-					return new LockTimeoutException( message, sqlException, sql );
-				case -803:
-					return new ConstraintViolationException(
-							message,
-							sqlException,
-							sql,
-							ConstraintViolationException.ConstraintKind.UNIQUE,
-							getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
-					);
-			}
-			return null;
+		return (sqlException, message, sql) -> switch ( extractErrorCode( sqlException ) ) {
+			case -952 -> new LockTimeoutException( message, sqlException, sql );
+			case -803 -> new ConstraintViolationException(
+					message,
+					sqlException,
+					sql,
+					ConstraintViolationException.ConstraintKind.UNIQUE,
+					getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
+			);
+			default -> null;
 		};
 	}
 
@@ -1177,13 +1237,13 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public String translateExtractField(TemporalUnit unit) {
-		switch ( unit ) {
+		return switch (unit) {
 			//WEEK means the ISO week number on DB2
-			case DAY_OF_MONTH: return "day";
-			case DAY_OF_YEAR: return "doy";
-			case DAY_OF_WEEK: return "dow";
-			default: return super.translateExtractField( unit );
-		}
+			case DAY_OF_MONTH -> "day";
+			case DAY_OF_YEAR -> "doy";
+			case DAY_OF_WEEK -> "dow";
+			default -> super.translateExtractField( unit );
+		};
 	}
 
 	@Override
@@ -1200,7 +1260,8 @@ public class DB2Dialect extends Dialect {
 	public String extractPattern(TemporalUnit unit) {
 		switch ( unit ) {
 			case WEEK:
-				// Not sure why, but `extract(week from '2019-05-27')` wrongly returns 21 and week_iso behaves correct
+				// Not sure why, but `extract(week from '2019-05-27')`
+				// wrongly returns 21 and week_iso behaves correct
 				return "week_iso(?2)";
 			case DAY_OF_YEAR:
 				return "dayofyear(?2)";
@@ -1216,6 +1277,16 @@ public class DB2Dialect extends Dialect {
 				}
 		}
 		return super.extractPattern( unit );
+	}
+
+	@Override
+	public String castPattern(CastType from, CastType to) {
+		if ( from == CastType.STRING && to == CastType.BOOLEAN ) {
+			return "cast(?1 as ?2)";
+		}
+		else {
+			return super.castPattern( from, to );
+		}
 	}
 
 	@Override
@@ -1284,5 +1355,15 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public boolean supportsFromClauseInUpdate() {
 		return getDB2Version().isSameOrAfter( 11 );
+	}
+
+	@Override
+	public String getDual() {
+		return "sysibm.dual";
+	}
+
+	@Override
+	public String getFromDualForSelectOnly() {
+		return " from " + getDual();
 	}
 }

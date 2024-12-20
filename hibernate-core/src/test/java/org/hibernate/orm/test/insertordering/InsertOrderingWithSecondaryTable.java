@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.insertordering;
 
@@ -28,13 +26,13 @@ import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.jupiter.api.Test;
 
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-11714")
+@JiraKey(value = "HHH-11714")
 public class InsertOrderingWithSecondaryTable extends BaseInsertOrderingTest {
 
 	@Override
@@ -66,7 +64,7 @@ public class InsertOrderingWithSecondaryTable extends BaseInsertOrderingTest {
 			area2.setShape( circle );
 			top.getGeographicAreas().add( area2 );
 
-			session.save( top );
+			session.persist( top );
 
 			clearBatches();
 		} );
@@ -112,7 +110,6 @@ public class InsertOrderingWithSecondaryTable extends BaseInsertOrderingTest {
 
 	@Entity(name = "ShapePolygonEntity")
 	@DiscriminatorValue("POLYGON")
-	@Table(name = "POLYGON")
 	public static class ShapePolygonEntity extends ShapeEntity {
 
 	}
@@ -120,7 +117,6 @@ public class InsertOrderingWithSecondaryTable extends BaseInsertOrderingTest {
 	@Entity(name = "ShapeCircleEntity")
 	@DiscriminatorValue("CIRCLE")
 	@SecondaryTable(name = "SHAPE_CIRCLE", pkJoinColumns = @PrimaryKeyJoinColumn(name = "SHAPE_ID"))
-	@Table(name = "CIRCLE")
 	public static class ShapeCircleEntity extends ShapeEntity {
 		@Column(table = "SHAPE_CIRCLE")
 		private String centre;

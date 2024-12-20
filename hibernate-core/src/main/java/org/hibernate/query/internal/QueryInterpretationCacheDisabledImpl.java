@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.internal;
 
@@ -10,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
@@ -18,6 +17,8 @@ import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sql.spi.ParameterInterpretation;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
@@ -25,10 +26,12 @@ import org.hibernate.stat.spi.StatisticsImplementor;
  */
 public class QueryInterpretationCacheDisabledImpl implements QueryInterpretationCache {
 
-	private final Supplier<StatisticsImplementor> statisticsSupplier;
+	private final ServiceRegistry serviceRegistry;
 
-	public QueryInterpretationCacheDisabledImpl(Supplier<StatisticsImplementor> statisticsSupplier) {
-		this.statisticsSupplier = statisticsSupplier;
+	private StatisticsImplementor statistics;
+
+	public QueryInterpretationCacheDisabledImpl(ServiceRegistry serviceRegistry) {
+		this.serviceRegistry = serviceRegistry;
 	}
 
 	@Override
@@ -41,9 +44,16 @@ public class QueryInterpretationCacheDisabledImpl implements QueryInterpretation
 		return 0;
 	}
 
+	private StatisticsImplementor getStatistics() {
+		if ( statistics == null ) {
+			statistics = serviceRegistry.requireService( StatisticsImplementor.class );
+		}
+		return statistics;
+	}
+
 	@Override
 	public <R> SelectQueryPlan<R> resolveSelectQueryPlan(Key key, Supplier<SelectQueryPlan<R>> creator) {
-		final StatisticsImplementor statistics = statisticsSupplier.get();
+		final StatisticsImplementor statistics = getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {
 			statistics.queryPlanCacheMiss( key.getQueryString() );
 		}
@@ -60,17 +70,18 @@ public class QueryInterpretationCacheDisabledImpl implements QueryInterpretation
 	}
 
 	@Override
-	public HqlInterpretation resolveHqlInterpretation(String queryString, Class<?> expectedResultType, Function<String, SqmStatement<?>> creator) {
-		final StatisticsImplementor statistics = statisticsSupplier.get();
+	public <R> HqlInterpretation<R> resolveHqlInterpretation(
+			String queryString, Class<R> expectedResultType, HqlTranslator translator) {
+		final StatisticsImplementor statistics = getStatistics();
 		final boolean stats = statistics.isStatisticsEnabled();
 		final long startTime = stats ? System.nanoTime() : 0L;
-		final SqmStatement<?> sqmStatement = creator.apply( queryString );
+
+		final SqmStatement<R> sqmStatement = translator.translate( queryString, expectedResultType );
 
 		final DomainParameterXref domainParameterXref;
 		final ParameterMetadataImplementor parameterMetadata;
-
 		if ( sqmStatement.getSqmParameters().isEmpty() ) {
-			domainParameterXref = DomainParameterXref.empty();
+			domainParameterXref = DomainParameterXref.EMPTY;
 			parameterMetadata = ParameterMetadataImpl.EMPTY;
 		}
 		else {
@@ -84,9 +95,9 @@ public class QueryInterpretationCacheDisabledImpl implements QueryInterpretation
 			statistics.queryCompiled( queryString, microseconds );
 		}
 
-		return new HqlInterpretation() {
+		return new HqlInterpretation<>() {
 			@Override
-			public SqmStatement<?> getSqmStatement() {
+			public SqmStatement<R> getSqmStatement() {
 				return sqmStatement;
 			}
 
@@ -98,6 +109,12 @@ public class QueryInterpretationCacheDisabledImpl implements QueryInterpretation
 			@Override
 			public DomainParameterXref getDomainParameterXref() {
 				return domainParameterXref;
+			}
+
+			@Override
+			public void validateResultType(Class<?> resultType) {
+				assert sqmStatement instanceof SqmSelectStatement<?>;
+				( (SqmSelectStatement<R>) sqmStatement ).validateResultType( resultType );
 			}
 		};
 	}

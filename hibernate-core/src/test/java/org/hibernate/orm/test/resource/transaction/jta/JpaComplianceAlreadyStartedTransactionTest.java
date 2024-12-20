@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.resource.transaction.jta;
 
@@ -14,7 +12,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Before;
@@ -23,7 +21,7 @@ import org.junit.Test;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-13076")
+@JiraKey(value = "HHH-13076")
 public class JpaComplianceAlreadyStartedTransactionTest extends BaseNonConfigCoreFunctionalTestCase {
 	private TransactionManager tm;
 
@@ -47,7 +45,8 @@ public class JpaComplianceAlreadyStartedTransactionTest extends BaseNonConfigCor
 			Transaction tx = null;
 			try {
 				// A call to begin() with an active Tx should cause an IllegalStateException
-				tx = s.beginTransaction();
+				tx = s.getTransaction();
+				tx.begin();
 			}
 			catch (Exception e) {
 				if ( tx != null && tx.isActive() ) {

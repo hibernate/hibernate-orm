@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.orm.junit;
 
@@ -58,12 +56,11 @@ public abstract class BaseSessionFactoryFunctionalTest
 
 	protected static final Dialect DIALECT = DialectContext.getDialect();
 
-	protected static final Class[] NO_CLASSES = new Class[0];
+	protected static final Class<?>[] NO_CLASSES = new Class[0];
 	protected static final String[] NO_MAPPINGS = new String[0];
 
 	private static final Logger log = Logger.getLogger( BaseSessionFactoryFunctionalTest.class );
 
-	private ServiceRegistryScope registryScope;
 	private DomainModelScope modelScope;
 	private SessionFactoryScope sessionFactoryScope;
 
@@ -84,8 +81,8 @@ public abstract class BaseSessionFactoryFunctionalTest
 	@Override
 	public StandardServiceRegistry produceServiceRegistry(StandardServiceRegistryBuilder ssrBuilder) {
 		ssrBuilder.applySetting( AvailableSettings.HBM2DDL_AUTO, exportSchema() ? "create-drop" : "none" );
-		ServiceRegistryUtil.applySettings( ssrBuilder );
 		applySettings( ssrBuilder );
+		ServiceRegistryUtil.applySettings( ssrBuilder );
 		return ssrBuilder.build();
 	}
 
@@ -103,7 +100,6 @@ public abstract class BaseSessionFactoryFunctionalTest
 
 	@Override
 	public void injectServiceRegistryScope(ServiceRegistryScope registryScope) {
-		this.registryScope = registryScope;
 	}
 
 	@Override
@@ -113,49 +109,44 @@ public abstract class BaseSessionFactoryFunctionalTest
 		applyMetadataBuilder( metadataBuilder );
 		applyMetadataSources( metadataSources );
 		final MetadataImplementor metadata = (MetadataImplementor) metadataBuilder.build();
-		if ( !overrideCacheStrategy() || getCacheConcurrencyStrategy() == null ) {
-			return metadata;
+		if ( overrideCacheStrategy() && getCacheConcurrencyStrategy() != null ) {
+			applyCacheSettings( metadata );
 		}
-
-		applyCacheSettings( metadata );
-
 		return metadata;
 	}
 
 	protected final void applyCacheSettings(Metadata metadata) {
 		for ( PersistentClass entityBinding : metadata.getEntityBindings() ) {
-			if ( entityBinding.isInherited() ) {
-				continue;
-			}
-
-			boolean hasLob = false;
-
-			for ( Property prop : entityBinding.getPropertyClosure() ) {
-				if ( prop.getValue().isSimpleValue() ) {
-					if ( isLob( (SimpleValue) prop.getValue() ) ) {
-						hasLob = true;
-						break;
-					}
+			if ( !entityBinding.isInherited() ) {
+				if ( !hasLob( entityBinding ) ) {
+					final RootClass rootClass = (RootClass) entityBinding;
+					rootClass.setCacheConcurrencyStrategy( getCacheConcurrencyStrategy() );
+					entityBinding.setCached( true );
 				}
-			}
-
-			if ( !hasLob ) {
-				( (RootClass) entityBinding ).setCacheConcurrencyStrategy( getCacheConcurrencyStrategy() );
-				entityBinding.setCached( true );
 			}
 		}
 
 		for ( Collection collectionBinding : metadata.getCollectionBindings() ) {
-			boolean isLob = false;
-
-			if ( collectionBinding.getElement().isSimpleValue() ) {
-				isLob = isLob( (SimpleValue) collectionBinding.getElement() );
-			}
-
-			if ( !isLob ) {
+			if ( !isLob( collectionBinding ) ) {
 				collectionBinding.setCacheConcurrencyStrategy( getCacheConcurrencyStrategy() );
 			}
 		}
+	}
+
+	private static boolean isLob(Collection collectionBinding) {
+		return collectionBinding.getElement().isSimpleValue()
+			&& isLob( (SimpleValue) collectionBinding.getElement() );
+	}
+
+	private static boolean hasLob(PersistentClass entityBinding) {
+		for ( Property prop : entityBinding.getPropertyClosure() ) {
+			if ( prop.getValue().isSimpleValue() ) {
+				if ( isLob( (SimpleValue) prop.getValue() ) ) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	protected boolean overrideCacheStrategy() {

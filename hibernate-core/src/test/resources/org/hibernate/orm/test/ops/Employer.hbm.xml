@@ -34,7 +34,7 @@
 		</id>
 		<bag name="employers"
 			inverse="true"
-			cascade="persist,merge,save-update"
+			cascade="persist,merge"
 			table="EMPLOYER_EMPLOYEE">
 			<key column="EMPEE_ID"/>
 			<many-to-many class="Employer" column="EMPER_ID" />

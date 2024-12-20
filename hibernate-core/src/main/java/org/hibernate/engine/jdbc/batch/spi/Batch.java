@@ -1,15 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.batch.spi;
 
 import java.sql.PreparedStatement;
 import java.util.function.Supplier;
 
+import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
+import org.hibernate.StaleStateException;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
@@ -24,7 +24,7 @@ import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
  * A batch is usually associated with a {@link org.hibernate.engine.jdbc.spi.JdbcCoordinator}.
  *
  * @author Steve Ebersole
- * 
+ *
  * @see org.hibernate.engine.jdbc.spi.JdbcCoordinator#getBatch(BatchKey, Integer, Supplier)
  */
 @Incubating
@@ -50,6 +50,17 @@ public interface Batch {
 	 * of the current part of the batch.
 	 */
 	void addToBatch(JdbcValueBindings jdbcValueBindings, TableInclusionChecker inclusionChecker);
+
+	/**
+	 * Apply the value bindings to the batch JDBC statements and indicates completion
+	 * of the current part of the batch.
+	 */
+	void addToBatch(JdbcValueBindings jdbcValueBindings, TableInclusionChecker inclusionChecker, StaleStateMapper staleStateMapper);
+
+	@FunctionalInterface
+	interface StaleStateMapper {
+		HibernateException map(StaleStateException staleStateException);
+	}
 
 	/**
 	 * Execute this batch.

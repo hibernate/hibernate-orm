@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.ast.internal;
 
@@ -26,9 +24,9 @@ import java.util.List;
  */
 public class CollectionLoaderNamedQuery implements CollectionLoader {
 	private final CollectionPersister persister;
-	private final NamedQueryMemento namedQueryMemento;
+	private final NamedQueryMemento<?> namedQueryMemento;
 
-	public CollectionLoaderNamedQuery(CollectionPersister persister, NamedQueryMemento namedQueryMemento) {
+	public CollectionLoaderNamedQuery(CollectionPersister persister, NamedQueryMemento<?> namedQueryMemento) {
 		this.persister = persister;
 		this.namedQueryMemento = namedQueryMemento;
 	}
@@ -53,9 +51,12 @@ public class CollectionLoaderNamedQuery implements CollectionLoader {
 		else {
 			// using annotations we have no way to specify a @CollectionResult
 			final CollectionKey collectionKey = new CollectionKey( persister, key );
-			final PersistentCollection<?> collection = session.getPersistenceContextInternal().getCollection( collectionKey );
+			final PersistentCollection<?> collection =
+					session.getPersistenceContextInternal()
+							.getCollection( collectionKey );
 			for ( Object element : resultList ) {
-				if ( element != null && !persister.getElementType().getReturnedClass().isInstance( element ) ) {
+				if ( element != null
+						&& !persister.getElementType().getReturnedClass().isInstance( element ) ) {
 					throw new QueryTypeMismatchException( "Collection loader for '" + persister.getRole()
 							+ "' returned an instance of '" + element.getClass().getName() + "'" );
 				}
@@ -63,7 +64,9 @@ public class CollectionLoaderNamedQuery implements CollectionLoader {
 			collection.beforeInitialize( persister, resultList.size() );
 			collection.injectLoadedState( getLoadable(), resultList );
 			collection.afterInitialize();
-			session.getPersistenceContextInternal().getCollectionEntry( collection ).postInitialize( collection );
+			session.getPersistenceContextInternal()
+					.getCollectionEntry( collection )
+					.postInitialize( collection, session );
 			return collection;
 		}
 	}

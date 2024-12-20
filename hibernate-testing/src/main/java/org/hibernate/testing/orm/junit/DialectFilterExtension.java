@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.orm.junit;
 
@@ -86,6 +84,8 @@ public class DialectFilterExtension implements ExecutionCondition {
 							matchingMicroVersion,
 							dialect,
 							requiresDialect.matchSubTypes()
+									? VersionMatchMode.SAME_OR_NEWER
+									: VersionMatchMode.SAME
 					);
 				}
 				else {
@@ -138,6 +138,21 @@ public class DialectFilterExtension implements ExecutionCondition {
 			int matchingMicroVersion,
 			Dialect dialect,
 			boolean matchNewerVersions) {
+		return versionsMatch(
+				matchingMajorVersion,
+				matchingMinorVersion,
+				matchingMicroVersion,
+				dialect,
+				matchNewerVersions ? VersionMatchMode.SAME_OR_NEWER : VersionMatchMode.SAME
+		);
+	}
+
+	public static boolean versionsMatch(
+			int matchingMajorVersion,
+			int matchingMinorVersion,
+			int matchingMicroVersion,
+			Dialect dialect,
+			VersionMatchMode matchMode) {
 		if ( matchingMajorVersion < 0 ) {
 			return false;
 		}
@@ -150,12 +165,20 @@ public class DialectFilterExtension implements ExecutionCondition {
 			matchingMicroVersion = 0;
 		}
 
-		if ( matchNewerVersions ) {
+		if ( matchMode == VersionMatchMode.SAME_OR_NEWER ) {
 			return dialect.getVersion().isSameOrAfter( matchingMajorVersion, matchingMinorVersion, matchingMicroVersion );
 		}
-		else {
-			return dialect.getVersion().isSame( matchingMajorVersion );
+		if ( matchMode == VersionMatchMode.SAME_OR_OLDER
+				&& dialect.getVersion().isBefore( matchingMajorVersion, matchingMinorVersion, matchingMicroVersion ) ) {
+			return true;
 		}
+		return dialect.getVersion().isSame( matchingMajorVersion );
+	}
+
+	public enum VersionMatchMode {
+		SAME,
+		SAME_OR_NEWER,
+		SAME_OR_OLDER
 	}
 
 	private ConditionEvaluationResult evaluateSkipConditions(ExtensionContext context, Dialect dialect, String enabledResult) {
@@ -196,6 +219,8 @@ public class DialectFilterExtension implements ExecutionCondition {
 						effectiveSkipForDialect.microVersion(),
 						dialect,
 						effectiveSkipForDialect.matchSubTypes()
+								? VersionMatchMode.SAME_OR_OLDER
+								: VersionMatchMode.SAME
 				);
 
 				if ( versionsMatch ) {

@@ -2,7 +2,7 @@
 == Tutorial using JPA-standard APIs
 
 .Objectives
-- [*] Configure Hibernate using `peristence.xml`
+- [*] Configure Hibernate using `persistence.xml`
 - [*] Bootstrap a Jakarta Persistence `EntityManagerFactory`
 - [*] Use annotations to provide mapping information
 - [*] Use `EntityManager` to persist and query data

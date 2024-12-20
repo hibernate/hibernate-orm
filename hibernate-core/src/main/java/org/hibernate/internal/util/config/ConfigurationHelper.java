@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal.util.config;
 
@@ -14,13 +12,16 @@ import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.function.Supplier;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.Incubating;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 
@@ -50,12 +51,24 @@ public final class ConfigurationHelper {
 	 *
 	 * @return The value, or null if not found
 	 */
-	public static String getString(String name, Map values) {
-		Object value = values.get( name );
-		if ( value == null ) {
-			return null;
-		}
-		return value.toString();
+	public static String getString(String name, Map<?,?> values) {
+		final Object value = values.get( name );
+		return value == null ? null : value.toString();
+	}
+
+	/**
+	 * Get the config value as a {@link String}
+	 *
+	 * @param preferred The preferred config setting name.
+	 * @param fallback The fallback config setting name, when the preferred
+	 *                 configuration is not set.
+	 * @param values The map of config values
+	 *
+	 * @return The value, or null if not found
+	 */
+	public static String getString(String preferred, String fallback, Map<?,?> values) {
+		final String preferredValue = getString( preferred, values );
+		return preferredValue == null ? getString( fallback, values ) : preferredValue;
 	}
 
 	/**
@@ -67,7 +80,7 @@ public final class ConfigurationHelper {
 	 *
 	 * @return The value.
 	 */
-	public static String getString(String name, Map values, String defaultValue) {
+	public static String getString(String name, Map<?,?> values, String defaultValue) {
 		return getString( name, values, () -> defaultValue );
 	}
 
@@ -81,35 +94,7 @@ public final class ConfigurationHelper {
 	 */
 	public static String getString(String name, Map<?,?> values, Supplier<String> defaultValueSupplier) {
 		final Object value = values.get( name );
-		if ( value != null ) {
-			return value.toString();
-		}
-
-		return defaultValueSupplier.get();
-	}
-
-	/**
-	 * Get the config value as a {@link String}.
-	 *
-	 * @param name The config setting name.
-	 * @param values The map of config parameters.
-	 * @param defaultValue The default value to use if not found.
-	 * @param otherSupportedValues List of other supported values. Does not need to contain the default one.
-	 *
-	 * @return The value.
-	 *
-	 * @throws ConfigurationException Unsupported value provided.
-	 *
-	 */
-	public static String getString(String name, Map values, String defaultValue, String ... otherSupportedValues) {
-		final String value = getString( name, values, defaultValue );
-		if ( !defaultValue.equals( value ) && ArrayHelper.indexOf( otherSupportedValues, value ) == -1 ) {
-			throw new ConfigurationException(
-					"Unsupported configuration [name=" + name + ", value=" + value + "]. " +
-							"Choose value between: '" + defaultValue + "', '" + String.join( "', '", otherSupportedValues ) + "'."
-			);
-		}
-		return value;
+		return value != null ? value.toString() : defaultValueSupplier.get();
 	}
 
 	/**
@@ -120,7 +105,7 @@ public final class ConfigurationHelper {
 	 *
 	 * @return The value.
 	 */
-	public static boolean getBoolean(String name, Map values) {
+	public static boolean getBoolean(String name, Map<?,?> values) {
 		return getBoolean( name, values, false );
 	}
 
@@ -133,33 +118,32 @@ public final class ConfigurationHelper {
 	 *
 	 * @return The value.
 	 */
-	public static boolean getBoolean(String name, Map values, boolean defaultValue) {
+	public static boolean getBoolean(String name, Map<?,?> values, boolean defaultValue) {
 		final Object raw = values.get( name );
-
 		final Boolean value = toBoolean( raw, defaultValue );
 		if ( value == null ) {
 			throw new ConfigurationException(
 					"Could not determine how to handle configuration raw [name=" + name + ", value=" + raw + "] as boolean"
 			);
 		}
-
-		return value;
+		else {
+			return value;
+		}
 	}
 
 	public static Boolean toBoolean(Object value, boolean defaultValue) {
 		if ( value == null ) {
 			return defaultValue;
 		}
-
-		if (value instanceof Boolean) {
-			return (Boolean) value;
+		else if (value instanceof Boolean bool) {
+			return bool;
 		}
-
-		if (value instanceof String) {
-			return Boolean.parseBoolean( (String) value );
+		else if (value instanceof String string) {
+			return Boolean.parseBoolean(string);
 		}
-
-		return null;
+		else {
+			return null;
+		}
 	}
 
 	/**
@@ -170,20 +154,22 @@ public final class ConfigurationHelper {
 	 *
 	 * @return The value.
 	 */
-	public static Boolean getBooleanWrapper(String name, Map values, Boolean defaultValue) {
-		Object value = values.get( name );
+	public static Boolean getBooleanWrapper(String name, Map<?,?> values, Boolean defaultValue) {
+		final Object value = values.get( name );
 		if ( value == null ) {
 			return defaultValue;
 		}
-		if (value instanceof Boolean) {
-			return (Boolean) value;
+		else if (value instanceof Boolean bool) {
+			return bool;
 		}
-		if (value instanceof String) {
-			return Boolean.valueOf( (String) value );
+		else if (value instanceof String string) {
+			return Boolean.valueOf(string);
 		}
-		throw new ConfigurationException(
-				"Could not determine how to handle configuration value [name=" + name + ", value=" + value + "] as boolean"
-		);
+		else {
+			throw new ConfigurationException(
+					"Could not determine how to handle configuration value [name=" + name + ", value=" + value + "] as boolean"
+			);
+		}
 	}
 
 	/**
@@ -195,16 +181,16 @@ public final class ConfigurationHelper {
 	 *
 	 * @return The value.
 	 */
-	public static int getInt(String name, Map values, int defaultValue) {
-		Object value = values.get( name );
+	public static int getInt(String name, Map<?,?> values, int defaultValue) {
+		final Object value = values.get( name );
 		if ( value == null ) {
 			return defaultValue;
 		}
-		if (value instanceof Integer) {
-			return (Integer) value;
+		if (value instanceof Integer integer) {
+			return integer;
 		}
-		if (value instanceof String) {
-			return Integer.parseInt( (String) value );
+		if (value instanceof String string) {
+			return Integer.parseInt(string);
 		}
 		throw new ConfigurationException(
 				"Could not determine how to handle configuration value [name=" + name +
@@ -220,21 +206,18 @@ public final class ConfigurationHelper {
 	 *
 	 * @return The value, or null if not found
 	 */
-	public static Integer getInteger(String name, Map values) {
-		Object value = values.get( name );
+	public static Integer getInteger(String name, Map<?,?> values) {
+		final Object value = values.get( name );
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof Integer) {
-			return (Integer) value;
+		else if (value instanceof Integer integer) {
+			return integer;
 		}
-		if (value instanceof String) {
+		else if (value instanceof String string) {
 			//empty values are ignored
-			final String trimmed = value.toString().trim();
-			if ( trimmed.isEmpty() ) {
-				return null;
-			}
-			return Integer.valueOf( trimmed );
+			final String trimmed = string.trim();
+			return trimmed.isEmpty() ? null : Integer.valueOf( trimmed );
 		}
 		throw new ConfigurationException(
 				"Could not determine how to handle configuration value [name=" + name +
@@ -242,21 +225,23 @@ public final class ConfigurationHelper {
 		);
 	}
 
-	public static long getLong(String name, Map values, int defaultValue) {
-		Object value = values.get( name );
+	public static long getLong(String name, Map<?,?> values, int defaultValue) {
+		final Object value = values.get( name );
 		if ( value == null ) {
 			return defaultValue;
 		}
-		if (value instanceof Long) {
-			return (Long) value;
+		else if (value instanceof Long number) {
+			return number;
 		}
-		if (value instanceof String) {
-			return Long.parseLong( (String) value );
+		else if (value instanceof String string) {
+			return Long.parseLong(string);
 		}
-		throw new ConfigurationException(
-				"Could not determine how to handle configuration value [name=" + name +
-						", value=" + value + "(" + value.getClass().getName() + ")] as long"
-		);
+		else {
+			throw new ConfigurationException(
+					"Could not determine how to handle configuration value [name=" + name +
+							", value=" + value + "(" + value.getClass().getName() + ")] as long"
+			);
+		}
 	}
 
 	/**
@@ -265,25 +250,24 @@ public final class ConfigurationHelper {
 	 * @param configurationValues The config values to clone
 	 *
 	 * @return The clone
+	 *
+	 * @deprecated No longer used
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
+	@Deprecated(since = "7", forRemoval = true)
 	public static Map clone(Map<?,?> configurationValues) {
 		if ( configurationValues == null ) {
 			return null;
 		}
-		// If a Properties object, leverage its clone() impl
-		if (configurationValues instanceof Properties) {
-			return (Properties) ( (Properties) configurationValues ).clone();
+		else if ( configurationValues instanceof Properties properties ) {
+			// If a Properties object, leverage its clone() impl
+			return (Properties) properties.clone();
 		}
-		// Otherwise make a manual copy
-		HashMap clone = new HashMap();
-		for ( Map.Entry entry : configurationValues.entrySet() ) {
-			clone.put( entry.getKey(), entry.getValue() );
+		else {
+			// Otherwise make a manual copy
+			return new HashMap<>( configurationValues );
 		}
-		return clone;
 	}
-
-
 
 	/**
 	 * replace a property by a starred version
@@ -294,16 +278,12 @@ public final class ConfigurationHelper {
 	 * @return cloned and masked properties
 	 */
 	public static Properties maskOut(Properties props, String key) {
-		Properties clone = ( Properties ) props.clone();
+		final Properties clone = (Properties) props.clone();
 		if ( clone.get( key ) != null ) {
 			clone.setProperty( key, "****" );
 		}
 		return clone;
 	}
-
-
-
-
 
 	/**
 	 * Extract a property value by name from the given properties object.
@@ -334,7 +314,7 @@ public final class ConfigurationHelper {
 	 * @param properties The properties object
 	 * @return The property value; may be null.
 	 */
-	public static String extractPropertyValue(String propertyName, Map properties) {
+	public static String extractPropertyValue(String propertyName, Map<?,?> properties) {
 		String value = (String) properties.get( propertyName );
 		if ( value == null ) {
 			return null;
@@ -348,7 +328,7 @@ public final class ConfigurationHelper {
 
 	public static String extractValue(
 			String name,
-			Map values,
+			Map<?,?> values,
 			Supplier<String> fallbackValueFactory) {
 		final String value = extractPropertyValue( name, values );
 		if ( value != null ) {
@@ -370,9 +350,13 @@ public final class ConfigurationHelper {
 	 * @param delim The string defining tokens used as both entry and key/value delimiters.
 	 * @param properties The properties object
 	 * @return The resulting map; never null, though perhaps empty.
+	 *
+	 * @deprecated No longer used
 	 */
+	@SuppressWarnings("rawtypes")
+	@Deprecated(since = "7", forRemoval = true)
 	public static Map toMap(String propertyName, String delim, Properties properties) {
-		Map map = new HashMap();
+		Map<String,String> map = new HashMap<>();
 		String value = extractPropertyValue( propertyName, properties );
 		if ( value != null ) {
 			StringTokenizer tokens = new StringTokenizer( value, delim );
@@ -395,9 +379,13 @@ public final class ConfigurationHelper {
 	 * @param delim The string defining tokens used as both entry and key/value delimiters.
 	 * @param properties The properties object
 	 * @return The resulting map; never null, though perhaps empty.
+	 *
+	 * @deprecated No longer used
 	 */
-	public static Map toMap(String propertyName, String delim, Map properties) {
-		Map map = new HashMap();
+	@SuppressWarnings("rawtypes")
+	@Deprecated(since = "7", forRemoval = true)
+	public static Map toMap(String propertyName, String delim, Map<?,?> properties) {
+		Map<String,String> map = new HashMap<>();
 		String value = extractPropertyValue( propertyName, properties );
 		if ( value != null ) {
 			StringTokenizer tokens = new StringTokenizer( value, delim );
@@ -447,10 +435,10 @@ public final class ConfigurationHelper {
 	 *
 	 * @param configurationValues The configuration map.
 	 */
-	public static void resolvePlaceHolders(Map<?,?> configurationValues) {
-		Iterator itr = configurationValues.entrySet().iterator();
+	public static void resolvePlaceHolders(Map<?,Object> configurationValues) {
+		final Iterator<? extends Map.Entry<?,Object>> itr = configurationValues.entrySet().iterator();
 		while ( itr.hasNext() ) {
-			final Map.Entry entry = ( Map.Entry ) itr.next();
+			final Map.Entry<?,Object> entry = itr.next();
 			final Object value = entry.getValue();
 			if (value instanceof String) {
 				final String resolved = resolvePlaceHolder( ( String ) value );
@@ -473,7 +461,7 @@ public final class ConfigurationHelper {
 	 * @return The (possibly) interpolated property value.
 	 */
 	public static String resolvePlaceHolder(String property) {
-		if ( property.indexOf( PLACEHOLDER_START ) < 0 ) {
+		if ( !property.contains( PLACEHOLDER_START ) ) {
 			return property;
 		}
 		StringBuilder buff = new StringBuilder();
@@ -493,7 +481,7 @@ public final class ConfigurationHelper {
 							throw new IllegalArgumentException( "unmatched placeholder start [" + property + "]" );
 						}
 					}
-					String systemProperty = extractFromSystem( systemPropertyName );
+					final String systemProperty = extractFromSystem( systemPropertyName );
 					buff.append( systemProperty == null ? "" : systemProperty );
 					pos = x + 1;
 					// make sure spinning forward did not put us past the end of the buffer...
@@ -504,8 +492,8 @@ public final class ConfigurationHelper {
 			}
 			buff.append( chars[pos] );
 		}
-		String rtn = buff.toString();
-		return rtn.isEmpty() ? null : rtn;
+		final String result = buff.toString();
+		return result.isEmpty() ? null : result;
 	}
 
 	private static String extractFromSystem(String systemPropertyName) {
@@ -519,7 +507,7 @@ public final class ConfigurationHelper {
 
 	@Incubating
 	public static synchronized int getPreferredSqlTypeCodeForBoolean(StandardServiceRegistry serviceRegistry) {
-		final Integer typeCode = serviceRegistry.getService( ConfigurationService.class ).getSetting(
+		final Integer typeCode = serviceRegistry.requireService( ConfigurationService.class ).getSetting(
 				AvailableSettings.PREFERRED_BOOLEAN_JDBC_TYPE,
 				TypeCodeConverter.INSTANCE
 		);
@@ -529,15 +517,30 @@ public final class ConfigurationHelper {
 		}
 
 		// default to the Dialect answer
-		return serviceRegistry.getService( JdbcServices.class )
+		return serviceRegistry.requireService( JdbcServices.class )
 				.getJdbcEnvironment()
 				.getDialect()
 				.getPreferredSqlTypeCodeForBoolean();
 	}
 
 	@Incubating
+	public static synchronized int getPreferredSqlTypeCodeForBoolean(ServiceRegistry serviceRegistry, Dialect dialect) {
+		final Integer typeCode = serviceRegistry.requireService( ConfigurationService.class ).getSetting(
+				AvailableSettings.PREFERRED_BOOLEAN_JDBC_TYPE,
+				TypeCodeConverter.INSTANCE
+		);
+		if ( typeCode != null ) {
+			INCUBATION_LOGGER.incubatingSetting( AvailableSettings.PREFERRED_BOOLEAN_JDBC_TYPE );
+			return typeCode;
+		}
+
+		// default to the Dialect answer
+		return dialect.getPreferredSqlTypeCodeForBoolean();
+	}
+
+	@Incubating
 	public static synchronized int getPreferredSqlTypeCodeForDuration(StandardServiceRegistry serviceRegistry) {
-		final Integer explicitSetting = serviceRegistry.getService( ConfigurationService.class ).getSetting(
+		final Integer explicitSetting = serviceRegistry.requireService( ConfigurationService.class ).getSetting(
 				AvailableSettings.PREFERRED_DURATION_JDBC_TYPE,
 				TypeCodeConverter.INSTANCE
 		);
@@ -546,12 +549,12 @@ public final class ConfigurationHelper {
 			return explicitSetting;
 		}
 
-		return SqlTypes.NUMERIC;
+		return SqlTypes.DURATION;
 	}
 
 	@Incubating
 	public static synchronized int getPreferredSqlTypeCodeForUuid(StandardServiceRegistry serviceRegistry) {
-		final Integer explicitSetting = serviceRegistry.getService( ConfigurationService.class ).getSetting(
+		final Integer explicitSetting = serviceRegistry.requireService( ConfigurationService.class ).getSetting(
 				AvailableSettings.PREFERRED_UUID_JDBC_TYPE,
 				TypeCodeConverter.INSTANCE
 		);
@@ -565,7 +568,7 @@ public final class ConfigurationHelper {
 
 	@Incubating
 	public static synchronized int getPreferredSqlTypeCodeForInstant(StandardServiceRegistry serviceRegistry) {
-		final Integer explicitSetting = serviceRegistry.getService( ConfigurationService.class ).getSetting(
+		final Integer explicitSetting = serviceRegistry.requireService( ConfigurationService.class ).getSetting(
 				AvailableSettings.PREFERRED_INSTANT_JDBC_TYPE,
 				TypeCodeConverter.INSTANCE
 		);
@@ -579,11 +582,32 @@ public final class ConfigurationHelper {
 
 	@Incubating
 	public static synchronized int getPreferredSqlTypeCodeForArray(StandardServiceRegistry serviceRegistry) {
+		final Integer explicitSetting = serviceRegistry.requireService( ConfigurationService.class ).getSetting(
+				AvailableSettings.PREFERRED_ARRAY_JDBC_TYPE,
+				TypeCodeConverter.INSTANCE
+		);
+		if ( explicitSetting != null ) {
+			INCUBATION_LOGGER.incubatingSetting( AvailableSettings.PREFERRED_ARRAY_JDBC_TYPE );
+			return explicitSetting;
+		}
 		// default to the Dialect answer
-		return serviceRegistry.getService( JdbcServices.class )
+		return serviceRegistry.requireService( JdbcServices.class )
 				.getJdbcEnvironment()
 				.getDialect()
 				.getPreferredSqlTypeCodeForArray();
+	}
+
+	public static void setIfNotEmpty(String value, String settingName, Map<String, String> configuration) {
+		if ( StringHelper.isNotEmpty( value ) ) {
+			configuration.put( settingName, value );
+		}
+	}
+
+	@Deprecated(since = "7", forRemoval = true)
+	public static void setIfNotNull(Object value, String settingName, Map<String, Object> configuration) {
+		if ( value != null ) {
+			configuration.put( settingName, value );
+		}
 	}
 
 	private static class TypeCodeConverter implements ConfigurationService.Converter<Integer> {
@@ -591,9 +615,10 @@ public final class ConfigurationHelper {
 		public static final TypeCodeConverter INSTANCE = new TypeCodeConverter();
 
 		@Override
+		@NonNull
 		public Integer convert(Object value) {
-			if ( value instanceof Number ) {
-				return ( (Number) value ).intValue();
+			if ( value instanceof Number number ) {
+				return number.intValue();
 			}
 
 			final String string = value.toString().toUpperCase( Locale.ROOT );

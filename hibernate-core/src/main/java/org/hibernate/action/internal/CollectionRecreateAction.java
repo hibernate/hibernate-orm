@@ -1,15 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.action.internal;
 
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.event.spi.PostCollectionRecreateEvent;
 import org.hibernate.event.spi.PostCollectionRecreateEventListener;
 import org.hibernate.event.spi.PreCollectionRecreateEvent;
@@ -44,14 +44,26 @@ public final class CollectionRecreateAction extends CollectionAction {
 		final PersistentCollection<?> collection = getCollection();
 		preRecreate();
 		final SharedSessionContractImplementor session = getSession();
-		getPersister().recreate( collection, getKey(), session);
+		final CollectionPersister persister = getPersister();
+		final Object key = getKey();
+		final EventMonitor eventMonitor = session.getEventMonitor();
+		final DiagnosticEvent event = eventMonitor.beginCollectionRecreateEvent();
+		boolean success = false;
+		try {
+			persister.recreate( collection, key, session );
+			success = true;
+		}
+		finally {
+			eventMonitor.completeCollectionRecreateEvent( event, key, persister.getRole(), success, session );
+		}
+
 		session.getPersistenceContextInternal().getCollectionEntry( collection ).afterAction( collection );
 		evict();
 		postRecreate();
 
 		final StatisticsImplementor statistics = session.getFactory().getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {
-			statistics.recreateCollection( getPersister().getRole() );
+			statistics.recreateCollection( persister.getRole() );
 		}
 	}
 

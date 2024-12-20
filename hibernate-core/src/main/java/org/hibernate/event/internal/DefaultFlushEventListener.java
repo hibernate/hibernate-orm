@@ -1,22 +1,20 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.FlushEvent;
 import org.hibernate.event.spi.FlushEventListener;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
- * Defines the default flush event listeners used by hibernate for 
+ * Defines the default flush event listeners used by hibernate for
  * flushing session state in response to generated flush events.
  *
  * @author Steve Ebersole
@@ -30,10 +28,10 @@ public class DefaultFlushEventListener extends AbstractFlushingEventListener imp
 	public void onFlush(FlushEvent event) throws HibernateException {
 		final EventSource source = event.getSession();
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
-		final EventManager eventManager = source.getEventManager();
+		final EventMonitor eventMonitor = source.getEventMonitor();
 		if ( persistenceContext.getNumberOfManagedEntities() > 0
 				|| persistenceContext.getCollectionEntriesSize() > 0 ) {
-			final HibernateMonitoringEvent flushEvent = eventManager.beginFlushEvent();
+			final DiagnosticEvent flushEvent = eventMonitor.beginFlushEvent();
 			try {
 				source.getEventListenerManager().flushStart();
 
@@ -42,7 +40,7 @@ public class DefaultFlushEventListener extends AbstractFlushingEventListener imp
 				postFlush( source );
 			}
 			finally {
-				eventManager.completeFlushEvent( flushEvent, event );
+				eventMonitor.completeFlushEvent( flushEvent, event );
 				source.getEventListenerManager().flushEnd(
 						event.getNumberOfEntitiesProcessed(),
 						event.getNumberOfCollectionsProcessed()

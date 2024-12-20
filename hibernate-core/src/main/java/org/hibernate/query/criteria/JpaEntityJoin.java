@@ -1,32 +1,22 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.criteria;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Predicate;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedEntityJoin;
 
 /**
  * @author Steve Ebersole
  */
-public interface JpaEntityJoin<T> extends JpaJoinedFrom<T,T> {
+public interface JpaEntityJoin<L,R> extends JpaJoin<L,R> {
 	@Override
-	EntityDomainType<T> getModel();
+	EntityDomainType<R> getModel();
 
 	@Override
-	JpaEntityJoin<T> on(JpaExpression<Boolean> restriction);
+	<S extends R> SqmTreatedEntityJoin<L,R,S> treatAs(Class<S> treatAsType);
 
 	@Override
-	JpaEntityJoin<T> on(Expression<Boolean> restriction);
-
-	@Override
-	JpaEntityJoin<T> on(JpaPredicate... restrictions);
-
-	@Override
-	JpaEntityJoin<T> on(Predicate... restrictions);
+	<S extends R> SqmTreatedEntityJoin<L,R,S> treatAs(EntityDomainType<S> treatAsType);
 }

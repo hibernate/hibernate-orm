@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.onetoone.embeddedid;
 
 import java.util.List;
@@ -5,7 +9,7 @@ import java.util.List;
 import org.hibernate.query.Query;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -32,7 +36,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 		}
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-15279")
+@JiraKey(value = "HHH-15279")
 public class OneToOneMultiLevelEmbeddedId {
 
 	@BeforeEach

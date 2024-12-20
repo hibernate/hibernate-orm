@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.internal;
 
@@ -11,13 +9,11 @@ import java.util.function.Supplier;
 
 import org.hibernate.InstantiationException;
 import org.hibernate.PropertyNotFoundException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.ValueAccess;
-import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Support for instantiating embeddables as POJO representation
@@ -28,11 +24,11 @@ public class EmbeddableInstantiatorPojoStandard extends AbstractPojoInstantiator
 	private final Supplier<EmbeddableMappingType> embeddableMappingAccess;
 	private final Constructor<?> constructor;
 
-	public EmbeddableInstantiatorPojoStandard(JavaType<?> javaType, Supplier<EmbeddableMappingType> embeddableMappingAccess) {
-		super( javaType.getJavaTypeClass() );
+	public EmbeddableInstantiatorPojoStandard(Class<?> embeddableClass, Supplier<EmbeddableMappingType> embeddableMappingAccess) {
+		super( embeddableClass );
 
 		this.embeddableMappingAccess = embeddableMappingAccess;
-		this.constructor = resolveConstructor( javaType.getJavaTypeClass() );
+		this.constructor = resolveConstructor( embeddableClass );
 	}
 
 	protected static Constructor<?> resolveConstructor(Class<?> mappedPojoClass) {
@@ -47,7 +43,7 @@ public class EmbeddableInstantiatorPojoStandard extends AbstractPojoInstantiator
 	}
 
 	@Override
-	public Object instantiate(ValueAccess valuesAccess, SessionFactoryImplementor sessionFactory) {
+	public Object instantiate(ValueAccess valuesAccess) {
 		if ( isAbstract() ) {
 			throw new InstantiationException(
 					"Cannot instantiate abstract class or interface", getMappedPojoClass()

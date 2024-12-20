@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.batch;
 
 import java.util.List;
@@ -6,7 +10,7 @@ import java.util.stream.Stream;
 
 import org.hibernate.annotations.BatchSize;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.BeforeAll;
@@ -31,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 				BatchAndResultStreamTest.Appointment.class
 		}
 )
-@TestForIssue( jiraKey = "HHH-16039")
+@JiraKey( value = "HHH-16039")
 public class BatchAndResultStreamTest {
 
 	@BeforeAll

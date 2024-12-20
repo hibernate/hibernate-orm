@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id$
 package org.hibernate.orm.test.annotations.configuration;
 
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
@@ -19,7 +15,7 @@ import org.junit.Test;
  * @author Emmanuel Bernard
  */
 public class ConfigurationTest  {
-    @Test
+	@Test
 	public void testMixPackageAndResourceOrdering() throws Exception {
 		try (BootstrapServiceRegistry serviceRegistry = new BootstrapServiceRegistryBuilder().build()) {
 			Configuration config = new Configuration( serviceRegistry );
@@ -27,7 +23,7 @@ public class ConfigurationTest  {
 			config.addPackage( "org.hibernate.orm/test.annotations.configuration" );
 		}
 		catch( Exception e ) {
-            Assert.fail( "Processing package first when ORM.xml is used should not fail" );
+			Assert.fail( "Processing package first when ORM.xml is used should not fail" );
 		}
 	}
 }

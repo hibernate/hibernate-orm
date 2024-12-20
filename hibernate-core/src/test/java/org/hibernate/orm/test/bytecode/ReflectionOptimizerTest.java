@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode;
 
@@ -13,7 +11,7 @@ import static org.junit.Assert.assertNotNull;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -43,9 +41,9 @@ public class ReflectionOptimizerTest extends BaseUnitTestCase {
 	public void testReflectionOptimization() {
 		ReflectionOptimizer optimizer = provider.getReflectionOptimizer(
 				Bean.class,
-		        BeanReflectionHelper.getGetterNames(),
-		        BeanReflectionHelper.getSetterNames(),
-		        BeanReflectionHelper.getTypes()
+				BeanReflectionHelper.getGetterNames(),
+				BeanReflectionHelper.getSetterNames(),
+				BeanReflectionHelper.getTypes()
 		);
 		assertNotNull( optimizer );
 		assertNotNull( optimizer.getInstantiationOptimizer() );
@@ -62,7 +60,7 @@ public class ReflectionOptimizerTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12584")
+	@JiraKey(value = "HHH-12584")
 	public void testAbstractClass() {
 		ReflectionOptimizer reflectionOptimizer = provider.getReflectionOptimizer( AbstractClass.class, new String[]{ "getProperty" },
 			new String[]{ "setProperty" }, new Class[]{ String.class } );
@@ -70,7 +68,7 @@ public class ReflectionOptimizerTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12584")
+	@JiraKey(value = "HHH-12584")
 	public void testInterface() {
 		ReflectionOptimizer reflectionOptimizer = provider.getReflectionOptimizer( Interface.class, new String[]{ "getProperty" },
 			new String[]{ "setProperty" }, new Class[]{ String.class } );

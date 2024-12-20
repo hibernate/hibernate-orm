@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.from;
 
@@ -63,9 +61,18 @@ public class OneToManyTableGroup extends AbstractColumnReferenceQualifier implem
 	}
 
 	public void registerIndexTableGroup(TableGroupJoin indexTableGroupJoin) {
+		registerIndexTableGroup( indexTableGroupJoin, true );
+	}
+
+	public void registerIndexTableGroup(TableGroupJoin indexTableGroupJoin, boolean nested) {
 		assert this.indexTableGroup == null;
 		this.indexTableGroup = indexTableGroupJoin.getJoinedGroup();
-		addNestedTableGroupJoin( indexTableGroupJoin );
+		if ( nested ) {
+			addNestedTableGroupJoin( indexTableGroupJoin );
+		}
+		else {
+			addTableGroupJoin( indexTableGroupJoin );
+		}
 	}
 
 	@Override

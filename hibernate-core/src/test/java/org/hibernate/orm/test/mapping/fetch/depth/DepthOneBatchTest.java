@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.mapping.fetch.depth;
 
 import java.util.HashSet;
@@ -153,7 +157,6 @@ public class DepthOneBatchTest {
 
 		@OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 		@PrimaryKeyJoinColumn(name = "AGENCY_ID")
-		@BatchSize(size = 2)
 		public AgencyDetail getAgencyDetail() {
 			return agencyDetail;
 		}

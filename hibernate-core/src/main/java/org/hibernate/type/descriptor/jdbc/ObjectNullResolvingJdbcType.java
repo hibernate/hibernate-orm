@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
 
@@ -42,13 +40,27 @@ public class ObjectNullResolvingJdbcType extends ObjectJdbcType {
 			@Override
 			protected void doBindNull(PreparedStatement st, int index, WrapperOptions options)
 					throws SQLException {
-				st.setNull( index, st.getParameterMetaData().getParameterType( index ) );
+				if ( options.getDialect().supportsBindingNullForSetObject() ) {
+					st.setObject( index, null );
+				}
+				else {
+					final int sqlType = options.getDialect().supportsBindingNullSqlTypeForSetNull() ? Types.NULL
+							: st.getParameterMetaData().getParameterType( index );
+					st.setNull( index, sqlType );
+				}
 			}
 
 			@Override
 			protected void doBindNull(CallableStatement st, String name, WrapperOptions options)
 					throws SQLException {
-				st.setNull( name, Types.JAVA_OBJECT );
+				if ( options.getDialect().supportsBindingNullForSetObject() ) {
+					st.setObject( name, null );
+				}
+				else {
+					final int sqlType = options.getDialect().supportsBindingNullSqlTypeForSetNull() ? Types.NULL
+							: Types.JAVA_OBJECT;
+					st.setNull( name, sqlType );
+				}
 			}
 
 			@Override

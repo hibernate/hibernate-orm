@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.fetch.subselect;
 
@@ -154,9 +152,9 @@ public class SimpleNestedSubSelectFetchTests {
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			session.remove( session.load( Customer.class, 1 ) );
-			session.remove( session.load( Customer.class, 2 ) );
-			session.remove( session.load( Customer.class, 3 ) );
+			session.remove( session.getReference( Customer.class, 1 ) );
+			session.remove( session.getReference( Customer.class, 2 ) );
+			session.remove( session.getReference( Customer.class, 3 ) );
 		} );
 	}
 

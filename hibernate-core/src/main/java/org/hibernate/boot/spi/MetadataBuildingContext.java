@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.spi;
 
@@ -39,7 +37,7 @@ public interface MetadataBuildingContext {
 	 *
 	 * @return The mapping defaults.
 	 */
-	MappingDefaults getMappingDefaults();
+	EffectiveMappingDefaults getEffectiveDefaults();
 
 	/**
 	 * Access to the collector of metadata as we build it.
@@ -85,15 +83,33 @@ public interface MetadataBuildingContext {
 		return isPreferJavaTimeJdbcTypesEnabled( getBootstrapContext().getServiceRegistry() );
 	}
 
+	@Incubating
+	default boolean isPreferNativeEnumTypesEnabled() {
+		return isPreferNativeEnumTypesEnabled( getBootstrapContext().getServiceRegistry() );
+	}
+
 	static boolean isPreferJavaTimeJdbcTypesEnabled(ServiceRegistry serviceRegistry) {
-		return isPreferJavaTimeJdbcTypesEnabled( serviceRegistry.getService( ConfigurationService.class ) );
+		return isPreferJavaTimeJdbcTypesEnabled( serviceRegistry.requireService( ConfigurationService.class ) );
+	}
+
+	static boolean isPreferNativeEnumTypesEnabled(ServiceRegistry serviceRegistry) {
+		return isPreferNativeEnumTypesEnabled( serviceRegistry.requireService( ConfigurationService.class ) );
 	}
 
 	static boolean isPreferJavaTimeJdbcTypesEnabled(ConfigurationService configurationService) {
 		return ConfigurationHelper.getBoolean(
-				MappingSettings.PREFER_JAVA_TYPE_JDBC_TYPES,
+				MappingSettings.JAVA_TIME_USE_DIRECT_JDBC,
 				configurationService.getSettings(),
 				// todo : true would be better eventually so maybe just rip off that band aid
+				false
+		);
+	}
+
+	static boolean isPreferNativeEnumTypesEnabled(ConfigurationService configurationService) {
+		return ConfigurationHelper.getBoolean(
+				MappingSettings.PREFER_NATIVE_ENUM_TYPES,
+				configurationService.getSettings(),
+				// todo: switch to true with HHH-17905
 				false
 		);
 	}

@@ -1,19 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.merge;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
@@ -22,64 +18,69 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 
 /**
  * @author Luis Barreiro
  */
-@RunWith( BytecodeEnhancerRunner.class )
+@DomainModel(
+		annotatedClasses = {
+				CompositeNullTest.ParentEntity.class, CompositeNullTest.Address.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @EnhancementOptions(lazyLoading = true, inlineDirtyChecking = true)
-public class CompositeNullTest extends BaseCoreFunctionalTestCase {
+public class CompositeNullTest {
 
-    private long entityId;
+	private long entityId;
 
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{ParentEntity.class, Address.class};
-    }
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		ParentEntity parent = new ParentEntity();
+		parent.description = "Test";
 
-    @Before
-    public void prepare() {
-        ParentEntity parent = new ParentEntity();
-        parent.description = "Test";
+		scope.inTransaction( s -> {
+			s.persist( parent );
+		} );
 
-        doInHibernate( this::sessionFactory, s -> {
-            s.persist( parent );
-        } );
+		entityId = parent.id;
+	}
 
-        entityId = parent.id;
-    }
+	@Test
+	@JiraKey("HHH-15730")
+	public void testNullComposite(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			ParentEntity parentEntity = s.find( ParentEntity.class, entityId );
+			assertNull( parentEntity.address );
+		} );
+	}
 
-    @Test
-    @TestForIssue( jiraKey = "HHH-15730")
-    public void testNullComposite() {
-        doInHibernate( this::sessionFactory, s -> {
-            ParentEntity parentEntity = s.find( ParentEntity.class, entityId );
-            Assert.assertNull( parentEntity.address );
-        } );
-    }
+	// --- //
 
-    // --- //
+	@Entity(name = "Parent")
+	@Table( name = "PARENT_ENTITY" )
+	static class ParentEntity {
 
-    @Entity(name = "Parent")
-    @Table( name = "PARENT_ENTITY" )
-    private static class ParentEntity {
+		@Id
+		@GeneratedValue
+		Long id;
 
-        @Id
-        @GeneratedValue
-        Long id;
+		String description;
 
-        String description;
+		@Embedded
+		Address address;
+	}
 
-        @Embedded
-        Address address;
-    }
+	@Embeddable
+	@Table( name = "ADDRESS" )
+	static class Address {
 
-    @Embeddable
-    @Table( name = "ADDRESS" )
-    private static class Address {
+		String street;
 
-        String street;
-
-    }
+	}
 }

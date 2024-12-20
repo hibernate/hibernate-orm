@@ -1,22 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.internal;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
-import java.util.regex.Pattern;
+import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -47,7 +44,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -58,21 +54,21 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
-import org.hibernate.mapping.UniqueKey;
+import org.hibernate.mapping.UserDefinedObjectType;
 import org.hibernate.mapping.UserDefinedType;
-import org.hibernate.procedure.spi.NamedCallableQueryMemento;
+import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.query.internal.NamedObjectRepositoryImpl;
 import org.hibernate.query.named.NamedObjectRepository;
-import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.cfg.AvailableSettings.EVENT_LISTENER_PREFIX;
+import static org.hibernate.internal.util.StringHelper.splitAtCommas;
+import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
 
 /**
  * Container for configuration data collected during binding the metamodel.
@@ -82,7 +78,6 @@ import static org.hibernate.cfg.AvailableSettings.EVENT_LISTENER_PREFIX;
  * @author Gail Badner
  */
 public class MetadataImpl implements MetadataImplementor, Serializable {
-	private static final Pattern LISTENER_SEPARATION_PATTERN = Pattern.compile( " ," );
 
 	private final UUID uuid;
 	private final MetadataBuildingOptions metadataBuildingOptions;
@@ -91,6 +86,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final Map<String,PersistentClass> entityBindingMap;
 	private final List<Component> composites;
 	private final Map<Class<?>, Component> genericComponentsMap;
+	private final Map<Class<?>, DiscriminatorType<?>> embeddableDiscriminatorTypesMap;
 	private final Map<Class<?>, MappedSuperclass> mappedSuperclassMap;
 	private final Map<String,Collection> collectionBindingMap;
 	private final Map<String, TypeDefinition> typeDefinitionMap;
@@ -98,8 +94,8 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final Map<String, FetchProfile> fetchProfileMap;
 	private final Map<String, String> imports;
 	private final Map<String, IdentifierGeneratorDefinition> idGeneratorDefinitionMap;
-	private final Map<String, NamedHqlQueryDefinition> namedQueryMap;
-	private final Map<String, NamedNativeQueryDefinition> namedNativeQueryMap;
+	private final Map<String, NamedHqlQueryDefinition<?>> namedQueryMap;
+	private final Map<String, NamedNativeQueryDefinition<?>> namedNativeQueryMap;
 	private final Map<String, NamedProcedureCallDefinition> namedProcedureCallMap;
 	private final Map<String, NamedResultSetMappingDescriptor> sqlResultSetMappingMap;
 	private final Map<String, NamedEntityGraphDefinition> namedEntityGraphMap;
@@ -112,6 +108,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			Map<String, PersistentClass> entityBindingMap,
 			List<Component> composites,
 			Map<Class<?>, Component> genericComponentsMap,
+			Map<Class<?>, DiscriminatorType<?>> embeddableDiscriminatorTypesMap,
 			Map<Class<?>, MappedSuperclass> mappedSuperclassMap,
 			Map<String, Collection> collectionBindingMap,
 			Map<String, TypeDefinition> typeDefinitionMap,
@@ -119,8 +116,8 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			Map<String, FetchProfile> fetchProfileMap,
 			Map<String, String> imports,
 			Map<String, IdentifierGeneratorDefinition> idGeneratorDefinitionMap,
-			Map<String, NamedHqlQueryDefinition> namedQueryMap,
-			Map<String, NamedNativeQueryDefinition> namedNativeQueryMap,
+			Map<String, NamedHqlQueryDefinition<?>> namedQueryMap,
+			Map<String, NamedNativeQueryDefinition<?>> namedNativeQueryMap,
 			Map<String, NamedProcedureCallDefinition> namedProcedureCallMap,
 			Map<String, NamedResultSetMappingDescriptor> sqlResultSetMappingMap,
 			Map<String, NamedEntityGraphDefinition> namedEntityGraphMap,
@@ -132,6 +129,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		this.entityBindingMap = entityBindingMap;
 		this.composites = composites;
 		this.genericComponentsMap = genericComponentsMap;
+		this.embeddableDiscriminatorTypesMap = embeddableDiscriminatorTypesMap;
 		this.mappedSuperclassMap = mappedSuperclassMap;
 		this.collectionBindingMap = collectionBindingMap;
 		this.typeDefinitionMap = typeDefinitionMap;
@@ -166,10 +164,10 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public SessionFactoryBuilder getSessionFactoryBuilder() {
-		final SessionFactoryBuilderService factoryBuilderService = metadataBuildingOptions.getServiceRegistry().getService( SessionFactoryBuilderService.class );
+		final SessionFactoryBuilderService factoryBuilderService = metadataBuildingOptions.getServiceRegistry().requireService( SessionFactoryBuilderService.class );
 		final SessionFactoryBuilderImplementor defaultBuilder = factoryBuilderService.createSessionFactoryBuilder( this, bootstrapContext );
 
-		final ClassLoaderService cls = metadataBuildingOptions.getServiceRegistry().getService( ClassLoaderService.class );
+		final ClassLoaderService cls = metadataBuildingOptions.getServiceRegistry().requireService( ClassLoaderService.class );
 		final java.util.Collection<SessionFactoryBuilderFactory> discoveredBuilderFactories = cls.loadJavaServices( SessionFactoryBuilderFactory.class );
 
 		SessionFactoryBuilder builder = null;
@@ -241,22 +239,22 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public NamedHqlQueryDefinition getNamedHqlQueryMapping(String name) {
+	public NamedHqlQueryDefinition<?> getNamedHqlQueryMapping(String name) {
 		return namedQueryMap.get( name );
 	}
 
 	@Override
-	public void visitNamedHqlQueryDefinitions(Consumer<NamedHqlQueryDefinition> definitionConsumer) {
+	public void visitNamedHqlQueryDefinitions(Consumer<NamedHqlQueryDefinition<?>> definitionConsumer) {
 		namedQueryMap.values().forEach( definitionConsumer );
 	}
 
 	@Override
-	public NamedNativeQueryDefinition getNamedNativeQueryMapping(String name) {
+	public NamedNativeQueryDefinition<?> getNamedNativeQueryMapping(String name) {
 		return namedNativeQueryMap.get( name );
 	}
 
 	@Override
-	public void visitNamedNativeQueryDefinitions(Consumer<NamedNativeQueryDefinition> definitionConsumer) {
+	public void visitNamedNativeQueryDefinitions(Consumer<NamedNativeQueryDefinition<?>> definitionConsumer) {
 		namedNativeQueryMap.values().forEach( definitionConsumer );
 	}
 
@@ -356,37 +354,13 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public NamedObjectRepository buildNamedQueryRepository(SessionFactoryImplementor sessionFactory) {
+	public NamedObjectRepository buildNamedQueryRepository() {
 		return new NamedObjectRepositoryImpl(
-				CollectionHelper.mapOfSize( namedQueryMap.size() ),
-				CollectionHelper.mapOfSize( namedNativeQueryMap.size() ),
-				CollectionHelper.mapOfSize( namedProcedureCallMap.size() ),
-				CollectionHelper.mapOfSize( sqlResultSetMappingMap.size() )
+				mapOfSize( namedQueryMap.size() ),
+				mapOfSize( namedNativeQueryMap.size() ),
+				mapOfSize( namedProcedureCallMap.size() ),
+				mapOfSize( sqlResultSetMappingMap.size() )
 		);
-	}
-
-	private Map<String, NamedSqmQueryMemento> buildNamedSqmMementos(SessionFactoryImplementor sessionFactory) {
-		final HashMap<String, NamedSqmQueryMemento> map = new HashMap<>();
-		if ( namedQueryMap != null ) {
-			namedQueryMap.forEach( (key, value) -> map.put( key, value.resolve( sessionFactory ) ) );
-		}
-		return map;
-	}
-
-	private Map<String, NamedNativeQueryMemento> buildNamedNativeMementos(SessionFactoryImplementor sessionFactory) {
-		final HashMap<String, NamedNativeQueryMemento> map = new HashMap<>();
-		if ( namedNativeQueryMap != null ) {
-			namedNativeQueryMap.forEach( (key, value) -> map.put( key, value.resolve( sessionFactory ) ) );
-		}
-		return map;
-	}
-
-	private Map<String, NamedCallableQueryMemento> buildProcedureCallMementos(SessionFactoryImplementor sessionFactory) {
-		final Map<String, NamedCallableQueryMemento> map = new HashMap<>();
-		if ( namedProcedureCallMap != null ) {
-			namedProcedureCallMap.forEach( (key, value) -> map.put( key, value.resolve( sessionFactory ) ) );
-		}
-		return map;
 	}
 
 	@Override
@@ -449,13 +423,16 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 				}
 			}
 			for ( UserDefinedType userDefinedType : namespace.getUserDefinedTypes() ) {
-				if ( userDefinedType.getColumns().size() > 1 ) {
-					final List<Column> userDefinedTypeColumns = columnOrderingStrategy.orderUserDefinedTypeColumns(
-							userDefinedType,
-							this
-					);
-					if ( userDefinedTypeColumns != null ) {
-						userDefinedType.reorderColumns( userDefinedTypeColumns );
+				if ( userDefinedType instanceof UserDefinedObjectType ) {
+					final UserDefinedObjectType objectType = (UserDefinedObjectType) userDefinedType;
+					if ( objectType.getColumns().size() > 1 ) {
+						final List<Column> objectTypeColumns = columnOrderingStrategy.orderUserDefinedTypeColumns(
+								objectType,
+								this
+						);
+						if ( objectTypeColumns != null ) {
+							objectType.reorderColumns( objectTypeColumns );
+						}
 					}
 				}
 			}
@@ -464,7 +441,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	private boolean shouldOrderTableColumns() {
 		final ConfigurationService configurationService = metadataBuildingOptions.getServiceRegistry()
-				.getService( ConfigurationService.class );
+				.requireService( ConfigurationService.class );
 		final Set<SchemaManagementToolCoordinator.ActionGrouping> groupings = SchemaManagementToolCoordinator.ActionGrouping.interpret(
 				this,
 				configurationService.getSettings()
@@ -515,9 +492,9 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 		assert sessionFactoryServiceRegistry != null;
 
-		final EventListenerRegistry eventListenerRegistry = sessionFactoryServiceRegistry.getService( EventListenerRegistry.class );
-		final ConfigurationService cfgService = sessionFactoryServiceRegistry.getService( ConfigurationService.class );
-		final ClassLoaderService classLoaderService = sessionFactoryServiceRegistry.getService( ClassLoaderService.class );
+		final EventListenerRegistry eventListenerRegistry = sessionFactoryServiceRegistry.requireService( EventListenerRegistry.class );
+		final ConfigurationService cfgService = sessionFactoryServiceRegistry.requireService( ConfigurationService.class );
+		final ClassLoaderService classLoaderService = sessionFactoryServiceRegistry.requireService( ClassLoaderService.class );
 
 		for ( Map.Entry<String,Object> entry : cfgService.getSettings().entrySet() ) {
 			final String propertyName = entry.getKey();
@@ -536,7 +513,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			String listeners,
 			EventType<T> eventType) {
 		final EventListenerGroup<T> eventListenerGroup = eventListenerRegistry.getEventListenerGroup( eventType );
-		for ( String listenerImpl : LISTENER_SEPARATION_PATTERN.split( listeners ) ) {
+		for ( String listenerImpl : splitAtCommas( listeners ) ) {
 			@SuppressWarnings("unchecked")
 			T listener = (T) instantiate( listenerImpl, classLoaderService );
 			if ( !eventType.baseListenerInterface().isInstance( listener ) ) {
@@ -564,6 +541,13 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	@Override
 	public Component getGenericComponent(Class<?> componentClass) {
 		return genericComponentsMap.get( componentClass );
+	}
+
+	@Override
+	public DiscriminatorType<?> resolveEmbeddableDiscriminatorType(
+			Class<?> embeddableClass,
+			Supplier<DiscriminatorType<?>> supplier) {
+		return embeddableDiscriminatorTypesMap.computeIfAbsent( embeddableClass, k -> supplier.get() );
 	}
 
 	@Override
@@ -637,11 +621,11 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		return bootstrapContext;
 	}
 
-	public Map<String, NamedHqlQueryDefinition> getNamedQueryMap() {
+	public Map<String, NamedHqlQueryDefinition<?>> getNamedQueryMap() {
 		return namedQueryMap;
 	}
 
-	public Map<String, NamedNativeQueryDefinition> getNamedNativeQueryMap() {
+	public Map<String, NamedNativeQueryDefinition<?>> getNamedNativeQueryMap() {
 		return namedNativeQueryMap;
 	}
 
@@ -661,4 +645,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		return genericComponentsMap;
 	}
 
+	public Map<Class<?>, DiscriminatorType<?>> getEmbeddableDiscriminatorTypesMap() {
+		return embeddableDiscriminatorTypesMap;
+	}
 }

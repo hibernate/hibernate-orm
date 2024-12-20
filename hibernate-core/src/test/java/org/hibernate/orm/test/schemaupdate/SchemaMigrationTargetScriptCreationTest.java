@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemaupdate;
 
@@ -28,7 +26,7 @@ import org.junit.After;
 import org.junit.Test;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.hamcrest.core.Is.is;
@@ -83,7 +81,7 @@ public class SchemaMigrationTargetScriptCreationTest extends BaseCoreFunctionalT
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10684")
+	@JiraKey(value = "HHH-10684")
 	public void testTargetScriptIsCreated() throws Exception {
 		String fileContent = new String( Files.readAllBytes( output.toPath() ) );
 		Pattern fileContentPattern = Pattern.compile( "create( (column|row))? table test_entity" );

@@ -18,7 +18,7 @@
 		</id>
 		<property name="name" unique="true" not-null="true"/>
 		<property name="type" column="type_"/>
-		<many-to-one name="parent" cascade="save-update"/>
+		<many-to-one name="parent" cascade="merge,persist"/>
 		<union-subclass name="J">
 			<property name="amount"/>
 		</union-subclass>

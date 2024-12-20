@@ -10,6 +10,7 @@ include::./common-attributes.adoc[]
 :doc-quick-start-url: {doc-version-base-url}/quickstart/html_single/
 :doc-query-language-url: {doc-version-base-url}/querylanguage/html_single/Hibernate_Query_Language.html
 :doc-introduction-url: {doc-version-base-url}/introduction/html_single/Hibernate_Introduction.html
+:doc-data-repositories-url: {doc-version-base-url}/repositories/html_single/Hibernate_Data_Repositories.html
 :doc-user-guide-url: {doc-version-base-url}/userguide/html_single/Hibernate_User_Guide.html
 :doc-javadoc-url: {doc-version-base-url}/javadocs/
 :doc-topical-url: {doc-version-base-url}/topical/html_single/

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql.partition;
 
@@ -70,12 +68,12 @@ public class PartitionKeyTests {
 	@Entity( name = "PartitionedEntity" )
 	@Table( name = "entity_table" )
 	public static class PartitionedEntity {
-	    @Id
-	    private Integer id;
+		@Id
+		private Integer id;
 		@PartitionKey
 		@Column(name = "tenant_id", updatable = false)
 		private Integer tenantId;
-	    @Basic
+		@Basic
 		private String name;
 
 		protected PartitionedEntity() {

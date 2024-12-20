@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.internal;
 
@@ -19,9 +17,11 @@ public class RowTransformerListImpl<T> implements RowTransformer<List<Object>> {
 	/**
 	 * Singleton access
 	 */
-	public static final RowTransformerListImpl INSTANCE = new RowTransformerListImpl();
+	@SuppressWarnings( "rawtypes" )
+	private static final RowTransformerListImpl INSTANCE = new RowTransformerListImpl();
 
-	public static RowTransformerListImpl instance() {
+	@SuppressWarnings( "unchecked" )
+	public static <X> RowTransformerListImpl<X> instance() {
 		return INSTANCE;
 	}
 

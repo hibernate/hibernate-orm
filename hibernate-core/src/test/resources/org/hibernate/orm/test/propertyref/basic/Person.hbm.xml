@@ -63,7 +63,7 @@
 
     <class name="Group" table="PROPREF_GRP">
         <id name="name"/>
-        <set name="users" table="PROPREF_USERGROUP" cascade="save-update">
+        <set name="users" table="PROPREF_USERGROUP" cascade="merge">
             <key column="groupName"/>
             <many-to-many column="userId" class="Person" property-ref="userId"/>
         </set>

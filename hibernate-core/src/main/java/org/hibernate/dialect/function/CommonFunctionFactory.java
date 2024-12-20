@@ -1,87 +1,55 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
 
 import java.util.Date;
 import java.util.Arrays;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.Dialect;
 
-import org.hibernate.dialect.function.array.ArrayAggFunction;
-import org.hibernate.dialect.function.array.ArrayAndElementArgumentTypeResolver;
-import org.hibernate.dialect.function.array.ArrayAndElementArgumentValidator;
-import org.hibernate.dialect.function.array.ArrayArgumentValidator;
-import org.hibernate.dialect.function.array.ArrayConcatElementFunction;
-import org.hibernate.dialect.function.array.ArrayConcatFunction;
-import org.hibernate.dialect.function.array.ArrayConstructorFunction;
-import org.hibernate.dialect.function.array.ArrayContainsOperatorFunction;
-import org.hibernate.dialect.function.array.ArrayContainsUnnestFunction;
-import org.hibernate.dialect.function.array.ArrayOverlapsOperatorFunction;
-import org.hibernate.dialect.function.array.ArrayOverlapsUnnestFunction;
-import org.hibernate.dialect.function.array.ArrayGetUnnestFunction;
-import org.hibernate.dialect.function.array.ArrayRemoveIndexUnnestFunction;
-import org.hibernate.dialect.function.array.ArrayReplaceUnnestFunction;
-import org.hibernate.dialect.function.array.ArraySetUnnestFunction;
-import org.hibernate.dialect.function.array.ArraySliceUnnestFunction;
-import org.hibernate.dialect.function.array.ArrayToStringFunction;
-import org.hibernate.dialect.function.array.ArrayViaArgumentReturnTypeResolver;
-import org.hibernate.dialect.function.array.CockroachArrayFillFunction;
-import org.hibernate.dialect.function.array.ElementViaArrayArgumentReturnTypeResolver;
-import org.hibernate.dialect.function.array.H2ArrayContainsFunction;
-import org.hibernate.dialect.function.array.H2ArrayFillFunction;
-import org.hibernate.dialect.function.array.H2ArrayOverlapsFunction;
-import org.hibernate.dialect.function.array.H2ArrayPositionFunction;
-import org.hibernate.dialect.function.array.H2ArrayPositionsFunction;
-import org.hibernate.dialect.function.array.H2ArrayRemoveFunction;
-import org.hibernate.dialect.function.array.H2ArrayRemoveIndexFunction;
-import org.hibernate.dialect.function.array.H2ArrayReplaceFunction;
-import org.hibernate.dialect.function.array.H2ArraySetFunction;
-import org.hibernate.dialect.function.array.H2ArrayToStringFunction;
-import org.hibernate.dialect.function.array.HSQLArrayConstructorFunction;
-import org.hibernate.dialect.function.array.HSQLArrayFillFunction;
-import org.hibernate.dialect.function.array.HSQLArrayPositionFunction;
-import org.hibernate.dialect.function.array.HSQLArrayPositionsFunction;
-import org.hibernate.dialect.function.array.HSQLArrayRemoveFunction;
-import org.hibernate.dialect.function.array.HSQLArraySetFunction;
-import org.hibernate.dialect.function.array.HSQLArrayToStringFunction;
-import org.hibernate.dialect.function.array.OracleArrayConcatElementFunction;
-import org.hibernate.dialect.function.array.OracleArrayConcatFunction;
-import org.hibernate.dialect.function.array.OracleArrayFillFunction;
-import org.hibernate.dialect.function.array.OracleArrayOverlapsFunction;
-import org.hibernate.dialect.function.array.OracleArrayGetFunction;
-import org.hibernate.dialect.function.array.OracleArrayLengthFunction;
-import org.hibernate.dialect.function.array.OracleArrayPositionFunction;
-import org.hibernate.dialect.function.array.OracleArrayPositionsFunction;
-import org.hibernate.dialect.function.array.OracleArrayRemoveFunction;
-import org.hibernate.dialect.function.array.OracleArrayRemoveIndexFunction;
-import org.hibernate.dialect.function.array.OracleArrayReplaceFunction;
-import org.hibernate.dialect.function.array.OracleArraySetFunction;
-import org.hibernate.dialect.function.array.OracleArraySliceFunction;
-import org.hibernate.dialect.function.array.OracleArrayToStringFunction;
-import org.hibernate.dialect.function.array.OracleArrayTrimFunction;
-import org.hibernate.dialect.function.array.PostgreSQLArrayConcatElementFunction;
-import org.hibernate.dialect.function.array.PostgreSQLArrayConcatFunction;
-import org.hibernate.dialect.function.array.PostgreSQLArrayFillFunction;
-import org.hibernate.dialect.function.array.PostgreSQLArrayPositionFunction;
-import org.hibernate.dialect.function.array.PostgreSQLArrayConstructorFunction;
-import org.hibernate.dialect.function.array.OracleArrayAggEmulation;
-import org.hibernate.dialect.function.array.OracleArrayConstructorFunction;
-import org.hibernate.dialect.function.array.OracleArrayContainsFunction;
-import org.hibernate.dialect.function.array.PostgreSQLArrayPositionsFunction;
-import org.hibernate.dialect.function.array.PostgreSQLArrayTrimEmulation;
+import org.hibernate.dialect.function.array.*;
+import org.hibernate.dialect.function.json.*;
+import org.hibernate.dialect.function.xml.DB2XmlTableFunction;
+import org.hibernate.dialect.function.xml.H2XmlConcatFunction;
+import org.hibernate.dialect.function.xml.H2XmlElementFunction;
+import org.hibernate.dialect.function.xml.H2XmlForestFunction;
+import org.hibernate.dialect.function.xml.H2XmlPiFunction;
+import org.hibernate.dialect.function.xml.HANAXmlTableFunction;
+import org.hibernate.dialect.function.xml.LegacyDB2XmlExistsFunction;
+import org.hibernate.dialect.function.xml.LegacyDB2XmlQueryFunction;
+import org.hibernate.dialect.function.xml.OracleXmlTableFunction;
+import org.hibernate.dialect.function.xml.PostgreSQLXmlQueryFunction;
+import org.hibernate.dialect.function.xml.SQLServerXmlAggFunction;
+import org.hibernate.dialect.function.xml.SQLServerXmlConcatFunction;
+import org.hibernate.dialect.function.xml.SQLServerXmlElementFunction;
+import org.hibernate.dialect.function.xml.SQLServerXmlExistsFunction;
+import org.hibernate.dialect.function.xml.SQLServerXmlForestFunction;
+import org.hibernate.dialect.function.xml.SQLServerXmlPiFunction;
+import org.hibernate.dialect.function.xml.SQLServerXmlQueryFunction;
+import org.hibernate.dialect.function.xml.SQLServerXmlTableFunction;
+import org.hibernate.dialect.function.xml.SybaseASEXmlTableFunction;
+import org.hibernate.dialect.function.xml.XmlAggFunction;
+import org.hibernate.dialect.function.xml.XmlConcatFunction;
+import org.hibernate.dialect.function.xml.XmlElementFunction;
+import org.hibernate.dialect.function.xml.XmlExistsFunction;
+import org.hibernate.dialect.function.xml.XmlForestFunction;
+import org.hibernate.dialect.function.xml.XmlPiFunction;
+import org.hibernate.dialect.function.xml.XmlQueryFunction;
+import org.hibernate.dialect.function.xml.XmlTableFunction;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
+import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -100,6 +68,7 @@ public class CommonFunctionFactory {
 	private final BasicType<Boolean> booleanType;
 	private final BasicType<Character> characterType;
 	private final BasicType<String> stringType;
+	private final BasicType<byte[]> binaryType;
 	private final BasicType<Integer> integerType;
 	private final BasicType<Long> longType;
 	private final BasicType<Double> doubleType;
@@ -122,6 +91,7 @@ public class CommonFunctionFactory {
 		characterType = basicTypeRegistry.resolve(StandardBasicTypes.CHARACTER);
 		booleanType = basicTypeRegistry.resolve(StandardBasicTypes.BOOLEAN);
 		stringType = basicTypeRegistry.resolve(StandardBasicTypes.STRING);
+		binaryType = basicTypeRegistry.resolve(StandardBasicTypes.BINARY);
 		integerType = basicTypeRegistry.resolve(StandardBasicTypes.INTEGER);
 		doubleType = basicTypeRegistry.resolve(StandardBasicTypes.DOUBLE);
 	}
@@ -419,7 +389,8 @@ public class CommonFunctionFactory {
 	}
 
 	/**
-	 * CockroachDB lacks implicit casting: https://github.com/cockroachdb/cockroach/issues/89965
+	 * CockroachDB lacks
+	 * <a href="https://github.com/cockroachdb/cockroach/issues/89965">implicit casting</a>
 	 */
 	public void median_percentileCont_castDouble() {
 		functionRegistry.patternDescriptorBuilder(
@@ -814,6 +785,11 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	/**
+	 * Emulate left via substr and right via substr and length.
+	 * This function is for Apache Derby and uses {@link SqlAstNodeRenderingMode#NO_PLAIN_PARAMETER}
+	 * for the right function emulation, because length in Apache Derby can't handle plain parameters.
+	 */
 	public void leftRight_substrLength() {
 		functionRegistry.patternDescriptorBuilder( "left", "substr(?1,1,?2)" )
 				.setInvariantType(stringType)
@@ -826,6 +802,7 @@ public class CommonFunctionFactory {
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(STRING, INTEGER)
 				.setArgumentListSignature( "(STRING string, INTEGER length)" )
+				.setArgumentRenderingMode( SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER )
 				.register();
 	}
 
@@ -839,6 +816,7 @@ public class CommonFunctionFactory {
 		functionRegistry.registerAlternateKey( "repeat", "replicate" );
 	}
 
+	@Deprecated(since = "7")
 	public void md5() {
 		functionRegistry.namedDescriptorBuilder( "md5" )
 				.setInvariantType(stringType)
@@ -1599,34 +1577,34 @@ public class CommonFunctionFactory {
 	 * Transact SQL-style
 	 */
 	public void characterLength_len() {
-		functionRegistry.namedDescriptorBuilder( "len" )
+		functionRegistry.namedDescriptorBuilder( "character_length", "len" )
 				.setInvariantType(integerType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(STRING_OR_CLOB)
 				.register();
-		functionRegistry.registerAlternateKey( "character_length", "len" );
-		functionRegistry.registerAlternateKey( "length", "len" );
+		functionRegistry.registerAlternateKey( "len", "character_length" );
+		functionRegistry.registerAlternateKey( "length", "character_length" );
 	}
 
 	/**
 	 * Oracle-style
 	 */
 	public void characterLength_length(SqlAstNodeRenderingMode argumentRenderingMode) {
-		functionRegistry.namedDescriptorBuilder( "length" )
+		functionRegistry.namedDescriptorBuilder( "character_length", "length" )
 				.setInvariantType(integerType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(STRING_OR_CLOB)
 				.setArgumentRenderingMode( argumentRenderingMode )
 				.register();
-		functionRegistry.registerAlternateKey( "character_length", "length" );
+		functionRegistry.registerAlternateKey( "length", "character_length" );
 	}
 
 	public void characterLength_length(String clobPattern) {
 		functionRegistry.register(
-				"length",
+				"character_length",
 				new LengthFunction( "length", "length(?1)", clobPattern, typeConfiguration )
 		);
-		functionRegistry.registerAlternateKey( "character_length", "length" );
+		functionRegistry.registerAlternateKey( "length", "character_length" );
 	}
 
 	public void octetLength() {
@@ -1638,10 +1616,15 @@ public class CommonFunctionFactory {
 	}
 
 	public void octetLength_pattern(String pattern) {
+		octetLength_pattern( pattern, SqlAstNodeRenderingMode.DEFAULT );
+	}
+
+	public void octetLength_pattern(String pattern, SqlAstNodeRenderingMode renderingMode) {
 		functionRegistry.patternDescriptorBuilder( "octet_length", pattern )
 				.setInvariantType(integerType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(STRING_OR_CLOB)
+				.setArgumentRenderingMode( renderingMode )
 				.register();
 	}
 
@@ -1661,10 +1644,15 @@ public class CommonFunctionFactory {
 	}
 
 	public void bitLength_pattern(String pattern) {
+		bitLength_pattern( pattern, SqlAstNodeRenderingMode.DEFAULT );
+	}
+
+	public void bitLength_pattern(String pattern, SqlAstNodeRenderingMode renderingMode) {
 		functionRegistry.patternDescriptorBuilder( "bit_length", pattern )
 				.setInvariantType(integerType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(STRING_OR_CLOB)
+				.setArgumentRenderingMode( renderingMode )
 				.register();
 	}
 
@@ -2329,6 +2317,7 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	@Deprecated(since = "7")
 	public void crc32() {
 		functionRegistry.namedDescriptorBuilder( "crc32" )
 				.setInvariantType(integerType)
@@ -2337,6 +2326,31 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	public void hex(String pattern) {
+		functionRegistry.patternDescriptorBuilder( "hex", pattern )
+				.setInvariantType(stringType)
+				.setParameterTypes( BINARY )
+				.setExactArgumentCount( 1 )
+				.register();
+	}
+
+	public void md5(String pattern) {
+		functionRegistry.patternDescriptorBuilder( "md5", pattern )
+				.setInvariantType(binaryType)
+				.setParameterTypes( STRING )
+				.setExactArgumentCount( 1 )
+				.register();
+	}
+
+	public void sha(String pattern) {
+		functionRegistry.patternDescriptorBuilder( "sha", pattern )
+				.setInvariantType(binaryType)
+				.setParameterTypes( STRING )
+				.setExactArgumentCount( 1 )
+				.register();
+	}
+
+	@Deprecated(since = "7")
 	public void sha1() {
 		functionRegistry.namedDescriptorBuilder( "sha1" )
 				.setInvariantType(stringType)
@@ -2345,6 +2359,7 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	@Deprecated(since = "7")
 	public void sha2() {
 		functionRegistry.namedDescriptorBuilder( "sha2" )
 				.setInvariantType(stringType)
@@ -2353,12 +2368,36 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	@Deprecated(since = "7")
 	public void sha() {
 		functionRegistry.namedDescriptorBuilder( "sha" )
 				.setInvariantType(stringType)
 				.setParameterTypes( STRING )
 				.setExactArgumentCount( 1 )
 				.register();
+	}
+
+	public void timestampaddAndDiff(Dialect dialect, SqlAstNodeRenderingMode timestampRenderingMode) {
+		functionRegistry.register(
+				"timestampadd",
+				new TimestampaddFunction(
+						dialect,
+						typeConfiguration,
+						SqlAstNodeRenderingMode.DEFAULT,
+						SqlAstNodeRenderingMode.DEFAULT,
+						timestampRenderingMode
+				)
+		);
+		functionRegistry.register(
+				"timestampdiff",
+				new TimestampdiffFunction(
+						dialect,
+						typeConfiguration,
+						SqlAstNodeRenderingMode.DEFAULT,
+						timestampRenderingMode,
+						timestampRenderingMode
+				)
+		);
 	}
 
 	/**
@@ -2665,6 +2704,14 @@ public class CommonFunctionFactory {
 				"array_contains_nullable",
 				new H2ArrayContainsFunction( true, maximumArraySize, typeConfiguration )
 		);
+		functionRegistry.register(
+				"array_includes",
+				new H2ArrayIncludesFunction( false, maximumArraySize, typeConfiguration )
+		);
+		functionRegistry.register(
+				"array_includes_nullable",
+				new H2ArrayIncludesFunction( true, maximumArraySize, typeConfiguration )
+		);
 	}
 
 	/**
@@ -2679,6 +2726,14 @@ public class CommonFunctionFactory {
 				"array_contains_nullable",
 				new ArrayContainsUnnestFunction( true, typeConfiguration )
 		);
+		functionRegistry.register(
+				"array_includes",
+				new ArrayIncludesUnnestFunction( false, typeConfiguration )
+		);
+		functionRegistry.register(
+				"array_includes_nullable",
+				new ArrayIncludesUnnestFunction( true, typeConfiguration )
+		);
 	}
 
 	/**
@@ -2687,6 +2742,8 @@ public class CommonFunctionFactory {
 	public void arrayContains_postgresql() {
 		functionRegistry.register( "array_contains", new ArrayContainsOperatorFunction( false, typeConfiguration ) );
 		functionRegistry.register( "array_contains_nullable", new ArrayContainsOperatorFunction( true, typeConfiguration ) );
+		functionRegistry.register( "array_includes", new ArrayIncludesOperatorFunction( false, typeConfiguration ) );
+		functionRegistry.register( "array_includes_nullable", new ArrayIncludesOperatorFunction( true, typeConfiguration ) );
 	}
 
 	/**
@@ -2695,56 +2752,66 @@ public class CommonFunctionFactory {
 	public void arrayContains_oracle() {
 		functionRegistry.register( "array_contains", new OracleArrayContainsFunction( false, typeConfiguration ) );
 		functionRegistry.register( "array_contains_nullable", new OracleArrayContainsFunction( true, typeConfiguration ) );
+		functionRegistry.register( "array_includes", new OracleArrayIncludesFunction( false, typeConfiguration ) );
+		functionRegistry.register( "array_includes_nullable", new OracleArrayIncludesFunction( true, typeConfiguration ) );
 	}
 
 	/**
-	 * H2 array_overlaps() function
+	 * H2 array_intersects() function
 	 */
-	public void arrayOverlaps_h2(int maximumArraySize) {
+	public void arrayIntersects_h2(int maximumArraySize) {
 		functionRegistry.register(
-				"array_overlaps",
-				new H2ArrayOverlapsFunction( false, maximumArraySize, typeConfiguration )
+				"array_intersects",
+				new H2ArrayIntersectsFunction( false, maximumArraySize, typeConfiguration )
 		);
 		functionRegistry.register(
-				"array_overlaps_nullable",
-				new H2ArrayOverlapsFunction( true, maximumArraySize, typeConfiguration )
+				"array_intersects_nullable",
+				new H2ArrayIntersectsFunction( true, maximumArraySize, typeConfiguration )
 		);
+		functionRegistry.registerAlternateKey( "array_overlaps", "array_intersects" );
+		functionRegistry.registerAlternateKey( "array_overlaps_nullable", "array_intersects_nullable" );
 	}
 
 	/**
-	 * HSQL array_overlaps() function
+	 * HSQL array_intersects() function
 	 */
-	public void arrayOverlaps_hsql() {
+	public void arrayIntersects_hsql() {
 		functionRegistry.register(
-				"array_overlaps",
-				new ArrayOverlapsUnnestFunction( false, typeConfiguration )
+				"array_intersects",
+				new ArrayIntersectsUnnestFunction( false, typeConfiguration )
 		);
 		functionRegistry.register(
-				"array_overlaps_nullable",
-				new ArrayOverlapsUnnestFunction( true, typeConfiguration )
+				"array_intersects_nullable",
+				new ArrayIntersectsUnnestFunction( true, typeConfiguration )
 		);
+		functionRegistry.registerAlternateKey( "array_overlaps", "array_intersects" );
+		functionRegistry.registerAlternateKey( "array_overlaps_nullable", "array_intersects_nullable" );
 	}
 
 	/**
-	 * CockroachDB and PostgreSQL array overlaps operator
+	 * CockroachDB and PostgreSQL array intersects operator
 	 */
-	public void arrayOverlaps_postgresql() {
-		functionRegistry.register( "array_overlaps", new ArrayOverlapsOperatorFunction( false, typeConfiguration ) );
-		functionRegistry.register( "array_overlaps_nullable", new ArrayOverlapsOperatorFunction( true, typeConfiguration ) );
+	public void arrayIntersects_postgresql() {
+		functionRegistry.register( "array_intersects", new ArrayIntersectsOperatorFunction( false, typeConfiguration ) );
+		functionRegistry.register( "array_intersects_nullable", new ArrayIntersectsOperatorFunction( true, typeConfiguration ) );
+		functionRegistry.registerAlternateKey( "array_overlaps", "array_intersects" );
+		functionRegistry.registerAlternateKey( "array_overlaps_nullable", "array_intersects_nullable" );
 	}
 
 	/**
-	 * Oracle array_overlaps() function
+	 * Oracle array_intersects() function
 	 */
-	public void arrayOverlaps_oracle() {
+	public void arrayIntersects_oracle() {
 		functionRegistry.register(
-				"array_overlaps",
-				new OracleArrayOverlapsFunction( typeConfiguration, false )
+				"array_intersects",
+				new OracleArrayIntersectsFunction( typeConfiguration, false )
 		);
 		functionRegistry.register(
-				"array_overlaps_nullable",
-				new OracleArrayOverlapsFunction( typeConfiguration, true )
+				"array_intersects_nullable",
+				new OracleArrayIntersectsFunction( typeConfiguration, true )
 		);
+		functionRegistry.registerAlternateKey( "array_overlaps", "array_intersects" );
+		functionRegistry.registerAlternateKey( "array_overlaps_nullable", "array_intersects_nullable" );
 	}
 
 	/**
@@ -2845,6 +2912,7 @@ public class CommonFunctionFactory {
 				)
 				.setArgumentListSignature( "(ARRAY array)" )
 				.register();
+		functionRegistry.register( "length", new DynamicDispatchFunction( functionRegistry, "character_length", "array_length" ) );
 	}
 
 	/**
@@ -2852,6 +2920,7 @@ public class CommonFunctionFactory {
 	 */
 	public void arrayLength_oracle() {
 		functionRegistry.register( "array_length", new OracleArrayLengthFunction( typeConfiguration ) );
+		functionRegistry.register( "length", new DynamicDispatchFunction( functionRegistry, "character_length", "array_length" ) );
 	}
 
 	/**
@@ -3248,5 +3317,1097 @@ public class CommonFunctionFactory {
 	 */
 	public void arrayToString_oracle() {
 		functionRegistry.register( "array_to_string", new OracleArrayToStringFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * json_value() function
+	 */
+	public void jsonValue() {
+		functionRegistry.register( "json_value", new JsonValueFunction( typeConfiguration, true, true ) );
+	}
+
+	/**
+	 * HANA json_value() function
+	 */
+	public void jsonValue_no_passing() {
+		functionRegistry.register( "json_value", new HANAJsonValueFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Oracle json_value() function
+	 */
+	public void jsonValue_oracle() {
+		functionRegistry.register( "json_value", new OracleJsonValueFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * DB2 json_value() function
+	 */
+	public void jsonValue_db2() {
+		functionRegistry.register( "json_value", new DB2JsonValueFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * PostgreSQL json_value() function
+	 */
+	public void jsonValue_postgresql() {
+		functionRegistry.register( "json_value", new PostgreSQLJsonValueFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * CockroachDB json_value() function
+	 */
+	public void jsonValue_cockroachdb() {
+		functionRegistry.register( "json_value", new CockroachDBJsonValueFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * MySQL json_value() function
+	 */
+	public void jsonValue_mysql() {
+		functionRegistry.register( "json_value", new MySQLJsonValueFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * MariaDB json_value() function
+	 */
+	public void jsonValue_mariadb() {
+		functionRegistry.register( "json_value", new MariaDBJsonValueFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server json_value() function
+	 */
+	public void jsonValue_sqlserver() {
+		functionRegistry.register( "json_value", new SQLServerJsonValueFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * H2 json_value() function
+	 */
+	public void jsonValue_h2() {
+		functionRegistry.register( "json_value", new H2JsonValueFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * json_query() function
+	 */
+	public void jsonQuery() {
+		functionRegistry.register( "json_query", new JsonQueryFunction( typeConfiguration, true, true ) );
+	}
+
+	/**
+	 * json_query() function
+	 */
+	public void jsonQuery_no_passing() {
+		functionRegistry.register( "json_query", new JsonQueryFunction( typeConfiguration, true, false ) );
+	}
+
+	/**
+	 * Oracle json_query() function
+	 */
+	public void jsonQuery_oracle() {
+		functionRegistry.register( "json_query", new JsonQueryFunction( typeConfiguration, false, false ) );
+	}
+
+	/**
+	 * PostgreSQL json_query() function
+	 */
+	public void jsonQuery_postgresql() {
+		functionRegistry.register( "json_query", new PostgreSQLJsonQueryFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * CockroachDB json_query() function
+	 */
+	public void jsonQuery_cockroachdb() {
+		functionRegistry.register( "json_query", new CockroachDBJsonQueryFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * MySQL json_query() function
+	 */
+	public void jsonQuery_mysql() {
+		functionRegistry.register( "json_query", new MySQLJsonQueryFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * MariaDB json_query() function
+	 */
+	public void jsonQuery_mariadb() {
+		functionRegistry.register( "json_query", new MariaDBJsonQueryFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server json_query() function
+	 */
+	public void jsonQuery_sqlserver() {
+		functionRegistry.register( "json_query", new SQLServerJsonQueryFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * H2 json_query() function
+	 */
+	public void jsonQuery_h2() {
+		functionRegistry.register( "json_query", new H2JsonQueryFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * json_exists() function
+	 */
+	public void jsonExists() {
+		functionRegistry.register( "json_exists", new JsonExistsFunction( typeConfiguration, true, true ) );
+	}
+
+	/**
+	 * json_exists() function that doesn't support the passing clause
+	 */
+	public void jsonExists_no_passing() {
+		functionRegistry.register( "json_exists", new JsonExistsFunction( typeConfiguration, true, false ) );
+	}
+
+	/**
+	 * Oracle json_exists() function
+	 */
+	public void jsonExists_oracle() {
+		functionRegistry.register( "json_exists", new JsonExistsFunction( typeConfiguration, false, true ) );
+	}
+
+	/**
+	 * H2 json_exists() function
+	 */
+	public void jsonExists_h2() {
+		functionRegistry.register( "json_exists", new H2JsonExistsFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server json_exists() function
+	 */
+	public void jsonExists_sqlserver(boolean supportsExtendedJson) {
+		functionRegistry.register( "json_exists", new SQLServerJsonExistsFunction( supportsExtendedJson, typeConfiguration ) );
+	}
+
+	/**
+	 * PostgreSQL json_exists() function
+	 */
+	public void jsonExists_postgresql() {
+		functionRegistry.register( "json_exists", new PostgreSQLJsonExistsFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * CockroachDB json_exists() function
+	 */
+	public void jsonExists_cockroachdb() {
+		functionRegistry.register( "json_exists", new CockroachDBJsonExistsFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * MySQL json_exists() function
+	 */
+	public void jsonExists_mysql() {
+		functionRegistry.register( "json_exists", new MySQLJsonExistsFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SAP HANA json_exists() function
+	 */
+	public void jsonExists_hana() {
+		functionRegistry.register( "json_exists", new HANAJsonExistsFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * json_object() function
+	 */
+	public void jsonObject() {
+		functionRegistry.register( "json_object", new JsonObjectFunction( typeConfiguration, true ) );
+	}
+
+	/**
+	 * DB2 json_object() function
+	 */
+	public void jsonObject_db2() {
+		functionRegistry.register( "json_object", new DB2JsonObjectFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Oracle json_object() function
+	 */
+	public void jsonObject_oracle(boolean colonSyntax) {
+		functionRegistry.register( "json_object", new OracleJsonObjectFunction( colonSyntax, typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server json_object() function
+	 */
+	public void jsonObject_sqlserver(boolean supportsExtendedJson) {
+		functionRegistry.register( "json_object", new SQLServerJsonObjectFunction( supportsExtendedJson, typeConfiguration ) );
+	}
+
+	/**
+	 * SAP HANA json_object() function
+	 */
+	public void jsonObject_hana() {
+		functionRegistry.register( "json_object", new HANAJsonObjectFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * HSQLDB json_object() function
+	 */
+	public void jsonObject_hsqldb() {
+		functionRegistry.register( "json_object", new HSQLJsonObjectFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * MySQL json_object() function
+	 */
+	public void jsonObject_mysql() {
+		functionRegistry.register( "json_object", new MySQLJsonObjectFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * PostgreSQL json_object() function
+	 */
+	public void jsonObject_postgresql() {
+		functionRegistry.register( "json_object", new PostgreSQLJsonObjectFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * json_array() function
+	 */
+	public void jsonArray() {
+		functionRegistry.register( "json_array", new JsonArrayFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * DB2 json_array() function
+	 */
+	public void jsonArray_db2() {
+		functionRegistry.register( "json_array", new DB2JsonArrayFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Oracle json_array() function
+	 */
+	public void jsonArray_oracle() {
+		functionRegistry.register( "json_array", new OracleJsonArrayFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server json_array() function
+	 */
+	public void jsonArray_sqlserver(boolean supportsExtendedJson) {
+		functionRegistry.register( "json_array", new SQLServerJsonArrayFunction( supportsExtendedJson, typeConfiguration ) );
+	}
+
+	/**
+	 * SAP HANA json_array() function
+	 */
+	public void jsonArray_hana() {
+		functionRegistry.register( "json_array", new HANAJsonArrayFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * HSQLDB json_array() function
+	 */
+	public void jsonArray_hsqldb() {
+		functionRegistry.register( "json_array", new HSQLJsonArrayFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * MySQL json_array() function
+	 */
+	public void jsonArray_mysql() {
+		functionRegistry.register( "json_array", new MySQLJsonArrayFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * MariaDB json_array() function
+	 */
+	public void jsonArray_mariadb() {
+		functionRegistry.register( "json_array", new MariaDBJsonArrayFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * PostgreSQL json_array() function
+	 */
+	public void jsonArray_postgresql() {
+		functionRegistry.register( "json_array", new PostgreSQLJsonArrayFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * H2 json_arrayagg() function
+	 */
+	public void jsonArrayAgg_h2() {
+		functionRegistry.register( "json_arrayagg", new H2JsonArrayAggFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * HSQLDB json_arrayagg() function
+	 */
+	public void jsonArrayAgg_hsqldb() {
+		functionRegistry.register( "json_arrayagg", new HSQLJsonArrayAggFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Oracle json_arrayagg() function
+	 */
+	public void jsonArrayAgg_oracle() {
+		functionRegistry.register( "json_arrayagg", new OracleJsonArrayAggFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * PostgreSQL json_arrayagg() function
+	 */
+	public void jsonArrayAgg_postgresql(boolean supportsStandard) {
+		functionRegistry.register( "json_arrayagg", new PostgreSQLJsonArrayAggFunction( supportsStandard, typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server json_arrayagg() function
+	 */
+	public void jsonArrayAgg_sqlserver(boolean supportsExtendedJson) {
+		functionRegistry.register( "json_arrayagg", new SQLServerJsonArrayAggFunction( supportsExtendedJson, typeConfiguration ) );
+	}
+
+	/**
+	 * MySQL json_arrayagg() function
+	 */
+	public void jsonArrayAgg_mysql() {
+		functionRegistry.register( "json_arrayagg", new MySQLJsonArrayAggFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * MariaDB json_arrayagg() function
+	 */
+	public void jsonArrayAgg_mariadb() {
+		functionRegistry.register( "json_arrayagg", new MariaDBJsonArrayAggFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * DB2 json_arrayagg() function
+	 */
+	public void jsonArrayAgg_db2() {
+		functionRegistry.register( "json_arrayagg", new DB2JsonArrayAggFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * HANA json_arrayagg() function
+	 */
+	public void jsonArrayAgg_hana() {
+		functionRegistry.register( "json_arrayagg", new HANAJsonArrayAggFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Oracle json_objectagg() function
+	 */
+	public void jsonObjectAgg_oracle() {
+		functionRegistry.register( "json_objectagg", new OracleJsonObjectAggFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * json_objectagg() function for H2 and HSQLDB
+	 */
+	public void jsonObjectAgg_h2() {
+		functionRegistry.register( "json_objectagg", new H2JsonObjectAggFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * PostgreSQL json_objectagg() function
+	 */
+	public void jsonObjectAgg_postgresql(boolean supportsStandard) {
+		functionRegistry.register( "json_objectagg", new PostgreSQLJsonObjectAggFunction( supportsStandard, typeConfiguration ) );
+	}
+
+	/**
+	 * MySQL json_objectagg() function
+	 */
+	public void jsonObjectAgg_mysql() {
+		functionRegistry.register( "json_objectagg", new MySQLJsonObjectAggFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * MariaDB json_objectagg() function
+	 */
+	public void jsonObjectAgg_mariadb() {
+		functionRegistry.register( "json_objectagg", new MariaDBJsonObjectAggFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server json_objectagg() function
+	 */
+	public void jsonObjectAgg_sqlserver(boolean supportsExtendedJson) {
+		functionRegistry.register( "json_objectagg", new SQLServerJsonObjectAggFunction( supportsExtendedJson, typeConfiguration ) );
+	}
+
+	/**
+	 * HANA json_objectagg() function
+	 */
+	public void jsonObjectAgg_hana() {
+		functionRegistry.register( "json_objectagg", new HANAJsonObjectAggFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * DB2 json_objectagg() function
+	 */
+	public void jsonObjectAgg_db2() {
+		functionRegistry.register( "json_objectagg", new DB2JsonObjectAggFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * PostgreSQL json_set() function
+	 */
+	public void jsonSet_postgresql() {
+		functionRegistry.register( "json_set", new PostgreSQLJsonSetFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * MySQL json_set() function
+	 */
+	public void jsonSet_mysql() {
+		functionRegistry.namedDescriptorBuilder( "json_set" )
+				.setArgumentsValidator( new ArgumentTypesValidator(
+						StandardArgumentsValidators.exactly( 3 ),
+						FunctionParameterType.IMPLICIT_JSON,
+						FunctionParameterType.STRING,
+						FunctionParameterType.ANY
+				) )
+				.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant(
+						typeConfiguration.getBasicTypeRegistry().resolve( String.class, SqlTypes.JSON )
+				) )
+				.register();
+	}
+
+	/**
+	 * Oracle json_set() function
+	 */
+	public void jsonSet_oracle() {
+		functionRegistry.register( "json_set", new OracleJsonSetFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server json_set() function
+	 */
+	public void jsonSet_sqlserver() {
+		functionRegistry.register( "json_set", new SQLServerJsonSetFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * PostgreSQL json_remove() function
+	 */
+	public void jsonRemove_postgresql() {
+		functionRegistry.register( "json_remove", new PostgreSQLJsonRemoveFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * CockroachDB json_remove() function
+	 */
+	public void jsonRemove_cockroachdb() {
+		functionRegistry.register( "json_remove", new CockroachDBJsonRemoveFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * MySQL json_remove() function
+	 */
+	public void jsonRemove_mysql() {
+		functionRegistry.namedDescriptorBuilder( "json_remove" )
+				.setArgumentsValidator( new ArgumentTypesValidator(
+						StandardArgumentsValidators.exactly( 2 ),
+						FunctionParameterType.IMPLICIT_JSON,
+						FunctionParameterType.STRING
+				) )
+				.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant(
+						typeConfiguration.getBasicTypeRegistry().resolve( String.class, SqlTypes.JSON )
+				) )
+				.register();
+	}
+
+	/**
+	 * Oracle json_remove() function
+	 */
+	public void jsonRemove_oracle() {
+		functionRegistry.register( "json_remove", new OracleJsonRemoveFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL server json_remove() function
+	 */
+	public void jsonRemove_sqlserver() {
+		functionRegistry.register( "json_remove", new SQLServerJsonRemoveFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * PostgreSQL json_replace() function
+	 */
+	public void jsonReplace_postgresql() {
+		functionRegistry.register( "json_replace", new PostgreSQLJsonReplaceFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * MySQL json_replace() function
+	 */
+	public void jsonReplace_mysql() {
+		functionRegistry.namedDescriptorBuilder( "json_replace" )
+				.setArgumentsValidator( new ArgumentTypesValidator(
+						StandardArgumentsValidators.exactly( 3 ),
+						FunctionParameterType.IMPLICIT_JSON,
+						FunctionParameterType.STRING,
+						FunctionParameterType.ANY
+				) )
+				.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant(
+						typeConfiguration.getBasicTypeRegistry().resolve( String.class, SqlTypes.JSON )
+				) )
+				.register();
+	}
+
+	/**
+	 * Oracle json_replace() function
+	 */
+	public void jsonReplace_oracle() {
+		functionRegistry.register( "json_replace", new OracleJsonReplaceFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL server json_replace() function
+	 */
+	public void jsonReplace_sqlserver(boolean supportsExtendedJson) {
+		functionRegistry.register( "json_replace", new SQLServerJsonReplaceFunction( supportsExtendedJson, typeConfiguration ) );
+	}
+
+	/**
+	 * PostgreSQL json_insert() function
+	 */
+	public void jsonInsert_postgresql() {
+		functionRegistry.register( "json_insert", new PostgreSQLJsonInsertFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * MySQL json_insert() function
+	 */
+	public void jsonInsert_mysql() {
+		functionRegistry.namedDescriptorBuilder( "json_insert" )
+				.setArgumentsValidator( new ArgumentTypesValidator(
+						StandardArgumentsValidators.exactly( 3 ),
+						FunctionParameterType.IMPLICIT_JSON,
+						FunctionParameterType.STRING,
+						FunctionParameterType.ANY
+				) )
+				.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant(
+						typeConfiguration.getBasicTypeRegistry().resolve( String.class, SqlTypes.JSON )
+				) )
+				.register();
+	}
+
+	/**
+	 * Oracle json_insert() function
+	 */
+	public void jsonInsert_oracle() {
+		functionRegistry.register( "json_insert", new OracleJsonInsertFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL server json_insert() function
+	 */
+	public void jsonInsert_sqlserver(boolean supportsExtendedJson) {
+		functionRegistry.register( "json_insert", new SQLServerJsonInsertFunction( supportsExtendedJson, typeConfiguration ) );
+	}
+
+	/**
+	 * PostgreSQL json_mergepatch() function
+	 */
+	public void jsonMergepatch_postgresql() {
+		functionRegistry.register( "json_mergepatch", new PostgreSQLJsonMergepatchFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * MySQL json_mergepatch() function
+	 */
+	public void jsonMergepatch_mysql() {
+		functionRegistry.namedDescriptorBuilder( "json_mergepatch", "json_merge_patch" )
+				.setArgumentsValidator( new ArgumentTypesValidator(
+						StandardArgumentsValidators.min( 2 ),
+						FunctionParameterType.IMPLICIT_JSON,
+						FunctionParameterType.IMPLICIT_JSON
+				) )
+				.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant(
+						typeConfiguration.getBasicTypeRegistry().resolve( String.class, SqlTypes.JSON )
+				) )
+				.register();
+	}
+
+	/**
+	 * Oracle json_mergepatch() function
+	 */
+	public void jsonMergepatch_oracle() {
+		functionRegistry.register( "json_mergepatch", new OracleJsonMergepatchFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * PostgreSQL json_array_append() function
+	 */
+	public void jsonArrayAppend_postgresql(boolean supportsLax) {
+		functionRegistry.register( "json_array_append", new PostgreSQLJsonArrayAppendFunction( supportsLax, typeConfiguration ) );
+	}
+
+	/**
+	 * MySQL json_array_append() function
+	 */
+	public void jsonArrayAppend_mysql() {
+		functionRegistry.namedDescriptorBuilder( "json_array_append" )
+				.setArgumentsValidator( new ArgumentTypesValidator(
+						StandardArgumentsValidators.exactly( 3 ),
+						FunctionParameterType.IMPLICIT_JSON,
+						FunctionParameterType.STRING,
+						FunctionParameterType.ANY
+				) )
+				.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant(
+						typeConfiguration.getBasicTypeRegistry().resolve( String.class, SqlTypes.JSON )
+				) )
+				.register();
+	}
+
+	/**
+	 * MariaDB json_array_append() function
+	 */
+	public void jsonArrayAppend_mariadb() {
+		functionRegistry.register( "json_array_append", new MariaDBJsonArrayAppendFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Oracle json_array_append() function
+	 */
+	public void jsonArrayAppend_oracle() {
+		functionRegistry.register( "json_array_append", new OracleJsonArrayAppendFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL server json_array_append() function
+	 */
+	public void jsonArrayAppend_sqlserver(boolean supportsExtendedJson) {
+		functionRegistry.register( "json_array_append", new SQLServerJsonArrayAppendFunction( supportsExtendedJson, typeConfiguration ) );
+	}
+
+	/**
+	 * PostgreSQL json_array_insert() function
+	 */
+	public void jsonArrayInsert_postgresql() {
+		functionRegistry.register( "json_array_insert", new PostgreSQLJsonArrayInsertFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * MySQL json_array_insert() function
+	 */
+	public void jsonArrayInsert_mysql() {
+		functionRegistry.namedDescriptorBuilder( "json_array_insert" )
+				.setArgumentsValidator( new ArgumentTypesValidator(
+						StandardArgumentsValidators.exactly( 3 ),
+						FunctionParameterType.IMPLICIT_JSON,
+						FunctionParameterType.STRING,
+						FunctionParameterType.ANY
+				) )
+				.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant(
+						typeConfiguration.getBasicTypeRegistry().resolve( String.class, SqlTypes.JSON )
+				) )
+				.register();
+	}
+
+	/**
+	 * Oracle json_array_insert() function
+	 */
+	public void jsonArrayInsert_oracle() {
+		functionRegistry.register( "json_array_insert", new OracleJsonArrayInsertFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL server json_array_insert() function
+	 */
+	public void jsonArrayInsert_sqlserver() {
+		functionRegistry.register( "json_array_insert", new SQLServerJsonArrayInsertFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Standard xmlelement() function
+	 */
+	public void xmlelement() {
+		functionRegistry.register( "xmlelement", new XmlElementFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * H2 xmlelement() function
+	 */
+	public void xmlelement_h2() {
+		functionRegistry.register( "xmlelement", new H2XmlElementFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server xmlelement() function
+	 */
+	public void xmlelement_sqlserver() {
+		functionRegistry.register( "xmlelement", new SQLServerXmlElementFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Standard xmlcomment() function
+	 */
+	public void xmlcomment() {
+		functionRegistry.namedDescriptorBuilder( "xmlcomment" )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes( STRING )
+				.setInvariantType( typeConfiguration.getBasicTypeRegistry().resolve( String.class, SqlTypes.SQLXML ) )
+				.register();
+	}
+
+	/**
+	 * SQL Server xmlcomment() function
+	 */
+	public void xmlcomment_sqlserver() {
+		functionRegistry.patternDescriptorBuilder( "xmlcomment", "cast(('<!--'+?1+'-->') AS xml)" )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes( STRING )
+				.setInvariantType( typeConfiguration.getBasicTypeRegistry().resolve( String.class, SqlTypes.SQLXML ) )
+				.register();
+	}
+
+	/**
+	 * Standard xmlforest() function
+	 */
+	public void xmlforest() {
+		functionRegistry.register( "xmlforest", new XmlForestFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * H2 xmlforest() function
+	 */
+	public void xmlforest_h2() {
+		functionRegistry.register( "xmlforest", new H2XmlForestFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server xmlforest() function
+	 */
+	public void xmlforest_sqlserver() {
+		functionRegistry.register( "xmlforest", new SQLServerXmlForestFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Standard xmlconcat() function
+	 */
+	public void xmlconcat() {
+		functionRegistry.register( "xmlconcat", new XmlConcatFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * H2 xmlconcat() function
+	 */
+	public void xmlconcat_h2() {
+		functionRegistry.register( "xmlconcat", new H2XmlConcatFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server xmlconcat() function
+	 */
+	public void xmlconcat_sqlserver() {
+		functionRegistry.register( "xmlconcat", new SQLServerXmlConcatFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Standard xmlpi() function
+	 */
+	public void xmlpi() {
+		functionRegistry.register( "xmlpi", new XmlPiFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * H2 xmlpi() function
+	 */
+	public void xmlpi_h2() {
+		functionRegistry.register( "xmlpi", new H2XmlPiFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server xmlpi() function
+	 */
+	public void xmlpi_sqlserver() {
+		functionRegistry.register( "xmlpi", new SQLServerXmlPiFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Oracle xmlquery() function
+	 */
+	public void xmlquery_oracle() {
+		functionRegistry.register( "xmlquery", new XmlQueryFunction( true, typeConfiguration ) );
+	}
+
+	/**
+	 * DB2 xmlquery() function
+	 */
+	public void xmlquery_db2() {
+		functionRegistry.register( "xmlquery", new XmlQueryFunction( false, typeConfiguration ) );
+	}
+
+	/**
+	 * DB2 10.5 xmlquery() function
+	 */
+	public void xmlquery_db2_legacy() {
+		functionRegistry.register( "xmlquery", new LegacyDB2XmlQueryFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * PostgreSQL xmlquery() function
+	 */
+	public void xmlquery_postgresql() {
+		functionRegistry.register( "xmlquery", new PostgreSQLXmlQueryFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server xmlquery() function
+	 */
+	public void xmlquery_sqlserver() {
+		functionRegistry.register( "xmlquery", new SQLServerXmlQueryFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Standard xmlexists() function
+	 */
+	public void xmlexists() {
+		functionRegistry.register( "xmlexists", new XmlExistsFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server xmlexists() function
+	 */
+	public void xmlexists_sqlserver() {
+		functionRegistry.register( "xmlexists", new SQLServerXmlExistsFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * DB2 10.5 xmlexists() function
+	 */
+	public void xmlexists_db2_legacy() {
+		functionRegistry.register( "xmlexists", new LegacyDB2XmlExistsFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Standard xmlagg() function
+	 */
+	public void xmlagg() {
+		functionRegistry.register( "xmlagg", new XmlAggFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server xmlagg() function
+	 */
+	public void xmlagg_sqlserver() {
+		functionRegistry.register( "xmlagg", new SQLServerXmlAggFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Standard unnest() function
+	 */
+	public void unnest(@Nullable String defaultBasicArrayElementColumnName, String defaultIndexSelectionExpression) {
+		functionRegistry.register( "unnest", new UnnestFunction( defaultBasicArrayElementColumnName, defaultIndexSelectionExpression ) );
+	}
+
+	/**
+	 * Standard unnest() function for databases that don't support arrays natively
+	 */
+	public void unnest_emulated() {
+		// Pass an arbitrary value
+		unnest( "v", "i" );
+	}
+
+	/**
+	 * H2 unnest() function
+	 */
+	public void unnest_h2(int maxArraySize) {
+		functionRegistry.register( "unnest", new H2UnnestFunction( maxArraySize ) );
+	}
+
+	/**
+	 * Oracle unnest() function
+	 */
+	public void unnest_oracle() {
+		functionRegistry.register( "unnest", new OracleUnnestFunction() );
+	}
+
+	/**
+	 * PostgreSQL unnest() function
+	 */
+	public void unnest_postgresql() {
+		functionRegistry.register( "unnest", new PostgreSQLUnnestFunction() );
+	}
+
+	/**
+	 * SQL Server unnest() function
+	 */
+	public void unnest_sqlserver() {
+		functionRegistry.register( "unnest", new SQLServerUnnestFunction() );
+	}
+
+	/**
+	 * Sybase ASE unnest() function
+	 */
+	public void unnest_sybasease() {
+		functionRegistry.register( "unnest", new SybaseASEUnnestFunction() );
+	}
+
+	/**
+	 * HANA unnest() function
+	 */
+	public void unnest_hana() {
+		functionRegistry.register( "unnest", new HANAUnnestFunction() );
+	}
+
+	/**
+	 * DB2 unnest() function
+	 */
+	public void unnest_db2(int maximumArraySize) {
+		functionRegistry.register( "unnest", new DB2UnnestFunction( maximumArraySize ) );
+	}
+
+	/**
+	 * Standard generate_series() function
+	 */
+	public void generateSeries(@Nullable String defaultValueColumnName, String defaultIndexSelectionExpression, boolean coerceToTimestamp) {
+		functionRegistry.register( "generate_series", new GenerateSeriesFunction( defaultValueColumnName, defaultIndexSelectionExpression, coerceToTimestamp, typeConfiguration ) );
+	}
+
+	/**
+	 * Recursive CTE generate_series() function
+	 */
+	public void generateSeries_recursive(int maxSeriesSize, boolean supportsInterval, boolean coerceToTimestamp) {
+		functionRegistry.register( "generate_series", new CteGenerateSeriesFunction( maxSeriesSize, supportsInterval, coerceToTimestamp, typeConfiguration ) );
+	}
+
+	/**
+	 * H2 generate_series() function
+	 */
+	public void generateSeries_h2(int maxSeriesSize) {
+		functionRegistry.register( "generate_series", new H2GenerateSeriesFunction( maxSeriesSize, typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server generate_series() function
+	 */
+	public void generateSeries_sqlserver(int maxSeriesSize) {
+		functionRegistry.register( "generate_series", new SQLServerGenerateSeriesFunction( maxSeriesSize, typeConfiguration ) );
+	}
+
+	/**
+	 * Sybase ASE generate_series() function
+	 */
+	public void generateSeries_sybasease(int maxSeriesSize) {
+		functionRegistry.register( "generate_series", new SybaseASEGenerateSeriesFunction( maxSeriesSize, typeConfiguration ) );
+	}
+
+	/**
+	 * HANA generate_series() function
+	 */
+	public void generateSeries_hana(int maxSeriesSize) {
+		functionRegistry.register( "generate_series", new HANAGenerateSeriesFunction( maxSeriesSize, typeConfiguration ) );
+	}
+
+	/**
+	 * Standard json_table() function
+	 */
+	public void jsonTable() {
+		functionRegistry.register( "json_table", new JsonTableFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Oracle json_table() function
+	 */
+	public void jsonTable_oracle() {
+		functionRegistry.register( "json_table", new OracleJsonTableFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * PostgreSQL json_table() function
+	 */
+	public void jsonTable_postgresql() {
+		functionRegistry.register( "json_table", new PostgreSQLJsonTableFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * CockroachDB json_table() function
+	 */
+	public void jsonTable_cockroachdb() {
+		functionRegistry.register( "json_table", new CockroachDBJsonTableFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * MySQL json_table() function
+	 */
+	public void jsonTable_mysql() {
+		functionRegistry.register( "json_table", new MySQLJsonTableFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * DB2 json_table() function
+	 */
+	public void jsonTable_db2(int maximumSeriesSize) {
+		functionRegistry.register( "json_table", new DB2JsonTableFunction( maximumSeriesSize, typeConfiguration ) );
+	}
+
+	/**
+	 * HANA json_table() function
+	 */
+	public void jsonTable_hana() {
+		functionRegistry.register( "json_table", new HANAJsonTableFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server json_table() function
+	 */
+	public void jsonTable_sqlserver() {
+		functionRegistry.register( "json_table", new SQLServerJsonTableFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * H2 json_table() function
+	 */
+	public void jsonTable_h2(int maximumArraySize) {
+		functionRegistry.register( "json_table", new H2JsonTableFunction( maximumArraySize, typeConfiguration ) );
+	}
+
+	/**
+	 * Standard xmltable() function
+	 */
+	public void xmltable(boolean supportsParametersInDefault) {
+		functionRegistry.register( "xmltable", new XmlTableFunction( supportsParametersInDefault, typeConfiguration ) );
+	}
+
+	/**
+	 * Oracle xmltable() function
+	 */
+	public void xmltable_oracle() {
+		functionRegistry.register( "xmltable", new OracleXmlTableFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * DB2 xmltable() function
+	 */
+	public void xmltable_db2() {
+		functionRegistry.register( "xmltable", new DB2XmlTableFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * HANA xmltable() function
+	 */
+	public void xmltable_hana() {
+		functionRegistry.register( "xmltable", new HANAXmlTableFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server xmltable() function
+	 */
+	public void xmltable_sqlserver() {
+		functionRegistry.register( "xmltable", new SQLServerXmlTableFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Sybase ASE xmltable() function
+	 */
+	public void xmltable_sybasease() {
+		functionRegistry.register( "xmltable", new SybaseASEXmlTableFunction( typeConfiguration ) );
 	}
 }

@@ -1,14 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.sql.internal;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.converter.internal.EnumHelper;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.sql.DdlType;
@@ -40,7 +39,10 @@ public class NativeEnumDdlTypeImpl implements DdlType {
 
 	@Override @SuppressWarnings("unchecked")
 	public String getTypeName(Size columnSize, Type type, DdlTypeRegistry ddlTypeRegistry) {
-		return dialect.getEnumTypeDeclaration( (Class<? extends Enum<?>>) type.getReturnedClass() );
+		return dialect.getEnumTypeDeclaration(
+				type.getReturnedClass().getSimpleName(),
+				EnumHelper.getEnumeratedValues( type )
+		);
 	}
 
 	@Override

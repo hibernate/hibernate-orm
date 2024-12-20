@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.onetoone.cache;
 
 import java.lang.reflect.Constructor;
@@ -91,7 +95,8 @@ public class OneToOneCacheTest {
 
 							person.setName( String.format( "%s%d", personClass.getName(), i ) );
 
-							ids.add( session.save( person ) );
+							session.persist( person );
+							ids.add( person.getId() );
 						}
 						catch (Exception e) {
 							throw new RuntimeException( e );

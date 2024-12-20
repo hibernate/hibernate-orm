@@ -1,14 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hql;
 
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.community.dialect.DerbyDialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -54,7 +52,7 @@ public class InsertSelectTests {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15527")
+	@JiraKey( value = "HHH-15527")
 	public void testInsertSelectGeneratedAssigned(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		scope.inTransaction(
@@ -70,7 +68,7 @@ public class InsertSelectTests {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15531")
+	@JiraKey( value = "HHH-15531")
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't really support window functions, " +
 			"but this requires the use of a dense_rank window function. We could emulate this, but don't think it's worth it")
 	public void testInsertSelectDistinct(SessionFactoryScope scope) {
@@ -86,7 +84,7 @@ public class InsertSelectTests {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15531")
+	@JiraKey( value = "HHH-15531")
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't really support window functions and " +
 			"its attempt at a row_number function fails to deliver the desired semantics")
 	public void testInsertSelectGroupBy(SessionFactoryScope scope) {
@@ -102,7 +100,7 @@ public class InsertSelectTests {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-16786")
+	@JiraKey( value = "HHH-16786")
 	public void testInsertSelectParameterInference(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		scope.inTransaction(

@@ -1,19 +1,21 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.array;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentTypeResolver;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
+import org.hibernate.query.sqm.produce.function.internal.AbstractFunctionArgumentTypeResolver;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
-import org.hibernate.query.sqm.tree.expression.SqmFunction;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.type.BasicPluralType;
+
+import java.util.List;
 
 /**
  * Encapsulates the validator, return type and argument type resolvers for the array_contains function.
@@ -37,7 +39,7 @@ public abstract class AbstractArrayFillFunction extends AbstractSqmSelfRendering
 		return "(OBJECT element, INTEGER elementCount)";
 	}
 
-	private static class ArrayFillArgumentsValidator implements FunctionArgumentTypeResolver {
+	private static class ArrayFillArgumentsValidator extends AbstractFunctionArgumentTypeResolver {
 
 		public static final FunctionArgumentTypeResolver INSTANCE = new ArrayFillArgumentsValidator();
 
@@ -45,10 +47,7 @@ public abstract class AbstractArrayFillFunction extends AbstractSqmSelfRendering
 		}
 
 		@Override
-		public MappingModelExpressible<?> resolveFunctionArgumentType(
-				SqmFunction<?> function,
-				int argumentIndex,
-				SqmToSqlAstConverter converter) {
+		public @Nullable MappingModelExpressible<?> resolveFunctionArgumentType(List<? extends SqmTypedNode<?>> arguments, int argumentIndex, SqmToSqlAstConverter converter) {
 			if ( argumentIndex == 0 ) {
 				final MappingModelExpressible<?> impliedReturnType = converter.resolveFunctionImpliedReturnType();
 				return impliedReturnType instanceof BasicPluralType<?, ?>

@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.where.annotations;
 
 import java.util.ArrayList;
@@ -5,12 +9,10 @@ import java.util.Date;
 import java.util.List;
 
 import org.hibernate.annotations.SQLRestriction;
-import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,17 +27,11 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@Jpa(
-		annotatedClasses = {
-				EagerManyToOneTest.Child.class,
-				EagerManyToOneTest.Parent.class
-		},
-		properties = @Setting( name = AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS, value = "false")
-
-)
-@TestForIssue(jiraKey = "HHH-15902")
+@SuppressWarnings("JUnitMalformedDeclaration")
+@Jpa( annotatedClasses = { EagerManyToOneTest.Child.class, EagerManyToOneTest.Parent.class } )
+@JiraKey("HHH-15902")
 public class EagerManyToOneTest {
 
 	@BeforeEach
@@ -62,12 +58,12 @@ public class EagerManyToOneTest {
 
 	@Test
 	public void testFindParent(EntityManagerFactoryScope scope) {
-
 		scope.inTransaction(
 				entityManager -> {
 					Parent parent = entityManager.find( Parent.class, 1 );
 					assertThat( parent ).isNotNull();
-					assertThat( parent.children.size() ).isEqualTo( 1 );
+					// the Child filter should apply
+					assertThat( parent.children ).isEmpty();
 				}
 		);
 		scope.inTransaction(
@@ -78,8 +74,7 @@ public class EagerManyToOneTest {
 		);
 		scope.inTransaction(
 				entityManager -> {
-
-					List<EagerManyToOne2Test.Child> children = entityManager.createQuery( "select c from Child c", EagerManyToOne2Test.Child.class )
+					List<Child> children = entityManager.createQuery( "select c from Child c", Child.class )
 							.getResultList();
 					assertThat( children.size() ).isEqualTo( 0 );
 				}

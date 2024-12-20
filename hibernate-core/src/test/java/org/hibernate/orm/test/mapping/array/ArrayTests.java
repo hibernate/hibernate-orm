@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.mapping.array;
 
 import java.util.List;
@@ -57,7 +61,7 @@ public class ArrayTests {
 		scope.inTransaction(
 				session -> {
 					Employee employee = new Employee( 2, "Andrea" );
-					session.save( employee );
+					session.persist( employee );
 				}
 		);
 
@@ -115,7 +119,7 @@ public class ArrayTests {
 				session -> {
 					Employee employee = new Employee( 1, "Koen" );
 					employee.setToDoList( new String[] { "metro", "boulot", "dodo" } );
-					session.save( employee );
+					session.persist( employee );
 				}
 		);
 	}

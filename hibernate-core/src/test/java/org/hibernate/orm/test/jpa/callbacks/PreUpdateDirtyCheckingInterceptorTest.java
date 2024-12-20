@@ -1,13 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.callbacks;
 
-import java.io.Serializable;
-import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
@@ -21,12 +17,12 @@ import jakarta.persistence.Lob;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 
-import org.hibernate.EmptyInterceptor;
+import org.hibernate.Interceptor;
 import org.hibernate.SessionBuilder;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.type.Type;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -35,7 +31,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernateSes
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-@TestForIssue(jiraKey = "HHH-12718")
+@JiraKey(value = "HHH-12718")
 public class PreUpdateDirtyCheckingInterceptorTest
 		extends BaseNonConfigCoreFunctionalTestCase {
 
@@ -67,14 +63,14 @@ public class PreUpdateDirtyCheckingInterceptorTest
 		} );
 	}
 
-	public static class OnFlushDirtyInterceptor extends EmptyInterceptor {
+	public static class OnFlushDirtyInterceptor implements Interceptor {
 
 		private static OnFlushDirtyInterceptor INSTANCE = new OnFlushDirtyInterceptor();
 
 		@Override
 		public int[] findDirty(
 				Object entity,
-				Serializable id,
+				Object id,
 				Object[] currentState,
 				Object[] previousState,
 				String[] propertyNames,

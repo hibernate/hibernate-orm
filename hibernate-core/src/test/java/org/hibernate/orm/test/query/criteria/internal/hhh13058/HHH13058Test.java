@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.query.criteria.internal.hhh13058;
 
 import java.util.Arrays;
@@ -13,7 +17,7 @@ import jakarta.persistence.criteria.Subquery;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -25,7 +29,7 @@ import static org.junit.Assert.assertThat;
  * @author Archie Cobbs
  * @author Nathan Xu
  */
-@TestForIssue( jiraKey = "HHH-13058" )
+@JiraKey( value = "HHH-13058" )
 public class HHH13058Test extends BaseEntityManagerFunctionalTestCase {
 
 	private Set<Site> validSites;
@@ -114,8 +118,8 @@ public class HHH13058Test extends BaseEntityManagerFunctionalTestCase {
 							subquery.select( subtask )
 									.where(
 											builder.or(
-												   patient.isNull(),
-												   site.in( validSites )
+												patient.isNull(),
+												site.in( validSites )
 											)
 									)
 					)

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.unique;
 
@@ -53,7 +51,7 @@ public interface UniqueDelegate {
 	 * <p>
 	 * This is for handling single columns explicitly marked {@linkplain Column#isUnique() unique},
 	 * not for dealing with {@linkplain UniqueKey unique keys}.
-	 * 
+	 *
 	 * @param column The column to which to apply the unique
 	 * @param context A context for SQL string generation
 	 * @return The fragment (usually "unique"), empty string indicates the uniqueness will be

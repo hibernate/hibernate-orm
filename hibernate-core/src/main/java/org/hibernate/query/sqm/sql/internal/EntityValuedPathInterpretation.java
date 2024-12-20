@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.sql.internal;
 
@@ -162,7 +160,9 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 		// we try to make use of it and the FK model part if possible based on the inferred mapping
 		if ( mapping instanceof EntityAssociationMapping ) {
 			final EntityAssociationMapping associationMapping = (EntityAssociationMapping) mapping;
-			final ModelPart keyTargetMatchPart = associationMapping.getKeyTargetMatchPart();
+			final ModelPart keyTargetMatchPart = associationMapping.getForeignKeyDescriptor().getPart(
+					associationMapping.getSideNature()
+			);
 
 			if ( associationMapping.isFkOptimizationAllowed() ) {
 				final boolean forceUsingForeignKeyAssociationSidePart;
@@ -265,7 +265,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 		if ( currentClause == Clause.GROUP || currentClause == Clause.ORDER ) {
 			assert sqlAstCreationState.getCurrentSqmQueryPart().isSimpleQueryPart();
 			final SqmQuerySpec<?> querySpec = sqlAstCreationState.getCurrentSqmQueryPart().getFirstQuerySpec();
-			if ( currentClause == Clause.ORDER && !querySpec.groupByClauseContains( navigablePath ) ) {
+			if ( currentClause == Clause.ORDER && !querySpec.groupByClauseContains( navigablePath, sqlAstCreationState ) ) {
 				// We must ensure that the order by expression be expanded but only if the group by
 				// contained the same expression, and that was expanded as well
 				expandToAllColumns = false;

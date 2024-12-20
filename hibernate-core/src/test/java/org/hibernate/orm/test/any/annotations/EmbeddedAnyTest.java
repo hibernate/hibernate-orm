@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.any.annotations;
 
@@ -13,7 +11,7 @@ import org.hibernate.annotations.AnyDiscriminator;
 import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyKeyJavaClass;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -83,7 +81,7 @@ public class EmbeddedAnyTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-16732")
+	@JiraKey( value = "HHH-16732")
 	public void testEmbeddedIdHql(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -94,7 +92,7 @@ public class EmbeddedAnyTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15323")
+	@JiraKey( value = "HHH-15323")
 	public void testEmbeddedTypeHql(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -105,7 +103,7 @@ public class EmbeddedAnyTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15323")
+	@JiraKey( value = "HHH-15323")
 	public void testEmbeddedTypeHql2(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
@@ -17,7 +15,6 @@ import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteContainer;
 import org.hibernate.sql.ast.tree.cte.CteTableGroup;
@@ -44,7 +41,6 @@ import org.hibernate.sql.model.internal.TableInsertStandard;
 import org.hibernate.sql.model.internal.TableUpdateStandard;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
-import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /**
  * A SQL AST translator for H2.
@@ -175,7 +171,7 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 	protected void visitConflictClause(ConflictClause conflictClause) {
 		if ( conflictClause != null ) {
 			if ( conflictClause.isDoUpdate() && conflictClause.getConstraintName() != null ) {
-				throw new IllegalQueryOperationException( "Insert conflict do update clause with constraint name is not supported" );
+				throw new IllegalQueryOperationException( "Insert conflict 'do update' clause with constraint name is not supported" );
 			}
 		}
 	}
@@ -299,10 +295,15 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 	@Override
 	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
 		appendSql( OPEN_PARENTHESIS );
-		render( arithmeticExpression.getLeftHandOperand(), SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+		visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
 		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
-		render( arithmeticExpression.getRightHandOperand(), SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+		visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
 		appendSql( CLOSE_PARENTHESIS );
+	}
+
+	@Override
+	protected void visitArithmeticOperand(Expression expression) {
+		render( expression, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 	}
 
 	@Override
@@ -310,13 +311,9 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 		final TableReference tableRef = tableGroup.getPrimaryTableReference();
 		// The H2 parser can't handle a sub-query as first element in a nested join
 		// i.e. `join ( (select ...) alias join ... )`, so we have to introduce a dummy table reference
-		if ( tableRef instanceof QueryPartTableReference || tableRef.getTableId().startsWith( "(select" ) ) {
-			final boolean realTableGroup = tableGroup.isRealTableGroup()
-					&& ( isNotEmpty( tableGroup.getTableReferenceJoins() )
-					|| hasNestedTableGroupsToRender( tableGroup.getNestedTableGroupJoins() ) );
-			if ( realTableGroup ) {
-				appendSql( "dual cross join " );
-			}
+		if ( getSqlBuffer().charAt( getSqlBuffer().length() - 1 ) == '('
+				&& ( tableRef instanceof QueryPartTableReference || tableRef.getTableId().startsWith( "(select" ) ) ) {
+			appendSql( "dual cross join " );
 		}
 		return super.renderPrimaryTableReference( tableGroup, lockMode );
 	}
@@ -361,11 +358,6 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 		return true;
 	}
 
-	@Override
-	protected String getDual() {
-		return "dual";
-	}
-
 	private boolean supportsOffsetFetchClause() {
 		return true;
 	}
@@ -379,5 +371,11 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 	@Override
 	protected boolean supportsJoinInMutationStatementSubquery() {
 		return false;
+	}
+
+	@Override
+	public boolean supportsFilterClause() {
+		// Introduction of FILTER clause https://github.com/h2database/h2database/commit/9e6dbf3baa57000f670826ede431dc7fb4cd9d9c
+		return true;
 	}
 }

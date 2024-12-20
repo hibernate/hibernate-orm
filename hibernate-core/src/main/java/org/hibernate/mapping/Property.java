@@ -1,15 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.StringTokenizer;
 
@@ -17,6 +13,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -32,9 +29,15 @@ import org.hibernate.property.access.spi.Setter;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.GeneratorCreationContext;
-import org.hibernate.type.CompositeType;
+import org.hibernate.type.AnyType;
+import org.hibernate.type.CollectionType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.Type;
 import org.hibernate.type.WrapperArrayHandling;
+import org.hibernate.type.MappingContext;
+
+import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
 
 /**
  * A mapping model object representing a property or field of an {@linkplain PersistentClass entity}
@@ -56,7 +59,7 @@ public class Property implements Serializable, MetaAttributable {
 	private boolean lazy;
 	private String lazyGroup;
 	private boolean optional;
-	private java.util.Map metaAttributes;
+	private java.util.Map<String,MetaAttribute> metaAttributes;
 	private PersistentClass persistentClass;
 	private boolean naturalIdentifier;
 	private boolean isGeneric;
@@ -82,7 +85,7 @@ public class Property implements Serializable, MetaAttributable {
 	public Type getType() throws MappingException {
 		return value.getType();
 	}
-	
+
 	public int getColumnSpan() {
 		return value.getColumnSpan();
 	}
@@ -102,11 +105,11 @@ public class Property implements Serializable, MetaAttributable {
 	public java.util.List<Column> getColumns() {
 		return value.getColumns();
 	}
-	
+
 	public String getName() {
 		return name;
 	}
-	
+
 	public boolean isComposite() {
 		return value instanceof Component;
 	}
@@ -116,7 +119,7 @@ public class Property implements Serializable, MetaAttributable {
 	}
 
 	public void resetUpdateable(boolean updateable) {
-		setUpdateable(updateable);
+		setUpdateable( updateable );
 		boolean[] columnUpdateability = getValue().getColumnUpdateability();
 		for (int i=0; i<getColumnSpan(); i++ ) {
 			columnUpdateability[i] = updateable;
@@ -124,40 +127,42 @@ public class Property implements Serializable, MetaAttributable {
 	}
 
 	public void resetOptional(boolean optional) {
-		setOptional(optional);
-		for ( Selectable column: getValue().getSelectables() ) {
-			if (column instanceof Column) {
-				( (Column) column ).setNullable(optional);
+		setOptional( optional );
+		for ( Selectable selectable: getValue().getSelectables() ) {
+			if ( selectable instanceof Column column ) {
+				column.setNullable( optional );
 			}
 		}
 	}
 
-	/**
-	 * @deprecated this method is no longer used
-	 */
-	@Deprecated(since = "6", forRemoval = true)
-	public boolean isPrimitive(Class<?> clazz) {
-		return getGetter( clazz ).getReturnTypeClass().isPrimitive();
-	}
-
 	public CascadeStyle getCascadeStyle() throws MappingException {
 		final Type type = value.getType();
-		if ( type.isComponentType() ) {
-			return getCompositeCascadeStyle( (CompositeType) type, cascade );
-		}
-		else if ( type.isCollectionType() ) {
-			return getCollectionCascadeStyle( ( (Collection) value ).getElement().getType(), cascade );
-		}
-		else {
-			return getCascadeStyle( cascade );			
-		}
-	}
-
-	private static CascadeStyle getCompositeCascadeStyle(CompositeType compositeType, String cascade) {
-		if ( compositeType.isAnyType() ) {
+		if ( type instanceof AnyType ) {
 			return getCascadeStyle( cascade );
 		}
-		int length = compositeType.getSubtypes().length;
+		if ( type instanceof ComponentType ) {
+			return getCompositeCascadeStyle( (ComponentType) type, cascade );
+		}
+		else if ( type instanceof CollectionType ) {
+			final Collection collection = (Collection) value;
+			return getCollectionCascadeStyle( collection.getElement().getType(), cascade );
+		}
+		else {
+			return getCascadeStyle( cascade );
+		}
+	}
+//
+//	private static CascadeStyle getCompositeCascadeStyle(CompositeType compositeType, String cascade) {
+//		if ( compositeType instanceof AnyType ) {
+//			return getCascadeStyle( cascade );
+//		}
+//		else {
+//			return getCompositeCascadeStyle( (ComponentType) compositeType, cascade );
+//		}
+//	}
+
+	private static CascadeStyle getCompositeCascadeStyle(ComponentType compositeType, String cascade) {
+		final int length = compositeType.getSubtypes().length;
 		for ( int i=0; i<length; i++ ) {
 			if ( compositeType.getCascadeStyle(i) != CascadeStyles.NONE ) {
 				return CascadeStyles.ALL;
@@ -167,29 +172,32 @@ public class Property implements Serializable, MetaAttributable {
 	}
 
 	private static CascadeStyle getCollectionCascadeStyle(Type elementType, String cascade) {
-		if ( elementType.isComponentType() ) {
-			return getCompositeCascadeStyle( (CompositeType) elementType, cascade );
+		if ( elementType instanceof AnyType ) {
+			return getCascadeStyle( cascade );
+		}
+		else if ( elementType instanceof ComponentType ) {
+			return getCompositeCascadeStyle( (ComponentType) elementType, cascade );
 		}
 		else {
 			return getCascadeStyle( cascade );
 		}
 	}
-	
+
 	private static CascadeStyle getCascadeStyle(String cascade) {
 		if ( cascade==null || cascade.equals("none") ) {
 			return CascadeStyles.NONE;
 		}
 		else {
-			StringTokenizer tokens = new StringTokenizer(cascade, ", ");
-			CascadeStyle[] styles = new CascadeStyle[ tokens.countTokens() ] ;
+			final StringTokenizer tokens = new StringTokenizer(cascade, ", ");
+			final CascadeStyle[] styles = new CascadeStyle[ tokens.countTokens() ] ;
 			int i=0;
 			while ( tokens.hasMoreTokens() ) {
 				styles[i++] = CascadeStyles.getCascadeStyle( tokens.nextToken() );
 			}
 			return new CascadeStyles.MultipleCascadeStyle(styles);
-		}		
+		}
 	}
-	
+
 	public String getCascade() {
 		return cascade;
 	}
@@ -213,7 +221,7 @@ public class Property implements Serializable, MetaAttributable {
 	}
 
 	public boolean isInsertable() {
-		// if the property mapping consists of all formulas, 
+		// if the property mapping consists of all formulas,
 		// make it non-insertable
 		return insertable && value.hasAnyInsertableColumns();
 	}
@@ -252,13 +260,6 @@ public class Property implements Serializable, MetaAttributable {
 		this.propertyAccessStrategy = propertyAccessStrategy;
 	}
 
-	/**
-	 * Approximate!
-	 */
-	boolean isNullable() {
-		return value==null || value.isNullable();
-	}
-
 	public boolean isBasicPropertyAccessor() {
 		return propertyAccessorName==null || "property".equals( propertyAccessorName );
 	}
@@ -268,14 +269,22 @@ public class Property implements Serializable, MetaAttributable {
 	}
 
 	public MetaAttribute getMetaAttribute(String attributeName) {
-		return metaAttributes==null?null:(MetaAttribute) metaAttributes.get(attributeName);
+		return metaAttributes==null ? null : metaAttributes.get(attributeName);
 	}
 
 	public void setMetaAttributes(Map<String, MetaAttribute> metas) {
 		this.metaAttributes = metas;
 	}
 
+	/**
+	 * @deprecated use {@link #isValid(MappingContext)}
+	 */
+	@Deprecated(since = "7.0")
 	public boolean isValid(Mapping mapping) throws MappingException {
+		return isValid( (MappingContext) mapping);
+	}
+
+	public boolean isValid(MappingContext mappingContext) throws MappingException {
 		final Value value = getValue();
 		if ( value instanceof BasicValue && ( (BasicValue) value ).isDisallowedWrapperArray() ) {
 			throw new MappingException(
@@ -292,13 +301,13 @@ public class Property implements Serializable, MetaAttributable {
 							"and the Javadoc of the org.hibernate.cfg.AvailableSettings.WRAPPER_ARRAY_HANDLING field."
 			);
 		}
-		return value.isValid( mapping );
+		return value.isValid( mappingContext );
 	}
 
 	public String toString() {
 		return getClass().getSimpleName() + '(' + name + ')';
 	}
-	
+
 	public void setLazy(boolean lazy) {
 		this.lazy=lazy;
 	}
@@ -344,11 +353,11 @@ public class Property implements Serializable, MetaAttributable {
 	public void setOptimisticLocked(boolean optimisticLocked) {
 		this.optimisticLocked = optimisticLocked;
 	}
-	
+
 	public boolean isOptional() {
 		return optional;
 	}
-	
+
 	public void setOptional(boolean optional) {
 		this.optional = optional;
 	}
@@ -364,26 +373,25 @@ public class Property implements Serializable, MetaAttributable {
 	public boolean isSelectable() {
 		return selectable;
 	}
-	
+
 	public void setSelectable(boolean selectable) {
 		this.selectable = selectable;
 	}
 
-	public String getAccessorPropertyName(RepresentationMode mode) {
-		return getName();
-	}
-
 	// todo : remove
+	@Internal
 	public Getter getGetter(Class clazz) throws MappingException {
 		return getPropertyAccessStrategy( clazz ).buildPropertyAccess( clazz, name, true ).getGetter();
 	}
 
 	// todo : remove
+	@Internal
 	public Setter getSetter(Class clazz) throws MappingException {
 		return getPropertyAccessStrategy( clazz ).buildPropertyAccess( clazz, name, true ).getSetter();
 	}
 
 	// todo : remove
+	@Internal
 	public PropertyAccessStrategy getPropertyAccessStrategy(Class clazz) throws MappingException {
 		final PropertyAccessStrategy propertyAccessStrategy = getPropertyAccessStrategy();
 		if ( propertyAccessStrategy != null ) {
@@ -403,14 +411,12 @@ public class Property implements Serializable, MetaAttributable {
 				? RepresentationMode.MAP
 				: RepresentationMode.POJO;
 
-		return resolveServiceRegistry().getService( PropertyAccessStrategyResolver.class ).resolvePropertyAccessStrategy(
-				clazz,
-				accessName,
-				representationMode
-		);
+		return resolveServiceRegistry()
+				.requireService( PropertyAccessStrategyResolver.class )
+				.resolvePropertyAccessStrategy( clazz, accessName, representationMode );
 	}
 
-	protected ServiceRegistry resolveServiceRegistry() {
+	ServiceRegistry resolveServiceRegistry() {
 		if ( getPersistentClass() != null ) {
 			return getPersistentClass().getServiceRegistry();
 		}
@@ -445,20 +451,16 @@ public class Property implements Serializable, MetaAttributable {
 	}
 
 	public void addCallbackDefinitions(java.util.List<CallbackDefinition> callbackDefinitions) {
-		if ( callbackDefinitions == null || callbackDefinitions.isEmpty() ) {
-			return;
+		if ( callbackDefinitions != null && !callbackDefinitions.isEmpty() ) {
+			if ( this.callbackDefinitions == null ) {
+				this.callbackDefinitions = new ArrayList<>();
+			}
+			this.callbackDefinitions.addAll( callbackDefinitions );
 		}
-		if ( this.callbackDefinitions == null ) {
-			this.callbackDefinitions = new ArrayList<>();
-		}
-		this.callbackDefinitions.addAll( callbackDefinitions );
 	}
 
 	public java.util.List<CallbackDefinition> getCallbackDefinitions() {
-		if ( callbackDefinitions == null ) {
-			return Collections.emptyList();
-		}
-		return Collections.unmodifiableList( callbackDefinitions );
+		return callbackDefinitions == null ? emptyList() : unmodifiableList( callbackDefinitions );
 	}
 
 	public String getReturnedClassName() {
@@ -475,7 +477,7 @@ public class Property implements Serializable, MetaAttributable {
 	}
 
 	public Property copy() {
-		final Property property = new Property();
+		final Property property = this instanceof SyntheticProperty ? new SyntheticProperty() : new Property();
 		property.setName( getName() );
 		property.setValue( getValue() );
 		property.setCascade( getCascade() );
@@ -532,8 +534,18 @@ public class Property implements Serializable, MetaAttributable {
 		}
 
 		@Override
+		public RootClass getRootClass() {
+			return persistentClass.getRootClass();
+		}
+
+		@Override
 		public Property getProperty() {
 			return Property.this;
+		}
+
+		@Override
+		public SqlStringGenerationContext getSqlStringGenerationContext() {
+			return context.getSqlStringGenerationContext();
 		}
 	}
 }

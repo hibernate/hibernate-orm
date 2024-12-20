@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
@@ -10,19 +8,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.query.sqm.FetchClauseType;
-import org.hibernate.query.sqm.FrameExclusion;
-import org.hibernate.query.sqm.FrameKind;
+import org.hibernate.query.common.FetchClauseType;
+import org.hibernate.query.common.FrameExclusion;
+import org.hibernate.query.common.FrameKind;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
+import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.FunctionExpression;
@@ -31,6 +35,7 @@ import org.hibernate.sql.ast.tree.expression.Over;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.DerivedTableReference;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.FunctionTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
@@ -41,6 +46,7 @@ import org.hibernate.sql.ast.tree.from.ValuesTableReference;
 import org.hibernate.sql.ast.tree.insert.ConflictClause;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.insert.Values;
+import org.hibernate.sql.ast.tree.predicate.InArrayPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
@@ -61,6 +67,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  * A SQL AST translator for Oracle.
  *
  * @author Christian Beikov
+ * @author Loïc Lefèvre
  */
 public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslatorWithUpsert<T> {
 
@@ -111,7 +118,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 	protected void visitConflictClause(ConflictClause conflictClause) {
 		if ( conflictClause != null ) {
 			if ( conflictClause.isDoUpdate() && conflictClause.getConstraintName() != null ) {
-				throw new IllegalQueryOperationException( "Insert conflict do update clause with constraint name is not supported" );
+				throw new IllegalQueryOperationException( "Insert conflict 'do update' clause with constraint name is not supported" );
 			}
 		}
 	}
@@ -119,6 +126,15 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 	@Override
 	protected boolean needsRecursiveKeywordInWithClause() {
 		return false;
+	}
+
+	@Override
+	public void visitInArrayPredicate(InArrayPredicate inArrayPredicate) {
+		// column in (select column_value from(?) )
+		inArrayPredicate.getTestExpression().accept( this );
+		appendSql( " in (select column_value from table(" );
+		inArrayPredicate.getArrayParameter().accept( this );
+		appendSql( "))" );
 	}
 
 	@Override
@@ -222,7 +238,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 
 	@Override
 	protected void visitValuesList(List<Values> valuesList) {
-		if ( valuesList.size() < 2 ) {
+		if ( getDialect().getVersion().isSameOrAfter( 23 ) || valuesList.size() < 2 ) {
 			visitValuesListStandard( valuesList );
 		}
 		else {
@@ -244,9 +260,42 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 
 	@Override
 	public void visitFunctionTableReference(FunctionTableReference tableReference) {
-		append( "table(" );
 		tableReference.getFunctionExpression().accept( this );
-		append( CLOSE_PARENTHESIS );
+		if ( !tableReference.rendersIdentifierVariable() ) {
+			renderDerivedTableReferenceIdentificationVariable( tableReference );
+		}
+	}
+
+	@Override
+	public void renderNamedSetReturningFunction(String functionName, List<? extends SqlAstNode> sqlAstArguments, AnonymousTupleTableGroupProducer tupleType, String tableIdentifierVariable, SqlAstNodeRenderingMode argumentRenderingMode) {
+		final ModelPart ordinalitySubPart = tupleType.findSubPart( CollectionPart.Nature.INDEX.getName(), null );
+		if ( ordinalitySubPart != null ) {
+			appendSql( "lateral (select t.*, rownum " );
+			appendSql( ordinalitySubPart.asBasicValuedModelPart().getSelectionExpression() );
+			appendSql( " from table(" );
+			renderSimpleNamedFunction( functionName, sqlAstArguments, argumentRenderingMode );
+			append( ") t)" );
+		}
+		else {
+			appendSql( "table(" );
+			super.renderNamedSetReturningFunction( functionName, sqlAstArguments, tupleType, tableIdentifierVariable, argumentRenderingMode );
+			append( ')' );
+		}
+	}
+
+	@Override
+	protected void renderDerivedTableReference(DerivedTableReference tableReference) {
+		if ( tableReference instanceof FunctionTableReference && tableReference.isLateral() ) {
+			// No need for a lateral keyword for functions
+			tableReference.accept( this );
+		}
+		else {
+			super.renderDerivedTableReference( tableReference );
+		}
+	}
+
+	@Override
+	protected void renderDerivedTableReferenceIdentificationVariable(DerivedTableReference tableReference) {
 		renderTableReferenceIdentificationVariable( tableReference );
 	}
 
@@ -509,7 +558,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 				appendSql( ')' );
 				break;
 			case SqlTypes.ARRAY:
-				final String arrayTypeName = ( (OracleArrayJdbcType) jdbcType ).getTypeName();
+				final String arrayTypeName = ( (OracleArrayJdbcType) jdbcType ).getSqlTypeName();
 				switch ( operator ) {
 					case DISTINCT_FROM:
 					case NOT_DISTINCT_FROM:
@@ -567,7 +616,12 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 			List<SqlSelection> lhsExpressions,
 			SqlTuple tuple,
 			ComparisonOperator operator) {
-		emulateSelectTupleComparison( lhsExpressions, tuple.getExpressions(), operator, true );
+		if(getDialect().getVersion().isSameOrAfter(23)) {
+			super.renderSelectTupleComparison(lhsExpressions, tuple, operator);
+		}
+		else {
+			emulateSelectTupleComparison(lhsExpressions, tuple.getExpressions(), operator, true);
+		}
 	}
 
 	@Override
@@ -588,6 +642,14 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 	}
 
 	@Override
+	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
+		if ( isIntegerDivisionEmulationRequired( arithmeticExpression ) ) {
+			appendSql( "floor" );
+		}
+		super.visitBinaryArithmeticExpression(arithmeticExpression);
+	}
+
+	@Override
 	protected boolean supportsDuplicateSelectItemsInQueryGroup() {
 		return false;
 	}
@@ -598,28 +660,8 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 	}
 
 	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return true;
-	}
-
-	@Override
 	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
 		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInSubQuery() {
-		return true;
-	}
-
-	@Override
-	protected String getDual() {
-		return "dual";
-	}
-
-	@Override
-	protected String getFromDualForSelectOnly() {
-		return getDialect().getVersion().isSameOrAfter( 23 ) ? "" : ( " from " + getDual() );
 	}
 
 	private boolean supportsOffsetFetchClause() {

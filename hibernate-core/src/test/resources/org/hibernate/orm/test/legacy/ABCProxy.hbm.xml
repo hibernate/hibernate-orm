@@ -16,7 +16,7 @@
 		</id>
 		<discriminator column="clazz_discriminata" type="integer" force="true" not-null="false"/>
 		<property name="name"/>
-		<many-to-one name="forward" class="org.hibernate.orm.test.legacy.E" cascade="save-update" />
+		<many-to-one name="forward" class="org.hibernate.orm.test.legacy.E" cascade="merge,persist" />
 		<subclass name="org.hibernate.orm.test.legacy.B" discriminator-value="null" lazy="true">
 			<property name="count" column="count_"/>
 
@@ -58,7 +58,7 @@
 			<generator class="increment"/>
 		</id>
 		<property name="amount"/>
-		<one-to-one name="reverse" class="org.hibernate.orm.test.legacy.A" property-ref="forward" cascade="save-update"/>
+		<one-to-one name="reverse" class="org.hibernate.orm.test.legacy.A" property-ref="forward" cascade="merge,persist"/>
 		<set name="as" lazy="true">
 			<key column="e"/>
 			<one-to-many class="org.hibernate.orm.test.legacy.A"/>

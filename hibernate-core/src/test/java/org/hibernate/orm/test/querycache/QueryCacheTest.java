@@ -1,27 +1,24 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.querycache;
 
-import java.io.Serializable;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
-import org.hibernate.EmptyInterceptor;
 import org.hibernate.Hibernate;
+import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
-import org.hibernate.Transaction;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 import org.hibernate.stat.EntityStatistics;
@@ -30,8 +27,10 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.Type;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.jdbc.ConnectionProviderDelegate;
+import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -47,11 +46,13 @@ import jakarta.persistence.criteria.Root;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 
 /**
  * @author Gavin King
  * @author Brett Meyer
+ * @author Réda Housni Alaoui
  */
 @DomainModel(
 		xmlMappings = "org/hibernate/orm/test/querycache/Item.hbm.xml",
@@ -68,7 +69,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		settings = {
 				@Setting(name = AvailableSettings.USE_QUERY_CACHE, value = "true"),
 				@Setting(name = AvailableSettings.CACHE_REGION_PREFIX, value = "foo"),
-				@Setting(name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true")
+				@Setting(name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true"),
+				@Setting(name = JdbcSettings.CONNECTION_PROVIDER, value = "org.hibernate.orm.test.querycache.QueryCacheTest$ProxyConnectionProvider")
 		}
 )
 public class QueryCacheTest {
@@ -92,7 +94,7 @@ public class QueryCacheTest {
 
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5426")
+	@JiraKey("HHH-5426")
 	public void testInvalidationFromBulkHQL(SessionFactoryScope scope) {
 		scope.getSessionFactory().getCache().evictQueryRegions();
 		scope.getSessionFactory().getStatistics().clear();
@@ -132,7 +134,7 @@ public class QueryCacheTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "JBPAPP-4224")
+	@JiraKey("JBPAPP-4224")
 	public void testHitCacheInSameSession(SessionFactoryScope scope) {
 		scope.getSessionFactory().getCache().evictQueryRegions();
 		scope.getSessionFactory().getStatistics().clear();
@@ -180,7 +182,7 @@ public class QueryCacheTest {
 		scope.inTransaction(
 				session -> {
 					for ( Object obj : list ) {
-						session.delete( obj );
+						session.remove( obj );
 					}
 				}
 		);
@@ -206,7 +208,7 @@ public class QueryCacheTest {
 					Item i = new Item();
 					i.setName( "widget" );
 					i.setDescription( "A really top-quality, full-featured widget." );
-					session.save( i );
+					session.persist( i );
 				}
 		);
 
@@ -335,7 +337,7 @@ public class QueryCacheTest {
 					session.createQuery( queryString ).setCacheable( true ).list();
 					Item i = session.get( Item.class, item.getId() );
 
-					session.delete( i );
+					session.remove( i );
 				}
 		);
 
@@ -376,7 +378,7 @@ public class QueryCacheTest {
 				session -> {
 					item.setName( "widget" );
 					item.setDescription( "A really top-quality, full-featured widget." );
-					session.save( item );
+					session.persist( item );
 				}
 		);
 
@@ -386,7 +388,7 @@ public class QueryCacheTest {
 					assertEquals( 1, result.size() );
 					Item i = session.get( Item.class, item.getId() );
 					assertEquals( "widget", i.getName() );
-					session.delete( i );
+					session.remove( i );
 				}
 		);
 	}
@@ -405,7 +407,7 @@ public class QueryCacheTest {
 					session.createQuery( queryString ).setCacheable( true ).list();
 					item.setName( "widget" );
 					item.setDescription( "A really top-quality, full-featured widget." );
-					session.save( item );
+					session.persist( item );
 				}
 		);
 
@@ -513,7 +515,7 @@ public class QueryCacheTest {
 					assertEquals( 3, qs.getCacheMissCount() );
 					assertEquals( 3, qs.getCachePutCount() );
 
-					session.delete( i );
+					session.remove( i );
 				}
 		);
 
@@ -525,7 +527,7 @@ public class QueryCacheTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-4459")
+	@JiraKey("HHH-4459")
 	public void testGetByCompositeId(SessionFactoryScope scope) {
 
 		scope.inSession(
@@ -578,7 +580,7 @@ public class QueryCacheTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-3051")
+	@JiraKey("HHH-3051")
 	public void testScalarSQLQuery(SessionFactoryScope scope) {
 		scope.getSessionFactory().getCache().evictQueryRegions();
 		scope.getSessionFactory().getStatistics().clear();
@@ -633,78 +635,111 @@ public class QueryCacheTest {
 //		assertEquals(1, query.getResultList().size());
 //	}
 
+//	@Test
+//	@JiraKey("HHH-9962")
+//	/* Test courtesy of Giambattista Bloisi */
+//	public void testDelayedLoad(SessionFactoryScope scope) throws InterruptedException, ExecutionException {
+//		DelayLoadOperations interceptor = new DelayLoadOperations();
+//		final SessionBuilder sessionBuilder = scope.getSessionFactory().withOptions().interceptor( interceptor );
+//		Item item1 = new Item();
+//		item1.setName( "Item1" );
+//		item1.setDescription( "Washington" );
+//
+//		try (Session s1 = sessionBuilder.openSession()) {
+//			Transaction tx1 = s1.beginTransaction();
+//			try {
+//				s1.persist( item1 );
+//				tx1.commit();
+//			}
+//			finally {
+//				if ( tx1.isActive() ) {
+//					tx1.rollback();
+//				}
+//			}
+//		}
+//
+//		Item item2 = new Item();
+//		item2.setName( "Item2" );
+//		item2.setDescription( "Chicago" );
+//		try (Session s2 = sessionBuilder.openSession()) {
+//			Transaction tx2 = s2.beginTransaction();
+//			try {
+//				s2.persist( item2 );
+//				tx2.commit();
+//			}
+//			finally {
+//				if ( tx2.isActive() ) {
+//					tx2.rollback();
+//				}
+//			}
+//		}
+//
+//		interceptor.blockOnLoad();
+//
+//		Future<Item> fetchedItem = executor.submit( () -> findByDescription( sessionBuilder, "Washington" ) );
+//
+//		// wait for the onLoad listener to be called
+//		interceptor.waitOnLoad();
+//
+//		try (Session s3 = sessionBuilder.openSession()) {
+//			Transaction tx3 = s3.beginTransaction();
+//			try {
+//				item1.setDescription( "New York" );
+//				item2.setDescription( "Washington" );
+//				s3.update( item1 );
+//				s3.update( item2 );
+//				tx3.commit();
+//			}
+//			finally {
+//				if ( tx3.isActive() ) {
+//					tx3.rollback();
+//				}
+//			}
+//		}
+//
+//		interceptor.unblockOnLoad();
+//
+//		// the concurrent query was executed before the data was amended so
+//		// let's expect "Item1" to be returned as living in Washington
+//		Item fetched = fetchedItem.get();
+//		assertEquals( "Item1", fetched.getName() );
+//
+//		// Query again: now "Item2" is expected to live in Washington
+//		fetched = findByDescription( sessionBuilder, "Washington" );
+//		assertEquals( "Item2", fetched.getName() );
+//	}
+
 	@Test
-	@TestForIssue(jiraKey = "HHH-9962")
-	/* Test courtesy of Giambattista Bloisi */
-	public void testDelayedLoad(SessionFactoryScope scope) throws InterruptedException, ExecutionException {
-		DelayLoadOperations interceptor = new DelayLoadOperations();
-		final SessionBuilder sessionBuilder = scope.getSessionFactory().withOptions().interceptor( interceptor );
-		Item item1 = new Item();
-		item1.setName( "Item1" );
-		item1.setDescription( "Washington" );
+	@JiraKey("HHH-18371")
+	public void testConnectionFailure(SessionFactoryScope scope) {
+		scope.getSessionFactory().getCache().evictQueryRegions();
+		scope.getSessionFactory().getStatistics().clear();
 
-		try (Session s1 = sessionBuilder.openSession()) {
-			Transaction tx1 = s1.beginTransaction();
+		final Item item = new Item();
+		scope.inTransaction( session -> {
+			item.setName( "widget" );
+			item.setDescription( "A really top-quality, full-featured widget." );
+			session.persist( item );
+		} );
+
+		scope.inTransaction( session -> ProxyConnectionProvider.runWithConnectionRetrievalFailure( new SQLException(
+				"Too many connections" ), () -> {
 			try {
-				s1.persist( item1 );
-				tx1.commit();
+				session.createQuery( queryString, Item.class ).setCacheable( true ).list();
+				fail( "Failure expected" );
 			}
-			finally {
-				if ( tx1.isActive() ) {
-					tx1.rollback();
-				}
+			catch (RuntimeException e) {
+				assertTrue( e.getMessage().contains( "Too many connections" ) );
 			}
-		}
+		} ) );
 
-		Item item2 = new Item();
-		item2.setName( "Item2" );
-		item2.setDescription( "Chicago" );
-		try (Session s2 = sessionBuilder.openSession()) {
-			Transaction tx2 = s2.beginTransaction();
-			try {
-				s2.persist( item2 );
-				tx2.commit();
-			}
-			finally {
-				if ( tx2.isActive() ) {
-					tx2.rollback();
-				}
-			}
-		}
-
-		interceptor.blockOnLoad();
-
-		Future<Item> fetchedItem = executor.submit( () -> findByDescription( sessionBuilder, "Washington" ) );
-
-		// wait for the onLoad listener to be called
-		interceptor.waitOnLoad();
-
-		try (Session s3 = sessionBuilder.openSession()) {
-			Transaction tx3 = s3.beginTransaction();
-			try {
-				item1.setDescription( "New York" );
-				item2.setDescription( "Washington" );
-				s3.update( item1 );
-				s3.update( item2 );
-				tx3.commit();
-			}
-			finally {
-				if ( tx3.isActive() ) {
-					tx3.rollback();
-				}
-			}
-		}
-
-		interceptor.unblockOnLoad();
-
-		// the concurrent query was executed before the data was amended so
-		// let's expect "Item1" to be returned as living in Washington
-		Item fetched = fetchedItem.get();
-		assertEquals( "Item1", fetched.getName() );
-
-		// Query again: now "Item2" is expected to live in Washington
-		fetched = findByDescription( sessionBuilder, "Washington" );
-		assertEquals( "Item2", fetched.getName() );
+		scope.inTransaction( session -> {
+			final List<Item> result = session.createQuery( queryString, Item.class ).setCacheable( true ).list();
+			assertEquals( 1, result.size() );
+			final Item i = session.find( Item.class, item.getId() );
+			assertEquals( "widget", i.getName() );
+			session.remove( i );
+		} );
 	}
 
 	protected Item findByDescription(SessionBuilder sessionBuilder, final String description) {
@@ -724,13 +759,18 @@ public class QueryCacheTest {
 		}
 	}
 
-	public class DelayLoadOperations extends EmptyInterceptor {
+	public class DelayLoadOperations implements Interceptor {
 
 		private volatile CountDownLatch blockLatch;
 		private volatile CountDownLatch waitLatch;
 
 		@Override
-		public boolean onLoad(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types) {
+		public boolean onLoad(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types){
+			onLoad();
+			return true;
+		}
+
+		private void onLoad() {
 			// Synchronize load and update activities
 			try {
 				if ( waitLatch != null ) {
@@ -744,8 +784,9 @@ public class QueryCacheTest {
 				Thread.currentThread().interrupt();
 				throw new RuntimeException( e );
 			}
-			return true;
 		}
+
+
 
 		public void blockOnLoad() {
 			blockLatch = new CountDownLatch( 1 );
@@ -760,6 +801,33 @@ public class QueryCacheTest {
 			if ( blockLatch != null ) {
 				blockLatch.countDown();
 			}
+		}
+	}
+
+	public static class ProxyConnectionProvider extends ConnectionProviderDelegate {
+		private static final ThreadLocal<SQLException> CONNECTION_RETRIEVAL_EXCEPTION_TO_THROW = new ThreadLocal<>();
+
+		public ProxyConnectionProvider() {
+			setConnectionProvider( SharedDriverManagerConnectionProviderImpl.getInstance() );
+		}
+
+		static void runWithConnectionRetrievalFailure(SQLException exceptionToThrow, Runnable runnable) {
+			CONNECTION_RETRIEVAL_EXCEPTION_TO_THROW.set( exceptionToThrow );
+			try {
+				runnable.run();
+			}
+			finally {
+				CONNECTION_RETRIEVAL_EXCEPTION_TO_THROW.remove();
+			}
+		}
+
+		@Override
+		public Connection getConnection() throws SQLException {
+			SQLException exceptionToSend = CONNECTION_RETRIEVAL_EXCEPTION_TO_THROW.get();
+			if ( exceptionToSend != null ) {
+				throw exceptionToSend;
+			}
+			return super.getConnection();
 		}
 	}
 }

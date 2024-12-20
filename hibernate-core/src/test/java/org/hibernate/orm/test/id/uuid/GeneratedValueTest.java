@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id.uuid;
 
@@ -20,9 +18,11 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.UUIDGenerator;
+import org.hibernate.generator.Generator;
+import org.hibernate.id.uuid.UuidGenerator;
+import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 
@@ -55,14 +55,10 @@ public class GeneratedValueTest {
 
 			PersistentClass entityBinding = metadata.getEntityBinding( TheEntity.class.getName() );
 			assertEquals( UUID.class, entityBinding.getIdentifier().getType().getReturnedClass() );
-			IdentifierGenerator generator = entityBinding.getIdentifier().createIdentifierGenerator(
-					metadata.getMetadataBuildingOptions().getIdentifierGeneratorFactory(),
-					metadata.getDatabase().getDialect(),
-					null,
-					null,
-					(RootClass) entityBinding
-			);
-			assertTyping( UUIDGenerator.class, generator );
+			KeyValue keyValue = entityBinding.getIdentifier();
+			Dialect dialect = metadata.getDatabase().getDialect();
+			final Generator generator = keyValue.createGenerator( dialect, (RootClass) entityBinding);
+			assertTyping( UuidGenerator.class, generator );
 
 			// now a functional test
 			SessionFactory sf = metadata.buildSessionFactory();
@@ -72,7 +68,7 @@ public class GeneratedValueTest {
 				Session s = sf.openSession();
 				s.beginTransaction();
 				try {
-					s.save( theEntity );
+					s.persist( theEntity );
 					s.getTransaction().commit();
 					s.close();
 
@@ -81,7 +77,7 @@ public class GeneratedValueTest {
 					s = sf.openSession();
 					s.beginTransaction();
 
-					s.delete( theEntity );
+					s.remove( theEntity );
 					s.getTransaction().commit();
 				}
 				catch (Exception e) {

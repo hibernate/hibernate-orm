@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.internal.bytebuddy;
 
@@ -18,7 +16,7 @@ import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.proxy.pojo.bytebuddy.ByteBuddyProxyFactory;
 import org.hibernate.proxy.pojo.bytebuddy.ByteBuddyProxyHelper;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -35,17 +33,24 @@ import org.junit.jupiter.params.provider.MethodSource;
  *
  * @author Sanne Grinovero
  */
-@TestForIssue( jiraKey = "HHH-15790" )
+@JiraKey( value = "HHH-15790" )
 public class SuperTypesEnhancementTest {
 
 	private static final ByteBuddyProxyHelper helper = new ByteBuddyProxyHelper( new ByteBuddyState() );
 
 	private static Stream<Arguments> superTypeMethods() {
-		return Arrays.stream( PrimeAmongSecondarySupertypes.class.getDeclaredMethods() ).map( e -> Arguments.of( e ) );
+		return Arrays.stream( PrimeAmongSecondarySupertypes.class.getDeclaredMethods() )
+				// need to filter out methods added by jacoco
+				.filter( method -> !method.isSynthetic() )
+				.map( Arguments::of );
 	}
 
 	private static Stream<Arguments> interfaces() {
-		return Arrays.stream( PrimeAmongSecondarySupertypes.class.getDeclaredMethods() ).map( m -> m.getReturnType() ).map( e -> Arguments.of( e ) );
+		return Arrays.stream( PrimeAmongSecondarySupertypes.class.getDeclaredMethods() )
+				// need to filter out methods added by jacoco
+				.filter( method -> !method.isSynthetic() )
+				.map( m -> m.getReturnType() )
+				.map( e -> Arguments.of( e ) );
 	}
 
 	@ParameterizedTest

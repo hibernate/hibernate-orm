@@ -1,19 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.hql.internal;
 
-import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaSelection;
@@ -33,18 +30,20 @@ import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
+
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 
 /**
  * @author Steve Ebersole
  */
-public class FullyQualifiedReflectivePathTerminal
+public class FullyQualifiedReflectivePathTerminal<E>
 		extends FullyQualifiedReflectivePath
-		implements SqmExpression {
-	private final SqmExpressible expressibleType;
+		implements SqmExpression<E> {
+	private final @Nullable SqmExpressible<E> expressibleType;
 	private final SqmCreationState creationState;
 
-	private final Function<SemanticQueryWalker,?> handler;
+	private final Function<SemanticQueryWalker<?>,?> handler;
 
 	public FullyQualifiedReflectivePathTerminal(
 			FullyQualifiedReflectivePathSource pathSource,
@@ -60,22 +59,19 @@ public class FullyQualifiedReflectivePathTerminal
 	}
 
 	@Override
-	public FullyQualifiedReflectivePathTerminal copy(SqmCopyContext context) {
+	public FullyQualifiedReflectivePathTerminal<E> copy(SqmCopyContext context) {
 		return this;
 	}
 
-	@SuppressWarnings("unchecked")
-	private Function<SemanticQueryWalker, ?> resolveTerminalSemantic() {
+	private Function<SemanticQueryWalker<?>, ?> resolveTerminalSemantic() {
 		return semanticQueryWalker -> {
 			final SqmCreationContext creationContext = creationState.getCreationContext();
-			final ClassLoaderService cls =
-					creationContext.getServiceRegistry().requireService( ClassLoaderService.class );
 			final String fullPath = getFullPath();
 
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			// See if it is an entity-type literal
 
-			final EntityDomainType<?> entityDescriptor = creationContext.getJpaMetamodel().entity( fullPath );
+			final EntityDomainType<?> entityDescriptor = creationContext.getJpaMetamodel().findEntityType( fullPath );
 			if ( entityDescriptor != null ) {
 				return new SqmLiteralEntityType<>( entityDescriptor, creationContext.getNodeBuilder() );
 			}
@@ -84,7 +80,7 @@ public class FullyQualifiedReflectivePathTerminal
 			// See if it is a Class FQN
 
 			try {
-				final Class<?> namedClass = cls.classForName( fullPath );
+				final Class<?> namedClass = creationContext.classForName( fullPath );
 				if ( namedClass != null ) {
 					return semanticQueryWalker.visitFullyQualifiedClass( namedClass );
 				}
@@ -98,7 +94,7 @@ public class FullyQualifiedReflectivePathTerminal
 
 			final String parentFullPath = getParent().getFullPath();
 			try {
-				final Class<?> namedClass = cls.classForName( parentFullPath );
+				final Class<?> namedClass = creationContext.classForName( parentFullPath );
 				if ( namedClass != null ) {
 					return createEnumOrFieldLiteral( namedClass );
 				}
@@ -136,23 +132,23 @@ public class FullyQualifiedReflectivePathTerminal
 	}
 
 	@Override
-	public SqmExpressible getNodeType() {
+	public @Nullable SqmExpressible<E> getNodeType() {
 		return expressibleType;
 	}
 
 	@Override
-	public Object accept(SemanticQueryWalker walker) {
-		return handler.apply( walker );
+	public <X> X accept(SemanticQueryWalker<X> walker) {
+		return (X) handler.apply( walker );
 	}
 
 	@Override
-	public JavaType getJavaTypeDescriptor() {
-		return expressibleType.getExpressibleJavaType();
+	public JavaType<E> getJavaTypeDescriptor() {
+		return expressibleType == null ? null : expressibleType.getExpressibleJavaType();
 	}
 
 
 	@Override
-	public void applyInferableType(SqmExpressible type) {
+	public void applyInferableType(@Nullable SqmExpressible<?> type) {
 	}
 
 	@Override
@@ -198,7 +194,7 @@ public class FullyQualifiedReflectivePathTerminal
 	}
 
 	@Override
-	public SqmExpression as(Class type) {
+	public <X> SqmExpression<X> as(Class<X> type) {
 		return null;
 	}
 
@@ -219,6 +215,21 @@ public class FullyQualifiedReflectivePathTerminal
 
 	@Override
 	public SqmPredicate equalTo(Object that) {
+		return null;
+	}
+
+	@Override
+	public Predicate notEqualTo(Expression value) {
+		return null;
+	}
+
+	@Override
+	public Predicate notEqualTo(Object value) {
+		return null;
+	}
+
+	@Override
+	public <X> SqmExpression<X> cast(Class<X> type) {
 		return null;
 	}
 
@@ -248,7 +259,7 @@ public class FullyQualifiedReflectivePathTerminal
 	}
 
 	@Override
-	public JpaSelection alias(String name) {
+	public JpaSelection<E> alias(String name) {
 		return null;
 	}
 

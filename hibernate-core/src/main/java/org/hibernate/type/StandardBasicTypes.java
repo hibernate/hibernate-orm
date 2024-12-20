@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
 
@@ -551,7 +549,6 @@ public final class StandardBasicTypes {
 	);
 
 
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Binary mappings
 
@@ -572,14 +569,6 @@ public final class StandardBasicTypes {
 			Byte[].class,
 			SqlTypes.VARBINARY
 	);
-
-	/**
-	 * The standard Hibernate type for mapping {@link Byte Byte[]} to JDBC {@link org.hibernate.type.SqlTypes#VARBINARY VARBINARY}.
-	 *
-	 * @deprecated use {@link #BINARY_WRAPPER} instead
-	 */
-	@Deprecated(forRemoval = true)
-	public static final BasicTypeReference<Byte[]> WRAPPER_BINARY = BINARY_WRAPPER;
 
 	/**
 	 * The standard Hibernate type for mapping {@code byte[]} to JDBC {@link org.hibernate.type.SqlTypes#LONGVARBINARY LONGVARBINARY}.
@@ -746,10 +735,34 @@ public final class StandardBasicTypes {
 
 	/**
 	 * The standard Hibernate type for mapping {@code float[]} to JDBC {@link org.hibernate.type.SqlTypes#VECTOR VECTOR},
-	 * specifically for embedding vectors like provided by the PostgreSQL extension pgvector.
+	 * specifically for embedding vectors like provided by the PostgreSQL extension pgvector and Oracle 23ai.
 	 */
 	public static final BasicTypeReference<float[]> VECTOR = new BasicTypeReference<>(
 			"vector", float[].class, SqlTypes.VECTOR
+	);
+
+	/**
+	 * The standard Hibernate type for mapping {@code byte[]} to JDBC {@link org.hibernate.type.SqlTypes#VECTOR_INT8 VECTOR_INT8},
+	 * specifically for embedding integer vectors (8-bits) like provided by Oracle 23ai.
+	 */
+	public static final BasicTypeReference<byte[]> VECTOR_INT8 = new BasicTypeReference<>(
+			"byte_vector", byte[].class, SqlTypes.VECTOR_INT8
+	);
+
+	/**
+	 * The standard Hibernate type for mapping {@code float[]} to JDBC {@link org.hibernate.type.SqlTypes#VECTOR VECTOR},
+	 * specifically for embedding single-precision floating-point (32-bits) vectors like provided by Oracle 23ai.
+	 */
+	public static final BasicTypeReference<float[]> VECTOR_FLOAT32 = new BasicTypeReference<>(
+			"float_vector", float[].class, SqlTypes.VECTOR_FLOAT32
+	);
+
+	/**
+	 * The standard Hibernate type for mapping {@code double[]} to JDBC {@link org.hibernate.type.SqlTypes#VECTOR VECTOR},
+	 * specifically for embedding double-precision floating-point (64-bits) vectors like provided by Oracle 23ai.
+	 */
+	public static final BasicTypeReference<double[]> VECTOR_FLOAT64 = new BasicTypeReference<>(
+			"double_vector", double[].class, SqlTypes.VECTOR_FLOAT64
 	);
 
 
@@ -1250,6 +1263,27 @@ public final class StandardBasicTypes {
 				null,
 				basicTypeRegistry,
 				"vector"
+		);
+
+		handle(
+				VECTOR_FLOAT32,
+				null,
+				basicTypeRegistry,
+				"float_vector"
+		);
+
+		handle(
+				VECTOR_FLOAT64,
+				null,
+				basicTypeRegistry,
+				"double_vector"
+		);
+
+		handle(
+				VECTOR_INT8,
+				null,
+				basicTypeRegistry,
+				"byte_vector"
 		);
 
 

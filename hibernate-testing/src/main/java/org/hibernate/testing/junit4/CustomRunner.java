@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.junit4;
 
@@ -14,7 +12,6 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -30,11 +27,9 @@ import org.hibernate.testing.SkipForDialects;
 import org.hibernate.testing.orm.junit.DialectContext;
 import org.hibernate.testing.orm.junit.DialectFilterExtension;
 import org.hibernate.testing.orm.junit.SkipForDialectGroup;
-import org.hibernate.testing.orm.junit.TestingUtil;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.runner.manipulation.NoTestsRemainException;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.BlockJUnit4ClassRunner;
@@ -327,6 +322,8 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 						effectiveSkipForDialect.microVersion(),
 						dialect,
 						effectiveSkipForDialect.matchSubTypes()
+								? DialectFilterExtension.VersionMatchMode.SAME_OR_OLDER
+								: DialectFilterExtension.VersionMatchMode.SAME
 				);
 
 				if ( versionsMatch ) {
@@ -479,6 +476,8 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 						matchingMicroVersion,
 						dialect,
 						requiresDialect.matchSubTypes()
+								? DialectFilterExtension.VersionMatchMode.SAME_OR_NEWER
+								: DialectFilterExtension.VersionMatchMode.SAME
 				);
 			}
 			else {

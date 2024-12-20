@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.persistenceunit;
 
@@ -21,7 +19,7 @@ import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.persister.entity.EntityPersister;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
@@ -34,7 +32,7 @@ import static org.junit.Assert.assertNull;
 public class TwoPersistenceUnits2LCDisabledEnabled {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11516" )
+	@JiraKey( value = "HHH-11516" )
 	public void testDisabledEnabled() {
 		final Map<Object, Object> config = Environment.getProperties();
 		config.put( AvailableSettings.LOADED_CLASSES, Collections.singletonList( AnEntity.class ) );

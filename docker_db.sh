@@ -1,6 +1,10 @@
 #! /bin/bash
 
-if command -v podman > /dev/null; then
+if command -v docker > /dev/null; then
+  CONTAINER_CLI=$(command -v docker)
+  HEALTCHECK_PATH="{{.State.Health.Status}}"
+  PRIVILEGED_CLI=""
+else
   CONTAINER_CLI=$(command -v podman)
   HEALTCHECK_PATH="{{.State.Healthcheck.Status}}"
   # Only use sudo for podman
@@ -9,10 +13,6 @@ if command -v podman > /dev/null; then
   else
     PRIVILEGED_CLI=""
   fi
-else
-  CONTAINER_CLI=$(command -v docker)
-  HEALTCHECK_PATH="{{.State.Health.Status}}"
-  PRIVILEGED_CLI=""
 fi
 
 mysql() {
@@ -21,7 +21,7 @@ mysql() {
 
 mysql_8_0() {
     $CONTAINER_CLI rm -f mysql || true
-    $CONTAINER_CLI run --name mysql -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mysql:8.0.31 --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_as_cs --skip-character-set-client-handshake --log-bin-trust-function-creators=1
+    $CONTAINER_CLI run --name mysql -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d ${DB_IMAGE_MYSQL_8_0:-docker.io/mysql:8.0.31} --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_as_cs --skip-character-set-client-handshake --log-bin-trust-function-creators=1 --lower_case_table_names=2
     # Give the container some time to start
     OUTPUT=
     n=0
@@ -45,7 +45,7 @@ mysql_8_0() {
 
 mysql_8_1() {
     $CONTAINER_CLI rm -f mysql || true
-    $CONTAINER_CLI run --name mysql -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mysql:8.1.0 --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_as_cs --skip-character-set-client-handshake --log-bin-trust-function-creators=1
+    $CONTAINER_CLI run --name mysql -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d ${DB_IMAGE_MYSQL_8_1:-docker.io/mysql:8.1.0} --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_as_cs --skip-character-set-client-handshake --log-bin-trust-function-creators=1 --lower_case_table_names=2
     # Give the container some time to start
     OUTPUT=
     n=0
@@ -69,7 +69,7 @@ mysql_8_1() {
 
 mysql_8_2() {
     $CONTAINER_CLI rm -f mysql || true
-    $CONTAINER_CLI run --name mysql -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mysql:8.2.0 --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_as_cs --skip-character-set-client-handshake --log-bin-trust-function-creators=1
+    $CONTAINER_CLI run --name mysql -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d ${DB_IMAGE_MYSQL_8_2:-docker.io/mysql:8.2.0} --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_as_cs --skip-character-set-client-handshake --log-bin-trust-function-creators=1 --lower_case_table_names=2
     # Give the container some time to start
     OUTPUT=
     n=0
@@ -92,99 +92,62 @@ mysql_8_2() {
 }
 
 mariadb() {
-  mariadb_11_3
+  mariadb_11_7
 }
 
-mariadb_10_4() {
-    $CONTAINER_CLI rm -f mariadb || true
-    $CONTAINER_CLI run --name mariadb -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mariadb:10.4.31 --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake
-    OUTPUT=
+mariadb_wait_until_start()
+{
     n=0
     until [ "$n" -ge 5 ]
     do
-        # Need to access STDERR. Thanks for the snippet https://stackoverflow.com/a/56577569/412446
-        { OUTPUT="$( { $CONTAINER_CLI logs mariadb; } 2>&1 1>&3 3>&- )"; } 3>&1;
-        if [[ $OUTPUT == *"ready for connections"* ]]; then
+        if $CONTAINER_CLI exec mariadb healthcheck.sh --connect --innodb_initialized; then
           break;
         fi
         n=$((n+1))
         echo "Waiting for MariaDB to start..."
         sleep 3
     done
-    if [ "$n" -ge 5 ]; then
-      echo "MariaDB failed to start and configure after 15 seconds"
-    else
+    if $CONTAINER_CLI exec mariadb healthcheck.sh --connect --innodb_initialized; then
       echo "MariaDB successfully started"
+    else
+      echo "MariaDB failed to start and configure after 15 seconds"
     fi
 }
 
-mariadb_10_9() {
+mariadb_10_5() {
     $CONTAINER_CLI rm -f mariadb || true
-    $CONTAINER_CLI run --name mariadb -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mariadb:10.9.3 --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake
-    OUTPUT=
-    n=0
-    until [ "$n" -ge 5 ]
-    do
-        # Need to access STDERR. Thanks for the snippet https://stackoverflow.com/a/56577569/412446
-        { OUTPUT="$( { $CONTAINER_CLI logs mariadb; } 2>&1 1>&3 3>&- )"; } 3>&1;
-        if [[ $OUTPUT == *"ready for connections"* ]]; then
-          break;
-        fi
-        n=$((n+1))
-        echo "Waiting for MariaDB to start..."
-        sleep 3
-    done
-    if [ "$n" -ge 5 ]; then
-      echo "MariaDB failed to start and configure after 15 seconds"
-    else
-      echo "MariaDB successfully started"
-    fi
+    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d ${DB_IMAGE_MARIADB_10_5:-docker.io/mariadb:10.5.25} --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
+    mariadb_wait_until_start
+}
+
+mariadb_10_11() {
+    $CONTAINER_CLI rm -f mariadb || true
+    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d ${DB_IMAGE_MARIADB_10_11:-docker.io/mariadb:10.11.8} --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
+    mariadb_wait_until_start
 }
 
 mariadb_11_1() {
     $CONTAINER_CLI rm -f mariadb || true
-    $CONTAINER_CLI run --name mariadb -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mariadb:11.1.2 --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake
-    OUTPUT=
-    n=0
-    until [ "$n" -ge 5 ]
-    do
-        # Need to access STDERR. Thanks for the snippet https://stackoverflow.com/a/56577569/412446
-        { OUTPUT="$( { $CONTAINER_CLI logs mariadb; } 2>&1 1>&3 3>&- )"; } 3>&1;
-        if [[ $OUTPUT == *"ready for connections"* ]]; then
-          break;
-        fi
-        n=$((n+1))
-        echo "Waiting for MariaDB to start..."
-        sleep 3
-    done
-    if [ "$n" -ge 5 ]; then
-      echo "MariaDB failed to start and configure after 15 seconds"
-    else
-      echo "MariaDB successfully started"
-    fi
+    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d ${DB_IMAGE_MARIADB_11_1:-docker.io/mariadb:11.1.2} --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
+    mariadb_wait_until_start
 }
 
-mariadb_11_3() {
+mariadb_11_4() {
     $CONTAINER_CLI rm -f mariadb || true
-    $CONTAINER_CLI run --name mariadb -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mariadb:11.3.1-rc --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake
-    OUTPUT=
-    n=0
-    until [ "$n" -ge 5 ]
-    do
-        # Need to access STDERR. Thanks for the snippet https://stackoverflow.com/a/56577569/412446
-        { OUTPUT="$( { $CONTAINER_CLI logs mariadb; } 2>&1 1>&3 3>&- )"; } 3>&1;
-        if [[ $OUTPUT == *"ready for connections"* ]]; then
-          break;
-        fi
-        n=$((n+1))
-        echo "Waiting for MariaDB to start..."
-        sleep 3
-    done
-    if [ "$n" -ge 5 ]; then
-      echo "MariaDB failed to start and configure after 15 seconds"
-    else
-      echo "MariaDB successfully started"
-    fi
+    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d ${DB_IMAGE_MARIADB_11_4:-docker.io/mariadb:11.4.2} --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
+    mariadb_wait_until_start
+}
+
+mariadb_11_7() {
+    $CONTAINER_CLI rm -f mariadb || true
+    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d ${DB_IMAGE_MARIADB_11_7:-docker.io/mariadb:11.7-rc} --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
+    mariadb_wait_until_start
+}
+
+mariadb_verylatest() {
+    $CONTAINER_CLI rm -f mariadb || true
+    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d ${DB_IMAGE_MARIADB_VERYLATEST:-quay.io/mariadb-foundation/mariadb-devel:verylatest} --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
+    mariadb_wait_until_start
 }
 
 postgresql() {
@@ -193,34 +156,34 @@ postgresql() {
 
 postgresql_12() {
     $CONTAINER_CLI rm -f postgres || true
-    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 -d docker.io/postgis/postgis:12-3.4
-    $CONTAINER_CLI exec postgres bash -c '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install postgresql-12-pgvector && psql -U hibernate_orm_test -d hibernate_orm_test -c "create extension vector;"'
+    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 -d ${DB_IMAGE_POSTGRESQL_12:-docker.io/postgis/postgis:12-3.4}
+    $CONTAINER_CLI exec postgres bash -c '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install -y postgresql-12-pgvector && psql -U hibernate_orm_test -d hibernate_orm_test -c "create extension vector;"'
 }
 
 postgresql_13() {
     $CONTAINER_CLI rm -f postgres || true
-    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 -d docker.io/postgis/postgis:13-3.1
-    $CONTAINER_CLI exec postgres bash -c '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install postgresql-13-pgvector && psql -U hibernate_orm_test -d hibernate_orm_test -c "create extension vector;"'
+    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 -d ${DB_IMAGE_POSTGRESQL_13:-docker.io/postgis/postgis:13-3.1}
+    $CONTAINER_CLI exec postgres bash -c '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install -y postgresql-13-pgvector && psql -U hibernate_orm_test -d hibernate_orm_test -c "create extension vector;"'
 }
 
 postgresql_14() {
     $CONTAINER_CLI rm -f postgres || true
-    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 -d docker.io/postgis/postgis:14-3.3
-    $CONTAINER_CLI exec postgres bash -c '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install postgresql-14-pgvector && psql -U hibernate_orm_test -d hibernate_orm_test -c "create extension vector;"'
+    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 -d ${DB_IMAGE_POSTGRESQL_14:-docker.io/postgis/postgis:14-3.3}
+    $CONTAINER_CLI exec postgres bash -c '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install -y postgresql-14-pgvector && psql -U hibernate_orm_test -d hibernate_orm_test -c "create extension vector;"'
 }
 
 postgresql_15() {
     $CONTAINER_CLI rm -f postgres || true
-    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /pgtmpfs:size=131072k -d docker.io/postgis/postgis:15-3.3 \
+    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /pgtmpfs:size=131072k -d ${DB_IMAGE_POSTGRESQL_15:-docker.io/postgis/postgis:15-3.3} \
       -c fsync=off -c synchronous_commit=off -c full_page_writes=off -c shared_buffers=256MB -c maintenance_work_mem=256MB -c max_wal_size=1GB -c checkpoint_timeout=1d
-    $CONTAINER_CLI exec postgres bash -c '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install postgresql-15-pgvector && psql -U hibernate_orm_test -d hibernate_orm_test -c "create extension vector;"'
+    $CONTAINER_CLI exec postgres bash -c '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install -y postgresql-15-pgvector && psql -U hibernate_orm_test -d hibernate_orm_test -c "create extension vector;"'
 }
 
 postgresql_16() {
     $CONTAINER_CLI rm -f postgres || true
-    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /pgtmpfs:size=131072k -d docker.io/postgis/postgis:16-3.4 \
+    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /pgtmpfs:size=131072k -d ${DB_IMAGE_POSTGRESQL_16:-docker.io/postgis/postgis:16-3.4} \
       -c fsync=off -c synchronous_commit=off -c full_page_writes=off -c shared_buffers=256MB -c maintenance_work_mem=256MB -c max_wal_size=1GB -c checkpoint_timeout=1d
-    $CONTAINER_CLI exec postgres bash -c '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install postgresql-16-pgvector && psql -U hibernate_orm_test -d hibernate_orm_test -c "create extension vector;"'
+    $CONTAINER_CLI exec postgres bash -c '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install -y postgresql-16-pgvector && psql -U hibernate_orm_test -d hibernate_orm_test -c "create extension vector;"'
 }
 
 edb() {
@@ -261,7 +224,7 @@ db2() {
 
 db2_11_5() {
     $PRIVILEGED_CLI $CONTAINER_CLI rm -f db2 || true
-    $PRIVILEGED_CLI $CONTAINER_CLI run --name db2 --privileged -e DB2INSTANCE=orm_test -e DB2INST1_PASSWORD=orm_test -e DBNAME=orm_test -e LICENSE=accept -e AUTOCONFIG=false -e ARCHIVE_LOGS=false -e TO_CREATE_SAMPLEDB=false -e REPODB=false -p 50000:50000 -d icr.io/db2_community/db2:11.5.9.0
+    $PRIVILEGED_CLI $CONTAINER_CLI run --name db2 --privileged -e DB2INSTANCE=orm_test -e DB2INST1_PASSWORD=orm_test -e DBNAME=orm_test -e LICENSE=accept -e AUTOCONFIG=false -e ARCHIVE_LOGS=false -e TO_CREATE_SAMPLEDB=false -e REPODB=false -p 50000:50000 -d ${DB_IMAGE_DB2_11_5:-icr.io/db2_community/db2:11.5.9.0}
     # Give the container some time to start
     OUTPUT=
     while [[ $OUTPUT != *"INSTANCE"* ]]; do
@@ -275,7 +238,7 @@ db2_11_5() {
 db2_10_5() {
     $PRIVILEGED_CLI $CONTAINER_CLI rm -f db2 || true
     # The sha represents the tag 10.5.0.5-3.10.0
-    $PRIVILEGED_CLI $CONTAINER_CLI run --name db2 --privileged -e DB2INST1_PASSWORD=db2inst1-pwd -e LICENSE=accept -p 50000:50000 -d docker.io/ibmoms/db2express-c@sha256:a499afd9709a1f69fb41703e88def9869955234c3525547e2efc3418d1f4ca2b db2start
+    $PRIVILEGED_CLI $CONTAINER_CLI run --name db2 --privileged -e DB2INST1_PASSWORD=db2inst1-pwd -e LICENSE=accept -p 50000:50000 -d ${DB_IMAGE_DB2_10_5:-quay.io/hibernate/db2express-c@sha256:a499afd9709a1f69fb41703e88def9869955234c3525547e2efc3418d1f4ca2b} db2start
     # Give the container some time to start
     OUTPUT=
     while [[ $OUTPUT != *"DB2START"* ]]; do
@@ -336,7 +299,7 @@ CREATE TRANSFORM FOR db2gse.ST_Geometry DB2_PROGRAM (
 EOF
     $PRIVILEGED_CLI $CONTAINER_CLI run --name db2spatial --privileged -e DB2INSTANCE=orm_test -e DB2INST1_PASSWORD=orm_test -e DBNAME=orm_test -e LICENSE=accept -e AUTOCONFIG=false -e ARCHIVE_LOGS=false -e TO_CREATE_SAMPLEDB=false -e REPODB=false \
         -v ${temp_dir}:/conf  \
-        -p 50000:50000 -d docker.io/ibmcom/db2:11.5.5.0
+        -p 50000:50000 -d ${DB_IMAGE_DB2_SPATIAL:-docker.io/ibmcom/db2:11.5.5.0}
 
     # Give the container some time to start
     OUTPUT=
@@ -360,7 +323,7 @@ mssql() {
 mssql_2017() {
     $CONTAINER_CLI rm -f mssql || true
     #This sha256 matches a specific tag of mcr.microsoft.com/mssql/server:2017-latest :
-    $CONTAINER_CLI run --name mssql -d -p 1433:1433 -e "SA_PASSWORD=Hibernate_orm_test" -e ACCEPT_EULA=Y mcr.microsoft.com/mssql/server@sha256:7d194c54e34cb63bca083542369485c8f4141596805611e84d8c8bab2339eede
+    $CONTAINER_CLI run --name mssql -d -p 1433:1433 -e "SA_PASSWORD=Hibernate_orm_test" -e ACCEPT_EULA=Y ${DB_IMAGE_MSSQL_2017:-mcr.microsoft.com/mssql/server@sha256:7d194c54e34cb63bca083542369485c8f4141596805611e84d8c8bab2339eede}
     sleep 5
     n=0
     until [ "$n" -ge 5 ]
@@ -381,8 +344,8 @@ mssql_2017() {
 
 mssql_2022() {
     $CONTAINER_CLI rm -f mssql || true
-    #This sha256 matches a specific tag of mcr.microsoft.com/mssql/server:2022-latest :
-    $CONTAINER_CLI run --name mssql -d -p 1433:1433 -e "SA_PASSWORD=Hibernate_orm_test" -e ACCEPT_EULA=Y mcr.microsoft.com/mssql/server@sha256:5439be9edc3b514cf647bcd3651779fa13f487735a985f40cbdcfecc60fea273
+    #This sha256 matches a specific tag of 2022-CU12-ubuntu-22.04 (https://mcr.microsoft.com/en-us/product/mssql/server/tags):
+    $CONTAINER_CLI run --name mssql -d -p 1433:1433 -e "SA_PASSWORD=Hibernate_orm_test" -e ACCEPT_EULA=Y ${DB_IMAGE_MSSQL_2022:-mcr.microsoft.com/mssql/server@sha256:b94071acd4612bfe60a73e265097c2b6388d14d9d493db8f37cf4479a4337480}
     sleep 5
     n=0
     until [ "$n" -ge 5 ]
@@ -404,7 +367,7 @@ mssql_2022() {
 sybase() {
     $CONTAINER_CLI rm -f sybase || true
     # Yup, that sucks, but on ubuntu we need to use -T11889 as per: https://github.com/DataGrip/docker-env/issues/12
-    $CONTAINER_CLI run -d -p 9000:5000 -p 9001:5001 --name sybase --entrypoint /bin/bash docker.io/nguoianphu/docker-sybase -c "source /opt/sybase/SYBASE.sh
+    $CONTAINER_CLI run -d -p 9000:5000 -p 9001:5001 --name sybase --entrypoint /bin/bash ${DB_IMAGE_SYBASE:-docker.io/nguoianphu/docker-sybase} -c "source /opt/sybase/SYBASE.sh
 /opt/sybase/ASE-16_0/bin/dataserver \
 -d/opt/sybase/data/master.dat \
 -e/opt/sybase/ASE-16_0/install/MYSYBASE.log \
@@ -477,6 +440,8 @@ use master
 go
 create login $SYBASE_USER with password $SYBASE_PASSWORD
 go
+exec sp_configure 'enable xml', 1
+go
 exec sp_dboption $SYBASE_DB, 'abort tran on log full', true
 go
 exec sp_dboption $SYBASE_DB, 'allow nulls by default', true
@@ -530,7 +495,7 @@ oracle_setup() {
         echo "Waiting for Oracle to start..."
         sleep 5;
         # On WSL, health-checks intervals don't work for Podman, so run them manually
-        if command -v podman > /dev/null; then
+        if ! command -v docker > /dev/null; then
           $PRIVILEGED_CLI $CONTAINER_CLI healthcheck run oracle > /dev/null
         fi
         HEALTHSTATUS="`$PRIVILEGED_CLI $CONTAINER_CLI inspect -f $HEALTCHECK_PATH oracle`"
@@ -610,7 +575,7 @@ oracle_free_setup() {
         echo "Waiting for Oracle Free to start..."
         sleep 5;
         # On WSL, health-checks intervals don't work for Podman, so run them manually
-        if command -v podman > /dev/null; then
+        if ! command -v docker > /dev/null; then
           $PRIVILEGED_CLI $CONTAINER_CLI healthcheck run oracle > /dev/null
         fi
         HEALTHSTATUS="`$PRIVILEGED_CLI $CONTAINER_CLI inspect -f $HEALTCHECK_PATH oracle`"
@@ -699,15 +664,27 @@ disable_userland_proxy() {
       echo "Stopping docker..."
       sudo service docker stop
       echo "Updating /etc/docker/daemon.json..."
-      sudo bash -c 'echo "${docker_daemon_json/\}/,}\"userland-proxy\": false}" > /etc/docker/daemon.json'
+      sudo bash -c "export docker_daemon_json='$docker_daemon_json'; echo \"\${docker_daemon_json/\}/,}\\\"userland-proxy\\\": false}\" > /etc/docker/daemon.json"
       echo "Starting docker..."
       sudo service docker start
+      echo "Service status:"
+      sudo journalctl -xeu docker.service
       echo "Docker successfully started with userland proxies disabled"
     fi
   fi
 }
 
 oracle_atps() {
+  echo "Managing Oracle Autonomous Database..."
+  export INFO=$(curl -s -k -L -X GET "https://api.atlas-controller.oraclecloud.com/ords/atlas/admin/database?type=autonomous2&hostname=`hostname`" -H 'accept: application/json')
+  export HOST=$(echo $INFO | jq -r '.database' | jq -r '.host')
+  export SERVICE=$(echo $INFO | jq -r '.database' | jq -r '.service')
+  export PASSWORD=$(echo $INFO | jq -r '.database' | jq -r '.password')
+
+  curl -k -s -X POST "https://${HOST}.oraclevcn.com:8443/ords/admin/_/sql" -H 'content-type: application/sql' -H 'accept: application/json' -basic -u admin:${PASSWORD} --data-ascii "create user hibernate_orm_test_$RUNID identified by \"Oracle_19_Password\" DEFAULT TABLESPACE DATA TEMPORARY TABLESPACE TEMP;alter user hibernate_orm_test_$RUNID quota unlimited on data;grant CREATE SESSION, RESOURCE, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE to hibernate_orm_test_$RUNID;"
+}
+
+oracle_atps_tls() {
   echo "Managing Oracle Autonomous Database..."
   export INFO=$(curl -s -k -L -X GET "https://api.atlas-controller.oraclecloud.com/ords/atlas/admin/database?type=autonomous&hostname=`hostname`" -H 'accept: application/json')
   export HOST=$(echo $INFO | jq -r '.database' | jq -r '.host')
@@ -764,6 +741,21 @@ oracle() {
   oracle_23
 }
 
+oracle_18() {
+    $PRIVILEGED_CLI $CONTAINER_CLI rm -f oracle || true
+    disable_userland_proxy
+    # We need to use the defaults
+    # SYSTEM/Oracle18
+    $PRIVILEGED_CLI $CONTAINER_CLI run --name oracle -d -p 1521:1521 -e ORACLE_PASSWORD=Oracle18 \
+       --cap-add cap_net_raw \
+       --health-cmd healthcheck.sh \
+       --health-interval 5s \
+       --health-timeout 5s \
+       --health-retries 10 \
+       ${DB_IMAGE_ORACLE_21:-docker.io/gvenzl/oracle-xe:18.4.0}
+    oracle_setup
+}
+
 oracle_21() {
     $PRIVILEGED_CLI $CONTAINER_CLI rm -f oracle || true
     disable_userland_proxy
@@ -775,7 +767,7 @@ oracle_21() {
        --health-interval 5s \
        --health-timeout 5s \
        --health-retries 10 \
-       docker.io/gvenzl/oracle-xe:21.3.0-full
+       ${DB_IMAGE_ORACLE_21:-docker.io/gvenzl/oracle-xe:21.3.0}
     oracle_setup
 }
 
@@ -789,14 +781,14 @@ oracle_23() {
        --health-interval 5s \
        --health-timeout 5s \
        --health-retries 10 \
-       docker.io/gvenzl/oracle-free:23-full
+       ${DB_IMAGE_ORACLE_23:-docker.io/gvenzl/oracle-free:23}
     oracle_free_setup
 }
 
 hana() {
     temp_dir=$(mktemp -d)
     echo '{"master_password" : "H1bernate_test"}' >$temp_dir/password.json
-    chmod 777 -R $temp_dir
+    chmod -R 777 $temp_dir
     $PRIVILEGED_CLI $CONTAINER_CLI rm -f hana || true
     $PRIVILEGED_CLI $CONTAINER_CLI run -d --name hana -p 39013:39013 -p 39017:39017 -p 39041-39045:39041-39045 -p 1128-1129:1128-1129 -p 59013-59014:59013-59014 \
       --memory=8g \
@@ -806,7 +798,7 @@ hana() {
       --sysctl kernel.shmmni=4096 \
       --sysctl kernel.shmall=8388608 \
       -v $temp_dir:/config:Z \
-      docker.io/saplabs/hanaexpress:2.00.072.00.20231123.1 \
+      ${DB_IMAGE_HANA:-docker.io/saplabs/hanaexpress:2.00.076.00.20240701.1} \
       --passwords-url file:///config/password.json \
       --agree-to-sap-license
     # Give the container some time to start
@@ -820,8 +812,47 @@ hana() {
 }
 
 cockroachdb() {
-  cockroachdb_23_1
+  cockroachdb_24_1
 }
+
+cockroachdb_24_1() {
+  $CONTAINER_CLI rm -f cockroach || true
+  LOG_CONFIG="
+sinks:
+  stderr:
+    channels: all
+    filter: ERROR
+    redact: false
+    exit-on-error: true
+"
+  $CONTAINER_CLI run -d --name=cockroach -m 6g -p 26257:26257 -p 8080:8080 ${DB_IMAGE_COCKROACHDB_24_1:-cockroachdb/cockroach:v24.1.5} start-single-node \
+    --insecure --store=type=mem,size=0.25 --advertise-addr=localhost --log="$LOG_CONFIG"
+  OUTPUT=
+  while [[ $OUTPUT != *"CockroachDB node starting"* ]]; do
+        echo "Waiting for CockroachDB to start..."
+        sleep 10
+        # Note we need to redirect stderr to stdout to capture the logs
+        OUTPUT=$($CONTAINER_CLI logs cockroach 2>&1)
+  done
+  echo "Enabling experimental box2d operators and some optimized settings for running the tests"
+  #settings documented in https://www.cockroachlabs.com/docs/v24.1/local-testing#use-a-local-single-node-cluster-with-in-memory-storage
+  $CONTAINER_CLI exec cockroach bash -c "cat <<EOF | ./cockroach sql --insecure
+SET CLUSTER SETTING sql.spatial.experimental_box2d_comparison_operators.enabled = on;
+SET CLUSTER SETTING kv.range_merge.queue_interval = '50ms';
+SET CLUSTER SETTING jobs.registry.interval.gc = '30s';
+SET CLUSTER SETTING jobs.registry.interval.cancel = '180s';
+SET CLUSTER SETTING jobs.retention_time = '15s';
+SET CLUSTER SETTING sql.stats.automatic_collection.enabled = false;
+SET CLUSTER SETTING kv.range_split.by_load_merge_delay = '5s';
+ALTER RANGE default CONFIGURE ZONE USING "gc.ttlseconds" = 600;
+ALTER DATABASE system CONFIGURE ZONE USING "gc.ttlseconds" = 600;
+
+quit
+EOF
+"
+  echo "Cockroachdb successfully started"
+}
+
 
 cockroachdb_23_1() {
   $CONTAINER_CLI rm -f cockroach || true
@@ -833,7 +864,7 @@ sinks:
     redact: false
     exit-on-error: true
 "
-  $CONTAINER_CLI run -d --name=cockroach -m 6g -p 26257:26257 -p 8080:8080 docker.io/cockroachdb/cockroach:v23.1.12 start-single-node \
+  $CONTAINER_CLI run -d --name=cockroach -m 6g -p 26257:26257 -p 8080:8080 ${DB_IMAGE_COCKROACHDB_23_1:-docker.io/cockroachdb/cockroach:v23.1.28} start-single-node \
     --insecure --store=type=mem,size=0.25 --advertise-addr=localhost --log="$LOG_CONFIG"
   OUTPUT=
   while [[ $OUTPUT != *"CockroachDB node starting"* ]]; do
@@ -853,49 +884,9 @@ SET CLUSTER SETTING jobs.registry.interval.cancel = '180s';
 SET CLUSTER SETTING jobs.retention_time = '15s';
 SET CLUSTER SETTING sql.stats.automatic_collection.enabled = false;
 SET CLUSTER SETTING kv.range_split.by_load_merge_delay = '5s';
+SET CLUSTER SETTING sql.defaults.serial_normalization = 'sql_sequence_cached';
 ALTER RANGE default CONFIGURE ZONE USING "gc.ttlseconds" = 600;
 ALTER DATABASE system CONFIGURE ZONE USING "gc.ttlseconds" = 600;
-
-quit
-EOF
-"
-  echo "Cockroachdb successfully started"
-
-}
-
-cockroachdb_22_2() {
-  $CONTAINER_CLI rm -f cockroach || true
-  LOG_CONFIG="
-sinks:
-  stderr:
-    channels: all
-    filter: ERROR
-    redact: false
-    exit-on-error: true
-"
-  $CONTAINER_CLI run -d --name=cockroach -m 6g -p 26257:26257 -p 8080:8080 docker.io/cockroachdb/cockroach:v22.2.2 start-single-node \
-    --insecure --store=type=mem,size=0.25 --advertise-addr=localhost --log="$LOG_CONFIG"
-  OUTPUT=
-  while [[ $OUTPUT != *"CockroachDB node starting"* ]]; do
-        echo "Waiting for CockroachDB to start..."
-        sleep 10
-        # Note we need to redirect stderr to stdout to capture the logs
-        OUTPUT=$($CONTAINER_CLI logs cockroach 2>&1)
-  done
-  echo "Enabling experimental box2d operators and some optimized settings for running the tests"
-  #settings documented in https://www.cockroachlabs.com/docs/v22.1/local-testing.html#use-a-local-single-node-cluster-with-in-memory-storage
-  $CONTAINER_CLI exec cockroach bash -c "cat <<EOF | ./cockroach sql --insecure
-SET CLUSTER SETTING sql.spatial.experimental_box2d_comparison_operators.enabled = on;
-SET CLUSTER SETTING kv.raft_log.disable_synchronization_unsafe = true;
-SET CLUSTER SETTING kv.range_merge.queue_interval = '50ms';
-SET CLUSTER SETTING jobs.registry.interval.gc = '30s';
-SET CLUSTER SETTING jobs.registry.interval.cancel = '180s';
-SET CLUSTER SETTING jobs.retention_time = '15s';
-SET CLUSTER SETTING sql.stats.automatic_collection.enabled = false;
-SET CLUSTER SETTING kv.range_split.by_load_merge_delay = '5s';
-ALTER RANGE default CONFIGURE ZONE USING "gc.ttlseconds" = 600;
-ALTER DATABASE system CONFIGURE ZONE USING "gc.ttlseconds" = 600;
-SET CLUSTER SETTING sql.defaults.serial_normalization=sql_sequence;
 
 quit
 EOF
@@ -905,12 +896,14 @@ EOF
 }
 
 tidb() {
-  tidb_5_1
+  tidb_5_4
 }
 
-tidb_5_1() {
+tidb_5_4() {
     $CONTAINER_CLI rm -f tidb || true
-    $CONTAINER_CLI run --name tidb -p4000:4000 -d docker.io/pingcap/tidb:v5.1.4
+    $CONTAINER_CLI network rm -f tidb_network || true
+    $CONTAINER_CLI network create tidb_network
+    $CONTAINER_CLI run --name tidb -p4000:4000 -d --network tidb_network ${DB_IMAGE_TIDB_5_4:-docker.io/pingcap/tidb:v5.4.3}
     # Give the container some time to start
     OUTPUT=
     n=0
@@ -924,7 +917,7 @@ tidb_5_1() {
         echo "Waiting for TiDB to start..."
         sleep 3
     done
-    $CONTAINER_CLI run --link tidb:tidb -it --rm docker.io/mysql:8.2.0 mysql -htidb -P4000 -uroot -e "create database hibernate_orm_test; create user 'hibernate_orm_test' identified by 'hibernate_orm_test'; grant all on hibernate_orm_test.* to 'hibernate_orm_test';"
+    $CONTAINER_CLI run -it --rm --network tidb_network docker.io/mysql:8.2.0 mysql -htidb -P4000 -uroot -e "create database hibernate_orm_test; create user 'hibernate_orm_test' identified by 'hibernate_orm_test'; grant all on hibernate_orm_test.* to 'hibernate_orm_test';"
     if [ "$n" -ge 5 ]; then
       echo "TiDB failed to start and configure after 15 seconds"
     else
@@ -932,12 +925,71 @@ tidb_5_1() {
     fi
 }
 
+informix() {
+  informix_14_10
+}
+
+informix_14_10() {
+    temp_dir=$(mktemp -d)
+    echo "ALLOW_NEWLINE 1" >$temp_dir/onconfig.mod
+    chmod 777 -R $temp_dir
+    $PRIVILEGED_CLI $CONTAINER_CLI rm -f informix || true
+    $PRIVILEGED_CLI $CONTAINER_CLI run --name informix --privileged -p 9088:9088 -v $temp_dir:/opt/ibm/config -e LICENSE=accept -e GL_USEGLU=1 -d ${DB_IMAGE_INFORMIX_14_10:-icr.io/informix/informix-developer-database:14.10.FC9W1DE}
+    echo "Starting Informix. This can take a few minutes"
+    # Give the container some time to start
+    OUTPUT=
+    n=0
+    until [ "$n" -ge 5 ]
+    do
+        OUTPUT=$($PRIVILEGED_CLI $CONTAINER_CLI logs informix 2>&1)
+        if [[ $OUTPUT == *"Server Started"* ]]; then
+          sleep 15
+          $PRIVILEGED_CLI $CONTAINER_CLI exec informix bash -l -c "export DB_LOCALE=en_US.utf8;export CLIENT_LOCALE=en_US.utf8;echo \"execute function task('create dbspace from storagepool', 'datadbs', '100 MB', '4');execute function task('create sbspace from storagepool', 'sbspace', '20 M', '0');create database dev in datadbs with log;\" > post_init.sql;dbaccess sysadmin post_init.sql"
+          break;
+        fi
+        n=$((n+1))
+        echo "Waiting for Informix to start..."
+        sleep 30
+    done
+    if [ "$n" -ge 5 ]; then
+      echo "Informix failed to start and configure after 5 minutes"
+    else
+      echo "Informix successfully started"
+    fi
+}
+
+informix_12_10() {
+    $PRIVILEGED_CLI $CONTAINER_CLI rm -f informix || true
+    $PRIVILEGED_CLI $CONTAINER_CLI run --name informix --privileged -p 9088:9088 -e LICENSE=accept -e GL_USEGLU=1 -d ${DB_IMAGE_INFORMIX_12_10:-ibmcom/informix-developer-database:12.10.FC12W1DE}
+    echo "Starting Informix. This can take a few minutes"
+    # Give the container some time to start
+    OUTPUT=
+    n=0
+    until [ "$n" -ge 5 ]
+    do
+        OUTPUT=$($PRIVILEGED_CLI $CONTAINER_CLI logs informix 2>&1)
+        if [[ $OUTPUT == *"login Information"* ]]; then
+          sleep 15
+          $PRIVILEGED_CLI $CONTAINER_CLI exec informix bash -l -c "export DB_LOCALE=en_US.utf8;export CLIENT_LOCALE=en_US.utf8;echo \"execute function task('create dbspace from storagepool', 'datadbs', '100 MB', '4');execute function task('create sbspace from storagepool', 'sbspace', '20 M', '0');create database dev in datadbs with log;\" > post_init.sql;dbaccess sysadmin post_init.sql"
+          break;
+        fi
+        n=$((n+1))
+        echo "Waiting for Informix to start..."
+        sleep 30
+    done
+    if [ "$n" -ge 5 ]; then
+      echo "Informix failed to start and configure after 5 minutes"
+    else
+      echo "Informix successfully started"
+    fi
+}
+
 if [ -z ${1} ]; then
     echo "No db name provided"
     echo "Provide one of:"
     echo -e "\tcockroachdb"
+    echo -e "\tcockroachdb_24_1"
     echo -e "\tcockroachdb_23_1"
-    echo -e "\tcockroachdb_22_2"
     echo -e "\tdb2"
     echo -e "\tdb2_11_5"
     echo -e "\tdb2_10_5"
@@ -949,10 +1001,12 @@ if [ -z ${1} ]; then
     echo -e "\tedb_12"
     echo -e "\thana"
     echo -e "\tmariadb"
-    echo -e "\tmariadb_11_3"
+    echo -e "\tmariadb_verylatest"
+    echo -e "\tmariadb_11_7"
+    echo -e "\tmariadb_11_4"
     echo -e "\tmariadb_11_1"
-    echo -e "\tmariadb_10_9"
-    echo -e "\tmariadb_10_4"
+    echo -e "\tmariadb_10_11"
+    echo -e "\tmariadb_10_5"
     echo -e "\tmssql"
     echo -e "\tmssql_2022"
     echo -e "\tmssql_2017"
@@ -971,7 +1025,10 @@ if [ -z ${1} ]; then
     echo -e "\tpostgresql_12"
     echo -e "\tsybase"
     echo -e "\ttidb"
-    echo -e "\ttidb_5_1"
+    echo -e "\ttidb_5_4"
+    echo -e "\informix"
+    echo -e "\informix_14_10"
+    echo -e "\informix_12_10"
 else
     ${1}
 fi

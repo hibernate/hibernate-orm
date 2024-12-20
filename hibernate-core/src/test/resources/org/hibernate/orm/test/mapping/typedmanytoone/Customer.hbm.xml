@@ -33,7 +33,7 @@
 		
 		<many-to-one name="billingAddress" 
 			entity-name="BillingAddress"
-			cascade="persist,save-update,delete"
+			cascade="persist,merge,delete"
 			fetch="join">
 			<column name="billingAddressId"/>
 			<formula>'BILLING'</formula>
@@ -41,7 +41,7 @@
 			
 		<many-to-one name="shippingAddress" 
 			entity-name="ShippingAddress"
-			cascade="persist,save-update,delete"
+			cascade="persist,merge,delete"
 			fetch="join">
 			<column name="shippingAddressId"/>
 			<formula>'SHIPPING'</formula>

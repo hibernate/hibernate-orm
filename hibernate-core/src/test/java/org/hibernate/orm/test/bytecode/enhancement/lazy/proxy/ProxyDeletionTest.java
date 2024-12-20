@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy;
 
@@ -44,8 +42,8 @@ public class ProxyDeletionTest extends BaseNonConfigCoreFunctionalTestCase {
 		inTransaction(
 				session -> {
 					EEntity entity = session.get( EEntity.class, 17L );
-					session.delete( entity );
-					session.delete( entity.getD() );
+					session.remove( entity );
+					session.remove( entity.getD() );
 				}
 		);
 	}
@@ -139,13 +137,13 @@ public class ProxyDeletionTest extends BaseNonConfigCoreFunctionalTestCase {
 					d.setG( g );
 
 
-					session.save( b1 );
-					session.save( b2 );
-					session.save( a );
-					session.save( c );
-					session.save( g );
-					session.save( d );
-					session.save( e );
+					session.persist( b1 );
+					session.persist( b2 );
+					session.persist( a );
+					session.persist( c );
+					session.persist( g );
+					session.persist( d );
+					session.persist( e );
 
 
 					// create a slew of Activity objects, some with Instruction reference
@@ -156,17 +154,17 @@ public class ProxyDeletionTest extends BaseNonConfigCoreFunctionalTestCase {
 						if ( i % 2 == 0 ) {
 							final Instruction instr = new Instruction( i, "Instruction #" + i );
 							activity.setInstruction( instr );
-							session.save( instr );
+							session.persist( instr );
 						}
 						else {
 							final WebApplication webApplication = new WebApplication( i, "http://" + i + ".com" );
 							webApplication.setName( "name #" + i );
 							activity.setWebApplication( webApplication );
 							webApplication.getActivities().add( activity );
-							session.save( webApplication );
+							session.persist( webApplication );
 						}
 
-						session.save( activity );
+						session.persist( activity );
 					}
 
 					RoleEntity roleEntity = new RoleEntity();
@@ -187,10 +185,10 @@ public class ProxyDeletionTest extends BaseNonConfigCoreFunctionalTestCase {
 					roleEntity.setKey( specializedKey );
 					roleEntity.setSpecializedKey( moreSpecializedKey );
 					moreSpecializedKey.addRole( roleEntity );
-					session.save( specializedEntity );
-					session.save( roleEntity );
-					session.save( specializedKey );
-					session.save( moreSpecializedKey );
+					session.persist( specializedEntity );
+					session.persist( roleEntity );
+					session.persist( specializedKey );
+					session.persist( moreSpecializedKey );
 				}
 		);
 	}

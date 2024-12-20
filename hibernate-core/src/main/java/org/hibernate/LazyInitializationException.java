@@ -1,14 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
 import org.hibernate.internal.CoreMessageLogger;
 
 import org.jboss.logging.Logger;
+
+import java.lang.invoke.MethodHandles;
 
 /**
  * Indicates an attempt to access unfetched data outside the context
@@ -24,6 +24,7 @@ import org.jboss.logging.Logger;
 public class LazyInitializationException extends HibernateException {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			LazyInitializationException.class.getName()
 	);

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.beans.container.spi;
 
@@ -23,20 +21,17 @@ import org.hibernate.resource.beans.spi.BeanInstanceProducer;
  * @author Steve Ebersole
  */
 public abstract class AbstractCdiBeanContainer implements CdiBasedBeanContainer {
-	private Map<String,ContainedBeanImplementor<?>> beanCache = new HashMap<>();
-	private List<ContainedBeanImplementor<?>> registeredBeans = new ArrayList<>();
+	private final Map<String,ContainedBeanImplementor<?>> beanCache = new HashMap<>();
+	private final List<ContainedBeanImplementor<?>> registeredBeans = new ArrayList<>();
 
 	@Override
 	public <B> ContainedBean<B> getBean(
 			Class<B> beanType,
 			LifecycleOptions lifecycleOptions,
 			BeanInstanceProducer fallbackProducer) {
-		if ( lifecycleOptions.canUseCachedReferences() ) {
-			return getCacheableBean( beanType, lifecycleOptions, fallbackProducer );
-		}
-		else {
-			return createBean( beanType, lifecycleOptions, fallbackProducer );
-		}
+		return lifecycleOptions.canUseCachedReferences()
+				? getCacheableBean( beanType, lifecycleOptions, fallbackProducer )
+				: createBean( beanType, lifecycleOptions, fallbackProducer );
 	}
 
 	@SuppressWarnings("unchecked")
@@ -46,22 +41,21 @@ public abstract class AbstractCdiBeanContainer implements CdiBasedBeanContainer 
 			BeanInstanceProducer fallbackProducer) {
 		final String beanCacheKey = Helper.determineBeanCacheKey( beanType );
 
-		final ContainedBeanImplementor existing = beanCache.get( beanCacheKey );
+		final ContainedBeanImplementor<?> existing = beanCache.get( beanCacheKey );
 		if ( existing != null ) {
-			return existing;
+			return (ContainedBeanImplementor<B>) existing;
 		}
 
-		final ContainedBeanImplementor bean = createBean( beanType, lifecycleOptions, fallbackProducer );
+		final ContainedBeanImplementor<B> bean = createBean( beanType, lifecycleOptions, fallbackProducer );
 		beanCache.put( beanCacheKey, bean );
 		return bean;
 	}
 
-	@SuppressWarnings("unchecked")
 	private <B> ContainedBeanImplementor<B> createBean(
 			Class<B> beanType,
 			LifecycleOptions lifecycleOptions,
 			BeanInstanceProducer fallbackProducer) {
-		final ContainedBeanImplementor bean = createBean(
+		final ContainedBeanImplementor<B> bean = createBean(
 				beanType,
 				lifecycleOptions.useJpaCompliantCreation()
 						? JpaCompliantLifecycleStrategy.INSTANCE
@@ -99,23 +93,22 @@ public abstract class AbstractCdiBeanContainer implements CdiBasedBeanContainer 
 			BeanInstanceProducer fallbackProducer) {
 		final String beanCacheKey = Helper.determineBeanCacheKey( beanName, beanType );
 
-		final ContainedBeanImplementor existing = beanCache.get( beanCacheKey );
+		final ContainedBeanImplementor<?> existing = beanCache.get( beanCacheKey );
 		if ( existing != null ) {
-			return existing;
+			return (ContainedBeanImplementor<B>) existing;
 		}
 
-		final ContainedBeanImplementor bean = createBean( beanName, beanType, lifecycleOptions, fallbackProducer );
+		final ContainedBeanImplementor<B> bean = createBean( beanName, beanType, lifecycleOptions, fallbackProducer );
 		beanCache.put( beanCacheKey, bean );
 		return bean;
 	}
 
-	@SuppressWarnings("unchecked")
 	private <B> ContainedBeanImplementor<B> createBean(
 			String beanName,
 			Class<B> beanType,
 			LifecycleOptions lifecycleOptions,
 			BeanInstanceProducer fallbackProducer) {
-		final ContainedBeanImplementor bean = createBean(
+		final ContainedBeanImplementor<B> bean = createBean(
 				beanName,
 				beanType,
 				lifecycleOptions.useJpaCompliantCreation()

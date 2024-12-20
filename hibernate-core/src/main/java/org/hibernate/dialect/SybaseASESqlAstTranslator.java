@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
@@ -13,6 +11,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
@@ -27,7 +26,6 @@ import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.AggregateColumnWriteExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
@@ -49,6 +47,7 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.type.SqlTypes;
 
 /**
  * A SQL AST translator for Sybase ASE.
@@ -96,19 +95,6 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	@Override
-	protected void renderUpdateClause(UpdateStatement updateStatement) {
-		appendSql( "update " );
-		final Stack<Clause> clauseStack = getClauseStack();
-		try {
-			clauseStack.push( Clause.UPDATE );
-			renderDmlTargetTableExpression( updateStatement.getTargetTable() );
-		}
-		finally {
-			clauseStack.pop();
-		}
-	}
-
-	@Override
 	protected boolean supportsJoinsInDelete() {
 		return true;
 	}
@@ -129,7 +115,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	protected void visitConflictClause(ConflictClause conflictClause) {
 		if ( conflictClause != null ) {
 			if ( conflictClause.isDoUpdate() && conflictClause.getConstraintName() != null ) {
-				throw new IllegalQueryOperationException( "Insert conflict do update clause with constraint name is not supported" );
+				throw new IllegalQueryOperationException( "Insert conflict 'do update' clause with constraint name is not supported" );
 			}
 		}
 	}
@@ -271,6 +257,15 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	@Override
+	protected LockStrategy determineLockingStrategy(
+			QuerySpec querySpec,
+			ForUpdateClause forUpdateClause,
+			Boolean followOnLocking) {
+		// No need for follow on locking
+		return LockStrategy.CLAUSE;
+	}
+
+	@Override
 	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
 		// Sybase ASE does not really support the FOR UPDATE clause
 	}
@@ -327,7 +322,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 		append( '(' );
 		visitValuesListEmulateSelectUnion( tableReference.getValuesList() );
 		append( ')' );
-		renderDerivedTableReference( tableReference );
+		renderDerivedTableReferenceIdentificationVariable( tableReference );
 	}
 
 	@Override
@@ -362,8 +357,81 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 
 	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
+		// In Sybase ASE, XMLTYPE is not "comparable", so we have to cast the two parts to varchar for this purpose
+		final boolean isLob = isLob( lhs.getExpressionType() );
+		final boolean ansiNullOn = ((SybaseASEDialect) getDialect()).isAnsiNullOn();
+		if ( isLob ) {
+			switch ( operator ) {
+				case DISTINCT_FROM:
+					if ( ansiNullOn ) {
+						appendSql( "case when " );
+						lhs.accept( this );
+						appendSql( " like " );
+						rhs.accept( this );
+						appendSql( " or " );
+						lhs.accept( this );
+						appendSql( " is null and " );
+						rhs.accept( this );
+						appendSql( " is null then 0 else 1 end=1" );
+					}
+					else {
+						lhs.accept( this );
+						appendSql( " not like " );
+						rhs.accept( this );
+						appendSql( " and (" );
+						lhs.accept( this );
+						appendSql( " is not null or " );
+						rhs.accept( this );
+						appendSql( " is not null)" );
+					}
+					return;
+				case NOT_DISTINCT_FROM:
+					if ( ansiNullOn ) {
+						appendSql( "case when " );
+						lhs.accept( this );
+						appendSql( " like " );
+						rhs.accept( this );
+						appendSql( " or " );
+						lhs.accept( this );
+						appendSql( " is null and " );
+						rhs.accept( this );
+						appendSql( " is null then 0 else 1 end=0" );
+					}
+					else {
+						lhs.accept( this );
+						appendSql( " like " );
+						rhs.accept( this );
+						appendSql( " or " );
+						lhs.accept( this );
+						appendSql( " is null and " );
+						rhs.accept( this );
+						appendSql( " is null" );
+					}
+					return;
+				case EQUAL:
+					lhs.accept( this );
+					appendSql( " like " );
+					rhs.accept( this );
+					return;
+				case NOT_EQUAL:
+					lhs.accept( this );
+					appendSql( " not like " );
+					rhs.accept( this );
+					if ( !ansiNullOn ) {
+						appendSql( " and " );
+						lhs.accept( this );
+						appendSql( " is not null and " );
+						rhs.accept( this );
+						appendSql( " is not null" );
+					}
+					return;
+				default:
+					// Fall through
+					break;
+			}
+		}
 		// I think intersect is only supported in 16.0 SP3
-		if ( getDialect().isAnsiNullOn() ) {
+		if ( ansiNullOn ) {
 			if ( supportsDistinctFromPredicate() ) {
 				renderComparisonEmulateIntersect( lhs, operator, rhs );
 			}
@@ -374,40 +442,28 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 		else {
 			// The ansinull setting only matters if using a parameter or literal and the eq operator according to the docs
 			// http://infocenter.sybase.com/help/index.jsp?topic=/com.sybase.infocenter.dc32300.1570/html/sqlug/sqlug89.htm
-			boolean rhsNotNullPredicate =
-					lhs instanceof Literal
-					|| isParameter( lhs );
-			boolean lhsNotNullPredicate =
-					rhs instanceof Literal
-					|| isParameter( rhs );
-			if ( rhsNotNullPredicate || lhsNotNullPredicate ) {
+			boolean lhsAffectedByAnsiNullOff = lhs instanceof Literal || isParameter( lhs );
+			boolean rhsAffectedByAnsiNullOff = rhs instanceof Literal || isParameter( rhs );
+			if ( lhsAffectedByAnsiNullOff || rhsAffectedByAnsiNullOff ) {
 				lhs.accept( this );
 				switch ( operator ) {
 					case DISTINCT_FROM:
+						// Since this is the ansinull=off case, this comparison is enough
 						appendSql( "<>" );
 						break;
 					case NOT_DISTINCT_FROM:
+						// Since this is the ansinull=off case, this comparison is enough
 						appendSql( '=' );
 						break;
-					case LESS_THAN:
-					case GREATER_THAN:
-					case LESS_THAN_OR_EQUAL:
-					case GREATER_THAN_OR_EQUAL:
-						// These operators are not affected by ansinull=off
-						lhsNotNullPredicate = false;
-						rhsNotNullPredicate = false;
 					default:
 						appendSql( operator.sqlText() );
 						break;
 				}
 				rhs.accept( this );
-				if ( lhsNotNullPredicate ) {
+				if ( operator == ComparisonOperator.EQUAL || operator == ComparisonOperator.NOT_EQUAL ) {
 					appendSql( " and " );
 					lhs.accept( this );
-					appendSql( " is not null" );
-				}
-				if ( rhsNotNullPredicate ) {
-					appendSql( " and " );
+					appendSql( " is not null and " );
 					rhs.accept( this );
 					appendSql( " is not null" );
 				}
@@ -421,6 +477,21 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 				}
 			}
 		}
+	}
+
+	public static boolean isLob(JdbcMappingContainer expressionType) {
+		return expressionType != null && expressionType.getJdbcTypeCount() == 1 && switch ( expressionType.getSingleJdbcMapping().getJdbcType().getDdlTypeCode() ) {
+			case SqlTypes.LONG32NVARCHAR,
+				SqlTypes.LONG32VARCHAR,
+				SqlTypes.LONGNVARCHAR,
+				SqlTypes.LONGVARCHAR,
+				SqlTypes.LONG32VARBINARY,
+				SqlTypes.LONGVARBINARY,
+				SqlTypes.CLOB,
+				SqlTypes.NCLOB,
+				SqlTypes.BLOB -> true;
+			default -> false;
+		};
 	}
 
 	@Override
@@ -457,9 +528,9 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	@Override
 	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
 		appendSql( OPEN_PARENTHESIS );
-		arithmeticExpression.getLeftHandOperand().accept( this );
+		visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
 		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
-		arithmeticExpression.getRightHandOperand().accept( this );
+		visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
 		appendSql( CLOSE_PARENTHESIS );
 	}
 
@@ -511,11 +582,6 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	@Override
 	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
 		return false;
-	}
-
-	@Override
-	protected String getDual() {
-		return "(select 1 c1)";
 	}
 
 	private boolean supportsParameterOffsetFetchExpression() {

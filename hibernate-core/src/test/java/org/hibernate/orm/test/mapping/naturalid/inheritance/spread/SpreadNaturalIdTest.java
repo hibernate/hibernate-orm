@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.naturalid.inheritance.spread;
 
@@ -12,7 +10,7 @@ import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.ServiceRegistry;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
@@ -21,7 +19,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-7129" )
+@JiraKey( value = "HHH-7129" )
 public class SpreadNaturalIdTest {
 	@Test
 	@SuppressWarnings("EmptyCatchBlock")

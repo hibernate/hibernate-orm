@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.internal;
 
@@ -17,10 +15,12 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * @author Steve Ebersole
  */
-public class NamedHqlQueryDefinitionImpl extends AbstractNamedQueryDefinition implements NamedHqlQueryDefinition {
+public class NamedHqlQueryDefinitionImpl<E> extends AbstractNamedQueryDefinition<E> implements NamedHqlQueryDefinition<E> {
 	private final String hqlString;
 	private final Integer firstResult;
 	private final Integer maxResults;
@@ -28,6 +28,7 @@ public class NamedHqlQueryDefinitionImpl extends AbstractNamedQueryDefinition im
 
 	public NamedHqlQueryDefinitionImpl(
 			String name,
+			@Nullable Class<E> resultType,
 			String hqlString,
 			Integer firstResult,
 			Integer maxResults,
@@ -41,9 +42,11 @@ public class NamedHqlQueryDefinitionImpl extends AbstractNamedQueryDefinition im
 			Integer fetchSize,
 			String comment,
 			Map<String,String> parameterTypes,
-			Map<String,Object> hints) {
+			Map<String,Object> hints,
+			String location) {
 		super(
 				name,
+				resultType,
 				cacheable,
 				cacheRegion,
 				cacheMode,
@@ -53,7 +56,8 @@ public class NamedHqlQueryDefinitionImpl extends AbstractNamedQueryDefinition im
 				timeout,
 				fetchSize,
 				comment,
-				hints
+				hints,
+				location
 		);
 		this.hqlString = hqlString;
 		this.firstResult = firstResult;
@@ -67,9 +71,10 @@ public class NamedHqlQueryDefinitionImpl extends AbstractNamedQueryDefinition im
 	}
 
 	@Override
-	public NamedSqmQueryMemento resolve(SessionFactoryImplementor factory) {
-		return new NamedHqlQueryMementoImpl(
+	public NamedSqmQueryMemento<E> resolve(SessionFactoryImplementor factory) {
+		return new NamedHqlQueryMementoImpl<>(
 				getRegistrationName(),
+				getResultType(),
 				hqlString,
 				firstResult,
 				maxResults,

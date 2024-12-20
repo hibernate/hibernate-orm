@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.from;
 
@@ -14,13 +12,14 @@ import org.hibernate.sql.ast.SqlTreeCreationLogger;
 import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.tree.predicate.PredicateContainer;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 
 /**
  * @author Steve Ebersole
  */
-public class TableGroupJoin implements TableJoin, DomainResultProducer {
+public class TableGroupJoin implements TableJoin, PredicateContainer, DomainResultProducer {
 	private final NavigablePath navigablePath;
 	private final TableGroup joinedGroup;
 
@@ -78,6 +77,7 @@ public class TableGroupJoin implements TableJoin, DomainResultProducer {
 		return predicate;
 	}
 
+	@Override
 	public void applyPredicate(Predicate predicate) {
 		this.predicate = SqlAstTreeHelper.combinePredicates( this.predicate, predicate );
 	}

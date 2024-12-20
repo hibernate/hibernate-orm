@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.joinedsubclass;
 
@@ -21,11 +19,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Gavin King
@@ -40,9 +36,9 @@ public class JoinedSubclassTest {
 	public void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "delete from Employee" ).executeUpdate();
-					session.createQuery( "delete from Customer" ).executeUpdate();
-					session.createQuery( "delete from Person" ).executeUpdate();
+					session.createMutationQuery( "delete from Employee" ).executeUpdate();
+					session.createMutationQuery( "delete from Customer" ).executeUpdate();
+					session.createMutationQuery( "delete from Person" ).executeUpdate();
 				}
 		);
 	}
@@ -56,22 +52,22 @@ public class JoinedSubclassTest {
 					e.setName( "Steve" );
 					e.setSex( 'M' );
 					e.setTitle( "grand poobah" );
-					session.save( e );
+					session.persist( e );
 				}
 		);
 
 
 		Customer c = scope.fromTransaction(
 				session ->
-						session.get( Customer.class, new Long( e.getId() ) )
+						session.get( Customer.class, e.getId() )
 
 		);
 		assertNull( c );
 
 		scope.inTransaction(
 				session -> {
-					Employee employee = session.get( Employee.class, new Long( e.getId() ) );
-					Customer customer = session.get( Customer.class, new Long( e.getId() ) );
+					Employee employee = session.get( Employee.class, e.getId() );
+					Customer customer = session.get( Customer.class, e.getId() );
 					assertNotNull( employee );
 					assertNull( customer );
 				}
@@ -79,7 +75,7 @@ public class JoinedSubclassTest {
 
 		scope.inTransaction(
 				session -> {
-					session.delete( e );
+					session.remove( e );
 				}
 		);
 	}
@@ -110,7 +106,7 @@ public class JoinedSubclassTest {
 
 			Root<Person> root = criteria.from( Person.class );
 
-			criteria.where( criteriaBuilder.gt( root.get( "salary" ), new BigDecimal( 100 ) ) );
+			criteria.where( criteriaBuilder.gt( criteriaBuilder.treat( root, Employee.class ).get( "salary" ), new BigDecimal( 100 ) ) );
 
 			result = s.createQuery( criteria ).list();
 //			result = s.createCriteria( Person.class )
@@ -124,8 +120,8 @@ public class JoinedSubclassTest {
 		assertEquals( result.size(), 1 );
 		assertEquals( result.get(0), new BigDecimal(1000) );*/
 
-			s.delete( p );
-			s.delete( q );
+			s.remove( p );
+			s.remove( q );
 		} );
 	}
 
@@ -148,13 +144,12 @@ public class JoinedSubclassTest {
 
 		scope.inTransaction(
 				session -> {
-					session.lock( p, LockMode.PESSIMISTIC_WRITE );
-					session.lock( q, LockMode.PESSIMISTIC_WRITE );
-					session.delete( p );
-					session.delete( q );
+					session.lock( session.get(Person.class, p.getId()), LockMode.PESSIMISTIC_WRITE );
+					session.lock( session.get( Employee.class, q.getId()), LockMode.PESSIMISTIC_WRITE );
+					session.remove( p );
+					session.remove( q );
 				}
 		);
 	}
 
 }
-

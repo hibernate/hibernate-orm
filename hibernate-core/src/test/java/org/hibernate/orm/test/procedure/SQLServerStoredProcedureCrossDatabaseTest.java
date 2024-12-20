@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.procedure;
 
@@ -15,7 +13,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.SQLServerDialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -34,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Vlad Mihalcea
  */
 @RequiresDialect(value = SQLServerDialect.class, majorVersion = 11)
-@TestForIssue( jiraKey = "HHH-12704" )
+@JiraKey( value = "HHH-12704" )
 @Jpa(
 		annotatedClasses = {
 				Person.class,

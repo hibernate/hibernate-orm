@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.dialect;
 
@@ -18,7 +16,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -64,8 +62,8 @@ public class HANADialectTestCase extends BaseUnitTestCase {
 	@Entity( name = "EntityWithIdentity" )
 	@Table( name = "EntityWithIdentity" )
 	public static class EntityWithIdentity {
-	    @Id @GeneratedValue( strategy = GenerationType.IDENTITY )
-	    private Integer id;
+		@Id @GeneratedValue( strategy = GenerationType.IDENTITY )
+		private Integer id;
 
 		private EntityWithIdentity() {
 			// for use by Hibernate
@@ -81,7 +79,7 @@ public class HANADialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13239")
+	@JiraKey(value = "HHH-13239")
 	public void testLockWaitTimeout() {
 		HANADialect dialect = new HANADialect();
 

@@ -19,7 +19,7 @@
 			<generator class="native"/>
 		</id>
 
-		<list name="subcategories" lazy="true" cascade="save-update,merge,delete,lock">
+		<list name="subcategories" lazy="true" cascade="persist,merge,delete,lock">
 		    <!--cache-->
 			<key column="parent"/>
 			<index column="ord"/>

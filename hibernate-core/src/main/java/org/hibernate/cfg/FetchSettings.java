@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cfg;
 
@@ -48,15 +46,4 @@ public interface FetchSettings {
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applySubselectFetchEnabled(boolean)
 	 */
 	String USE_SUBSELECT_FETCH = "hibernate.use_subselect_fetch";
-
-	/**
-	 * Specifies the {@link org.hibernate.loader.BatchFetchStyle} to use,
-	 * either the name of a {code BatchFetchStyle} instance, or an instance
-	 * of {@code BatchFetchStyle}.
-	 *
-	 * @deprecated An appropriate batch-fetch style is selected automatically
-	 */
-	@Deprecated(since = "6.0")
-	@SuppressWarnings("DeprecatedIsStillUsed")
-	String BATCH_FETCH_STYLE = "hibernate.batch_fetch_style";
 }

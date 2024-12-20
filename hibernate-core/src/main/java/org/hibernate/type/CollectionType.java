@@ -1,18 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
 
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -21,32 +18,38 @@ import java.util.TreeMap;
 
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
+import org.hibernate.Incubating;
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
-import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.collection.spi.AbstractPersistentCollection;
+import org.hibernate.collection.spi.PersistentArrayHolder;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.MarkerObject;
-import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
-import org.hibernate.pretty.MessageHelper;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
 
 import org.jboss.logging.Logger;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
+import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_BOOLEAN_ARRAY;
+import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_INT_ARRAY;
+import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
+import static org.hibernate.pretty.MessageHelper.collectionInfoString;
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * A type that handles Hibernate {@code PersistentCollection}s (including arrays).
@@ -55,9 +58,9 @@ import org.jboss.logging.Logger;
  */
 public abstract class CollectionType extends AbstractType implements AssociationType {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, CollectionType.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, CollectionType.class.getName() );
 
-//	private static final Object NOT_NULL_COLLECTION = new MarkerObject( "NOT NULL COLLECTION" );
+	@Internal
 	public static final Object UNFETCHED_COLLECTION = new MarkerObject( "UNFETCHED COLLECTION" );
 
 	private final String role;
@@ -66,7 +69,6 @@ public abstract class CollectionType extends AbstractType implements Association
 	// the need for the persister if very hot in many use cases: cache it in a field
 	// TODO initialize it at constructor time
 	private volatile CollectionPersister persister;
-
 
 	public CollectionType(String role, String foreignKeyPropertyName) {
 		this.role = role;
@@ -86,16 +88,15 @@ public abstract class CollectionType extends AbstractType implements Association
 	public boolean contains(Object collection, Object childObject, SharedSessionContractImplementor session) {
 		// we do not have to worry about queued additions to uninitialized
 		// collections, since they can only occur for inverse collections!
-		Iterator<?> elems = getElementsIterator( collection );
+		final Iterator<?> elems = getElementsIterator( collection );
 		while ( elems.hasNext() ) {
-			Object element = elems.next();
+			final Object maybeProxy = elems.next();
 			// worrying about proxies is perhaps a little bit of overkill here...
-			final LazyInitializer li = HibernateProxy.extractLazyInitializer( element );
-			if ( li != null ) {
-				if ( !li.isUninitialized() ) {
-					element = li.getImplementation();
-				}
-			}
+			final LazyInitializer initializer = extractLazyInitializer( maybeProxy );
+			final Object element =
+					initializer != null && !initializer.isUninitialized()
+							? initializer.getImplementation()
+							: maybeProxy;
 			if ( element == childObject ) {
 				return true;
 			}
@@ -111,13 +112,13 @@ public abstract class CollectionType extends AbstractType implements Association
 	@Override
 	public final boolean isEqual(Object x, Object y) {
 		return x == y
-			|| x instanceof PersistentCollection && isEqual( (PersistentCollection<?>) x, y )
-			|| y instanceof PersistentCollection && isEqual( (PersistentCollection<?>) y, x );
+			|| x instanceof PersistentCollection<?> xc && isEqual( xc, y )
+			|| y instanceof PersistentCollection<?> yc && isEqual( yc, x );
 	}
 
-	private boolean isEqual(PersistentCollection<?> x, Object y) {
-		return x.wasInitialized()
-			&& ( x.isWrapper( y ) || x.isDirectlyProvidedCollection( y ) );
+	private boolean isEqual(PersistentCollection<?> collection, Object other) {
+		return collection.wasInitialized()
+			&& ( collection.isWrapper( other ) || collection.isDirectlyProvidedCollection( other ) );
 	}
 
 	@Override
@@ -158,56 +159,57 @@ public abstract class CollectionType extends AbstractType implements Association
 	}
 
 	@Override
-	public int[] getSqlTypeCodes(Mapping session) throws MappingException {
-		return ArrayHelper.EMPTY_INT_ARRAY;
+	public int[] getSqlTypeCodes(MappingContext mappingContext) throws MappingException {
+		return EMPTY_INT_ARRAY;
 	}
 
 	@Override
-	public int getColumnSpan(Mapping session) throws MappingException {
+	public int getColumnSpan(MappingContext session) throws MappingException {
 		return 0;
 	}
 
 	@Override
-	public String toLoggableString(Object value, SessionFactoryImplementor factory)
-			throws HibernateException {
+	public String toLoggableString(Object value, SessionFactoryImplementor factory) {
 		if ( value == null ) {
 			return "null";
 		}
-
-		if ( !getReturnedClass().isInstance( value ) && !(value instanceof PersistentCollection) ) {
-			// its most likely the collection-key
-			final CollectionPersister persister = getPersister( factory );
-			if ( persister.getKeyType().getReturnedClass().isInstance( value ) ) {
-				return getRole() + "#" + getPersister( factory ).getKeyType().toLoggableString( value, factory );
-			}
-			else {
+		else {
+			if ( !getReturnedClass().isInstance( value )
+					&& !(value instanceof PersistentCollection) ) {
+				final CollectionPersister persister = getPersister( factory );
+				final Type keyType = persister.getKeyType();
+				final Type identifierType = persister.getIdentifierType();
+				// its most likely the collection-key
+				if ( keyType.getReturnedClass().isInstance( value ) ) {
+					return getRole() + "#" + keyType.toLoggableString( value, factory );
+				}
 				// although it could also be the collection-id
-				if ( persister.getIdentifierType() != null
-						&& persister.getIdentifierType().getReturnedClass().isInstance( value ) ) {
-					return getRole() + "#" + getPersister( factory ).getIdentifierType().toLoggableString( value, factory );
+				else if ( identifierType != null
+						&& identifierType.getReturnedClass().isInstance( value ) ) {
+					return getRole() + "#" + identifierType.toLoggableString( value, factory );
 				}
 			}
+			return renderLoggableString( value, factory );
 		}
-		return renderLoggableString( value, factory );
 	}
 
-	protected String renderLoggableString(Object value, SessionFactoryImplementor factory) throws HibernateException {
+	protected String renderLoggableString(Object value, SessionFactoryImplementor factory) {
 		if ( !Hibernate.isInitialized( value ) ) {
 			return "<uninitialized>";
 		}
-
-		final List<String> list = new ArrayList<>();
-		Type elemType = getElementType( factory );
-		Iterator<?> itr = getElementsIterator( value );
-		while ( itr.hasNext() ) {
-			Object element = itr.next();
-			String string =
-					element == LazyPropertyInitializer.UNFETCHED_PROPERTY || !Hibernate.isInitialized(element)
-							? "<uninitialized>"
-							: elemType.toLoggableString( element, factory );
-			list.add( string );
+		else {
+			final List<String> list = new ArrayList<>();
+			final Type elemType = getElementType( factory );
+			getElementsIterator( value )
+					.forEachRemaining( element -> list.add( elementString( factory, element, elemType ) ) );
+			return list.toString();
 		}
-		return list.toString();
+	}
+
+	private static String elementString(SessionFactoryImplementor factory, Object element, Type elemType) {
+		return element == UNFETCHED_PROPERTY || !Hibernate.isInitialized( element )
+				? "<uninitialized>"
+				: elemType.toLoggableString( element, factory );
 	}
 
 	@Override
@@ -217,7 +219,7 @@ public abstract class CollectionType extends AbstractType implements Association
 
 	@Override
 	public String getName() {
-		return getReturnedClass().getName() + '(' + getRole() + ')';
+		return getReturnedClassName() + '(' + getRole() + ')';
 	}
 
 	/**
@@ -249,6 +251,11 @@ public abstract class CollectionType extends AbstractType implements Association
 		return false;
 	}
 
+	@Internal @Incubating
+	public boolean isInverse(SessionFactoryImplementor factory) {
+		return getPersister( factory ).isInverse();
+	}
+
 	@Override
 	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException {
@@ -259,7 +266,10 @@ public abstract class CollectionType extends AbstractType implements Association
 		//session.getPersistenceContext().getCollectionEntry( (PersistentCollection) value ).getKey();
 
 		final Object key = getKeyOfOwner( owner, session );
-		return key == null ? null : getPersister( session ).getKeyType().disassemble( key, session, owner );
+		return key == null ? null
+				: getPersister( session )
+						.getKeyType()
+						.disassemble( key, session, owner );
 	}
 
 	@Override
@@ -276,9 +286,10 @@ public abstract class CollectionType extends AbstractType implements Association
 			return null;
 		}
 		else {
-			final Object key = getPersister(session)
-					.getKeyType()
-					.assemble( cached, session, owner);
+			final Object key =
+					getPersister( session )
+							.getKeyType()
+							.assemble( cached, session, owner);
 			return resolveKey( key, session, owner );
 		}
 	}
@@ -291,25 +302,24 @@ public abstract class CollectionType extends AbstractType implements Association
 	 * @return The underlying collection persister
 	 */
 	private CollectionPersister getPersister(SharedSessionContractImplementor session) {
-		CollectionPersister p = this.persister;
-		return p != null ? p : getPersister( session.getFactory() );
+		return getPersister( session.getFactory() );
 	}
 
 	private CollectionPersister getPersister(SessionFactoryImplementor factory) {
-		CollectionPersister p = this.persister;
-		if ( p != null ) {
-			return p;
+		CollectionPersister persister = this.persister;
+		if ( persister != null ) {
+			return persister;
 		}
 		else {
 			synchronized ( this ) {
-				p  = this.persister;
-				if ( p != null ) {
-					return p;
+				persister  = this.persister;
+				if ( persister != null ) {
+					return persister;
 				}
 				else {
-					p = factory.getRuntimeMetamodels().getMappingMetamodel().getCollectionDescriptor( role );
-					this.persister = p;
-					return p;
+					persister = factory.getMappingMetamodel().getCollectionDescriptor( role );
+					this.persister = persister;
+					return persister;
 				}
 			}
 		}
@@ -318,11 +328,9 @@ public abstract class CollectionType extends AbstractType implements Association
 	@Override
 	public boolean isDirty(Object old, Object current, SharedSessionContractImplementor session)
 			throws HibernateException {
-
 		// collections don't dirty an un-versioned parent entity
-
-		// TODO: I don't really like this implementation; it would be better if
-		// this was handled by searchForDirtyCollections()
+		// TODO: I don't really like this implementation; it would be
+		//       better if this was handled by searchForDirtyCollections()
 		return super.isDirty( old, current, session );
 		// return false;
 
@@ -331,7 +339,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	@Override
 	public boolean isDirty(Object old, Object current, boolean[] checkable, SharedSessionContractImplementor session)
 			throws HibernateException {
-		return isDirty(old, current, session);
+		return isDirty( old, current, session );
 	}
 
 	/**
@@ -366,42 +374,21 @@ public abstract class CollectionType extends AbstractType implements Association
 	 * @param session The session from which the request is originating.
 	 * @return The collection owner's key
 	 */
-	public Object getKeyOfOwner(Object owner, SharedSessionContractImplementor session) {
-		final PersistenceContext pc = session.getPersistenceContextInternal();
-
-		EntityEntry entityEntry = pc.getEntry( owner );
+	public @Nullable Object getKeyOfOwner(Object owner, SharedSessionContractImplementor session) {
+		final EntityEntry entityEntry = session.getPersistenceContextInternal().getEntry( owner );
 		if ( entityEntry == null ) {
 			// This just handles a particular case of component
 			// projection, perhaps get rid of it and throw an exception
 			return null;
 		}
-
-		if ( foreignKeyPropertyName == null ) {
+		else if ( foreignKeyPropertyName == null ) {
 			return entityEntry.getId();
 		}
 		else {
-			// TODO: at the point where we are resolving collection references, we don't
-			// know if the uk value has been resolved (depends if it was earlier or
-			// later in the mapping document) - now, we could try and use e.getStatus()
-			// to decide to semiResolve(), trouble is that initializeEntity() reuses
-			// the same array for resolved and hydrated values
-			Object id = entityEntry.getLoadedState() != null
-					? entityEntry.getLoadedValue( foreignKeyPropertyName )
-					: entityEntry.getPersister().getPropertyValue( owner, foreignKeyPropertyName );
-
-			// NOTE VERY HACKISH WORKAROUND!!
-			// TODO: Fix this so it will work for non-POJO entity mode
-			Type keyType = getPersister( session ).getKeyType();
-			if ( !keyType.getReturnedClass().isInstance( id ) ) {
-				throw new UnsupportedOperationException( "Re-work support for semi-resolve" );
-//				id = keyType.semiResolve(
-//						entityEntry.getLoadedValue( foreignKeyPropertyName ),
-//						session,
-//						owner
-//				);
-			}
-
-			return id;
+			final Object loadedValue = entityEntry.getLoadedValue( foreignKeyPropertyName );
+			return loadedValue == null
+					? entityEntry.getPersister().getPropertyValue( owner, foreignKeyPropertyName )
+					: loadedValue;
 		}
 	}
 
@@ -415,26 +402,27 @@ public abstract class CollectionType extends AbstractType implements Association
 	 * otherwise, null is returned
 	 */
 	public Object getIdOfOwnerOrNull(Object key, SharedSessionContractImplementor session) {
-		Object ownerId = null;
 		if ( foreignKeyPropertyName == null ) {
-			ownerId = key;
+			return key;
 		}
 		else {
-			final CollectionPersister persister = getPersister( session );
-			Type keyType = persister.getKeyType();
-			EntityPersister ownerPersister = persister.getOwnerEntityPersister();
+			final EntityPersister ownerPersister = getPersister( session ).getOwnerEntityPersister();
 			// TODO: Fix this so it will work for non-POJO entity mode
-			Class<?> ownerMappedClass = ownerPersister.getMappedClass();
-			if ( ownerMappedClass.isAssignableFrom( keyType.getReturnedClass() )
-					&& keyType.getReturnedClass().isInstance( key ) ) {
+			final Class<?> keyClass = keyClass( session );
+			if ( ownerPersister.getMappedClass().isAssignableFrom( keyClass )
+					&& keyClass.isInstance( key ) ) {
 				// the key is the owning entity itself, so get the ID from the key
-				ownerId = ownerPersister.getIdentifier( key, session );
+				return ownerPersister.getIdentifier( key, session );
 			}
 			else {
 				// TODO: check if key contains the owner ID
+				return null;
 			}
 		}
-		return ownerId;
+	}
+
+	private Class<?> keyClass(SharedSessionContractImplementor session) {
+		return getPersister( session ).getKeyType().getReturnedClass();
 	}
 
 	private Object resolveKey(Object key, SharedSessionContractImplementor session, Object owner) {
@@ -461,7 +449,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	@Override
 	public Joinable getAssociatedJoinable(SessionFactoryImplementor factory)
 			throws MappingException {
-		return (Joinable) factory.getRuntimeMetamodels().getMappingMetamodel().getCollectionDescriptor( role );
+		return (Joinable) factory.getMappingMetamodel().getCollectionDescriptor( role );
 	}
 
 	@Override
@@ -472,22 +460,12 @@ public abstract class CollectionType extends AbstractType implements Association
 	@Override
 	public String getAssociatedEntityName(SessionFactoryImplementor factory)
 			throws MappingException {
-		try {
-
-			QueryableCollection collectionPersister = (QueryableCollection) factory.getRuntimeMetamodels().getMappingMetamodel().getCollectionDescriptor( role );
-
-			if ( !collectionPersister.getElementType().isEntityType() ) {
-				throw new MappingException(
-						"collection was not an association: " +
-						collectionPersister.getRole()
-				);
-			}
-
-			return collectionPersister.getElementPersister().getEntityName();
-
+		final CollectionPersister persister = factory.getMappingMetamodel().getCollectionDescriptor( role );
+		if ( persister.getElementType().isEntityType() ) {
+			return persister.getElementPersister().getEntityName();
 		}
-		catch (ClassCastException cce) {
-			throw new MappingException( "collection role is not queryable " + role );
+		else {
+			throw new MappingException( "Collection is not an association: " + persister.getRole() );
 		}
 	}
 
@@ -508,13 +486,13 @@ public abstract class CollectionType extends AbstractType implements Association
 			Object owner,
 			Map<Object, Object> copyCache,
 			SharedSessionContractImplementor session) {
-		Collection result = (Collection) target;
+		final Collection result = (Collection) target;
 		result.clear();
 
 		// copy elements into newly empty target collection
-		Type elemType = getElementType( session.getFactory() );
-		for ( Object o : (Collection<?>) original ) {
-			result.add( elemType.replace(o, null, session, owner, copyCache) );
+		final Type elemType = getElementType( session.getFactory() );
+		for ( Object o : (Collection) original ) {
+			result.add( elemType.replace( o, null, session, owner, copyCache ) );
 		}
 
 		// if the original is a PersistentCollection, and that original
@@ -524,13 +502,11 @@ public abstract class CollectionType extends AbstractType implements Association
 		// One thing to be careful of here is a "bare" original collection
 		// in which case we should never ever ever reset the dirty flag
 		// on the target because we simply do not know...
-		if ( original instanceof PersistentCollection && result instanceof PersistentCollection ) {
-			final PersistentCollection<?> originalPersistentCollection = (PersistentCollection<?>) original;
-			final PersistentCollection<?> resultPersistentCollection = (PersistentCollection<?>) result;
-
-			preserveSnapshot( originalPersistentCollection, resultPersistentCollection, elemType, owner, copyCache, session );
-
-			if ( ! originalPersistentCollection.isDirty() ) {
+		if ( original instanceof PersistentCollection<?> originalPersistentCollection
+				&& result instanceof PersistentCollection<?> resultPersistentCollection) {
+			preserveSnapshot( originalPersistentCollection, resultPersistentCollection,
+					elemType, owner, copyCache, session );
+			if ( !originalPersistentCollection.isDirty() ) {
 				resultPersistentCollection.clearDirty();
 			}
 		}
@@ -545,72 +521,85 @@ public abstract class CollectionType extends AbstractType implements Association
 			Object owner,
 			Map<Object, Object> copyCache,
 			SharedSessionContractImplementor session) {
-		Serializable originalSnapshot = original.getStoredSnapshot();
-		Serializable resultSnapshot = result.getStoredSnapshot();
-		Serializable targetSnapshot;
-
-		if ( originalSnapshot instanceof List ) {
-			ArrayList<Object> targetList = new ArrayList<>( ( (List<?>) originalSnapshot ).size() );
-			targetSnapshot = targetList;
-			for ( Object obj : (List<?>) originalSnapshot ) {
-				targetList.add( elemType.replace( obj, null, session, owner, copyCache ) );
-			}
-
+		final CollectionEntry ce = session.getPersistenceContextInternal().getCollectionEntry( result );
+		if ( ce != null ) {
+			ce.resetStoredSnapshot( result,
+					createSnapshot( original, result, elemType, owner, copyCache, session ) );
 		}
-		else if ( originalSnapshot instanceof Map ) {
-			Map<Object,Object> targetMap;
-			if ( originalSnapshot instanceof SortedMap ) {
-				@SuppressWarnings({"unchecked", "rawtypes"})
-				Comparator<Object> comparator = ((SortedMap) originalSnapshot).comparator();
-				targetMap = new TreeMap<>( comparator );
-			}
-			else {
-				targetMap = new HashMap<>(
-						CollectionHelper.determineProperSizing( ( (Map<?,?>) originalSnapshot ).size() ),
-						CollectionHelper.LOAD_FACTOR
-				);
-			}
-			targetSnapshot = (Serializable) targetMap;
+	}
 
-			for ( Map.Entry<?,?> entry : ( (Map<?, ?>) originalSnapshot ).entrySet() ) {
-				Object key = entry.getKey();
-				Object value = entry.getValue();
-				Object resultSnapshotValue = ( resultSnapshot == null )
-						? null
-						: ( (Map<?,?>) resultSnapshot ).get( key );
-
-				Object newValue = elemType.replace( value, resultSnapshotValue, session, owner, copyCache );
-
-				if ( key == value ) {
-					targetMap.put( newValue, newValue );
-
-				}
-				else {
-					targetMap.put( key, newValue );
-				}
-
-			}
-
+	private static Serializable createSnapshot(
+			PersistentCollection<?> original,
+			PersistentCollection<?> result,
+			Type elemType,
+			Object owner,
+			Map<Object, Object> copyCache,
+			SharedSessionContractImplementor session) {
+		final Serializable originalSnapshot = original.getStoredSnapshot();
+		if ( originalSnapshot instanceof List<?> list ) {
+			return createListSnapshot( list, elemType, owner, copyCache, session );
 		}
-		else if ( originalSnapshot instanceof Object[] ) {
-			Object[] arr = (Object[]) originalSnapshot;
-			for ( int i = 0; i < arr.length; i++ ) {
-				arr[i] = elemType.replace( arr[i], null, session, owner, copyCache );
-			}
-			targetSnapshot = originalSnapshot;
-
+		else if ( originalSnapshot instanceof Map<?,?> map ) {
+			return createMapSnapshot( map, result, elemType, owner, copyCache, session );
+		}
+		else if ( originalSnapshot instanceof Object[] array ) {
+			return createArraySnapshot( array, elemType, owner, copyCache, session );
 		}
 		else {
 			// retain the same snapshot
-			targetSnapshot = resultSnapshot;
-
+			return result.getStoredSnapshot();
 		}
+	}
 
-		CollectionEntry ce = session.getPersistenceContextInternal().getCollectionEntry( result );
-		if ( ce != null ) {
-			ce.resetStoredSnapshot( result, targetSnapshot );
+	private static Serializable createArraySnapshot(
+			Object[] array,
+			Type elemType,
+			Object owner,
+			Map<Object, Object> copyCache,
+			SharedSessionContractImplementor session) {
+		for ( int i = 0; i < array.length; i++ ) {
+			array[i] = elemType.replace( array[i], null, session, owner, copyCache );
 		}
+		return array;
+	}
 
+	private static Serializable createMapSnapshot(
+			Map<?, ?> map,
+			PersistentCollection<?> result,
+			Type elemType,
+			Object owner,
+			Map<Object, Object> copyCache,
+			SharedSessionContractImplementor session) {
+		final Map<?,?> resultSnapshot = (Map<?,?>) result.getStoredSnapshot();
+		final Map<Object, Object> targetMap;
+		if ( map instanceof SortedMap<?,?> sortedMap ) {
+			//noinspection unchecked, rawtypes
+			targetMap = new TreeMap( sortedMap.comparator() );
+		}
+		else {
+			targetMap = mapOfSize( map.size() );
+		}
+		for ( Map.Entry<?,?> entry : map.entrySet() ) {
+			final Object key = entry.getKey();
+			final Object value = entry.getValue();
+			final Object resultSnapshotValue = resultSnapshot == null ? null : resultSnapshot.get( key );
+			final Object newValue = elemType.replace( value, resultSnapshotValue, session, owner, copyCache );
+			targetMap.put( key == value ? newValue : key, newValue );
+		}
+		return (Serializable) targetMap;
+	}
+
+	private static ArrayList<Object> createListSnapshot(
+			List<?> list,
+			Type elemType,
+			Object owner,
+			Map<Object, Object> copyCache,
+			SharedSessionContractImplementor session) {
+		final ArrayList<Object> targetList = new ArrayList<>( list.size() );
+		for ( Object obj : list ) {
+			targetList.add( elemType.replace( obj, null, session, owner, copyCache ) );
+		}
+		return targetList;
 	}
 
 	/**
@@ -645,58 +634,112 @@ public abstract class CollectionType extends AbstractType implements Association
 			final Object owner,
 			final Map<Object, Object> copyCache) throws HibernateException {
 		if ( original == null ) {
-			return null;
+			return replaceNullOriginal( target, session );
 		}
-		if ( !Hibernate.isInitialized( original ) ) {
-			if ( ( (PersistentCollection<?>) original ).hasQueuedOperations() ) {
-				if ( original == target ) {
-					// A managed entity with an uninitialized collection is being merged,
-					// We need to replace any detached entities in the queued operations
-					// with managed copies.
-					final AbstractPersistentCollection<?> pc = (AbstractPersistentCollection<?>) original;
-					pc.replaceQueuedOperationValues( getPersister( session ), copyCache );
-				}
-				else {
-					// original is a detached copy of the collection;
-					// it contains queued operations, which will be ignored
-					LOG.ignoreQueuedOperationsOnMerge(
-							MessageHelper.collectionInfoString(
-									getRole(),
-									( (PersistentCollection<?>) original ).getKey()
-							)
-					);
-				}
-			}
-			return target;
+		else if ( !Hibernate.isInitialized( original ) ) {
+			return replaceUninitializedOriginal( original, target, session, copyCache );
 		}
+		else {
+			return replaceOriginal( original, target, session, owner, copyCache );
+		}
+	}
 
-		// for a null target, or a target which is the same as the original, we
-		// need to put the merged elements in a new collection
-		Object result = ( target == null ||
-				target == original ||
-				target == LazyPropertyInitializer.UNFETCHED_PROPERTY ||
-				target instanceof PersistentCollection
-						&& ( (PersistentCollection<?>) target ).isWrapper( original ) )
-								? instantiateResult( original ) : target;
+	private Object replaceOriginal(
+			Object original, Object target,
+			SharedSessionContractImplementor session,
+			Object owner,
+			Map<Object, Object> copyCache) {
 
 		//for arrays, replaceElements() may return a different reference, since
 		//the array length might not match
-		result = replaceElements( original, result, owner, copyCache, session );
-
+		final Object result =
+				replaceElements( original,
+						instantiateResultIfNecessary( original, target ),
+						owner, copyCache, session );
 		if ( original == target ) {
 			// get the elements back into the target making sure to handle dirty flag
-			boolean wasClean = target instanceof PersistentCollection
-					&& !( (PersistentCollection<?>) target ).isDirty();
+			final boolean wasClean =
+					target instanceof PersistentCollection<?> collection
+							&& !collection.isDirty();
 			//TODO: this is a little inefficient, don't need to do a whole
 			//      deep replaceElements() call
 			replaceElements( result, target, owner, copyCache, session );
 			if ( wasClean ) {
-				( (PersistentCollection<?>) target ).clearDirty();
+				((PersistentCollection<?>) target).clearDirty();
 			}
-			result = target;
+			return target;
 		}
+		else {
+			return result;
+		}
+	}
 
-		return result;
+	private Object instantiateResultIfNecessary(Object original, Object target) {
+		// for a null target, or a target which is the same as the original,
+		// we need to put the merged elements in a new collection
+		return target == null
+			|| target == original
+			|| target == UNFETCHED_PROPERTY
+			|| target instanceof PersistentCollection<?> collection && collection.isWrapper( original )
+				? instantiateResult( original )
+				: target;
+	}
+
+	private Object replaceUninitializedOriginal(
+			Object original,
+			Object target,
+			SharedSessionContractImplementor session,
+			Map<Object, Object> copyCache) {
+		final PersistentCollection<?> persistentCollection = (PersistentCollection<?>) original;
+		if ( persistentCollection.hasQueuedOperations() ) {
+			if ( original == target ) {
+				// A managed entity with an uninitialized collection is being merged,
+				// We need to replace any detached entities in the queued operations
+				// with managed copies.
+				final AbstractPersistentCollection<?> pc = (AbstractPersistentCollection<?>) original;
+				pc.replaceQueuedOperationValues( getPersister( session ), copyCache );
+			}
+			else {
+				// original is a detached copy of the collection;
+				// it contains queued operations, which will be ignored
+				LOG.ignoreQueuedOperationsOnMerge(
+						collectionInfoString( getRole(), persistentCollection.getKey() ) );
+			}
+		}
+		return target;
+	}
+
+	private static Object replaceNullOriginal(Object target, SharedSessionContractImplementor session) {
+		if ( target == null ) {
+			return null;
+		}
+		else if ( target instanceof Collection<?> collection ) {
+			collection.clear();
+			return collection;
+		}
+		else if ( target instanceof Map<?,?> map ) {
+			map.clear();
+			return map;
+		}
+		else {
+			final PersistenceContext persistenceContext = session.getPersistenceContext();
+			final PersistentCollection<?> collectionHolder = persistenceContext.getCollectionHolder( target );
+			if ( collectionHolder != null ) {
+				if ( collectionHolder instanceof PersistentArrayHolder<?> arrayHolder ) {
+					persistenceContext.removeCollectionHolder( target );
+					arrayHolder.beginRead();
+					final PluralAttributeMapping attributeMapping =
+							persistenceContext.getCollectionEntry( collectionHolder )
+									.getLoadedPersister().getAttributeMapping();
+					arrayHolder.injectLoadedState( attributeMapping, null );
+					arrayHolder.endRead();
+					arrayHolder.dirty();
+					persistenceContext.addCollectionHolder( collectionHolder );
+					return arrayHolder.getArray();
+				}
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -724,63 +767,56 @@ public abstract class CollectionType extends AbstractType implements Association
 	 * @return The collection
 	 */
 	public Object getCollection(Object key, SharedSessionContractImplementor session, Object owner, Boolean overridingEager) {
-
 		final CollectionPersister persister = getPersister( session );
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-
 		final CollectionKey collectionKey = new CollectionKey( persister, key );
-		PersistentCollection<?> collection = null;
-
 		// check if collection is currently being loaded
-		final LoadingCollectionEntry loadingCollectionEntry = persistenceContext.getLoadContexts().findLoadingCollectionEntry( collectionKey );
-		if ( loadingCollectionEntry != null ) {
-			collection = loadingCollectionEntry.getCollectionInstance();
-		}
-
+		final LoadingCollectionEntry loadingCollectionEntry =
+				persistenceContext.getLoadContexts().findLoadingCollectionEntry( collectionKey );
+		PersistentCollection<?> collection =
+				loadingCollectionEntry == null ? null
+						: loadingCollectionEntry.getCollectionInstance();
 		if ( collection == null ) {
-
 			// check if it is already completely loaded, but unowned
 			collection = persistenceContext.useUnownedCollection( collectionKey );
-
 			if ( collection == null ) {
-
 				collection = persistenceContext.getCollection( collectionKey );
-
 				if ( collection == null ) {
 					// create a new collection wrapper, to be initialized later
-					collection = instantiate( session, persister, key );
-
-					collection.setOwner( owner );
-
-					persistenceContext.addUninitializedCollection( persister, collection, key );
-
-					// some collections are not lazy:
-					boolean eager = overridingEager != null ? overridingEager : !persister.isLazy();
-					if ( initializeImmediately() ) {
-						session.initializeCollection( collection, false );
-					}
-					else if ( eager ) {
-						persistenceContext.addNonLazyCollection( collection );
-					}
-
-					if ( hasHolder() ) {
-						persistenceContext.addCollectionHolder( collection );
-					}
-
-					if ( LOG.isTraceEnabled() ) {
-						LOG.tracef( "Created collection wrapper: %s",
-									MessageHelper.collectionInfoString( persister, collection,
-																		key, session ) );
-					}
 					// we have already set the owner so we can just return the value
-					return collection.getValue();
+					return createNewWrapper( key, owner, overridingEager, persister, session ).getValue();
 				}
 			}
 		}
-
 		collection.setOwner( owner );
-
 		return collection.getValue();
+	}
+
+	private PersistentCollection<?> createNewWrapper(
+			Object key,
+			Object owner,
+			Boolean overridingEager,
+			CollectionPersister persister,
+			SharedSessionContractImplementor session) {
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		final PersistentCollection<?> collection = instantiate( session, persister, key );
+		collection.setOwner( owner );
+		persistenceContext.addUninitializedCollection( persister, collection, key );
+		// some collections are not lazy:
+		if ( initializeImmediately() ) {
+			session.initializeCollection( collection, false );
+		}
+		else if ( overridingEager != null ? overridingEager : !persister.isLazy() ) {
+			persistenceContext.addNonLazyCollection( collection );
+		}
+		if ( hasHolder() ) {
+			persistenceContext.addCollectionHolder( collection );
+		}
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracef( "Created collection wrapper: %s",
+					collectionInfoString( persister, collection, key, session ) );
+		}
+		return collection;
 	}
 
 	public boolean hasHolder() {
@@ -807,7 +843,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	}
 
 	@Override
-	public boolean[] toColumnNullness(Object value, Mapping mapping) {
-		return ArrayHelper.EMPTY_BOOLEAN_ARRAY;
+	public boolean[] toColumnNullness(Object value, MappingContext mapping) {
+		return EMPTY_BOOLEAN_ARRAY;
 	}
 }

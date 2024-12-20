@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
 
@@ -11,7 +9,6 @@ import java.util.List;
 import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
-import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
@@ -62,7 +59,7 @@ public class ListAttributeImpl<X, E> extends AbstractPluralAttribute<X, List<E>,
 	}
 
 	@Override
-	public SqmPathSource<?> findSubPathSource(String name, JpaMetamodelImplementor metamodel) {
+	public SqmPathSource<?> findSubPathSource(String name, boolean includeSubtypes) {
 		final CollectionPart.Nature nature = CollectionPart.Nature.fromNameExact( name );
 		if ( nature != null ) {
 			switch ( nature ) {
@@ -72,7 +69,7 @@ public class ListAttributeImpl<X, E> extends AbstractPluralAttribute<X, List<E>,
 					return getElementPathSource();
 			}
 		}
-		return getElementPathSource().findSubPathSource( name, metamodel );
+		return getElementPathSource().findSubPathSource( name, includeSubtypes );
 	}
 
 	@Override

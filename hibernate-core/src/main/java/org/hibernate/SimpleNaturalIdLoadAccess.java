@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
@@ -21,7 +19,7 @@ import java.util.Optional;
  * <pre>
  * Book book = session.bySimpleNaturalId(Book.class).load(isbn);
  * </pre>
- * 
+ *
  * @author Eric Dalquist
  * @author Steve Ebersole
  *
@@ -44,6 +42,8 @@ public interface SimpleNaturalIdLoadAccess<T> {
 	 * Override the associations fetched by default by specifying
 	 * the complete list of associations to be fetched as an
 	 * {@linkplain jakarta.persistence.EntityGraph entity graph}.
+	 *
+	 * @since 6.3
 	 */
 	default SimpleNaturalIdLoadAccess<T> withFetchGraph(RootGraph<T> graph) {
 		return with( graph, GraphSemantic.FETCH );
@@ -53,6 +53,8 @@ public interface SimpleNaturalIdLoadAccess<T> {
 	 * Augment the associations fetched by default by specifying a
 	 * list of additional associations to be fetched as an
 	 * {@linkplain jakarta.persistence.EntityGraph entity graph}.
+	 *
+	 * @since 6.3
 	 */
 	default SimpleNaturalIdLoadAccess<T> withLoadGraph(RootGraph<T> graph) {
 		return with( graph, GraphSemantic.LOAD );
@@ -62,6 +64,8 @@ public interface SimpleNaturalIdLoadAccess<T> {
 	 * Customize the associations fetched by specifying an
 	 * {@linkplain jakarta.persistence.EntityGraph entity graph},
 	 * and how it should be {@linkplain GraphSemantic interpreted}.
+	 *
+	 * @since 6.3
 	 */
 	SimpleNaturalIdLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic);
 
@@ -131,7 +135,7 @@ public interface SimpleNaturalIdLoadAccess<T> {
 	 * an uninitialized instance.
 	 *
 	 * @param naturalIdValue The value of the natural-id
-	 * 
+	 *
 	 * @return The persistent instance or {@code null}
 	 */
 	T load(Object naturalIdValue);

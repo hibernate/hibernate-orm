@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.stat.internal;
 
@@ -22,6 +20,7 @@ public class EntityStatisticsImpl extends AbstractCacheableDataStatistics implem
 	private final String rootEntityName;
 	private final LongAdder loadCount = new LongAdder();
 	private final LongAdder updateCount = new LongAdder();
+	private final LongAdder upsertCount = new LongAdder();
 	private final LongAdder insertCount = new LongAdder();
 	private final LongAdder deleteCount = new LongAdder();
 	private final LongAdder fetchCount = new LongAdder();
@@ -52,6 +51,10 @@ public class EntityStatisticsImpl extends AbstractCacheableDataStatistics implem
 		return updateCount.sum();
 	}
 
+	public long getUpsertCount() {
+		return upsertCount.sum();
+	}
+
 	public long getFetchCount() {
 		return fetchCount.sum();
 	}
@@ -72,6 +75,10 @@ public class EntityStatisticsImpl extends AbstractCacheableDataStatistics implem
 		updateCount.increment();
 	}
 
+	void incrementUpsertCount() {
+		upsertCount.increment();
+	}
+
 	void incrementInsertCount() {
 		insertCount.increment();
 	}
@@ -90,6 +97,7 @@ public class EntityStatisticsImpl extends AbstractCacheableDataStatistics implem
 				.append( "[rootEntityName=" ).append( rootEntityName )
 				.append( ",loadCount=" ).append( this.loadCount )
 				.append( ",updateCount=" ).append( this.updateCount )
+				.append( ",upsertCount=" ).append( this.upsertCount )
 				.append( ",insertCount=" ).append( this.insertCount )
 				.append( ",deleteCount=" ).append( this.deleteCount )
 				.append( ",fetchCount=" ).append( this.fetchCount )

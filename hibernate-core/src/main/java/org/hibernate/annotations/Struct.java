@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
 
@@ -46,6 +44,16 @@ public @interface Struct {
 	 * The name of the UDT (user defined type).
 	 */
 	String name();
+
+	/** (Optional) The catalog of the UDT.
+	 * <p> Defaults to the default catalog.
+	 */
+	String catalog() default "";
+
+	/** (Optional) The schema of the UDT.
+	 * <p> Defaults to the default schema for user.
+	 */
+	String schema() default "";
 
 	/**
 	 * The ordered set of attributes of the UDT, as they appear physically in the DDL.

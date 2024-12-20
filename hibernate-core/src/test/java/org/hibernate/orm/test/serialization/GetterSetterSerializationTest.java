@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.serialization;
 
@@ -23,7 +21,7 @@ import org.hibernate.property.access.spi.Setter;
 import org.hibernate.property.access.spi.SetterFieldImpl;
 import org.hibernate.property.access.spi.SetterMethodImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.junit.Assert.assertSame;
 
@@ -36,7 +34,7 @@ import static org.junit.Assert.assertSame;
 public class GetterSetterSerializationTest {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11202")
+	@JiraKey( value = "HHH-11202")
 	public void testPrivateFieldGetter() throws Exception {
 		final AnEntity entity = new AnEntity( new PK( 1L ) );
 
@@ -58,7 +56,7 @@ public class GetterSetterSerializationTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11202")
+	@JiraKey( value = "HHH-11202")
 	public void testPrivateFieldSetter() throws Exception {
 		AnEntity entity = new AnEntity( new PK( 1L ) );
 
@@ -88,7 +86,7 @@ public class GetterSetterSerializationTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11202")
+	@JiraKey( value = "HHH-11202")
 	public void testProtectedMethodGetter() throws Exception {
 		final AnEntity entity = new AnEntity( new PK( 1L ) );
 
@@ -109,7 +107,7 @@ public class GetterSetterSerializationTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11202")
+	@JiraKey( value = "HHH-11202")
 	public void testProtectedMethodSetter() throws Exception {
 		final AnEntity entity = new AnEntity( new PK( 1L ) );
 

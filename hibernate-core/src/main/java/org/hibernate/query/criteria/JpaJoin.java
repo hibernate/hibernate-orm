@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.criteria;
 
@@ -20,23 +18,23 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
 *
 * @author Steve Ebersole
 */
-public interface JpaJoin<O, T> extends JpaJoinedFrom<O, T>, Join<O, T> {
+public interface JpaJoin<L, R> extends JpaFrom<L,R>, Join<L,R> {
 	@Override
-	PersistentAttribute<? super O, ?> getAttribute();
+	PersistentAttribute<? super L, ?> getAttribute();
 
-	JpaJoin<O, T> on(JpaExpression<Boolean> restriction);
-
-	@Override
-	JpaJoin<O, T> on(Expression<Boolean> restriction);
-
-	JpaJoin<O, T> on(JpaPredicate... restrictions);
+	JpaJoin<L, R> on(JpaExpression<Boolean> restriction);
 
 	@Override
-	JpaJoin<O, T> on(Predicate... restrictions);
+	JpaJoin<L, R> on(Expression<Boolean> restriction);
+
+	JpaJoin<L, R> on(JpaPredicate... restrictions);
 
 	@Override
-	<S extends T> JpaJoin<O, S> treatAs(Class<S> treatAsType);
+	JpaJoin<L, R> on(Predicate... restrictions);
 
 	@Override
-	<S extends T> JpaJoin<O, S> treatAs(EntityDomainType<S> treatAsType);
+	<S extends R> JpaTreatedJoin<L,R,S> treatAs(Class<S> treatAsType);
+
+	@Override
+	<S extends R> JpaTreatedJoin<L,R,S> treatAs(EntityDomainType<S> treatAsType);
 }

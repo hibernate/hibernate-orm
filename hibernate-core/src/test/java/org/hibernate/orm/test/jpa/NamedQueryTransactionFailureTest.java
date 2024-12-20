@@ -1,12 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id$
-
 package org.hibernate.orm.test.jpa;
 
 import java.util.Map;
@@ -17,7 +12,7 @@ import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import org.mockito.Mockito;
@@ -25,7 +20,6 @@ import org.mockito.Mockito;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
@@ -64,7 +58,7 @@ public class NamedQueryTransactionFailureTest extends BaseEntityManagerFunctiona
 		TransactionCoordinator.TransactionDriver transactionDriver = Mockito.mock( TransactionCoordinator.TransactionDriver.class);
 		when( transactionCoordinator.getTransactionDriverControl() ).thenReturn( transactionDriver );
 		when( transactionCoordinator.isActive() ).thenReturn( true );
-		when( transactionDriver.isActive( anyBoolean() ) ).thenReturn( false );
+		when( transactionDriver.isActive() ).thenReturn( false );
 
 		doNothing().when( transactionCoordinator ).pulse();
 
@@ -77,7 +71,7 @@ public class NamedQueryTransactionFailureTest extends BaseEntityManagerFunctiona
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11997" )
+	@JiraKey( value = "HHH-11997" )
 	public void testNamedQueryWithMarkForRollbackOnlyFailure() {
 		try {
 			doInJPA( this::entityManagerFactory, entityManager -> {

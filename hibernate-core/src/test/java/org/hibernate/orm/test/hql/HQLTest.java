@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.hql;
 
@@ -25,8 +23,9 @@ import org.hibernate.CacheMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.community.dialect.FirebirdDialect;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.CockroachDialect;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
@@ -288,7 +287,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void test_hql_multiple_root_reference_jpql_example() {
-		 doInJPA(this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-multiple-root-reference-jpql-example[]
 			List<Object[]> persons = entityManager.createQuery(
 				"select distinct pr, ph " +
@@ -1523,6 +1522,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	@SkipForDialect(dialectClass = DerbyDialect.class)
 	@SkipForDialect(dialectClass = SybaseASEDialect.class)
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "order by not supported in list")
+	@SkipForDialect(dialectClass = InformixDialect.class)
 	public void test_hql_aggregate_functions_within_group_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-aggregate-functions-within-group-example[]

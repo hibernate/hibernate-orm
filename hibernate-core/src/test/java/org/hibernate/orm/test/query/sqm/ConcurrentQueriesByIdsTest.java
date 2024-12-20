@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.sqm;
 
@@ -69,7 +67,7 @@ public class ConcurrentQueriesByIdsTest extends BaseCoreFunctionalTestCase {
 				.setParameter(
 						"ids",
 						Arrays.asList( base + 0, base + 1, base + 2, base + 3, base + 4, base + 5,
-									   base + 6, base + 7, base + 8, base + 9
+									base + 6, base + 7, base + 8, base + 9
 						)
 				)
 				.list();

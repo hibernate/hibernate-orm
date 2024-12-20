@@ -1,17 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
 
 import java.util.Map;
 import java.util.function.Supplier;
 
-import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.OrderBy;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.mapping.Collection;
@@ -23,6 +19,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.usertype.UserCollectionType;
 
+import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.internal.util.StringHelper.qualify;
 
 /**
@@ -49,13 +46,6 @@ public class ListBinder extends CollectionBinder {
 	}
 
 	@Override
-	public void setSqlOrderBy(OrderBy orderByAnn) {
-		if ( orderByAnn != null ) {
-			throw new AnnotationException( "A collection of type 'List' is annotated '@OrderBy'" );
-		}
-	}
-
-	@Override
 	public SecondPass getSecondPass() {
 		return new CollectionSecondPass( ListBinder.this.collection ) {
 			@Override
@@ -67,14 +57,8 @@ public class ListBinder extends CollectionBinder {
 	}
 
 	private void bindIndex() {
-		final PropertyHolder valueHolder = PropertyHolderBuilder.buildPropertyHolder(
-				collection,
-				qualify( collection.getRole(), "key" ),
-				null,
-				null,
-				propertyHolder,
-				getBuildingContext()
-		);
+		final PropertyHolder valueHolder =
+				buildPropertyHolder( collection, getPath(), null, null, propertyHolder, buildingContext );
 
 		if ( !collection.isOneToMany() ) {
 			indexColumn.forceNotNull();
@@ -94,6 +78,10 @@ public class ListBinder extends CollectionBinder {
 		list.setBaseIndex( indexColumn.getBase() );
 
 		createBackref();
+	}
+
+	private String getPath() {
+		return qualify( collection.getRole(), "key" );
 	}
 
 	private void createBackref() {

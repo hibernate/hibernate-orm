@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.events;
 
@@ -16,30 +14,29 @@ import jakarta.persistence.MappedSuperclass;
 @MappedSuperclass
 public abstract class BaseEntity {
 
-    private Timestamp createdOn;
+	private Timestamp createdOn;
 
-    private Timestamp updatedOn;
+	private Timestamp updatedOn;
 
-    //Getters and setters are omitted for brevity
+	//Getters and setters are omitted for brevity
 
 //end::events-default-listener-mapping-example[]
 
-    public Timestamp getCreatedOn() {
-        return createdOn;
-    }
+	public Timestamp getCreatedOn() {
+		return createdOn;
+	}
 
-    void setCreatedOn(Timestamp createdOn) {
-        this.createdOn = createdOn;
-    }
+	void setCreatedOn(Timestamp createdOn) {
+		this.createdOn = createdOn;
+	}
 
-    public Timestamp getUpdatedOn() {
-        return updatedOn;
-    }
+	public Timestamp getUpdatedOn() {
+		return updatedOn;
+	}
 
-    void setUpdatedOn(Timestamp updatedOn) {
-        this.updatedOn = updatedOn;
-    }
+	void setUpdatedOn(Timestamp updatedOn) {
+		this.updatedOn = updatedOn;
+	}
 //tag::events-default-listener-mapping-example[]
 }
 //end::events-default-listener-mapping-example[]
-

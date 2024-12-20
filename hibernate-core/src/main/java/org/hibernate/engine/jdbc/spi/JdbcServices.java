@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.spi;
 
@@ -71,7 +69,7 @@ public interface JdbcServices extends Service {
 	 * Obtain information about supported behavior reported by the JDBC driver.
 	 * <p>
 	 * Yuck, yuck, yuck! Much prefer this to be part of a "basic settings" type object.
-	 * 
+	 *
 	 * @return The extracted database metadata, oddly enough :)
 	 */
 	ExtractedDatabaseMetaData getExtractedMetaDataSupport();

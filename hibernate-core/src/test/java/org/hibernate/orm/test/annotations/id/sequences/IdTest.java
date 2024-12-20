@@ -1,21 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.id.sequences;
 
 import org.hibernate.mapping.Column;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.orm.test.annotations.id.generationmappings.DedicatedSequenceEntity1;
-import org.hibernate.orm.test.annotations.id.generationmappings.DedicatedSequenceEntity2;
+import org.hibernate.orm.test.annotations.id.generationmappings.sub.DedicatedSequenceEntity1;
+import org.hibernate.orm.test.annotations.id.generationmappings.sub.DedicatedSequenceEntity2;
 import org.hibernate.orm.test.annotations.id.sequences.entities.Ball;
 import org.hibernate.orm.test.annotations.id.sequences.entities.BreakDance;
 import org.hibernate.orm.test.annotations.id.sequences.entities.Computer;
@@ -82,8 +80,8 @@ public class IdTest {
 					Furniture furFromDb = session.get( Furniture.class, fur.getId() );
 					assertNotNull( systemfromDb );
 					assertNotNull( furFromDb );
-					session.delete( systemfromDb );
-					session.delete( furFromDb );
+					session.remove( systemfromDb );
+					session.remove( furFromDb );
 				}
 		);
 	}
@@ -125,9 +123,9 @@ public class IdTest {
 
 		scope.inTransaction(
 				session -> {
-					session.delete( session.get( Ball.class, 1 ) );
-					session.delete( session.get( Dog.class, 1 ) );
-					session.delete( session.get( Computer.class, 1L ) );
+					session.remove( session.get( Ball.class, 1 ) );
+					session.remove( session.get( Dog.class, 1 ) );
+					session.remove( session.get( Computer.class, 1L ) );
 				}
 		);
 	}
@@ -144,7 +142,7 @@ public class IdTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( session.get( Shoe.class, b.getId() ) )
+						session.remove( session.get( Shoe.class, b.getId() ) )
 		);
 	}
 
@@ -160,7 +158,7 @@ public class IdTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( session.get( Store.class, b.getId() ) )
+						session.remove( session.get( Store.class, b.getId() ) )
 		);
 	}
 
@@ -176,7 +174,7 @@ public class IdTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( session.get( Department.class, b.getId() ) )
+						session.remove( session.get( Department.class, b.getId() ) )
 		);
 	}
 
@@ -194,7 +192,7 @@ public class IdTest {
 				session -> {
 					Home reloadedHome = session.get( Home.class, h.getId() );
 					assertEquals( h.getId(), reloadedHome.getId() );
-					session.delete( reloadedHome );
+					session.remove( reloadedHome );
 				}
 		);
 	}
@@ -213,7 +211,7 @@ public class IdTest {
 				session -> {
 					Home reloadedHome = session.get( Home.class, h.getId() );
 					assertEquals( h.getId(), reloadedHome.getId() );
-					session.delete( reloadedHome );
+					session.remove( reloadedHome );
 				}
 		);
 	}
@@ -231,7 +229,7 @@ public class IdTest {
 
 					christmasTree = session.get( FirTree.class, christmasTree.getId() );
 					assertNotNull( christmasTree );
-					session.delete( christmasTree );
+					session.remove( christmasTree );
 				}
 		);
 	}
@@ -273,7 +271,7 @@ public class IdTest {
 					// reattach by saveOrUpdate
 					session.beginTransaction();
 					fb.setClub( "Bimbo FC SA" );
-					session.saveOrUpdate( fb );
+					session.merge( fb );
 					session.getTransaction().commit();
 
 					// clean up
@@ -282,14 +280,14 @@ public class IdTest {
 					fpk = new FootballerPk( "David", "Beckam" );
 					fb = session.get( Footballer.class, fpk );
 					assertEquals( "Bimbo FC SA", fb.getClub() );
-					session.delete( fb );
-					session.delete( keeper );
+					session.remove( fb );
+					session.remove( keeper );
 				}
 		);
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-6790")
+	@JiraKey(value = "HHH-6790")
 	public void testSequencePerEntity(SessionFactoryScope scope) {
 		DedicatedSequenceEntity1 entity1 = new DedicatedSequenceEntity1();
 		DedicatedSequenceEntity2 entity2 = new DedicatedSequenceEntity2();

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
@@ -30,8 +28,8 @@ import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
+import org.hibernate.sql.results.internal.RowTransformerArrayImpl;
 
-import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.sql.results.spi.ListResultsConsumer.UniqueSemantic.FILTER;
 
 /**
@@ -152,8 +150,8 @@ public class GeneratedValuesProcessor {
 				assert results.size() == 1;
 				setEntityAttributes( entity, state, results.get( 0 ) );
 			}
-			else {
-				castNonNull( generatedValues );
+			else if ( generatedValues != null ) {
+				// can be null when an update action resulted in a no-op (e.g. only changes to unowned association)
 				final List<Object> results = generatedValues.getGeneratedValues( generatedValuesToSelect );
 				setEntityAttributes( entity, state, results.toArray( new Object[0] ) );
 			}
@@ -171,8 +169,15 @@ public class GeneratedValuesProcessor {
 
 	private List<Object[]> executeSelect(Object id, SharedSessionContractImplementor session) {
 		final JdbcParameterBindings jdbcParamBindings = getJdbcParameterBindings( id, session );
-		return session.getFactory().getJdbcServices().getJdbcSelectExecutor()
-				.list( jdbcSelect, jdbcParamBindings, new NoCallbackExecutionContext(session), (row) -> row, FILTER );
+		return session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
+				jdbcSelect,
+				jdbcParamBindings,
+				new NoCallbackExecutionContext( session ),
+				RowTransformerArrayImpl.instance(),
+				null,
+				FILTER,
+				1
+		);
 	}
 
 	private JdbcParameterBindings getJdbcParameterBindings(Object id, SharedSessionContractImplementor session) {
@@ -210,5 +215,9 @@ public class GeneratedValuesProcessor {
 
 	public EntityMappingType getEntityDescriptor() {
 		return entityDescriptor;
+	}
+
+	public JdbcOperationQuerySelect getJdbcSelect() {
+		return jdbcSelect;
 	}
 }

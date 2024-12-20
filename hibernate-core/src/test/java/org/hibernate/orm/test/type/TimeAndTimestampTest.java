@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.type;
 
@@ -12,13 +10,13 @@ import java.util.concurrent.TimeUnit;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -28,11 +26,11 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-10465")
+@JiraKey(value = "HHH-10465")
 @SkipForDialect(MariaDBDialect.class)
 @SkipForDialect(MySQLDialect.class)
 @SkipForDialect(value = OracleDialect.class, comment = "Oracle date does not support milliseconds  ")
-@SkipForDialect(value = AbstractHANADialect.class, comment = "HANA date does not support milliseconds  ")
+@SkipForDialect(value = HANADialect.class, comment = "HANA date does not support milliseconds  ")
 public class TimeAndTimestampTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override

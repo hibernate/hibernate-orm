@@ -1,12 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cfg;
 
 import org.hibernate.Incubating;
+import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 
 import jakarta.persistence.spi.PersistenceUnitInfo;
@@ -33,15 +32,15 @@ public interface PersistenceSettings {
 	String JAKARTA_PERSISTENCE_PROVIDER = "jakarta.persistence.provider";
 
 	/**
-	 * Specifies the {@linkplain jakarta.persistence.spi.PersistenceUnitTransactionType
+	 * Specifies the {@linkplain jakarta.persistence.PersistenceUnitTransactionType
 	 * type of transactions} supported by the entity managers. The default depends on
 	 * whether the program is considered to be executing in a Java SE or EE environment:
 	 * <ul>
 	 *     <li>For Java SE, the default is
-	 *     {@link jakarta.persistence.spi.PersistenceUnitTransactionType#RESOURCE_LOCAL
+	 *     {@link jakarta.persistence.PersistenceUnitTransactionType#RESOURCE_LOCAL
 	 *     RESOURCE_LOCAL}.
 	 *     <li>For Java EE, the default is
-	 *     {@link jakarta.persistence.spi.PersistenceUnitTransactionType#JTA JTA}.
+	 *     {@link jakarta.persistence.PersistenceUnitTransactionType#JTA JTA}.
 	 * </ul>
 	 * <p>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.2
@@ -61,15 +60,26 @@ public interface PersistenceSettings {
 	 * Naming the SessionFactory allows for it to be properly serialized across JVMs as
 	 * long as the same name is used on each JVM.
 	 * <p>
-	 * If {@link #SESSION_FACTORY_NAME_IS_JNDI} is set to {@code true}, this is also the
-	 * name under which the SessionFactory is bound into JNDI on startup and from which
-	 * it can be obtained from JNDI.
+	 * If {@link #SESSION_FACTORY_NAME_IS_JNDI} is set to {@code true}, this name will
+	 * also be used as {@link #SESSION_FACTORY_JNDI_NAME}.
+	 *
+	 * @see #SESSION_FACTORY_JNDI_NAME
+	 * @see org.hibernate.internal.SessionFactoryRegistry
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyName(String)
+	 */
+	String SESSION_FACTORY_NAME = "hibernate.session_factory_name";
+
+	/**
+	 * An optional name used to bind the SessionFactory into JNDI.
+	 * <p>
+	 * If {@link #SESSION_FACTORY_NAME_IS_JNDI} is set to {@code true},
+	 * {@link #SESSION_FACTORY_NAME} will be used as the JNDI name
 	 *
 	 * @see #SESSION_FACTORY_NAME_IS_JNDI
 	 * @see org.hibernate.internal.SessionFactoryRegistry
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyName(String)
 	 */
-	String SESSION_FACTORY_NAME = "hibernate.session_factory_name";
+	String SESSION_FACTORY_JNDI_NAME = "hibernate.session_factory_jndi_name";
 
 	/**
 	 * Does the value defined by {@link #SESSION_FACTORY_NAME} represent a JNDI namespace
@@ -83,6 +93,10 @@ public interface PersistenceSettings {
 	 *
 	 * @see #SESSION_FACTORY_NAME
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyNameAsJndiName(boolean)
+	 *
+	 * @settingDefault {@code true} if {@link SessionFactory#getName()} comes from
+	 * {@value #SESSION_FACTORY_NAME}; {@code false} if there is no {@link SessionFactory#getName()}
+	 * or if it comes from {@value #PERSISTENCE_UNIT_NAME}
 	 */
 	String SESSION_FACTORY_NAME_IS_JNDI = "hibernate.session_factory_name_is_jndi";
 
@@ -120,7 +134,6 @@ public interface PersistenceSettings {
 	 *
 	 * @see #SCANNER
 	 * @see org.hibernate.boot.archive.scan.spi.Scanner
-	 * @see org.hibernate.boot.archive.scan.spi.AbstractScannerImpl
 	 * @see org.hibernate.boot.MetadataBuilder#applyArchiveDescriptorFactory
 	 */
 	String SCANNER_ARCHIVE_INTERPRETER = "hibernate.archive.interpreter";
@@ -182,4 +195,12 @@ public interface PersistenceSettings {
 	 */
 	@Deprecated
 	String JPA_TRANSACTION_TYPE = "javax.persistence.transactionType";
+
+	/**
+	 * Specifies whether unowned (i.e. {@code mapped-by}) associations should be considered
+	 * when validating transient entity instance references.
+	 *
+	 * @settingDefault {@code false}
+	 */
+	String UNOWNED_ASSOCIATION_TRANSIENT_CHECK = "hibernate.unowned_association_transient_check";
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -15,8 +13,6 @@ import org.hibernate.dialect.MySQLSqlAstTranslator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
-import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.MutationStatement;
@@ -27,6 +23,8 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.DerivedTableReference;
+import org.hibernate.sql.ast.tree.from.FunctionTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.ValuesTableReference;
@@ -162,7 +160,7 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 				getSql(),
 				getParameterBinders(),
 				getAffectedTableNames(),
-				null
+				getUniqueConstraintNameThatMayFail(sqlAst)
 		);
 	}
 
@@ -270,6 +268,27 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 		}
 		else {
 			emulateQueryPartTableReferenceColumnAliasing( tableReference );
+		}
+	}
+
+	@Override
+	protected void renderDerivedTableReference(DerivedTableReference tableReference) {
+		if ( tableReference instanceof FunctionTableReference && tableReference.isLateral() ) {
+			// No need for a lateral keyword for functions
+			tableReference.accept( this );
+		}
+		else {
+			super.renderDerivedTableReference( tableReference );
+		}
+	}
+
+	@Override
+	protected void renderDerivedTableReferenceIdentificationVariable(DerivedTableReference tableReference) {
+		if ( getDialect().getVersion().isSameOrAfter( 8 ) ) {
+			super.renderDerivedTableReferenceIdentificationVariable( tableReference );
+		}
+		else {
+			renderTableReferenceIdentificationVariable( tableReference );
 		}
 	}
 
@@ -389,16 +408,6 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	@Override
 	protected boolean supportsWithClause() {
 		return getDialect().getVersion().isSameOrAfter( 8 );
-	}
-
-	@Override
-	protected String getDual() {
-		return "dual";
-	}
-
-	@Override
-	protected String getFromDualForSelectOnly() {
-		return getDialect().getVersion().isSameOrAfter( 8 ) ? "" : ( " from " + getDual() );
 	}
 
 	@Override

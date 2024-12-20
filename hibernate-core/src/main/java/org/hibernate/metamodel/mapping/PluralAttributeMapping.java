@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping;
 
@@ -138,7 +136,7 @@ public interface PluralAttributeMapping
 			TableGroup parentTableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		return new BasicResult( 0, null, getJavaType() );
+		return new BasicResult( 0, null, getJavaType(), null, null, false, false );
 	}
 
 	String getSeparateCollectionTable();
@@ -156,8 +154,16 @@ public interface PluralAttributeMapping
 			TableGroup tableGroup,
 			boolean useQualifier,
 			Map<String, Filter> enabledFilters,
+			boolean onlyApplyLoadByKeyFilters,
 			SqlAstCreationState creationState) {
-		getCollectionDescriptor().applyFilterRestrictions( predicateConsumer, tableGroup, useQualifier, enabledFilters, creationState );
+		getCollectionDescriptor().applyFilterRestrictions(
+				predicateConsumer,
+				tableGroup,
+				useQualifier,
+				enabledFilters,
+				onlyApplyLoadByKeyFilters,
+				creationState
+		);
 	}
 
 	@Override
@@ -166,9 +172,18 @@ public interface PluralAttributeMapping
 			TableGroup tableGroup,
 			boolean useQualifier,
 			Map<String, Filter> enabledFilters,
+			boolean onlyApplyLoadByKeyFilters,
 			Set<String> treatAsDeclarations,
 			SqlAstCreationState creationState) {
-		getCollectionDescriptor().applyBaseRestrictions( predicateConsumer, tableGroup, useQualifier, enabledFilters, treatAsDeclarations, creationState );
+		getCollectionDescriptor().applyBaseRestrictions(
+				predicateConsumer,
+				tableGroup,
+				useQualifier,
+				enabledFilters,
+				onlyApplyLoadByKeyFilters,
+				treatAsDeclarations,
+				creationState
+		);
 	}
 
 	default void applyBaseManyToManyRestrictions(

@@ -19,7 +19,7 @@
 
 	<class name="Document">
 		<id name="name"/>
-		<timestamp name="lastModified"/>
+		<timestamp name="lastModified" column="last_modified"/>
 		<property name="text"/>
 	</class>
 

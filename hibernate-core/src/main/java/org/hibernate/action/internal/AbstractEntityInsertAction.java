@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.action.internal;
 
@@ -14,12 +12,14 @@ import org.hibernate.engine.internal.Nullability;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
@@ -133,8 +133,11 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 		nullifyTransientReferencesIfNotAlready();
 		final Object version = getVersion( getState(), getPersister() );
 		final PersistenceContext persistenceContextInternal = getSession().getPersistenceContextInternal();
-		persistenceContextInternal.addEntity( getEntityKey(), getInstance() );
-		persistenceContextInternal.addEntry(
+		final EntityHolder entityHolder = persistenceContextInternal.addEntityHolder(
+				getEntityKey(),
+				getInstance()
+		);
+		final EntityEntry entityEntry = persistenceContextInternal.addEntry(
 				getInstance(),
 				( getPersister().isMutable() ? Status.MANAGED : Status.READ_ONLY ),
 				getState(),
@@ -146,6 +149,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 				getPersister(),
 				isVersionIncrementDisabled
 		);
+		entityHolder.setEntityEntry( entityEntry );
 		if ( isEarlyInsert() ) {
 			addCollectionsByKeyToPersistenceContext( persistenceContextInternal, getState() );
 		}
@@ -176,22 +180,28 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 			Object object,
 			PersistenceContext persistenceContext) {
 		if ( object != null ) {
-			final AttributeMappingsList attributeMappings = attributeMapping.getEmbeddableTypeDescriptor().getAttributeMappings();
+			final EmbeddableMappingType descriptor = attributeMapping.getEmbeddableTypeDescriptor();
+			final EmbeddableMappingType.ConcreteEmbeddableType concreteEmbeddableType = descriptor.findSubtypeBySubclass(
+					object.getClass().getName()
+			);
+			final AttributeMappingsList attributeMappings = descriptor.getAttributeMappings();
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
 				final AttributeMapping attribute = attributeMappings.get( i );
-				if ( attribute.isPluralAttributeMapping() ) {
-					addCollectionKey(
-							attribute.asPluralAttributeMapping(),
-							attribute.getPropertyAccess().getGetter().get( object ),
-							persistenceContext
-					);
-				}
-				else if ( attribute.isEmbeddedAttributeMapping() ) {
-					visitEmbeddedAttributeMapping(
-							attribute.asEmbeddedAttributeMapping(),
-							attribute.getPropertyAccess().getGetter().get( object ),
-							persistenceContext
-					);
+				if ( concreteEmbeddableType.declaresAttribute( attribute ) ) {
+					if ( attribute.isPluralAttributeMapping() ) {
+						addCollectionKey(
+								attribute.asPluralAttributeMapping(),
+								descriptor.getValue( object, i ),
+								persistenceContext
+						);
+					}
+					else if ( attribute.isEmbeddedAttributeMapping() ) {
+						visitEmbeddedAttributeMapping(
+								attribute.asEmbeddedAttributeMapping(),
+								descriptor.getValue( object, i ),
+								persistenceContext
+						);
+					}
 				}
 			}
 		}
@@ -203,19 +213,16 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 			PersistenceContext persistenceContext) {
 		if ( o instanceof PersistentCollection ) {
 			final CollectionPersister collectionPersister = pluralAttributeMapping.getCollectionDescriptor();
-			final CollectionKey collectionKey = new CollectionKey(
+			final Object key = ( (AbstractEntityPersister) getPersister() ).getCollectionKey(
 					collectionPersister,
-					( (AbstractEntityPersister) getPersister() ).getCollectionKey(
-							collectionPersister,
-							getInstance(),
-							persistenceContext.getEntry( getInstance() ),
-							getSession()
-					)
+					getInstance(),
+					persistenceContext.getEntry( getInstance() ),
+					getSession()
 			);
-			persistenceContext.addCollectionByKey(
-					collectionKey,
-					(PersistentCollection<?>) o
-			);
+			if ( key != null ) {
+				final CollectionKey collectionKey = new CollectionKey( collectionPersister, key );
+				persistenceContext.addCollectionByKey( collectionKey, (PersistentCollection<?>) o );
+			}
 		}
 	}
 

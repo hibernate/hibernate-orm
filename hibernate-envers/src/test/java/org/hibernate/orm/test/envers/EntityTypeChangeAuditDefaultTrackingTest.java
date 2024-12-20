@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers;
 
@@ -21,7 +19,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.envers.Audited;
-import org.hibernate.envers.DefaultTrackingModifiedEntitiesRevisionEntity;
+import org.hibernate.envers.TrackingModifiedEntitiesRevisionMapping;
 import org.hibernate.envers.RevisionEntity;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 
@@ -200,7 +198,7 @@ public class EntityTypeChangeAuditDefaultTrackingTest extends EntityManagerFacto
 	@Table(name = "TRACKING_REV_INFO")
 	@RevisionEntity
 	public static class CustomTrackingRevisionEntity
-		extends DefaultTrackingModifiedEntitiesRevisionEntity {
+		extends TrackingModifiedEntitiesRevisionMapping {
 
 	}
 	//end::envers-tracking-modified-entities-revchanges-example[]

@@ -1,12 +1,15 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.annotations.override.mappedsuperclass;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
@@ -17,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Stanislav Gubanov
  */
-@TestForIssue(jiraKey = "HHH-11771")
+@JiraKey(value = "HHH-11771")
 public class MappedSuperClassIdPropertyBasicAttributeOverrideTest {
 
 	@Test

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql;
 
@@ -17,7 +15,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
 import org.hibernate.Session;
-import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLInsert;
@@ -26,6 +23,7 @@ import org.hibernate.annotations.SQLSelect;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.jdbc.Expectation;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
@@ -109,7 +107,7 @@ public class CustomSQLTest extends BaseEntityManagerFunctionalTestCase {
 	@Entity(name = "Person")
 	@SQLInsert(
 		sql = "INSERT INTO person (name, id, valid) VALUES (?, ?, true) ",
-		check = ResultCheckStyle.COUNT
+		verify = Expectation.RowCount.class
 	)
 	@SQLUpdate(
 		sql = "UPDATE person SET name = ? where id = ? "

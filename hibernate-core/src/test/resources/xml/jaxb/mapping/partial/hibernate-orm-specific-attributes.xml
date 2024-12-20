@@ -6,16 +6,19 @@
   ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
   ~ See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
   -->
-<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="3.1">
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="3.2">
     <package>org.hibernate.orm.test.boot.jaxb.mapping</package>
     <entity class="HibernateOrmSpecificAttributesMappingTest$MyEntity">
         <attributes>
             <!-- 1 == CHAR -->
-            <id name="id" jdbc-type-code="1">
-                <uuid-generator style="time"/>
+            <id name="id">
+                <uuid-generator style="TIME"/>
+                <jdbc-type-code>1</jdbc-type-code>
             </id>
             <!-- 2005 == CLOB -->
-            <basic name="name" jdbc-type-code="2005"/>
+            <basic name="name">
+                <jdbc-type-code>2005</jdbc-type-code>
+            </basic>
             <basic name="tags">
                 <type value="org.hibernate.orm.test.boot.jaxb.mapping.HibernateOrmSpecificAttributesMappingTest$DelimitedStringsJavaType"/>
             </basic>

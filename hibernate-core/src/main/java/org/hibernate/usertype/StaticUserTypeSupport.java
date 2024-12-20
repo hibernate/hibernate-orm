@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.usertype;
 
@@ -12,7 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -115,8 +113,9 @@ public class StaticUserTypeSupport<T> implements UserType<T> {
 	}
 
 	@Override
-	public T nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
-		final Object extracted = jdbcValueExtractor.extract( rs, position, session );
+	public T nullSafeGet(ResultSet rs, int position, WrapperOptions options)
+			throws SQLException {
+		final Object extracted = jdbcValueExtractor.extract( rs, position, options );
 
 		if ( valueConverter != null ) {
 			return valueConverter.toDomainValue( extracted );
@@ -127,7 +126,8 @@ public class StaticUserTypeSupport<T> implements UserType<T> {
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, T value, int index, SharedSessionContractImplementor session) throws SQLException {
+	public void nullSafeSet(PreparedStatement st, T value, int index, WrapperOptions options)
+			throws SQLException {
 		final Object valueToBind;
 		if ( valueConverter != null ) {
 			valueToBind = valueConverter.toRelationalValue( value );
@@ -136,7 +136,7 @@ public class StaticUserTypeSupport<T> implements UserType<T> {
 			valueToBind = value;
 		}
 
-		jdbcValueBinder.bind( st, valueToBind, index, session );
+		jdbcValueBinder.bind( st, valueToBind, index, options );
 	}
 
 	@Override

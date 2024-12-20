@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.generator.values.internal;
 
@@ -15,7 +13,6 @@ import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
-import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
@@ -28,12 +25,13 @@ import org.hibernate.id.insert.InsertReturningDelegate;
 import org.hibernate.id.insert.UniqueKeySelectingDelegate;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.EntityTableMapping;
-import org.hibernate.pretty.MessageHelper;
-import org.hibernate.query.results.TableGroupImpl;
+import org.hibernate.query.results.internal.TableGroupImpl;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
@@ -53,9 +51,9 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.sql.results.spi.RowReader;
-import org.hibernate.type.descriptor.WrapperOptions;
 
 import static org.hibernate.generator.internal.NaturalIdHelper.getNaturalIdPropertyNames;
+import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
  * Factory and helper methods for {@link GeneratedValuesMutationDelegate} framework.
@@ -72,7 +70,7 @@ public class GeneratedValuesHelper {
 	 *
 	 * @param resultSet The result set from which to extract the generated values
 	 * @param persister The entity type which we're reading the generated values for
-	 * @param wrapperOptions The session
+	 * @param session The session
 	 *
 	 * @return The generated values
 	 *
@@ -83,7 +81,7 @@ public class GeneratedValuesHelper {
 			ResultSet resultSet,
 			EntityPersister persister,
 			EventType timing,
-			WrapperOptions wrapperOptions) throws SQLException {
+			SharedSessionContractImplementor session) throws SQLException {
 		if ( resultSet == null ) {
 			return null;
 		}
@@ -100,19 +98,11 @@ public class GeneratedValuesHelper {
 		}
 
 		final GeneratedValuesImpl generatedValues = new GeneratedValuesImpl( generatedProperties );
-		final Object[] results = readGeneratedValues(
-				resultSet,
-				persister,
-				mappingProducer,
-				wrapperOptions.getSession()
-		);
+		final Object[] results = readGeneratedValues( resultSet, persister, mappingProducer, session );
 
 		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf(
-					"Extracted generated values %s: %s",
-					MessageHelper.infoString( persister ),
-					results
-			);
+			LOG.debug( "Extracted generated values for entity "
+							+ infoString( persister ) + ": " + ArrayHelper.toString(results) );
 		}
 
 		for ( int i = 0; i < results.length; i++ ) {
@@ -157,6 +147,7 @@ public class GeneratedValuesHelper {
 				null,
 				null,
 				QueryOptions.NONE,
+				true,
 				mappingProducer.resolve(
 						directResultSetAccess,
 						session.getLoadQueryInfluencers(),
@@ -188,14 +179,11 @@ public class GeneratedValuesHelper {
 			}
 		};
 
-		final JdbcValuesSourceProcessingStateStandardImpl valuesProcessingState = new JdbcValuesSourceProcessingStateStandardImpl(
-				executionContext,
-				processingOptions
-		);
+		final JdbcValuesSourceProcessingStateStandardImpl valuesProcessingState =
+				new JdbcValuesSourceProcessingStateStandardImpl( executionContext, processingOptions );
 
 		final RowReader<Object[]> rowReader = ResultsHelper.createRowReader(
-				executionContext,
-				LockOptions.NONE,
+				session.getFactory(),
 				RowTransformerArrayImpl.instance(),
 				Object[].class,
 				jdbcValues
@@ -329,7 +317,11 @@ public class GeneratedValuesHelper {
 	public static GeneratedValuesMutationDelegate getGeneratedValuesDelegate(
 			EntityPersister persister,
 			EventType timing) {
-		final boolean hasGeneratedProperties = !persister.getGeneratedProperties( timing ).isEmpty();
+		final List<? extends ModelPart> generatedProperties = persister.getGeneratedProperties( timing );
+		final boolean hasGeneratedProperties = !generatedProperties.isEmpty();
+		final boolean hasFormula =
+				generatedProperties.stream()
+					.anyMatch( part -> part instanceof SelectableMapping selectable && selectable.isFormula() );
 		final boolean hasRowId = timing == EventType.INSERT && persister.getRowIdMapping() != null;
 		final Dialect dialect = persister.getFactory().getJdbcServices().getDialect();
 
@@ -344,7 +336,8 @@ public class GeneratedValuesHelper {
 			return null;
 		}
 
-		if ( dialect.supportsInsertReturningGeneratedKeys()
+		if ( !hasFormula
+				&& dialect.supportsInsertReturningGeneratedKeys()
 				&& persister.getFactory().getSessionFactoryOptions().isGetGeneratedKeysEnabled() ) {
 			return new GetGeneratedKeysDelegate( persister, false, timing );
 		}

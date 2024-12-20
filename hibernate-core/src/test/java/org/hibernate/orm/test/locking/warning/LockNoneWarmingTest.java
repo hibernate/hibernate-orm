@@ -1,12 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.locking.warning;
 
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.util.HashSet;
 import java.util.Set;
 import jakarta.persistence.Column;
@@ -22,7 +21,7 @@ import org.hibernate.Session;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
@@ -39,14 +38,14 @@ import static org.junit.Assert.assertFalse;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-10513")
+@JiraKey(value = "HHH-10513")
 public class LockNoneWarmingTest extends BaseCoreFunctionalTestCase {
 
 	private Triggerable triggerable;
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( CoreMessageLogger.class, LockNoneWarmingTest.class.getName() )
+			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, LockNoneWarmingTest.class.getName() )
 	);
 
 	@Override
@@ -77,7 +76,7 @@ public class LockNoneWarmingTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testQuerySetLockModeNONEDoNotLogAWarnMessageWhenTheDialectUseFollowOnLockingIsTrue() {
 		try (Session s = openSession();) {
-			final Query query = s.createQuery( "from Item i join i.bids b where name = :name" );
+			final Query query = s.createQuery( "from Item i join i.bids b where name = :name", Object[].class );
 			query.setParameter( "name", "ZZZZ" );
 			query.setLockMode( "i", LockMode.NONE );
 			query.setLockMode( "b", LockMode.NONE );

@@ -1,15 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bootstrap.binding.naming;
 
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.NamingHelper;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
@@ -18,7 +16,7 @@ import static org.junit.Assert.assertEquals;
 public class NamingHelperTest extends BaseUnitTestCase {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12357")
+	@JiraKey(value = "HHH-12357")
 	public void generateHashedFkName() {
 		Identifier booksDe = new Identifier( "Bücher", false );
 		Identifier authorsDe = new Identifier( "Autoren", false );
@@ -34,7 +32,7 @@ public class NamingHelperTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12357")
+	@JiraKey(value = "HHH-12357")
 	public void generateHashedFkNameUSingUtf8() {
 		Identifier booksDe = new Identifier( "Bücher", false );
 		Identifier authorsDe = new Identifier( "Autoren", false );

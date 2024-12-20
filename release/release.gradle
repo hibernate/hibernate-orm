@@ -59,15 +59,22 @@ def stageIntroductionGuideTask = tasks.register( "stageIntroductionGuide", Copy 
     into layout.buildDirectory.dir( "documentation/introduction" )
 }
 
-def stageQueryGuideTasks = tasks.register( "stageQueryGuide", Copy ) {
+def stageQueryGuideTask = tasks.register( "stageQueryGuide", Copy ) {
     group 'documentation'
-    description "Stages the Query Language Guide as part of preparing for release"
-    dependsOn ':documentation:renderQueryLanguageGuides'
     description "Stages the Query Language Guide as part of preparing for release"
     dependsOn ':documentation:renderQueryLanguageGuides'
 
     from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/querylanguage" ) }
     into layout.buildDirectory.dir( "documentation/querylanguage" )
+}
+
+def stageRepositoriesGuideTask = tasks.register( "stageRepositoriesGuide", Copy ) {
+    group 'documentation'
+    description "Stages the Repositories Guide as part of preparing for release"
+    dependsOn ':documentation:renderRepositories'
+
+    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/repositories" ) }
+    into layout.buildDirectory.dir( "documentation/repositories" )
 }
 
 def stageUserGuideTask = tasks.register( "stageUserGuide", Copy ) {
@@ -179,7 +186,8 @@ def assembleDocumentationTask = tasks.register( "assembleDocumentation" ) {
     dependsOn stageQuickstartTask
     dependsOn stageIntroductionGuideTask
     dependsOn stageUserGuideTask
-    dependsOn stageQueryGuideTasks
+    dependsOn stageQueryGuideTask
+    dependsOn stageRepositoriesGuideTask
     dependsOn stageIntegrationGuideTask
     dependsOn stageTopicalGuideTask
     dependsOn stageMigrationGuideTask
@@ -225,14 +233,14 @@ def releaseChecksTask = tasks.register( "releaseChecks" ) {
         String gitBranchLocal
         String gitRemoteLocal
 
-        if (project.hasProperty('gitBranch')) {
+        if (project.hasProperty('gitBranch') && !project.property('gitBranch').isEmpty()) {
             gitBranchLocal = project.property('gitBranch')
         }
         else {
             gitBranchLocal = executeGitCommand( 'branch', '--show-current' ).trim()
         }
 
-        if (project.hasProperty('gitRemote')) {
+        if (project.hasProperty('gitRemote') && !project.property('gitRemote').isEmpty()) {
             gitRemoteLocal = project.property('gitRemote')
         }
         else {
@@ -322,14 +330,14 @@ def releasePreparePostGitTask = tasks.register( 'gitTasksAfterRelease' ) {
     dependsOn changeToDevelopmentVersionTask
 
     doLast {
-        logger.lifecycle( "Performing pre-steps Git commit : `${project.releaseVersion}`" )
-        executeGitCommand( 'add', '.' )
-        executeGitCommand( 'commit', '-m', "Post-steps for release : `${project.ormVersion.fullName}`" )
-
         if ( project.createTag ) {
             logger.lifecycle( "Tagging release : `${project.releaseTag}`..." )
             executeGitCommand( 'tag', '-a', project.releaseTag, '-m', "Release $project.ormVersion.fullName" )
         }
+
+        logger.lifecycle( "Performing post-steps Git commit : `${project.releaseVersion}`" )
+        executeGitCommand( 'add', '.' )
+        executeGitCommand( 'commit', '-m', "Post-steps for release : `${project.ormVersion.fullName}`" )
     }
 }
 
@@ -363,6 +371,8 @@ def releasePrepareTask = tasks.register( 'releasePrepare' ) {
     group 'Release'
     description 'Performs release preparations on local check-out, including updating changelog'
 
+    // we want to assemble the docs here so that we catch problems early (and even during "dry run" for CI releases)
+    dependsOn assembleDocumentationTask
     dependsOn gitPreparationForReleaseTask
 
     finalizedBy releasePreparePostGitTask

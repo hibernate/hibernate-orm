@@ -32,7 +32,7 @@
         </id>
         <property name="name" column="NAME" type="string"/>
         <component name="code" class="Course$Code">
-            <many-to-one name="department" class="Department" column="DEPT_ID" cascade="save-update"/>
+            <many-to-one name="department" class="Department" column="DEPT_ID" cascade="merge,persist"/>
             <property name="number" type="int" column="CODE_NUMBER"/>
         </component>
         <fetch-profile name="course.details">

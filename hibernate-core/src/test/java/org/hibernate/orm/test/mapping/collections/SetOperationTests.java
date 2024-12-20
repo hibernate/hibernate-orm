@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.collections;
 
@@ -72,7 +70,7 @@ public class SetOperationTests {
 					entity.addComponent( new SimpleComponent( "the stuff - 1", "the stuff - 2" ) );
 					entity.addComponent( new SimpleComponent( "other stuff - 1", "other stuff - 2" ) );
 
-					session.save( entity );
+					session.persist( entity );
 				}
 		);
 	}
@@ -88,7 +86,7 @@ public class SetOperationTests {
 	public void testLoad(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final EntityOfSets entity = session.load( EntityOfSets.class, 1 );
+					final EntityOfSets entity = session.getReference( EntityOfSets.class, 1 );
 					assertThat( entity, notNullValue() );
 					assertThat( entity, isNotInitialized() );
 				}
@@ -140,8 +138,8 @@ public class SetOperationTests {
 	public void testDeleteWithElementCollectionData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final EntityOfSets entity = session.load( EntityOfSets.class, 1 );
-					session.delete( entity );
+					final EntityOfSets entity = session.getReference( EntityOfSets.class, 1 );
+					session.remove( entity );
 				}
 		);
 

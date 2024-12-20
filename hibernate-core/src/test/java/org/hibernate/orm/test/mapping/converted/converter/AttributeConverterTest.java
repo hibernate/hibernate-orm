@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.converted.converter;
 
@@ -15,7 +13,7 @@ import org.hibernate.IrrelevantEntity;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.internal.ClassmateContext;
+import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.model.convert.internal.InstanceBasedConverterDescriptor;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -40,7 +38,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ExceptionUtil;
@@ -198,7 +196,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8462")
+	@JiraKey(value = "HHH-8462")
 	public void testBasicOrmXmlConverterApplication() {
 		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
@@ -232,7 +230,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-14881")
+	@JiraKey(value = "HHH-14881")
 	public void testBasicOrmXmlConverterWithOrmXmlPackage() {
 		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
@@ -310,7 +308,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 		try (SessionFactory sf = cfg.buildSessionFactory()) {
 			Session session = sf.openSession();
 			session.beginTransaction();
-			session.save( new Tester4( 1L, "steve", 200 ) );
+			session.persist( new Tester4( 1L, "steve", 200 ) );
 			session.getTransaction().commit();
 			session.close();
 
@@ -331,16 +329,16 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 
 			session = sf.openSession();
 			session.beginTransaction();
-			t4 = (Tester4) session.get( Tester4.class, 1L );
+			t4 = session.get( Tester4.class, 1L );
 			assertEquals( 300, t4.code.longValue() );
-			session.delete( t4 );
+			session.remove( t4 );
 			session.getTransaction().commit();
 			session.close();
 		}
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-14206" )
+	@JiraKey( value = "HHH-14206" )
 	public void testPrimitiveTypeConverterAutoApplied() {
 		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
@@ -383,7 +381,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 		try (SessionFactory sf = cfg.buildSessionFactory()) {
 			Session session = sf.openSession();
 			session.beginTransaction();
-			session.save( new IrrelevantInstantEntity( 1L ) );
+			session.persist( new IrrelevantInstantEntity( 1L ) );
 			session.getTransaction().commit();
 			session.close();
 
@@ -397,14 +395,14 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 
 			session = sf.openSession();
 			session.beginTransaction();
-			session.delete( e );
+			session.remove( e );
 			session.getTransaction().commit();
 			session.close();
 		}
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-14021")
+	@JiraKey(value = "HHH-14021")
 	public void testBasicByteUsage() {
 		Configuration cfg = new Configuration();
 		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
@@ -416,7 +414,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 		try (SessionFactory sf = cfg.buildSessionFactory()) {
 			Session session = sf.openSession();
 			session.beginTransaction();
-			session.save( new Tester4( 1L, "George", 150, ConvertibleEnum.DEFAULT ) );
+			session.persist( new Tester4( 1L, "George", 150, ConvertibleEnum.DEFAULT ) );
 			session.getTransaction().commit();
 			session.close();
 
@@ -437,16 +435,16 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 
 			session = sf.openSession();
 			session.beginTransaction();
-			t4 = (Tester4) session.get( Tester4.class, 1L );
+			t4 = session.get( Tester4.class, 1L );
 			assertEquals( ConvertibleEnum.VALUE, t4.convertibleEnum );
-			session.delete( t4 );
+			session.remove( t4 );
 			session.getTransaction().commit();
 			session.close();
 		}
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8866")
+	@JiraKey(value = "HHH-8866")
 	public void testEnumConverter() {
 		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
@@ -489,7 +487,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 
 				s = sf.openSession();
 				s.beginTransaction();
-				entity = s.load( EntityWithConvertibleField.class, entityID );
+				entity = s.getReference( EntityWithConvertibleField.class, entityID );
 				assertEquals( ConvertibleEnum.VALUE, entity.getConvertibleEnum() );
 				s.getTransaction().commit();
 				s.close();
@@ -503,7 +501,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 
 				s = sf.openSession();
 				s.beginTransaction();
-				s.delete( entity );
+				s.remove( entity );
 				s.getTransaction().commit();
 				s.close();
 			}
@@ -525,7 +523,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	// Entity declarations used in the test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Entity(name = "T1")
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public static class Tester {
 		@Id
 		private Long id;
@@ -541,7 +539,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	}
 
 	@Entity(name = "T2")
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public static class Tester2 {
 		@Id
 		private Long id;
@@ -550,7 +548,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	}
 
 	@Entity(name = "T3")
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public static class Tester3 {
 		@Id
 		private Long id;
@@ -559,7 +557,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	}
 
 	@Entity(name = "T4")
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public static class Tester4 {
 		@Id
 		private Long id;
@@ -587,7 +585,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	}
 
 	@Entity(name = "T5")
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public static class Tester5 {
 		@Id
 		private Long id;
@@ -606,7 +604,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 
 	@Entity
 	@Table(name = "irrelevantInstantEntity")
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public static class IrrelevantInstantEntity {
 		@Id
 		private Long id;

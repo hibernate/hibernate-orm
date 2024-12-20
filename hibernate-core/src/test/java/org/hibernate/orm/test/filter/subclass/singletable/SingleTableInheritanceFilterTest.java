@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.filter.subclass.singletable;
 
@@ -20,7 +18,7 @@ import org.hibernate.annotations.FilterDef;
 import org.hibernate.orm.test.filter.AbstractStatefulStatelessFilterTest;
 import org.hibernate.query.MutationQuery;
 import org.hibernate.query.Query;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
@@ -36,7 +34,7 @@ import java.util.function.Consumer;
 /**
  * @author Jan Schatteman
  */
-@TestForIssue( jiraKey = "HHH-16435")
+@JiraKey( value = "HHH-16435")
 @DomainModel(
 		annotatedClasses = {
 				SingleTableInheritanceFilterTest.AbstractSuperClass.class,

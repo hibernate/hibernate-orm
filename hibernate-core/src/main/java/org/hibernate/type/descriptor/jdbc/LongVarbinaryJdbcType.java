@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
 
@@ -16,14 +14,19 @@ import java.sql.Types;
 public class LongVarbinaryJdbcType extends VarbinaryJdbcType {
 	public static final LongVarbinaryJdbcType INSTANCE = new LongVarbinaryJdbcType();
 
-	private final int jdbcTypeCode;
+	private final int defaultSqlTypeCode;
 
 	public LongVarbinaryJdbcType() {
-		this(Types.LONGVARBINARY);
+		this( Types.LONGVARBINARY );
 	}
 
-	public LongVarbinaryJdbcType(int jdbcTypeCode) {
-		this.jdbcTypeCode = jdbcTypeCode;
+	public LongVarbinaryJdbcType(int defaultSqlTypeCode) {
+		this.defaultSqlTypeCode = defaultSqlTypeCode;
+	}
+
+	@Override
+	public int getDefaultSqlTypeCode() {
+		return defaultSqlTypeCode;
 	}
 
 	@Override
@@ -33,6 +36,6 @@ public class LongVarbinaryJdbcType extends VarbinaryJdbcType {
 
 	@Override
 	public int getJdbcTypeCode() {
-		return jdbcTypeCode;
+		return Types.LONGVARBINARY;
 	}
 }

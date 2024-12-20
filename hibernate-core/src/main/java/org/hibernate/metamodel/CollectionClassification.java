@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel;
 
@@ -69,7 +67,7 @@ public enum CollectionClassification {
 	 * as {@link java.util.Set}.
 	 *
 	 * @see jakarta.persistence.OrderBy
-	 * @see org.hibernate.annotations.OrderBy
+	 * @see org.hibernate.annotations.SQLOrder
 	 */
 	ORDERED_SET( PluralAttribute.CollectionType.SET, false ),
 
@@ -95,7 +93,7 @@ public enum CollectionClassification {
 	 * as {@link java.util.Map}.
 	 *
 	 * @see jakarta.persistence.OrderBy
-	 * @see org.hibernate.annotations.OrderBy
+	 * @see org.hibernate.annotations.SQLOrder
 	 */
 	ORDERED_MAP( PluralAttribute.CollectionType.MAP, true );
 

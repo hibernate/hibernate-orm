@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bootstrap.scanning;
 
@@ -16,9 +14,9 @@ import java.util.Map;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 
+import org.hibernate.archive.scan.internal.StandardScanner;
 import org.hibernate.boot.archive.scan.internal.StandardScanOptions;
 import org.hibernate.boot.archive.scan.internal.StandardScanParameters;
-import org.hibernate.boot.archive.scan.internal.StandardScanner;
 import org.hibernate.boot.archive.scan.spi.ClassDescriptor;
 import org.hibernate.boot.archive.scan.spi.MappingFileDescriptor;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;

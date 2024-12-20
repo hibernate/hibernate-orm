@@ -1,10 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.orm.test.ondemandload;
 
 import java.math.BigDecimal;
@@ -70,8 +67,8 @@ public class LazyLoadingTest {
 	public void cleanUpData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.delete( session.get( Store.class, 1 ) );
-					session.delete( session.get( Product.class, "007" ) );
+					session.remove( session.get( Store.class, 1 ) );
+					session.remove( session.get( Product.class, "007" ) );
 				}
 		);
 	}
@@ -156,7 +153,7 @@ public class LazyLoadingTest {
 		Store s = scope.fromTransaction(
 				session -> {
 					// first load the store, making sure it is not initialized
-					Store store = session.load( Store.class, 1 );
+					Store store = session.getReference( Store.class, 1 );
 					assertNotNull( store );
 					assertFalse( Hibernate.isInitialized( store ) );
 

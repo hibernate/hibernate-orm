@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.spi;
 
@@ -12,7 +10,6 @@ import java.util.function.Supplier;
 import org.hibernate.Incubating;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.sql.spi.ParameterInterpretation;
-import org.hibernate.query.sqm.tree.SqmStatement;
 
 /**
  * Cache for various parts of translating or interpreting queries.
@@ -37,12 +34,7 @@ public interface QueryInterpretationCache {
 	int getNumberOfCachedHqlInterpretations();
 	int getNumberOfCachedQueryPlans();
 
-	@Deprecated(forRemoval = true)
-	HqlInterpretation resolveHqlInterpretation(String queryString, Class<?> expectedResultType, Function<String, SqmStatement<?>> creator);
-
-	default HqlInterpretation resolveHqlInterpretation(String queryString, Class<?> expectedResultType, HqlTranslator translator) {
-		return resolveHqlInterpretation( queryString, expectedResultType, s -> translator.translate( queryString, expectedResultType ) );
-	}
+	<R> HqlInterpretation<R> resolveHqlInterpretation(String queryString, Class<R> expectedResultType, HqlTranslator translator);
 
 	<R> SelectQueryPlan<R> resolveSelectQueryPlan(Key key, Supplier<SelectQueryPlan<R>> creator);
 

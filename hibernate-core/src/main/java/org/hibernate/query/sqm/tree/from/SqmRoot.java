@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.from;
 
@@ -11,6 +9,8 @@ import java.util.List;
 
 import org.hibernate.Internal;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.sqm.TreatException;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedFrom;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaRoot;
@@ -191,27 +191,42 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 	}
 
 	@Override
-	public <S extends E> SqmTreatedRoot<E, S> treatAs(Class<S> treatJavaType) throws PathException {
-		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
+	public <S extends E> SqmTreatedFrom<E,E,S> treatAs(Class<S> treatJavaType) throws PathException {
+		return (SqmTreatedFrom<E, E, S>) treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
 	}
 
 	@Override
-	public <S extends E> SqmTreatedRoot<E, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
-		final SqmTreatedRoot<E, S> treat = findTreat( treatTarget, null );
+	public <S extends E> SqmTreatedFrom<E,E,S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
+		final SqmTreatedFrom<E,E,S> treat = findTreat( treatTarget, null );
 		if ( treat == null ) {
-			return addTreat( new SqmTreatedRoot<>( this, treatTarget ) );
+			//noinspection rawtypes,unchecked
+			return addTreat( (SqmTreatedFrom) new SqmTreatedRoot( this, treatTarget ) );
 		}
 		return treat;
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public <S extends E> SqmFrom<?, S> treatAs(Class<S> treatJavaType, String alias) {
+	public <S extends E> SqmTreatedRoot treatAs(Class<S> treatJavaType, String alias) {
 		throw new UnsupportedOperationException( "Root treats can not be aliased" );
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public <S extends E> SqmFrom<?, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
+	public <S extends E> SqmTreatedRoot treatAs(EntityDomainType<S> treatTarget, String alias) {
 		throw new UnsupportedOperationException( "Root treats can not be aliased" );
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
+	public <S extends E> SqmTreatedRoot treatAs(Class<S> treatJavaType, String alias, boolean fetch) {
+		throw new TreatException( "Root paths cannot be aliased, nor fetched - " + getNavigablePath().getFullPath() );
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
+	public <S extends E> SqmTreatedRoot treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch) {
+		throw new TreatException( "Root paths cannot be aliased, nor fetched - " + getNavigablePath().getFullPath() );
 	}
 
 }

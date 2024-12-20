@@ -1,14 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Supplier;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
@@ -158,8 +155,8 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 		}
 
 		@Override
-		protected ReturnableType<?> resolveResultType(
-				Supplier<MappingModelExpressible<?>> inferredTypeSupplier,
+		protected ReturnableType<?> determineResultType(
+				SqmToSqlAstConverter converter,
 				TypeConfiguration typeConfiguration) {
 			return (ReturnableType<?>)
 					getWithinGroup().getSortSpecifications().get( 0 )

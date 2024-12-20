@@ -1,12 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cdi.general.hibernatesearch;
 
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
@@ -28,7 +27,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * @author Yoann Rodiere
  */
 public class HibernateSearchSimulatedIntegrator implements Integrator, BeanContainer.LifecycleOptions {
-	
+
 	private final BeanInstanceProducer fallbackBeanInstanceProducer;
 
 	private ContainedBeanImplementor<TheApplicationScopedBean> applicationScopedBean1;
@@ -60,7 +59,10 @@ public class HibernateSearchSimulatedIntegrator implements Integrator, BeanConta
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void integrate(Metadata metadata, SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
+	public void integrate(
+			Metadata metadata,
+			BootstrapContext bootstrapContext,
+			SessionFactoryImplementor sessionFactory) {
 		ManagedBeanRegistry registry = sessionFactory.getServiceRegistry().getService( ManagedBeanRegistry.class );
 
 		BeanContainer beanContainer = registry.getBeanContainer();

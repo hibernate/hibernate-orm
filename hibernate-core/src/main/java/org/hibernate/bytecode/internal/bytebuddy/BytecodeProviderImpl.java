@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.internal.bytebuddy;
 
@@ -21,6 +19,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 import org.hibernate.HibernateException;
+import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerClassLocator;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
@@ -1310,6 +1309,18 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 	@Override
 	public @Nullable Enhancer getEnhancer(EnhancementContext enhancementContext) {
 		return new EnhancerImpl( enhancementContext, byteBuddyState );
+	}
+
+	/**
+	 * Similar to {@link #getEnhancer(EnhancementContext)} but intended for advanced users who wish
+	 * to customize how ByteBuddy is locating the class files and caching the types.
+	 * Possibly used in Quarkus in a future version.
+	 * @param enhancementContext
+	 * @param classLocator
+	 * @return
+	 */
+	public @Nullable Enhancer getEnhancer(EnhancementContext enhancementContext, EnhancerClassLocator classLocator) {
+		return new EnhancerImpl( enhancementContext, byteBuddyState, classLocator );
 	}
 
 	@Override

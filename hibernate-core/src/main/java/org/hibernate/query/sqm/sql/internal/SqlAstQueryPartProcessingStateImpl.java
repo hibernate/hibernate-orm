@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.sql.internal;
 
@@ -105,13 +103,16 @@ public class SqlAstQueryPartProcessingStateImpl
 			else {
 				throw new IllegalArgumentException( "Illegal expression passed for nested fetching: " + expression );
 			}
-			return expression.createSqlSelection(
-					-1,
-					nestingFetchParent.getReferencedMappingType().getSelectableIndex( selectableName ),
-					javaType,
-					true,
-					typeConfiguration
-			);
+			final int selectableIndex = nestingFetchParent.getReferencedMappingType().getSelectableIndex( selectableName );
+			if ( selectableIndex != -1 ) {
+				return expression.createSqlSelection(
+						-1,
+						selectableIndex,
+						javaType,
+						true,
+						typeConfiguration
+				);
+			}
 		}
 		final Map<Expression, Object> selectionMap;
 		if ( deduplicateSelectionItems ) {

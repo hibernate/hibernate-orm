@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
@@ -61,7 +59,7 @@ public class PostgreSQLStructCastingJdbcType extends AbstractPostgreSQLStructJdb
 		appender.append( "cast(" );
 		appender.append( writeExpression );
 		appender.append( " as " );
-		appender.append( getTypeName() );
+		appender.append( getStructTypeName() );
 		appender.append( ')' );
 	}
 
@@ -88,6 +86,11 @@ public class PostgreSQLStructCastingJdbcType extends AbstractPostgreSQLStructJdb
 						options
 				);
 				st.setString( name, stringValue );
+			}
+
+			@Override
+			public Object getBindValue(X value, WrapperOptions options) throws SQLException {
+				return ( (PostgreSQLStructCastingJdbcType) getJdbcType() ).getBindValue( value, options );
 			}
 		};
 	}

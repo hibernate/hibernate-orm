@@ -1,14 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.ast.internal;
 
 import java.lang.reflect.Array;
 import java.util.List;
 
+import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ObjectDeletedException;
@@ -18,14 +17,16 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.engine.spi.Status;
 import org.hibernate.engine.spi.SubselectFetch;
+import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.loader.LoaderLogging;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
@@ -45,23 +46,26 @@ public class LoaderHelper {
 	/**
 	 * Ensure the {@linkplain LockMode} associated with the entity in relation to a
 	 * persistence context is {@linkplain LockMode#greaterThan great or equal} to the
-	 * requested mode.
+	 * requested mode, performing a pessimistic lock upgrade on a given entity, if needed.
+	 *
+	 * @param object The entity for which to upgrade the lock.
+	 * @param entry The entity's {@link EntityEntry} instance.
+	 * @param lockOptions Contains the requested lock mode.
+	 * @param session The session which is the source of the event being processed.
 	 */
 	public static void upgradeLock(Object object, EntityEntry entry, LockOptions lockOptions, EventSource session) {
 		final LockMode requestedLockMode = lockOptions.getLockMode();
 		if ( requestedLockMode.greaterThan( entry.getLockMode() ) ) {
-			// The user requested a "greater" (i.e. more restrictive) form of
-			// pessimistic lock
+			// Request is for a more restrictive lock than the lock already held
+			final EntityPersister persister = entry.getPersister();
 
-			if ( entry.getStatus() != Status.MANAGED ) {
+			if ( entry.getStatus().isDeletedOrGone()) {
 				throw new ObjectDeletedException(
 						"attempted to lock a deleted instance",
 						entry.getId(),
-						entry.getPersister().getEntityName()
+						persister.getEntityName()
 				);
 			}
-
-			final EntityPersister persister = entry.getPersister();
 
 			if ( LoaderLogging.LOADER_LOGGER.isTraceEnabled() ) {
 				LoaderLogging.LOADER_LOGGER.tracef(
@@ -77,20 +81,49 @@ public class LoaderHelper {
 			Object ck = null;
 			try {
 				if ( cachingEnabled ) {
-					EntityDataAccess cache = persister.getCacheAccessStrategy();
+					final EntityDataAccess cache = persister.getCacheAccessStrategy();
 					ck = cache.generateCacheKey( entry.getId(), persister, session.getFactory(), session.getTenantIdentifier() );
 					lock = cache.lockItem( session, ck, entry.getVersion() );
 				}
 
+				if ( persister.isVersioned() && entry.getVersion() == null ) {
+					// This should be an empty entry created for an uninitialized bytecode proxy
+					if ( !Hibernate.isPropertyInitialized( object, persister.getVersionMapping().getPartName() ) ) {
+						Hibernate.initialize( object );
+						entry = session.getPersistenceContextInternal().getEntry( object );
+						assert entry.getVersion() != null;
+					}
+					else {
+						throw new IllegalStateException( String.format(
+								"Trying to lock versioned entity %s but found null version",
+								MessageHelper.infoString( persister.getEntityName(), entry.getId() )
+						) );
+					}
+				}
+
 				if ( persister.isVersioned() && requestedLockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT  ) {
 					// todo : should we check the current isolation mode explicitly?
-					Object nextVersion = persister.forceVersionIncrement(
-							entry.getId(), entry.getVersion(), false, session
-					);
+					final Object nextVersion =
+							persister.forceVersionIncrement( entry.getId(), entry.getVersion(), false, session );
 					entry.forceLocked( object, nextVersion );
 				}
 				else {
-					persister.lock( entry.getId(), entry.getVersion(), object, lockOptions, session );
+					if ( entry.isExistsInDatabase() ) {
+						final EventMonitor eventMonitor = session.getEventMonitor();
+						final DiagnosticEvent entityLockEvent = eventMonitor.beginEntityLockEvent();
+						boolean success = false;
+						try {
+							persister.lock( entry.getId(), entry.getVersion(), object, lockOptions, session );
+							success = true;
+						}
+						finally {
+							eventMonitor.completeEntityLockEvent( entityLockEvent, entry.getId(),
+									persister.getEntityName(), lockOptions.getLockMode(), success, session );
+						}
+					}
+					else {
+						session.forceFlush( entry );
+					}
 				}
 				entry.setLockMode(requestedLockMode);
 			}
@@ -101,7 +134,6 @@ public class LoaderHelper {
 					persister.getCacheAccessStrategy().unlockItem( session, ck, lock );
 				}
 			}
-
 		}
 	}
 
@@ -224,7 +256,9 @@ public class LoaderHelper {
 						session
 				),
 				RowTransformerStandardImpl.instance(),
-				ListResultsConsumer.UniqueSemantic.FILTER
+				null,
+				ListResultsConsumer.UniqueSemantic.FILTER,
+				idsToInitialize.length
 		);
 	}
 }

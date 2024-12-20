@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
@@ -18,11 +16,13 @@ import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
+import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.DerivedTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.ValuesTableReference;
@@ -52,6 +52,20 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	public TiDBSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
 		this.dialect = (TiDBDialect) super.getDialect();
+	}
+
+	@Override
+	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
+		if ( isIntegerDivisionEmulationRequired( arithmeticExpression ) ) {
+			appendSql( OPEN_PARENTHESIS );
+			visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
+			appendSql( " div " );
+			visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
+			appendSql( CLOSE_PARENTHESIS );
+		}
+		else {
+			super.visitBinaryArithmeticExpression(arithmeticExpression);
+		}
 	}
 
 	@Override
@@ -151,7 +165,7 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 				getSql(),
 				getParameterBinders(),
 				getAffectedTableNames(),
-				null
+				getUniqueConstraintNameThatMayFail(sqlAst)
 		);
 	}
 
@@ -237,6 +251,11 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	}
 
 	@Override
+	protected void renderDerivedTableReferenceIdentificationVariable(DerivedTableReference tableReference) {
+		renderTableReferenceIdentificationVariable( tableReference );
+	}
+
+	@Override
 	public void visitOffsetFetchClause(QueryPart queryPart) {
 		if ( !isRowNumberingCurrentQueryPart() ) {
 			renderCombinedLimitClause( queryPart );
@@ -315,11 +334,6 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	@Override
 	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
 		return false;
-	}
-
-	@Override
-	protected String getDual() {
-		return "dual";
 	}
 
 	@Override

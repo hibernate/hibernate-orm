@@ -1,13 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.function.array;
 
 import java.util.List;
 
+import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -19,6 +18,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,6 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 @DomainModel(annotatedClasses = EntityWithArrays.class)
 @SessionFactory
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStructuralArrays.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsArrayToString.class)
 // Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
 @BootstrapServiceRegistry(integrators = SharedDriverManagerTypeCacheClearingIntegrator.class)
 public class ArrayToStringTest {
@@ -59,12 +60,25 @@ public class ArrayToStringTest {
 	public void test(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-array-to-string-example[]
-			List<String> results = em.createQuery( "select array_to_string(e.theArray, ',') from EntityWithArrays e", String.class )
+			List<String> results = em.createQuery( "select array_to_string(e.theArray, ',') from EntityWithArrays e order by e.id", String.class )
 					.getResultList();
 			//end::hql-array-to-string-example[]
 			assertEquals( 3, results.size() );
+			// We expect an empty string, but Oracle returns NULL instead of empty strings
 			Assertions.assertThat( results.get( 0 ) ).isNullOrEmpty();
 			assertEquals( "abc,def", results.get( 1 ) );
+			assertNull( results.get( 2 ) );
+		} );
+	}
+
+	@Test
+	public void testNullValue(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			List<String> results = em.createQuery( "select array_to_string(e.theArray, ',', 'null') from EntityWithArrays e order by e.id", String.class )
+					.getResultList();
+			assertEquals( 3, results.size() );
+			Assertions.assertThat( results.get( 0 ) ).isNullOrEmpty();
+			assertEquals( "abc,null,def", results.get( 1 ) );
 			assertNull( results.get( 2 ) );
 		} );
 	}
@@ -96,6 +110,34 @@ public class ArrayToStringTest {
 					cb.collectionToString( root.get( "theCollection" ), "," )
 			);
 			em.createQuery( cq ).getResultList();
+		} );
+	}
+
+	@Test
+	public void testCast(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			//tag::hql-array-to-string-hql-example[]
+			List<String> results = em.createQuery( "select cast(e.theArray as String) from EntityWithArrays e order by e.id", String.class )
+					.getResultList();
+			//end::hql-array-to-string-hql-example[]
+			assertEquals( 3, results.size() );
+			assertEquals( "[]", results.get( 0 ) );
+			assertEquals( "[abc,null,def]", results.get( 1 ) );
+			assertNull( results.get( 2 ) );
+		} );
+	}
+
+	@Test
+	@SkipForDialect( dialectClass = HSQLDialect.class, majorVersion = 2, minorVersion = 7, microVersion = 2,
+			reason = "Needs at least 2.7.3 due to the change in HSQLArrayToStringFunction that introduced a cast")
+	public void testStr(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			List<String> results = em.createQuery( "select str(e.theArray) from EntityWithArrays e order by e.id", String.class )
+					.getResultList();
+			assertEquals( 3, results.size() );
+			assertEquals( "[]", results.get( 0 ) );
+			assertEquals( "[abc,null,def]", results.get( 1 ) );
+			assertNull( results.get( 2 ) );
 		} );
 	}
 

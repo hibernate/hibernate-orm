@@ -1,6 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.inheritance;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -20,7 +24,7 @@ import jakarta.persistence.InheritanceType;
 		}
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-15115")
+@JiraKey(value = "HHH-15115")
 public class JoinedInheritanceDeletionTest {
 
 	@BeforeEach
@@ -31,9 +35,9 @@ public class JoinedInheritanceDeletionTest {
 					Employee employee = new Employee( 2, "Chris", "Software Engineer" );
 					Customer customer = new Customer( 3, "Miriam", "" );
 
-					session.save( person );
-					session.save( employee );
-					session.save( customer );
+					session.persist( person );
+					session.persist( employee );
+					session.persist( customer );
 				}
 		);
 	}

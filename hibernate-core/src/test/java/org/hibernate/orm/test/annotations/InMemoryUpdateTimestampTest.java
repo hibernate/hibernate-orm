@@ -1,21 +1,21 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations;
 
 import java.util.Date;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.generator.internal.CurrentTimestampGeneration;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -25,14 +25,22 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-13256")
+@JiraKey("HHH-13256")
 public class InMemoryUpdateTimestampTest extends BaseEntityManagerFunctionalTestCase {
+
+	private static final MutableClock clock = new MutableClock();
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
 				Person.class
 		};
+	}
+
+	@Override
+	protected void addConfigOptions(Map options) {
+		super.addConfigOptions( options );
+		options.put( CurrentTimestampGeneration.CLOCK_SETTING_NAME, clock );
 	}
 
 	@Test
@@ -47,6 +55,7 @@ public class InMemoryUpdateTimestampTest extends BaseEntityManagerFunctionalTest
 			entityManager.flush();
 			Assert.assertNotNull( person.getUpdatedOn() );
 		} );
+		clock.tick();
 
 		AtomicReference<Date> beforeTimestamp = new AtomicReference<>();
 

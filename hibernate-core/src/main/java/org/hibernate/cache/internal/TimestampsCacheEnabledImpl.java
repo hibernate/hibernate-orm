@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.internal;
 
@@ -14,8 +12,8 @@ import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.jboss.logging.Logger;
@@ -60,8 +58,8 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 			if ( debugEnabled ) {
 				log.debugf( "Pre-invalidating space [%s], timestamp: %s", space, ts );
 			}
-			final EventManager eventManager = session.getEventManager();
-			final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
+			final EventMonitor eventMonitor = session.getEventMonitor();
+			final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
 			try {
 				eventListenerManager.cachePutStart();
 
@@ -70,12 +68,12 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 				timestampsRegion.putIntoCache( space, ts, session );
 			}
 			finally {
-				eventManager.completeCachePutEvent(
+				eventMonitor.completeCachePutEvent(
 						cachePutEvent,
 						session,
 						timestampsRegion,
 						true,
-						EventManager.CacheActionDescription.TIMESTAMP_PRE_INVALIDATE
+						EventMonitor.CacheActionDescription.TIMESTAMP_PRE_INVALIDATE
 				);
 				eventListenerManager.cachePutEnd();
 			}
@@ -102,19 +100,19 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 			}
 
 			final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
-			final EventManager eventManager = session.getEventManager();
-			final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
+			final EventMonitor eventMonitor = session.getEventMonitor();
+			final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
 			try {
 				eventListenerManager.cachePutStart();
 				timestampsRegion.putIntoCache( space, ts, session );
 			}
 			finally {
-				eventManager.completeCachePutEvent(
+				eventMonitor.completeCachePutEvent(
 						cachePutEvent,
 						session,
 						timestampsRegion,
 						true,
-						EventManager.CacheActionDescription.TIMESTAMP_INVALIDATE
+						EventMonitor.CacheActionDescription.TIMESTAMP_INVALIDATE
 				);
 				eventListenerManager.cachePutEnd();
 
@@ -194,14 +192,14 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 
 	private Long getLastUpdateTimestampForSpace(String space, SharedSessionContractImplementor session) {
 		Long ts = null;
-		final EventManager eventManager = session.getEventManager();
-		final HibernateMonitoringEvent cacheGetEvent = eventManager.beginCacheGetEvent();
+		final EventMonitor eventMonitor = session.getEventMonitor();
+		final DiagnosticEvent cacheGetEvent = eventMonitor.beginCacheGetEvent();
 		try {
 			session.getEventListenerManager().cacheGetStart();
 			ts = (Long) timestampsRegion.getFromCache( space, session );
 		}
 		finally {
-			eventManager.completeCacheGetEvent(
+			eventMonitor.completeCacheGetEvent(
 					cacheGetEvent,
 					session,
 					timestampsRegion,

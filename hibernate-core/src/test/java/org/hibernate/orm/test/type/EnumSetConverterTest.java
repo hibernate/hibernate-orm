@@ -1,28 +1,33 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.type;
 
 import java.util.EnumSet;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.query.BindableType;
 import org.hibernate.query.spi.QueryImplementor;
 
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
+import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.type.BasicType;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Column;
@@ -42,29 +47,21 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Christian Beikov
  */
-@SkipForDialect(value = SybaseASEDialect.class, comment = "Sybase or the driver are trimming trailing zeros in byte arrays")
-public class EnumSetConverterTest extends BaseNonConfigCoreFunctionalTestCase {
+@BootstrapServiceRegistry(
+		// Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
+		integrators = SharedDriverManagerTypeCacheClearingIntegrator.class
+)
+@DomainModel(annotatedClasses = EnumSetConverterTest.TableWithEnumSetConverter.class)
+@SessionFactory
+public class EnumSetConverterTest {
 
-	private BindableType<Set<MySpecialEnum>> enumSetType;
+	private BasicType<Set<MySpecialEnum>> enumSetType;
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[]{ TableWithEnumSetConverter.class };
-	}
-
-	@Override
-	protected void addSettings(Map<String, Object> settings) {
-		// Make sure this stuff runs on a dedicated connection pool,
-		// otherwise we might run into ORA-21700: object does not exist or is marked for delete
-		// because the JDBC connection or database session caches something that should have been invalidated
-		settings.put( AvailableSettings.CONNECTION_PROVIDER, "" );
-	}
-
-	public void startUp() {
-		super.startUp();
-		inTransaction( em -> {
+	@BeforeAll
+	public void startUp(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
 			//noinspection unchecked
-			enumSetType = (BindableType<Set<MySpecialEnum>>) em.unwrap( SessionImplementor.class )
+			enumSetType = (BasicType<Set<MySpecialEnum>>) em.unwrap( SessionImplementor.class )
 					.getFactory()
 					.getRuntimeMetamodels()
 					.getMappingMetamodel()
@@ -88,8 +85,8 @@ public class EnumSetConverterTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testById() {
-		inSession( em -> {
+	public void testById(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			TableWithEnumSetConverter tableRecord;
 			tableRecord = em.find( TableWithEnumSetConverter.class, 1L );
 			assertThat( tableRecord.getTheSet(), is( new HashSet<>() ) );
@@ -103,8 +100,8 @@ public class EnumSetConverterTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testQueryById() {
-		inSession( em -> {
+	public void testQueryById(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			TypedQuery<TableWithEnumSetConverter> tq = em.createNamedQuery( "TableWithEnumSetConverter.JPQL.getById", TableWithEnumSetConverter.class );
 			tq.setParameter( "id", 2L );
 			TableWithEnumSetConverter tableRecord = tq.getSingleResult();
@@ -113,9 +110,8 @@ public class EnumSetConverterTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect( value = AbstractHANADialect.class, comment = "For some reason, HANA can't intersect VARBINARY values, but funnily can do a union...")
-	public void testQuery() {
-		inSession( em -> {
+	public void testQuery(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			TypedQuery<TableWithEnumSetConverter> tq = em.createNamedQuery( "TableWithEnumSetConverter.JPQL.getByData", TableWithEnumSetConverter.class );
 			tq.setParameter( "data", new HashSet<>() );
 			TableWithEnumSetConverter tableRecord = tq.getSingleResult();
@@ -124,8 +120,8 @@ public class EnumSetConverterTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testNativeQueryById() {
-		inSession( em -> {
+	public void testNativeQueryById(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			TypedQuery<TableWithEnumSetConverter> tq = em.createNamedQuery( "TableWithEnumSetConverter.Native.getById", TableWithEnumSetConverter.class );
 			tq.setParameter( "id", 2L );
 			TableWithEnumSetConverter tableRecord = tq.getSingleResult();
@@ -134,13 +130,20 @@ public class EnumSetConverterTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect( value = HSQLDialect.class, comment = "HSQL does not like plain parameters in the distinct from predicate")
-	@SkipForDialect( value = OracleDialect.class, comment = "Oracle requires a special function to compare XML")
-	public void testNativeQuery() {
-		inSession( em -> {
-			final String op = em.getJdbcServices().getDialect().supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
+	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQL does not like plain parameters in the distinct from predicate")
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle requires a special function to compare XML")
+	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 requires a special function to compare XML")
+	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "SQL Server requires a special function to compare XML")
+	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase ASE requires a special function to compare XML")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA requires a special function to compare LOBs")
+	@SkipForDialect(dialectClass = MariaDBDialect.class, reason = "MariaDB requires a special function to compare LOBs")
+	public void testNativeQuery(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final Dialect dialect = em.getDialect();
+			final String op = dialect.supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
+			final String param = enumSetType.getJdbcType().wrapWriteExpression( ":data", dialect );
 			QueryImplementor<TableWithEnumSetConverter> tq = em.createNativeQuery(
-					"SELECT * FROM table_with_enum_set_convert t WHERE the_set " + op + " :data",
+					"SELECT * FROM table_with_enum_set_convert t WHERE the_set " + op + " " + param,
 					TableWithEnumSetConverter.class
 			);
 			tq.setParameter( "data", EnumSet.of( MySpecialEnum.VALUE1, MySpecialEnum.VALUE2 ), enumSetType );
@@ -200,7 +203,7 @@ public class EnumSetConverterTest extends BaseNonConfigCoreFunctionalTestCase {
 	public enum MySpecialEnum {
 		VALUE1, VALUE2, VALUE3
 	}
-	
+
 	public static class MyEnumConverter implements AttributeConverter<MySpecialEnum, String> {
 		@Override
 		public String convertToDatabaseColumn(MySpecialEnum attribute) {

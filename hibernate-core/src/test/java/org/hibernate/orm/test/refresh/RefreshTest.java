@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.refresh;
 
 import java.io.Serializable;
@@ -6,7 +10,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
-import org.hibernate.TransientObjectException;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -80,7 +83,7 @@ public class RefreshTest {
 	@Test
 	public void testRefreshWithNullId(SessionFactoryScope scope) {
 		Assertions.assertThrows(
-				TransientObjectException.class,
+				IllegalArgumentException.class,
 				() -> {
 					scope.inTransaction(
 							session -> {
@@ -205,7 +208,7 @@ public class RefreshTest {
 	public static class RealmAttributeEntity {
 
 		@Id
-		@ManyToOne(fetch= FetchType.LAZY)
+		@ManyToOne(fetch= FetchType.LAZY, cascade = CascadeType.PERSIST)
 		@JoinColumn(name = "REALM_ID")
 		protected RealmEntity realm;
 

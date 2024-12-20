@@ -1,12 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.cid.keymanytoone;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -59,7 +57,7 @@ public class EagerKeyManyToOneTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-4147")
+	@JiraKey(value = "HHH-4147")
 	public void testLoadEntityWithEagerFetchingToKeyManyToOneReferenceBackToSelf(SessionFactoryScope scope) {
 		// based on the core testsuite test of same name in org.hibernate.orm.test.keymanytoone.bidir.component.EagerKeyManyToOneTest
 		// meant to test against regression relating to http://opensource.atlassian.com/projects/hibernate/browse/HHH-2277

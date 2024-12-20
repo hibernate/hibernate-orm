@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.query.hql.treat;
 
 import java.util.List;
@@ -64,9 +68,9 @@ public class HqlTreatJoinFetchTest {
 	public void testJoinFetchRootTreat(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					QueryImplementor<TestEntity> query = session.createQuery(
+					QueryImplementor<BaseEntity> query = session.createQuery(
 							"select t from BaseEntity t join fetch treat(t as JoinedEntity).testEntity j left join fetch j.joined2 e",
-							TestEntity.class
+							BaseEntity.class
 					);
 					query.list();
 				}

@@ -1,21 +1,22 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
@@ -63,12 +64,6 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	protected void copyTo(AbstractSqmPath<T> target, SqmCopyContext context) {
 		assert navigablePathsMatch( target );
 		super.copyTo( target, context );
-		if ( reusablePaths != null ) {
-			target.reusablePaths = new HashMap<>( reusablePaths.size() );
-			for ( Map.Entry<String, SqmPath<?>> entry : reusablePaths.entrySet() ) {
-				target.reusablePaths.put( entry.getKey(), entry.getValue().copy( context ) );
-			}
-		}
 	}
 
 	// meant for assertions only
@@ -85,12 +80,12 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 
 	@Override
 	public SqmPathSource<T> getNodeType() {
-		return (SqmPathSource<T>) super.getNodeType();
+		return (SqmPathSource<T>) NullnessUtil.castNonNull( super.getNodeType() );
 	}
 
 	@Override
 	public SqmPathSource<T> getReferencedPathSource() {
-		return (SqmPathSource<T>) super.getNodeType();
+		return (SqmPathSource<T>) NullnessUtil.castNonNull( super.getNodeType() );
 	}
 
 	@Override
@@ -196,11 +191,18 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public SqmPath<?> get(String attributeName) {
-		final SqmPathSource<?> subNavigable =
-				getResolvedModel().getSubPathSource( attributeName, nodeBuilder().getSessionFactory().getJpaMetamodel() );
+	public <Y> SqmPath<Y> get(String attributeName) {
+		//noinspection unchecked
+		final SqmPathSource<Y> subNavigable = (SqmPathSource<Y>) getResolvedModel().getSubPathSource( attributeName );
 		return resolvePath( attributeName, subNavigable );
+	}
+
+	@Override
+	public <Y> SqmPath<Y> get(String attributeName, boolean includeSubtypes) {
+		//noinspection unchecked
+		final SqmPathSource<Y> subPathSource = (SqmPathSource<Y>)
+				getResolvedModel().getSubPathSource( attributeName, includeSubtypes );
+		return resolvePath( attributeName, subPathSource );
 	}
 
 	protected <X> SqmPath<X> resolvePath(PersistentAttribute<?, X> attribute) {
@@ -224,15 +226,50 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		}
 	}
 
-	protected <S extends T> SqmTreatedPath<T, S> getTreatedPath(EntityDomainType<S> treatTarget) {
-		final NavigablePath treat = getNavigablePath().treatAs( treatTarget.getHibernateEntityName() );
+	protected <S extends T> SqmTreatedPath<T, S> getTreatedPath(ManagedDomainType<S> treatTarget) {
+		final NavigablePath treat = getNavigablePath().treatAs( treatTarget.getTypeName() );
 		//noinspection unchecked
 		SqmTreatedPath<T, S> path = (SqmTreatedPath<T, S>) getLhs().getReusablePath( treat.getLocalName() );
 		if ( path == null ) {
-			path = new SqmTreatedSimplePath<>( this, treatTarget, nodeBuilder() );
+			if ( treatTarget instanceof EntityDomainType<?> ) {
+				path = new SqmTreatedEntityValuedSimplePath<>( this, (EntityDomainType<S>) treatTarget, nodeBuilder() );
+			}
+			else {
+				path = new SqmTreatedEmbeddedValuedSimplePath<>( this, (EmbeddableDomainType<S>) treatTarget );
+			}
 			getLhs().registerReusablePath( path );
 		}
 		return path;
+	}
+
+	@Override
+	public <S extends T> SqmTreatedPath<T, S> treatAs(Class<S> treatJavaType) {
+		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget) {
+		return getTreatedPath( treatTarget );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedPath<T, S> treatAs(Class<S> treatJavaType, String alias) {
+		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
+		return getTreatedPath( treatTarget );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedPath<T, S> treatAs(Class<S> treatJavaType, String alias, boolean fetch) {
+		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch) {
+		return null;
 	}
 
 	/**
@@ -288,16 +325,17 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public <E, C extends java.util.Collection<E>> SqmPath<C> get(PluralAttribute<T, C, E> attribute) {
+	public <E, C extends Collection<E>> SqmExpression<C> get(PluralAttribute<? super T, C, E> attribute) {
+		//noinspection unchecked
 		return resolvePath( (PersistentAttribute<T, C>) attribute );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public <K, V, M extends Map<K, V>> SqmPath<M> get(MapAttribute<T, K, V> map) {
-		return resolvePath( (PersistentAttribute<T, M>) map );
+	public <K, V, M extends Map<K, V>> SqmExpression<M> get(MapAttribute<? super T, K, V> attribute) {
+		//noinspection unchecked
+		return resolvePath( (PersistentAttribute<T, M>) attribute );
 	}
+
 
 	@Override
 	public String toString() {

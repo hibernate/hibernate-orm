@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.criteria;
 
@@ -11,7 +9,7 @@ import java.util.Set;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.common.FetchClauseType;
 
 /**
  * Models a {@code SELECT} query.  Used as a delegate in

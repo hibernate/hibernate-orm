@@ -1,15 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id;
 
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
 import java.util.EnumSet;
@@ -50,5 +48,5 @@ public interface PostInsertIdentifierGenerator extends OnExecutionGenerator, Con
 	 * Noop default implementation. May be overridden by subtypes.
 	 */
 	@Override
-	default void configure(Type type, Properties params, ServiceRegistry serviceRegistry) {}
+	default void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) {}
 }

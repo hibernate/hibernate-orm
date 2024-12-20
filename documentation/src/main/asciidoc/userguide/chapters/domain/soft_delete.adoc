@@ -8,15 +8,6 @@ An occasional requirement seen in the wild is to never physically remove rows fr
 instead perform a "soft delete" where a column is updated to indicate that the row is no longer active.
 Hibernate offers first-class support for this behavior through its `@SoftDelete` annotation.
 
-[NOTE]
-====
-The `@SoftDelete` annotation is new in 6.4.
-
-It was possible to hack together support for soft deletes in previous versions using a combination of filters,
-`@Where` and custom delete event handling.  However, that approach was tedious and did not work in
-all cases.  `@SoftDelete` should be highly preferred.
-====
-
 Hibernate supports soft delete for both <<soft-delete-entity,entities>> and <<soft-delete-collection,collections>>.
 
 Soft delete support is defined by 3 main parts -

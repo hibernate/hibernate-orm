@@ -1,10 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.sql.ast.spi;
 
 import org.hibernate.persister.internal.SqlFragmentPredicate;
@@ -25,6 +22,7 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
+import org.hibernate.sql.ast.tree.expression.EmbeddableTypeLiteral;
 import org.hibernate.sql.ast.tree.expression.EntityTypeLiteral;
 import org.hibernate.sql.ast.tree.expression.Every;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -34,6 +32,7 @@ import org.hibernate.sql.ast.tree.expression.FunctionExpression;
 import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.ModifiedSubQueryExpression;
+import org.hibernate.sql.ast.tree.expression.NestedColumnReference;
 import org.hibernate.sql.ast.tree.expression.OrderedSetAggregateFunctionExpression;
 import org.hibernate.sql.ast.tree.expression.Over;
 import org.hibernate.sql.ast.tree.expression.Overflow;
@@ -465,6 +464,10 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 	}
 
 	@Override
+	public void visitNestedColumnReference(NestedColumnReference nestedColumnReference) {
+	}
+
+	@Override
 	public void visitAggregateColumnWriteExpression(AggregateColumnWriteExpression aggregateColumnWriteExpression) {
 	}
 
@@ -522,6 +525,10 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 
 	@Override
 	public void visitEntityTypeLiteral(EntityTypeLiteral expression) {
+	}
+
+	@Override
+	public void visitEmbeddableTypeLiteral(EmbeddableTypeLiteral expression) {
 	}
 
 	@Override

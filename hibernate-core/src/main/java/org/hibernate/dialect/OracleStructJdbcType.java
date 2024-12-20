@@ -1,12 +1,8 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
-
-import java.util.Locale;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.naming.Identifier;
@@ -20,7 +16,7 @@ import oracle.sql.TIMESTAMPTZ;
 /**
  * @author Christian Beikov
  */
-public class OracleStructJdbcType extends StructJdbcType {
+public class OracleStructJdbcType extends OracleBaseStructJdbcType {
 
 	public OracleStructJdbcType() {
 		// The default instance is for reading only and will return an Object[]
@@ -28,11 +24,7 @@ public class OracleStructJdbcType extends StructJdbcType {
 	}
 
 	private OracleStructJdbcType(EmbeddableMappingType embeddableMappingType, String typeName, int[] orderMapping) {
-		super(
-				embeddableMappingType,
-				typeName == null ? null : typeName.toUpperCase( Locale.ROOT ),
-				orderMapping
-		);
+		super( embeddableMappingType, typeName, orderMapping );
 	}
 
 	@Override
@@ -56,10 +48,7 @@ public class OracleStructJdbcType extends StructJdbcType {
 		if ( rawJdbcValue.getClass() == TIMESTAMPTZ.class ) {
 			try {
 				return ( (TIMESTAMPTZ) rawJdbcValue ).offsetDateTimeValue(
-						options.getSession()
-								.getJdbcCoordinator()
-								.getLogicalConnection()
-								.getPhysicalConnection()
+						options.getSession().getJdbcCoordinator().getLogicalConnection().getPhysicalConnection()
 				);
 			}
 			catch (Exception e) {

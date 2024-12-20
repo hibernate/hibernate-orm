@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.spi;
 
@@ -15,8 +13,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.query.QueryFlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -39,12 +37,11 @@ import org.hibernate.query.BindableType;
 import org.hibernate.query.CommonQueryContract;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.QueryParameter;
-import org.hibernate.query.ResultListTransformer;
-import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.TypedParameterValue;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.tree.expression.NullSqmExpressible;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -54,7 +51,6 @@ import org.hibernate.type.descriptor.java.JavaType;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityGraph;
-import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
@@ -71,6 +67,7 @@ import static org.hibernate.jpa.HibernateHints.HINT_FETCH_SIZE;
 import static org.hibernate.jpa.HibernateHints.HINT_FLUSH_MODE;
 import static org.hibernate.jpa.HibernateHints.HINT_FOLLOW_ON_LOCKING;
 import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_SPACES;
+import static org.hibernate.jpa.HibernateHints.HINT_QUERY_DATABASE;
 import static org.hibernate.jpa.HibernateHints.HINT_QUERY_PLAN_CACHEABLE;
 import static org.hibernate.jpa.HibernateHints.HINT_TIMEOUT;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_CACHE_RETRIEVE_MODE;
@@ -97,10 +94,16 @@ import static org.hibernate.jpa.internal.util.LockModeTypeHelper.interpretLockMo
  */
 public abstract class AbstractCommonQueryContract implements CommonQueryContract {
 	private final SharedSessionContractImplementor session;
-	private final QueryOptionsImpl queryOptions = new QueryOptionsImpl();
+	private final QueryOptionsImpl queryOptions;
 
 	public AbstractCommonQueryContract(SharedSessionContractImplementor session) {
 		this.session = session;
+		this.queryOptions = new QueryOptionsImpl();
+	}
+
+	protected AbstractCommonQueryContract(AbstractCommonQueryContract original) {
+		this.session = original.session;
+		this.queryOptions = original.queryOptions;
 	}
 
 	public SharedSessionContractImplementor getSession() {
@@ -142,15 +145,11 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			throw new IllegalArgumentException( "Can't get max rows value from: " + expression );
 		}
 		// Note that we can never have ties because this is only used when we de-duplicate results
-		switch ( selectStatement.getFetchClauseType() ) {
-			case ROWS_ONLY:
-			case ROWS_WITH_TIES:
-				return fetchValue.intValue();
-			case PERCENT_ONLY:
-			case PERCENT_WITH_TIES:
-				return (int) Math.ceil( ( ( (double) size ) * fetchValue.doubleValue() ) / 100d );
-		}
-		throw new UnsupportedOperationException( "Unsupported fetch clause type: " + selectStatement.getFetchClauseType() );
+		return switch ( selectStatement.getFetchClauseType() ) {
+			case ROWS_ONLY, ROWS_WITH_TIES -> fetchValue.intValue();
+			case PERCENT_ONLY, PERCENT_WITH_TIES ->
+					(int) Math.ceil( ( ((double) size) * fetchValue.doubleValue() ) / 100d );
+		};
 	}
 
 
@@ -176,7 +175,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		}
 
 		putIfNotNull( hints, HINT_COMMENT, getComment() );
-		putIfNotNull( hints, HINT_FLUSH_MODE, getHibernateFlushMode() );
+		putIfNotNull( hints, HINT_FLUSH_MODE,  getQueryOptions().getFlushMode() );
 
 		putIfNotNull( hints, HINT_READONLY, getQueryOptions().isReadOnly() );
 		putIfNotNull( hints, HINT_FETCH_SIZE, getQueryOptions().getFetchSize() );
@@ -241,13 +240,14 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	@Override
 	public CommonQueryContract setHint(String hintName, Object value) {
-		applyHint( hintName, value );
+		if ( !applyHint( hintName, value ) ) {
+			QueryLogging.QUERY_MESSAGE_LOGGER.ignoringUnrecognizedQueryHint( hintName );
+		}
 		return this;
 	}
 
 	public final boolean applyHint(String hintName, Object value) {
 		getSession().checkOpen( true );
-
 		try {
 			switch ( hintName ) {
 				case HINT_FLUSH_MODE:
@@ -270,14 +270,11 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 				case HINT_NATIVE_SPACES:
 					applySynchronizeSpacesHint( value );
 					return true;
+				case HINT_QUERY_DATABASE:
+					applyDatabaseHint( (String) value );
+					return true;
 				default:
-					if ( applySelectionHint( hintName, value ) || applyAdditionalPossibleHints( hintName, value ) ) {
-						return true;
-					}
-					else {
-						QueryLogging.QUERY_MESSAGE_LOGGER.ignoringUnrecognizedQueryHint( hintName );
-						return false;
-					}
+					return applySelectionHint( hintName, value );
 			}
 		}
 		catch ( ClassCastException e ) {
@@ -294,36 +291,41 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			return true;
 		}
 		else {
+			final MutableQueryOptions queryOptions = getQueryOptions();
 			switch ( hintName ) {
 				case HINT_READONLY:
-					applyReadOnlyHint( getBoolean( value ) );
+					queryOptions.setReadOnly( getBoolean( value ) );
 					return true;
 				case HINT_FETCH_SIZE:
-					applyFetchSizeHint( getInteger( value ) );
+					queryOptions.setFetchSize( getInteger( value ) );
 					return true;
 				case HINT_QUERY_PLAN_CACHEABLE:
-					applyQueryPlanCacheableHint( getBoolean( value ) );
+					queryOptions.setQueryPlanCachingEnabled( getBoolean( value ) );
 					return true;
 				case HINT_CACHEABLE:
-					applyCacheableHint( getBoolean( value ) );
+					queryOptions.setResultCachingEnabled( getBoolean( value ) );
 					return true;
 				case HINT_CACHE_REGION:
-					applyCacheRegionHint( (String) value );
+					queryOptions.setResultCacheRegionName( (String) value );
 					return true;
 				case HINT_CACHE_MODE:
-					applyCacheModeHint( getCacheMode( value ) );
+					queryOptions.setCacheMode( getCacheMode( value ) );
 					return true;
 				case HINT_JAVAEE_CACHE_RETRIEVE_MODE:
 					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_CACHE_RETRIEVE_MODE, HINT_SPEC_CACHE_RETRIEVE_MODE );
 					//fall through to:
 				case HINT_SPEC_CACHE_RETRIEVE_MODE:
-					applyJpaCacheRetrieveModeHint( value != null ? CacheRetrieveMode.valueOf( value.toString() ) : null );
+					final CacheRetrieveMode retrieveMode =
+							value == null ? null : CacheRetrieveMode.valueOf( value.toString() );
+					queryOptions.setCacheRetrieveMode( retrieveMode );
 					return true;
 				case HINT_JAVAEE_CACHE_STORE_MODE:
 					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_CACHE_STORE_MODE, HINT_SPEC_CACHE_STORE_MODE );
 					//fall through to:
 				case HINT_SPEC_CACHE_STORE_MODE:
-					applyJpaCacheStoreModeHint( value != null ? CacheStoreMode.valueOf( value.toString() ) : null );
+					final CacheStoreMode storeMode =
+							value == null ? null : CacheStoreMode.valueOf( value.toString() );
+					queryOptions.setCacheStoreMode( storeMode );
 					return true;
 				case HINT_JAVAEE_FETCH_GRAPH:
 					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_FETCH_GRAPH, HINT_SPEC_FETCH_GRAPH );
@@ -344,37 +346,13 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		}
 	}
 
-	protected void applyFetchSizeHint(int fetchSize) {
-		getQueryOptions().setFetchSize( fetchSize );
-	}
-
-	protected void applyQueryPlanCacheableHint(boolean isCacheable) {
-		getQueryOptions().setQueryPlanCachingEnabled( isCacheable );
-	}
-
-	protected void applyCacheModeHint(CacheMode cacheMode) {
-		getQueryOptions().setCacheMode( cacheMode );
-	}
-
-	protected void applyCacheableHint(boolean isCacheable) {
-		getQueryOptions().setResultCachingEnabled( isCacheable );
-	}
-
-	protected void applyCacheRegionHint(String regionName) {
-		getQueryOptions().setResultCacheRegionName( regionName );
-	}
-
-	private void applyReadOnlyHint(Boolean readOnly) {
-		getQueryOptions().setReadOnly( readOnly );
-	}
-
 	protected void applyEntityGraphHint(String hintName, Object value) {
 		final GraphSemantic graphSemantic = GraphSemantic.fromHintName( hintName );
-		if ( value instanceof RootGraphImplementor ) {
-			applyGraph( (RootGraphImplementor<?>) value, graphSemantic );
+		if ( value instanceof RootGraphImplementor<?> rootGraphImplementor ) {
+			applyGraph( rootGraphImplementor, graphSemantic );
 		}
-		else if ( value instanceof String ) {
-			applyGraph( (String) value, graphSemantic );
+		else if ( value instanceof String string ) {
+			applyGraph( string, graphSemantic );
 		}
 		else {
 			throw new IllegalArgumentException( "The value of the hint '" + hintName
@@ -459,11 +437,11 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	protected final void applyLockModeHint(Object value) {
-		if ( value instanceof LockMode ) {
-			applyHibernateLockMode( (LockMode) value );
+		if ( value instanceof LockMode lockMode ) {
+			applyHibernateLockMode( lockMode );
 		}
-		else if ( value instanceof LockModeType ) {
-			applyLockModeType( (LockModeType) value );
+		else if ( value instanceof LockModeType lockModeType ) {
+			applyLockModeType( lockModeType );
 		}
 		else if ( value instanceof String ) {
 			applyHibernateLockMode( interpretLockMode( value ) );
@@ -497,10 +475,6 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		getQueryOptions().getLockOptions().setFollowOnLocking( followOnLocking );
 	}
 
-	protected boolean applyAdditionalPossibleHints(String hintName, Object value) {
-		return false;
-	}
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Options
@@ -516,7 +490,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	@Override
 	public FlushMode getHibernateFlushMode() {
-		return getQueryOptions().getFlushMode();
+		final FlushMode flushMode = getQueryOptions().getFlushMode();
+		return flushMode == null ? getSession().getHibernateFlushMode() : flushMode;
 	}
 
 	@Override
@@ -525,14 +500,15 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		return this;
 	}
 
-	protected boolean applyJpaCacheRetrieveModeHint(CacheRetrieveMode retrieveMode) {
-		getQueryOptions().setCacheRetrieveMode( retrieveMode );
-		return true;
+	@Override
+	public QueryFlushMode getQueryFlushMode() {
+		return FlushModeTypeHelper.getForcedFlushMode( getQueryOptions().getFlushMode() );
 	}
 
-	protected boolean applyJpaCacheStoreModeHint(CacheStoreMode storeMode) {
-		getQueryOptions().setCacheStoreMode( storeMode );
-		return true;
+	@Override
+	public CommonQueryContract setQueryFlushMode(QueryFlushMode queryFlushMode) {
+		getQueryOptions().setFlushMode( FlushModeTypeHelper.getFlushMode(queryFlushMode) );
+		return this;
 	}
 
 	protected void applyTimeoutHint(int timeout) {
@@ -547,6 +523,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		setHibernateFlushMode( flushMode );
 	}
 
+	protected void applyDatabaseHint(String hint) {
+		getQueryOptions().addDatabaseHint( hint );
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Options
@@ -560,6 +539,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		return getQueryOptions().getTimeout();
 	}
 
+
 	@Override
 	public CommonQueryContract setTimeout(int timeout) {
 		getQueryOptions().setTimeout( timeout );
@@ -571,49 +551,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		return getQueryOptions().getLimit().getMaxRowsJpa();
 	}
 
-	public void applyMaxResults(int maxResult) {
-		if ( maxResult < 0 ) {
-			throw new IllegalArgumentException( "max-results cannot be negative" );
-		}
-		getSession().checkOpen();
-		getQueryOptions().getLimit().setMaxRows( maxResult );
-	}
-
 	public int getFirstResult() {
 		getSession().checkOpen();
 		return getQueryOptions().getLimit().getFirstRowJpa();
-	}
-
-	public void applyFirstResult(int startPosition) {
-		if ( startPosition < 0 ) {
-			throw new IllegalArgumentException( "first-result value cannot be negative : " + startPosition );
-		}
-
-		getSession().checkOpen();
-		getQueryOptions().getLimit().setFirstRow( startPosition );
-	}
-
-	protected FlushModeType getJpaFlushMode() {
-		getSession().checkOpen();
-		final FlushMode flushMode = getQueryOptions().getFlushMode() == null
-				? getSession().getHibernateFlushMode()
-				: getQueryOptions().getFlushMode();
-		return FlushModeTypeHelper.getFlushModeType( flushMode );
-	}
-
-	protected void applyJpaFlushMode(FlushModeType flushModeType) {
-		getSession().checkOpen();
-		setHibernateFlushMode( FlushModeTypeHelper.getFlushMode( flushModeType ) );
-	}
-
-	public boolean applyTupleTransformer(TupleTransformer<?> transformer) {
-		getQueryOptions().setTupleTransformer( transformer );
-		return true;
-	}
-
-	public boolean applyResultListTransformer(ResultListTransformer<?> transformer) {
-		getQueryOptions().setResultListTransformer( transformer );
-		return true;
 	}
 
 
@@ -762,14 +702,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	public Object getParameterValue(String name) {
 		getSession().checkOpen( false );
 
-		final QueryParameterImplementor<?> parameter = getParameterMetadata().getQueryParameter( name );
-		if ( parameter == null ) {
-			throw new IllegalArgumentException( "Could not resolve parameter by name - " + name );
-		}
-
-		final QueryParameterBinding<?> binding = getQueryParameterBindings().getBinding( parameter );
-		if ( binding == null || !binding.isBound() ) {
-			throw new IllegalStateException( "Parameter value not yet bound : " + parameter );
+		final QueryParameterBinding<Object> binding = getQueryParameterBindings().getBinding( name );
+		if ( !binding.isBound() ) {
+			throw new IllegalStateException( "The parameter [" + name + "] has not yet been bound" );
 		}
 
 		if ( binding.isMultiValued() ) {
@@ -783,13 +718,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	public Object getParameterValue(int position) {
 		getSession().checkOpen( false );
 
-		final QueryParameterImplementor<?> parameter = getParameterMetadata().getQueryParameter( position );
-		if ( parameter == null ) {
-			throw new IllegalArgumentException( "Could not resolve parameter by position - " + position );
-		}
-
-		final QueryParameterBinding<?> binding = getQueryParameterBindings().getBinding( parameter );
-		if ( binding == null || !binding.isBound() ) {
+		final QueryParameterBinding<Object> binding = getQueryParameterBindings().getBinding( position );
+		if ( !binding.isBound() ) {
 			throw new IllegalStateException( "The parameter [" + position + "] has not yet been bound" );
 		}
 
@@ -816,12 +746,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			}
 		}
 
-		final QueryParameterImplementor<?> param = getParameterMetadata().getQueryParameter( name );
-
-		if ( param == null ) {
-			throw new IllegalArgumentException( "Named parameter [" + name + "] is not registered with this procedure call" );
-		}
-
+		final QueryParameterBinding<Object> binding = getQueryParameterBindings().getBinding( name );
+		final QueryParameter<Object> param = binding.getQueryParameter();
 		if ( param.allowsMultiValuedBinding() ) {
 			final BindableType<?> hibernateType = param.getHibernateType();
 			if ( hibernateType == null || isInstance( hibernateType, value ) ) {
@@ -832,7 +758,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			}
 		}
 
-		locateBinding( name ).setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
+		binding.setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
 
 		return this;
 	}
@@ -895,6 +821,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	@Override
 	public CommonQueryContract setParameter(int position, Object value) {
+		getSession().checkOpen( false );
+
 		if ( value instanceof TypedParameterValue ) {
 			@SuppressWarnings("unchecked")
 			final TypedParameterValue<Object> typedValue = (TypedParameterValue<Object>) value;
@@ -907,23 +835,19 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			}
 		}
 
-		final QueryParameterImplementor<?> param = getParameterMetadata().getQueryParameter( position );
-
-		if ( param == null ) {
-			throw new IllegalArgumentException( "Positional parameter [" + position + "] is not registered with this procedure call" );
-		}
-
+		final QueryParameterBinding<Object> binding = getQueryParameterBindings().getBinding( position );
+		final QueryParameter<Object> param = binding.getQueryParameter();
 		if ( param.allowsMultiValuedBinding() ) {
 			final BindableType<?> hibernateType = param.getHibernateType();
-			if ( hibernateType == null || isInstance( hibernateType, value ) ) {
+			if ( hibernateType == null || hibernateType instanceof NullSqmExpressible || isInstance( hibernateType, value ) ) {
 				if ( value instanceof Collection && !isRegisteredAsBasicType( value.getClass() ) ) {
-					//noinspection rawtypes,unchecked
-					return setParameterList( param, (Collection) value );
+					//noinspection rawtypes
+					return setParameterList( position, (Collection) value );
 				}
 			}
 		}
 
-		locateBinding( position ).setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
+		binding.setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
 		return this;
 	}
 

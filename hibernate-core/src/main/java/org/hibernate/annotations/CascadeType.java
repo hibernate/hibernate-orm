@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
 
@@ -30,7 +28,11 @@ import org.hibernate.ReplicationMode;
  * </pre>
  *
  * @see Cascade
+ *
+ * @deprecated Use the JPA-defined
+ *             {@link jakarta.persistence.CascadeType}
  */
+@Deprecated(since = "7")
 public enum CascadeType {
 	/**
 	 * Includes all types listed here.
@@ -40,14 +42,14 @@ public enum CascadeType {
 
 	/**
 	 * Equivalent to {@link jakarta.persistence.CascadeType#PERSIST}.
-	 * 
-	 * @see jakarta.persistence.EntityManager#persist(Object) 
+	 *
+	 * @see jakarta.persistence.EntityManager#persist(Object)
 	 */
 	PERSIST,
 
 	/**
 	 * Equivalent to {@link jakarta.persistence.CascadeType#MERGE}.
-	 * 
+	 *
 	 * @see jakarta.persistence.EntityManager#merge(Object)
 	 */
 	MERGE,
@@ -83,34 +85,10 @@ public enum CascadeType {
 	LOCK,
 
 	/**
-	 * A cascade type for the {@code delete()} operation.
-	 * <p>
-	 * This is actually a synonym for {@link #REMOVE}.
-	 * 
-	 * @see org.hibernate.Session#delete(Object) 
-	 *
-	 * @deprecated since {@link org.hibernate.Session#delete(Object)}
-	 *             is deprecated
-	 */
-	@Deprecated
-	DELETE,
-
-	/**
-	 * A cascade type for the {@code saveOrUpdate()} operation.
-	 * 
-	 * @see org.hibernate.Session#saveOrUpdate(Object) 
-	 *
-	 * @deprecated since {@link org.hibernate.Session#saveOrUpdate(Object)}
-	 *             is deprecated
-	 */
-	@Deprecated
-	SAVE_UPDATE,
-
-	/**
 	 * A cascade type for the {@code replicate()} operation.
 	 *
-	 * @see org.hibernate.Session#replicate(Object, ReplicationMode) 
-	 * 
+	 * @see org.hibernate.Session#replicate(Object, ReplicationMode)
+	 *
 	 * @deprecated since {@link org.hibernate.Session#replicate(Object, ReplicationMode)}
 	 *             is deprecated
 	 */

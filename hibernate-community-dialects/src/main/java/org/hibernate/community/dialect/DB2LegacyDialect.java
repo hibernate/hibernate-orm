@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -27,6 +25,7 @@ import java.util.TimeZone;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.community.dialect.sequence.LegacyDB2SequenceSupport;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DB2GetObjectExtractor;
 import org.hibernate.dialect.DB2StructJdbcType;
@@ -49,7 +48,6 @@ import org.hibernate.dialect.pagination.DB2LimitHandler;
 import org.hibernate.dialect.pagination.LegacyDB2LimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.DB2SequenceSupport;
-import org.hibernate.dialect.sequence.LegacyDB2SequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
 import org.hibernate.dialect.unique.SkipNullableUniqueDelegate;
@@ -65,13 +63,16 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.procedure.internal.DB2CallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.mutation.internal.cte.CteInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.cte.CteMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -88,15 +89,18 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorDB2DatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.tool.schema.internal.StandardTableExporter;
+import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.JavaObjectType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.CharJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
-import org.hibernate.type.descriptor.jdbc.DecimalJdbcType;
 import org.hibernate.type.descriptor.jdbc.InstantJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.LocalDateJdbcType;
 import org.hibernate.type.descriptor.jdbc.LocalDateTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.LocalTimeJdbcType;
@@ -155,6 +159,17 @@ public class DB2LegacyDialect extends Dialect {
 			? LegacyDB2LimitHandler.INSTANCE
 			: DB2LimitHandler.INSTANCE;
 	private final UniqueDelegate uniqueDelegate = createUniqueDelegate();
+	private final StandardTableExporter db2TableExporter = new StandardTableExporter( this ) {
+		@Override
+		protected void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn) {
+			final JdbcType jdbcType = aggregateColumn.getType().getJdbcType();
+			if ( jdbcType.isLob() || jdbcType.isXml() ) {
+				// LOB or XML columns can't have check constraints
+				return;
+			}
+			super.applyAggregateColumnCheck( buf, aggregateColumn );
+		}
+	};
 
 	public DB2LegacyDialect() {
 		this( DatabaseVersion.make( 9, 0 ) );
@@ -188,6 +203,11 @@ public class DB2LegacyDialect extends Dialect {
 	 */
 	public DatabaseVersion getDB2Version() {
 		return this.getVersion();
+	}
+
+	@Override
+	public Exporter<Table> getTableExporter() {
+		return this.db2TableExporter;
 	}
 
 	@Override
@@ -431,7 +451,54 @@ public class DB2LegacyDialect extends Dialect {
 		functionFactory.windowFunctions();
 		if ( getDB2Version().isSameOrAfter( 9, 5 ) ) {
 			functionFactory.listagg( null );
+
+			if ( getDB2Version().isSameOrAfter( 11 ) ) {
+				functionFactory.jsonValue_db2();
+				functionFactory.jsonQuery_no_passing();
+				functionFactory.jsonExists_no_passing();
+				functionFactory.jsonObject_db2();
+				functionFactory.jsonArray_db2();
+				functionFactory.jsonArrayAgg_db2();
+				functionFactory.jsonObjectAgg_db2();
+				functionFactory.jsonTable_db2( getMaximumSeriesSize() );
+			}
 		}
+
+		functionFactory.xmlelement();
+		functionFactory.xmlcomment();
+		functionFactory.xmlforest();
+		functionFactory.xmlconcat();
+		functionFactory.xmlpi();
+		if ( getDB2Version().isSameOrAfter( 11 ) ) {
+			functionFactory.xmlquery_db2();
+			functionFactory.xmlexists();
+		}
+		else {
+			functionFactory.xmlquery_db2_legacy();
+			functionFactory.xmlexists_db2_legacy();
+		}
+		functionFactory.xmlagg();
+		functionFactory.xmltable_db2();
+
+		functionFactory.unnest_db2( getMaximumSeriesSize() );
+		if ( supportsRecursiveCTE() ) {
+			functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, true );
+		}
+	}
+
+	/**
+	 * DB2 doesn't support the {@code generate_series} function or {@code lateral} recursive CTEs,
+	 * so it has to be emulated with a top level recursive CTE which requires an upper bound on the amount
+	 * of elements that the series can return.
+	 */
+	protected int getMaximumSeriesSize() {
+		return 10000;
+	}
+
+	@Override
+	public int getPreferredSqlTypeCodeForArray() {
+		// Even if DB2 11 supports JSON functions, it's not possible to unnest a JSON array to rows, so stick to XML
+		return SqlTypes.XML_ARRAY;
 	}
 
 	@Override
@@ -778,8 +845,21 @@ public class DB2LegacyDialect extends Dialect {
 	}
 
 	@Override
+	public Boolean supportsRefCursors() {
+		// DB2 supports the binding with Types.REF_CURSOR but doesn't support statement.getObject(position, ResultSet.class)
+		return false;
+	}
+
+	@Override
 	public int registerResultSetOutParameter(CallableStatement statement, int col) throws SQLException {
+		statement.registerOutParameter( col++, Types.REF_CURSOR );
 		return col;
+	}
+
+	@Override
+	public int registerResultSetOutParameter(CallableStatement statement, String name) throws SQLException {
+		statement.registerOutParameter( name, Types.REF_CURSOR );
+		return 1;
 	}
 
 	@Override
@@ -791,6 +871,16 @@ public class DB2LegacyDialect extends Dialect {
 		}
 
 		return ps.getResultSet();
+	}
+
+	@Override
+	public ResultSet getResultSet(CallableStatement statement, int position) throws SQLException {
+		return (ResultSet) statement.getObject( position );
+	}
+
+	@Override
+	public ResultSet getResultSet(CallableStatement statement, String name) throws SQLException {
+		return (ResultSet) statement.getObject( name );
 	}
 
 	@Override
@@ -866,9 +956,6 @@ public class DB2LegacyDialect extends Dialect {
 			jdbcTypeRegistry.addDescriptor( Types.BOOLEAN, SmallIntJdbcType.INSTANCE );
 			// Binary literals were only added in 11. See https://www.ibm.com/support/knowledgecenter/SSEPGG_11.1.0/com.ibm.db2.luw.sql.ref.doc/doc/r0000731.html#d79816e393
 			jdbcTypeRegistry.addDescriptor( Types.VARBINARY, VarbinaryJdbcType.INSTANCE_WITHOUT_LITERALS );
-			if ( getDB2Version().isBefore( 9, 7 ) ) {
-				jdbcTypeRegistry.addDescriptor( Types.NUMERIC, DecimalJdbcType.INSTANCE );
-			}
 		}
 		// See HHH-12753
 		// It seems that DB2's JDBC 4.0 support as of 9.5 does not
@@ -876,14 +963,8 @@ public class DB2LegacyDialect extends Dialect {
 		// Therefore here we overwrite the sql type descriptors to
 		// use the non-N variants which are supported.
 		jdbcTypeRegistry.addDescriptor( Types.NCHAR, CharJdbcType.INSTANCE );
-		jdbcTypeRegistry.addDescriptor(
-				Types.NCLOB,
-				useInputStreamToInsertBlob()
-						? ClobJdbcType.STREAM_BINDING
-						: ClobJdbcType.CLOB_BINDING
-		);
+		jdbcTypeRegistry.addDescriptor( Types.NCLOB, ClobJdbcType.STREAM_BINDING );
 		jdbcTypeRegistry.addDescriptor( Types.NVARCHAR, VarcharJdbcType.INSTANCE );
-		jdbcTypeRegistry.addDescriptor( Types.NUMERIC, DecimalJdbcType.INSTANCE );
 
 		jdbcTypeRegistry.addDescriptor( XmlJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( DB2StructJdbcType.INSTANCE );
@@ -947,7 +1028,9 @@ public class DB2LegacyDialect extends Dialect {
 
 	@Override
 	public AggregateSupport getAggregateSupport() {
-		return DB2AggregateSupport.INSTANCE;
+		return getDB2Version().isSameOrAfter( 11 )
+				? DB2AggregateSupport.JSON_INSTANCE
+				: DB2AggregateSupport.INSTANCE;
 	}
 
 	@Override
@@ -1038,6 +1121,19 @@ public class DB2LegacyDialect extends Dialect {
 		return DB2IdentityColumnSupport.INSTANCE;
 	}
 
+	/**
+	 * @return {@code true} because we can use {@code select ... from new table (insert .... )}
+	 */
+	@Override
+	public boolean supportsInsertReturning() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsInsertReturningRowId() {
+		return false;
+	}
+
 	@Override
 	public boolean supportsValuesList() {
 		return true;
@@ -1124,6 +1220,16 @@ public class DB2LegacyDialect extends Dialect {
 	}
 
 	@Override
+	public String castPattern(CastType from, CastType to) {
+		if ( from == CastType.STRING && to == CastType.BOOLEAN ) {
+			return "cast(?1 as ?2)";
+		}
+		else {
+			return super.castPattern( from, to );
+		}
+	}
+
+	@Override
 	public int getInExpressionCountLimit() {
 		return BIND_PARAMETERS_NUMBER_LIMIT;
 	}
@@ -1189,5 +1295,15 @@ public class DB2LegacyDialect extends Dialect {
 	@Override
 	public boolean supportsFromClauseInUpdate() {
 		return getDB2Version().isSameOrAfter( 11 );
+	}
+
+	@Override
+	public String getDual() {
+		return "sysibm.dual";
+	}
+
+	@Override
+	public String getFromDualForSelectOnly() {
+		return " from " + getDual();
 	}
 }

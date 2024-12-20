@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
@@ -16,7 +14,6 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.ElementType.TYPE_PARAMETER;
-import static java.lang.annotation.ElementType.TYPE_USE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
@@ -32,7 +29,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author Steve Ebersole
  */
-@Target({METHOD, FIELD, TYPE, PACKAGE, CONSTRUCTOR, TYPE_PARAMETER, TYPE_USE})
+@Target({METHOD, FIELD, TYPE, PACKAGE, CONSTRUCTOR, TYPE_PARAMETER})
 @Retention(RUNTIME)
 @Documented
 public @interface Remove {

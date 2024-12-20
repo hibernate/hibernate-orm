@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.format.jackson;
 
@@ -15,6 +13,7 @@ public final class JacksonIntegration {
 	private static final boolean JACKSON_XML_AVAILABLE = ableToLoadJacksonXMLMapper();
 	private static final boolean JACKSON_JSON_AVAILABLE = ableToLoadJacksonJSONMapper();
 	private static final JacksonXmlFormatMapper XML_FORMAT_MAPPER = JACKSON_XML_AVAILABLE ? new JacksonXmlFormatMapper() : null;
+	private static final JacksonXmlFormatMapper XML_FORMAT_MAPPER_PORTABLE = JACKSON_XML_AVAILABLE ? new JacksonXmlFormatMapper( false ) : null;
 	private static final JacksonJsonFormatMapper JSON_FORMAT_MAPPER = JACKSON_JSON_AVAILABLE ? new JacksonJsonFormatMapper() : null;
 
 	private JacksonIntegration() {
@@ -31,6 +30,10 @@ public final class JacksonIntegration {
 
 	public static FormatMapper getXMLJacksonFormatMapperOrNull() {
 		return XML_FORMAT_MAPPER;
+	}
+
+	public static FormatMapper getXMLJacksonFormatMapperOrNull(boolean legacyFormat) {
+		return legacyFormat ? XML_FORMAT_MAPPER : XML_FORMAT_MAPPER_PORTABLE;
 	}
 
 	public static FormatMapper getJsonJacksonFormatMapperOrNull() {

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.inheritance;
 
@@ -189,7 +187,7 @@ public class JoinFetchInheritanceTest {
 			if ( collection ) {
 				final List<Kitten> kittens = kittenContainer.getKittens();
 				if ( simpleInitialized && animal.getType().equals( CAT ) ||
-					 !simpleInitialized && animal.getType().equals( CAT_EMBEDDED ) ) {
+					!simpleInitialized && animal.getType().equals( CAT_EMBEDDED ) ) {
 					assertThat( Hibernate.isInitialized( kittens ) ).isTrue();
 					assertThat( kittens ).hasSizeBetween( 0, 1 );
 				}
@@ -200,7 +198,7 @@ public class JoinFetchInheritanceTest {
 			else {
 				final Kitten kitten = kittenContainer.getSingleKitten();
 				if ( simpleInitialized && animal.getType().equals( CAT ) ||
-					 !simpleInitialized && animal.getType().equals( CAT_EMBEDDED ) ) {
+					!simpleInitialized && animal.getType().equals( CAT_EMBEDDED ) ) {
 					assertThat( Hibernate.isInitialized( kitten ) ).isTrue();
 					assertThat( kitten.getName() ).isEqualTo( simpleInitialized ? "kitten_1" : "kitten_2" );
 				}

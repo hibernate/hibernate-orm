@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.entity.mutation;
 
@@ -12,7 +10,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.SelectableMapping;
-import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.ast.ColumnValueBindingList;
@@ -29,7 +27,7 @@ import org.hibernate.sql.model.ast.builder.TableDeleteBuilderStandard;
  */
 public class DeleteCoordinatorStandard extends AbstractDeleteCoordinator {
 
-	public DeleteCoordinatorStandard(AbstractEntityPersister entityPersister, SessionFactoryImplementor factory) {
+	public DeleteCoordinatorStandard(EntityPersister entityPersister, SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
 	}
 
@@ -69,7 +67,7 @@ public class DeleteCoordinatorStandard extends AbstractDeleteCoordinator {
 		if ( applyVersion ) {
 			// apply any optimistic locking
 			applyOptimisticLocking( deleteGroupBuilder, loadedState, session );
-			final AbstractEntityPersister persister = entityPersister();
+			final EntityPersister persister = entityPersister();
 			if ( persister.hasPartitionedSelectionMapping() ) {
 				final AttributeMappingsList attributeMappings = persister.getAttributeMappings();
 				for ( int m = 0; m < attributeMappings.size(); m++ ) {
@@ -122,7 +120,7 @@ public class DeleteCoordinatorStandard extends AbstractDeleteCoordinator {
 			MutationGroupBuilder mutationGroupBuilder,
 			Object[] loadedState,
 			SharedSessionContractImplementor session) {
-		final AbstractEntityPersister persister = entityPersister();
+		final EntityPersister persister = entityPersister();
 		assert loadedState != null;
 		assert lockStyle.isAllOrDirty();
 		assert persister.optimisticLockStyle().isAllOrDirty();

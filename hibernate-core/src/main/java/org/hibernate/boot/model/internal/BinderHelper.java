@@ -1,50 +1,40 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
 
 import java.lang.annotation.Annotation;
-import java.lang.annotation.Repeatable;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.AnyDiscriminatorImplicitValues;
 import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyDiscriminatorValues;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
-import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.SqlFragmentAlias;
-import org.hibernate.annotations.common.reflection.XAnnotatedElement;
-import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.annotations.common.reflection.XPackage;
-import org.hibernate.annotations.common.reflection.XProperty;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
-import org.hibernate.dialect.DatabaseVersion;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.log.DeprecationLogger;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.AttributeContainer;
 import org.hibernate.mapping.BasicValue;
@@ -60,20 +50,32 @@ import org.hibernate.mapping.SyntheticProperty;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
+import org.hibernate.models.spi.AnnotationTarget;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.ClassDetailsRegistry;
+import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 
+import static jakarta.persistence.ConstraintMode.NO_CONSTRAINT;
+import static jakarta.persistence.ConstraintMode.PROVIDER_DEFAULT;
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnOrFormulaFromAnnotation;
-import static org.hibernate.boot.model.internal.HCANNHelper.findAnnotation;
+import static org.hibernate.boot.model.internal.AnyBinder.resolveImplicitDiscriminatorStrategy;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
-import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.StringHelper.isNotBlank;
 import static org.hibernate.internal.util.StringHelper.qualifier;
 import static org.hibernate.internal.util.StringHelper.qualify;
+import static org.hibernate.internal.util.collections.ArrayHelper.isEmpty;
+import static org.hibernate.models.spi.TypeDetailsHelper.resolveRawClass;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.EMBEDDED;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.NOOP;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.interpret;
@@ -347,7 +349,7 @@ public class BinderHelper {
 		else {
 			ownerEntity.addProperty( result );
 		}
-		embeddedComponent.createUniqueKey(); //make it unique
+		embeddedComponent.createUniqueKey( context ); //make it unique
 		return result;
 	}
 
@@ -447,10 +449,16 @@ public class BinderHelper {
 		// Now, for each column find the properties of the target entity
 		// which are mapped to that column. (There might be multiple such
 		// properties for each column.)
-		if ( columnOwner instanceof PersistentClass ) {
-			PersistentClass persistentClass = (PersistentClass) columnOwner;
+		if ( columnOwner instanceof PersistentClass persistentClass ) {
+			// Process ToOne associations after Components, Basic and Id properties
+			final List<Property> toOneProperties = new ArrayList<>();
 			for ( Property property : persistentClass.getReferenceableProperties() ) {
-				matchColumnsByProperty( property, columnsToProperty );
+				if ( property.getValue() instanceof ToOne ) {
+					toOneProperties.add( property );
+				}
+				else {
+					matchColumnsByProperty( property, columnsToProperty );
+				}
 			}
 			if ( persistentClass.hasIdentifierProperty() ) {
 				matchColumnsByProperty( persistentClass.getIdentifierProperty(), columnsToProperty );
@@ -461,6 +469,9 @@ public class BinderHelper {
 				for ( Property p : key.getProperties() ) {
 					matchColumnsByProperty( p, columnsToProperty );
 				}
+			}
+			for ( Property property : toOneProperties ) {
+				matchColumnsByProperty( property, columnsToProperty );
 			}
 		}
 		else {
@@ -574,8 +585,8 @@ public class BinderHelper {
 	 */
 	public static Property findPropertyByName(PersistentClass associatedClass, String propertyName) {
 		Property property = null;
-		Property idProperty = associatedClass.getIdentifierProperty();
-		String idName = idProperty == null ? null : idProperty.getName();
+		final Property idProperty = associatedClass.getIdentifierProperty();
+		final String idName = idProperty == null ? null : idProperty.getName();
 		try {
 			if ( isEmpty( propertyName ) || propertyName.equals( idName ) ) {
 				//default to id
@@ -586,9 +597,9 @@ public class BinderHelper {
 					property = idProperty;
 					propertyName = propertyName.substring( idName.length() + 1 );
 				}
-				StringTokenizer st = new StringTokenizer( propertyName, ".", false );
-				while ( st.hasMoreElements() ) {
-					String element = (String) st.nextElement();
+				final StringTokenizer tokens = new StringTokenizer( propertyName, ".", false );
+				while ( tokens.hasMoreElements() ) {
+					String element = (String) tokens.nextElement();
 					if ( property == null ) {
 						property = associatedClass.getProperty( element );
 					}
@@ -607,9 +618,9 @@ public class BinderHelper {
 				if ( associatedClass.getIdentifierMapper() == null ) {
 					return null;
 				}
-				StringTokenizer st = new StringTokenizer( propertyName, ".", false );
-				while ( st.hasMoreElements() ) {
-					String element = (String) st.nextElement();
+				final StringTokenizer tokens = new StringTokenizer( propertyName, ".", false );
+				while ( tokens.hasMoreElements() ) {
+					final String element = (String) tokens.nextElement();
 					if ( property == null ) {
 						property = associatedClass.getIdentifierMapper().getProperty( element );
 					}
@@ -634,15 +645,14 @@ public class BinderHelper {
 	public static Property findPropertyByName(Component component, String propertyName) {
 		Property property = null;
 		try {
-			if ( propertyName == null
-					|| propertyName.length() == 0) {
+			if ( isEmpty( propertyName ) ) {
 				// Do not expect to use a primary key for this case
 				return null;
 			}
 			else {
-				StringTokenizer st = new StringTokenizer( propertyName, ".", false );
-				while ( st.hasMoreElements() ) {
-					String element = (String) st.nextElement();
+				final StringTokenizer tokens = new StringTokenizer( propertyName, ".", false );
+				while ( tokens.hasMoreElements() ) {
+					final String element = (String) tokens.nextElement();
 					if ( property == null ) {
 						property = component.getProperty( element );
 					}
@@ -661,9 +671,9 @@ public class BinderHelper {
 				if ( component.getOwner().getIdentifierMapper() == null ) {
 					return null;
 				}
-				StringTokenizer st = new StringTokenizer( propertyName, ".", false );
-				while ( st.hasMoreElements() ) {
-					String element = (String) st.nextElement();
+				final StringTokenizer tokens = new StringTokenizer( propertyName, ".", false );
+				while ( tokens.hasMoreElements() ) {
+					final String element = (String) tokens.nextElement();
 					if ( property == null ) {
 						property = component.getOwner().getIdentifierMapper().getProperty( element );
 					}
@@ -747,7 +757,7 @@ public class BinderHelper {
 			EntityBinder entityBinder,
 			boolean optional,
 			MetadataBuildingContext context) {
-		final XProperty property = inferredData.getProperty();
+		final MemberDetails property = inferredData.getAttributeMember();
 
 		final Any value = new Any( context, keyColumns.getTable(), true );
 		value.setLazy( lazy );
@@ -790,13 +800,20 @@ public class BinderHelper {
 
 		final Map<Object,Class<?>> discriminatorValueMappings = new HashMap<>();
 		processAnyDiscriminatorValues(
-				inferredData.getProperty(),
+				inferredData.getAttributeMember(),
 				valueMapping -> discriminatorValueMappings.put(
 						discriminatorJavaType.wrap( valueMapping.discriminator(), null ),
 						valueMapping.entity()
-				)
+				),
+				context.getMetadataCollector().getSourceModelBuildingContext()
 		);
 		value.setDiscriminatorValueMappings( discriminatorValueMappings );
+
+
+		final AnyDiscriminatorImplicitValues anyDiscriminatorImplicitValues = property.getDirectAnnotationUsage( AnyDiscriminatorImplicitValues.class );
+		if ( anyDiscriminatorImplicitValues != null ) {
+			value.setImplicitDiscriminatorValueStrategy( resolveImplicitDiscriminatorStrategy( anyDiscriminatorImplicitValues, context ) );
+		}
 
 		final BasicValueBinder keyValueBinder = new BasicValueBinder( BasicValueBinder.Kind.ANY_KEY, context );
 		final List<AnnotatedJoinColumn> columns = keyColumns.getJoinColumns();
@@ -818,25 +835,27 @@ public class BinderHelper {
 	}
 
 	private static void processAnyDiscriminatorValues(
-			XProperty property,
-			Consumer<AnyDiscriminatorValue> consumer) {
-		final AnyDiscriminatorValue valueAnn = findAnnotation( property, AnyDiscriminatorValue.class );
-		if ( valueAnn != null ) {
-			consumer.accept( valueAnn );
+			MemberDetails property,
+			Consumer<AnyDiscriminatorValue> consumer,
+			SourceModelBuildingContext sourceModelContext) {
+		final AnyDiscriminatorValues valuesAnn =
+				property.locateAnnotationUsage( AnyDiscriminatorValues.class, sourceModelContext );
+		if ( valuesAnn != null ) {
+			final AnyDiscriminatorValue[] nestedList = valuesAnn.value();
+			ArrayHelper.forEach( nestedList, consumer );
 			return;
 		}
 
-		final AnyDiscriminatorValues valuesAnn = findAnnotation( property, AnyDiscriminatorValues.class );
-		if ( valuesAnn != null ) {
-			for ( AnyDiscriminatorValue discriminatorValue : valuesAnn.value() ) {
-				consumer.accept( discriminatorValue );
-			}
+		final AnyDiscriminatorValue valueAnn =
+				property.locateAnnotationUsage( AnyDiscriminatorValue.class, sourceModelContext );
+		if ( valueAnn != null ) {
+			consumer.accept( valueAnn );
 		}
 	}
 
 	public static MappedSuperclass getMappedSuperclassOrNull(
-			XClass declaringClass,
-			Map<XClass, InheritanceState> inheritanceStatePerClass,
+			ClassDetails declaringClass,
+			Map<ClassDetails, InheritanceState> inheritanceStatePerClass,
 			MetadataBuildingContext context) {
 		boolean retrieve = false;
 		if ( declaringClass != null ) {
@@ -852,9 +871,7 @@ public class BinderHelper {
 		}
 
 		if ( retrieve ) {
-			return context.getMetadataCollector().getMappedSuperclass(
-					context.getBootstrapContext().getReflectionManager().toClass( declaringClass )
-			);
+			return context.getMetadataCollector().getMappedSuperclass( declaringClass.toJavaClass() );
 		}
 		else {
 			return null;
@@ -870,25 +887,35 @@ public class BinderHelper {
 			PropertyHolder propertyHolder,
 			String propertyName,
 			MetadataBuildingContext buildingContext) {
-		final XClass mappedClass = buildingContext.getBootstrapContext().getReflectionManager()
-					.toXClass( propertyHolder.getPersistentClass().getMappedClass() );
+		final ClassDetailsRegistry classDetailsRegistry = buildingContext.getMetadataCollector()
+				.getSourceModelBuildingContext()
+				.getClassDetailsRegistry();
+		final PersistentClass persistentClass = propertyHolder.getPersistentClass();
+		final String name =
+				isEmpty( persistentClass.getClassName() )
+						? persistentClass.getEntityName()
+						: persistentClass.getClassName();
+		final ClassDetails classDetails = classDetailsRegistry.resolveClassDetails( name );
 		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
 		if ( propertyHolder.isInIdClass() ) {
-			final PropertyData propertyData = metadataCollector.getPropertyAnnotatedWithIdAndToOne( mappedClass, propertyName );
-			return propertyData == null && buildingContext.getBuildingOptions().isSpecjProprietarySyntaxEnabled()
-					? metadataCollector.getPropertyAnnotatedWithMapsId( mappedClass, propertyName )
-					: propertyData;
+			final PropertyData data = metadataCollector.getPropertyAnnotatedWithIdAndToOne( classDetails, propertyName );
+			if ( data != null ) {
+				return data;
+			}
+			// TODO: is this branch even necessary?
+			else if ( buildingContext.getBuildingOptions().isSpecjProprietarySyntaxEnabled() ) {
+				return metadataCollector.getPropertyAnnotatedWithMapsId( classDetails, propertyName );
+			}
 		}
-		else {
-			return metadataCollector.getPropertyAnnotatedWithMapsId( mappedClass, isId ? "" : propertyName );
-		}
+		return metadataCollector.getPropertyAnnotatedWithMapsId( classDetails, isId ? "" : propertyName );
 	}
 
 	public static Map<String,String> toAliasTableMap(SqlFragmentAlias[] aliases){
 		final Map<String,String> ret = new HashMap<>();
-		for ( SqlFragmentAlias alias : aliases ) {
-			if ( isNotEmpty( alias.table() ) ) {
-				ret.put( alias.alias(), alias.table() );
+		for ( SqlFragmentAlias aliasAnnotation : aliases ) {
+			final String table = aliasAnnotation.table();
+			if ( isNotBlank( table ) ) {
+				ret.put( aliasAnnotation.alias(), table );
 			}
 		}
 		return ret;
@@ -896,133 +923,67 @@ public class BinderHelper {
 
 	public static Map<String,String> toAliasEntityMap(SqlFragmentAlias[] aliases){
 		final Map<String,String> result = new HashMap<>();
-		for ( SqlFragmentAlias alias : aliases ) {
-			if ( alias.entity() != void.class ) {
-				result.put( alias.alias(), alias.entity().getName() );
+		for ( SqlFragmentAlias aliasAnnotation : aliases ) {
+			final Class<?> entityClass = aliasAnnotation.entity();
+			if ( entityClass != void.class ) {
+				result.put( aliasAnnotation.alias(), entityClass.getName() );
 			}
 		}
 		return result;
 	}
 
-	public static boolean hasToOneAnnotation(XAnnotatedElement property) {
-		return property.isAnnotationPresent(ManyToOne.class)
-			|| property.isAnnotationPresent(OneToOne.class);
+	public static boolean hasToOneAnnotation(AnnotationTarget property) {
+		return property.hasDirectAnnotationUsage(ManyToOne.class)
+			|| property.hasDirectAnnotationUsage(OneToOne.class);
 	}
 
-	public static <T extends Annotation> T getOverridableAnnotation(
-			XAnnotatedElement element,
-			Class<T> annotationType,
-			MetadataBuildingContext context) {
-		final Dialect dialect = context.getMetadataCollector().getDatabase().getDialect();
-		final Iterator<Annotation> annotations =
-				Arrays.stream( element.getAnnotations() )
-						.flatMap( annotation -> {
-							try {
-								final Method value = annotation.annotationType().getDeclaredMethod("value");
-								final Class<?> returnType = value.getReturnType();
-								if ( returnType.isArray()
-										&& returnType.getComponentType().isAnnotationPresent(Repeatable.class)
-										&& returnType.getComponentType().isAnnotationPresent(DialectOverride.OverridesAnnotation.class) ) {
-									return Stream.of( (Annotation[]) value.invoke(annotation) );
-								}
-							}
-							catch (NoSuchMethodException ignored) {
-							}
-							catch (Exception e) {
-								throw new AssertionFailure("could not read @DialectOverride annotation", e);
-							}
-							return Stream.of(annotation);
-						} ).iterator();
-		while ( annotations.hasNext() ) {
-			final Annotation annotation = annotations.next();
-			final Class<? extends Annotation> type = annotation.annotationType();
-			final DialectOverride.OverridesAnnotation overridesAnnotation =
-					type.getAnnotation(DialectOverride.OverridesAnnotation.class);
-			if ( overridesAnnotation != null
-					&& overridesAnnotation.value().equals(annotationType) ) {
-				try {
-					//noinspection unchecked
-					final Class<? extends Dialect> overrideDialect = (Class<? extends Dialect>)
-							type.getDeclaredMethod("dialect").invoke(annotation);
-					if ( overrideDialect.isAssignableFrom( dialect.getClass() ) ) {
-						final DialectOverride.Version before = (DialectOverride.Version)
-								type.getDeclaredMethod("before").invoke(annotation);
-						final DialectOverride.Version sameOrAfter = (DialectOverride.Version)
-								type.getDeclaredMethod("sameOrAfter").invoke(annotation);
-						DatabaseVersion version = dialect.getVersion();
-						if ( version.isBefore( before.major(), before.minor() )
-							&& version.isSameOrAfter( sameOrAfter.major(), sameOrAfter.minor() ) ) {
-							//noinspection unchecked
-							return (T) type.getDeclaredMethod("override").invoke(annotation);
-						}
-					}
-				}
-				catch (Exception e) {
-					throw new AssertionFailure("could not read @DialectOverride annotation", e);
-				}
-			}
-		}
-		return element.getAnnotation( annotationType );
-	}
 
 	public static FetchMode getFetchMode(FetchType fetch) {
-		switch ( fetch ) {
-			case EAGER:
-				return FetchMode.JOIN;
-			case LAZY:
-				return FetchMode.SELECT;
-			default:
-				throw new AssertionFailure("unknown fetch type: " + fetch);
-		}
-	}
-
-	private static CascadeType convertCascadeType(jakarta.persistence.CascadeType cascade) {
-		switch ( cascade ) {
-			case ALL:
-				return CascadeType.ALL;
-			case PERSIST:
-				return CascadeType.PERSIST;
-			case MERGE:
-				return CascadeType.MERGE;
-			case REMOVE:
-				return CascadeType.REMOVE;
-			case REFRESH:
-				return CascadeType.REFRESH;
-			case DETACH:
-				return CascadeType.DETACH;
-			default:
-				throw new AssertionFailure("unknown cascade type: " + cascade);
-		}
-	}
-
-	private static EnumSet<CascadeType> convertToHibernateCascadeType(jakarta.persistence.CascadeType[] ejbCascades) {
-		final EnumSet<CascadeType> cascadeTypes = EnumSet.noneOf( CascadeType.class );
-		if ( ejbCascades != null ) {
-			for ( jakarta.persistence.CascadeType cascade: ejbCascades ) {
-				cascadeTypes.add( convertCascadeType( cascade ) );
-			}
-		}
-		return cascadeTypes;
+		return switch ( fetch ) {
+			case EAGER -> FetchMode.JOIN;
+			case LAZY -> FetchMode.SELECT;
+		};
 	}
 
 	public static String getCascadeStrategy(
 			jakarta.persistence.CascadeType[] ejbCascades,
 			Cascade hibernateCascadeAnnotation,
 			boolean orphanRemoval,
-			boolean forcePersist) {
+			MetadataBuildingContext context) {
 		final EnumSet<CascadeType> cascadeTypes = convertToHibernateCascadeType( ejbCascades );
-		final CascadeType[] hibernateCascades = hibernateCascadeAnnotation == null ? null : hibernateCascadeAnnotation.value();
-		if ( hibernateCascades != null && hibernateCascades.length > 0 ) {
-			cascadeTypes.addAll( Arrays.asList( hibernateCascades ) );
+		final CascadeType[] hibernateCascades = hibernateCascadeAnnotation == null
+				? null
+				: hibernateCascadeAnnotation.value();
+		if ( !isEmpty( hibernateCascades ) ) {
+			Collections.addAll( cascadeTypes, hibernateCascades );
 		}
 		if ( orphanRemoval ) {
 			cascadeTypes.add( CascadeType.DELETE_ORPHAN );
 			cascadeTypes.add( CascadeType.REMOVE );
 		}
-		if ( forcePersist ) {
-			cascadeTypes.add( CascadeType.PERSIST );
-		}
+		cascadeTypes.addAll( context.getEffectiveDefaults().getDefaultCascadeTypes() );
 		return renderCascadeTypeList( cascadeTypes );
+	}
+
+	private static EnumSet<CascadeType> convertToHibernateCascadeType(jakarta.persistence.CascadeType[] cascades) {
+		final EnumSet<CascadeType> cascadeTypes = EnumSet.noneOf( CascadeType.class );
+		if ( cascades != null ) {
+			for ( jakarta.persistence.CascadeType cascade: cascades ) {
+				cascadeTypes.add( convertCascadeType( cascade ) );
+			}
+		}
+		return cascadeTypes;
+	}
+
+	private static CascadeType convertCascadeType(jakarta.persistence.CascadeType cascade) {
+		return switch (cascade) {
+			case ALL -> CascadeType.ALL;
+			case PERSIST -> CascadeType.PERSIST;
+			case MERGE -> CascadeType.MERGE;
+			case REMOVE -> CascadeType.REMOVE;
+			case REFRESH -> CascadeType.REFRESH;
+			case DETACH -> CascadeType.DETACH;
+		};
 	}
 
 	private static String renderCascadeTypeList(EnumSet<CascadeType> cascadeTypes) {
@@ -1031,9 +992,6 @@ public class BinderHelper {
 			switch ( cascadeType ) {
 				case ALL:
 					cascade.append( "," ).append( "all" );
-					break;
-				case SAVE_UPDATE:
-					cascade.append( "," ).append( "save-update" );
 					break;
 				case PERSIST:
 					cascade.append( "," ).append( "persist" );
@@ -1047,35 +1005,57 @@ public class BinderHelper {
 				case REFRESH:
 					cascade.append( "," ).append( "refresh" );
 					break;
-				case REPLICATE:
-					cascade.append( "," ).append( "replicate" );
-					break;
 				case DETACH:
 					cascade.append( "," ).append( "evict" );
 					break;
-				case DELETE:
 				case REMOVE:
 					cascade.append( "," ).append( "delete" );
 					break;
 				case DELETE_ORPHAN:
 					cascade.append( "," ).append( "delete-orphan" );
 					break;
+				case REPLICATE:
+					warnAboutDeprecatedCascadeType( CascadeType.REPLICATE );
+					cascade.append( "," ).append( "replicate" );
+					break;
 			}
 		}
-		return cascade.length() > 0 ? cascade.substring( 1 ) : "none";
+		return cascade.isEmpty() ? "none" : cascade.substring(1);
+	}
+
+	private static void warnAboutDeprecatedCascadeType(CascadeType cascadeType) {
+		DeprecationLogger.DEPRECATION_LOGGER.warnf(
+				"%s.%s is deprecated",
+				CascadeType.class.getName(),
+				cascadeType.name().toLowerCase( Locale.ROOT )
+		);
+	}
+
+	private static void warnAboutDeprecatedCascadeType(CascadeType oldType, CascadeType newType) {
+		DeprecationLogger.DEPRECATION_LOGGER.warnf(
+				"%s.%s is deprecated, use %s.%s instead",
+				CascadeType.class.getName(),
+				oldType.name().toLowerCase( Locale.ROOT ),
+				CascadeType.class.getName(),
+				newType.name().toLowerCase( Locale.ROOT )
+		);
 	}
 
 	static boolean isGlobalGeneratorNameGlobal(MetadataBuildingContext context) {
 		return context.getBootstrapContext().getJpaCompliance().isGlobalGeneratorScopeEnabled();
 	}
 
-	static boolean isCompositeId(XClass entityClass, XProperty idProperty) {
-		return entityClass.isAnnotationPresent( Embeddable.class )
-			|| idProperty.isAnnotationPresent( EmbeddedId.class );
+	static boolean isCompositeId(ClassDetails idClass, MemberDetails idProperty) {
+		return idClass.hasDirectAnnotationUsage( Embeddable.class )
+			|| idProperty.hasDirectAnnotationUsage( EmbeddedId.class );
 	}
 
-	public static boolean isDefault(XClass clazz, MetadataBuildingContext context) {
-		return context.getBootstrapContext().getReflectionManager().equals( clazz, void.class );
+	public static boolean isDefault(ClassDetails clazz) {
+		return clazz == ClassDetails.VOID_CLASS_DETAILS;
+	}
+
+	public static boolean isDefault(TypeDetails clazz) {
+		return resolveRawClass( clazz ) == ClassDetails.VOID_CLASS_DETAILS;
 	}
 
 	public static void checkMappedByType(
@@ -1125,18 +1105,29 @@ public class BinderHelper {
 		return false;
 	}
 
+	public static boolean noConstraint(ForeignKey foreignKey, boolean noConstraintByDefault) {
+		if ( foreignKey == null ) {
+			return false;
+		}
+		else {
+			final ConstraintMode mode = foreignKey.value();
+			return mode == NO_CONSTRAINT
+				|| mode == PROVIDER_DEFAULT && noConstraintByDefault;
+		}
+	}
+
 	/**
 	 * Extract an annotation from the package-info for the package the given class is defined in
 	 *
 	 * @param annotationType The type of annotation to return
-	 * @param xClass The class in the package
+	 * @param classDetails The class in the package
 	 * @param context The processing context
 	 *
 	 * @return The annotation or {@code null}
 	 */
 	public static <A extends Annotation> A extractFromPackage(
 			Class<A> annotationType,
-			XClass xClass,
+			ClassDetails classDetails,
 			MetadataBuildingContext context) {
 
 // todo (soft-delete) : or if we want caching of this per package
@@ -1146,20 +1137,23 @@ public class BinderHelper {
 //		where context.getMetadataCollector() can cache some of this - either the annotations themselves
 //		or even just the XPackage resolutions
 
-		final String declaringClassName = xClass.getName();
+		final String declaringClassName = classDetails.getName();
 		final String packageName = qualifier( declaringClassName );
-		if ( isNotEmpty( packageName ) ) {
-			final ClassLoaderService classLoaderService = context.getBootstrapContext()
-					.getServiceRegistry()
-					.getService( ClassLoaderService.class );
-			assert classLoaderService != null;
-			final Package declaringClassPackage = classLoaderService.packageForNameOrNull( packageName );
-			if ( declaringClassPackage != null ) {
-				// will be null when there is no `package-info.class`
-				final XPackage xPackage = context.getBootstrapContext().getReflectionManager().toXPackage( declaringClassPackage );
-				return xPackage.getAnnotation( annotationType );
-			}
+
+		if ( isEmpty( packageName ) ) {
+			return null;
 		}
+		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
+		final ClassDetailsRegistry classDetailsRegistry = sourceModelContext.getClassDetailsRegistry();
+
+		final String packageInfoName = packageName + ".package-info";
+		try {
+			final ClassDetails packageInfoClassDetails = classDetailsRegistry.resolveClassDetails( packageInfoName );
+			return packageInfoClassDetails.getAnnotationUsage( annotationType, sourceModelContext );
+		}
+		catch (ClassLoadingException ignore) {
+		}
+
 		return null;
 	}
 }

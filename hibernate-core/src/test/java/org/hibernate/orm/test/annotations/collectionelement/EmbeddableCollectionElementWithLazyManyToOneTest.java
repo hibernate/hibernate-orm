@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.collectionelement;
 
@@ -18,11 +16,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
 import org.hibernate.Hibernate;
-import org.hibernate.query.criteria.HibernateCriteriaBuilder;
-import org.hibernate.query.criteria.JpaCriteriaQuery;
-import org.hibernate.query.criteria.JpaRoot;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -45,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class EmbeddableCollectionElementWithLazyManyToOneTest {
 
 	@Test
-	@TestForIssue(jiraKey = "???")
+	@JiraKey(value = "???")
 	public void testLazyManyToOneInEmbeddable(SessionFactoryScope scope) {
 		Parent p = new Parent();
 		p.containedChild = new ContainedChild( new Child() );
@@ -64,12 +59,12 @@ public class EmbeddableCollectionElementWithLazyManyToOneTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( p )
+						session.remove( p )
 		);
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "???")
+	@JiraKey(value = "???")
 	public void testLazyManyToOneInCollectionElementEmbeddable(SessionFactoryScope scope) {
 		Parent p = new Parent();
 		p.containedChildren.add( new ContainedChild( new Child() ) );
@@ -91,12 +86,12 @@ public class EmbeddableCollectionElementWithLazyManyToOneTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( p )
+						session.remove( p )
 		);
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "???")
+	@JiraKey(value = "???")
 	public void testLazyBoth(SessionFactoryScope scope) {
 		Parent p = new Parent();
 		ContainedChild containedChild = new ContainedChild( new Child() );
@@ -121,12 +116,12 @@ public class EmbeddableCollectionElementWithLazyManyToOneTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( p )
+						session.remove( p )
 		);
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13045")
+	@JiraKey(value = "HHH-13045")
 	public void testAccessIdOfManyToOneInEmbeddable(SessionFactoryScope scope) {
 		Parent p = new Parent();
 		p.containedChildren.add( new ContainedChild( new Child() ) );
@@ -139,15 +134,15 @@ public class EmbeddableCollectionElementWithLazyManyToOneTest {
 		scope.inTransaction(
 				session ->
 						assertFalse( session.createQuery(
-								"from Parent p join p.containedChildren c where c.child.id is not null" )
-											 .getResultList()
-											 .isEmpty() )
+								"from Parent p join p.containedChildren c where c.child.id is not null", Parent.class )
+											.getResultList()
+											.isEmpty() )
 
 		);
 
 		scope.inTransaction(
 				session ->
-						session.delete( p )
+						session.remove( p )
 		);
 	}
 

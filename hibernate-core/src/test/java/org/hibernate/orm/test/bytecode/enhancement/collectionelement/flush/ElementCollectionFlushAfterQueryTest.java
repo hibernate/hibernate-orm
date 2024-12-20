@@ -1,13 +1,17 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.bytecode.enhancement.collectionelement.flush;
 
 import java.util.HashSet;
 import java.util.Set;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
@@ -16,24 +20,26 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(BytecodeEnhancerRunner.class)
-@TestForIssue(jiraKey = "HHH-16337")
-public class ElementCollectionFlushAfterQueryTest extends BaseCoreFunctionalTestCase {
+import org.junit.jupiter.api.Test;
+
+
+@DomainModel(
+		annotatedClasses = {
+				ElementCollectionFlushAfterQueryTest.MyEntity.class,
+				ElementCollectionFlushAfterQueryTest.MyOtherEntity.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+@JiraKey("HHH-16337")
+public class ElementCollectionFlushAfterQueryTest {
 	private static final Long MY_ENTITY_ID = 1l;
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				MyEntity.class,
-				MyOtherEntity.class
-		};
-	}
-
 	@Test
-	public void testAutoFlush() {
-		inTransaction(
+	public void testAutoFlush(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					MyEntity myEntity = new MyEntity( MY_ENTITY_ID, "my entity" );
 					myEntity.addRedirectUris( "1" );
@@ -41,7 +47,7 @@ public class ElementCollectionFlushAfterQueryTest extends BaseCoreFunctionalTest
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					MyEntity myEntity = session.find( MyEntity.class, MY_ENTITY_ID );
 
@@ -53,7 +59,7 @@ public class ElementCollectionFlushAfterQueryTest extends BaseCoreFunctionalTest
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					MyEntity myEntity = session.find( MyEntity.class, MY_ENTITY_ID );
 					Set<String> redirectUris = myEntity.getRedirectUris();

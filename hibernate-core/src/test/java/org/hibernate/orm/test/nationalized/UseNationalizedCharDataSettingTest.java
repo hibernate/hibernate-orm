@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.nationalized;
 
@@ -27,7 +25,7 @@ import org.hibernate.type.descriptor.java.CharacterJavaType;
 import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
@@ -43,7 +41,7 @@ import static org.junit.Assert.assertSame;
  */
 public class UseNationalizedCharDataSettingTest extends BaseUnitTestCase {
 	@Test
-	@TestForIssue(jiraKey = "HHH-10528")
+	@JiraKey(value = "HHH-10528")
 	public void testSetting() {
 		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.USE_NATIONALIZED_CHARACTER_DATA, true )
@@ -76,7 +74,7 @@ public class UseNationalizedCharDataSettingTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11205")
+	@JiraKey(value = "HHH-11205")
 	public void testSettingOnCharType() {
 		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.USE_NATIONALIZED_CHARACTER_DATA, true )

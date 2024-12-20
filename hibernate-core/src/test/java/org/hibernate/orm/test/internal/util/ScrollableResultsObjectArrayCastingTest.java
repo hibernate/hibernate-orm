@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.internal.util;
 
@@ -13,7 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.TypedQuery;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -26,7 +24,7 @@ import org.junit.jupiter.api.Test;
  * @author Dragoş Haiduc
  * @author Nathan Xu
  */
-@TestForIssue( jiraKey = "HHH-14231" )
+@JiraKey( value = "HHH-14231" )
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsExpectedLobUsagePattern.class )
 @Jpa( annotatedClasses = ScrollableResultsObjectArrayCastingTest.Product.class )
 public class ScrollableResultsObjectArrayCastingTest {

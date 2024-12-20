@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.connections.internal;
 
@@ -127,11 +125,12 @@ public abstract class BasicConnectionCreator implements ConnectionCreator {
 	);
 
 	protected JDBCException convertSqlException(String message, SQLException e) {
+		final String fullMessage = message + " [" + e.getMessage() + "]";
 		try {
 			// if JdbcServices#getSqlExceptionHelper is available, use it...
 			final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 			if ( jdbcServices != null && jdbcServices.getSqlExceptionHelper() != null ) {
-				return jdbcServices.getSqlExceptionHelper().convert( e, message, null );
+				return jdbcServices.getSqlExceptionHelper().convert( e, fullMessage );
 			}
 		}
 		catch (ServiceException se) {
@@ -140,7 +139,7 @@ public abstract class BasicConnectionCreator implements ConnectionCreator {
 
 		// likely we are still in the process of initializing the ServiceRegistry, so use the simplified
 		// SQLException conversion
-		return simpleConverterAccess.getValue().convert( e, message, null );
+		return simpleConverterAccess.getValue().convert( e, fullMessage, null );
 	}
 
 	protected abstract Connection makeConnection(String url, Properties connectionProps);

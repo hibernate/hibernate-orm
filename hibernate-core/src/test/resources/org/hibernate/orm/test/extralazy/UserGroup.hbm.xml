@@ -29,7 +29,7 @@
 		<id name="name"/>
 		<property name="password" column="`password`"/>
 		<map name="session" lazy="extra" 
-				cascade="persist,save-update,delete,delete-orphan">
+				cascade="persist,merge,delete,delete-orphan">
 			<key column="userName" not-null="true"/>
 			<map-key column="name" type="string"/>
 			<one-to-many class="SessionAttribute"/>

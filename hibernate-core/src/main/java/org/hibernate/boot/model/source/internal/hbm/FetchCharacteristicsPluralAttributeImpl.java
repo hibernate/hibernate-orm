@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
@@ -10,7 +8,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFetchStyleWithSubselectEnum;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmLazyWithExtraEnum;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmOuterJoinEnum;
 import org.hibernate.boot.model.source.spi.FetchCharacteristicsPluralAttribute;
-import org.hibernate.boot.spi.MappingDefaults;
+import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 
@@ -65,9 +63,9 @@ public class FetchCharacteristicsPluralAttributeImpl implements FetchCharacteris
 		private Integer batchSize;
 		private boolean extraLazy;
 
-		public Builder(MappingDefaults mappingDefaults) {
+		public Builder(EffectiveMappingDefaults mappingDefaults) {
 			setFetchStyle( FetchStyle.SELECT );
-			if ( mappingDefaults.areCollectionsImplicitlyLazy() ) {
+			if ( mappingDefaults.isDefaultCollectionLaziness() ) {
 				setFetchTiming( FetchTiming.DELAYED );
 			}
 			else {
@@ -104,7 +102,7 @@ public class FetchCharacteristicsPluralAttributeImpl implements FetchCharacteris
 	// Static builder methods
 
 	public static FetchCharacteristicsPluralAttributeImpl interpret(
-			MappingDefaults mappingDefaults,
+			EffectiveMappingDefaults mappingDefaults,
 			JaxbHbmFetchStyleWithSubselectEnum fetch,
 			JaxbHbmOuterJoinEnum outerJoin,
 			JaxbHbmLazyWithExtraEnum lazy,

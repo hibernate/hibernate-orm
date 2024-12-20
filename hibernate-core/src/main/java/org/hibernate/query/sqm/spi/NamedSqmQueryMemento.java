@@ -1,10 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.query.sqm.spi;
 
 import java.util.Map;
@@ -16,19 +13,19 @@ import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.sqm.SqmSelectionQuery;
 import org.hibernate.query.sqm.tree.SqmStatement;
 
-public interface NamedSqmQueryMemento extends NamedQueryMemento {
+public interface NamedSqmQueryMemento<E> extends NamedQueryMemento<E> {
 	<T> SqmQueryImplementor<T> toQuery(SharedSessionContractImplementor session, Class<T> resultType);
 
 	/**
 	 * Convert the memento into an untyped executable query
 	 */
-	<T> SqmQueryImplementor<T> toQuery(SharedSessionContractImplementor session);
+	SqmQueryImplementor<E> toQuery(SharedSessionContractImplementor session);
 
 	<T> SqmSelectionQuery<T> toSelectionQuery(Class<T> resultType, SharedSessionContractImplementor session);
 
 	String getHqlString();
 
-	SqmStatement<?> getSqmStatement();
+	SqmStatement<E> getSqmStatement();
 
 	Integer getFirstResult();
 
@@ -39,6 +36,6 @@ public interface NamedSqmQueryMemento extends NamedQueryMemento {
 	Map<String, String> getParameterTypes();
 
 	@Override
-	NamedSqmQueryMemento makeCopy(String name);
+	NamedSqmQueryMemento<E> makeCopy(String name);
 
 }

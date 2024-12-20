@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
 
@@ -26,6 +24,7 @@ import org.hibernate.usertype.UserCollectionType;
 
 import jakarta.persistence.Column;
 
+import static org.hibernate.boot.model.internal.BinderHelper.isGlobalGeneratorNameGlobal;
 import static org.hibernate.boot.model.internal.GeneratorBinder.makeIdGenerator;
 
 /**
@@ -51,7 +50,7 @@ public class IdBagBinder extends BagBinder {
 	protected boolean bindStarToManySecondPass(Map<String, PersistentClass> persistentClasses) {
 		boolean result = super.bindStarToManySecondPass( persistentClasses );
 
-		final CollectionId collectionIdAnn = property.getAnnotation( CollectionId.class );
+		final CollectionId collectionIdAnn = property.getDirectAnnotationUsage( CollectionId.class );
 		if ( collectionIdAnn == null ) {
 			throw new MappingException( "idbag mapping missing '@CollectionId' annotation" );
 		}
@@ -59,16 +58,17 @@ public class IdBagBinder extends BagBinder {
 		final PropertyData propertyData = new WrappedInferredData(
 				new PropertyInferredData(
 						null,
+						declaringClass,
 						property,
 						//default access should not be useful
 						null,
-						buildingContext.getBootstrapContext().getReflectionManager()
+						buildingContext
 				),
 				"id"
 		);
 
 		final AnnotatedColumns idColumns = AnnotatedColumn.buildColumnsFromAnnotations(
-				new Column[] { collectionIdAnn.column() },
+				new Column[]{collectionIdAnn.column()},
 //				null,
 				null,
 				Nullability.FORCED_NOT_NULL,
@@ -130,10 +130,9 @@ public class IdBagBinder extends BagBinder {
 			generatorName = namedGenerator;
 		}
 
-		id.setIdentifierGeneratorStrategy( generatorType );
-
-		if ( buildingContext.getBootstrapContext().getJpaCompliance().isGlobalGeneratorScopeEnabled() ) {
-			SecondPass secondPass = new IdGeneratorResolverSecondPass(
+		if ( isGlobalGeneratorNameGlobal( buildingContext ) ) {
+			SecondPass secondPass = new IdBagIdGeneratorResolverSecondPass(
+					(IdentifierBag) collection,
 					id,
 					property,
 					generatorType,

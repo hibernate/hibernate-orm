@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.where.annotations;
 
@@ -24,7 +22,7 @@ import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.metamodel.CollectionClassification;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -51,7 +49,7 @@ public class LazyOneToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCas
 	@Override
 	protected void configure(Configuration configuration) {
 		super.configure( configuration );
-		configuration.setProperty( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG.name() );
+		configuration.setProperty( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG );
 	}
 
 	@Before
@@ -74,10 +72,10 @@ public class LazyOneToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCas
 					).executeUpdate();
 				}
 		);
-		
+
 		doInHibernate(
 				this::sessionFactory, session -> {
-					
+
 					session.createNativeQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'plastic', 'MATERIAL' )" )
 							.executeUpdate();
 					session.createNativeQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'house', 'BUILDING' )" )
@@ -111,7 +109,7 @@ public class LazyOneToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12875")
+	@JiraKey( value = "HHH-12875")
 	public void testInitializeFromNonUniqueAssociationTable() {
 		doInHibernate(
 				this::sessionFactory, session -> {

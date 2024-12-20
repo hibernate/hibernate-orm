@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -13,6 +11,7 @@ import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.MySQLSqlAstTranslator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
@@ -24,6 +23,7 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.DerivedTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.insert.ConflictClause;
@@ -150,7 +150,7 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 				getSql(),
 				getParameterBinders(),
 				getAffectedTableNames(),
-				null
+				getUniqueConstraintNameThatMayFail(sqlAst)
 		);
 	}
 
@@ -280,6 +280,11 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 	}
 
 	@Override
+	protected void renderDerivedTableReferenceIdentificationVariable(DerivedTableReference tableReference) {
+		renderTableReferenceIdentificationVariable( tableReference );
+	}
+
+	@Override
 	public void visitOffsetFetchClause(QueryPart queryPart) {
 		if ( !isRowNumberingCurrentQueryPart() ) {
 			renderCombinedLimitClause( queryPart );
@@ -288,7 +293,54 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 
 	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
-		renderComparisonDistinctOperator( lhs, operator, rhs );
+		final JdbcMappingContainer lhsExpressionType = lhs.getExpressionType();
+		if ( lhsExpressionType != null && lhsExpressionType.getJdbcTypeCount() == 1
+				&& lhsExpressionType.getSingleJdbcMapping().getJdbcType().isJson() ) {
+			switch ( operator ) {
+				case DISTINCT_FROM:
+					appendSql( "case when json_equals(" );
+					lhs.accept( this );
+					appendSql( ',' );
+					rhs.accept( this );
+					appendSql( ")=1 or " );
+					lhs.accept( this );
+					appendSql( " is null and " );
+					rhs.accept( this );
+					appendSql( " is null then 0 else 1 end=1" );
+					break;
+				case NOT_DISTINCT_FROM:
+					appendSql( "case when json_equals(" );
+					lhs.accept( this );
+					appendSql( ',' );
+					rhs.accept( this );
+					appendSql( ")=1 or " );
+					lhs.accept( this );
+					appendSql( " is null and " );
+					rhs.accept( this );
+					appendSql( " is null then 0 else 1 end=0" );
+					break;
+				case NOT_EQUAL:
+					appendSql( "json_equals(" );
+					lhs.accept( this );
+					appendSql( ',' );
+					rhs.accept( this );
+					appendSql( ")=0" );
+					break;
+				case EQUAL:
+					appendSql( "json_equals(" );
+					lhs.accept( this );
+					appendSql( ',' );
+					rhs.accept( this );
+					appendSql( ")=1" );
+					break;
+				default:
+					renderComparisonDistinctOperator( lhs, operator, rhs );
+					break;
+			}
+		}
+		else {
+			renderComparisonDistinctOperator( lhs, operator, rhs );
+		}
 	}
 
 	@Override
@@ -364,16 +416,6 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 	protected boolean supportsDistinctFromPredicate() {
 		// It supports a proprietary operator
 		return true;
-	}
-
-	@Override
-	protected String getDual() {
-		return "dual";
-	}
-
-	@Override
-	protected String getFromDualForSelectOnly() {
-		return getDialect().getVersion().isBefore( 10, 4 ) ? ( " from " + getDual() ) : "";
 	}
 
 	@Override

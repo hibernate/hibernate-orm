@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.jpa.criteria;
 
 import java.util.HashSet;
@@ -6,7 +10,7 @@ import java.util.Set;
 import org.hibernate.query.SemanticException;
 import org.hibernate.type.descriptor.java.CoercionException;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Assertions;
@@ -15,7 +19,6 @@ import org.junit.jupiter.api.Test;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
@@ -32,7 +35,7 @@ import jakarta.persistence.criteria.Subquery;
 				QueryPredicateAndParameterComparableTest.Submission.class
 		}
 )
-@TestForIssue(jiraKey = "HHH-15802")
+@JiraKey(value = "HHH-15802")
 public class QueryPredicateAndParameterComparableTest {
 
 	@Test

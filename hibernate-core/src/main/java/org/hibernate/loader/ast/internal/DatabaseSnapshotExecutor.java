@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.ast.internal;
 
@@ -40,7 +38,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
-import org.hibernate.sql.results.internal.RowTransformerDatabaseSnapshotImpl;
+import org.hibernate.sql.results.internal.RowTransformerArrayImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
@@ -176,8 +174,10 @@ class DatabaseSnapshotExecutor {
 				jdbcSelect,
 				jdbcParameterBindings,
 				new BaseExecutionContext( session ),
-				RowTransformerDatabaseSnapshotImpl.instance(),
-				ListResultsConsumer.UniqueSemantic.FILTER
+				RowTransformerArrayImpl.instance(),
+				null,
+				ListResultsConsumer.UniqueSemantic.FILTER,
+				1
 		);
 
 		final int size = list.size();

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.usertype;
 
@@ -10,7 +8,6 @@ import java.io.Serializable;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.ValueAccess;
 
@@ -158,7 +155,7 @@ public interface CompositeUserType<J> extends EmbeddableInstantiator {
 	Object getPropertyValue(J component, int property) throws HibernateException;
 
 	@Override
-	J instantiate(ValueAccess values, SessionFactoryImplementor sessionFactory);
+	J instantiate(ValueAccess values);
 
 	/**
 	 * The class that represents the embeddable mapping of the type.
@@ -234,12 +231,12 @@ public interface CompositeUserType<J> extends EmbeddableInstantiator {
 	J replace(J detached, J managed, Object owner);
 
 	@Override
-	default boolean isInstance(Object object, SessionFactoryImplementor sessionFactory) {
+	default boolean isInstance(Object object) {
 		return returnedClass().isInstance( object );
 	}
 
 	@Override
-	default boolean isSameClass(Object object, SessionFactoryImplementor sessionFactory) {
+	default boolean isSameClass(Object object) {
 		return object.getClass().equals( returnedClass() );
 	}
 }

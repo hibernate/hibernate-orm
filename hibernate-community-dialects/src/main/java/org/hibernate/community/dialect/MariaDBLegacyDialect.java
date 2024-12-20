@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -12,6 +10,9 @@ import java.sql.SQLException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.*;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.AggregateSupportImpl;
+import org.hibernate.dialect.aggregate.MySQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.sequence.MariaDBSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
@@ -20,6 +21,7 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.sqm.CastType;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -31,7 +33,6 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JsonJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
@@ -91,7 +92,19 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 							.getBasicTypeRegistry()
 							.resolve( StandardBasicTypes.BOOLEAN )
 			);
+			commonFunctionFactory.jsonValue_mariadb();
+			commonFunctionFactory.jsonArray_mariadb();
+			commonFunctionFactory.jsonQuery_mariadb();
+			commonFunctionFactory.jsonArrayAgg_mariadb();
+			commonFunctionFactory.jsonObjectAgg_mariadb();
+			commonFunctionFactory.jsonArrayAppend_mariadb();
+
 			if ( getVersion().isSameOrAfter( 10, 3, 3 ) ) {
+				if ( getVersion().isSameOrAfter( 10, 6 ) ) {
+					commonFunctionFactory.unnest_emulated();
+					commonFunctionFactory.jsonTable_mysql();
+				}
+
 				commonFunctionFactory.inverseDistributionOrderedSetAggregates_windowEmulation();
 				functionContributions.getFunctionRegistry().patternDescriptorBuilder( "median", "median(?1) over ()" )
 						.setInvariantType( functionContributions.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE ) )
@@ -109,6 +122,13 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 		if ( getVersion().isSameOrAfter( 10, 7 ) ) {
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
 		}
+	}
+
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		return getVersion().isSameOrAfter( 10, 2 )
+				? MySQLAggregateSupport.forMariaDB( this )
+				: AggregateSupportImpl.INSTANCE;
 	}
 
 	@Override
@@ -139,12 +159,20 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
 		// Make sure we register the JSON type descriptor before calling super, because MariaDB does not need casting
-		jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON, JsonJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON, MariaDBCastingJsonJdbcType.INSTANCE );
+		jdbcTypeRegistry.addTypeConstructorIfAbsent( MariaDBCastingJsonArrayJdbcTypeConstructor.INSTANCE );
 
 		super.contributeTypes( typeContributions, serviceRegistry );
 		if ( getVersion().isSameOrAfter( 10, 7 ) ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( VarcharUUIDJdbcType.INSTANCE );
 		}
+	}
+
+	@Override
+	public String castPattern(CastType from, CastType to) {
+		return to == CastType.JSON
+				? "json_extract(?1,'$')"
+				: super.castPattern( from, to );
 	}
 
 	@Override
@@ -263,5 +291,15 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 		builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 
 		return super.buildIdentifierHelper( builder, dbMetaData );
+	}
+
+	@Override
+	public String getDual() {
+		return "dual";
+	}
+
+	@Override
+	public String getFromDualForSelectOnly() {
+		return getVersion().isBefore( 10, 4 ) ? ( " from " + getDual() ) : "";
 	}
 }

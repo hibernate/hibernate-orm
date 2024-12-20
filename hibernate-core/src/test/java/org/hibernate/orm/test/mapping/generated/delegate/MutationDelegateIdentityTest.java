@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.generated.delegate;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Date;
 
 import org.hibernate.annotations.ColumnDefault;
@@ -15,6 +14,7 @@ import org.hibernate.annotations.RowId;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.generator.EventType;
@@ -22,10 +22,12 @@ import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.id.insert.AbstractReturningDelegate;
 import org.hibernate.id.insert.AbstractSelectingDelegate;
 import org.hibernate.id.insert.UniqueKeySelectingDelegate;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationType;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -33,7 +35,12 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.logger.LoggerInspectionExtension;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
+import org.jboss.logging.Logger;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -76,6 +83,7 @@ public class MutationDelegateIdentityTest {
 
 			assertThat( inspector.getSqlQueries().get( 0 ) ).contains( "insert" );
 			inspector.assertExecutedCount( delegate instanceof AbstractReturningDelegate ? 1 : 2 );
+			assertThat( triggerable.wasTriggered() ).isFalse();
 		} );
 	}
 
@@ -238,6 +246,19 @@ public class MutationDelegateIdentityTest {
 				.getMappingMetamodel()
 				.findEntityDescriptor( entityClass );
 		return entityDescriptor.getMutationDelegate( mutationType );
+	}
+
+	private Triggerable triggerable;
+
+	@RegisterExtension
+	public LoggerInspectionExtension logger = LoggerInspectionExtension.builder().setLogger(
+			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, SqlExceptionHelper.class.getName() )
+	).build();
+
+	@BeforeAll
+	public void setUp(SessionFactoryScope scope) {
+		triggerable = logger.watchForLogMessages( "SQL Error:" );
+		triggerable.reset();
 	}
 
 	@Entity( name = "IdentityOnly" )

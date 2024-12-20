@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.spi;
 
@@ -22,23 +20,25 @@ import jakarta.persistence.EntityGraph;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
+import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.query.QueryFlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.TypeMismatchException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.internal.EntityManagerMessageLogger;
-import org.hibernate.internal.HEMLogging;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.AvailableHints;
-import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.query.KeyedPage;
+import org.hibernate.query.KeyedResultList;
 import org.hibernate.query.Order;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
@@ -73,14 +73,14 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 public abstract class AbstractQuery<R>
 		extends AbstractSelectionQuery<R>
 		implements QueryImplementor<R> {
-	protected static final EntityManagerMessageLogger log = HEMLogging.messageLogger( AbstractQuery.class );
+	protected static final CoreMessageLogger log = CoreLogging.messageLogger( AbstractQuery.class );
 
 	public AbstractQuery(SharedSessionContractImplementor session) {
 		super( session );
 	}
 
 	@Override
-	protected void applyOptions(NamedQueryMemento memento) {
+	protected void applyOptions(NamedQueryMemento<?> memento) {
 		if ( memento.getHints() != null ) {
 			memento.getHints().forEach( this::setHint );
 		}
@@ -193,18 +193,14 @@ public abstract class AbstractQuery<R>
 	}
 
 	@Override
-	public FlushModeType getFlushMode() {
-		getSession().checkOpen();
-		final FlushMode flushMode = getQueryOptions().getFlushMode() == null
-				? getSession().getHibernateFlushMode()
-				: getQueryOptions().getFlushMode();
-		return FlushModeTypeHelper.getFlushModeType( flushMode );
+	public QueryImplementor<R> setQueryFlushMode(QueryFlushMode queryFlushMode) {
+		super.setQueryFlushMode( queryFlushMode );
+		return this;
 	}
 
 	@Override
 	public QueryImplementor<R> setFlushMode(FlushModeType flushModeType) {
-		getSession().checkOpen();
-		setHibernateFlushMode( FlushModeTypeHelper.getFlushMode( flushModeType ) );
+		super.setFlushMode( flushModeType );
 		return this;
 	}
 
@@ -299,7 +295,7 @@ public abstract class AbstractQuery<R>
 	}
 
 	@Override
-	public Query<R> setOrder(List<Order<? super R>> orders) {
+	public Query<R> setOrder(List<? extends Order<? super R>> orders) {
 		throw new UnsupportedOperationException( "Should be implemented by " + this.getClass().getName() );
 	}
 
@@ -330,7 +326,7 @@ public abstract class AbstractQuery<R>
 	// JPA hint handling
 
 
-	@SuppressWarnings( {"UnusedDeclaration"})
+	@SuppressWarnings("unused")
 	public Set<String> getSupportedHints() {
 		return AvailableHints.getDefinedHints();
 	}
@@ -348,7 +344,7 @@ public abstract class AbstractQuery<R>
 			hints.put( HINT_JAVAEE_LOCK_TIMEOUT, getLockOptions().getTimeOut() );
 		}
 
-		if ( getLockOptions().getScope() ) {
+		if ( getLockOptions().getLockScope() == PessimisticLockScope.EXTENDED ) {
 			hints.put( HINT_SPEC_LOCK_SCOPE, getLockOptions().getLockScope() );
 			hints.put( HINT_JAVAEE_LOCK_SCOPE, getLockOptions().getLockScope() );
 		}
@@ -364,7 +360,7 @@ public abstract class AbstractQuery<R>
 
 		putIfNotNull( hints, HINT_COMMENT, getComment() );
 		putIfNotNull( hints, HINT_FETCH_SIZE, getQueryOptions().getFetchSize() );
-		putIfNotNull( hints, HINT_FLUSH_MODE, getHibernateFlushMode() );
+		putIfNotNull( hints, HINT_FLUSH_MODE,  getQueryOptions().getFlushMode() );
 
 		if ( getCacheMode() != null ) {
 			putIfNotNull( hints, HINT_CACHE_MODE, getCacheMode() );
@@ -394,7 +390,6 @@ public abstract class AbstractQuery<R>
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked", "rawtypes"} )
 	public Set<Parameter<?>> getParameters() {
 		return super.getParameters();
 	}
@@ -654,9 +649,6 @@ public abstract class AbstractQuery<R>
 		catch (IllegalQueryOperationException e) {
 			throw new IllegalStateException( e );
 		}
-		catch (TypeMismatchException e) {
-			throw new IllegalArgumentException( e );
-		}
 		catch (HibernateException e) {
 			throw getSession().getExceptionConverter().convert( e );
 		}
@@ -667,7 +659,10 @@ public abstract class AbstractQuery<R>
 
 	protected abstract int doExecuteUpdate();
 
-
+	@Override
+	public KeyedResultList<R> getKeyedResultList(KeyedPage<R> keyedPage) {
+		throw new UnsupportedOperationException("Getting keyed result list is not supported by this query.");
+	}
 
 	@Override
 	public void setOptionalId(Serializable id) {

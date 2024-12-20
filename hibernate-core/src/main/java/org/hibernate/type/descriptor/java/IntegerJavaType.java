@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
@@ -32,6 +30,11 @@ public class IntegerJavaType extends AbstractClassJavaType<Integer>
 	}
 
 	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
+	@Override
 	public String toString(Integer value) {
 		return value == null ? null : value.toString();
 	}
@@ -47,7 +50,7 @@ public class IntegerJavaType extends AbstractClassJavaType<Integer>
 		if ( value == null ) {
 			return null;
 		}
-		if ( Integer.class.isAssignableFrom( type ) ) {
+		if ( Integer.class.isAssignableFrom( type ) || type == Object.class ) {
 			return (X) value;
 		}
 		if ( Byte.class.isAssignableFrom( type ) ) {
@@ -82,29 +85,26 @@ public class IntegerJavaType extends AbstractClassJavaType<Integer>
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof Integer) {
-			return (Integer) value;
+		if (value instanceof Integer integer) {
+			return integer;
 		}
-		if (value instanceof Number) {
-			return ( (Number) value ).intValue();
+		if (value instanceof Number number) {
+			return number.intValue();
 		}
-		if (value instanceof String) {
-			return Integer.valueOf( (String) value );
+		if (value instanceof String string) {
+			return Integer.valueOf( string );
 		}
 		throw unknownWrap( value.getClass() );
 	}
 
 	@Override
 	public boolean isWider(JavaType<?> javaType) {
-		switch ( javaType.getJavaType().getTypeName() ) {
-			case "byte":
-			case "java.lang.Byte":
-			case "short":
-			case "java.lang.Short":
-				return true;
-			default:
-				return false;
-		}
+		return switch ( javaType.getTypeName() ) {
+			case
+				"byte", "java.lang.Byte",
+				"short", "java.lang.Short" -> true;
+			default -> false;
+		};
 	}
 
 	@Override
@@ -148,41 +148,41 @@ public class IntegerJavaType extends AbstractClassJavaType<Integer>
 			return null;
 		}
 
-		if ( value instanceof Integer ) {
-			return (int) value;
+		if ( value instanceof Integer integer ) {
+			return integer;
 		}
 
-		if ( value instanceof Short ) {
-			return CoercionHelper.toInteger( (short) value );
+		if ( value instanceof Short shortValue ) {
+			return CoercionHelper.toInteger( shortValue );
 		}
 
-		if ( value instanceof Byte ) {
-			return CoercionHelper.toInteger( (byte) value );
+		if ( value instanceof Byte byteValue ) {
+			return CoercionHelper.toInteger( byteValue );
 		}
 
-		if ( value instanceof Long ) {
-			return CoercionHelper.toInteger( (long) value );
+		if ( value instanceof Long longValue ) {
+			return CoercionHelper.toInteger( longValue );
 		}
 
-		if ( value instanceof Double ) {
-			return CoercionHelper.toInteger( (double) value );
+		if ( value instanceof Double doubleValue ) {
+			return CoercionHelper.toInteger( doubleValue );
 		}
 
-		if ( value instanceof Float ) {
-			return CoercionHelper.toInteger( (float) value );
+		if ( value instanceof Float floatValue ) {
+			return CoercionHelper.toInteger( floatValue );
 		}
 
-		if ( value instanceof BigInteger ) {
-			return CoercionHelper.toInteger( (BigInteger) value );
+		if ( value instanceof BigInteger bigInteger ) {
+			return CoercionHelper.toInteger( bigInteger );
 		}
 
-		if ( value instanceof BigDecimal ) {
-			return CoercionHelper.toInteger( (BigDecimal) value );
+		if ( value instanceof BigDecimal bigDecimal ) {
+			return CoercionHelper.toInteger( bigDecimal );
 		}
 
-		if ( value instanceof String ) {
+		if ( value instanceof String string ) {
 			return CoercionHelper.coerceWrappingError(
-					() -> Integer.parseInt( (String) value )
+					() -> Integer.parseInt( string )
 			);
 		}
 

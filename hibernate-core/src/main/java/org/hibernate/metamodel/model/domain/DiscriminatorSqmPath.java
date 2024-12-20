@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain;
 
@@ -30,13 +28,39 @@ public interface DiscriminatorSqmPath<T> extends SqmPath<T> {
 		throw new IllegalStateException( "Discriminator cannot be de-referenced" );
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	default SqmTreatedPath treatAs(Class treatJavaType) throws PathException {
 		throw new UnsupportedMappingException( "Cannot apply TREAT operator to discriminator path" );
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	default SqmTreatedPath treatAs(EntityDomainType treatTarget) throws PathException {
+		throw new UnsupportedMappingException( "Cannot apply TREAT operator to discriminator path" );
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
+	default SqmTreatedPath treatAs(Class treatJavaType, String alias) throws PathException {
+		throw new UnsupportedMappingException( "Cannot apply TREAT operator to discriminator path" );
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
+	default SqmTreatedPath treatAs(EntityDomainType treatTarget, String alias) throws PathException {
+		throw new UnsupportedMappingException( "Cannot apply TREAT operator to discriminator path" );
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
+	default SqmTreatedPath treatAs(Class treatJavaType, String alias, boolean fetch) throws PathException {
+		throw new UnsupportedMappingException( "Cannot apply TREAT operator to discriminator path" );
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
+	default SqmTreatedPath treatAs(EntityDomainType treatTarget, String alias, boolean fetch) throws PathException {
 		throw new UnsupportedMappingException( "Cannot apply TREAT operator to discriminator path" );
 	}
 }

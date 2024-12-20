@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
+import java.lang.invoke.MethodHandles;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -20,12 +19,15 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.CockroachDBAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.FormatFunction;
 import org.hibernate.dialect.function.PostgreSQLTruncFunction;
@@ -42,15 +44,17 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.LockAcquisitionException;
+import org.hibernate.exception.TransactionSerializationException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
+import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -61,26 +65,30 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NamedNativeEnumDdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NamedNativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
 
+import static java.lang.Integer.parseInt;
 import static org.hibernate.cfg.DialectSpecificSettings.COCKROACH_VERSION_STRING;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
-import static org.hibernate.query.sqm.TemporalUnit.DAY;
-import static org.hibernate.query.sqm.TemporalUnit.EPOCH;
-import static org.hibernate.query.sqm.TemporalUnit.NATIVE;
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
+import static org.hibernate.query.common.TemporalUnit.DAY;
+import static org.hibernate.query.common.TemporalUnit.EPOCH;
+import static org.hibernate.query.common.TemporalUnit.NATIVE;
 import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
@@ -120,7 +128,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  */
 public class CockroachDialect extends Dialect {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, CockroachDialect.class.getName() );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, CockroachDialect.class.getName() );
 	// KNOWN LIMITATIONS:
 	// * no support for java.sql.Clob
 
@@ -142,7 +150,7 @@ public class CockroachDialect extends Dialect {
 
 	public CockroachDialect(DialectResolutionInfo info, String versionString) {
 		this(
-				versionString != null ? parseVersion( versionString ) : info.makeCopy(),
+				versionString != null ? parseVersion( versionString ) : info.makeCopyOrDefault( MINIMUM_VERSION ),
 				PostgreSQLDriverKind.determineKind( info )
 		);
 		registerKeywords( info );
@@ -158,10 +166,15 @@ public class CockroachDialect extends Dialect {
 		this.driverKind = driverKind;
 	}
 
+	@Override
+	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
+		return fetchDataBaseVersion( info );
+	}
+
 	protected static DatabaseVersion fetchDataBaseVersion(DialectResolutionInfo info) {
 		String versionString = null;
 		if ( info.getDatabaseMetadata() != null ) {
-			try (java.sql.Statement s = info.getDatabaseMetadata().getConnection().createStatement()) {
+			try ( java.sql.Statement s = info.getDatabaseMetadata().getConnection().createStatement() ) {
 				final ResultSet rs = s.executeQuery( "SELECT version()" );
 				if ( rs.next() ) {
 					versionString = rs.getString( 1 );
@@ -175,20 +188,19 @@ public class CockroachDialect extends Dialect {
 			// default to the dialect-specific configuration setting
 			versionString = ConfigurationHelper.getString( COCKROACH_VERSION_STRING, info.getConfigurationValues() );
 		}
-		return versionString != null ? parseVersion( versionString ) : info.makeCopy();
+		return versionString != null ? parseVersion( versionString ) : info.makeCopyOrDefault( MINIMUM_VERSION );
 	}
 
 	public static DatabaseVersion parseVersion( String versionString ) {
 		DatabaseVersion databaseVersion = null;
 		// What the DB select returns is similar to "CockroachDB CCL v21.2.10 (x86_64-unknown-linux-gnu, built 2022/05/02 17:38:58, go1.16.6)"
-		Matcher m = CRDB_VERSION_PATTERN.matcher( versionString == null ? "" : versionString );
-		if ( m.find() ) {
-				String[] versionParts = m.group().substring( 1 ).split( "\\." );
+		final Matcher matcher = CRDB_VERSION_PATTERN.matcher( versionString == null ? "" : versionString );
+		if ( matcher.find() ) {
+				final String[] versionParts = StringHelper.split( ".", matcher.group().substring( 1 ) );
 				// if we got to this point, there is at least a major version, so no need to check [].length > 0
-				int majorVersion = Integer.parseInt( versionParts[0] );
-				int minorVersion = versionParts.length > 1 ? Integer.parseInt( versionParts[1] ) : 0;
-				int microVersion = versionParts.length > 2 ? Integer.parseInt( versionParts[2] ) : 0;
-
+				int majorVersion = parseInt( versionParts[0] );
+				int minorVersion = versionParts.length > 1 ? parseInt( versionParts[1] ) : 0;
+				int microVersion = versionParts.length > 2 ? parseInt( versionParts[2] ) : 0;
 				databaseVersion=  new SimpleDatabaseVersion( majorVersion, minorVersion, microVersion);
 		}
 		if ( databaseVersion == null ) {
@@ -209,59 +221,35 @@ public class CockroachDialect extends Dialect {
 
 	@Override
 	protected String columnType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case TINYINT:
-				return "smallint"; //no tinyint
-			case INTEGER:
-				return "int4";
-
-			case NCHAR:
-				return columnType( CHAR );
-			case NVARCHAR:
-				return columnType( VARCHAR );
-
-			case NCLOB:
-			case CLOB:
-				return "string";
-
-			case BINARY:
-			case VARBINARY:
-			case BLOB:
-				return "bytes";
-
-			// We do not use the time with timezone type because PG deprecated it and it lacks certain operations like subtraction
-//			case TIME_UTC:
-//				return columnType( TIME_WITH_TIMEZONE );
-
-			case TIMESTAMP_UTC:
-				return columnType( TIMESTAMP_WITH_TIMEZONE );
-
-			default:
-				return super.columnType( sqlTypeCode );
-		}
+		return switch (sqlTypeCode) {
+			case TINYINT -> "smallint"; // no tinyint
+			case INTEGER -> "int4";
+			case NCHAR -> columnType( CHAR );
+			case NVARCHAR -> columnType( VARCHAR );
+			case NCLOB, CLOB -> "string";
+			case BINARY, VARBINARY, BLOB -> "bytes";
+			// We do not use the time with timezone type because PG
+			// deprecated it and it lacks certain operations like
+			// subtraction
+//			case TIME_UTC -> columnType( TIME_WITH_TIMEZONE );
+			case TIMESTAMP_UTC -> columnType( TIMESTAMP_WITH_TIMEZONE );
+			default -> super.columnType(sqlTypeCode);
+		};
 	}
 
 	@Override
 	protected String castType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case CHAR:
-			case NCHAR:
-			case VARCHAR:
-			case NVARCHAR:
-			case LONG32VARCHAR:
-			case LONG32NVARCHAR:
-				return "string";
-			case BINARY:
-			case VARBINARY:
-			case LONG32VARBINARY:
-				return "bytes";
-		}
-		return super.castType( sqlTypeCode );
+		return switch (sqlTypeCode) {
+			case CHAR, NCHAR, VARCHAR, NVARCHAR, LONG32VARCHAR, LONG32NVARCHAR -> "string";
+			case BINARY, VARBINARY, LONG32VARBINARY -> "bytes";
+			default -> super.castType( sqlTypeCode );
+		};
 	}
 
 	@Override
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
+
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
@@ -275,6 +263,9 @@ public class CockroachDialect extends Dialect {
 		// Prefer jsonb if possible
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INET, "inet", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
+
+		ddlTypeRegistry.addDescriptor( new NamedNativeEnumDdlTypeImpl( this ) );
+		ddlTypeRegistry.addDescriptor( new NamedNativeOrdinalEnumDdlTypeImpl( this ) );
 	}
 
 	@Override
@@ -318,15 +309,13 @@ public class CockroachDialect extends Dialect {
 				}
 				break;
 			case ARRAY:
-				final JdbcTypeConstructor jdbcTypeConstructor = jdbcTypeRegistry.getConstructor( jdbcTypeCode );
 				// PostgreSQL names array types by prepending an underscore to the base name
-				if ( jdbcTypeConstructor != null && columnTypeName.charAt( 0 ) == '_' ) {
+				if ( columnTypeName.charAt( 0 ) == '_' ) {
 					final String componentTypeName = columnTypeName.substring( 1 );
 					final Integer sqlTypeCode = resolveSqlTypeCode( componentTypeName, jdbcTypeRegistry.getTypeConfiguration() );
 					if ( sqlTypeCode != null ) {
-						return jdbcTypeConstructor.resolveType(
-								jdbcTypeRegistry.getTypeConfiguration(),
-								this,
+						return jdbcTypeRegistry.resolveTypeConstructorDescriptor(
+								jdbcTypeCode,
 								jdbcTypeRegistry.getDescriptor( sqlTypeCode ),
 								ColumnTypeInformation.EMPTY
 						);
@@ -339,22 +328,15 @@ public class CockroachDialect extends Dialect {
 
 	@Override
 	protected Integer resolveSqlTypeCode(String columnTypeName, TypeConfiguration typeConfiguration) {
-		switch ( columnTypeName ) {
-			case "bool":
-				return Types.BOOLEAN;
-			case "float4":
-				// Use REAL instead of FLOAT to get Float as recommended Java type
-				return Types.REAL;
-			case "float8":
-				return Types.DOUBLE;
-			case "int2":
-				return Types.SMALLINT;
-			case "int4":
-				return Types.INTEGER;
-			case "int8":
-				return Types.BIGINT;
-		}
-		return super.resolveSqlTypeCode( columnTypeName, typeConfiguration );
+		return switch (columnTypeName) {
+			case "bool" -> Types.BOOLEAN;
+			case "float4" -> Types.REAL; // Use REAL instead of FLOAT to get Float as recommended Java type
+			case "float8" -> Types.DOUBLE;
+			case "int2" -> Types.SMALLINT;
+			case "int4" -> Types.INTEGER;
+			case "int8" -> Types.BIGINT;
+			default -> super.resolveSqlTypeCode( columnTypeName, typeConfiguration );
+		};
 	}
 
 	@Override
@@ -369,16 +351,20 @@ public class CockroachDialect extends Dialect {
 		// Don't use this type due to https://github.com/pgjdbc/pgjdbc/issues/2862
 		//jdbcTypeRegistry.addDescriptor( TimestampUtcAsOffsetDateTimeJdbcType.INSTANCE );
 		if ( driverKind == PostgreSQLDriverKind.PG_JDBC ) {
+			jdbcTypeRegistry.addDescriptor( PostgreSQLEnumJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( PostgreSQLOrdinalEnumJdbcType.INSTANCE );
 			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLUUIDJdbcType.INSTANCE );
 			if ( PgJdbcHelper.isUsable( serviceRegistry ) ) {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getIntervalJdbcType( serviceRegistry ) );
 				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getInetJdbcType( serviceRegistry ) );
 				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getJsonbJdbcType( serviceRegistry ) );
+				jdbcTypeRegistry.addTypeConstructorIfAbsent( PgJdbcHelper.getJsonbArrayJdbcType( serviceRegistry ) );
 			}
 			else {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingIntervalSecondJdbcType.INSTANCE );
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingInetJdbcType.INSTANCE );
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
+				jdbcTypeRegistry.addTypeConstructorIfAbsent( PostgreSQLCastingJsonArrayJdbcTypeConstructor.JSONB_INSTANCE );
 			}
 		}
 		else {
@@ -386,6 +372,7 @@ public class CockroachDialect extends Dialect {
 			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingInetJdbcType.INSTANCE );
 			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingIntervalSecondJdbcType.INSTANCE );
 			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
+			jdbcTypeRegistry.addTypeConstructorIfAbsent( PostgreSQLCastingJsonArrayJdbcTypeConstructor.JSONB_INSTANCE );
 		}
 
 		// Force Blob binding to byte[] for CockroachDB
@@ -405,6 +392,9 @@ public class CockroachDialect extends Dialect {
 								.getDescriptor( Object.class )
 				)
 		);
+
+		// Replace the standard array constructor
+		jdbcTypeRegistry.addTypeConstructor( PostgreSQLArrayJdbcTypeConstructor.INSTANCE );
 	}
 
 	@Override
@@ -423,7 +413,6 @@ public class CockroachDialect extends Dialect {
 		functionFactory.substr();
 		functionFactory.reverse();
 		functionFactory.repeat();
-		functionFactory.md5();
 		functionFactory.sha1();
 		functionFactory.octetLength();
 		functionFactory.bitLength();
@@ -471,7 +460,7 @@ public class CockroachDialect extends Dialect {
 		functionFactory.arrayPrepend_postgresql();
 		functionFactory.arrayAppend_postgresql();
 		functionFactory.arrayContains_postgresql();
-		functionFactory.arrayOverlaps_postgresql();
+		functionFactory.arrayIntersects_postgresql();
 		functionFactory.arrayGet_bracket();
 		functionFactory.arraySet_unnest();
 		functionFactory.arrayRemove();
@@ -482,14 +471,46 @@ public class CockroachDialect extends Dialect {
 		functionFactory.arrayFill_cockroachdb();
 		functionFactory.arrayToString_postgresql();
 
+		functionFactory.jsonValue_cockroachdb();
+		functionFactory.jsonQuery_cockroachdb();
+		functionFactory.jsonExists_cockroachdb();
+		functionFactory.jsonObject_postgresql();
+		functionFactory.jsonArray_postgresql();
+		functionFactory.jsonArrayAgg_postgresql( false );
+		functionFactory.jsonObjectAgg_postgresql( false );
+		functionFactory.jsonSet_postgresql();
+		functionFactory.jsonRemove_cockroachdb();
+		functionFactory.jsonReplace_postgresql();
+		functionFactory.jsonInsert_postgresql();
+		// No support for WITH clause in subquery: https://github.com/cockroachdb/cockroach/issues/131011
+//		functionFactory.jsonMergepatch_postgresql();
+		functionFactory.jsonArrayAppend_postgresql( false );
+		functionFactory.jsonArrayInsert_postgresql();
+
+		functionFactory.unnest_postgresql();
+		functionFactory.generateSeries( null, "ordinality", true );
+		functionFactory.jsonTable_cockroachdb();
+
+		// Postgres uses # instead of ^ for XOR
+		functionContributions.getFunctionRegistry().patternDescriptorBuilder( "bitxor", "(?1#?2)" )
+				.setExactArgumentCount( 2 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.register();
+
 		functionContributions.getFunctionRegistry().register(
 				"trunc",
-				new PostgreSQLTruncFunction(
-						true,
-						functionContributions.getTypeConfiguration()
-				)
+				new PostgreSQLTruncFunction( true, functionContributions.getTypeConfiguration() )
 		);
 		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
+
+		functionFactory.hex( "encode(?1, 'hex')" );
+		functionFactory.sha( "digest(?1, 'sha256')" );
+		functionFactory.md5( "digest(?1, 'md5')" );
+	}
+
+	@Override
+	public @Nullable String getDefaultOrdinalityColumnName() {
+		return "ordinality";
 	}
 
 	@Override
@@ -594,7 +615,8 @@ public class CockroachDialect extends Dialect {
 
 	@Override
 	public boolean supportsNullPrecedence() {
-		// Not yet implemented: https://www.cockroachlabs.com/docs/v20.2/null-handling.html#nulls-and-sorting
+		// Not yet implemented:
+		// https://www.cockroachlabs.com/docs/v20.2/null-handling.html#nulls-and-sorting
 		return false;
 	}
 
@@ -614,8 +636,8 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
-	public String getNativeIdentifierGeneratorStrategy() {
-		return "sequence";
+	public GenerationType getNativeValueGenerationStrategy() {
+		return GenerationType.SEQUENCE;
 	}
 
 	@Override
@@ -651,6 +673,11 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
+	public AggregateSupport getAggregateSupport() {
+		return CockroachDBAggregateSupport.valueOf( this );
+	}
+
+	@Override
 	public int getMaxIdentifierLength() {
 		return 63;
 	}
@@ -669,6 +696,7 @@ public class CockroachDialect extends Dialect {
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			TemporalAccessor temporalAccessor,
+			@SuppressWarnings("deprecation")
 			TemporalType precision,
 			TimeZone jdbcTimeZone) {
 		switch ( precision ) {
@@ -706,7 +734,12 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
-	public void appendDateTimeLiteral(SqlAppender appender, Date date, TemporalType precision, TimeZone jdbcTimeZone) {
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			Date date,
+			@SuppressWarnings("deprecation")
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
 		switch ( precision ) {
 			case DATE:
 				appender.appendSql( "date '" );
@@ -732,6 +765,7 @@ public class CockroachDialect extends Dialect {
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			Calendar calendar,
+			@SuppressWarnings("deprecation")
 			TemporalType precision,
 			TimeZone jdbcTimeZone) {
 		switch ( precision ) {
@@ -763,22 +797,20 @@ public class CockroachDialect extends Dialect {
 	 */
 	@Override
 	public String extractPattern(TemporalUnit unit) {
-		switch ( unit ) {
-			case DAY_OF_WEEK:
-				return "(" + super.extractPattern(unit) + "+1)";
-			default:
-				return super.extractPattern(unit);
-		}
+		return switch (unit) {
+			case DAY_OF_WEEK -> "(" + super.extractPattern( unit ) + "+1)";
+			default -> super.extractPattern( unit );
+		};
 	}
 
 	@Override
 	public String translateExtractField(TemporalUnit unit) {
-		switch ( unit ) {
-			case DAY_OF_MONTH: return "day";
-			case DAY_OF_YEAR: return "dayofyear";
-			case DAY_OF_WEEK: return "dayofweek";
-			default: return super.translateExtractField( unit );
-		}
+		return switch (unit) {
+			case DAY_OF_MONTH -> "day";
+			case DAY_OF_YEAR -> "dayofyear";
+			case DAY_OF_WEEK -> "dayofweek";
+			default -> super.translateExtractField( unit );
+		};
 	}
 
 	/**
@@ -790,7 +822,7 @@ public class CockroachDialect extends Dialect {
 		return 1_000; //microseconds
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		return intervalType != null
 				? "(?2+?3)"
@@ -798,21 +830,16 @@ public class CockroachDialect extends Dialect {
 	}
 
 	private static String intervalPattern(TemporalUnit unit) {
-		switch (unit) {
-			case NANOSECOND:
-				return "(?2)/1e3*interval '1 microsecond'";
-			case NATIVE:
-				return "(?2)*interval '1 second'";
-			case QUARTER: //quarter is not supported in interval literals
-				return "(?2)*interval '3 month'";
-			case WEEK: //week is not supported in interval literals
-				return "(?2)*interval '7 day'";
-			default:
-				return "(?2)*interval '1 " + unit + "'";
-		}
+		return switch (unit) {
+			case NATIVE -> "(?2)*interval '1 microsecond'";
+			case NANOSECOND -> "(?2)/1e3*interval '1 microsecond'";
+			case QUARTER -> "(?2)*interval '3 month'"; // quarter is not supported in interval literals
+			case WEEK -> "(?2)*interval '7 day'"; // week is not supported in interval literals
+			default -> "(?2)*interval '1 " + unit + "'";
+		};
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		if ( unit == null ) {
 			return "(?3-?2)";
@@ -821,43 +848,33 @@ public class CockroachDialect extends Dialect {
 			// special case: subtraction of two dates
 			// results in an integer number of days
 			// instead of an INTERVAL
-			switch ( unit ) {
-				case YEAR:
-				case MONTH:
-				case QUARTER:
+			return switch (unit) {
+				case YEAR, MONTH, QUARTER ->
 					// age only supports timestamptz, so we have to cast the date expressions
-					return "extract(" + translateDurationField( unit ) + " from age(cast(?3 as timestamptz),cast(?2 as timestamptz)))";
-				default:
-					return "(?3-?2)" + DAY.conversionFactor( unit, this );
-			}
+						"extract(" + translateDurationField( unit )
+								+ " from age(cast(?3 as timestamptz),cast(?2 as timestamptz)))";
+				default -> "(?3-?2)" + DAY.conversionFactor( unit, this );
+			};
 		}
 		else {
-			switch (unit) {
-				case YEAR:
-					return "extract(year from ?3-?2)";
-				case QUARTER:
-					return "(extract(year from ?3-?2)*4+extract(month from ?3-?2)//3)";
-				case MONTH:
-					return "(extract(year from ?3-?2)*12+extract(month from ?3-?2))";
-				case WEEK: //week is not supported by extract() when the argument is a duration
-					return "(extract(day from ?3-?2)/7)";
-				case DAY:
-					return "extract(day from ?3-?2)";
+			return switch (unit) {
+				case YEAR -> "extract(year from ?3-?2)";
+				case QUARTER -> "(extract(year from ?3-?2)*4+extract(month from ?3-?2)//3)";
+				case MONTH -> "(extract(year from ?3-?2)*12+extract(month from ?3-?2))";
+				case WEEK -> "(extract(day from ?3-?2)/7)"; // week is not supported by extract() when the argument is a duration
+				case DAY -> "extract(day from ?3-?2)";
 				//in order to avoid multiple calls to extract(),
 				//we use extract(epoch from x - y) * factor for
 				//all the following units:
-
 				// Note that CockroachDB also has an extract_duration function which returns an int,
-				// but we don't use that here because it is deprecated since v20
-				case HOUR:
-				case MINUTE:
-				case SECOND:
-				case NANOSECOND:
-				case NATIVE:
-					return "cast(extract(epoch from ?3-?2)" + EPOCH.conversionFactor( unit, this ) + " as int)";
-				default:
-					throw new SemanticException( "Unrecognized field: " + unit );
-			}
+				// but we don't use that here because it is deprecated since v20.
+				// We need to use round() instead of cast(... as int) because extract epoch returns
+				// float8 which can cause loss-of-precision in some cases
+				// https://github.com/cockroachdb/cockroach/issues/72523
+				case HOUR, MINUTE, SECOND, NANOSECOND, NATIVE ->
+						"round(extract(epoch from ?3-?2)" + EPOCH.conversionFactor( unit, this ) + ")::int";
+				default -> throw new SemanticException( "Unrecognized field: " + unit );
+			};
 		}
 	}
 
@@ -865,7 +882,7 @@ public class CockroachDialect extends Dialect {
 	public String translateDurationField(TemporalUnit unit) {
 		return unit==NATIVE
 				? "microsecond"
-				: super.translateDurationField(unit);
+				: super.translateDurationField( unit );
 	}
 
 	@Override
@@ -890,14 +907,12 @@ public class CockroachDialect extends Dialect {
 
 	@Override
 	public String getForUpdateString(String aliases, LockOptions lockOptions) {
-		/*
-		 * Parent's implementation for (aliases, lockOptions) ignores aliases.
-		 */
+		// Parent's implementation for (aliases, lockOptions) ignores aliases.
 		if ( aliases.isEmpty() ) {
-			LockMode lockMode = lockOptions.getLockMode();
+			final LockMode lockMode = lockOptions.getLockMode();
 			for ( Map.Entry<String, LockMode> entry : lockOptions.getAliasSpecificLocks() ) {
 				// seek the highest lock mode
-				if ( entry.getValue().greaterThan(lockMode) ) {
+				if ( entry.getValue().greaterThan( lockMode ) ) {
 					aliases = entry.getKey();
 				}
 			}
@@ -906,38 +921,21 @@ public class CockroachDialect extends Dialect {
 		if (lockMode == null ) {
 			lockMode = lockOptions.getLockMode();
 		}
-		switch ( lockMode ) {
-			case PESSIMISTIC_READ: {
-				return getReadLockString( aliases, lockOptions.getTimeOut() );
-			}
-			case PESSIMISTIC_WRITE: {
-				return getWriteLockString( aliases, lockOptions.getTimeOut() );
-			}
-			case UPGRADE_NOWAIT:
-			case PESSIMISTIC_FORCE_INCREMENT: {
-				return getForUpdateNowaitString(aliases);
-			}
-			case UPGRADE_SKIPLOCKED: {
-				return getForUpdateSkipLockedString(aliases);
-			}
-			default: {
-				return "";
-			}
-		}
+		return switch (lockMode) {
+			case PESSIMISTIC_READ -> getReadLockString( aliases, lockOptions.getTimeOut() );
+			case PESSIMISTIC_WRITE -> getWriteLockString( aliases, lockOptions.getTimeOut() );
+			case UPGRADE_NOWAIT, PESSIMISTIC_FORCE_INCREMENT -> getForUpdateNowaitString( aliases );
+			case UPGRADE_SKIPLOCKED -> getForUpdateSkipLockedString( aliases );
+			default -> "";
+		};
 	}
 
 	private String withTimeout(String lockString, int timeout) {
-		switch (timeout) {
-			case LockOptions.NO_WAIT: {
-				return supportsNoWait() ? lockString + " nowait" : lockString;
-			}
-			case LockOptions.SKIP_LOCKED: {
-				return supportsSkipLocked() ? lockString + " skip locked" : lockString;
-			}
-			default: {
-				return lockString;
-			}
-		}
+		return switch (timeout) {
+			case LockOptions.NO_WAIT -> supportsNoWait() ? lockString + " nowait" : lockString;
+			case LockOptions.SKIP_LOCKED -> supportsSkipLocked() ? lockString + " skip locked" : lockString;
+			default -> lockString;
+		};
 	}
 
 	@Override
@@ -952,12 +950,12 @@ public class CockroachDialect extends Dialect {
 
 	@Override
 	public String getReadLockString(int timeout) {
-		return withTimeout(" for share", timeout );
+		return withTimeout( " for share", timeout );
 	}
 
 	@Override
 	public String getReadLockString(String aliases, int timeout) {
-		return withTimeout(" for share of " + aliases, timeout );
+		return withTimeout( " for share of " + aliases, timeout );
 	}
 
 	@Override
@@ -995,6 +993,11 @@ public class CockroachDialect extends Dialect {
 
 	@Override
 	public boolean useInputStreamToInsertBlob() {
+		return false;
+	}
+
+	@Override
+	public boolean useConnectionToCreateLob() {
 		return false;
 	}
 
@@ -1047,15 +1050,15 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData databaseMetaData)
 			throws SQLException {
 
-		if ( dbMetaData == null ) {
+		if ( databaseMetaData == null ) {
 			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.LOWER );
 			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		}
 
-		return super.buildIdentifierHelper( builder, dbMetaData );
+		return super.buildIdentifierHelper( builder, databaseMetaData );
 	}
 
 	@Override
@@ -1069,52 +1072,46 @@ public class CockroachDialect extends Dialect {
 	 */
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
 			new TemplatedViolatedConstraintNameExtractor( sqle -> {
-				final String sqlState = JdbcExceptionHelper.extractSqlState( sqle );
+				final String sqlState = extractSqlState( sqle );
 				if ( sqlState == null ) {
 					return null;
 				}
-				switch ( Integer.parseInt( sqlState ) ) {
+				return switch ( parseInt( sqlState ) ) {
 					// CHECK VIOLATION
-					case 23514:
-						return extractUsingTemplate( "violates check constraint \"","\"", sqle.getMessage() );
+					case 23514 -> extractUsingTemplate( "violates check constraint \"", "\"", sqle.getMessage() );
 					// UNIQUE VIOLATION
-					case 23505:
-						return extractUsingTemplate( "violates unique constraint \"","\"", sqle.getMessage() );
+					case 23505 -> extractUsingTemplate(" violates unique constraint \"", "\"", sqle.getMessage() );
 					// FOREIGN KEY VIOLATION
-					case 23503:
-						return extractUsingTemplate( "violates foreign key constraint \"","\"", sqle.getMessage() );
+					case 23503 -> extractUsingTemplate( "violates foreign key constraint \"", "\"", sqle.getMessage() );
 					// NOT NULL VIOLATION
-					case 23502:
-						return extractUsingTemplate( "null value in column \"","\" violates not-null constraint", sqle.getMessage() );
+					case 23502 -> extractUsingTemplate( "null value in column \"", "\" violates not-null constraint", sqle.getMessage() );
 					// TODO: RESTRICT VIOLATION
-					case 23001:
-						return null;
+					case 23001 -> null;
 					// ALL OTHER
-					default:
-						return null;
-				}
+					default -> null;
+				};
 			} );
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
-			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
+			final String sqlState = extractSqlState( sqlException );
 			if ( sqlState == null ) {
 				return null;
 			}
-			switch ( sqlState ) {
-				case "40P01":
-					// DEADLOCK DETECTED
-					return new LockAcquisitionException( message, sqlException, sql);
-				case "55P03":
-					// LOCK NOT AVAILABLE
-					return new PessimisticLockException( message, sqlException, sql);
-				case "57014":
-					return new QueryTimeoutException( message, sqlException, sql );
-				default:
-					// returning null allows other delegates to operate
-					return null;
-			}
+			return switch (sqlState) {
+				// Serialization Exception
+				case "40001" -> message.contains("WriteTooOldError")
+						? new TransactionSerializationException( message, sqlException, sql )
+						: null;
+				// DEADLOCK DETECTED
+				case "40P01" -> new LockAcquisitionException( message, sqlException, sql );
+				// LOCK NOT AVAILABLE
+				case "55P03" -> new PessimisticLockException( message, sqlException, sql );
+				case "57014" -> new QueryTimeoutException( message, sqlException, sql );
+				// returning null allows other delegates to operate
+				default -> null;
+			};
 		};
 	}
 

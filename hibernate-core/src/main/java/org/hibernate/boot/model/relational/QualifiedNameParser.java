@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.relational;
 
@@ -42,12 +40,12 @@ public class QualifiedNameParser {
 
 			StringBuilder buff = new StringBuilder();
 			if ( catalogName != null ) {
-				buff.append( catalogName.toString() ).append( '.' );
+				buff.append( catalogName ).append( '.' );
 			}
 			if ( schemaName != null ) {
-				buff.append( schemaName.toString() ).append( '.' );
+				buff.append( schemaName ).append( '.' );
 			}
-			buff.append( objectName.toString() );
+			buff.append( objectName );
 			qualifiedText = buff.toString();
 		}
 
@@ -89,8 +87,8 @@ public class QualifiedNameParser {
 			NameParts that = (NameParts) o;
 
 			return Objects.equals( this.getCatalogName(), that.getCatalogName() )
-					&& Objects.equals( this.getSchemaName(), that.getSchemaName() )
-					&& Objects.equals( this.getObjectName(), that.getObjectName() );
+				&& Objects.equals( this.getSchemaName(), that.getSchemaName() )
+				&& Objects.equals( this.getObjectName(), that.getObjectName() );
 		}
 
 		@Override
@@ -134,7 +132,7 @@ public class QualifiedNameParser {
 		boolean schemaWasQuoted = false;
 		boolean nameWasQuoted;
 
-		final String[] tokens = text.split( "\\." );
+		final String[] tokens = StringHelper.split( ".", text );
 		if ( tokens.length == 0 || tokens.length == 1 ) {
 			// we have just a local name...
 			name = text;

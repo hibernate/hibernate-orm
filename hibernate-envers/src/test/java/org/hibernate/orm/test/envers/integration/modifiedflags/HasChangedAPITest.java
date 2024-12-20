@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.modifiedflags;
 
@@ -14,12 +12,11 @@ import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.integration.auditReader.AuditedTestEntity;
 import org.hibernate.orm.test.envers.integration.auditReader.NotAuditedTestEntity;
 
-import org.hibernate.orm.test.envers.integration.modifiedflags.AbstractModifiedFlagsEntityTest;
 import org.hibernate.orm.test.envers.integration.modifiedflags.entities.EnumEntity;
 import org.hibernate.orm.test.envers.integration.modifiedflags.entities.EnumOption;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
@@ -76,7 +73,7 @@ public class HasChangedAPITest extends AbstractModifiedFlagsEntityTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13770")
+	@JiraKey(value = "HHH-13770")
 	public void testHasChangedHasNotChangedEnum() {
 		List list = getAuditReader().createQuery().forRevisionsOfEntity( EnumEntity.class, true, true )
 				.add( AuditEntity.property( "option" ).hasChanged() ).getResultList();

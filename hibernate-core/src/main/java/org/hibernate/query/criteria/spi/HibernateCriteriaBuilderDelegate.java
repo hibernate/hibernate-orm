@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.criteria.spi;
 
@@ -18,61 +16,36 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
+import java.time.temporal.TemporalAmount;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.Incubating;
-import org.hibernate.query.SortDirection;
-import org.hibernate.query.criteria.HibernateCriteriaBuilder;
-import org.hibernate.query.criteria.JpaCoalesce;
-import org.hibernate.query.criteria.JpaCollectionJoin;
-import org.hibernate.query.criteria.JpaCompoundSelection;
-import org.hibernate.query.criteria.JpaCriteriaDelete;
-import org.hibernate.query.criteria.JpaCriteriaInsertSelect;
-import org.hibernate.query.criteria.JpaCriteriaInsertValues;
-import org.hibernate.query.criteria.JpaCriteriaQuery;
-import org.hibernate.query.criteria.JpaCriteriaUpdate;
-import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
-import org.hibernate.query.criteria.JpaExpression;
-import org.hibernate.query.criteria.JpaFunction;
-import org.hibernate.query.criteria.JpaInPredicate;
-import org.hibernate.query.criteria.JpaJoin;
-import org.hibernate.query.criteria.JpaListJoin;
-import org.hibernate.query.criteria.JpaMapJoin;
-import org.hibernate.query.criteria.JpaOrder;
-import org.hibernate.query.criteria.JpaParameterExpression;
-import org.hibernate.query.criteria.JpaPath;
-import org.hibernate.query.criteria.JpaPredicate;
-import org.hibernate.query.criteria.JpaRoot;
-import org.hibernate.query.criteria.JpaSearchOrder;
-import org.hibernate.query.criteria.JpaSearchedCase;
-import org.hibernate.query.criteria.JpaSelection;
-import org.hibernate.query.criteria.JpaSetJoin;
-import org.hibernate.query.criteria.JpaSimpleCase;
-import org.hibernate.query.criteria.JpaSubQuery;
-import org.hibernate.query.criteria.JpaValues;
-import org.hibernate.query.criteria.JpaWindow;
-import org.hibernate.query.criteria.JpaWindowFrame;
 import org.hibernate.query.NullPrecedence;
-import org.hibernate.query.sqm.TemporalUnit;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.SortDirection;
+import org.hibernate.query.criteria.*;
+import org.hibernate.query.common.TemporalUnit;
 
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.CollectionJoin;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaSelect;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.ListJoin;
 import jakarta.persistence.criteria.MapJoin;
+import jakarta.persistence.criteria.Nulls;
+import jakarta.persistence.criteria.Order;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Selection;
 import jakarta.persistence.criteria.SetJoin;
 import jakarta.persistence.criteria.Subquery;
+import jakarta.persistence.criteria.TemporalField;
 
 public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilder {
 	private final HibernateCriteriaBuilder criteriaBuilder;
@@ -92,6 +65,26 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	@Override
 	public <X, T> JpaExpression<X> cast(JpaExpression<T> expression, Class<X> castTargetJavaType) {
 		return criteriaBuilder.cast( expression, castTargetJavaType );
+	}
+
+	@Override
+	public <X, T> JpaExpression<X> cast(JpaExpression<T> expression, JpaCastTarget<X> castTarget) {
+		return criteriaBuilder.cast( expression, castTarget );
+	}
+
+	@Override
+	public <X> JpaCastTarget<X> castTarget(Class<X> castTargetJavaType) {
+		return criteriaBuilder.castTarget( castTargetJavaType );
+	}
+
+	@Override
+	public <X> JpaCastTarget<X> castTarget(Class<X> castTargetJavaType, long length) {
+		return criteriaBuilder.castTarget( castTargetJavaType, length );
+	}
+
+	@Override
+	public <X> JpaCastTarget<X> castTarget(Class<X> castTargetJavaType, int precision, int scale) {
+		return criteriaBuilder.castTarget( castTargetJavaType, precision, scale );
 	}
 
 	@Override
@@ -210,8 +203,18 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	public <T> JpaSubQuery<T> unionAll(Subquery<? extends T> query1, Subquery<?>... queries) {
-		return criteriaBuilder.unionAll( query1, queries );
+	public <T> CriteriaSelect<T> union(CriteriaSelect<? extends T> left, CriteriaSelect<? extends T> right) {
+		return criteriaBuilder.union( left, right );
+	}
+
+	@Override
+	public <T> JpaSubQuery<T> unionAll(JpaSubQuery<? extends T> query1, JpaSubQuery<? extends T> query2) {
+		return criteriaBuilder.unionAll( query1, query2 );
+	}
+
+	@Override
+	public <T> CriteriaSelect<T> unionAll(CriteriaSelect<? extends T> left, CriteriaSelect<? extends T> right) {
+		return criteriaBuilder.unionAll( left, right );
 	}
 
 	@Override
@@ -240,6 +243,16 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	public <T> CriteriaSelect<T> except(CriteriaSelect<T> left, CriteriaSelect<?> right) {
+		return criteriaBuilder.except( left, right );
+	}
+
+	@Override
+	public <T> CriteriaSelect<T> exceptAll(CriteriaSelect<T> left, CriteriaSelect<?> right) {
+		return criteriaBuilder.exceptAll( left, right );
+	}
+
+	@Override
 	public <T> JpaSubQuery<T> exceptAll(Subquery<? extends T> query1, Subquery<?>... queries) {
 		return criteriaBuilder.exceptAll( query1, queries );
 	}
@@ -253,6 +266,8 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	public <T> JpaSubQuery<T> except(boolean all, Subquery<? extends T> query1, Subquery<?>... queries) {
 		return criteriaBuilder.except( all, query1, queries );
 	}
+
+
 
 	@Override
 	public JpaExpression<Integer> sign(Expression<? extends Number> x) {
@@ -315,6 +330,11 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	public <N, T extends Temporal> JpaExpression<N> extract(TemporalField<N, T> field, Expression<T> temporal) {
+		return null;
+	}
+
+	@Override
 	public <P, F> JpaExpression<F> fk(Path<P> path) {
 		return criteriaBuilder.fk( path );
 	}
@@ -327,6 +347,46 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	@Override
 	public <X, T extends X> JpaRoot<T> treat(Root<X> root, Class<T> type) {
 		return criteriaBuilder.treat( root, type );
+	}
+
+	@Override
+	public <T> JpaCriteriaQuery<T> union(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right) {
+		return criteriaBuilder.union( left, right );
+	}
+
+	@Override
+	public <T> JpaCriteriaQuery<T> unionAll(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right) {
+		return criteriaBuilder.unionAll( left, right );
+	}
+
+	@Override
+	public <T> CriteriaSelect<T> intersect(CriteriaSelect<? super T> left, CriteriaSelect<? super T> right) {
+		return criteriaBuilder.intersect( left, right );
+	}
+
+	@Override
+	public <T> CriteriaSelect<T> intersectAll(CriteriaSelect<? super T> left, CriteriaSelect<? super T> right) {
+		return criteriaBuilder.intersectAll( left, right );
+	}
+
+	@Override
+	public <T> JpaCriteriaQuery<T> intersect(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right) {
+		return criteriaBuilder.intersect( left, right );
+	}
+
+	@Override
+	public <T> JpaCriteriaQuery<T> intersectAll(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right) {
+		return criteriaBuilder.intersectAll( left, right );
+	}
+
+	@Override
+	public <T> JpaCriteriaQuery<T> except(CriteriaQuery<T> left, CriteriaQuery<?> right) {
+		return criteriaBuilder.except( left, right );
+	}
+
+	@Override
+	public <T> JpaCriteriaQuery<T> exceptAll(CriteriaQuery<T> left, CriteriaQuery<?> right) {
+		return criteriaBuilder.exceptAll( left, right );
 	}
 
 	@Override
@@ -370,7 +430,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	public JpaCompoundSelection<Tuple> tuple(List<? extends JpaSelection<?>> selections) {
+	public JpaCompoundSelection<Tuple> tuple(List<Selection<?>> selections) {
 		return criteriaBuilder.tuple( selections );
 	}
 
@@ -380,7 +440,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	public JpaCompoundSelection<Object[]> array(List<? extends JpaSelection<?>> selections) {
+	public JpaCompoundSelection<Object[]> array(List<Selection<?>> selections) {
 		return criteriaBuilder.array( selections );
 	}
 
@@ -437,6 +497,11 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	@Override
 	public JpaExpression<Long> count(Expression<?> argument) {
 		return criteriaBuilder.count( argument );
+	}
+
+	@Override
+	public JpaExpression<Long> count() {
+		return criteriaBuilder.count();
 	}
 
 	@Override
@@ -602,6 +667,16 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	@Override
 	public JpaExpression<String> concat(Expression<String> x, Expression<String> y) {
 		return criteriaBuilder.concat( x, y );
+	}
+
+	@Override
+	public <T> JpaParameterExpression<List<T>> listParameter(Class<T> paramClass) {
+		return criteriaBuilder.listParameter( paramClass );
+	}
+
+	@Override
+	public <T> JpaParameterExpression<List<T>> listParameter(Class<T> paramClass, String name) {
+		return criteriaBuilder.listParameter( paramClass, name );
 	}
 
 	@Override
@@ -820,12 +895,22 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	public JpaPredicate and(List<Predicate> restrictions) {
+		return criteriaBuilder.and( restrictions );
+	}
+
+	@Override
 	public JpaPredicate or(Expression<Boolean> x, Expression<Boolean> y) {
 		return criteriaBuilder.or( x, y );
 	}
 
 	@Override
 	public JpaPredicate or(Predicate... restrictions) {
+		return criteriaBuilder.or( restrictions );
+	}
+
+	@Override
+	public JpaPredicate or(List<Predicate> restrictions) {
 		return criteriaBuilder.or( restrictions );
 	}
 
@@ -1126,6 +1211,11 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	public JpaExpression<String> concat(List<Expression<String>> expressions) {
+		return criteriaBuilder.concat( expressions );
+	}
+
+	@Override
 	public JpaPredicate notIlike(Expression<String> x, Expression<String> pattern) {
 		return criteriaBuilder.notIlike( x, pattern );
 	}
@@ -1206,8 +1296,27 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	public JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence, boolean ignoreCase) {
+		return criteriaBuilder.sort( sortExpression, sortOrder, nullPrecedence, ignoreCase );
+	}
+
+	@Override
 	public JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder) {
 		return criteriaBuilder.sort( sortExpression, sortOrder );
+	}
+
+	@Override
+	public JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, Nulls nullPrecedence) {
+		return criteriaBuilder.sort( sortExpression, sortOrder, nullPrecedence );
+	}
+
+	@Override
+	public JpaOrder sort(
+			JpaExpression<?> sortExpression,
+			SortDirection sortOrder,
+			Nulls nullPrecedence,
+			boolean ignoreCase) {
+		return criteriaBuilder.sort( sortExpression, sortOrder, nullPrecedence, ignoreCase );
 	}
 
 	@Override
@@ -1223,6 +1332,16 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	@Override
 	public JpaOrder desc(Expression<?> x) {
 		return criteriaBuilder.desc( x );
+	}
+
+	@Override
+	public Order asc(Expression<?> expression, Nulls nullPrecedence) {
+		return criteriaBuilder.asc( expression, nullPrecedence );
+	}
+
+	@Override
+	public Order desc(Expression<?> expression, Nulls nullPrecedence) {
+		return criteriaBuilder.desc( expression, nullPrecedence );
 	}
 
 	@Override
@@ -2435,7 +2554,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 
 	@Override
 	@Incubating
-	public <T> JpaExpression<String> arrayToString(
+	public JpaExpression<String> arrayToString(
 			Expression<? extends Object[]> arrayExpression,
 			Expression<String> separatorExpression) {
 		return criteriaBuilder.arrayToString( arrayExpression, separatorExpression );
@@ -2443,7 +2562,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 
 	@Override
 	@Incubating
-	public <T> JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator) {
+	public JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator) {
 		return criteriaBuilder.arrayToString( arrayExpression, separator );
 	}
 
@@ -2484,24 +2603,28 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <T> JpaPredicate arrayContainsAll(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression) {
 		return criteriaBuilder.arrayContainsAll( arrayExpression, subArrayExpression );
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <T> JpaPredicate arrayContainsAll(Expression<T[]> arrayExpression, T[] subArray) {
 		return criteriaBuilder.arrayContainsAll( arrayExpression, subArray );
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <T> JpaPredicate arrayContainsAll(T[] array, Expression<T[]> subArrayExpression) {
 		return criteriaBuilder.arrayContainsAll( array, subArrayExpression );
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <T> JpaPredicate arrayContainsAllNullable(
 			Expression<T[]> arrayExpression,
@@ -2510,12 +2633,14 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <T> JpaPredicate arrayContainsAllNullable(Expression<T[]> arrayExpression, T[] subArray) {
 		return criteriaBuilder.arrayContainsAllNullable( arrayExpression, subArray );
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <T> JpaPredicate arrayContainsAllNullable(T[] array, Expression<T[]> subArrayExpression) {
 		return criteriaBuilder.arrayContainsAllNullable( array, subArrayExpression );
@@ -2523,38 +2648,118 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 
 	@Override
 	@Incubating
+	public <T> JpaPredicate arrayIncludes(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression) {
+		return criteriaBuilder.arrayIncludes( arrayExpression, subArrayExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayIncludes(Expression<T[]> arrayExpression, T[] subArray) {
+		return criteriaBuilder.arrayIncludes( arrayExpression, subArray );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayIncludes(T[] array, Expression<T[]> subArrayExpression) {
+		return criteriaBuilder.arrayIncludes( array, subArrayExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayIncludesNullable(
+			Expression<T[]> arrayExpression,
+			Expression<T[]> subArrayExpression) {
+		return criteriaBuilder.arrayIncludesNullable( arrayExpression, subArrayExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayIncludesNullable(Expression<T[]> arrayExpression, T[] subArray) {
+		return criteriaBuilder.arrayIncludesNullable( arrayExpression, subArray );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayIncludesNullable(T[] array, Expression<T[]> subArrayExpression) {
+		return criteriaBuilder.arrayIncludesNullable( array, subArrayExpression );
+	}
+
+	@Override
+	@Deprecated(forRemoval = true)
+	@Incubating
 	public <T> JpaPredicate arrayOverlaps(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2) {
 		return criteriaBuilder.arrayOverlaps( arrayExpression1, arrayExpression2 );
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <T> JpaPredicate arrayOverlaps(Expression<T[]> arrayExpression1, T[] array2) {
 		return criteriaBuilder.arrayOverlaps( arrayExpression1, array2 );
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <T> JpaPredicate arrayOverlaps(T[] array1, Expression<T[]> arrayExpression2) {
 		return criteriaBuilder.arrayOverlaps( array1, arrayExpression2 );
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <T> JpaPredicate arrayOverlapsNullable(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2) {
 		return criteriaBuilder.arrayOverlapsNullable( arrayExpression1, arrayExpression2 );
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <T> JpaPredicate arrayOverlapsNullable(Expression<T[]> arrayExpression1, T[] array2) {
 		return criteriaBuilder.arrayOverlapsNullable( arrayExpression1, array2 );
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <T> JpaPredicate arrayOverlapsNullable(T[] array1, Expression<T[]> arrayExpression2) {
 		return criteriaBuilder.arrayOverlapsNullable( array1, arrayExpression2 );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayIntersects(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2) {
+		return criteriaBuilder.arrayIntersects( arrayExpression1, arrayExpression2 );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayIntersects(Expression<T[]> arrayExpression1, T[] array2) {
+		return criteriaBuilder.arrayIntersects( arrayExpression1, array2 );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayIntersects(T[] array1, Expression<T[]> arrayExpression2) {
+		return criteriaBuilder.arrayIntersects( array1, arrayExpression2 );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayIntersectsNullable(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2) {
+		return criteriaBuilder.arrayIntersectsNullable( arrayExpression1, arrayExpression2 );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayIntersectsNullable(Expression<T[]> arrayExpression1, T[] array2) {
+		return criteriaBuilder.arrayIntersectsNullable( arrayExpression1, array2 );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayIntersectsNullable(T[] array1, Expression<T[]> arrayExpression2) {
+		return criteriaBuilder.arrayIntersectsNullable( array1, arrayExpression2 );
 	}
 
 	@Override
@@ -2871,7 +3076,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 
 	@Override
 	@Incubating
-	public <T> JpaExpression<String> collectionToString(
+	public JpaExpression<String> collectionToString(
 			Expression<? extends Collection<?>> collectionExpression,
 			Expression<String> separatorExpression) {
 		return criteriaBuilder.collectionToString( collectionExpression, separatorExpression );
@@ -2879,7 +3084,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 
 	@Override
 	@Incubating
-	public <T> JpaExpression<String> collectionToString(
+	public JpaExpression<String> collectionToString(
 			Expression<? extends Collection<?>> collectionExpression,
 			String separator) {
 		return criteriaBuilder.collectionToString( collectionExpression, separator );
@@ -2928,6 +3133,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <E> JpaPredicate collectionContainsAll(
 			Expression<? extends Collection<E>> collectionExpression,
@@ -2936,6 +3142,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <E> JpaPredicate collectionContainsAll(
 			Expression<? extends Collection<E>> collectionExpression,
@@ -2944,14 +3151,16 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <E> JpaPredicate collectionContainsAll(
 			Collection<E> collection,
-			Expression<? extends Collection<? extends E>> subArrayExpression) {
-		return criteriaBuilder.collectionContainsAll( collection, subArrayExpression );
+			Expression<? extends Collection<? extends E>> subCollectionExpression) {
+		return criteriaBuilder.collectionContainsAll( collection, subCollectionExpression );
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <E> JpaPredicate collectionContainsAllNullable(
 			Expression<? extends Collection<E>> collectionExpression,
@@ -2960,6 +3169,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <E> JpaPredicate collectionContainsAllNullable(
 			Expression<? extends Collection<E>> collectionExpression,
@@ -2968,6 +3178,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <E> JpaPredicate collectionContainsAllNullable(
 			Collection<E> collection,
@@ -2977,6 +3188,55 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 
 	@Override
 	@Incubating
+	public <E> JpaPredicate collectionIncludes(
+			Expression<? extends Collection<E>> collectionExpression,
+			Expression<? extends Collection<? extends E>> subCollectionExpression) {
+		return criteriaBuilder.collectionIncludes( collectionExpression, subCollectionExpression );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionIncludes(
+			Expression<? extends Collection<E>> collectionExpression,
+			Collection<? extends E> subCollection) {
+		return criteriaBuilder.collectionIncludes( collectionExpression, subCollection );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionIncludes(
+			Collection<E> collection,
+			Expression<? extends Collection<? extends E>> subArrayExpression) {
+		return criteriaBuilder.collectionIncludes( collection, subArrayExpression );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionIncludesNullable(
+			Expression<? extends Collection<E>> collectionExpression,
+			Expression<? extends Collection<? extends E>> subCollectionExpression) {
+		return criteriaBuilder.collectionIncludesNullable( collectionExpression, subCollectionExpression );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionIncludesNullable(
+			Expression<? extends Collection<E>> collectionExpression,
+			Collection<? extends E> subCollection) {
+		return criteriaBuilder.collectionIncludesNullable( collectionExpression, subCollection );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionIncludesNullable(
+			Collection<E> collection,
+			Expression<? extends Collection<? extends E>> subCollectionExpression) {
+		return criteriaBuilder.collectionIncludesNullable( collection, subCollectionExpression );
+	}
+
+	@Override
+	@Deprecated(forRemoval = true)
+	@Incubating
 	public <E> JpaPredicate collectionOverlaps(
 			Expression<? extends Collection<E>> collectionExpression1,
 			Expression<? extends Collection<? extends E>> collectionExpression2) {
@@ -2984,6 +3244,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <E> JpaPredicate collectionOverlaps(
 			Expression<? extends Collection<E>> collectionExpression1,
@@ -2992,6 +3253,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <E> JpaPredicate collectionOverlaps(
 			Collection<E> collection1,
@@ -3000,6 +3262,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <E> JpaPredicate collectionOverlapsNullable(
 			Expression<? extends Collection<E>> collectionExpression1,
@@ -3008,6 +3271,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <E> JpaPredicate collectionOverlapsNullable(
 			Expression<? extends Collection<E>> collectionExpression1,
@@ -3016,10 +3280,614 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <E> JpaPredicate collectionOverlapsNullable(
 			Collection<E> collection1,
 			Expression<? extends Collection<? extends E>> collectionExpression2) {
 		return criteriaBuilder.collectionOverlapsNullable( collection1, collectionExpression2 );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionIntersects(
+			Expression<? extends Collection<E>> collectionExpression1,
+			Expression<? extends Collection<? extends E>> collectionExpression2) {
+		return criteriaBuilder.collectionIntersects( collectionExpression1, collectionExpression2 );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionIntersects(
+			Expression<? extends Collection<E>> collectionExpression1,
+			Collection<? extends E> collection2) {
+		return criteriaBuilder.collectionIntersects( collectionExpression1, collection2 );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionIntersects(
+			Collection<E> collection1,
+			Expression<? extends Collection<? extends E>> collectionExpression2) {
+		return criteriaBuilder.collectionIntersects( collection1, collectionExpression2 );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionIntersectsNullable(
+			Expression<? extends Collection<E>> collectionExpression1,
+			Expression<? extends Collection<? extends E>> collectionExpression2) {
+		return criteriaBuilder.collectionIntersectsNullable( collectionExpression1, collectionExpression2 );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionIntersectsNullable(
+			Expression<? extends Collection<E>> collectionExpression1,
+			Collection<? extends E> collection2) {
+		return criteriaBuilder.collectionIntersectsNullable( collectionExpression1, collection2 );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionIntersectsNullable(
+			Collection<E> collection1,
+			Expression<? extends Collection<? extends E>> collectionExpression2) {
+		return criteriaBuilder.collectionIntersectsNullable( collection1, collectionExpression2 );
+	}
+
+	@Override
+	@Incubating
+	public JpaJsonValueExpression<String> jsonValue(Expression<?> jsonDocument, String jsonPath) {
+		return criteriaBuilder.jsonValue( jsonDocument, jsonPath );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaJsonValueExpression<T> jsonValue(
+			Expression<?> jsonDocument,
+			String jsonPath,
+			Class<T> returningType) {
+		return criteriaBuilder.jsonValue( jsonDocument, jsonPath, returningType );
+	}
+
+	@Override
+	@Incubating
+	public JpaJsonValueExpression<String> jsonValue(Expression<?> jsonDocument, Expression<String> jsonPath) {
+		return criteriaBuilder.jsonValue( jsonDocument, jsonPath );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaJsonValueExpression<T> jsonValue(
+			Expression<?> jsonDocument,
+			Expression<String> jsonPath,
+			Class<T> returningType) {
+		return criteriaBuilder.jsonValue( jsonDocument, jsonPath, returningType );
+	}
+
+	@Override
+	@Incubating
+	public JpaJsonQueryExpression jsonQuery(Expression<?> jsonDocument, String jsonPath) {
+		return criteriaBuilder.jsonQuery( jsonDocument, jsonPath );
+	}
+
+	@Override
+	@Incubating
+	public JpaJsonQueryExpression jsonQuery(Expression<?> jsonDocument, Expression<String> jsonPath) {
+		return criteriaBuilder.jsonQuery( jsonDocument, jsonPath );
+	}
+
+	@Override
+	@Incubating
+	public JpaJsonExistsExpression jsonExists(Expression<?> jsonDocument, String jsonPath) {
+		return criteriaBuilder.jsonExists( jsonDocument, jsonPath );
+	}
+
+	@Override
+	@Incubating
+	public JpaJsonExistsExpression jsonExists(Expression<?> jsonDocument, Expression<String> jsonPath) {
+		return criteriaBuilder.jsonExists( jsonDocument, jsonPath );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonObject(Map<?, ? extends Expression<?>> keyValues) {
+		return criteriaBuilder.jsonObject( keyValues );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonObjectWithNulls(Map<?, ? extends Expression<?>> keyValues) {
+		return criteriaBuilder.jsonObjectWithNulls( keyValues );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonArray(Expression<?>... values) {
+		return criteriaBuilder.jsonArray( values );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonArrayWithNulls(Expression<?>... values) {
+		return criteriaBuilder.jsonArrayWithNulls( values );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonArrayAgg(Expression<?> value) {
+		return criteriaBuilder.jsonArrayAgg( value );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonArrayAggWithNulls(Expression<?> value) {
+		return criteriaBuilder.jsonArrayAggWithNulls( value );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonArrayAgg(Expression<?> value, JpaOrder... orderBy) {
+		return criteriaBuilder.jsonArrayAgg( value, orderBy );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonArrayAgg(Expression<?> value, Predicate filter) {
+		return criteriaBuilder.jsonArrayAgg( value, filter );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonArrayAgg(Expression<?> value, Predicate filter, JpaOrder... orderBy) {
+		return criteriaBuilder.jsonArrayAgg( value, filter, orderBy );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonArrayAggWithNulls(Expression<?> value, JpaOrder... orderBy) {
+		return criteriaBuilder.jsonArrayAggWithNulls( value, orderBy );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonArrayAggWithNulls(Expression<?> value, Predicate filter) {
+		return criteriaBuilder.jsonArrayAggWithNulls( value, filter );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonArrayAggWithNulls(Expression<?> value, Predicate filter, JpaOrder... orderBy) {
+		return criteriaBuilder.jsonArrayAggWithNulls( value, filter, orderBy );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonObjectAgg(Expression<?> key, Expression<?> value) {
+		return criteriaBuilder.jsonObjectAgg( key, value );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonObjectAggWithNulls(Expression<?> key, Expression<?> value) {
+		return criteriaBuilder.jsonObjectAggWithNulls( key, value );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonObjectAggWithUniqueKeys(Expression<?> key, Expression<?> value) {
+		return criteriaBuilder.jsonObjectAggWithUniqueKeys( key, value );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonObjectAggWithUniqueKeysAndNulls(Expression<?> key, Expression<?> value) {
+		return criteriaBuilder.jsonObjectAggWithUniqueKeysAndNulls( key, value );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonObjectAgg(Expression<?> key, Expression<?> value, Predicate filter) {
+		return criteriaBuilder.jsonObjectAgg( key, value, filter );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonObjectAggWithNulls(Expression<?> key, Expression<?> value, Predicate filter) {
+		return criteriaBuilder.jsonObjectAggWithNulls( key, value, filter );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonObjectAggWithUniqueKeys(Expression<?> key, Expression<?> value, Predicate filter) {
+		return criteriaBuilder.jsonObjectAggWithUniqueKeys( key, value, filter );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonObjectAggWithUniqueKeysAndNulls(
+			Expression<?> key,
+			Expression<?> value,
+			Predicate filter) {
+		return criteriaBuilder.jsonObjectAggWithUniqueKeysAndNulls( key, value, filter );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonSet(Expression<?> jsonDocument, String jsonPath, Expression<?> value) {
+		return criteriaBuilder.jsonSet( jsonDocument, jsonPath, value );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonSet(Expression<?> jsonDocument, Expression<String> jsonPath, Expression<?> value) {
+		return criteriaBuilder.jsonSet( jsonDocument, jsonPath, value );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonSet(Expression<?> jsonDocument, String jsonPath, Object value) {
+		return criteriaBuilder.jsonSet( jsonDocument, jsonPath, value );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonSet(Expression<?> jsonDocument, Expression<String> jsonPath, Object value) {
+		return criteriaBuilder.jsonSet( jsonDocument, jsonPath, value );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonRemove(Expression<?> jsonDocument, String jsonPath) {
+		return criteriaBuilder.jsonRemove( jsonDocument, jsonPath );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonRemove(Expression<?> jsonDocument, Expression<String> jsonPath) {
+		return criteriaBuilder.jsonRemove( jsonDocument, jsonPath );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonInsert(Expression<?> jsonDocument, String jsonPath, Expression<?> value) {
+		return criteriaBuilder.jsonInsert( jsonDocument, jsonPath, value );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonInsert(
+			Expression<?> jsonDocument,
+			Expression<String> jsonPath,
+			Expression<?> value) {
+		return criteriaBuilder.jsonInsert( jsonDocument, jsonPath, value );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonInsert(Expression<?> jsonDocument, String jsonPath, Object value) {
+		return criteriaBuilder.jsonInsert( jsonDocument, jsonPath, value );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonInsert(Expression<?> jsonDocument, Expression<String> jsonPath, Object value) {
+		return criteriaBuilder.jsonInsert( jsonDocument, jsonPath, value );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonReplace(Expression<?> jsonDocument, String jsonPath, Expression<?> value) {
+		return criteriaBuilder.jsonReplace( jsonDocument, jsonPath, value );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonReplace(
+			Expression<?> jsonDocument,
+			Expression<String> jsonPath,
+			Expression<?> value) {
+		return criteriaBuilder.jsonReplace( jsonDocument, jsonPath, value );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonReplace(Expression<?> jsonDocument, String jsonPath, Object value) {
+		return criteriaBuilder.jsonReplace( jsonDocument, jsonPath, value );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonReplace(Expression<?> jsonDocument, Expression<String> jsonPath, Object value) {
+		return criteriaBuilder.jsonReplace( jsonDocument, jsonPath, value );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonMergepatch(Expression<?> document, Expression<?> patch) {
+		return criteriaBuilder.jsonMergepatch( document, patch );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonMergepatch(Expression<?> document, String patch) {
+		return criteriaBuilder.jsonMergepatch( document, patch );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonMergepatch(String document, Expression<?> patch) {
+		return criteriaBuilder.jsonMergepatch( document, patch );
+	}
+
+	@Override
+	@Incubating
+	public JpaXmlElementExpression xmlelement(String elementName) {
+		return criteriaBuilder.xmlelement( elementName );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> xmlcomment(String comment) {
+		return criteriaBuilder.xmlcomment( comment );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> xmlforest(Expression<?>... elements) {
+		return criteriaBuilder.xmlforest( elements );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> xmlforest(List<? extends Expression<?>> elements) {
+		return criteriaBuilder.xmlforest( elements );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> xmlconcat(Expression<?>... elements) {
+		return criteriaBuilder.xmlconcat( elements );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> xmlconcat(List<? extends Expression<?>> elements) {
+		return criteriaBuilder.xmlconcat( elements );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> xmlpi(String elementName) {
+		return criteriaBuilder.xmlpi( elementName );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> xmlpi(String elementName, Expression<String> content) {
+		return criteriaBuilder.xmlpi( elementName, content );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> xmlquery(String query, Expression<?> xmlDocument) {
+		return criteriaBuilder.xmlquery( query, xmlDocument );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> xmlquery(Expression<String> query, Expression<?> xmlDocument) {
+		return criteriaBuilder.xmlquery( query, xmlDocument );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<Boolean> xmlexists(String query, Expression<?> xmlDocument) {
+		return criteriaBuilder.xmlexists( query, xmlDocument );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<Boolean> xmlexists(Expression<String> query, Expression<?> xmlDocument) {
+		return criteriaBuilder.xmlexists( query, xmlDocument );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> xmlagg(JpaOrder order, Expression<?> argument) {
+		return criteriaBuilder.xmlagg( order, argument );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> xmlagg(JpaOrder order, JpaPredicate filter, Expression<?> argument) {
+		return criteriaBuilder.xmlagg( order, filter, argument );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> xmlagg(JpaOrder order, JpaWindow window, Expression<?> argument) {
+		return criteriaBuilder.xmlagg( order, window, argument );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> xmlagg(JpaOrder order, JpaPredicate filter, JpaWindow window, Expression<?> argument) {
+		return criteriaBuilder.xmlagg( order, filter, window, argument );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T> named(Expression<T> expression, String name) {
+		return criteriaBuilder.named( expression, name );
+	}
+
+	@Incubating
+	@Override
+	public <E> JpaSetReturningFunction<E> setReturningFunction(String name, Expression<?>... args) {
+		return criteriaBuilder.setReturningFunction( name, args );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaSetReturningFunction<E> unnestArray(Expression<E[]> array) {
+		return criteriaBuilder.unnestArray( array );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaSetReturningFunction<E> unnestCollection(Expression<? extends Collection<E>> collection) {
+		return criteriaBuilder.unnestCollection( collection );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Number> JpaSetReturningFunction<E> generateSeries(E start, E stop) {
+		return criteriaBuilder.generateSeries( start, stop );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Number> JpaSetReturningFunction<E> generateSeries(E start, Expression<E> stop) {
+		return criteriaBuilder.generateSeries( start, stop );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Number> JpaSetReturningFunction<E> generateSeries(Expression<E> start, E stop) {
+		return criteriaBuilder.generateSeries( start, stop );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Number> JpaSetReturningFunction<E> generateSeries(Expression<E> start, Expression<E> stop) {
+		return criteriaBuilder.generateSeries( start, stop );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Number> JpaSetReturningFunction<E> generateSeries(E start, Expression<E> stop, Expression<E> step) {
+		return criteriaBuilder.generateSeries( start, stop, step );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Number> JpaSetReturningFunction<E> generateSeries(Expression<E> start, E stop, Expression<E> step) {
+		return criteriaBuilder.generateSeries( start, stop, step );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Number> JpaSetReturningFunction<E> generateSeries(Expression<E> start, Expression<E> stop, E step) {
+		return criteriaBuilder.generateSeries( start, stop, step );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Number> JpaSetReturningFunction<E> generateSeries(E start, Expression<E> stop, E step) {
+		return criteriaBuilder.generateSeries( start, stop, step );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Number> JpaSetReturningFunction<E> generateSeries(Expression<E> start, E stop, E step) {
+		return criteriaBuilder.generateSeries( start, stop, step );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Number> JpaSetReturningFunction<E> generateSeries(E start, E stop, Expression<E> step) {
+		return criteriaBuilder.generateSeries( start, stop, step );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Number> JpaSetReturningFunction<E> generateSeries(E start, E stop, E step) {
+		return criteriaBuilder.generateSeries( start, stop, step );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Number> JpaSetReturningFunction<E> generateSeries(Expression<E> start, Expression<E> stop, Expression<E> step) {
+		return criteriaBuilder.generateSeries( start, stop, step );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(E start, Expression<E> stop, Expression<? extends TemporalAmount> step) {
+		return criteriaBuilder.generateTimeSeries( start, stop, step );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(Expression<E> start, E stop, Expression<? extends TemporalAmount> step) {
+		return criteriaBuilder.generateTimeSeries( start, stop, step );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(E start, E stop, Expression<? extends TemporalAmount> step) {
+		return criteriaBuilder.generateTimeSeries( start, stop, step );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(Expression<E> start, Expression<E> stop, TemporalAmount step) {
+		return criteriaBuilder.generateTimeSeries( start, stop, step );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(Expression<E> start, E stop, TemporalAmount step) {
+		return criteriaBuilder.generateTimeSeries( start, stop, step );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(E start, Expression<E> stop, TemporalAmount step) {
+		return criteriaBuilder.generateTimeSeries( start, stop, step );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(E start, E stop, TemporalAmount step) {
+		return criteriaBuilder.generateTimeSeries( start, stop, step );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(Expression<E> start, Expression<E> stop, Expression<? extends TemporalAmount> step) {
+		return criteriaBuilder.generateTimeSeries( start, stop, step );
+	}
+
+	@Incubating
+	@Override
+	public JpaJsonTableFunction jsonTable(Expression<?> jsonDocument) {
+		return criteriaBuilder.jsonTable( jsonDocument );
+	}
+
+	@Incubating
+	@Override
+	public JpaJsonTableFunction jsonTable(Expression<?> jsonDocument, String jsonPath) {
+		return criteriaBuilder.jsonTable( jsonDocument, jsonPath );
+	}
+
+	@Incubating
+	@Override
+	public JpaJsonTableFunction jsonTable(Expression<?> jsonDocument, Expression<String> jsonPath) {
+		return criteriaBuilder.jsonTable( jsonDocument, jsonPath );
+	}
+
+	@Incubating
+	@Override
+	public JpaXmlTableFunction xmlTable(String xpath, Expression<?> xmlDocument) {
+		return criteriaBuilder.xmlTable( xpath, xmlDocument );
+	}
+
+	@Incubating
+	@Override
+	public JpaXmlTableFunction xmlTable(Expression<String> xpath, Expression<?> xmlDocument) {
+		return criteriaBuilder.xmlTable( xpath, xmlDocument );
 	}
 }

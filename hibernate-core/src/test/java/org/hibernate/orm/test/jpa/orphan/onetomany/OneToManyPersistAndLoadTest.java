@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.jpa.orphan.onetomany;
 
 import java.util.HashSet;
@@ -7,7 +11,7 @@ import java.util.Set;
 import org.hibernate.Hibernate;
 import org.hibernate.engine.spi.SessionImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -25,7 +29,7 @@ import jakarta.persistence.OneToMany;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@TestForIssue(jiraKey = "HHH-16334")
+@JiraKey(value = "HHH-16334")
 @DomainModel(
 		annotatedClasses = {
 				OneToManyPersistAndLoadTest.Parent.class,
@@ -52,7 +56,7 @@ public class OneToManyPersistAndLoadTest {
 		scope.inTransaction(
 				session -> {
 					Parent parent = session.get( Parent.class, 1l );
-					session.delete( parent );
+					session.remove( parent );
 				}
 		);
 	}

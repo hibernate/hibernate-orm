@@ -1,26 +1,32 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.type;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.OracleDialect;
-import org.hibernate.query.BindableType;
+import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.query.spi.QueryImplementor;
 
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
+import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.type.BasicType;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -38,26 +44,19 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Christian Beikov
  */
-public class BasicListTest extends BaseNonConfigCoreFunctionalTestCase {
+@BootstrapServiceRegistry(
+		// Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
+		integrators = SharedDriverManagerTypeCacheClearingIntegrator.class
+)
+@DomainModel(annotatedClasses = BasicListTest.TableWithIntegerList.class)
+@SessionFactory
+public class BasicListTest {
 
-	private BindableType<List<Integer>> integerListType;
+	private BasicType<List<Integer>> integerListType;
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[]{ TableWithIntegerList.class };
-	}
-
-	@Override
-	protected void addSettings(Map<String, Object> settings) {
-		// Make sure this stuff runs on a dedicated connection pool,
-		// otherwise we might run into ORA-21700: object does not exist or is marked for delete
-		// because the JDBC connection or database session caches something that should have been invalidated
-		settings.put( AvailableSettings.CONNECTION_PROVIDER, "" );
-	}
-
-	public void startUp() {
-		super.startUp();
-		inTransaction( em -> {
+	@BeforeAll
+	public void startUp(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
 			integerListType = em.getTypeConfiguration().getBasicTypeForGenericJavaType( List.class, Integer.class );
 			em.persist( new TableWithIntegerList( 1L, Collections.emptyList() ) );
 			em.persist( new TableWithIntegerList( 2L, Arrays.asList( 512, 112, null, 0 ) ) );
@@ -77,8 +76,8 @@ public class BasicListTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testById() {
-		inSession( em -> {
+	public void testById(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			TableWithIntegerList tableRecord;
 			tableRecord = em.find( TableWithIntegerList.class, 1L );
 			assertThat( tableRecord.getTheList(), is( Collections.emptyList() ) );
@@ -92,8 +91,8 @@ public class BasicListTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testQueryById() {
-		inSession( em -> {
+	public void testQueryById(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			TypedQuery<TableWithIntegerList> tq = em.createNamedQuery( "TableWithIntegerList.JPQL.getById", TableWithIntegerList.class );
 			tq.setParameter( "id", 2L );
 			TableWithIntegerList tableRecord = tq.getSingleResult();
@@ -102,9 +101,8 @@ public class BasicListTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect( value = AbstractHANADialect.class, comment = "For some reason, HANA can't intersect VARBINARY values, but funnily can do a union...")
-	public void testQuery() {
-		inSession( em -> {
+	public void testQuery(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			TypedQuery<TableWithIntegerList> tq = em.createNamedQuery( "TableWithIntegerList.JPQL.getByData", TableWithIntegerList.class );
 			tq.setParameter( "data", Collections.emptyList() );
 			TableWithIntegerList tableRecord = tq.getSingleResult();
@@ -113,8 +111,8 @@ public class BasicListTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testNativeQueryById() {
-		inSession( em -> {
+	public void testNativeQueryById(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			TypedQuery<TableWithIntegerList> tq = em.createNamedQuery( "TableWithIntegerList.Native.getById", TableWithIntegerList.class );
 			tq.setParameter( "id", 2L );
 			TableWithIntegerList tableRecord = tq.getSingleResult();
@@ -123,13 +121,20 @@ public class BasicListTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect( value = HSQLDialect.class, comment = "HSQL does not like plain parameters in the distinct from predicate")
-	@SkipForDialect( value = OracleDialect.class, comment = "Oracle requires a special function to compare XML")
-	public void testNativeQuery() {
-		inSession( em -> {
-			final String op = em.getJdbcServices().getDialect().supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
+	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQL does not like plain parameters in the distinct from predicate")
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle requires a special function to compare XML")
+	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 requires a special function to compare XML")
+	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "SQL Server requires a special function to compare XML")
+	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase ASE requires a special function to compare XML")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA requires a special function to compare LOBs")
+	@SkipForDialect(dialectClass = MariaDBDialect.class, reason = "MariaDB requires a special function to compare LOBs")
+	public void testNativeQuery(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final Dialect dialect = em.getDialect();
+			final String op = dialect.supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
+			final String param = integerListType.getJdbcType().wrapWriteExpression( ":data", dialect );
 			QueryImplementor<TableWithIntegerList> tq = em.createNativeQuery(
-					"SELECT * FROM table_with_integer_list t WHERE the_list " + op + " :data",
+						"SELECT * FROM table_with_integer_list t WHERE the_list " + op + " " + param,
 					TableWithIntegerList.class
 			);
 			tq.setParameter( "data", Arrays.asList( 512, 112, null, 0 ), integerListType );

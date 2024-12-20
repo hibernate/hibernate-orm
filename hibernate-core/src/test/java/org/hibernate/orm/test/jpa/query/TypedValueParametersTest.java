@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.query;
 
@@ -18,10 +16,10 @@ import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.Type;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.TypedParameterValue;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.UserType;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -69,22 +67,22 @@ public class TypedValueParametersTest {
 	@Test
 	public void testNative(EntityManagerFactoryScope scope) {
 		test(scope,
-			 q -> {
-				  final CustomType<List<String>> customType = new CustomType<>(
-						  TagUserType.INSTANCE,
-						  scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class ).getTypeConfiguration()
-				  );
+			q -> {
+				final CustomType<List<String>> customType = new CustomType<>(
+						TagUserType.INSTANCE,
+						scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class ).getTypeConfiguration()
+				);
 
-				  org.hibernate.query.Query hibernateQuery = q.unwrap( org.hibernate.query.Query.class );
-				  hibernateQuery.setParameter( "tags", Arrays.asList( "important", "business" ), customType );
-			  }
+				org.hibernate.query.Query hibernateQuery = q.unwrap( org.hibernate.query.Query.class );
+				hibernateQuery.setParameter( "tags", Arrays.asList( "important", "business" ), customType );
+			}
 		);
 	}
 
 	@Test
 	public void testJpa(EntityManagerFactoryScope scope) {
 		test(scope,
-			 q -> {
+			q -> {
 				final CustomType<List<String>> customType = new CustomType<>(
 						TagUserType.INSTANCE,
 						scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class ).getTypeConfiguration()
@@ -142,7 +140,7 @@ public class TypedValueParametersTest {
 		public static final TagUserType INSTANCE = new TagUserType();
 
 		@Override
-		public void nullSafeSet(PreparedStatement statement, List<String> list, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
+		public void nullSafeSet(PreparedStatement statement, List<String> list, int index, WrapperOptions options) throws HibernateException, SQLException {
 			if ( list == null ) {
 				statement.setNull( index, SqlTypes.VARCHAR );
 			}
@@ -161,7 +159,8 @@ public class TypedValueParametersTest {
 		}
 
 		@Override
-		public List<String> nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+		public List<String> nullSafeGet(ResultSet rs, int position, WrapperOptions options)
+				throws SQLException {
 			String string = rs.getString( position );
 
 			if (rs.wasNull()) {

@@ -13,10 +13,10 @@ import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 /*
  * See https://github.com/hibernate/hibernate-jenkins-pipeline-helpers
  */
-@Library('hibernate-jenkins-pipeline-helpers@1.5') _
+@Library('hibernate-jenkins-pipeline-helpers') _
 import org.hibernate.jenkins.pipeline.helpers.job.JobHelper
 
-@Field final String DEFAULT_JDK_VERSION = '11'
+@Field final String DEFAULT_JDK_VERSION = '17'
 @Field final String DEFAULT_JDK_TOOL = "OpenJDK ${DEFAULT_JDK_VERSION} Latest"
 @Field final String NODE_PATTERN_BASE = 'Worker&&Containers'
 @Field List<BuildEnvironment> environments
@@ -29,10 +29,9 @@ stage('Configure') {
 		// Minimum supported versions
 		new BuildEnvironment( dbName: 'hsqldb_2_6' ),
 		new BuildEnvironment( dbName: 'mysql_8_0' ),
-		new BuildEnvironment( dbName: 'mariadb_10_4' ),
+		new BuildEnvironment( dbName: 'mariadb_10_5' ),
 		new BuildEnvironment( dbName: 'postgresql_12' ),
 		new BuildEnvironment( dbName: 'edb_12' ),
-		new BuildEnvironment( dbName: 'oracle_21' ), // Did not find an image for Oracle-XE 19c
 		new BuildEnvironment( dbName: 'db2_10_5', longRunning: true ),
 		new BuildEnvironment( dbName: 'mssql_2017' ), // Unfortunately there is no SQL Server 2008 image, so we have to test with 2017
 // 		new BuildEnvironment( dbName: 'sybase_16' ), // There only is a Sybase ASE 16 image, so no pint in testing that nightly
@@ -103,7 +102,7 @@ stage('Build') {
 					stage('Checkout') {
 						checkout scm
 					}
-					try {
+					tryFinally({
 						stage('Start database') {
 							switch (buildEnv.dbName) {
 								case "hsqldb_2_6":
@@ -117,11 +116,11 @@ stage('Build') {
 									sh "./docker_db.sh mysql_8_0"
 									state[buildEnv.tag]['containerName'] = "mysql"
 									break;
-								case "mariadb_10_4":
+								case "mariadb_10_5":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('mariadb:10.4.31').pull()
+										docker.image('mariadb:10.5.25').pull()
 									}
-									sh "./docker_db.sh mariadb_10_4"
+									sh "./docker_db.sh mariadb_10_5"
 									state[buildEnv.tag]['containerName'] = "mariadb"
 									break;
 								case "postgresql_12":
@@ -137,16 +136,9 @@ stage('Build') {
 									sh "./docker_db.sh edb_12"
 									state[buildEnv.tag]['containerName'] = "edb"
 									break;
-								case "oracle_21":
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('gvenzl/oracle-xe:21.3.0-full').pull()
-									}
-									sh "./docker_db.sh oracle_21"
-									state[buildEnv.tag]['containerName'] = "oracle"
-									break;
 								case "db2_10_5":
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('ibmoms/db2express-c@sha256:a499afd9709a1f69fb41703e88def9869955234c3525547e2efc3418d1f4ca2b').pull()
+									docker.withRegistry('https://quay.io', 'hibernate.quay.io') {
+										docker.image('hibernate/db2express-c@sha256:a499afd9709a1f69fb41703e88def9869955234c3525547e2efc3418d1f4ca2b').pull()
 									}
 									sh "./docker_db.sh db2_10_5"
 									state[buildEnv.tag]['containerName'] = "db2"
@@ -173,41 +165,101 @@ stage('Build') {
 							}
 						}
 						stage('Test') {
-							String cmd = "./ci/build.sh ${buildEnv.additionalOptions ?: ''} ${state[buildEnv.tag]['additionalOptions'] ?: ''}"
+							String args = "${buildEnv.additionalOptions ?: ''} ${state[buildEnv.tag]['additionalOptions'] ?: ''}"
 							withEnv(["RDBMS=${buildEnv.dbName}"]) {
-								try {
+								tryFinally({
 									if (buildEnv.dbLockableResource == null) {
 										withCredentials([file(credentialsId: 'sybase-jconnect-driver', variable: 'jconnect_driver')]) {
 											sh 'cp -f $jconnect_driver ./drivers/jconn4.jar'
 											timeout( [time: buildEnv.longRunning ? 480 : 120, unit: 'MINUTES'] ) {
-												sh cmd
+												ciBuild buildEnv, args
 											}
 										}
 									}
 									else {
 										lock(label: buildEnv.dbLockableResource, quantity: 1, variable: 'LOCKED_RESOURCE') {
 											if ( buildEnv.dbLockResourceAsHost ) {
-												cmd += " -DdbHost=${LOCKED_RESOURCE}"
+												args += " -DdbHost=${LOCKED_RESOURCE}"
 											}
 											timeout( [time: buildEnv.longRunning ? 480 : 120, unit: 'MINUTES'] ) {
-												sh cmd
+												ciBuild buildEnv, args
 											}
 										}
 									}
-								}
-								finally {
+								}, { // Finally
 									junit '**/target/test-results/test/*.xml,**/target/test-results/testKitTest/*.xml'
-								}
+								})
 							}
 						}
-					}
-					finally {
+					}, { // Finally
 						if ( state[buildEnv.tag]['containerName'] != null ) {
 							sh "docker rm -f ${state[buildEnv.tag]['containerName']}"
 						}
 						// Skip this for PRs
 						if ( !env.CHANGE_ID && buildEnv.notificationRecipients != null ) {
 							handleNotifications(currentBuild, buildEnv)
+						}
+					})
+				}
+			}
+		})
+	}
+	// Don't run additional checks when this is a PR
+	if ( !helper.scmSource.pullRequest ) {
+		executions.put('Reproducible build check', {
+			runBuildOnNode(NODE_PATTERN_BASE) {
+				def javaHome = tool(name: DEFAULT_JDK_TOOL, type: 'jdk')
+				// Use withEnv instead of setting env directly, as that is global!
+				// See https://github.com/jenkinsci/pipeline-plugin/blob/master/TUTORIAL.md
+				withEnv(["JAVA_HOME=${javaHome}", "PATH+JAVA=${javaHome}/bin"]) {
+					stage('Checkout') {
+						checkout scm
+					}
+					stage('Test') {
+						withGradle {
+							def tempDir = pwd(tmp: true)
+							def repo1 = tempDir + '/repo1'
+							def repo2 = tempDir + '/repo2'
+							// build Hibernate ORM two times without any cache and "publish" the resulting artifacts to different maven repositories
+							// so that we can compare them afterwards:
+							sh "./gradlew --no-daemon clean publishToMavenLocal --no-build-cache -Dmaven.repo.local=${repo1}"
+							sh "./gradlew --no-daemon clean publishToMavenLocal --no-build-cache -Dmaven.repo.local=${repo2}"
+
+							sh "sh ci/compare-build-results.sh ${repo1} ${repo2}"
+							sh "cat .buildcompare"
+						}
+					}
+				}
+			}
+		})
+		executions.put('Strict JAXP configuration', {
+			runBuildOnNode(NODE_PATTERN_BASE) {
+				// we want to test with JDK 23 where the strict settings were introduced
+				def testJavaHome = tool(name: "OpenJDK 23 Latest", type: 'jdk')
+				def javaHome = tool(name: DEFAULT_JDK_TOOL, type: 'jdk')
+				// Use withEnv instead of setting env directly, as that is global!
+				// See https://github.com/jenkinsci/pipeline-plugin/blob/master/TUTORIAL.md
+				withEnv(["JAVA_HOME=${javaHome}", "PATH+JAVA=${javaHome}/bin"]) {
+					stage('Checkout') {
+						checkout scm
+					}
+					stage('Test') {
+						withGradle {
+							def tempDir = pwd(tmp: true)
+							def jaxpStrictProperties = tempDir + '/jaxp-strict.properties'
+							def jaxpStrictTemplate = testJavaHome + '/conf/jaxp-strict.properties.template'
+
+							echo 'Copy strict JAXP configuration properties.'
+							sh "cp $jaxpStrictTemplate $jaxpStrictProperties"
+
+							// explicitly calling toString here to prevent Jenkins failures like:
+							//  > Scripts not permitted to use method groovy.lang.GroovyObject invokeMethod java.lang.String java.lang.Object (org.codehaus.groovy.runtime.GStringImpl positive)
+							String args = ("-Ptest.jdk.version=23 -Porg.gradle.java.installations.paths=${javaHome},${testJavaHome}"
+								+ " -Ptest.jdk.launcher.args=\"-Djava.xml.config.file=${jaxpStrictProperties}\"").toString()
+
+							timeout( [time: 60, unit: 'MINUTES'] ) {
+								ciBuild(args)
+							}
 						}
 					}
 				}
@@ -239,18 +291,37 @@ class BuildEnvironment {
 void runBuildOnNode(String label, Closure body) {
 	node( label ) {
 		pruneDockerContainers()
-        try {
-			body()
-        }
-        finally {
-        	// If this is a PR, we clean the workspace at the end
-        	if ( env.CHANGE_BRANCH != null ) {
-        		cleanWs()
-        	}
-        	pruneDockerContainers()
-        }
+    tryFinally(body, {
+      // If this is a PR, we clean the workspace at the end
+      if ( env.CHANGE_BRANCH != null ) {
+        cleanWs()
+      }
+      pruneDockerContainers()
+    })
 	}
 }
+
+void ciBuild(buildEnv, String args) {
+  // On untrusted nodes, we use the same access key as for PRs:
+  // it has limited access, essentially it can only push build scans.
+  def develocityCredentialsId = buildEnv.node ? 'ge.hibernate.org-access-key-pr' : 'ge.hibernate.org-access-key'
+
+  ciBuild(develocityCredentialsId, args)
+}
+
+void ciBuild(String args) {
+  ciBuild('ge.hibernate.org-access-key-pr', args)
+}
+
+void ciBuild(String develocityCredentialsId, String args) {
+  withCredentials([string(credentialsId: develocityCredentialsId,
+      variable: 'DEVELOCITY_ACCESS_KEY')]) {
+    withGradle { // withDevelocity, actually: https://plugins.jenkins.io/gradle/#plugin-content-capturing-build-scans-from-jenkins-pipeline
+      sh "./ci/build.sh $args"
+    }
+  }
+}
+
 void pruneDockerContainers() {
 	if ( !sh( script: 'command -v docker || true', returnStdout: true ).trim().isEmpty() ) {
 		sh 'docker container prune -f || true'
@@ -323,4 +394,34 @@ String getParallelResult( RunWrapper build, String parallelBranchName ) {
     	return null;
     }
     return branch.status.result
+}
+
+// try-finally construct that properly suppresses exceptions thrown in the finally block.
+def tryFinally(Closure main, Closure ... finallies) {
+	def mainFailure = null
+	try {
+		main()
+	}
+	catch (Throwable t) {
+		mainFailure = t
+		throw t
+	}
+	finally {
+		finallies.each {it ->
+			try {
+				it()
+			}
+			catch (Throwable t) {
+				if ( mainFailure ) {
+					mainFailure.addSuppressed( t )
+				}
+				else {
+					mainFailure = t
+				}
+			}
+		}
+	}
+	if ( mainFailure ) { // We may reach here if only the "finally" failed
+		throw mainFailure
+	}
 }

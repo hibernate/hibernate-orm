@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jdbc;
 
@@ -35,9 +33,9 @@ import org.hibernate.engine.jdbc.ClobImplementer;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.NClobImplementer;
-import org.hibernate.engine.jdbc.NonContextualLobCreator;
-import org.hibernate.engine.jdbc.WrappedBlob;
-import org.hibernate.engine.jdbc.WrappedClob;
+import org.hibernate.engine.jdbc.env.internal.NonContextualLobCreator;
+import org.hibernate.engine.jdbc.proxy.WrappedBlob;
+import org.hibernate.engine.jdbc.proxy.WrappedClob;
 import org.hibernate.engine.jdbc.env.internal.BlobAndClobCreator;
 import org.hibernate.engine.jdbc.env.internal.LobCreationHelper;
 import org.hibernate.engine.jdbc.env.internal.LobCreatorBuilderImpl;
@@ -65,7 +63,7 @@ public class LobCreatorTest {
 				connection
 		);
 
-		final LobCreatorBuilderImpl creatorBuilder = new LobCreatorBuilderImpl( supportedContextualLobTypes );
+		final LobCreatorBuilderImpl creatorBuilder = new LobCreatorBuilderImpl( dialect.useConnectionToCreateLob(), supportedContextualLobTypes );
 		final LobCreationContext lobCreationContext = new LobCreationContextImpl( connection );
 
 		final LobCreator lobCreator = creatorBuilder.buildLobCreator( lobCreationContext );
@@ -76,7 +74,7 @@ public class LobCreatorTest {
 		connection.close();
 	}
 
-    @Test
+	@Test
 	public void testJdbc3LobCreator() throws SQLException {
 		final Connection connection = createConnectionProxy( 3, new JdbcLobBuilderImpl() );
 		final H2Dialect dialect = new H2Dialect();
@@ -87,7 +85,7 @@ public class LobCreatorTest {
 				connection
 		);
 
-		final LobCreatorBuilderImpl creatorBuilder = new LobCreatorBuilderImpl( supportedContextualLobTypes );
+		final LobCreatorBuilderImpl creatorBuilder = new LobCreatorBuilderImpl( dialect.useConnectionToCreateLob(), supportedContextualLobTypes );
 		final LobCreationContext lobCreationContext = new LobCreationContextImpl( connection );
 
 		final LobCreator lobCreator = creatorBuilder.buildLobCreator( lobCreationContext );
@@ -97,7 +95,7 @@ public class LobCreatorTest {
 
 		connection.close();
 	}
-    @Test
+	@Test
 	public void testJdbc4UnsupportedLobCreator() throws SQLException {
 		final Connection connection = createConnectionProxy( 4, new JdbcLobBuilderImpl() );
 		final H2Dialect dialect = new H2Dialect();
@@ -108,7 +106,7 @@ public class LobCreatorTest {
 				connection
 		);
 
-		final LobCreatorBuilderImpl creatorBuilder = new LobCreatorBuilderImpl( supportedContextualLobTypes );
+		final LobCreatorBuilderImpl creatorBuilder = new LobCreatorBuilderImpl( dialect.useConnectionToCreateLob(), supportedContextualLobTypes );
 		final LobCreationContext lobCreationContext = new LobCreationContextImpl( connection );
 
 		final LobCreator lobCreator = creatorBuilder.buildLobCreator( lobCreationContext );
@@ -118,7 +116,7 @@ public class LobCreatorTest {
 
 		connection.close();
 	}
-    @Test
+	@Test
 	public void testConfiguredNonContextualLobCreator() throws SQLException {
 		final Connection connection = createConnectionProxy( 4, new JdbcLobBuilderImpl( LobTypes.BLOB, LobTypes.CLOB, LobTypes.NCLOB ) );
 		final H2Dialect dialect = new H2Dialect();
@@ -130,7 +128,7 @@ public class LobCreatorTest {
 				props,
 				connection
 		);
-		final LobCreatorBuilderImpl creatorBuilder = new LobCreatorBuilderImpl( supportedContextualLobTypes );
+		final LobCreatorBuilderImpl creatorBuilder = new LobCreatorBuilderImpl( dialect.useConnectionToCreateLob(), supportedContextualLobTypes );
 		final LobCreationContext lobCreationContext = new LobCreationContextImpl( connection );
 
 		final LobCreator lobCreator = creatorBuilder.buildLobCreator( lobCreationContext );
@@ -150,7 +148,7 @@ public class LobCreatorTest {
 				Collections.emptyMap(),
 				connection
 		);
-		final LobCreatorBuilderImpl creatorBuilder = new LobCreatorBuilderImpl( supportedContextualLobTypes );
+		final LobCreatorBuilderImpl creatorBuilder = new LobCreatorBuilderImpl( dialect.useConnectionToCreateLob(), supportedContextualLobTypes );
 		final LobCreationContext lobCreationContext = new LobCreationContextImpl( connection );
 
 		final LobCreator lobCreator = creatorBuilder.buildLobCreator( lobCreationContext );

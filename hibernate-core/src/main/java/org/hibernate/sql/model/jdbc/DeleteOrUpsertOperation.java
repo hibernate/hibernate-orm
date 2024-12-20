@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.model.jdbc;
 
@@ -46,7 +44,6 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 
 	private final OptionalTableUpdate optionalTableUpdate;
 
-
 	public DeleteOrUpsertOperation(
 			EntityMutationTarget mutationTarget,
 			EntityTableMapping tableMapping,
@@ -56,6 +53,16 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 		this.tableMapping = tableMapping;
 		this.upsertOperation = upsertOperation;
 		this.optionalTableUpdate = optionalTableUpdate;
+	}
+
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected DeleteOrUpsertOperation(DeleteOrUpsertOperation original) {
+		this.mutationTarget = original.mutationTarget;
+		this.tableMapping = original.tableMapping;
+		this.upsertOperation = original.upsertOperation;
+		this.optionalTableUpdate = original.optionalTableUpdate;
 	}
 
 	@Override
@@ -198,5 +205,19 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 				.executeUpdate( updateStatement, statementDetails.getSqlString() );
 
 		MODEL_MUTATION_LOGGER.tracef( "`%s` rows upserted into `%s`", rowCount, tableMapping.getTableName() );
+	}
+
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	public UpsertOperation getUpsertOperation() {
+		return upsertOperation;
+	}
+
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	public OptionalTableUpdate getOptionalTableUpdate() {
+		return optionalTableUpdate;
 	}
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.jakarta;
 
@@ -15,7 +13,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.tool.schema.Action;
@@ -29,7 +26,6 @@ import org.hibernate.testing.transaction.TransactionUtil2;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_DATABASE_ACTION;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION;
@@ -42,7 +38,6 @@ import static org.hibernate.cfg.AvailableSettings.JPA_JDBC_PASSWORD;
 import static org.hibernate.cfg.AvailableSettings.JPA_JDBC_URL;
 import static org.hibernate.cfg.AvailableSettings.JPA_JDBC_USER;
 
-import org.assertj.core.api.Assertions;
 
 /**
  * @author Steve Ebersole
@@ -141,6 +136,13 @@ public class JakartaSchemaToolingTests {
 		}
 	}
 
+	public static void applyToProperties(Properties properties, Object... pairs) {
+		assert pairs.length % 2 == 0;
+		for ( int i = 0; i < pairs.length; i+=2 ) {
+			properties.put( pairs[i], pairs[i+1] );
+		}
+	}
+
 	private SessionFactoryImplementor buildSessionFactory(Object... settingPairs) {
 		final Properties settings = new Properties();
 		settings.setProperty( AvailableSettings.AUTOCOMMIT, "false" );
@@ -150,7 +152,7 @@ public class JakartaSchemaToolingTests {
 				DriverManagerConnectionProviderImpl.INIT_SQL,
 				Environment.getProperties().getProperty( DriverManagerConnectionProviderImpl.INIT_SQL )
 		);
-		CollectionHelper.applyToProperties( settings, settingPairs );
+		applyToProperties( settings, settingPairs );
 		ServiceRegistryUtil.applySettings( settings );
 
 		final PersistenceUnitDescriptorAdapter puDescriptor = new PersistenceUnitDescriptorAdapter() {

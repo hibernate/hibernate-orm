@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.sql;
 
@@ -61,6 +59,7 @@ public class NativeQueryEagerAssociationTest {
 					building2,
 					List.of( building3, building4 )
 			) );
+			session.persist( building5 );
 			session.persist( new Classroom( 2L, "classroom_2", building5, null, null ) );
 		} );
 		scope.inTransaction( session -> {
@@ -80,7 +79,7 @@ public class NativeQueryEagerAssociationTest {
 	@Test
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-16191" )
 	public void testNativeQuery(SessionFactoryScope scope) {
-		final Classroom result = scope.fromTransaction(
+		final Classroom result = (Classroom) scope.fromTransaction(
 				session -> session.createNativeQuery( "select * from Classroom where id = 1", Classroom.class )
 						.getSingleResult()
 		);

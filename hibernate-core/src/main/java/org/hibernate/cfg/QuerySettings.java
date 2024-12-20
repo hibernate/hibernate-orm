@@ -1,13 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cfg;
 
+import org.hibernate.Incubating;
 import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.spi.QueryPlan;
 
 import jakarta.persistence.criteria.CriteriaDelete;
@@ -18,6 +16,37 @@ import jakarta.persistence.criteria.CriteriaUpdate;
  * @author Steve Ebersole
  */
 public interface QuerySettings {
+	/**
+	 * Boolean setting to control if the use of tech preview JSON functions in HQL is enabled.
+	 *
+	 * @settingDefault {@code false} (disabled) since the functions are still incubating.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	String JSON_FUNCTIONS_ENABLED = "hibernate.query.hql.json_functions_enabled";
+
+	/**
+	 * Boolean setting to control if the use of tech preview XML functions in HQL is enabled.
+	 *
+	 * @settingDefault {@code false} (disabled) since the functions are still incubating.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	String XML_FUNCTIONS_ENABLED = "hibernate.query.hql.xml_functions_enabled";
+
+	/**
+	 * Specifies that division of two integers should produce an integer on all
+	 * databases. By default, integer division in HQL can produce a non-integer
+	 * on Oracle, MySQL, or MariaDB.
+	 *
+	 * @settingDefault {@code false}
+	 *
+	 * @since 6.5
+	 */
+	String PORTABLE_INTEGER_DIVISION = "hibernate.query.hql.portable_integer_division";
+
 	/**
 	 * Specifies a {@link org.hibernate.query.hql.HqlTranslator} to use for HQL query
 	 * translation.
@@ -45,9 +74,9 @@ public interface QuerySettings {
 	/**
 	 * When enabled, specifies that named queries be checked during startup.
 	 * <p>
-	 * By default, named queries are checked at startup.
-	 * <p>
 	 * Mainly intended for use in test environments.
+	 *
+	 * @settingDefault {@code true} (enabled) - named queries are checked at startup.
 	 *
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyNamedQueryCheckingOnStartup(boolean)
 	 */
@@ -77,8 +106,8 @@ public interface QuerySettings {
 	 *     {@link jakarta.persistence.Query#setParameter(jakarta.persistence.Parameter,Object)}
 	 *     to specify its argument are passed to JDBC using a bind parameter.
 	 * </ul>
-	 * <p>
-	 * The default mode is {@link org.hibernate.query.criteria.ValueHandlingMode#BIND}.
+	 *
+	 * @settingDefault {@link org.hibernate.query.criteria.ValueHandlingMode#BIND}.
 	 *
 	 * @since 6.0.0
 	 *
@@ -90,13 +119,15 @@ public interface QuerySettings {
 	String CRITERIA_VALUE_HANDLING_MODE = "hibernate.criteria.value_handling_mode";
 
 	/**
-	 * Specifies the default {@linkplain NullPrecedence precedence of null values} in the HQL
-	 * {@code ORDER BY} clause, either {@code none}, {@code first}, or {@code last}.
-	 * <p>
-	 * The default is {@code none}.
+	 * Specifies the default {@linkplain jakarta.persistence.criteria.Nulls precedence
+	 * of null values} sorted via the HQL {@code ORDER BY} clause, either {@code none},
+	 * {@code first}, or {@code last}, or an instance of the enumeration
+	 * {@link jakarta.persistence.criteria.Nulls}.
 	 *
-	 * @see NullPrecedence
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyDefaultNullPrecedence(NullPrecedence)
+	 * @settingDefault {@code none}.
+	 *
+	 * @see jakarta.persistence.criteria.Nulls
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyDefaultNullPrecedence(jakarta.persistence.criteria.Nulls)
 	 */
 	String DEFAULT_NULL_ORDERING = "hibernate.order_by.default_null_ordering";
 
@@ -126,14 +157,29 @@ public interface QuerySettings {
 	String CRITERIA_COPY_TREE = "hibernate.criteria.copy_tree";
 
 	/**
-	 * When set to true, indicates that ordinal parameters (represented by the '?' placeholder) in native queries will be ignored.
-	 * <p>
-	 * By default, this is set to false, i.e. native queries will be checked for ordinal placeholders.
-	 * <p>
+	 * When enabled, ordinal parameters (represented by the {@code ?} placeholder) in
+	 * native queries will be ignored.
 	 *
-	 * @see SessionFactoryOptions#getIgnoreNativeJdbcParameters()
+	 * @settingDefault {@code false} (disabled) - native queries are checked for ordinal placeholders.
+	 *
+	 * @see SessionFactoryOptions#getNativeJdbcParametersIgnored()
 	 */
 	String NATIVE_IGNORE_JDBC_PARAMETERS = "hibernate.query.native.ignore_jdbc_parameters";
+
+	/**
+	 * When enabled, native queries will return {@link java.sql.Date},
+	 * {@link java.sql.Time}, and {@link java.sql.Timestamp} instead of the
+	 * datetime types from {@link java.time}, recovering the behavior of
+	 * native queries in Hibernate 6 and earlier.
+	 *
+	 * @settingDefault {@code false} (disabled) - native queries return
+	 * {@link java.time.LocalDate}, {@link java.time.LocalTime}, and
+	 * {@link java.time.LocalDateTime}.
+	 *
+	 * @since 7.0
+	 */
+	@Compatibility
+	String NATIVE_PREFER_JDBC_DATETIME_TYPES = "hibernate.query.native.prefer_jdbc_datetime_types";
 
 	/**
 	 * When {@linkplain org.hibernate.query.Query#setMaxResults(int) pagination} is used
@@ -143,9 +189,9 @@ public interface QuerySettings {
 	 * <p>
 	 * When enabled, this setting specifies that an exception should be thrown for any
 	 * query which would result in the limit being applied in-memory.
-	 * <p>
-	 * By default, the exception is <em>disabled</em>, and the possibility of terrible
-	 * performance is left as a problem for the client to avoid.
+	 *
+	 * @settingDefault {@code false} (disabled) - no exception is thrown and the
+	 * possibility of terrible performance is left as a problem for the client to avoid.
 	 *
 	 * @since 5.2.13
 	 */
@@ -163,8 +209,8 @@ public interface QuerySettings {
 	 *     <li>{@link org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode#EXCEPTION "exception"}
 	 *     specifies that a {@link org.hibernate.HibernateException} should be thrown.
 	 * </ul>
-	 * <p>
-	 * By default, a warning is logged.
+	 *
+	 * @settingDefault {@link org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode#WARNING "warning"}
 	 *
 	 * @since 5.2.17
 	 *
@@ -233,4 +279,11 @@ public interface QuerySettings {
 	 */
 	@Deprecated(since="6.0")
 	String QUERY_PLAN_CACHE_PARAMETER_METADATA_MAX_SIZE = "hibernate.query.plan_parameter_metadata_max_size";
+
+	/**
+	 * For database supporting name parameters this setting allows to use named parameter is the procedure call.
+	 * <p>
+	 * By default, this is set to false
+	 */
+	String QUERY_PASS_PROCEDURE_PARAMETER_NAMES = "hibernate.query.pass_procedure_parameter_names";
 }

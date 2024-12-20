@@ -1,13 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cfg;
 
 import org.hibernate.Incubating;
-import org.hibernate.Remove;
 import org.hibernate.SessionFactory;
 import org.hibernate.annotations.ListIndexBase;
 import org.hibernate.annotations.Nationalized;
@@ -49,33 +46,38 @@ public interface MappingSettings {
 	/**
 	 * Setting that indicates whether to build the JPA types, either:<ul>
 	 *     <li>
-	 *         <b>enabled</b> - Do the build
+	 *         {@code enabled} &mdash; do the build
 	 *     </li>
 	 *     <li>
-	 *         <b>disabled</b> - Do not do the build
+	 *         {@code disabled} &mdash; do not do the build
 	 *     </li>
 	 *     <li>
-	 *         <b>ignoreUnsupported</b> - Do the build, but ignore any non-JPA
-	 *         features that would otherwise result in a failure.
+	 *         {@code ignoreUnsupported} &mdash; do the build, but ignore any
+	 *         non-JPA features that would otherwise result in a failure.
 	 *     </li>
 	 * </ul>
+	 *
+	 * @settingDefault {@code ignoreUnsupported}
 	 */
 	String JPA_METAMODEL_POPULATION = "hibernate.jpa.metamodel.population";
 
 	/**
-	 * Setting that controls whether we seek out JPA "static metamodel" classes
+	 * Setting that controls whether we seek out JPA static metamodel classes
 	 * and populate them, either:<ul>
 	 *     <li>
-	 *         <b>enabled</b> - Do the population
+	 *         {@code enabled} &mdash; do populate the static metamodel,
 	 *     </li>
 	 *     <li>
-	 *         <b>disabled</b> - Do not do the population
+	 *         {@code disabled} &mdash; do not populate the static metamodel, or
 	 *     </li>
 	 *     <li>
-	 *         <b>skipUnsupported</b> - Do the population, but ignore any non-JPA
-	 *         features that would otherwise result in the population failing.
+	 *         {@code skipUnsupported} &mdash; do populate the static metamodel,
+	 *         but ignore any non-JPA features that would otherwise result in
+	 *         the process failing.
 	 *     </li>
 	 * </ul>
+	 *
+	 * @settingDefault {@code skipUnsupported}
 	 */
 	String STATIC_METAMODEL_POPULATION = "hibernate.jpa.static_metamodel.population";
 
@@ -234,11 +236,56 @@ public interface MappingSettings {
 	 * {@linkplain java.time.Instant} references, use {@code hibernate.type.preferred_instant_jdbc_type=INSTANT}.
 	 * See {@linkplain #PREFERRED_INSTANT_JDBC_TYPE}, {@linkplain org.hibernate.type.SqlTypes#INSTANT} and
 	 * {@linkplain org.hibernate.type.descriptor.jdbc.InstantJdbcType}.
-	 * 
+	 *
+	 * @settingDefault false
+	 *
 	 * @since 6.5
 	 */
 	@Incubating
-	String PREFER_JAVA_TYPE_JDBC_TYPES = "hibernate.type.prefer_java_type_jdbc_types";
+	String JAVA_TIME_USE_DIRECT_JDBC = "hibernate.type.java_time_use_direct_jdbc";
+
+	/**
+	 * Indicates that named SQL {@code enum} types should be used by default instead
+	 * of {@code varchar} on databases which support named enum types.
+	 * <p>
+	 * A named enum type is declared in DDL using {@code create type ... as enum} or
+	 * {@code create type ... as domain}.
+	 * <p>
+	 * This configuration property is used to specify a global preference, as an
+	 * alternative to the use of
+	 * {@link org.hibernate.annotations.JdbcTypeCode @JdbcTypeCode(SqlTypes.NAMED_ENUM)}
+	 * at the field or property level.
+	 *
+	 * @settingDefault false
+	 *
+	 * @since 6.5
+	 *
+	 * @see org.hibernate.type.SqlTypes#NAMED_ENUM
+	 * @see org.hibernate.dialect.PostgreSQLEnumJdbcType
+	 * @see org.hibernate.dialect.OracleEnumJdbcType
+	 */
+	@Incubating
+	String PREFER_NATIVE_ENUM_TYPES = "hibernate.type.prefer_native_enum_types";
+
+	/**
+	 * Specifies the preferred JDBC type for storing plural i.e. array/collection values.
+	 * <p>
+	 * Can be overridden locally using {@link org.hibernate.annotations.JdbcType},
+	 * {@link org.hibernate.annotations.JdbcTypeCode}, and friends.
+	 * <p>
+	 * Can also specify the name of the {@link org.hibernate.type.SqlTypes} constant
+	 * field, for example, {@code hibernate.type.preferred_array_jdbc_type=ARRAY}
+	 * or {@code hibernate.type.preferred_array_jdbc_type=TABLE}.
+	 *
+	 * @settingDefault {@link Dialect#getPreferredSqlTypeCodeForArray()}.
+	 *
+	 * @see org.hibernate.type.SqlTypes#ARRAY
+	 * @see org.hibernate.type.SqlTypes#TABLE
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	String PREFERRED_ARRAY_JDBC_TYPE = "hibernate.type.preferred_array_jdbc_type";
 
 	/**
 	 * Specifies a {@link org.hibernate.type.format.FormatMapper} used for JSON
@@ -277,6 +324,17 @@ public interface MappingSettings {
 	 */
 	@Incubating
 	String XML_FORMAT_MAPPER = "hibernate.type.xml_format_mapper";
+
+	/**
+	 * Specifies whether to use the legacy provider specific and non-portable XML format for collections and byte arrays
+	 * for XML serialization/deserialization.
+	 * <p>
+	 * {@code false} by default. This property only exists for backwards compatibility.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	String XML_FORMAT_MAPPER_LEGACY_FORMAT = "hibernate.type.xml_format_mapper.legacy_format";
 
 	/**
 	 * Configurable control over how to handle {@code Byte[]} and {@code Character[]} types
@@ -388,22 +446,6 @@ public interface MappingSettings {
 	String COLUMN_ORDERING_STRATEGY = "hibernate.column_ordering_strategy";
 
 	/**
-	 * Specifies the order in which metadata sources should be processed, is a delimited list
-	 * of values defined by {@link MetadataSourceType}.
-	 *
-	 * @settingDefault {@code "hbm,class"}, which indicates that {@code hbm.xml} files
-	 * should be processed first, followed by annotations and {@code orm.xml} files.
-	 *
-	 * @see MetadataSourceType
-	 * @see org.hibernate.boot.MetadataBuilder#applySourceProcessOrdering(MetadataSourceType...)
-	 *
-	 * @deprecated {@code hbm.xml} mappings are no longer supported, making this attribute irrelevant
-	 */
-	@SuppressWarnings("DeprecatedIsStillUsed")
-	@Deprecated(since = "6", forRemoval = true)
-	String ARTIFACT_PROCESSING_ORDER = "hibernate.mapping.precedence";
-
-	/**
 	 * Whether XML mappings should be processed.
 	 *
 	 * @apiNote This is a performance optimization appropriate when mapping details
@@ -436,51 +478,6 @@ public interface MappingSettings {
 	String DEFAULT_LIST_SEMANTICS = "hibernate.mapping.default_list_semantics";
 
 	/**
-	 * Enable instantiation of composite/embedded objects when all attribute values
-	 * are {@code null}. The default (and historical) behavior is that a {@code null}
-	 * reference will be used to represent the composite value when all of its
-	 * attributes are {@code null}.
-	 *
-	 * @apiNote This is an experimental feature that has known issues. It should not
-	 *          be used in production until it is stabilized. See Hibernate JIRA issue
-	 *          HHH-11936 for details.
-	 *
-	 * @deprecated It makes no sense at all to enable this at the global level for a
-	 *             persistence unit. If anything, it could be a setting specific to
-	 *             a given embeddable class. But, four years after the introduction of
-	 *             this feature, it's still marked experimental and has multiple known
-	 *             unresolved bugs. It's therefore time for those who advocated for
-	 *             this feature to accept defeat.
-	 *
-	 * @since 5.1
-	 */
-	@Incubating
-	@Deprecated(since = "6")
-	String CREATE_EMPTY_COMPOSITES_ENABLED = "hibernate.create_empty_composites.enabled";
-
-	/**
-	 * The {@link org.hibernate.annotations.Where @Where} annotation specifies a
-	 * restriction on the table rows which are visible as entity class instances or
-	 * collection elements.
-	 * <p>
-	 * This setting controls whether the restriction applied to an entity should be
-	 * applied to association fetches (for one-to-one, many-to-one, one-to-many, and
-	 * many-to-many associations) which target the entity.
-	 *
-	 * @apiNote The setting is very misnamed - it applies across all entity associations,
-	 *          not only to collections.
-	 *
-	 * @implSpec Enabled ({@code true}) by default, meaning the restriction is applied.
-	 *           When this setting is explicitly disabled ({@code false}), the restriction
-	 *           is not applied.
-	 *
-	 * @deprecated Originally added as a backwards compatibility flag
-	 */
-	@Remove
-	@Deprecated( forRemoval = true, since = "6.2" )
-	String USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS = "hibernate.use_entity_where_clause_for_collections";
-
-	/**
 	 * Whether XML should be validated against their schema as Hibernate reads them.
 	 *
 	 * @settingDefault {@code true}
@@ -510,7 +507,17 @@ public interface MappingSettings {
 	String TRANSFORM_HBM_XML_FEATURE_HANDLING = "hibernate.transform_hbm_xml.unsupported_feature_handling";
 
 	/**
+	 * Specifies that Hibernate should always restrict by discriminator values in
+	 * SQL {@code select} statements, even when querying the root entity of an
+	 * entity inheritance hierarchy.
+	 * <p>
+	 * By default, Hibernate only restricts by discriminator values when querying
+	 * a subtype, or when the root entity is explicitly annotated
+	 * {@link org.hibernate.annotations.DiscriminatorOptions#force
+	 * DiscriminatorOptions(force=true)}.
+	 *
 	 * @see org.hibernate.boot.MetadataBuilder#enableImplicitForcingOfDiscriminatorsInSelect
+	 * @see org.hibernate.annotations.DiscriminatorOptions#force
 	 *
 	 * @settingDefault {@code false}
 	 */

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.hbm.fk;
 
@@ -13,7 +11,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
@@ -43,7 +41,7 @@ public class CollectionKeyFkNameTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10207" )
+	@JiraKey( value = "HHH-10207" )
 	public void testExplicitFkNameOnCollectionKey() {
 		verifyFkNameUsed(
 				"org/hibernate/orm/test/hbm/fk/person_set.hbm.xml",
@@ -72,7 +70,7 @@ public class CollectionKeyFkNameTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10207" )
+	@JiraKey( value = "HHH-10207" )
 	public void testExplicitFkNameOnManyToOne() {
 		verifyFkNameUsed(
 				"org/hibernate/orm/test/hbm/fk/person_set.hbm.xml",

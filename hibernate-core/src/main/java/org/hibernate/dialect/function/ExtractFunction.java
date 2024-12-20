@@ -1,15 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
@@ -29,7 +27,6 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
-import org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType;
 
 import java.time.ZoneOffset;
 import java.util.Collections;
@@ -37,9 +34,10 @@ import java.util.List;
 
 import static java.util.Arrays.asList;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.*;
-import static org.hibernate.query.sqm.TemporalUnit.*;
+import static org.hibernate.query.common.TemporalUnit.*;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEMPORAL;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEMPORAL_UNIT;
+import static org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType.ZONE_OFFSET_NAME;
 
 /**
  * ANSI SQL-inspired {@code extract()} function, where the date/time fields
@@ -96,7 +94,7 @@ public class ExtractFunction extends AbstractSqmFunctionDescriptor implements Fu
 			case OFFSET:
 				if ( compositeTemporal ) {
 					final SqmPath<Object> offsetPath = ( (SqmPath<?>) originalExpression ).get(
-							AbstractTimeZoneStorageCompositeUserType.ZONE_OFFSET_NAME
+							ZONE_OFFSET_NAME
 					);
 					return new SelfRenderingSqmFunction<>(
 							this,

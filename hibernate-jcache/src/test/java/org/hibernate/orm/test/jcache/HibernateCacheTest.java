@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jcache;
 
@@ -93,7 +91,7 @@ public class HibernateCacheTest extends BaseFunctionalTest {
 		// cleanup
 		s = sessionFactory().openSession();
 		t = s.beginTransaction();
-		s.delete( i );
+		s.remove( i );
 		t.commit();
 		s.close();
 	}
@@ -115,7 +113,7 @@ public class HibernateCacheTest extends BaseFunctionalTest {
 		VersionedItem item = new VersionedItem();
 		item.setName( "steve" );
 		item.setDescription( "steve's item" );
-		s.save( item );
+		s.persist( item );
 		txn.commit();
 		s.close();
 
@@ -127,7 +125,7 @@ public class HibernateCacheTest extends BaseFunctionalTest {
 		try {
 			s = sessionFactory().openSession();
 			txn = s.beginTransaction();
-			s.update( item );
+			s.merge( item );
 			txn.commit();
 			s.close();
 			fail( "expected stale write to fail" );
@@ -191,8 +189,8 @@ public class HibernateCacheTest extends BaseFunctionalTest {
 		// cleanup
 		s = sessionFactory().openSession();
 		txn = s.beginTransaction();
-		item = s.load( VersionedItem.class, item.getId() );
-		s.delete( item );
+		item = s.getReference( VersionedItem.class, item.getId() );
+		s.remove( item );
 		txn.commit();
 		s.close();
 

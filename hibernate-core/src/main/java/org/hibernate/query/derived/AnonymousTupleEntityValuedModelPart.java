@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.derived;
 
@@ -70,6 +68,8 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import static java.util.Objects.requireNonNullElse;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
@@ -83,20 +83,17 @@ public class AnonymousTupleEntityValuedModelPart
 
 	private final EntityIdentifierMapping identifierMapping;
 	private final DomainType<?> domainType;
-	private final String componentName;
 	private final EntityValuedModelPart delegate;
-	private final Set<String> targetKeyPropertyNames;
-	private final int fetchableIndex;
+//	private final Set<String> targetKeyPropertyNames;
+//	private final int fetchableIndex;
 
 	public AnonymousTupleEntityValuedModelPart(
 			EntityIdentifierMapping identifierMapping,
 			DomainType<?> domainType,
-			String componentName,
 			EntityValuedModelPart delegate,
 			int fetchableIndex) {
 		this.identifierMapping = identifierMapping;
 		this.domainType = domainType;
-		this.componentName = componentName;
 		this.delegate = delegate;
 		final EntityPersister persister = ((EntityMappingType) delegate.getPartMappingType())
 				.getEntityPersister();
@@ -108,8 +105,8 @@ public class AnonymousTupleEntityValuedModelPart
 				persister.getIdentifierType(),
 				persister.getFactory()
 		);
-		this.targetKeyPropertyNames = targetKeyPropertyNames;
-		this.fetchableIndex = fetchableIndex;
+//		this.targetKeyPropertyNames = targetKeyPropertyNames;
+//		this.fetchableIndex = fetchableIndex;
 	}
 
 	public ModelPart getForeignKeyPart() {
@@ -158,7 +155,7 @@ public class AnonymousTupleEntityValuedModelPart
 
 	@Override
 	public String getPartName() {
-		return componentName;
+		return delegate.getPartName();
 	}
 
 	@Override
@@ -198,9 +195,7 @@ public class AnonymousTupleEntityValuedModelPart
 
 	@Override
 	public Object getValue(Object instance, int position) {
-		return delegate.getEntityMappingType()
-				.getAttributeMapping( position )
-				.getValue( instance );
+		return delegate.getEntityMappingType().getValue( instance, position );
 	}
 
 	@Override
@@ -210,9 +205,7 @@ public class AnonymousTupleEntityValuedModelPart
 
 	@Override
 	public void setValue(Object instance, int position, Object value) {
-		delegate.getEntityMappingType()
-				.getAttributeMapping( position )
-				.setValue( instance, value );
+		delegate.getEntityMappingType().setValue( instance, position, value );
 	}
 
 	@Override
@@ -249,14 +242,13 @@ public class AnonymousTupleEntityValuedModelPart
 	public TableGroupJoin createTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAliasBase explicitSqlAliasBase,
-			SqlAstJoinType requestedJoinType,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase explicitSqlAliasBase,
+			@Nullable SqlAstJoinType requestedJoinType,
 			boolean fetched,
 			boolean addsPredicate,
 			SqlAstCreationState creationState) {
 		final SqlAstJoinType joinType = requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
-
 		final LazyTableGroup lazyTableGroup = createRootTableGroupJoin(
 				navigablePath,
 				lhs,
@@ -384,7 +376,7 @@ public class AnonymousTupleEntityValuedModelPart
 					}
 			);
 		}
-		Consumer<TableGroup> tableGroupInitializerCallback = tg -> {
+		return tg -> {
 					this.identifierMapping.forEachSelectable(
 							(i, selectableMapping) -> {
 								final SelectableMapping targetMapping = targetMappings.get( i );
@@ -405,7 +397,6 @@ public class AnonymousTupleEntityValuedModelPart
 							}
 					);
 				};
-		return tableGroupInitializerCallback;
 	}
 
 	public TableGroup createTableGroupInternal(
@@ -430,7 +421,7 @@ public class AnonymousTupleEntityValuedModelPart
 				primaryTableReference,
 				true,
 				sqlAliasBase,
-				entityMappingType::containsTableReference,
+				entityMappingType.getRootEntityDescriptor()::containsTableReference,
 				(tableExpression, tg) -> entityMappingType.createTableReferenceJoin(
 						tableExpression,
 						sqlAliasBase,
@@ -445,11 +436,11 @@ public class AnonymousTupleEntityValuedModelPart
 	public LazyTableGroup createRootTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAliasBase explicitSqlAliasBase,
-			SqlAstJoinType sqlAstJoinType,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase explicitSqlAliasBase,
+			@Nullable SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
-			Consumer<Predicate> predicateConsumer,
+			@Nullable Consumer<Predicate> predicateConsumer,
 			SqlAstCreationState creationState) {
 		final SqlAliasBase sqlAliasBase = SqlAliasBase.from(
 				explicitSqlAliasBase,
@@ -491,7 +482,8 @@ public class AnonymousTupleEntityValuedModelPart
 	public boolean canUseParentTableGroup(TableGroupProducer producer, NavigablePath navigablePath, ValuedModelPart valuedModelPart) {
 		final ModelPart foreignKeyPart = getForeignKeyPart();
 		if ( foreignKeyPart instanceof AnonymousTupleNonAggregatedEntityIdentifierMapping ) {
-			final AnonymousTupleNonAggregatedEntityIdentifierMapping identifierMapping = (AnonymousTupleNonAggregatedEntityIdentifierMapping) foreignKeyPart;
+			final AnonymousTupleNonAggregatedEntityIdentifierMapping identifierMapping =
+					(AnonymousTupleNonAggregatedEntityIdentifierMapping) foreignKeyPart;
 			final int numberOfFetchables = identifierMapping.getNumberOfFetchables();
 			for ( int i = 0; i< numberOfFetchables; i++ ) {
 				if ( valuedModelPart == identifierMapping.getFetchable( i ) ) {
@@ -505,7 +497,7 @@ public class AnonymousTupleEntityValuedModelPart
 
 	@Override
 	public String getSqlAliasStem() {
-		return getPartName();
+		return ((TableGroupJoinProducer) delegate).getSqlAliasStem();
 	}
 
 	@Override
@@ -727,8 +719,7 @@ public class AnonymousTupleEntityValuedModelPart
 	@Override
 	public boolean isSimpleJoinPredicate(Predicate predicate) {
 		return delegate instanceof TableGroupJoinProducer
-				? ( (TableGroupJoinProducer) delegate ).isSimpleJoinPredicate( predicate )
-				: false;
+			&& ( (TableGroupJoinProducer) delegate ).isSimpleJoinPredicate(predicate);
 	}
 
 	@Override
@@ -743,6 +734,11 @@ public class AnonymousTupleEntityValuedModelPart
 
 	@Override
 	public boolean isAffectedByInfluencers(LoadQueryInfluencers influencers) {
+		return false;
+	}
+
+	@Override
+	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
 		return false;
 	}
 

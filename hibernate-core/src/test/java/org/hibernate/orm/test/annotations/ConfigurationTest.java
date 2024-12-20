@@ -1,14 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id$
 package org.hibernate.orm.test.annotations;
 
 import org.hibernate.SessionFactory;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -56,7 +53,7 @@ public class ConfigurationTest {
 		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
 		cfg.configure( "org/hibernate/orm/test/annotations/hibernate.cfg.xml" );
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
-		cfg.setProperty( Configuration.ARTEFACT_PROCESSING_ORDER, "class" );
+		cfg.setProperty( MappingSettings.XML_MAPPING_ENABLED, false );
 
 		try ( SessionFactoryImplementor sf = (SessionFactoryImplementor) cfg.buildSessionFactory() ) {
 			assertNotNull( sf );
@@ -108,35 +105,8 @@ public class ConfigurationTest {
 			Transaction tx = s.beginTransaction();
 			boat = (Boat) s.get( Boat.class, boat.getId() );
 			assertTrue( 34 != boat.getWeight(), "Annotation has precedence" );
-			s.delete( boat );
+			s.remove( boat );
 			//s.getTransaction().commit();
-			tx.commit();
-			s.close();
-		}
-	}
-
-	@Test
-	public void testPrecedenceAnnotation()  {
-		Configuration cfg = new Configuration();
-		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
-		cfg.configure( "org/hibernate/orm/test/annotations/hibernate.cfg.xml" );
-		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
-		cfg.setProperty( Configuration.ARTEFACT_PROCESSING_ORDER, "class, hbm" );
-		cfg.addAnnotatedClass( Boat.class );
-		try (SessionFactory sf = cfg.buildSessionFactory()) {
-			assertNotNull( sf );
-			Session s = sf.openSession();
-			s.getTransaction().begin();
-			Boat boat = new Boat();
-			boat.setSize( 12 );
-			boat.setWeight( 34 );
-			s.persist( boat );
-			s.getTransaction().commit();
-			s.clear();
-			Transaction tx = s.beginTransaction();
-			boat = (Boat) s.get( Boat.class, boat.getId() );
-			assertTrue( 34 == boat.getWeight(), "Annotation has precedence" );
-			s.delete( boat );
 			tx.commit();
 			s.close();
 		}

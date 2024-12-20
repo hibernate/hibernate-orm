@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemaupdate;
 
@@ -20,23 +18,24 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.MySQLDialect;
 
+import org.hibernate.tool.schema.internal.StandardTableMigrator;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
 /**
- * Test to illustrate that the {@link org.hibernate.mapping.Table#sqlAlterStrings} method
+ * Test to illustrate that the {@link StandardTableMigrator#sqlAlterStrings} method
  * uses legacy logic for building table names and doesn't adequately specify the catalog
  * or schema name properly.
  *
  * @author Chris Cranford
  */
 @RequiresDialect( value = MySQLDialect.class, majorVersion = 5 )
-@TestForIssue(jiraKey = "HHH-11455")
+@JiraKey(value = "HHH-11455")
 public class SchemaUpdateSchemaNameTest {
 
 	@BeforeAll

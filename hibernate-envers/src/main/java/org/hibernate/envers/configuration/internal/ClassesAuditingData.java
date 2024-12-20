@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.configuration.internal;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -37,6 +36,7 @@ import org.jboss.logging.Logger;
  */
 public class ClassesAuditingData {
 	private static final EnversMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			EnversMessageLogger.class,
 			ClassesAuditingData.class.getName()
 	);

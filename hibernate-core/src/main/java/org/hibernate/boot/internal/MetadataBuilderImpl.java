@@ -1,16 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.internal;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.Callable;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.HibernateException;
@@ -27,6 +23,12 @@ import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.cfgxml.spi.MappingReference;
+import org.hibernate.boot.jaxb.Origin;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
+import org.hibernate.boot.jaxb.hbm.transform.HbmXmlTransformer;
+import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
+import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.boot.model.TypeContributions;
@@ -42,6 +44,7 @@ import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategyStandard;
+import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -59,20 +62,15 @@ import org.hibernate.boot.spi.MetadataSourcesContributor;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.MetadataSourceType;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentImpl;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
-import org.hibernate.internal.util.NullnessHelper;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
@@ -85,7 +83,6 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 
-import org.jboss.jandex.IndexView;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.ConstraintMode;
@@ -93,7 +90,11 @@ import jakarta.persistence.SharedCacheMode;
 
 import static org.hibernate.cfg.AvailableSettings.JPA_COMPLIANCE;
 import static org.hibernate.cfg.AvailableSettings.WRAPPER_ARRAY_HANDLING;
+import static org.hibernate.cfg.MappingSettings.XML_FORMAT_MAPPER_LEGACY_FORMAT;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
+import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
+import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
+import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /**
  * @author Steve Ebersole
@@ -109,20 +110,19 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		this( sources, getStandardServiceRegistry( sources.getServiceRegistry() ) );
 	}
 
-	private static StandardServiceRegistry getStandardServiceRegistry(ServiceRegistry serviceRegistry) {
+	public static StandardServiceRegistry getStandardServiceRegistry(ServiceRegistry serviceRegistry) {
 		if ( serviceRegistry == null ) {
 			throw new HibernateException( "ServiceRegistry passed to MetadataBuilder cannot be null" );
 		}
-
-		if ( serviceRegistry instanceof StandardServiceRegistry ) {
-			return (StandardServiceRegistry) serviceRegistry;
+		else if ( serviceRegistry instanceof StandardServiceRegistry standardServiceRegistry ) {
+			return standardServiceRegistry;
 		}
-		else if ( serviceRegistry instanceof BootstrapServiceRegistry ) {
+		else if ( serviceRegistry instanceof BootstrapServiceRegistry bootstrapServiceRegistry ) {
 			log.debug(
 					"ServiceRegistry passed to MetadataBuilder was a BootstrapServiceRegistry; this likely won't end well " +
 							"if attempt is made to build SessionFactory"
 			);
-			return new StandardServiceRegistryBuilder( (BootstrapServiceRegistry) serviceRegistry ).build();
+			return new StandardServiceRegistryBuilder( bootstrapServiceRegistry ).build();
 		}
 		else {
 			throw new HibernateException(
@@ -143,17 +143,17 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 		for ( MetadataSourcesContributor contributor :
 				sources.getServiceRegistry()
-						.getService( ClassLoaderService.class )
+						.requireService( ClassLoaderService.class )
 						.loadJavaServices( MetadataSourcesContributor.class ) ) {
 			contributor.contribute( sources );
 		}
 
 		// todo : not so sure this is needed anymore.
 		//		these should be set during the StandardServiceRegistryBuilder.configure call
-		applyCfgXmlValues( serviceRegistry.getService( CfgXmlAccessService.class ) );
+		applyCfgXmlValues( serviceRegistry.requireService( CfgXmlAccessService.class ) );
 
 		for ( MetadataBuilderInitializer contributor :
-				serviceRegistry.getService( ClassLoaderService.class )
+				serviceRegistry.requireService( ClassLoaderService.class )
 						.loadJavaServices( MetadataBuilderInitializer.class ) ) {
 			contributor.contribute( this, serviceRegistry );
 		}
@@ -211,7 +211,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	public MetadataBuilder applyIndexView(IndexView jandexView) {
+	public MetadataBuilder applyIndexView(Object jandexView) {
 		this.bootstrapContext.injectJandexView( jandexView );
 		return this;
 	}
@@ -343,13 +343,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		return this;
 	}
 
-	@Override
-	@Deprecated
-	public MetadataBuilder applySourceProcessOrdering(MetadataSourceType... sourceTypes) {
-		Collections.addAll( options.sourceProcessOrdering, sourceTypes );
-		return this;
-	}
-
 	public MetadataBuilder allowSpecjSyntax() {
 		this.options.specjProprietarySyntaxEnabled = true;
 		return this;
@@ -437,7 +430,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 	@Override
 	public MetadataImplementor build() {
-		final CfgXmlAccessService cfgXmlAccessService = options.serviceRegistry.getService( CfgXmlAccessService.class );
+		final CfgXmlAccessService cfgXmlAccessService = options.serviceRegistry.requireService( CfgXmlAccessService.class );
 		if ( cfgXmlAccessService.getAggregatedConfig() != null ) {
 			if ( cfgXmlAccessService.getAggregatedConfig().getMappingReferences() != null ) {
 				for ( MappingReference mappingReference : cfgXmlAccessService.getAggregatedConfig().getMappingReferences() ) {
@@ -446,7 +439,53 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			}
 		}
 
-		return MetadataBuildingProcess.build( sources, bootstrapContext, options );
+		final MetadataImplementor bootModel = MetadataBuildingProcess.build( sources, bootstrapContext, options );
+
+		if ( isNotEmpty( sources.getHbmXmlBindings() ) ) {
+			final ConfigurationService configurationService =
+					bootstrapContext.getServiceRegistry().getService( ConfigurationService.class );
+			final boolean transformHbm = configurationService != null
+					&& configurationService.getSetting( MappingSettings.TRANSFORM_HBM_XML, BOOLEAN,false );
+
+			if ( !transformHbm ) {
+				for ( Binding<JaxbHbmHibernateMapping> hbmXmlBinding : sources.getHbmXmlBindings() ) {
+					final Origin origin = hbmXmlBinding.getOrigin();
+					DeprecationLogger.DEPRECATION_LOGGER.logDeprecatedHbmXmlProcessing( origin.getType(), origin.getName() );
+				}
+			}
+			else {
+				final List<Binding<JaxbEntityMappingsImpl>> transformed = HbmXmlTransformer.transform(
+						sources.getHbmXmlBindings(),
+						bootModel,
+						bootstrapContext.getServiceRegistry(),
+						UnsupportedFeatureHandling.fromSetting(
+								configurationService.getSettings().get( AvailableSettings.TRANSFORM_HBM_XML_FEATURE_HANDLING ),
+								UnsupportedFeatureHandling.ERROR
+						)
+				);
+
+				final MetadataSources newSources = new MetadataSources( bootstrapContext.getServiceRegistry() );
+				if ( sources.getAnnotatedClasses() != null ) {
+					sources.getAnnotatedClasses().forEach( newSources::addAnnotatedClass );
+				}
+				if ( sources.getAnnotatedClassNames() != null ) {
+					sources.getAnnotatedClassNames().forEach( newSources::addAnnotatedClassName );
+				}
+				if ( sources.getAnnotatedPackages() != null ) {
+					sources.getAnnotatedPackages().forEach( newSources::addPackage );
+				}
+				if ( sources.getExtraQueryImports() != null ) {
+					sources.getExtraQueryImports().forEach( newSources::addQueryImport );
+				}
+				for ( Binding<JaxbEntityMappingsImpl> mappingXmlBinding : transformed ) {
+					newSources.addMappingXmlBinding( mappingXmlBinding );
+				}
+
+				return (MetadataImplementor) newSources.buildMetadata();
+			}
+		}
+
+		return bootModel;
 	}
 
 	@Override
@@ -468,7 +507,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private CollectionClassification implicitListClassification;
 
 		public MappingDefaultsImpl(StandardServiceRegistry serviceRegistry) {
-			final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
+			final ConfigurationService configService = serviceRegistry.requireService( ConfigurationService.class );
 
 			// AvailableSettings.DEFAULT_SCHEMA and AvailableSettings.DEFAULT_CATALOG
 			// are taken into account later, at runtime, when rendering table/sequence names.
@@ -587,7 +626,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			implements MetadataBuildingOptions, JpaOrmXmlPersistenceUnitDefaultAware {
 		private final StandardServiceRegistry serviceRegistry;
 		private final MappingDefaultsImpl mappingDefaults;
-		private final IdentifierGeneratorFactory identifierGeneratorFactory;
 		private final TimeZoneStorageType defaultTimezoneStorage;
 		private final WrapperArrayHandling wrapperArrayHandling;
 
@@ -610,58 +648,54 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private boolean useNationalizedCharacterData;
 		private boolean specjProprietarySyntaxEnabled;
 		private boolean noConstraintByDefault;
-		private final ArrayList<MetadataSourceType> sourceProcessOrdering;
 
 		private final String schemaCharset;
 		private final boolean xmlMappingEnabled;
 		private final boolean allowExtensionsInCdi;
+		private final boolean xmlFormatMapperLegacyFormat;
 
 		public MetadataBuildingOptionsImpl(StandardServiceRegistry serviceRegistry) {
 			this.serviceRegistry = serviceRegistry;
-			this.identifierGeneratorFactory = serviceRegistry.getService( IdentifierGeneratorFactory.class );
 
-			final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
-			final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
+			final StrategySelector strategySelector = serviceRegistry.requireService( StrategySelector.class );
+			final ConfigurationService configService = serviceRegistry.requireService( ConfigurationService.class );
 
-			this.mappingDefaults = new MappingDefaultsImpl( serviceRegistry );
+			mappingDefaults = new MappingDefaultsImpl( serviceRegistry );
 
-			this.defaultTimezoneStorage = resolveTimeZoneStorageStrategy( configService );
-			this.wrapperArrayHandling = resolveWrapperArrayHandling( configService, serviceRegistry );
-			this.multiTenancyEnabled = JdbcEnvironmentImpl.isMultiTenancyEnabled( serviceRegistry );
+			defaultTimezoneStorage = resolveTimeZoneStorageStrategy( configService );
+			wrapperArrayHandling = resolveWrapperArrayHandling( configService );
+			multiTenancyEnabled = JdbcEnvironmentImpl.isMultiTenancyEnabled( serviceRegistry );
 
-			this.xmlMappingEnabled = configService.getSetting(
+			xmlMappingEnabled = configService.getSetting(
 					AvailableSettings.XML_MAPPING_ENABLED,
 					BOOLEAN,
 					true
 			);
+			xmlFormatMapperLegacyFormat = configService.getSetting( XML_FORMAT_MAPPER_LEGACY_FORMAT, BOOLEAN, false );
 
-			this.implicitDiscriminatorsForJoinedInheritanceSupported = configService.getSetting(
+			implicitDiscriminatorsForJoinedInheritanceSupported = configService.getSetting(
 					AvailableSettings.IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS,
 					BOOLEAN,
 					false
 			);
 
-			this.explicitDiscriminatorsForJoinedInheritanceSupported = !configService.getSetting(
+			explicitDiscriminatorsForJoinedInheritanceSupported = !configService.getSetting(
 					AvailableSettings.IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS,
 					BOOLEAN,
 					false
 			);
 
-			this.implicitlyForceDiscriminatorInSelect = configService.getSetting(
+			implicitlyForceDiscriminatorInSelect = configService.getSetting(
 					AvailableSettings.FORCE_DISCRIMINATOR_IN_SELECTS_BY_DEFAULT,
 					BOOLEAN,
 					false
 			);
 
-			this.sharedCacheMode = configService.getSetting(
+			sharedCacheMode = configService.getSetting(
 					AvailableSettings.JAKARTA_SHARED_CACHE_MODE,
-					value -> {
-						if ( value instanceof SharedCacheMode ) {
-							return (SharedCacheMode) value;
-						}
-
-						return SharedCacheMode.valueOf( value.toString() );
-					},
+					value -> value instanceof SharedCacheMode cacheMode
+							? cacheMode
+							: SharedCacheMode.valueOf( value.toString() ),
 					configService.getSetting(
 							AvailableSettings.JPA_SHARED_CACHE_MODE,
 							value -> {
@@ -674,96 +708,80 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 										AvailableSettings.JAKARTA_SHARED_CACHE_MODE
 								);
 
-								if ( value instanceof SharedCacheMode ) {
-									return (SharedCacheMode) value;
-								}
-
-								return SharedCacheMode.valueOf( value.toString() );
+								return value instanceof SharedCacheMode cacheMode
+										? cacheMode
+										: SharedCacheMode.valueOf( value.toString() );
 							},
 							SharedCacheMode.UNSPECIFIED
 					)
 			);
 
-			this.defaultCacheAccessType = configService.getSetting(
+			final RegionFactory regionFactory =  serviceRegistry.getService( RegionFactory.class );
+			defaultCacheAccessType = configService.getSetting(
 					AvailableSettings.DEFAULT_CACHE_CONCURRENCY_STRATEGY,
 					value -> {
 						if ( value == null ) {
 							return null;
 						}
-
-						if ( value instanceof CacheConcurrencyStrategy ) {
-							return ( (CacheConcurrencyStrategy) value ).toAccessType();
+						else if ( value instanceof CacheConcurrencyStrategy cacheConcurrencyStrategy ) {
+							return cacheConcurrencyStrategy.toAccessType();
 						}
-
-						if ( value instanceof AccessType ) {
-							return (AccessType) value;
+						else if ( value instanceof AccessType accessType ) {
+							return accessType;
 						}
-
-						return AccessType.fromExternalName( value.toString() );
+						else {
+							return AccessType.fromExternalName( value.toString() );
+						}
 					},
 					// by default, see if the defined RegionFactory (if one) defines a default
-					serviceRegistry.getService( RegionFactory.class ) == null
-							? null
-							: serviceRegistry.getService( RegionFactory.class ).getDefaultAccessType()
+					regionFactory == null ? null : regionFactory.getDefaultAccessType()
 			);
 
-			this.specjProprietarySyntaxEnabled = configService.getSetting(
+			specjProprietarySyntaxEnabled = configService.getSetting(
 					"hibernate.enable_specj_proprietary_syntax",
 					BOOLEAN,
 					false
 			);
 
-			this.noConstraintByDefault = ConstraintMode.NO_CONSTRAINT.name().equalsIgnoreCase( configService.getSetting(
+			noConstraintByDefault = ConstraintMode.NO_CONSTRAINT.name().equalsIgnoreCase( configService.getSetting(
 					AvailableSettings.HBM2DDL_DEFAULT_CONSTRAINT_MODE,
 					String.class,
 					null
 			) );
 
-			this.implicitNamingStrategy = strategySelector.resolveDefaultableStrategy(
+			implicitNamingStrategy = strategySelector.<ImplicitNamingStrategy>resolveDefaultableStrategy(
 					ImplicitNamingStrategy.class,
 					configService.getSettings().get( AvailableSettings.IMPLICIT_NAMING_STRATEGY ),
-					new Callable<>() {
-						@Override
-						public ImplicitNamingStrategy call() {
-							return strategySelector.resolveDefaultableStrategy(
-									ImplicitNamingStrategy.class,
-									"default",
-									ImplicitNamingStrategyJpaCompliantImpl.INSTANCE
-							);
-						}
-					}
+					() -> strategySelector.resolveDefaultableStrategy(
+							ImplicitNamingStrategy.class,
+							"default",
+							ImplicitNamingStrategyJpaCompliantImpl.INSTANCE
+					)
 			);
 
-			this.physicalNamingStrategy = strategySelector.resolveDefaultableStrategy(
+			physicalNamingStrategy = strategySelector.resolveDefaultableStrategy(
 					PhysicalNamingStrategy.class,
 					configService.getSettings().get( AvailableSettings.PHYSICAL_NAMING_STRATEGY ),
 					PhysicalNamingStrategyStandardImpl.INSTANCE
 			);
 
-			this.columnOrderingStrategy = strategySelector.resolveDefaultableStrategy(
+			columnOrderingStrategy = strategySelector.<ColumnOrderingStrategy>resolveDefaultableStrategy(
 					ColumnOrderingStrategy.class,
 					configService.getSettings().get( AvailableSettings.COLUMN_ORDERING_STRATEGY ),
-					new Callable<>() {
-						@Override
-						public ColumnOrderingStrategy call() {
-							return strategySelector.resolveDefaultableStrategy(
-									ColumnOrderingStrategy.class,
-									"default",
-									ColumnOrderingStrategyStandard.INSTANCE
-							);
-						}
-					}
+					() -> strategySelector.resolveDefaultableStrategy(
+							ColumnOrderingStrategy.class,
+							"default",
+							ColumnOrderingStrategyStandard.INSTANCE
+					)
 			);
 
-			this.sourceProcessOrdering = resolveInitialSourceProcessOrdering( configService );
-
-			this.useNationalizedCharacterData = configService.getSetting(
+			useNationalizedCharacterData = configService.getSetting(
 					AvailableSettings.USE_NATIONALIZED_CHARACTER_DATA,
 					BOOLEAN,
 					false
 			);
 
-			this.schemaCharset = configService.getSetting(
+			schemaCharset = configService.getSetting(
 					AvailableSettings.HBM2DDL_CHARSET_NAME,
 					String.class,
 					null
@@ -774,28 +792,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 					BOOLEAN,
 					false
 			);
-		}
-
-		private ArrayList<MetadataSourceType> resolveInitialSourceProcessOrdering(ConfigurationService configService) {
-			final ArrayList<MetadataSourceType> initialSelections = new ArrayList<>();
-
-			final String sourceProcessOrderingSetting = configService.getSetting(
-					AvailableSettings.ARTIFACT_PROCESSING_ORDER,
-					StandardConverters.STRING
-			);
-			if ( sourceProcessOrderingSetting != null ) {
-				final String[] orderChoices = StringHelper.split( ",; ", sourceProcessOrderingSetting, false );
-				initialSelections.addAll( CollectionHelper.arrayList( orderChoices.length ) );
-				for ( String orderChoice : orderChoices ) {
-					initialSelections.add( MetadataSourceType.parsePrecedence( orderChoice ) );
-				}
-			}
-			if ( initialSelections.isEmpty() ) {
-				initialSelections.add( MetadataSourceType.HBM );
-				initialSelections.add( MetadataSourceType.CLASS );
-			}
-
-			return initialSelections;
 		}
 
 		@Override
@@ -809,21 +805,18 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 
 		@Override
-		public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
-			return identifierGeneratorFactory;
-		}
-
-		@Override
 		public TimeZoneStorageStrategy getDefaultTimeZoneStorage() {
 			return toTimeZoneStorageStrategy( getTimeZoneSupport() );
+		}
+
+		private Dialect getDialect() {
+			return serviceRegistry.requireService( JdbcServices.class ).getDialect();
 		}
 
 		@Override
 		public TimeZoneSupport getTimeZoneSupport() {
 			try {
-				return serviceRegistry.getService( JdbcServices.class )
-						.getDialect()
-						.getTimeZoneSupport();
+				return getDialect().getTimeZoneSupport();
 			}
 			catch ( ServiceException se ) {
 				return TimeZoneSupport.NONE;
@@ -831,50 +824,36 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 
 		private TimeZoneStorageStrategy toTimeZoneStorageStrategy(TimeZoneSupport timeZoneSupport) {
-			switch ( defaultTimezoneStorage ) {
-				case NATIVE:
+			return switch (defaultTimezoneStorage) {
+				case NATIVE -> {
 					if ( timeZoneSupport != TimeZoneSupport.NATIVE ) {
 						throw new HibernateException( "The configured time zone storage type NATIVE is not supported with the configured dialect" );
 					}
-					return TimeZoneStorageStrategy.NATIVE;
-				case COLUMN:
-					return TimeZoneStorageStrategy.COLUMN;
-				case NORMALIZE:
-					return TimeZoneStorageStrategy.NORMALIZE;
-				case NORMALIZE_UTC:
-					return TimeZoneStorageStrategy.NORMALIZE_UTC;
-				case AUTO:
-					switch (timeZoneSupport) {
-						case NATIVE:
-							// if the db has native support for timezones, we use that, not a column
-							return TimeZoneStorageStrategy.NATIVE;
-						case NORMALIZE:
-						case NONE:
-							// otherwise we use a separate column
-							return TimeZoneStorageStrategy.COLUMN;
-						default:
-							throw new HibernateException( "Unsupported time zone support: " + timeZoneSupport);
-					}
-				case DEFAULT:
-					switch (timeZoneSupport) {
-						case NATIVE:
-							// if the db has native support for timezones, we use that, and don't normalize
-							return TimeZoneStorageStrategy.NATIVE;
-						case NORMALIZE:
-						case NONE:
-							// otherwise we normalize things to UTC
-							return TimeZoneStorageStrategy.NORMALIZE_UTC;
-						default:
-							throw new HibernateException( "Unsupported time zone support: " + timeZoneSupport);
-					}
-				default:
-					throw new HibernateException( "Unsupported time zone storage type: " + defaultTimezoneStorage );
-			}
+					yield TimeZoneStorageStrategy.NATIVE;
+				}
+				case COLUMN -> TimeZoneStorageStrategy.COLUMN;
+				case NORMALIZE -> TimeZoneStorageStrategy.NORMALIZE;
+				case NORMALIZE_UTC -> TimeZoneStorageStrategy.NORMALIZE_UTC;
+				case AUTO -> switch (timeZoneSupport) {
+					// if the db has native support for timezones, we use that, not a column
+					case NATIVE -> TimeZoneStorageStrategy.NATIVE;
+					// otherwise we use a separate column
+					case NORMALIZE, NONE -> TimeZoneStorageStrategy.COLUMN;
+				};
+				case DEFAULT -> switch (timeZoneSupport) {
+					// if the db has native support for timezones, we use that, and don't normalize
+					case NATIVE -> TimeZoneStorageStrategy.NATIVE;
+					// otherwise we normalize things to UTC
+					case NORMALIZE, NONE -> TimeZoneStorageStrategy.NORMALIZE_UTC;
+				};
+			};
 		}
 
 		@Override
 		public WrapperArrayHandling getWrapperArrayHandling() {
-			return wrapperArrayHandling;
+			return wrapperArrayHandling == WrapperArrayHandling.PICK
+					? pickWrapperArrayHandling( getDialect() )
+					: wrapperArrayHandling;
 		}
 
 		@Override
@@ -953,11 +932,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 
 		@Override
-		public List<MetadataSourceType> getSourceProcessOrdering() {
-			return sourceProcessOrdering;
-		}
-
-		@Override
 		public String getSchemaCharset() {
 			return schemaCharset;
 		}
@@ -972,6 +946,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			return allowExtensionsInCdi;
 		}
 
+		@Override
+		public boolean isXmlFormatMapperLegacyFormatEnabled() {
+			return xmlFormatMapperLegacyFormat;
+		}
+
 		/**
 		 * Yuck.  This is needed because JPA lets users define "global building options"
 		 * in {@code orm.xml} mappings.  Forget that there are generally multiple
@@ -983,15 +962,28 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			}
 
 			if ( mappingDefaults.getImplicitCatalogName() == null ) {
-				mappingDefaults.implicitCatalogName = StringHelper.nullIfEmpty(
+				mappingDefaults.implicitCatalogName = nullIfEmpty(
 						jpaOrmXmlPersistenceUnitDefaults.getDefaultCatalogName()
 				);
 			}
 
 			if ( mappingDefaults.getImplicitSchemaName() == null ) {
-				mappingDefaults.implicitSchemaName = StringHelper.nullIfEmpty(
-						jpaOrmXmlPersistenceUnitDefaults.getDefaultSchemaName()
-				);
+				mappingDefaults.implicitSchemaName = nullIfEmpty( jpaOrmXmlPersistenceUnitDefaults.getDefaultSchemaName() );
+			}
+		}
+
+		@Override
+		public void apply(PersistenceUnitMetadata persistenceUnitMetadata) {
+			if ( !mappingDefaults.implicitlyQuoteIdentifiers ) {
+				mappingDefaults.implicitlyQuoteIdentifiers = persistenceUnitMetadata.useQuotedIdentifiers();
+			}
+
+			if ( mappingDefaults.getImplicitCatalogName() == null ) {
+				mappingDefaults.implicitCatalogName = nullIfEmpty( persistenceUnitMetadata.getDefaultCatalog() );
+			}
+
+			if ( mappingDefaults.getImplicitSchemaName() == null ) {
+				mappingDefaults.implicitSchemaName = nullIfEmpty( persistenceUnitMetadata.getDefaultSchema() );
 			}
 		}
 
@@ -1002,7 +994,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 	private static TimeZoneStorageType resolveTimeZoneStorageStrategy(
 			ConfigurationService configService) {
-		return  configService.getSetting(
+		return configService.getSetting(
 				AvailableSettings.TIMEZONE_DEFAULT_STORAGE,
 				value -> TimeZoneStorageType.valueOf( value.toString() ),
 				TimeZoneStorageType.DEFAULT
@@ -1010,38 +1002,35 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	private static WrapperArrayHandling resolveWrapperArrayHandling(
-			ConfigurationService configService,
-			StandardServiceRegistry serviceRegistry) {
-		final WrapperArrayHandling setting = NullnessHelper.coalesceSuppliedValues(
+			ConfigurationService configService) {
+		return coalesceSuppliedValues(
 				() -> configService.getSetting(
 						WRAPPER_ARRAY_HANDLING,
 						WrapperArrayHandling::interpretExternalSettingLeniently
 				),
-				() -> resolveFallbackWrapperArrayHandling( configService, serviceRegistry )
+				() -> resolveFallbackWrapperArrayHandling( configService )
 		);
+	}
 
-		if ( setting == WrapperArrayHandling.PICK ) {
-			final Dialect dialect = serviceRegistry.getService( JdbcServices.class ).getDialect();
-			if ( dialect.supportsStandardArrays()
-					&& ( dialect.getPreferredSqlTypeCodeForArray() == SqlTypes.ARRAY
-						|| dialect.getPreferredSqlTypeCodeForArray() == SqlTypes.SQLXML ) ) {
-				return WrapperArrayHandling.ALLOW;
-			}
-
+	private static WrapperArrayHandling pickWrapperArrayHandling(Dialect dialect) {
+		if ( dialect.supportsStandardArrays()
+			&& ( dialect.getPreferredSqlTypeCodeForArray() == SqlTypes.ARRAY
+				|| dialect.getPreferredSqlTypeCodeForArray() == SqlTypes.SQLXML ) ) {
+			return WrapperArrayHandling.ALLOW;
+		}
+		else {
 			return WrapperArrayHandling.LEGACY;
 		}
-
-		return setting;
-	};
+	}
 
 	private static WrapperArrayHandling resolveFallbackWrapperArrayHandling(
-			ConfigurationService configService,
-			StandardServiceRegistry serviceRegistry) {
-		if ( configService.getSetting( JPA_COMPLIANCE, BOOLEAN ) == Boolean.TRUE ) {
+			ConfigurationService configService) {
+		if ( configService.getSetting( JPA_COMPLIANCE, BOOLEAN, false ) ) {
 			// JPA compliance was enabled.  Use PICK
 			return WrapperArrayHandling.PICK;
 		}
-
-		return WrapperArrayHandling.DISALLOW;
+		else {
+			return WrapperArrayHandling.DISALLOW;
+		}
 	}
 }

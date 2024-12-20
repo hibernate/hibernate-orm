@@ -1,12 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.produce.function;
 
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -22,15 +19,6 @@ import java.util.List;
  * @see ArgumentTypesValidator
  */
 public interface ArgumentsValidator {
-	/**
-	 * Perform validation that may be done using the {@link SqmTypedNode} tree and assigned Java types.
-	 *
-	 * @deprecated Use {@link #validate(List, String, TypeConfiguration)}
-	 */
-	@Deprecated(since = "6.2")
-	default void validate(List<? extends SqmTypedNode<?>> arguments, String functionName, QueryEngine queryEngine) {
-		validate( arguments, functionName, queryEngine.getTypeConfiguration() );
-	}
 
 	/**
 	 * Perform validation that may be done using the {@link SqmTypedNode} tree and assigned Java types.

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.query;
 
@@ -19,7 +17,7 @@ import org.hibernate.Session;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.NativeQuery;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.After;
 import org.junit.Before;
@@ -39,7 +37,7 @@ import org.assertj.core.api.InstanceOfAssertFactories;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-11092")
+@JiraKey(value = "HHH-11092")
 public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 
 	private static final String[] GAME_TITLES = { "Halo", "Grand Theft Auto", "NetHack" };
@@ -63,113 +61,113 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 	@After
 	public void tearDown() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-					 entityManager.createQuery( "delete from Game" ).executeUpdate();
-				 }
+					entityManager.createQuery( "delete from Game" ).executeUpdate();
+				}
 		);
 	}
 
 	@Test
 	public void testNamedQueriesOrdinalParametersAreOneBased() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-					 Query query = entityManager.createNamedQuery( "NamedQuery" );
-					 query.setParameter( 1, GAME_TITLES[0] );
-					 List list = query.getResultList();
-					 assertEquals( 1, list.size() );
-				 }
+					Query query = entityManager.createNamedQuery( "NamedQuery" );
+					query.setParameter( 1, GAME_TITLES[0] );
+					List list = query.getResultList();
+					assertEquals( 1, list.size() );
+				}
 		);
 	}
 
 	@Test
 	public void testNamedQueryOrdinalParametersConflict() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-					 Query query = entityManager.createNamedQuery( "NamedQuery" );
-					 query.setParameter( 1, GAME_TITLES[0] );
-					 List list = query.getResultList();
-					 assertEquals( 1, list.size() );
+					Query query = entityManager.createNamedQuery( "NamedQuery" );
+					query.setParameter( 1, GAME_TITLES[0] );
+					List list = query.getResultList();
+					assertEquals( 1, list.size() );
 
-					 final Session session = entityManager.unwrap( Session.class );
-					 final org.hibernate.query.Query sessionQuery = session.createQuery( "select g from Game g where title = ?1" );
-					 sessionQuery.setParameter( 1, GAME_TITLES[0] );
-					 list = sessionQuery.getResultList();
+					final Session session = entityManager.unwrap( Session.class );
+					final org.hibernate.query.Query sessionQuery = session.createQuery( "select g from Game g where title = ?1" );
+					sessionQuery.setParameter( 1, GAME_TITLES[0] );
+					list = sessionQuery.getResultList();
 
-					 query.setParameter( 1, GAME_TITLES[0] );
-					 assertEquals( 1, list.size() );
-				 }
+					query.setParameter( 1, GAME_TITLES[0] );
+					assertEquals( 1, list.size() );
+				}
 		);
 	}
 
 	@Test
 	public void testNamedQueryOrdinalParametersConflict2() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-					 Query query = entityManager.createNamedQuery( "NamedQuery" );
-					 query.setParameter( 1, GAME_TITLES[0] );
-					 List list = query.getResultList();
-					 assertEquals( 1, list.size() );
+					Query query = entityManager.createNamedQuery( "NamedQuery" );
+					query.setParameter( 1, GAME_TITLES[0] );
+					List list = query.getResultList();
+					assertEquals( 1, list.size() );
 
-					 final Session session = entityManager.unwrap( Session.class );
-					 final org.hibernate.query.Query sessionQuery = session.getNamedQuery( "NamedQuery" );
-					 sessionQuery.setParameter( 1, GAME_TITLES[0] );
-					 list = sessionQuery.getResultList();
+					final Session session = entityManager.unwrap( Session.class );
+					final org.hibernate.query.Query sessionQuery = session.getNamedQuery( "NamedQuery" );
+					sessionQuery.setParameter( 1, GAME_TITLES[0] );
+					list = sessionQuery.getResultList();
 
-					 query.setParameter( 1, GAME_TITLES[0] );
-					 assertEquals( 1, list.size() );
-				 }
+					query.setParameter( 1, GAME_TITLES[0] );
+					assertEquals( 1, list.size() );
+				}
 		);
 	}
 
 	@Test
 	public void testNativeNamedQueriesOrdinalParametersAreOneBased() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-					 Query query = entityManager.createNamedQuery( "NamedNativeQuery" );
-					 query.setParameter( 1, GAME_TITLES[0] );
-					 List list = query.getResultList();
-					 assertEquals( 1, list.size() );
-				 }
+					Query query = entityManager.createNamedQuery( "NamedNativeQuery" );
+					query.setParameter( 1, GAME_TITLES[0] );
+					List list = query.getResultList();
+					assertEquals( 1, list.size() );
+				}
 		);
 	}
 
 	@Test
 	public void testNativeNamedQueriesOrdinalParametersConflict() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-					 Query query = entityManager.createNamedQuery( "NamedNativeQuery" );
-					 query.setParameter( 1, GAME_TITLES[0] );
-					 List list = query.getResultList();
-					 assertEquals( 1, list.size() );
+					Query query = entityManager.createNamedQuery( "NamedNativeQuery" );
+					query.setParameter( 1, GAME_TITLES[0] );
+					List list = query.getResultList();
+					assertEquals( 1, list.size() );
 
-					 final Session session = entityManager.unwrap( Session.class );
-					 final org.hibernate.query.Query sessionQuery = session.createNativeQuery(
-							 "select * from Game g where title = ?" );
-					 sessionQuery.setParameter( 1, GAME_TITLES[0] );
-					 list = sessionQuery.getResultList();
+					final Session session = entityManager.unwrap( Session.class );
+					final org.hibernate.query.Query sessionQuery = session.createNativeQuery(
+							"select * from Game g where title = ?" );
+					sessionQuery.setParameter( 1, GAME_TITLES[0] );
+					list = sessionQuery.getResultList();
 
-					 query.setParameter( 1, GAME_TITLES[0] );
-					 assertEquals( 1, list.size() );
-				 }
+					query.setParameter( 1, GAME_TITLES[0] );
+					assertEquals( 1, list.size() );
+				}
 		);
 	}
 
 	@Test
 	public void testNativeNamedQueriesOrdinalParametersConflict2() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-					 Query query = entityManager.createNamedQuery( "NamedNativeQuery" );
-					 query.setParameter( 1, GAME_TITLES[0] );
-					 List list = query.getResultList();
-					 assertEquals( 1, list.size() );
+					Query query = entityManager.createNamedQuery( "NamedNativeQuery" );
+					query.setParameter( 1, GAME_TITLES[0] );
+					List list = query.getResultList();
+					assertEquals( 1, list.size() );
 
-					 final Session session = entityManager.unwrap( Session.class );
-					 final org.hibernate.query.Query sessionQuery = session.getNamedNativeQuery(
-							 "NamedNativeQuery" );
-					 sessionQuery.setParameter( 1, GAME_TITLES[0] );
-					 list = sessionQuery.getResultList();
+					final Session session = entityManager.unwrap( Session.class );
+					final org.hibernate.query.Query sessionQuery = session.getNamedNativeQuery(
+							"NamedNativeQuery" );
+					sessionQuery.setParameter( 1, GAME_TITLES[0] );
+					list = sessionQuery.getResultList();
 
-					 query.setParameter( 1, GAME_TITLES[0] );
-					 assertEquals( 1, list.size() );
-				 }
+					query.setParameter( 1, GAME_TITLES[0] );
+					assertEquals( 1, list.size() );
+				}
 		);
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12621")
+	@JiraKey(value = "HHH-12621")
 	public void testNativeQueriesFromNamedQueriesDoNotShareQuerySpaces() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Query originalQuery = entityManager.createNativeQuery( "select g from Game g where title = ?1" );
@@ -188,7 +186,7 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11413")
+	@JiraKey(value = "HHH-11413")
 	public void testNamedNativeQueryExceptionNoResultDefined() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			assertThrows(
@@ -200,7 +198,7 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11413")
+	@JiraKey(value = "HHH-11413")
 	public void testNamedQueryAddedFromTypedNativeQuery() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			final Query query = entityManager.createNativeQuery(
@@ -273,14 +271,14 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-14816")
+	@JiraKey(value = "HHH-14816")
 	public void testQueryHintLockMode() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-					 Query query = entityManager.createNamedQuery( "NamedNativeQuery" );
-					 query.setHint( HINT_NATIVE_LOCK_MODE, "none" );
-					 query.setParameter( 1, GAME_TITLES[0] );
-					 assertEquals( LockMode.NONE, query.getHints().get( HINT_NATIVE_LOCK_MODE ) );
-				 }
+					Query query = entityManager.createNamedQuery( "NamedNativeQuery" );
+					query.setHint( HINT_NATIVE_LOCK_MODE, "none" );
+					query.setParameter( 1, GAME_TITLES[0] );
+					assertEquals( LockMode.NONE, query.getHints().get( HINT_NATIVE_LOCK_MODE ) );
+				}
 		);
 	}
 

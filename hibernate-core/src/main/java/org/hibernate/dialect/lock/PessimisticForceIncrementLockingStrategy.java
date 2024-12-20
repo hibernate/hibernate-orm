@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.lock;
 
@@ -11,7 +9,6 @@ import org.hibernate.LockMode;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Lockable;
 
 /**
  * A pessimistic locking strategy where a lock is obtained by incrementing
@@ -23,7 +20,7 @@ import org.hibernate.persister.entity.Lockable;
  * @since 3.5
  */
 public class PessimisticForceIncrementLockingStrategy implements LockingStrategy {
-	private final Lockable lockable;
+	private final EntityPersister lockable;
 	private final LockMode lockMode;
 
 	/**
@@ -32,7 +29,7 @@ public class PessimisticForceIncrementLockingStrategy implements LockingStrategy
 	 * @param lockable The metadata for the entity to be locked.
 	 * @param lockMode Indicates the type of lock to be acquired.
 	 */
-	public PessimisticForceIncrementLockingStrategy(Lockable lockable, LockMode lockMode) {
+	public PessimisticForceIncrementLockingStrategy(EntityPersister lockable, LockMode lockMode) {
 		this.lockable = lockable;
 		this.lockMode = lockMode;
 		// ForceIncrement can be used for PESSIMISTIC_READ, PESSIMISTIC_WRITE or PESSIMISTIC_FORCE_INCREMENT

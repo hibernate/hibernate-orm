@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.inheritance.join;
 
@@ -54,6 +52,33 @@ public class AttributeJoinWithJoinedInheritanceTest {
 			s.createMutationQuery( "delete from SubChildEntityA1" ).executeUpdate();
 			s.createMutationQuery( "delete from SubChildEntityA2" ).executeUpdate();
 			s.createMutationQuery( "delete from BaseClass" ).executeUpdate();
+		} );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17646" )
+	public void testLeftJoinSelectFk(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			final ChildEntityA childEntityA = new SubChildEntityA1( 11 );
+			s.persist( childEntityA );
+			final ChildEntityB childEntityB = new ChildEntityB( 21 );
+			s.persist( childEntityB );
+			s.persist( new RootOne( 1, childEntityA ) );
+			s.persist( new RootOne( 2, null ) );
+		} );
+		scope.inTransaction( s -> {
+			// simulate association with ChildEntityB
+			s.createNativeMutationQuery( "update root_one set child_id = 21 where id = 2" ).executeUpdate();
+		} );
+		scope.inTransaction( s -> {
+			final List<Integer> resultList = s.createQuery(
+					"select ce.id " +
+							"from RootOne r left join r.child ce ",
+					Integer.class
+			).getResultList();
+			assertEquals( 2, resultList.size() );
+			assertEquals( 11, resultList.get( 0 ) );
+			assertNull( resultList.get( 1 ) );
 		} );
 	}
 

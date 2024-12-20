@@ -1,17 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.internal;
 
 import java.util.function.Supplier;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.ValueAccess;
-import org.hibernate.type.descriptor.java.JavaType;
 
 import static org.hibernate.bytecode.spi.ReflectionOptimizer.InstantiationOptimizer;
 
@@ -24,16 +20,16 @@ public class EmbeddableInstantiatorPojoOptimized extends AbstractPojoInstantiato
 	private final InstantiationOptimizer instantiationOptimizer;
 
 	public EmbeddableInstantiatorPojoOptimized(
-			JavaType<?> javaType,
+			Class<?> embeddableClass,
 			Supplier<EmbeddableMappingType> embeddableMappingAccess,
 			InstantiationOptimizer instantiationOptimizer) {
-		super( javaType.getJavaTypeClass() );
+		super( embeddableClass );
 		this.embeddableMappingAccess = embeddableMappingAccess;
 		this.instantiationOptimizer = instantiationOptimizer;
 	}
 
 	@Override
-	public Object instantiate(ValueAccess valuesAccess, SessionFactoryImplementor sessionFactory) {
+	public Object instantiate(ValueAccess valuesAccess) {
 		final Object embeddable = instantiationOptimizer.newInstance();
 		final EmbeddableMappingType embeddableMapping = embeddableMappingAccess.get();
 		final Object[] values = valuesAccess.getValues();

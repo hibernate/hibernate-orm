@@ -1,38 +1,43 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.bytecode.enhancement.bag;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Collection;
 import java.util.LinkedList;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.Assert.assertTrue;
 
 
-@RunWith(BytecodeEnhancerRunner.class)
-public class EagerBagsTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				EntityA.class,
-				EntityB.class,
-				EntityC.class,
-				EntityD.class,
-		};
-	}
+@DomainModel(
+		annotatedClasses = {
+				EagerBagsTest.EntityA.class,
+				EagerBagsTest.EntityB.class,
+				EagerBagsTest.EntityC.class,
+				EagerBagsTest.EntityD.class,
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class EagerBagsTest {
 
 	@Test
-	public void testIt() {
-		inTransaction(
+	public void testIt(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					EntityB b = new EntityB( 1l, "b" );
 
@@ -57,20 +62,20 @@ public class EagerBagsTest extends BaseCoreFunctionalTestCase {
 					a.addAttribute( b );
 					a.addAttribute( b1 );
 
-					session.save( c );
-					session.save( c1 );
-					session.save( c2 );
-					session.save( c3 );
-					session.save( c4 );
+					session.persist( c );
+					session.persist( c1 );
+					session.persist( c2 );
+					session.persist( c3 );
+					session.persist( c4 );
 
-					session.save( b );
-					session.save( b1 );
+					session.persist( b );
+					session.persist( b1 );
 
-					session.save( a );
+					session.persist( a );
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					EntityA entityA = session.find( EntityA.class, 1l );
 					Collection<EntityB> attributes = entityA.attributes;

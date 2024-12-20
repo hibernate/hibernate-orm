@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id: Address.java 5686 2005-02-12 07:27:32Z steveebersole $
 package org.hibernate.orm.test.typedonetoone;
 import java.io.Serializable;
 
@@ -13,7 +9,7 @@ import java.io.Serializable;
  * @author Gavin King
  */
 public class Address implements Serializable {
-	
+
 	private AddressId addressId;
 	private String street;
 	private String city;
@@ -27,7 +23,7 @@ public class Address implements Serializable {
 	public void setCustomer(Customer customer) {
 		this.customer = customer;
 	}
-	
+
 	public String getCity() {
 		return city;
 	}

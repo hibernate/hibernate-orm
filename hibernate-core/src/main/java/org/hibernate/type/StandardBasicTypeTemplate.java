@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
 
@@ -28,7 +26,7 @@ public class StandardBasicTypeTemplate<J> extends AbstractSingleColumnStandardBa
 		super( jdbcType, javaType );
 		this.registrationKeys = registrationKeys;
 
-		this.name = javaType.getJavaType() == null ? "(map-mode)" : javaType.getJavaType().getTypeName()
+		this.name = javaType.getJavaType() == null ? "(map-mode)" : javaType.getTypeName()
 				+ " -> " + jdbcType.getDefaultSqlTypeCode();
 	}
 

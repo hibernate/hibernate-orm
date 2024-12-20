@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.transaction.jta.platform.internal;
 
@@ -11,7 +9,6 @@ import jakarta.transaction.UserTransaction;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformException;
-import org.hibernate.internal.util.NullnessUtil;
 
 /**
  * @author Vlad Mihalcea
@@ -22,8 +19,10 @@ public class AtomikosJtaPlatform extends AbstractJtaPlatform {
 	@Override
 	protected TransactionManager locateTransactionManager() {
 		try {
-			Class transactionManagerClass = NullnessUtil.castNonNull( serviceRegistry().getService( ClassLoaderService.class ) ).classForName( TM_CLASS_NAME );
-			return  (TransactionManager) transactionManagerClass.newInstance();
+			return (TransactionManager) serviceRegistry()
+					.requireService( ClassLoaderService.class )
+					.classForName( TM_CLASS_NAME )
+					.newInstance();
 		}
 		catch (Exception e) {
 			throw new JtaPlatformException( "Could not instantiate Atomikos TransactionManager", e );

@@ -1,10 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.spatial.integration;
 
 import java.util.HashMap;
@@ -83,7 +80,7 @@ public class StoreAndRetrieveTests extends SpatialSessionFactoryAware {
 		for ( TestDataElement element : testData ) {
 			GeomEntityLike entity = createFrom( element, entityClass, session.getJdbcServices().getDialect() );
 			stored.put( entity.getId(), entity );
-			session.save( entity );
+			session.persist( entity );
 		}
 	}
 
@@ -100,7 +97,7 @@ public class StoreAndRetrieveTests extends SpatialSessionFactoryAware {
 		GeomEntity entity = new GeomEntity();
 		entity.setId( 1 );
 		entity.setType( "NULL Test" );
-		session.save( entity );
+		session.persist( entity );
 	}
 
 	private void retrieveAndCompareNullGeometry(SessionImplementor session) {

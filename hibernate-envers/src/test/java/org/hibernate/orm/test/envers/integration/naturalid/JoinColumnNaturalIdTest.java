@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.naturalid;
 
@@ -10,7 +8,7 @@ import jakarta.persistence.EntityManager;
 
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -18,7 +16,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-10246")
+@JiraKey(value = "HHH-10246")
 public class JoinColumnNaturalIdTest extends BaseEnversJPAFunctionalTestCase {
 	private Integer customerId;
 	private Integer deviceId;

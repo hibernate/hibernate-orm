@@ -1,15 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
-import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
@@ -18,8 +14,8 @@ public class Compatibility {
 	private Compatibility() {
 	}
 
-	private static final Map<Class,Class> primitiveToWrapper;
-	private static final Map<Class,Class> wrapperToPrimitive;
+	private static final Map<Class<?>,Class<?>> primitiveToWrapper;
+	private static final Map<Class<?>,Class<?>> wrapperToPrimitive;
 	static {
 		primitiveToWrapper = new ConcurrentHashMap<>();
 		wrapperToPrimitive = new ConcurrentHashMap<>();
@@ -33,27 +29,26 @@ public class Compatibility {
 		map( double.class, Double.class );
 	}
 
-	private static void map(Class primitive, Class wrapper) {
+	private static void map(Class<?> primitive, Class<?> wrapper) {
 		primitiveToWrapper.put( primitive, wrapper );
 		wrapperToPrimitive.put( wrapper, primitive );
 	}
 
-	public static boolean isWrapper(Class potentialWrapper) {
+	public static boolean isWrapper(Class<?> potentialWrapper) {
 		return wrapperToPrimitive.containsKey( potentialWrapper );
 	}
 
-	public static Class primitiveEquivalent(Class potentialWrapper) {
+	public static Class<?> primitiveEquivalent(Class<?> potentialWrapper) {
 		assert isWrapper( potentialWrapper );
 		return wrapperToPrimitive.get( potentialWrapper );
 	}
 
-	public static Class wrapperEquivalent(Class primitive) {
+	public static Class<?> wrapperEquivalent(Class<?> primitive) {
 		assert primitive.isPrimitive();
 		return primitiveToWrapper.get( primitive );
 	}
 
-	@SuppressWarnings("unchecked")
-	public static boolean areAssignmentCompatible(Class to, Class from) {
+	public static boolean areAssignmentCompatible(Class<?> to, Class<?> from) {
 		assert to != null;
 		assert from != null;
 
@@ -79,7 +74,7 @@ public class Compatibility {
 		return false;
 	}
 
-	private static boolean areAssignmentCompatiblePrimitive(Class to, Class from) {
+	private static boolean areAssignmentCompatiblePrimitive(Class<?> to, Class<?> from) {
 		assert to != null;
 		assert from != null;
 
@@ -99,38 +94,38 @@ public class Compatibility {
 		}
 		else if ( isIntegralTypePrimitive( to ) ) {
 			return from == byte.class
-					|| isCompatibleIntegralTypePrimitive( to, from )
-					// this would for sure cause loss of precision
-					|| isFloatingTypePrimitive( from );
+				|| isCompatibleIntegralTypePrimitive( to, from )
+				// this would for sure cause loss of precision
+				|| isFloatingTypePrimitive( from );
 		}
 		else if ( isFloatingTypePrimitive( to ) ) {
 			return from == byte.class
-					|| isIntegralTypePrimitive( from )
-					|| isCompatibleFloatingTypePrimitive( to, from );
+				|| isIntegralTypePrimitive( from )
+				|| isCompatibleFloatingTypePrimitive( to, from );
 		}
 
 		return false;
 	}
 
-	public static boolean isIntegralType(Class potentialIntegral) {
+	public static boolean isIntegralType(Class<?> potentialIntegral) {
 		if ( potentialIntegral.isPrimitive() ) {
 			return isIntegralTypePrimitive( potentialIntegral );
 		}
 
 		return isWrapper( potentialIntegral )
-				&& isIntegralTypePrimitive( primitiveEquivalent( potentialIntegral ) );
+			&& isIntegralTypePrimitive( primitiveEquivalent( potentialIntegral ) );
 
 	}
 
-	private static boolean isIntegralTypePrimitive(Class potentialIntegral) {
+	private static boolean isIntegralTypePrimitive(Class<?> potentialIntegral) {
 		assert potentialIntegral.isPrimitive();
 
 		return potentialIntegral == short.class
-				|| potentialIntegral == int.class
-				|| potentialIntegral == long.class;
+			|| potentialIntegral == int.class
+			|| potentialIntegral == long.class;
 	}
 
-	private static boolean isCompatibleIntegralTypePrimitive(Class to, Class from) {
+	private static boolean isCompatibleIntegralTypePrimitive(Class<?> to, Class<?> from) {
 		assert isIntegralTypePrimitive( to );
 		assert from.isPrimitive();
 
@@ -139,50 +134,34 @@ public class Compatibility {
 		}
 		else if ( to == int.class ) {
 			return from == short.class
-					|| from == int.class;
+				|| from == int.class;
 		}
 		else {
 			return isIntegralTypePrimitive( from );
 		}
 	}
 
-	public static boolean isFloatingType(Class potentialFloating) {
+	public static boolean isFloatingType(Class<?> potentialFloating) {
 		if ( potentialFloating.isPrimitive() ) {
 			return isFloatingTypePrimitive( potentialFloating );
 		}
 
 		return isWrapper( potentialFloating )
-				&& isFloatingTypePrimitive( primitiveEquivalent( potentialFloating ) );
+			&& isFloatingTypePrimitive( primitiveEquivalent( potentialFloating ) );
 
 	}
 
-	private static boolean isFloatingTypePrimitive(Class potentialFloating) {
+	private static boolean isFloatingTypePrimitive(Class<?> potentialFloating) {
 		assert potentialFloating.isPrimitive();
 
 		return potentialFloating == float.class
-				|| potentialFloating == double.class;
+			|| potentialFloating == double.class;
 	}
 
-	private static boolean isCompatibleFloatingTypePrimitive(Class to, Class from) {
+	private static boolean isCompatibleFloatingTypePrimitive(Class<?> to, Class<?> from) {
 		assert isFloatingTypePrimitive( to );
 		assert from.isPrimitive();
 
-		if ( to == float.class ) {
-			return from == float.class;
-		}
-		else {
-			return isFloatingTypePrimitive( from );
-		}
-	}
-
-	public static boolean areAssignmentCompatible(
-			JavaType to,
-			JavaType from) {
-
-		// todo (6.0) - base this in the descriptor.
-		// 		`JavaType#assignableFrom` ?
-		//      Note from Christian: I think this is a good idea to allow honoring parameterized types
-
-		return areAssignmentCompatible( to.getJavaTypeClass(), from.getJavaTypeClass() );
+		return to == float.class ? from == float.class : isFloatingTypePrimitive( from );
 	}
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.entitygraph.ast;
 
@@ -54,7 +52,7 @@ public class LoadPlanBuilderTest {
 				.getMappingMetamodel()
 				.getEntityDescriptor( Message.class );
 
-		final SingleIdEntityLoaderStandardImpl<?> loader = new SingleIdEntityLoaderStandardImpl<>( entityDescriptor, sessionFactory );
+		final SingleIdEntityLoaderStandardImpl<?> loader = new SingleIdEntityLoaderStandardImpl<>( entityDescriptor, new LoadQueryInfluencers( sessionFactory ) );
 
 		final SingleIdLoadPlan<?> loadPlan = loader.resolveLoadPlan(
 				LockOptions.READ,
@@ -89,7 +87,7 @@ public class LoadPlanBuilderTest {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
 		final EntityPersister entityDescriptor = (EntityPersister) sessionFactory.getRuntimeMetamodels().getEntityMappingType( Message.class );
 
-		final SingleIdEntityLoaderStandardImpl<?> loader = new SingleIdEntityLoaderStandardImpl<>( entityDescriptor, sessionFactory );
+		final SingleIdEntityLoaderStandardImpl<?> loader = new SingleIdEntityLoaderStandardImpl<>( entityDescriptor, new LoadQueryInfluencers( sessionFactory ) );
 
 		final LoadQueryInfluencers influencers = new LoadQueryInfluencers( sessionFactory ) {
 			@Override

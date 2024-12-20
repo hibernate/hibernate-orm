@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.List;
 
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
@@ -40,6 +41,9 @@ public class EnhancementHelper {
 		final File classesDir = classesDirectory.getAsFile();
 
 		final EnhancementSpec enhancementDsl = ormDsl.getEnhancement();
+
+		List<String> classesToEnhance = enhancementDsl.getClassNames().get();
+
 		if ( !enhancementDsl.getEnableLazyInitialization().get() ) {
 			project.getLogger().warn( "The 'enableLazyInitialization' configuration is deprecated and will be removed. Set the value to 'true' to get rid of this warning" );
 		}
@@ -49,7 +53,7 @@ public class EnhancementHelper {
 		final Enhancer enhancer = generateEnhancer( classLoader, ormDsl );
 
 		discoverTypes( classesDir, classesDir, enhancer, project );
-		doEnhancement( classesDir, classesDir, enhancer, project );
+		doEnhancement( classesDir, classesDir, enhancer, project, classesToEnhance );
 	}
 
 	private static void discoverTypes(File classesDir, File dir, Enhancer enhancer, Project project) {
@@ -72,14 +76,18 @@ public class EnhancementHelper {
 		}
 	}
 
-	private static void doEnhancement(File classesDir, File dir, Enhancer enhancer, Project project) {
+	private static void doEnhancement(File classesDir, File dir, Enhancer enhancer, Project project, List<String> classesToEnhance) {
 		for ( File subLocation : dir.listFiles() ) {
 			if ( subLocation.isDirectory() ) {
-				doEnhancement( classesDir, subLocation, enhancer, project );
+				doEnhancement( classesDir, subLocation, enhancer, project, classesToEnhance );
 			}
 			else if ( subLocation.isFile() && subLocation.getName().endsWith( ".class" ) ) {
 				final String className = determineClassName( classesDir, subLocation );
 				final long lastModified = subLocation.lastModified();
+
+				if(! (classesToEnhance.size()==0 || classesToEnhance.contains(className))) {
+					continue;
+				}
 
 				enhance( subLocation, className, enhancer, project );
 

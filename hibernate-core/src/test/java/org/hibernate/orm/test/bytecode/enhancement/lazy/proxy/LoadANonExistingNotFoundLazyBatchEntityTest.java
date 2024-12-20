@@ -1,15 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
- */
-
-/*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy;
 
@@ -20,19 +11,20 @@ import org.hibernate.Hibernate;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.ConstraintMode;
@@ -43,32 +35,46 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Andrea Boriero
  * @author Gail Badner
  */
-@TestForIssue(jiraKey = "HHH-11147")
-@RunWith(BytecodeEnhancerRunner.class)
+@JiraKey("HHH-11147")
+@DomainModel(
+		annotatedClasses = {
+				LoadANonExistingNotFoundLazyBatchEntityTest.Employee.class,
+				LoadANonExistingNotFoundLazyBatchEntityTest.Employer.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.FORMAT_SQL, value = "false" ),
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+				@Setting( name = AvailableSettings.USE_QUERY_CACHE, value = "false" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @EnhancementOptions(lazyLoading = true)
-public class LoadANonExistingNotFoundLazyBatchEntityTest extends BaseNonConfigCoreFunctionalTestCase {
+public class LoadANonExistingNotFoundLazyBatchEntityTest {
 
 	private static final int NUMBER_OF_ENTITIES = 20;
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11147")
-	public void loadEntityWithNotFoundAssociation() {
-		final StatisticsImplementor statistics = sessionFactory().getStatistics();
+	@JiraKey("HHH-11147")
+	public void loadEntityWithNotFoundAssociation(SessionFactoryScope scope) {
+		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
 
-		inTransaction( (session) -> {
+		scope.inTransaction( (session) -> {
 			List<Employee> employees = new ArrayList<>( NUMBER_OF_ENTITIES );
 			for ( int i = 0 ; i < NUMBER_OF_ENTITIES ; i++ ) {
-				employees.add( session.load( Employee.class, i + 1 ) );
+				employees.add( session.getReference( Employee.class, i + 1 ) );
 			}
 			for ( int i = 0 ; i < NUMBER_OF_ENTITIES ; i++ ) {
 				Hibernate.initialize( employees.get( i ) );
@@ -84,12 +90,12 @@ public class LoadANonExistingNotFoundLazyBatchEntityTest extends BaseNonConfigCo
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11147")
-	public void getEntityWithNotFoundAssociation() {
-		final StatisticsImplementor statistics = sessionFactory().getStatistics();
+	@JiraKey("HHH-11147")
+	public void getEntityWithNotFoundAssociation(SessionFactoryScope scope) {
+		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
 
-		inTransaction( (session) -> {
+		scope.inTransaction( (session) -> {
 			for ( int i = 0 ; i < NUMBER_OF_ENTITIES ; i++ ) {
 				Employee employee = session.get( Employee.class, i + 1 );
 				assertNull( employee.employer );
@@ -104,12 +110,12 @@ public class LoadANonExistingNotFoundLazyBatchEntityTest extends BaseNonConfigCo
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11147")
-	public void updateNotFoundAssociationWithNew() {
-		final StatisticsImplementor statistics = sessionFactory().getStatistics();
+	@JiraKey("HHH-11147")
+	public void updateNotFoundAssociationWithNew(SessionFactoryScope scope) {
+		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
 
-		inTransaction( (session) -> {
+		scope.inTransaction( (session) -> {
 			for ( int i = 0; i < NUMBER_OF_ENTITIES; i++ ) {
 				Employee employee = session.get( Employee.class, i + 1 );
 				Employer employer = new Employer();
@@ -119,7 +125,7 @@ public class LoadANonExistingNotFoundLazyBatchEntityTest extends BaseNonConfigCo
 			}
 		} );
 
-		inTransaction( (session) -> {
+		scope.inTransaction( (session) -> {
 			for ( int i = 0; i < NUMBER_OF_ENTITIES; i++ ) {
 				Employee employee = session.get( Employee.class, i + 1 );
 				assertTrue( Hibernate.isInitialized( employee.employer ) );
@@ -129,18 +135,9 @@ public class LoadANonExistingNotFoundLazyBatchEntityTest extends BaseNonConfigCo
 		} );
 	}
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Employee.class,
-				Employer.class
-		};
-	}
-
-	@Before
-	public void setUpData() {
-		doInHibernate(
-				this::sessionFactory, session -> {
+	@BeforeEach
+	public void setUpData(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 					for ( int i = 0; i < NUMBER_OF_ENTITIES; i++ ) {
 						final Employee employee = new Employee();
 						employee.id = i + 1;
@@ -151,37 +148,20 @@ public class LoadANonExistingNotFoundLazyBatchEntityTest extends BaseNonConfigCo
 		);
 
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 					// Add "not found" associations
 					session.createNativeQuery( "update Employee set employer_id = id" ).executeUpdate();
 				}
 		);
 	}
 
-	@After
-	public void cleanupDate() {
-		doInHibernate(
-				this::sessionFactory, session -> {
+	@AfterEach
+	public void cleanupDate(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 					session.createQuery( "delete from Employee" ).executeUpdate();
 					session.createQuery( "delete from Employer" ).executeUpdate();
 				}
 		);
-	}
-
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.FORMAT_SQL, "false" );
-		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
-	}
-
-	@Override
-	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
-		super.configureSessionFactoryBuilder( sfb );
-		sfb.applyStatisticsSupport( true );
-		sfb.applySecondLevelCacheSupport( false );
-		sfb.applyQueryCacheSupport( false );
 	}
 
 	@Entity(name = "Employee")

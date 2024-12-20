@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel;
 
@@ -12,6 +10,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.hibernate.Incubating;
+import org.hibernate.Internal;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -26,13 +25,15 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import jakarta.persistence.metamodel.Metamodel;
+
 /**
  * Access to information about the runtime relational O/R mapping model.
  *
  * @author Steve Ebersole
  */
 @Incubating
-public interface MappingMetamodel {
+public interface MappingMetamodel extends Metamodel {
 	/**
 	 * The {@link TypeConfiguration} this metamodel is associated with
 	 */
@@ -42,6 +43,7 @@ public interface MappingMetamodel {
 	// SQM model -> Mapping model
 
 	// todo (6.0) : POC intended for use in SQM to SQL translation
+	@Internal
 	MappingModelExpressible<?> resolveMappingExpressible(
 			SqmExpressible<?> sqmExpressible,
 			Function<NavigablePath,
@@ -61,6 +63,8 @@ public interface MappingMetamodel {
 	 * Visit all entity mapping descriptors defined in the model
 	 */
 	void forEachEntityDescriptor(Consumer<EntityPersister> action);
+
+	@Deprecated(forRemoval = true, since = "7")
 	Stream<EntityPersister> streamEntityDescriptors();
 
 	/**
@@ -113,7 +117,7 @@ public interface MappingMetamodel {
 	 * @apiNote Returns {@code null} rather than throwing exception
 	 */
 	EntityPersister findEntityDescriptor(Class<?> entityJavaType);
-	
+
 	boolean isEntityClass(Class<?> entityJavaType);
 
 	/**
@@ -123,30 +127,11 @@ public interface MappingMetamodel {
 	 * direct entity name.
 	 *
 	 * @throws org.hibernate.UnknownEntityTypeException If a matching EntityPersister cannot be located
+	 *
+	 * @deprecated No longer used
 	 */
+	@Deprecated(forRemoval = true, since = "7")
 	EntityPersister locateEntityDescriptor(Class<?> byClass);
-
-	/**
-	 * @see #locateEntityDescriptor
-	 *
-	 * @deprecated use {@link #locateEntityDescriptor(Class)} instead
-	 */
-	@Deprecated(since = "6.0")
-	default EntityPersister locateEntityPersister(Class<?> byClass) {
-		return locateEntityDescriptor( byClass );
-	}
-
-	/**
-	 * Locate the entity persister by name.
-	 *
-	 * @return The located EntityPersister, never {@code null}
-	 *
-	 * @throws org.hibernate.UnknownEntityTypeException If a matching EntityPersister cannot be located
-	 *
-	 * @deprecated - use {@link #getEntityDescriptor(String)} instead
-	 */
-	@Deprecated(since = "6.0")
-	EntityPersister locateEntityPersister(String byName);
 
 	String getImportedName(String name);
 
@@ -158,6 +143,8 @@ public interface MappingMetamodel {
 	 * Visit the mapping descriptors for all collections defined in the model
 	 */
 	void forEachCollectionDescriptor(Consumer<CollectionPersister> action);
+
+	@Deprecated(forRemoval = true, since = "7")
 	Stream<CollectionPersister> streamCollectionDescriptors();
 
 	/**
@@ -202,11 +189,11 @@ public interface MappingMetamodel {
 	<T> void addNamedEntityGraph(String graphName, RootGraphImplementor<T> entityGraph);
 	void forEachNamedGraph(Consumer<RootGraph<?>> action);
 	RootGraph<?> defaultGraph(String entityName);
-	RootGraph<?> defaultGraph(Class entityJavaType);
+	RootGraph<?> defaultGraph(Class<?> entityJavaType);
 	RootGraph<?> defaultGraph(EntityPersister entityDescriptor);
 	RootGraph<?> defaultGraph(EntityDomainType<?> entityDomainType);
 
-	List<RootGraph<?>> findRootGraphsForType(Class baseEntityJavaType);
+	List<RootGraph<?>> findRootGraphsForType(Class<?> baseEntityJavaType);
 	List<RootGraph<?>> findRootGraphsForType(String baseEntityName);
 	List<RootGraph<?>> findRootGraphsForType(EntityPersister baseEntityDescriptor);
 }

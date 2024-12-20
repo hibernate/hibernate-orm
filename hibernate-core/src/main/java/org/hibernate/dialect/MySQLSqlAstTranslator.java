@@ -1,14 +1,8 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
 
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -19,11 +13,14 @@ import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
+import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.DerivedTableReference;
+import org.hibernate.sql.ast.tree.from.FunctionTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.ValuesTableReference;
@@ -40,6 +37,10 @@ import org.hibernate.sql.exec.internal.JdbcOperationQueryInsertImpl;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
 /**
  * A SQL AST translator for MySQL.
  *
@@ -47,16 +48,13 @@ import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
  */
 public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
+	/**
+	 * On MySQL, 1GB or {@code 2^30 - 1} is the maximum size that a char value can be casted.
+	 */
+	private static final int MAX_CHAR_SIZE = (1 << 30) - 1;
+
 	public MySQLSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
-	}
-
-	/**
-	 * @deprecated Use {@link #getSqlType(CastTarget, SessionFactoryImplementor)} instead
-	 */
-	@Deprecated(forRemoval = true)
-	public static String getSqlType(CastTarget castTarget, Dialect dialect) {
-		return getSqlType( castTarget, castTarget.getSqlType(), dialect );
 	}
 
 	public static String getSqlType(CastTarget castTarget, SessionFactoryImplementor factory) {
@@ -64,10 +62,14 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 		return getSqlType( castTarget, sqlType, factory.getJdbcServices().getDialect() );
 	}
 
+	//TODO: this is really, really bad since it circumvents the whole machinery we have in DdlType
+	//      and in the Dialect for doing this in a unified way! These mappings should be held in
+	//      the DdlTypes themselves and should be set up in registerColumnTypes(). Doing it here
+	//      means we have problems distinguishing, say, the 'as Character' special case
 	private static String getSqlType(CastTarget castTarget, String sqlType, Dialect dialect) {
 		if ( sqlType != null ) {
 			int parenthesesIndex = sqlType.indexOf( '(' );
-			final String baseName = parenthesesIndex == -1 ? sqlType : sqlType.substring( 0, parenthesesIndex );
+			final String baseName = parenthesesIndex == -1 ? sqlType : sqlType.substring( 0, parenthesesIndex ).trim();
 			switch ( baseName.toLowerCase( Locale.ROOT ) ) {
 				case "bit":
 					return "unsigned";
@@ -79,26 +81,56 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 				case "float":
 				case "real":
 				case "double precision":
-					final int precision = castTarget.getPrecision() == null ?
-							dialect.getDefaultDecimalPrecision() :
-							castTarget.getPrecision();
+					if ( ((MySQLDialect) dialect).getMySQLVersion().isSameOrAfter( 8, 0, 17 ) ) {
+						return sqlType;
+					}
+					final int precision = castTarget.getPrecision() == null
+							? dialect.getDefaultDecimalPrecision()
+							: castTarget.getPrecision();
 					final int scale = castTarget.getScale() == null ? Size.DEFAULT_SCALE : castTarget.getScale();
 					return "decimal(" + precision + "," + scale + ")";
 				case "char":
 				case "varchar":
 				case "nchar":
 				case "nvarchar":
-					return castTarget.getLength() == null
-							? "char"
-							: ( "char(" + castTarget.getLength() + ")" );
+				case "text":
+				case "mediumtext":
+				case "longtext":
+				case "enum":
+					if ( castTarget.getLength() == null ) {
+						// TODO: this is ugly and fragile, but could easily be handled in a DdlType
+						if ( castTarget.getJdbcMapping().getJdbcJavaType().getJavaType() == Character.class ) {
+							return "char(1)";
+						}
+						else {
+							return "char";
+						}
+					}
+					return castTarget.getLength() > MAX_CHAR_SIZE ? "char" : "char(" + castTarget.getLength() + ")";
 				case "binary":
 				case "varbinary":
+				case "mediumblob":
+				case "longblob":
 					return castTarget.getLength() == null
 						? "binary"
-						: ( "binary(" + castTarget.getLength() + ")" );
+						: "binary(" + castTarget.getLength() + ")";
 			}
 		}
 		return sqlType;
+	}
+
+	@Override
+	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
+		if ( isIntegerDivisionEmulationRequired( arithmeticExpression ) ) {
+			appendSql( OPEN_PARENTHESIS );
+			visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
+			appendSql( " div " );
+			visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
+			appendSql( CLOSE_PARENTHESIS );
+		}
+		else {
+			super.visitBinaryArithmeticExpression(arithmeticExpression);
+		}
 	}
 
 	@Override
@@ -209,7 +241,7 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 				getSql(),
 				getParameterBinders(),
 				getAffectedTableNames(),
-				null
+				getUniqueConstraintNameThatMayFail(sqlAst)
 		);
 	}
 
@@ -308,6 +340,17 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	@Override
 	public void visitValuesTableReference(ValuesTableReference tableReference) {
 		emulateValuesTableReferenceColumnAliasing( tableReference );
+	}
+
+	@Override
+	protected void renderDerivedTableReference(DerivedTableReference tableReference) {
+		if ( tableReference instanceof FunctionTableReference && tableReference.isLateral() ) {
+			// No need for a lateral keyword for functions
+			tableReference.accept( this );
+		}
+		else {
+			super.renderDerivedTableReference( tableReference );
+		}
 	}
 
 	@Override
@@ -426,11 +469,6 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	@Override
 	protected boolean supportsWithClause() {
 		return true;
-	}
-
-	@Override
-	protected String getDual() {
-		return "dual";
 	}
 
 	@Override

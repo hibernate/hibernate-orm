@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.basic;
 
@@ -14,10 +12,12 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.NationalizationSupport;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -37,6 +37,8 @@ import static org.hamcrest.Matchers.is;
  */
 @DomainModel(annotatedClasses = StringNationalizedMappingTests.EntityOfStrings.class)
 @SessionFactory
+@SkipForDialect(dialectClass = SybaseASEDialect.class,
+		reason = "Error converting characters into server's character set")
 public class StringNationalizedMappingTests {
 
 	@Test
@@ -69,10 +71,14 @@ public class StringNationalizedMappingTests {
 
 		// and try to use the mapping
 		scope.inTransaction(
-				(session) -> session.persist(new EntityOfStrings(1, "nstring", "nclob"))
+				(session) -> session.persist(new EntityOfStrings(1, "nstring 🦑", "nclob 🦀"))
 		);
 		scope.inTransaction(
-				(session) -> session.get(EntityOfStrings.class, 1)
+				(session) -> {
+					EntityOfStrings entity = session.get(EntityOfStrings.class, 1);
+					assertThat( entity.nstring, is("nstring 🦑") );
+					assertThat( entity.nclobString, is("nclob 🦀") );
+				}
 		);
 	}
 

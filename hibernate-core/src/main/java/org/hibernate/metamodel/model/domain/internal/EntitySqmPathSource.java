@@ -1,13 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -44,8 +41,8 @@ public class EntitySqmPathSource<J> extends AbstractSqmPathSource<J> implements 
 	}
 
 	@Override
-	public SqmPathSource<?> findSubPathSource(String name, JpaMetamodelImplementor metamodel) {
-		return getSqmPathType().findSubPathSource( name, metamodel );
+	public SqmPathSource<?> findSubPathSource(String name, boolean includeSubtypes) {
+		return getSqmPathType().findSubPathSource( name, includeSubtypes );
 	}
 
 	@Override

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
@@ -74,7 +72,11 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 				.getJavaTypeRegistry()
 				.resolveManagedTypeDescriptor( idClassSource.getComponentClass() );
 
-		this.representationStrategy = new IdClassRepresentationStrategy( this );
+		this.representationStrategy = new IdClassRepresentationStrategy(
+				this,
+				idClassSource.sortProperties() == null,
+				idClassSource::getPropertyNames
+		);
 
 		final PropertyAccess propertyAccess = PropertyAccessStrategyMapImpl.INSTANCE.buildPropertyAccess(
 				null,
@@ -101,7 +103,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 				propertyAccess
 		);
 
-		final CompositeType idClassType = (CompositeType) idClassSource.getType();
+		final CompositeType idClassType = idClassSource.getType();
 		( (CompositeTypeImplementor) idClassType ).injectMappingModelPart( embedded, creationProcess );
 
 		creationProcess.registerInitializationCallback(
@@ -127,10 +129,16 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 		super( new MutableAttributeMappingList( inverseMappingType.attributeMappings.size() ) );
 
 		this.navigableRole = inverseMappingType.getNavigableRole();
-		this.idMapping = (NonAggregatedIdentifierMapping) valueMapping;;
+		this.idMapping = (NonAggregatedIdentifierMapping) valueMapping;
 		this.virtualIdEmbeddable = (VirtualIdEmbeddable) valueMapping.getEmbeddableTypeDescriptor();
 		this.javaType = inverseMappingType.javaType;
-		this.representationStrategy = new IdClassRepresentationStrategy( this );
+		this.representationStrategy = new IdClassRepresentationStrategy( this, false, () -> {
+			final String[] attributeNames = new String[inverseMappingType.getNumberOfAttributeMappings()];
+			for ( int i = 0; i < attributeNames.length; i++ ) {
+				attributeNames[i] = inverseMappingType.getAttributeMapping( i ).getAttributeName();
+			}
+			return attributeNames;
+		} );
 		this.embedded = valueMapping;
 		this.selectableMappings = selectableMappings;
 		creationProcess.registerInitializationCallback(
@@ -156,16 +164,13 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 
 	@Override
 	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
-		final Object id = representationStrategy.getInstantiator().instantiate(
-				null,
-				session.getSessionFactory()
-		);
+		final Object id = representationStrategy.getInstantiator().instantiate( null );
 
 		final Object[] propertyValues = new Object[virtualIdEmbeddable.getNumberOfAttributeMappings()];
 
 		for ( int i = 0; i < propertyValues.length; i++ ) {
 			final AttributeMapping attributeMapping = virtualIdEmbeddable.getAttributeMapping( i );
-			final Object o = attributeMapping.getPropertyAccess().getGetter().get( entity );
+			final Object o = attributeMapping.getValue( entity );
 			if ( o == null ) {
 				final AttributeMapping idClassAttributeMapping = getAttributeMapping( i );
 				if ( idClassAttributeMapping.getPropertyAccess().getGetter().getReturnTypeClass().isPrimitive() ) {
@@ -210,7 +215,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 		virtualIdEmbeddable.forEachAttribute(
 				(position, virtualIdAttribute) -> {
 					final AttributeMapping idClassAttribute = attributeMappings.get( position );
-					Object o = idClassAttribute.getPropertyAccess().getGetter().get( id );
+					Object o = idClassAttribute.getValue( id );
 					if ( virtualIdAttribute instanceof ToOneAttributeMapping && !( idClassAttribute instanceof ToOneAttributeMapping ) ) {
 						final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) virtualIdAttribute;
 						final EntityPersister entityPersister = toOneAttributeMapping.getEntityMappingType()
@@ -263,14 +268,6 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 	public EmbeddableValuedModelPart getEmbeddedValueMapping() {
 		return embedded;
 	}
-
-
-	@Override
-	public boolean isCreateEmptyCompositesEnabled() {
-		// generally we do not want empty composites for identifiers
-		return false;
-	}
-
 
 	@Override
 	public void forEachAttributeMapping(Consumer<? super AttributeMapping> action) {

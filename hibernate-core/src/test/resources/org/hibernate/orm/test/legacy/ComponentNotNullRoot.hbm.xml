@@ -34,9 +34,9 @@
 			<composite-element class="org.hibernate.orm.test.legacy.ComponentNotNullRoot$ContainerInnerClass">
 				<property name="name"/>
 				<property name="count" column="count_"/>
-				<many-to-one name="simple" not-null="true" cascade="save-update"/>
-				<many-to-one name="one" cascade="save-update"/>
-				<many-to-one name="many" cascade="save-update"/>
+				<many-to-one name="simple" not-null="true" cascade="merge,persist"/>
+				<many-to-one name="one" cascade="merge,persist"/>
+				<many-to-one name="many" cascade="merge,persist"/>
 			</composite-element>
 		</list>
 
@@ -46,8 +46,8 @@
 			<composite-element class="org.hibernate.orm.test.legacy.ComponentNotNullRoot$ContainerInnerClass">
 				<property name="name"/>
 				<property name="count" column="count_"/>
-				<many-to-one name="simple" cascade="save-update"/>
-				<many-to-one name="one" cascade="save-update"/>
+				<many-to-one name="simple" cascade="merge,persist"/>
+				<many-to-one name="one" cascade="merge,persist"/>
 				<nested-composite-element name="nested" class="org.hibernate.orm.test.legacy.ComponentNotNullRoot$ContainerInnerClass">
 					<property name="nestedproperty" not-null="true"/>
 				</nested-composite-element>

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.jdbc.internal;
 
@@ -16,8 +14,9 @@ import org.hibernate.ResourceClosedException;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
+import org.hibernate.resource.jdbc.LogicalConnection;
 import org.hibernate.resource.jdbc.ResourceRegistry;
-import org.hibernate.resource.jdbc.spi.JdbcObserver;
+import org.hibernate.resource.jdbc.spi.JdbcEventHandler;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 
@@ -30,9 +29,9 @@ import static org.hibernate.ConnectionReleaseMode.ON_CLOSE;
 import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION;
 
 /**
- * Represents a LogicalConnection where we manage obtaining and releasing the Connection as needed.
+ * Represents a {@link LogicalConnection} where we manage obtaining and releasing the {@link Connection} as needed.
  * This implementation does not claim to be thread-safe and is not designed to be used by multiple
- * threads, yet we do apply a limited amount of care to be able to void obscure exceptions when
+ * threads, yet we do apply a limited amount of care to be able to avoid obscure exceptions when
  * this class is used in the wrong way.
  *
  * @author Steve Ebersole
@@ -41,7 +40,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	private static final Logger log = Logger.getLogger( LogicalConnectionManagedImpl.class );
 
 	private final transient JdbcConnectionAccess jdbcConnectionAccess;
-	private final transient JdbcObserver observer;
+	private final transient JdbcEventHandler jdbcEventHandler;
 	private final transient SqlExceptionHelper sqlExceptionHelper;
 
 	private final transient PhysicalConnectionHandlingMode connectionHandlingMode;
@@ -54,19 +53,20 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	public LogicalConnectionManagedImpl(
 			JdbcConnectionAccess jdbcConnectionAccess,
 			JdbcSessionContext jdbcSessionContext,
-			ResourceRegistry resourceRegistry,
-			JdbcServices jdbcServices) {
+			SqlExceptionHelper sqlExceptionHelper,
+			ResourceRegistry resourceRegistry) {
 		this.jdbcConnectionAccess = jdbcConnectionAccess;
-		this.observer = jdbcSessionContext.getObserver();
+		this.jdbcEventHandler = jdbcSessionContext.getEventHandler();
 		this.resourceRegistry = resourceRegistry;
 
 		this.connectionHandlingMode = determineConnectionHandlingMode(
 				jdbcSessionContext.getPhysicalConnectionHandlingMode(),
 				jdbcConnectionAccess );
 
-		this.sqlExceptionHelper = jdbcServices.getSqlExceptionHelper();
+		this.sqlExceptionHelper = sqlExceptionHelper;
 
 		if ( connectionHandlingMode.getAcquisitionMode() == IMMEDIATELY ) {
+			//noinspection resource
 			acquireConnectionIfNeeded();
 		}
 
@@ -80,6 +80,19 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 							"SQL operations outside of any JDBC/SQL transaction."
 			);
 		}
+	}
+
+	public LogicalConnectionManagedImpl(
+			JdbcConnectionAccess jdbcConnectionAccess,
+			JdbcSessionContext jdbcSessionContext,
+			ResourceRegistry resourceRegistry,
+			JdbcServices jdbcServices) {
+		this(
+				jdbcConnectionAccess,
+				jdbcSessionContext,
+				jdbcServices.getSqlExceptionHelper(),
+				resourceRegistry
+		);
 	}
 
 	private PhysicalConnectionHandlingMode determineConnectionHandlingMode(
@@ -108,7 +121,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 
 	private Connection acquireConnectionIfNeeded() {
 		if ( physicalConnection == null ) {
-			// todo : is this the right place for these observer calls?
+			jdbcEventHandler.jdbcConnectionAcquisitionStart();
 			try {
 				physicalConnection = jdbcConnectionAccess.obtainConnection();
 			}
@@ -116,7 +129,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 				throw sqlExceptionHelper.convert( e, "Unable to acquire JDBC Connection" );
 			}
 			finally {
-				observer.jdbcConnectionAcquisitionEnd( physicalConnection );
+				jdbcEventHandler.jdbcConnectionAcquisitionEnd( physicalConnection );
 			}
 		}
 		return physicalConnection;
@@ -221,6 +234,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 				}
 			}
 			finally {
+				jdbcEventHandler.jdbcConnectionReleaseStart();
 				jdbcConnectionAccess.releaseConnection( localVariableConnection );
 			}
 		}
@@ -228,7 +242,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 			throw sqlExceptionHelper.convert( e, "Unable to release JDBC Connection" );
 		}
 		finally {
-			observer.jdbcConnectionReleaseEnd();
+			jdbcEventHandler.jdbcConnectionReleaseEnd();
 		}
 	}
 

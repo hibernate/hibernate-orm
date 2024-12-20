@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.onetoone;
 
@@ -15,7 +13,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.id.IdentifierGenerationException;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -32,7 +30,7 @@ import static org.junit.Assert.fail;
 public class OptionalOneToOnePKJCTest extends BaseCoreFunctionalTestCase {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-4982")
+	@JiraKey( value = "HHH-4982")
 	public void testNullBidirForeignIdGenerator() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -54,7 +52,7 @@ public class OptionalOneToOnePKJCTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-4982")
+	@JiraKey( value = "HHH-4982")
 	public void testNotFoundBidirForeignIdGenerator() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -79,7 +77,7 @@ public class OptionalOneToOnePKJCTest extends BaseCoreFunctionalTestCase {
 
 	// @PrimaryKeyJoinColumn @OneToOne(optional=true) non-foreign generator
 	@Test
-	@TestForIssue( jiraKey = "HHH-4982")
+	@JiraKey( value = "HHH-4982")
 	public void testNotFoundBidirDefaultIdGenerator() {
 		Session s = openSession();
 		s.getTransaction().begin();
@@ -110,7 +108,7 @@ public class OptionalOneToOnePKJCTest extends BaseCoreFunctionalTestCase {
 //				.uniqueResult();
 		assertNotNull( owner );
 		assertNull( owner.getAddress() );
-		s.delete( owner );
+		s.remove( owner );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -148,7 +146,7 @@ public class OptionalOneToOnePKJCTest extends BaseCoreFunctionalTestCase {
 		assertNotNull( party );
 		assertEquals( "id", party.partyId );
 		assertNull( party.partyAffiliate );
-		s.delete( party );
+		s.remove( party );
 		s.getTransaction().commit();
 		s.close();
 	}

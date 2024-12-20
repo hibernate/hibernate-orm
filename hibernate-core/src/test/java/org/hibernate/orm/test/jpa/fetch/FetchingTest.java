@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.fetch;
 
@@ -40,7 +38,7 @@ public class FetchingTest extends AbstractJPATest {
 					p = (Person) session.createQuery( "select p from Person p where p.firstName = :name" )
 							.setParameter( "name", "Gavin" ).uniqueResult();
 					assertFalse( Hibernate.isInitialized( p.getStays() ) );
-					session.delete( p );
+					session.remove( p );
 				}
 		);
 	}
@@ -79,7 +77,7 @@ public class FetchingTest extends AbstractJPATest {
 							Hibernate.isInitialized( stay3.getVeryOldPerson() ),
 							"FetchMode.JOIN should overrides lazy options"
 					);
-					session.delete( stay3.getVeryOldPerson() );
+					session.remove( stay3.getVeryOldPerson() );
 				}
 		);
 	}

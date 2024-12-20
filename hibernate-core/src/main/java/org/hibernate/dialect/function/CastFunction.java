@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
 
@@ -10,10 +8,14 @@ import java.sql.Types;
 import java.util.List;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
+import org.hibernate.query.sqm.function.FunctionRenderer;
+import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
@@ -23,6 +25,8 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.QueryLiteral;
+import org.hibernate.type.BasicType;
 
 /**
  * ANSI SQL-inspired {@code cast()} function, where the target types
@@ -48,13 +52,10 @@ public class CastFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 	}
 
 	private CastType getBooleanCastType(int preferredSqlTypeCodeForBoolean) {
-		switch ( preferredSqlTypeCodeForBoolean ) {
-			case Types.BIT:
-			case Types.SMALLINT:
-			case Types.TINYINT:
-				return CastType.INTEGER_BOOLEAN;
-		}
-		return CastType.BOOLEAN;
+		return switch (preferredSqlTypeCodeForBoolean) {
+			case Types.BIT, Types.SMALLINT, Types.TINYINT -> CastType.INTEGER_BOOLEAN;
+			default -> CastType.BOOLEAN;
+		};
 	}
 
 	@Override
@@ -71,9 +72,58 @@ public class CastFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 		final JdbcMapping targetJdbcMapping = castTarget.getExpressionType().getSingleJdbcMapping();
 		final CastType targetType = getCastType( targetJdbcMapping );
 
-		String cast = dialect.castPattern( sourceType, targetType );
+		if ( sourceType == CastType.OTHER && targetType == CastType.STRING
+				&& sourceMapping.getJdbcType().isArray() ) {
+			renderCastArrayToString( sqlAppender, arguments.get( 0 ), dialect, walker );
+		}
+		else {
+			new PatternRenderer( dialect.castPattern( sourceType, targetType ) )
+					.render( sqlAppender, arguments, walker );
+		}
+	}
 
-		new PatternRenderer( cast ).render( sqlAppender, arguments, walker );
+	public static void renderCastArrayToString(
+			SqlAppender sqlAppender,
+			SqlAstNode arrayArgument,
+			Dialect dialect,
+			SqlAstTranslator<?> walker) {
+		final SessionFactoryImplementor sessionFactory = walker.getSessionFactory();
+		final BasicType<?> stringType = sessionFactory.getTypeConfiguration().getBasicTypeForJavaType( String.class );
+		final SqmFunctionRegistry functionRegistry = sessionFactory.getQueryEngine().getSqmFunctionRegistry();
+		final FunctionRenderer concatDescriptor =
+				(FunctionRenderer) functionRegistry.findFunctionDescriptor( "concat" );
+		final FunctionRenderer arrayToStringDescriptor =
+				(FunctionRenderer) functionRegistry.findFunctionDescriptor( "array_to_string" );
+		final boolean caseWhen = dialect.isEmptyStringTreatedAsNull();
+		if ( caseWhen ) {
+			sqlAppender.append( "case when " );
+			arrayArgument.accept( walker );
+			sqlAppender.append( " is null then null else " );
+		}
+
+		concatDescriptor.render(
+				sqlAppender,
+				List.of(
+						new QueryLiteral<>( "[", stringType ),
+						new SelfRenderingFunctionSqlAstExpression(
+								"array_to_string",
+								arrayToStringDescriptor,
+								List.of(
+										arrayArgument,
+										new QueryLiteral<>( ",", stringType ),
+										new QueryLiteral<>( "null", stringType )
+								),
+								stringType,
+								stringType
+						),
+						new QueryLiteral<>( "]", stringType )
+				),
+				stringType,
+				walker
+		);
+		if ( caseWhen ) {
+			sqlAppender.append( " end" );
+		}
 	}
 
 	private CastType getCastType(JdbcMapping sourceMapping) {

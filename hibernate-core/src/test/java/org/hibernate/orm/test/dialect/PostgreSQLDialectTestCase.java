@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.dialect;
 
@@ -23,13 +21,12 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.dialect.unique.AlterTableUniqueDelegate;
-import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
@@ -50,7 +47,7 @@ import static org.junit.Assert.fail;
 public class PostgreSQLDialectTestCase extends BaseUnitTestCase {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-7251")
+	@JiraKey( value = "HHH-7251")
 	public void testDeadlockException() {
 		PostgreSQLDialect dialect = new PostgreSQLDialect();
 		SQLExceptionConversionDelegate delegate = dialect.buildSQLExceptionConversionDelegate();
@@ -61,7 +58,7 @@ public class PostgreSQLDialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-7251")
+	@JiraKey( value = "HHH-7251")
 	public void testTimeoutException() {
 		PostgreSQLDialect dialect = new PostgreSQLDialect();
 		SQLExceptionConversionDelegate delegate = dialect.buildSQLExceptionConversionDelegate();
@@ -72,7 +69,7 @@ public class PostgreSQLDialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-13661")
+	@JiraKey( value = "HHH-13661")
 	public void testQueryTimeoutException() {
 		final PostgreSQLDialect dialect = new PostgreSQLDialect();
 		final SQLExceptionConversionDelegate delegate = dialect.buildSQLExceptionConversionDelegate();
@@ -86,7 +83,7 @@ public class PostgreSQLDialectTestCase extends BaseUnitTestCase {
 	 * Tests that getForUpdateString(String aliases, LockOptions lockOptions) will return a String
 	 * that will effect the SELECT ... FOR UPDATE OF tableAlias1, ..., tableAliasN
 	 */
-	@TestForIssue( jiraKey = "HHH-5654" )
+	@JiraKey( value = "HHH-5654" )
 	public void testGetForUpdateStringWithAliasesAndLockOptions() {
 		PostgreSQLDialect dialect = new PostgreSQLDialect();
 		LockOptions lockOptions = new LockOptions();
@@ -111,7 +108,7 @@ public class PostgreSQLDialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8687")
+	@JiraKey(value = "HHH-8687")
 	public void testMessageException() {
 		PostgreSQLDialect dialect = new PostgreSQLDialect();
 		try {
@@ -128,7 +125,7 @@ public class PostgreSQLDialectTestCase extends BaseUnitTestCase {
 	 * Tests that getAlterTableString() will make use of IF EXISTS syntax
 	 */
 	@Test
-	@TestForIssue( jiraKey = "HHH-11647" )
+	@JiraKey( value = "HHH-11647" )
 	public void testGetAlterTableString() {
 		PostgreSQLDialect dialect = new PostgreSQLDialect();
 
@@ -136,7 +133,7 @@ public class PostgreSQLDialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-16252" )
+	@JiraKey( value = "HHH-16252" )
 	public void testAlterTableDropConstraintString() {
 		PostgreSQLDialect dialect = new PostgreSQLDialect();
 		AlterTableUniqueDelegate alterTable = new AlterTableUniqueDelegate( dialect );
@@ -157,11 +154,6 @@ public class PostgreSQLDialectTestCase extends BaseUnitTestCase {
 
 		@Override
 		public Dialect getDialect() {
-			return null;
-		}
-
-		@Override
-		public IdentifierHelper getIdentifierHelper() {
 			return null;
 		}
 

@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.locking;
 
 import java.util.Collection;
@@ -20,7 +24,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -48,19 +51,19 @@ public class RemoveEntityTest {
 				session -> {
 					EmployeeEntity emp = new EmployeeEntity();
 					emp.setEmail( EMPLOYEE_TO_DELETE_MAIL );
-					session.save( emp );
+					session.persist( emp );
 
 					LinkEntity linkEntity = new LinkEntity();
 					linkEntity.setEmployeeId( emp.getEmployeeId() );
-					session.save( linkEntity );
+					session.persist( linkEntity );
 
 					Set<LinkEntity> link = Set.of( linkEntity );
 					emp.setFolderLink( link );
-					session.save( emp );
+					session.persist( emp );
 
 					emp = new EmployeeEntity();
 					emp.setEmail( "demo-user2@mail.com" );
-					session.save( emp );
+					session.persist( emp );
 				}
 		);
 	}

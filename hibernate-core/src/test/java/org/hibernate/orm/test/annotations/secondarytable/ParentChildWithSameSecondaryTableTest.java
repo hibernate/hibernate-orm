@@ -1,8 +1,12 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.annotations.secondarytable;
 
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -33,7 +37,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 		}
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-15117")
+@JiraKey(value = "HHH-15117")
 public class ParentChildWithSameSecondaryTableTest {
 
 	@AfterEach
@@ -105,7 +109,7 @@ public class ParentChildWithSameSecondaryTableTest {
 		scope.inTransaction(
 				session -> {
 
-					session.delete( session.get( EntityC.class, 1L ) );
+					session.remove( session.get( EntityC.class, 1L ) );
 				}
 		);
 	}

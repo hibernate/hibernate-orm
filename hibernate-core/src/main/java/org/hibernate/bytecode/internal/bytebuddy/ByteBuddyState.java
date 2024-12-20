@@ -1,10 +1,39 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.internal.bytebuddy;
+
+import java.io.File;
+import java.io.IOException;
+import java.lang.invoke.MethodHandles;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
+
+import org.hibernate.HibernateException;
+import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImplConstants;
+import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
+import org.hibernate.bytecode.spi.BasicProxyFactory;
+import org.hibernate.engine.spi.PrimeAmongSecondarySupertypes;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.proxy.ProxyConfiguration;
+import org.hibernate.proxy.ProxyFactory;
+
+import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.ClassFileVersion;
+import net.bytebuddy.TypeCache;
+import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.dynamic.DynamicType;
+import net.bytebuddy.dynamic.DynamicType.Unloaded;
+import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
+import net.bytebuddy.dynamic.scaffold.TypeValidation;
+import net.bytebuddy.implementation.FieldAccessor;
+import net.bytebuddy.implementation.MethodDelegation;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
+import net.bytebuddy.matcher.ElementMatcher;
+import net.bytebuddy.pool.TypePool;
 
 import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
 import static net.bytebuddy.matcher.ElementMatchers.isFinalizer;
@@ -16,42 +45,6 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 import static org.hibernate.internal.CoreLogging.messageLogger;
-
-import java.io.File;
-import java.io.IOException;
-import java.lang.invoke.MethodHandles;
-import java.lang.reflect.Method;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Function;
-
-import org.hibernate.HibernateException;
-import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
-import org.hibernate.bytecode.spi.BasicProxyFactory;
-import org.hibernate.engine.spi.PrimeAmongSecondarySupertypes;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.securitymanager.SystemSecurityManager;
-import org.hibernate.proxy.ProxyConfiguration;
-import org.hibernate.proxy.ProxyFactory;
-
-import net.bytebuddy.ByteBuddy;
-import net.bytebuddy.ClassFileVersion;
-import net.bytebuddy.TypeCache;
-import net.bytebuddy.asm.AsmVisitorWrapper.ForDeclaredMethods;
-import net.bytebuddy.asm.MemberSubstitution;
-import net.bytebuddy.description.method.MethodDescription;
-import net.bytebuddy.dynamic.DynamicType;
-import net.bytebuddy.dynamic.DynamicType.Unloaded;
-import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
-import net.bytebuddy.dynamic.scaffold.TypeValidation;
-import net.bytebuddy.implementation.FieldAccessor;
-import net.bytebuddy.implementation.MethodDelegation;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
-import net.bytebuddy.matcher.ElementMatcher;
-import net.bytebuddy.matcher.ElementMatchers;
-import net.bytebuddy.pool.TypePool;
 
 /**
  * A utility to hold all ByteBuddy related state, as in the current version of
@@ -68,9 +61,11 @@ public final class ByteBuddyState {
 
 	private final ByteBuddy byteBuddy;
 
-	private static final ProxyDefinitionHelpers proxyDefinitionHelpers = new ProxyDefinitionHelpers();
+	private final ProxyDefinitionHelpers proxyDefinitionHelpers = new ProxyDefinitionHelpers();
 
 	private final ClassRewriter classRewriter;
+
+	private final EnhancerImplConstants enhancerConstants = new EnhancerImplConstants();
 
 	/**
 	 * It will be easier to maintain the cache and its state when it will no longer be static
@@ -87,16 +82,9 @@ public final class ByteBuddyState {
 
 	ByteBuddyState(ClassFileVersion classFileVersion) {
 		this.byteBuddy = new ByteBuddy( classFileVersion ).with( TypeValidation.DISABLED );
-
 		this.proxyCache = new TypeCache( TypeCache.Sort.WEAK );
 		this.basicProxyCache = new TypeCache( TypeCache.Sort.WEAK );
-
-		if ( SystemSecurityManager.isSecurityManagerEnabled() ) {
-			this.classRewriter = new SecurityManagerClassRewriter();
-		}
-		else {
-			this.classRewriter = new StandardClassRewriter();
-		}
+		this.classRewriter = new StandardClassRewriter();
 	}
 
 	/**
@@ -197,22 +185,12 @@ public final class ByteBuddyState {
 		return cache.findOrInsert(
 				referenceClass.getClassLoader(),
 				cacheKey,
-				() -> {
-					PrivilegedAction<Class<?>> delegateToPrivilegedAction = new PrivilegedAction<Class<?>>() {
-						@Override
-						public Class<?> run() {
-							return make( makeProxyFunction.apply( byteBuddy ) )
-									.load(
-											referenceClass.getClassLoader(),
-											resolveClassLoadingStrategy( referenceClass )
-									)
-									.getLoaded();
-						}
-					};
-					return SystemSecurityManager.isSecurityManagerEnabled() ? AccessController.doPrivileged(
-							delegateToPrivilegedAction ) :
-							delegateToPrivilegedAction.run();
-				},
+				() -> make( makeProxyFunction.apply( byteBuddy ) )
+						.load(
+								referenceClass.getClassLoader(),
+								resolveClassLoadingStrategy( referenceClass )
+						)
+						.getLoaded(),
 				cache
 		);
 	}
@@ -230,8 +208,6 @@ public final class ByteBuddyState {
 	}
 
 	private Unloaded<?> make(TypePool typePool, DynamicType.Builder<?> builder) {
-		builder = classRewriter.installReflectionMethodVisitors( builder );
-
 		Unloaded<?> unloadedClass;
 		if ( typePool != null ) {
 			unloadedClass = builder.make( typePool );
@@ -248,34 +224,11 @@ public final class ByteBuddyState {
 				LOG.warn( "Unable to save generated class %1$s", unloadedClass.getTypeDescription().getName(), e );
 			}
 		}
-
-		classRewriter.registerAuthorizedClass( unloadedClass );
-
 		return unloadedClass;
 	}
 
-	private static class GetDeclaredMethodAction implements PrivilegedAction<Method> {
-		private final Class<?> clazz;
-		private final String methodName;
-		private final Class<?>[] parameterTypes;
-
-		private GetDeclaredMethodAction(Class<?> clazz, String methodName, Class<?>... parameterTypes) {
-			this.clazz = clazz;
-			this.methodName = methodName;
-			this.parameterTypes = parameterTypes;
-		}
-
-		@Override
-		public Method run() {
-			try {
-				Method method = clazz.getDeclaredMethod( methodName, parameterTypes );
-
-				return method;
-			}
-			catch (NoSuchMethodException e) {
-				throw new HibernateException( "Unable to prepare getDeclaredMethod()/getMethod() substitution", e );
-			}
-		}
+	public EnhancerImplConstants getEnhancerConstants() {
+		return this.enhancerConstants;
 	}
 
 	/**
@@ -308,32 +261,10 @@ public final class ByteBuddyState {
 				toFullyIgnore.add( isDeclaredBy( m.getReturnType() ).and( named( m.getName() ) ).and( takesNoArguments() ) );
 			}
 
-			PrivilegedAction<MethodDelegation> delegateToInterceptorDispatcherMethodDelegationPrivilegedAction =
-					new PrivilegedAction<MethodDelegation>() {
+			this.delegateToInterceptorDispatcherMethodDelegation = MethodDelegation.to( ProxyConfiguration.InterceptorDispatcher.class );
 
-				@Override
-				public MethodDelegation run() {
-					return MethodDelegation.to( ProxyConfiguration.InterceptorDispatcher.class );
-				}
-			};
-
-			this.delegateToInterceptorDispatcherMethodDelegation = SystemSecurityManager.isSecurityManagerEnabled()
-					? AccessController.doPrivileged( delegateToInterceptorDispatcherMethodDelegationPrivilegedAction )
-					: delegateToInterceptorDispatcherMethodDelegationPrivilegedAction.run();
-
-			PrivilegedAction<FieldAccessor.PropertyConfigurable> interceptorFieldAccessorPrivilegedAction =
-					new PrivilegedAction<FieldAccessor.PropertyConfigurable>() {
-
-				@Override
-				public FieldAccessor.PropertyConfigurable run() {
-					return FieldAccessor.ofField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME )
-							.withAssigner( Assigner.DEFAULT, Assigner.Typing.DYNAMIC );
-				}
-			};
-
-			this.interceptorFieldAccessor = SystemSecurityManager.isSecurityManagerEnabled()
-					? AccessController.doPrivileged( interceptorFieldAccessorPrivilegedAction )
-					: interceptorFieldAccessorPrivilegedAction.run();
+			this.interceptorFieldAccessor = FieldAccessor.ofField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME )
+					.withAssigner( Assigner.DEFAULT, Assigner.Typing.DYNAMIC );
 		}
 
 		public ElementMatcher<? super MethodDescription> getGroovyGetMetaClassFilter() {
@@ -370,53 +301,7 @@ public final class ByteBuddyState {
 		void registerAuthorizedClass(Unloaded<?> unloadedClass);
 	}
 
-	private static class SecurityManagerClassRewriter implements ClassRewriter {
-
-		private final ForDeclaredMethods getDeclaredMethodMemberSubstitution;
-		private final ForDeclaredMethods getMethodMemberSubstitution;
-
-		private SecurityManagerClassRewriter() {
-			this.getDeclaredMethodMemberSubstitution = getDeclaredMethodMemberSubstitution();
-			this.getMethodMemberSubstitution = getMethodMemberSubstitution();
-		}
-
-		@Override
-		public DynamicType.Builder<?> installReflectionMethodVisitors(DynamicType.Builder<?> builder) {
-			builder = builder.visit( getDeclaredMethodMemberSubstitution );
-			return builder.visit( getMethodMemberSubstitution );
-		}
-
-		@Override
-		public void registerAuthorizedClass(Unloaded<?> unloadedClass) {
-			// we authorize the proxy class to access the method lookup dispatcher
-			HibernateMethodLookupDispatcher.registerAuthorizedClass( unloadedClass.getTypeDescription().getName() );
-		}
-
-		private static ForDeclaredMethods getDeclaredMethodMemberSubstitution() {
-			// this should only be called if the security manager is enabled, thus the privileged calls
-			return MemberSubstitution.relaxed()
-					.method( ElementMatchers.is( AccessController.doPrivileged( new GetDeclaredMethodAction( Class.class,
-							"getDeclaredMethod", String.class, Class[].class ) ) ) )
-					.replaceWith(
-							AccessController.doPrivileged( new GetDeclaredMethodAction( HibernateMethodLookupDispatcher.class,
-									"getDeclaredMethod", Class.class, String.class, Class[].class ) ) )
-					.on( ElementMatchers.isTypeInitializer() );
-		}
-
-		private static ForDeclaredMethods getMethodMemberSubstitution() {
-			// this should only be called if the security manager is enabled, thus the privileged calls
-			return MemberSubstitution.relaxed()
-					.method( ElementMatchers.is( AccessController.doPrivileged( new GetDeclaredMethodAction( Class.class,
-							"getMethod", String.class, Class[].class ) ) ) )
-					.replaceWith(
-							AccessController.doPrivileged( new GetDeclaredMethodAction( HibernateMethodLookupDispatcher.class,
-									"getMethod", Class.class, String.class, Class[].class ) ) )
-					.on( ElementMatchers.isTypeInitializer() );
-		}
-	}
-
 	private static class StandardClassRewriter implements ClassRewriter {
-
 		@Override
 		public DynamicType.Builder<?> installReflectionMethodVisitors(DynamicType.Builder<?> builder) {
 			// do nothing
@@ -434,7 +319,9 @@ public final class ByteBuddyState {
 			return ClassLoadingStrategy.UsingLookup.of( MethodHandles.privateLookupIn( originalClass, LOOKUP ) );
 		}
 		catch (Throwable e) {
-			throw new HibernateException( LOG.bytecodeEnhancementFailedUnableToGetPrivateLookupFor( originalClass.getName() ), e );
+			throw new HibernateException( "Bytecode enhancement failed for class '" + originalClass.getName()
+					+ "' (it might be due to the Java module system preventing Hibernate ORM from defining an enhanced class in the same package"
+					+ " - in this case, the class should be opened and exported to Hibernate ORM)", e );
 		}
 	}
 

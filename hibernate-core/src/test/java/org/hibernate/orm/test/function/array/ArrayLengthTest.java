@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.function.array;
 
@@ -33,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @DomainModel(annotatedClasses = EntityWithArrays.class)
 @SessionFactory
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsStructuralArrays.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsArrayLength.class)
 // Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
 @BootstrapServiceRegistry(integrators = SharedDriverManagerTypeCacheClearingIntegrator.class)
 public class ArrayLengthTest {
@@ -110,6 +109,18 @@ public class ArrayLengthTest {
 					cb.collectionLength( root.get( "theCollection" ) )
 			);
 			em.createQuery( cq ).getResultList();
+		} );
+	}
+
+	@Test
+	public void testLengthThreeHql(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			//tag::hql-array-length-hql-example[]
+			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where length(e.theArray) = 3", EntityWithArrays.class )
+					.getResultList();
+			//end::hql-array-length-hql-example[]
+			assertEquals( 1, results.size() );
+			assertEquals( 2L, results.get( 0 ).getId() );
 		} );
 	}
 

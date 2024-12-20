@@ -20,7 +20,8 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 
 /**
- * Models the published doc descriptor file
+ * Helper for {@linkplain #loadProject() loading} the project documentation descriptor and
+ * {@linkplain #storeProject storing} it to file.
  *
  * @author Steve Ebersole
  */
@@ -46,6 +47,9 @@ public class DescriptorAccess {
 		}
 	}
 
+	/**
+	 * Store the descriptor to file
+	 */
 	public static void storeProject(ProjectDocumentationDescriptor project, File jsonFile) {
 		prepareJsonFile( jsonFile );
 

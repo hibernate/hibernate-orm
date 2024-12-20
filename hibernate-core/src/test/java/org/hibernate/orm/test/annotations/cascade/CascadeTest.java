@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.cascade;
 
@@ -110,7 +108,7 @@ public class CascadeTest {
 				session -> {
 					Tooth t = session.get( Tooth.class, tooth.id );
 					assertNotNull( t );
-					session.delete( t.mouth );
+					session.remove( t.mouth );
 				}
 		);
 		scope.inTransaction(
@@ -148,7 +146,7 @@ public class CascadeTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( session.get( Mouth.class, mouth.id ) )
+						session.remove( session.get( Mouth.class, mouth.id ) )
 		);
 	}
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
 
@@ -11,7 +9,6 @@ import java.util.Map;
 import java.util.Objects;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -21,12 +18,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * @author Gavin King
  */
 public abstract class AbstractType implements Type {
-
-	@Deprecated(forRemoval = true)
-	protected static final Size LEGACY_DICTATED_SIZE = new Size();
-
-	@Deprecated(forRemoval = true)
-	protected static final Size LEGACY_DEFAULT_SIZE = new Size( 19, 2, 255L, Size.LobMultiplier.NONE ); // to match legacy behavior
 
 	@Override
 	public boolean isAssociationType() {
@@ -126,7 +117,8 @@ public abstract class AbstractType implements Type {
 	}
 
 	private boolean needsReplacement(ForeignKeyDirection foreignKeyDirection) {
-		if ( isAssociationType() ) {
+		// Collection and OneToOne are the only associations that could be TO_PARENT
+		if ( this instanceof CollectionType || this instanceof OneToOneType ) {
 			final AssociationType associationType = (AssociationType) this;
 			return associationType.getForeignKeyDirection() == foreignKeyDirection;
 		}

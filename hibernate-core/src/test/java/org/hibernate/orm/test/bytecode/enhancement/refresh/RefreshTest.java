@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.bytecode.enhancement.refresh;
 
 import java.io.Serializable;
@@ -6,13 +10,13 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -27,24 +31,23 @@ import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(BytecodeEnhancerRunner.class)
-@TestForIssue(jiraKey = "HHH-16423")
-public class RefreshTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+			RefreshTest.RealmEntity.class,
+				RefreshTest.RealmAttributeEntity.class,
+				RefreshTest.ComponentEntity.class,
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+@JiraKey("HHH-16423")
+public class RefreshTest {
 
 	private static final String REALM_ID = "id";
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				RealmEntity.class,
-				RealmAttributeEntity.class,
-				ComponentEntity.class,
-		};
-	}
-
-	@After
-	public void trearDown() {
-		inTransaction(
+	@AfterEach
+	public void trearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					RealmEntity find = session.find( RealmEntity.class, "id" );
 					if(find != null) {
@@ -55,8 +58,8 @@ public class RefreshTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testRefresh() {
-		inTransaction(
+	public void testRefresh(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					RealmEntity realm = new RealmEntity();
 					realm.setId( REALM_ID );
@@ -65,7 +68,7 @@ public class RefreshTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					RealmEntity realm = session.find( RealmEntity.class, REALM_ID );
 
@@ -79,8 +82,8 @@ public class RefreshTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testRefresh2() {
-		inTransaction(
+	public void testRefresh2(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					RealmEntity realm = new RealmEntity();
 					realm.setId( "id" );
@@ -100,7 +103,7 @@ public class RefreshTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					RealmEntity realm = session.find( RealmEntity.class, REALM_ID );
 
@@ -115,8 +118,8 @@ public class RefreshTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testRefresh3() {
-		inTransaction(
+	public void testRefresh3(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					RealmEntity realm = new RealmEntity();
 					realm.setId( "id" );
@@ -134,7 +137,7 @@ public class RefreshTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					RealmEntity realm = session.find( RealmEntity.class, REALM_ID );
 
@@ -149,8 +152,8 @@ public class RefreshTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testRefresh4() {
-		inTransaction(
+	public void testRefresh4(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					RealmEntity realm = new RealmEntity();
 					realm.setId( "id" );
@@ -178,7 +181,7 @@ public class RefreshTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					RealmEntity realm = session.find( RealmEntity.class, REALM_ID );
 
@@ -303,7 +306,7 @@ public class RefreshTest extends BaseCoreFunctionalTestCase {
 	public static class RealmAttributeEntity {
 
 		@Id
-		@ManyToOne(fetch = FetchType.LAZY)
+		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
 		@JoinColumn(name = "REALM_ID")
 		protected RealmEntity realm;
 

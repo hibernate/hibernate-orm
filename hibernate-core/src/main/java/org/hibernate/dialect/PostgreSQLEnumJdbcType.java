@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
@@ -12,21 +10,25 @@ import org.hibernate.engine.jdbc.Size;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Arrays;
 
 import static java.util.Collections.emptySet;
 import static org.hibernate.type.SqlTypes.NAMED_ENUM;
+import static org.hibernate.type.SqlTypes.OTHER;
+import static org.hibernate.type.descriptor.converter.internal.EnumHelper.getEnumeratedValues;
 
 /**
  * Represents a named {@code enum} type on PostgreSQL.
@@ -46,15 +48,28 @@ import static org.hibernate.type.SqlTypes.NAMED_ENUM;
  */
 public class PostgreSQLEnumJdbcType implements JdbcType {
 
+	public static final PostgreSQLEnumJdbcType INSTANCE = new PostgreSQLEnumJdbcType();
+
 	@Override
 	public int getJdbcTypeCode() {
+		return OTHER;
+	}
+
+	@Override
+	public int getDefaultSqlTypeCode() {
 		return NAMED_ENUM;
 	}
 
 	@Override
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
-		return (appender, value, dialect, wrapperOptions) -> appender.appendSql( "'" + ((Enum<?>) value).name() + "'::"
-				+ dialect.getEnumTypeDeclaration( (Class<? extends Enum<?>>) javaType.getJavaType() ) );
+		@SuppressWarnings("unchecked")
+		final Class<? extends Enum<?>> enumClass = (Class<? extends Enum<?>>) javaType.getJavaType();
+		return (appender, value, dialect, wrapperOptions) -> {
+			appender.appendSql( "'" );
+			appender.appendSql( ((Enum<?>) value).name() );
+			appender.appendSql( "'::" );
+			appender.appendSql( dialect.getEnumTypeDeclaration( enumClass ) );
+		};
 	}
 
 	@Override
@@ -83,13 +98,13 @@ public class PostgreSQLEnumJdbcType implements JdbcType {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
-				st.setObject( index, ((Enum<?>) value).name(), Types.OTHER );
+				st.setObject( index, getJavaType().unwrap( value, String.class, options ), Types.OTHER );
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				st.setObject( name, ((Enum<?>) value).name(), Types.OTHER );
+				st.setObject( name, getJavaType().unwrap( value, String.class, options ), Types.OTHER );
 			}
 		};
 	}
@@ -117,14 +132,25 @@ public class PostgreSQLEnumJdbcType implements JdbcType {
 	@Override
 	public void addAuxiliaryDatabaseObjects(
 			JavaType<?> javaType,
+			BasicValueConverter<?, ?> valueConverter,
 			Size columnSize,
 			Database database,
-			TypeConfiguration typeConfiguration) {
-		final Dialect dialect = database.getDialect();
+			JdbcTypeIndicators context) {
+		@SuppressWarnings("unchecked")
 		final Class<? extends Enum<?>> enumClass = (Class<? extends Enum<?>>) javaType.getJavaType();
-		final String[] create = dialect.getCreateEnumTypeCommand( enumClass );
+		@SuppressWarnings("unchecked")
+		final String[] enumeratedValues =
+				valueConverter == null
+						? getEnumeratedValues( enumClass )
+						: getEnumeratedValues( enumClass, (BasicValueConverter<Enum<?>,?>) valueConverter ) ;
+		if ( getDefaultSqlTypeCode() == NAMED_ENUM ) {
+			Arrays.sort( enumeratedValues );
+		}
+		final Dialect dialect = database.getDialect();
+		final String[] create =
+				dialect.getCreateEnumTypeCommand( javaType.getJavaTypeClass().getSimpleName(), enumeratedValues );
 		final String[] drop = dialect.getDropEnumTypeCommand( enumClass );
-		if ( create != null && create.length>0 ) {
+		if ( create != null && create.length > 0 ) {
 			database.addAuxiliaryDatabaseObject(
 					new NamedAuxiliaryDatabaseObject(
 							enumClass.getSimpleName(),

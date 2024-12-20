@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.softdelete;
 
@@ -108,6 +106,23 @@ public class ToOneTests {
 			assertThat( issue3 ).isNotNull();
 			assertThat( issue3.reporter ).isNotNull();
 			assertThat( issue3.assignee ).isNull();
+		} );
+	}
+
+	@Test
+	void fkAccessTest(SessionFactoryScope scope) {
+		final SQLStatementInspector sqlInspector = scope.getCollectingStatementInspector();
+		sqlInspector.clear();
+
+		scope.inTransaction( (session) -> {
+			final Integer issue2Reporter = session.createQuery( "select i.reporter.id from Issue i where i.id = 2", Integer.class ).getSingleResultOrNull();
+			assertThat( issue2Reporter ).isNull();
+
+			assertThat( sqlInspector.getSqlQueries() ).hasSize( 1 );
+			assertThat( sqlInspector.getSqlQueries().get( 0 ) ).contains( " join " );
+			assertThat( sqlInspector.getSqlQueries().get( 0 ) ).contains( ".reporter_fk" );
+			assertThat( sqlInspector.getSqlQueries().get( 0 ) ).containsAnyOf( ".active='Y'", ".active=N'Y'" );
+			assertThat( sqlInspector.getSqlQueries().get( 0 ) ).containsOnlyOnce( "active" );
 		} );
 	}
 

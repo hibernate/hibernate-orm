@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id: Name.java 5686 2005-02-12 07:27:32Z steveebersole $
 package org.hibernate.orm.test.hql;
 
 
@@ -19,9 +15,9 @@ public class Name {
 	private String first;
 	private Character initial;
 	private String last;
-	
+
 	protected Name() {}
-	
+
 	public Name(String first, Character initial, String last) {
 		this.first = first;
 		this.initial = initial;

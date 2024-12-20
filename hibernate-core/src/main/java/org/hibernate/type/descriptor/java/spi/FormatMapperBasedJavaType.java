@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java.spi;
 
@@ -24,6 +22,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * or {@link org.hibernate.type.SqlTypes#SQLXML} mapped types.
  *
  * @author Christian Beikov
+ * @author Yanming Zhou
  */
 @Incubating
 public abstract class FormatMapperBasedJavaType<T> extends AbstractJavaType<T> implements MutabilityPlan<T> {
@@ -43,7 +42,7 @@ public abstract class FormatMapperBasedJavaType<T> extends AbstractJavaType<T> i
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
 		throw new JdbcTypeRecommendationException(
-				"Could not determine recommended JdbcType for Java type '" + getJavaType().getTypeName() + "'"
+				"Could not determine recommended JdbcType for Java type '" + getTypeName() + "'"
 		);
 	}
 
@@ -76,7 +75,7 @@ public abstract class FormatMapperBasedJavaType<T> extends AbstractJavaType<T> i
 			return (X) getFormatMapper( typeConfiguration ).toString( value, this, options );
 		}
 		throw new UnsupportedOperationException(
-				"Unwrap strategy not known for this Java type : " + getJavaType().getTypeName()
+				"Unwrap strategy not known for this Java type: " + getTypeName()
 		);
 	}
 
@@ -90,7 +89,7 @@ public abstract class FormatMapperBasedJavaType<T> extends AbstractJavaType<T> i
 			return getFormatMapper( typeConfiguration ).fromString( (String) value, this, options );
 		}
 		throw new UnsupportedOperationException(
-				"Wrap strategy not known for this Java type : " + getJavaType().getTypeName()
+				"Wrap strategy not known for this Java type: " + getTypeName()
 		);
 	}
 
@@ -107,16 +106,16 @@ public abstract class FormatMapperBasedJavaType<T> extends AbstractJavaType<T> i
 
 	@Override
 	public T deepCopy(T value) {
-		return fromString( toString( value ) );
+		return value == null ? null : fromString( toString( value ) );
 	}
 
 	@Override
 	public Serializable disassemble(T value, SharedSessionContract session) {
-		return toString( value );
+		return value == null ? null : toString( value );
 	}
 
 	@Override
 	public T assemble(Serializable cached, SharedSessionContract session) {
-		return fromString( (CharSequence) cached );
+		return cached == null ? null : fromString( (CharSequence) cached );
 	}
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query;
 
@@ -13,7 +11,7 @@ import jakarta.persistence.Convert;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.dialect.SQLServerDialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -37,14 +35,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SessionFactory
 public class SQLServerNationalizedScalarQueryTest {
 
-	@TestForIssue(jiraKey = "HHH-16857")
+	@JiraKey(value = "HHH-16857")
 	@Test
 	public void testLiteral(SessionFactoryScope scope) {
 		scope.inTransaction(session -> session.createSelectionQuery("from User where name = 'Gavin'").getResultList());
 		scope.inTransaction(session -> session.createSelectionQuery("from User where role = 'ADMIN'").getResultList());
 	}
 
-	@TestForIssue(jiraKey = "HHH-10183")
+	@JiraKey(value = "HHH-10183")
 	@Test
 	public void testScalarResult(SessionFactoryScope scope) {
 
@@ -52,8 +50,8 @@ public class SQLServerNationalizedScalarQueryTest {
 		User user2 = new User( 2, "Steve" );
 
 		scope.inTransaction( session -> {
-			session.save( user1 );
-			session.save( user2 );
+			session.persist( user1 );
+			session.persist( user2 );
 		} );
 
 		scope.inTransaction( session -> {

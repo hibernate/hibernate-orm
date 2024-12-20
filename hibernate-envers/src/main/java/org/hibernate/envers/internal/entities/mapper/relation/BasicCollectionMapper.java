@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper.relation;
 
@@ -200,7 +198,7 @@ public class BasicCollectionMapper<T extends Collection> extends AbstractCollect
 		//		Currently the tuple is { owner_id, entity_id, rev } and so having this special
 		//		treatment is critical to avoid HHH-13080.
 		//
-		if ( elementType.isEntityType() && !revisionTypeInId ) {
+		if ( elementType instanceof EntityType && !revisionTypeInId ) {
 
 			// This is a short-circuit to check for reference equality only.
 			// There is no need to delegate to the identifier if the objects are reference equal.

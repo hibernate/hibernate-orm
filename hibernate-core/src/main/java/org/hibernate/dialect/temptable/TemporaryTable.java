@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.temptable;
 
@@ -221,7 +219,8 @@ public class TemporaryTable implements Exportable, Contributable {
 										.getEntityBinding( pluralAttribute.findContainingEntityMapping().getEntityName() );
 								final Property property = findPropertyByName( declaringClass, attributeName );
 								assert property != null;
-								final Iterator<Selectable> columnIterator = ( (Collection) property.getValue() ).getKey().getSelectables().iterator();
+								final Collection collection = (Collection) property.getValue();
+								final Iterator<Selectable> columnIterator = collection.getKey().getSelectables().iterator();
 								fkTarget.forEachSelectable(
 										(columnIndex, selection) -> {
 											final Selectable selectable = columnIterator.next();
@@ -319,15 +318,17 @@ public class TemporaryTable implements Exportable, Contributable {
 						int idIdx = 0;
 						for ( Column column : entityBinding.getKey().getColumns() ) {
 							final JdbcMapping jdbcMapping = identifierMapping.getJdbcMapping( idIdx++ );
+							String sqlTypeName = "";
+							if ( dialect.getIdentityColumnSupport().hasDataTypeInIdentityColumn() ) {
+								sqlTypeName = column.getSqlType( runtimeModelCreationContext.getMetadata() ) + " ";
+							}
+							sqlTypeName = sqlTypeName + dialect.getIdentityColumnSupport().getIdentityColumnString( column.getSqlTypeCode( runtimeModelCreationContext.getMetadata() ) );
 							columns.add(
 									new TemporaryTableColumn(
 											temporaryTable,
 											ENTITY_TABLE_IDENTITY_COLUMN,
 											jdbcMapping,
-											column.getSqlType(
-													runtimeModelCreationContext.getMetadata()
-											) + " " +
-											dialect.getIdentityColumnSupport().getIdentityColumnString( column.getSqlTypeCode( runtimeModelCreationContext.getMetadata() ) ),
+											sqlTypeName,
 											column.getColumnSize(
 													dialect,
 													runtimeModelCreationContext.getMetadata()
@@ -399,7 +400,7 @@ public class TemporaryTable implements Exportable, Contributable {
 									final PersistentClass declaringClass = runtimeModelCreationContext.getBootModel()
 											.getEntityBinding( attribute.findContainingEntityMapping().getEntityName() );
 									final SimpleValue value = (SimpleValue) declaringClass.getProperty( attribute.getAttributeName() ).getValue();
-									final Iterator<Selectable> columnIterator = value.getConstraintColumnIterator();
+									final Iterator<Selectable> columnIterator = value.getVirtualSelectables().iterator();
 									attribute.forEachSelectable(
 											(columnIndex, selection) -> {
 												final Selectable selectable = columnIterator.next();

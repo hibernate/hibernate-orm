@@ -1,9 +1,13 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.uniquekey;
 
 import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.annotations.NaturalId;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -14,7 +18,7 @@ import jakarta.persistence.Id;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@TestForIssue(jiraKey = "HHH-15784")
+@JiraKey(value = "HHH-15784")
 @DomainModel(annotatedClasses = PrimitiveArrayNaturalIdTest.HashedContent.class)
 @SessionFactory
 public class PrimitiveArrayNaturalIdTest {

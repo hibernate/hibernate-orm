@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
@@ -14,13 +12,13 @@ import java.util.Set;
 
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmColumnType;
-import org.hibernate.boot.model.TruthValue;
 import org.hibernate.boot.model.source.spi.ColumnSource;
 import org.hibernate.boot.model.source.spi.DerivedValueSource;
 import org.hibernate.boot.model.source.spi.RelationalValueSource;
 import org.hibernate.boot.model.source.spi.SizeSource;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 /**
  * @author Steve Ebersole
@@ -154,7 +152,7 @@ public class RelationalValueSourceHelper {
 		if ( sources.size() > 1 ) {
 			final String errorMessage;
 			if ( columnsAndFormulasSource.getSourceType().canBeNamed()
-					&& StringHelper.isNotEmpty( columnsAndFormulasSource.getSourceName() ) ) {
+					&& isNotEmpty( columnsAndFormulasSource.getSourceName() ) ) {
 				errorMessage = String.format(
 						Locale.ENGLISH,
 						"Expecting just a single formula/column in context of <%s name=\"%s\"/>",
@@ -199,7 +197,7 @@ public class RelationalValueSourceHelper {
 		if ( sources.size() > 1 ) {
 			final String errorMessage;
 			if ( columnsAndFormulasSource.getSourceType().canBeNamed()
-					&& StringHelper.isNotEmpty( columnsAndFormulasSource.getSourceName() ) ) {
+					&& isNotEmpty( columnsAndFormulasSource.getSourceName() ) ) {
 				errorMessage = String.format(
 						Locale.ENGLISH,
 						"Expecting just a single formula/column in context of <%s name=\"%s\"/>",
@@ -221,7 +219,7 @@ public class RelationalValueSourceHelper {
 		if ( !(result instanceof ColumnSource) ) {
 			final String errorMessage;
 			if ( columnsAndFormulasSource.getSourceType().canBeNamed()
-					&& StringHelper.isNotEmpty( columnsAndFormulasSource.getSourceName() ) ) {
+					&& isNotEmpty( columnsAndFormulasSource.getSourceName() ) ) {
 				errorMessage = String.format(
 						Locale.ENGLISH,
 						"Expecting single column in context of <%s name=\"%s\"/>, but found formula [%s]",
@@ -269,7 +267,7 @@ public class RelationalValueSourceHelper {
 			if ( !(source instanceof ColumnSource) ) {
 				final String errorMessage;
 				if ( columnsAndFormulasSource.getSourceType().canBeNamed()
-						&& StringHelper.isNotEmpty( columnsAndFormulasSource.getSourceName() ) ) {
+						&& isNotEmpty( columnsAndFormulasSource.getSourceName() ) ) {
 					errorMessage = String.format(
 							Locale.ENGLISH,
 							"Expecting only columns in context of <%s name=\"%s\"/>, but found formula [%s]",
@@ -309,7 +307,7 @@ public class RelationalValueSourceHelper {
 			ColumnsAndFormulasSource columnsAndFormulasSource) {
 		List<RelationalValueSource> result = new ArrayList<>();
 
-		if ( StringHelper.isNotEmpty( columnsAndFormulasSource.getFormulaAttribute() ) ) {
+		if ( isNotEmpty( columnsAndFormulasSource.getFormulaAttribute() ) ) {
 			// we have an explicit formula attribute (i.e., <SOMETHING formula="abc"/>)
 			validateUseOfFormulaAttribute( mappingDocument, columnsAndFormulasSource );
 
@@ -361,8 +359,8 @@ public class RelationalValueSourceHelper {
 							containingTableName,
 							columnsAndFormulasSource.getColumnAttribute(),
 							columnsAndFormulasSource.getSizeSource(),
-							interpretNullabilityToTruthValue( columnsAndFormulasSource.isNullable() ),
-							columnsAndFormulasSource.isUnique() ? TruthValue.TRUE : TruthValue.FALSE,
+							columnsAndFormulasSource.isNullable(),
+							columnsAndFormulasSource.isUnique(),
 							columnsAndFormulasSource.getIndexConstraintNames(),
 							columnsAndFormulasSource.getUniqueKeyConstraintNames()
 					)
@@ -372,23 +370,14 @@ public class RelationalValueSourceHelper {
 		return result;
 	}
 
-	private static TruthValue interpretNullabilityToTruthValue(Boolean nullable) {
-		if ( nullable == null ) {
-			return TruthValue.UNKNOWN;
-		}
-		else {
-			return nullable ? TruthValue.TRUE : TruthValue.FALSE;
-		}
-	}
-
 	private static void validateUseOfFormulaAttribute(
 			MappingDocument sourceDocument,
 			ColumnsAndFormulasSource columnsAndFormulasSource) {
 		//		1) make sure there is no column attribute
-		if ( StringHelper.isNotEmpty( columnsAndFormulasSource.getColumnAttribute() ) ) {
+		if ( isNotEmpty( columnsAndFormulasSource.getColumnAttribute() ) ) {
 			final String errorMessage;
 			if ( columnsAndFormulasSource.getSourceType().canBeNamed()
-					&& StringHelper.isNotEmpty( columnsAndFormulasSource.getSourceName() ) ) {
+					&& isNotEmpty( columnsAndFormulasSource.getSourceName() ) ) {
 				errorMessage = String.format(
 						Locale.ENGLISH,
 						"column attribute and formula attribute may not be specified together near <%s name=\"%s\" column=\"%s\" formula=\"%s\" />",
@@ -413,7 +402,7 @@ public class RelationalValueSourceHelper {
 		if ( CollectionHelper.isNotEmpty( columnsAndFormulasSource.getColumnOrFormulaElements() ) ) {
 			final String errorMessage;
 			if ( columnsAndFormulasSource.getSourceType().canBeNamed()
-					&& StringHelper.isNotEmpty( columnsAndFormulasSource.getSourceName() ) ) {
+					&& isNotEmpty( columnsAndFormulasSource.getSourceName() ) ) {
 				errorMessage = String.format(
 						Locale.ENGLISH,
 						"formula attribute may not be specified along with <column/> or <formula/> subelement(s) near <%s name=\"%s\" formula=\"%s\" />",
@@ -437,10 +426,10 @@ public class RelationalValueSourceHelper {
 	private static void validateUseOfColumnOrFormulaNestedElements(
 			MappingDocument sourceDocument,
 			ColumnsAndFormulasSource columnsAndFormulasSource) {
-		if ( StringHelper.isNotEmpty( columnsAndFormulasSource.getColumnAttribute() ) ) {
+		if ( isNotEmpty( columnsAndFormulasSource.getColumnAttribute() ) ) {
 			final String errorMessage;
 			if ( columnsAndFormulasSource.getSourceType().canBeNamed()
-					&& StringHelper.isNotEmpty( columnsAndFormulasSource.getSourceName() ) ) {
+					&& isNotEmpty( columnsAndFormulasSource.getSourceName() ) ) {
 				errorMessage = String.format(
 						Locale.ENGLISH,
 						"column attribute may not be specified along with <column/> or <formula/> subelement(s) near <%s name=\"%s\" column=\"%s\" />",
@@ -469,7 +458,7 @@ public class RelationalValueSourceHelper {
 		if ( customWrite != null && !customWrite.matches("[^?]*\\?[^?]*") ) {
 			final String errorMessage;
 			if ( columnsAndFormulasSource.getSourceType().canBeNamed()
-					&& StringHelper.isNotEmpty( columnsAndFormulasSource.getSourceName() ) ) {
+					&& isNotEmpty( columnsAndFormulasSource.getSourceName() ) ) {
 				errorMessage = String.format(
 						Locale.ENGLISH,
 						"write expression must contain exactly one value placeholder ('?') character near <column name=\"%s\" ... write=\"%s\" /> for <%s name=\"%s\" />",

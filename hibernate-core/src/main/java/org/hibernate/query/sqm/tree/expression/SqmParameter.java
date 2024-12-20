@@ -1,15 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.HibernateException;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.criteria.JpaParameterExpression;
-import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 /**
@@ -64,9 +61,6 @@ public interface SqmParameter<T> extends SqmExpression<T>, JpaParameterExpressio
 	 * @return The anticipated Type.
 	 */
 	BindableType<T> getAnticipatedType();
-
-	@Override
-	SqmExpressible<T> getNodeType();
 
 	/**
 	 * Make a copy

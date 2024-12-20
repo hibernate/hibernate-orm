@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.any.annotations;
 
@@ -15,12 +13,10 @@ import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyDiscriminatorValues;
 import org.hibernate.annotations.AnyKeyJavaClass;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
@@ -34,7 +30,6 @@ import jakarta.persistence.Table;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 @Jpa(
@@ -43,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 				LazyAnyDiscriminatorQueryTest.StringProperty.class
 		}
 )
-@TestForIssue(jiraKey = "HHH-15423")
+@JiraKey(value = "HHH-15423")
 public class LazyAnyDiscriminatorQueryTest {
 	private static final Long PROPERTY_HOLDER_ID = 2l;
 	private static final Long STRING_PROPERTY_ID = 1l;

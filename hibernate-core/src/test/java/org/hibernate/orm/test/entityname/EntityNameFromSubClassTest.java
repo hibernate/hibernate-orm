@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.entityname;
 import org.junit.Test;
@@ -37,10 +35,10 @@ public class EntityNameFromSubClassTest extends BaseCoreFunctionalTestCase {
 		Car golf = new Car();
 		golf.setOwner("stliu");
 		stliu.getCars().add(golf);
-		s.save(stliu);
+		s.persist(stliu);
 		s.getTransaction().commit();
 		s.close();
-		
+
 		s=openSession();
 		s.beginTransaction();
 		Person p = (Person)s.get(Person.class, stliu.getId());

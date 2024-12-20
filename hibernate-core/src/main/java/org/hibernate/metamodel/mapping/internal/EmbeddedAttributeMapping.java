@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
@@ -52,6 +50,10 @@ import org.hibernate.sql.results.graph.embeddable.internal.AggregateEmbeddableFe
 import org.hibernate.sql.results.graph.embeddable.internal.AggregateEmbeddableResultImpl;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableFetchImpl;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableResultImpl;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static java.util.Objects.requireNonNullElse;
 
 /**
  * @author Steve Ebersole
@@ -143,7 +145,9 @@ public class EmbeddedAttributeMapping
 			MappingModelCreationProcess creationProcess) {
 		super(
 				inverseModelPart.getFetchableName(),
-				-1,
+				inverseModelPart.asAttributeMapping() != null
+						? inverseModelPart.asAttributeMapping().getStateArrayPosition()
+						: -1,
 				inverseModelPart.getFetchableKey(),
 				inverseModelPart.asAttributeMapping() != null
 						? inverseModelPart.asAttributeMapping().getAttributeMetadata()
@@ -316,13 +320,13 @@ public class EmbeddedAttributeMapping
 	public TableGroupJoin createTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAliasBase explicitSqlAliasBase,
-			SqlAstJoinType requestedJoinType,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase explicitSqlAliasBase,
+			@Nullable SqlAstJoinType requestedJoinType,
 			boolean fetched,
 			boolean addsPredicate,
 			SqlAstCreationState creationState) {
-		final SqlAstJoinType joinType = requestedJoinType == null ? SqlAstJoinType.INNER : requestedJoinType;
+		final SqlAstJoinType joinType = requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
 		final TableGroup tableGroup = createRootTableGroupJoin(
 				navigablePath,
 				lhs,
@@ -341,11 +345,11 @@ public class EmbeddedAttributeMapping
 	public TableGroup createRootTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAliasBase explicitSqlAliasBase,
-			SqlAstJoinType sqlAstJoinType,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase explicitSqlAliasBase,
+			@Nullable SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
-			Consumer<Predicate> predicateConsumer,
+			@Nullable Consumer<Predicate> predicateConsumer,
 			SqlAstCreationState creationState) {
 		return new StandardVirtualTableGroup( navigablePath, this, lhs, fetched );
 	}

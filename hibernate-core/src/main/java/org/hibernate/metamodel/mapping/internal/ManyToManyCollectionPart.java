@@ -1,12 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
 import java.util.Locale;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import org.hibernate.annotations.NotFoundAction;
@@ -54,6 +53,8 @@ import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.type.EntityType;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static java.util.Objects.requireNonNullElse;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.createInverseModelPart;
@@ -133,6 +134,11 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 		}
 
 		return super.findSubPart( name, targetType );
+	}
+
+	@Override
+	public Set<String> getTargetKeyPropertyNames() {
+		return targetKeyPropertyNames;
 	}
 
 	@Override
@@ -252,14 +258,13 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 	public TableGroupJoin createTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAliasBase explicitSqlAliasBase,
-			SqlAstJoinType requestedJoinType,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase explicitSqlAliasBase,
+			@Nullable SqlAstJoinType requestedJoinType,
 			boolean fetched,
 			boolean addsPredicate,
 			SqlAstCreationState creationState) {
 		final SqlAstJoinType joinType = requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
-
 		final LazyTableGroup lazyTableGroup = createRootTableGroupJoin(
 				navigablePath,
 				lhs,
@@ -296,11 +301,11 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 	public LazyTableGroup createRootTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAliasBase explicitSqlAliasBase,
-			SqlAstJoinType requestedJoinType,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase explicitSqlAliasBase,
+			@Nullable SqlAstJoinType requestedJoinType,
 			boolean fetched,
-			Consumer<Predicate> predicateConsumer,
+			@Nullable Consumer<Predicate> predicateConsumer,
 			SqlAstCreationState creationState) {
 		final SqlAstJoinType joinType = requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
 		final boolean canUseInnerJoin = joinType == SqlAstJoinType.INNER || lhs.canUseInnerJoins();
@@ -387,7 +392,8 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 				fkTargetModelPart = resolveNamedTargetPart( mapKeyPropertyName, entityMappingType, collectionDescriptor );
 			}
 			else {
-				fkTargetModelPart = getAssociatedEntityMappingType().getIdentifierMapping();
+				fkTargetModelPart = getAssociatedEntityMappingType().getIdentifierMappingForJoin();
+//				fkTargetModelPart = getAssociatedEntityMappingType().getIdentifierMapping();
 			}
 		}
 		else if ( StringHelper.isNotEmpty( bootCollectionDescriptor.getMappedByProperty() ) ) {
@@ -443,7 +449,8 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 		}
 		else {
 			// non-inverse @ManyToMany
-			fkTargetModelPart = getAssociatedEntityMappingType().getIdentifierMapping();
+			fkTargetModelPart = getAssociatedEntityMappingType().getIdentifierMappingForJoin();
+//			fkTargetModelPart = getAssociatedEntityMappingType().getIdentifierMapping();
 		}
 
 		if ( getNature() == Nature.ELEMENT ) {

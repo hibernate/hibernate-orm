@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.internal;
 
@@ -20,6 +18,7 @@ import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindingValidator;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.tree.expression.NullSqmExpressible;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JavaTypeHelper;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -86,6 +85,10 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		return isMultiValued;
 	}
 
+	@Override
+	public QueryParameter<T> getQueryParameter() {
+		return queryParameter;
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// single-valued binding support
@@ -109,10 +112,10 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		final Object coerced;
 		if ( ! sessionFactory.getSessionFactoryOptions().getJpaCompliance().isLoadByIdComplianceEnabled() ) {
 			try {
-				if ( bindType != null ) {
+				if ( canValueBeCoerced( bindType) ) {
 					coerced = coerce( value, bindType );
 				}
-				else if ( queryParameter.getHibernateType() != null ) {
+				else if ( canValueBeCoerced( queryParameter.getHibernateType() ) ) {
 					coerced = coerce( value, queryParameter.getHibernateType() );
 				}
 				else {
@@ -186,7 +189,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	private void bindValue(Object value) {
 		isBound = true;
 		bindValue = value;
-		if ( bindType == null && value != null ) {
+		if ( canBindValueBeSet( value, bindType ) ) {
 			bindType = sessionFactory.getMappingMetamodel().resolveParameterBindType( value );
 		}
 	}
@@ -202,10 +205,10 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		}
 
 		final Object coerced;
-		if ( bindType != null ) {
+		if ( canValueBeCoerced( bindType ) ) {
 			coerced = coerce( value, bindType );
 		}
-		else if ( queryParameter.getHibernateType() != null ) {
+		else if ( canValueBeCoerced( queryParameter.getHibernateType() ) ) {
 			coerced = coerce( value, queryParameter.getHibernateType() );
 		}
 		else {
@@ -229,7 +232,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 
 		final Object coerced;
 		if ( ! sessionFactory.getSessionFactoryOptions().getJpaCompliance().isLoadByIdComplianceEnabled() ) {
-			if ( bindType != null ) {
+			if (canValueBeCoerced( bindType ) ) {
 				try {
 					coerced = coerce( value, bindType );
 				}
@@ -245,7 +248,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 					);
 				}
 			}
-			else if ( queryParameter.getHibernateType() != null ) {
+			else if ( canValueBeCoerced( queryParameter.getHibernateType() ) ) {
 				coerced = coerce( value, queryParameter.getHibernateType() );
 			}
 			else {
@@ -295,10 +298,9 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 			value = iterator.next();
 		}
 
-		if ( bindType == null && value != null ) {
-			this.bindType = sessionFactory.getMappingMetamodel().resolveParameterBindType( value );
+		if ( canBindValueBeSet( value, bindType ) ) {
+			bindType = sessionFactory.getMappingMetamodel().resolveParameterBindType( value );
 		}
-
 	}
 
 	@Override
@@ -373,5 +375,13 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return sessionFactory.getTypeConfiguration();
+	}
+
+	private static boolean canValueBeCoerced(BindableType<?> bindType) {
+		return bindType != null && !( bindType instanceof NullSqmExpressible );
+	}
+
+	private static boolean canBindValueBeSet(Object value, BindableType<?> bindType) {
+		return value != null && ( bindType == null || bindType instanceof NullSqmExpressible );
 	}
 }

@@ -1,14 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jdbc;
 import org.hibernate.HibernateException;
 
 /**
- * Indicates that more rows were affected then we were expecting to be.
+ * Indicates that more rows were affected than we were expecting to be.
  * Typically indicates presence of duplicate "PK" values in the
  * given table.
  *

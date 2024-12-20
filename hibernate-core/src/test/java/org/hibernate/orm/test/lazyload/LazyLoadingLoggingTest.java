@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.lazyload;
 
@@ -16,7 +14,7 @@ import jakarta.persistence.OneToOne;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.internal.AbstractSharedSessionContract;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -67,11 +65,11 @@ public class LazyLoadingLoggingTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12484")
+	@JiraKey(value = "HHH-12484")
 	public void testNoSession(SessionFactoryScope scope) {
 		Address address = scope.fromTransaction(
 				session ->
-						session.load( Address.class, 1L )
+						session.getReference( Address.class, 1L )
 		);
 
 		try {
@@ -80,20 +78,20 @@ public class LazyLoadingLoggingTest {
 		}
 		catch (LazyInitializationException expected) {
 			assertEquals(
-					"could not initialize proxy " +
+					"Could not initialize proxy " +
 							"[org.hibernate.orm.test.lazyload.LazyLoadingLoggingTest$Address#1] " +
-							"- no Session",
+							"- no session",
 					expected.getMessage()
 			);
 		}
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12484")
+	@JiraKey(value = "HHH-12484")
 	public void testDisconnect(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					Address address = session.load( Address.class, 1L );
+					Address address = session.getReference( Address.class, 1L );
 					AbstractSharedSessionContract sessionContract = (AbstractSharedSessionContract) session;
 					sessionContract.getJdbcCoordinator().close();
 
@@ -103,9 +101,9 @@ public class LazyLoadingLoggingTest {
 					}
 					catch (LazyInitializationException expected) {
 						assertEquals(
-								"could not initialize proxy " +
+								"Could not initialize proxy " +
 										"[org.hibernate.orm.test.lazyload.LazyLoadingLoggingTest$Address#1] " +
-										"- the owning Session is disconnected",
+										"- the owning session is disconnected",
 								expected.getMessage()
 						);
 					}

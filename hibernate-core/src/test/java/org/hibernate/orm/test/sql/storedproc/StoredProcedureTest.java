@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql.storedproc;
 
@@ -15,10 +13,14 @@ import org.hibernate.procedure.ProcedureOutputs;
 import org.hibernate.result.Output;
 import org.hibernate.result.ResultSetOutput;
 
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.ParameterMode;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -99,6 +101,20 @@ public class StoredProcedureTest extends BaseSessionFactoryFunctionalTest {
 					fail( "Unexpected id value found [" + id + "]" );
 				}
 			}
+		} );
+	}
+
+	@Test
+	@FailureExpected( reason = "We currently expect the registrations to happen positionally", jiraKey = "HHH-18280" )
+	public void testNamedParameters() {
+		inTransaction( (session) -> {
+			final ProcedureCall findUserRange = session.createStoredProcedureCall( "findUserRange" );
+			findUserRange.registerParameter( "end", int.class, ParameterMode.IN );
+			findUserRange.registerParameter( "start", int.class, ParameterMode.IN );
+			findUserRange.setParameter( "start", 1 );
+			findUserRange.setParameter( "end", 10 );
+			final List<?> resultList = findUserRange.getResultList();
+			assertThat( resultList ).hasSize( 9 );
 		} );
 	}
 }

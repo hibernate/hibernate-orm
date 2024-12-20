@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -32,9 +30,9 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
@@ -92,7 +90,7 @@ import static org.hibernate.type.SqlTypes.VARBINARY;
  *         Perform string casts to varchar; removes space padding.
  *     </li>
  * </ul>
- * 
+ *
  * @author Ian Booth
  * @author Bruce Lunsford
  * @author Max Rydahl Andersen
@@ -100,15 +98,17 @@ import static org.hibernate.type.SqlTypes.VARBINARY;
  */
 public class IngresDialect extends Dialect {
 
+	private static final DatabaseVersion DEFAULT_VERSION = DatabaseVersion.make( 9, 2 );
+
 	private final LimitHandler limitHandler;
 	private final SequenceSupport sequenceSupport;
 
 	public IngresDialect() {
-		this( DatabaseVersion.make( 9, 2 ) );
+		this( DEFAULT_VERSION );
 	}
 
 	public IngresDialect(DialectResolutionInfo info) {
-		this( info.makeCopy() );
+		this( info.makeCopyOrDefault( DEFAULT_VERSION ) );
 		registerKeywords( info );
 	}
 
@@ -131,7 +131,7 @@ public class IngresDialect extends Dialect {
 	protected String columnType(int sqlTypeCode) {
 		//TODO: should we be using nchar/nvarchar/long nvarchar
 		//      here? I think Ingres char/varchar types don't
-		//      support Unicode. Copy what AbstractHANADialect
+		//      support Unicode. Copy what HANADialect
 		//      does with a Hibernate property to config this.
 
 		switch ( sqlTypeCode ) {
@@ -556,5 +556,16 @@ public class IngresDialect extends Dialect {
 	@Override
 	public boolean supportsFetchClause(FetchClauseType type) {
 		return getVersion().isSameOrAfter( 9, 3 );
+	}
+
+	@Override
+	public String getDual() {
+		return "(select 0)";
+	}
+
+	@Override
+	public String getFromDualForSelectOnly() {
+		//this is only necessary if the query has a where clause
+		return " from " + getDual() + " dual";
 	}
 }

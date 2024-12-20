@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
@@ -31,11 +29,12 @@ public enum TimeZoneStorageStrategy {
 	 * Does not store the time zone, and instead:
 	 * <ul>
 	 * <li>when persisting to the database, normalizes JDBC timestamps to the
-	 * {@linkplain org.hibernate.cfg.AvailableSettings#JDBC_TIME_ZONE}
-	 * or to the JVM default time zone otherwise.
+	 *     {@linkplain org.hibernate.cfg.AvailableSettings#JDBC_TIME_ZONE
+	 *     configured JDBC time zone}, or to the JVM default time zone
+	 *     id no JDBC time zone is configured, or
 	 * <li>when reading back from the database, sets the offset or zone
-	 * of {@code OffsetDateTime}/{@code ZonedDateTime} properties
-	 * to the JVM default time zone.
+	 *     of {@code OffsetDateTime}/{@code ZonedDateTime} properties
+	 *     to the JVM default time zone.
 	 * </ul>
 	 * <p>
 	 * Provided partly for backward compatibility with older

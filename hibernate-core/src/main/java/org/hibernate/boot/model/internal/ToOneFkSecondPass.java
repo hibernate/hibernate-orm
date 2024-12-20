@@ -1,17 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Component;
-import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
@@ -34,11 +32,13 @@ public class ToOneFkSecondPass extends FkSecondPass {
 	private final boolean unique;
 	private final String path;
 	private final String entityClassName;
+	private final boolean annotatedEntity;
 
 	public ToOneFkSecondPass(
 			ToOne value,
 			AnnotatedJoinColumns columns,
 			boolean unique,
+			boolean annotatedEntity,
 			PersistentClass persistentClass,
 			String path,
 			MetadataBuildingContext buildingContext) {
@@ -48,6 +48,7 @@ public class ToOneFkSecondPass extends FkSecondPass {
 		this.unique = unique;
 		this.entityClassName = persistentClass.getClassName();
 		this.path = entityClassName != null ? path.substring( entityClassName.length() + 1 ) : path;
+		this.annotatedEntity = annotatedEntity;
 	}
 
 	@Override
@@ -60,8 +61,8 @@ public class ToOneFkSecondPass extends FkSecondPass {
 		if ( entityClassName == null ) {
 			return false;
 		}
-		final PersistentClass persistentClass = buildingContext.getMetadataCollector()
-				.getEntityBinding( entityClassName );
+		final PersistentClass persistentClass =
+				buildingContext.getMetadataCollector().getEntityBinding( entityClassName );
 		final Property property = persistentClass.getIdentifierProperty();
 		if ( path == null ) {
 			return false;
@@ -72,8 +73,7 @@ public class ToOneFkSecondPass extends FkSecondPass {
 		}
 		//try the embedded property
 		else {
-			final KeyValue valueIdentifier = persistentClass.getIdentifier();
-			if ( valueIdentifier instanceof Component ) {
+			if ( persistentClass.getIdentifier() instanceof Component component ) {
 				// Embedded property starts their path with 'id.'
 				// See PropertyPreloadedData( ) use when idClass != null in AnnotationSourceProcessor
 				String localPath = path;
@@ -81,7 +81,6 @@ public class ToOneFkSecondPass extends FkSecondPass {
 					localPath = path.substring( 3 );
 				}
 
-				final Component component = (Component) valueIdentifier;
 				for ( Property idProperty : component.getProperties() ) {
 					if ( localPath.equals( idProperty.getName() ) || localPath.startsWith( idProperty.getName() + "." ) ) {
 						return true;
@@ -94,27 +93,41 @@ public class ToOneFkSecondPass extends FkSecondPass {
 
 	@Override
 	public void doSecondPass(java.util.Map<String, PersistentClass> persistentClasses) throws MappingException {
-		if ( value instanceof ManyToOne ) {
-			//TODO: move this validation logic to a separate ManyToOnSecondPass
+		if ( value instanceof ManyToOne manyToOne ) {
+			//TODO: move this validation logic to a separate ManyToOneSecondPass
 			//      for consistency with how this is handled for OneToOnes
-			final ManyToOne manyToOne = (ManyToOne) value;
-			final PersistentClass targetEntity = persistentClasses.get( manyToOne.getReferencedEntityName() );
+			final String targetEntityName = manyToOne.getReferencedEntityName();
+			final PersistentClass targetEntity = persistentClasses.get( targetEntityName );
 			if ( targetEntity == null ) {
+				final String problem = annotatedEntity
+						? " which does not belong to the same persistence unit"
+						: " which is not an '@Entity' type";
 				throw new AnnotationException( "Association '" + qualify( entityClassName, path )
-						+ "' targets an unknown entity named '" + manyToOne.getReferencedEntityName() + "'" );
+						+ "' targets the type '" + targetEntityName + "'" + problem );
 			}
 			manyToOne.setPropertyName( path );
-			createSyntheticPropertyReference(
-					columns,
-					targetEntity,
-					persistentClass,
-					manyToOne,
-					path,
-					false,
-					buildingContext
-			);
+			final String propertyRef = columns.getReferencedProperty();
+			if ( propertyRef != null ) {
+				handlePropertyRef(
+						targetEntity,
+						manyToOne,
+						path,
+						propertyRef,
+						buildingContext
+				);
+			}
+			else {
+				createSyntheticPropertyReference(
+						columns,
+						targetEntity,
+						persistentClass,
+						manyToOne,
+						path,
+						false,
+						buildingContext
+				);
+			}
 			TableBinder.bindForeignKey( targetEntity, persistentClass, columns, manyToOne, unique, buildingContext );
-			// HbmMetadataSourceProcessorImpl does this only when property-ref != null, but IMO, it makes sense event if it is null
 			if ( !manyToOne.isIgnoreNotFound() ) {
 				manyToOne.createPropertyRefConstraints( persistentClasses );
 			}
@@ -125,5 +138,20 @@ public class ToOneFkSecondPass extends FkSecondPass {
 		else {
 			throw new AssertionFailure( "FkSecondPass for a wrong value type: " + value.getClass().getName() );
 		}
+	}
+
+	private void handlePropertyRef(
+			PersistentClass targetEntity,
+			ManyToOne manyToOne,
+			String path,
+			String referencedPropertyName,
+			MetadataBuildingContext buildingContext) {
+		manyToOne.setReferencedPropertyName( referencedPropertyName );
+		manyToOne.setReferenceToPrimaryKey( false );
+
+		final String entityName = targetEntity.getEntityName();
+		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
+		metadataCollector.addUniquePropertyReference( entityName, referencedPropertyName );
+		metadataCollector.addPropertyReferencedAssociation( entityName, path, referencedPropertyName );
 	}
 }

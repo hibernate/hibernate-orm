@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal.log;
 
+import java.lang.invoke.MethodHandles;
 import java.net.URISyntaxException;
 import java.net.URL;
 
@@ -35,7 +34,7 @@ public interface UrlMessageBundle {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".url";
 
 	Logger URL_LOGGER = Logger.getLogger( LOGGER_NAME );
-	UrlMessageBundle URL_MESSAGE_LOGGER = Logger.getMessageLogger( UrlMessageBundle.class, LOGGER_NAME );
+	UrlMessageBundle URL_MESSAGE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), UrlMessageBundle.class, LOGGER_NAME );
 
 	/**
 	 * Logs a warning about a malformed URL, caused by a {@link URISyntaxException}

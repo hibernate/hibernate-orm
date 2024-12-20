@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.generator.internal;
 
@@ -21,6 +19,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 
 import org.jboss.logging.Logger;
 
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Member;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -30,7 +29,7 @@ import java.sql.Timestamp;
 import java.util.EnumSet;
 
 import static java.sql.Types.TIMESTAMP;
-import static org.hibernate.generator.EventTypeSets.INSERT_ONLY;
+import static org.hibernate.generator.EventTypeSets.INSERT_AND_UPDATE;
 
 /**
  * Value generation strategy using the query {@link Dialect#getCurrentTimestampSelectString()}.
@@ -53,6 +52,7 @@ import static org.hibernate.generator.EventTypeSets.INSERT_ONLY;
 public class SourceGeneration implements BeforeExecutionGenerator {
 
 	private static final CoreMessageLogger log = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			SourceGeneration.class.getName()
 	);
@@ -74,7 +74,7 @@ public class SourceGeneration implements BeforeExecutionGenerator {
 	 */
 	@Override
 	public EnumSet<EventType> getEventTypes() {
-		return INSERT_ONLY;
+		return INSERT_AND_UPDATE;
 	}
 
 	@Override

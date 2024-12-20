@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
@@ -76,7 +74,7 @@ public class SubselectFetch {
 
 	/**
 	 *The entity-keys of all owners loaded from a particular execution
-	 *
+	 * <p>
 	 * Used for "empty collection" handling mostly
 	 */
 	public Set<EntityKey> getResultingEntityKeys() {
@@ -151,7 +149,7 @@ public class SubselectFetch {
 		public void addKey(EntityHolder holder) {
 			if ( batchFetchQueue.getSession().getLoadQueryInfluencers()
 					.hasSubselectLoadableCollections( holder.getDescriptor() ) ) {
-				final EntityInitializer entityInitializer = NullnessUtil.castNonNull( holder.getEntityInitializer() );
+				final EntityInitializer<?> entityInitializer = NullnessUtil.castNonNull( holder.getEntityInitializer() );
 				final SubselectFetch subselectFetch = subselectFetches.computeIfAbsent(
 						entityInitializer.getNavigablePath(),
 						navigablePath -> new SubselectFetch(

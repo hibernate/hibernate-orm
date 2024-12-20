@@ -1,18 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.cascade;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -22,97 +19,100 @@ import jakarta.persistence.Table;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
 /**
  * @author Luis Barreiro
  */
-@TestForIssue( jiraKey = "HHH-10252" )
-@RunWith( BytecodeEnhancerRunner.class )
-public class CascadeWithFkConstraintTest extends BaseCoreFunctionalTestCase {
+@JiraKey( "HHH-10252" )
+@DomainModel(
+		annotatedClasses = {
+			CascadeWithFkConstraintTest.Garage.class, CascadeWithFkConstraintTest.Car.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class CascadeWithFkConstraintTest  {
 
-    private String garageId, car1Id, car2Id;
+	private String garageId, car1Id, car2Id;
 
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{Garage.class, Car.class};
-    }
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		// Create garage, add 2 cars to garage
+		scope.inTransaction( em -> {
 
-    @Before
-    public void prepare() {
-        // Create garage, add 2 cars to garage
-        doInJPA( this::sessionFactory, em -> {
+			Garage garage = new Garage();
+			Car car1 = new Car();
+			Car car2 = new Car();
+			garage.insert( car1 );
+			garage.insert( car2 );
 
-            Garage garage = new Garage();
-            Car car1 = new Car();
-            Car car2 = new Car();
-            garage.insert( car1 );
-            garage.insert( car2 );
+			em.persist( garage );
+			em.persist( car1 );
+			em.persist( car2 );
 
-            em.persist( garage );
-            em.persist( car1 );
-            em.persist( car2 );
+			garageId = garage.id;
+			car1Id = car1.id;
+			car2Id = car2.id;
+		} );
+	}
 
-            garageId = garage.id;
-            car1Id = car1.id;
-            car2Id = car2.id;
-        } );
-    }
+	@Test
+	public void test(SessionFactoryScope scope) {
+		// Remove garage
+		scope.inTransaction( em -> {
+			Garage toRemoveGarage = em.find( Garage.class, garageId );
+			em.remove( toRemoveGarage );
+		} );
 
-    @Test
-    public void test() {
-        // Remove garage
-        doInJPA( this::sessionFactory, em -> {
-            Garage toRemoveGarage = em.find( Garage.class, garageId );
-            em.remove( toRemoveGarage );
-        } );
+		// Check if there is no garage but cars are still present
+		scope.inTransaction( em -> {
+			Garage foundGarage = em.find( Garage.class, garageId );
+			assertNull( foundGarage );
 
-        // Check if there is no garage but cars are still present
-        doInJPA( this::sessionFactory, em -> {
-            Garage foundGarage = em.find( Garage.class, garageId );
-            Assert.assertNull( foundGarage );
+			Car foundCar1 = em.find( Car.class, car1Id );
+			assertEquals( car1Id, foundCar1.id );
 
-            Car foundCar1 = em.find( Car.class, car1Id );
-            Assert.assertEquals( car1Id, foundCar1.id );
+			Car foundCar2 = em.find( Car.class, car2Id );
+			assertEquals( car2Id, foundCar2.id );
+		} );
+	}
 
-            Car foundCar2 = em.find( Car.class, car2Id );
-            Assert.assertEquals( car2Id, foundCar2.id );
-        } );
-    }
+	// --- //
 
-    // --- //
+	@Entity
+	@Table( name = "GARAGE" )
+	static class Garage {
 
-    @Entity
-    @Table( name = "GARAGE" )
-    private static class Garage {
+		@Id
+		String id;
 
-        @Id
-        String id;
+		@OneToMany
+		@JoinColumn( name = "GARAGE_ID" )
+		Set<Car> cars = new HashSet<>();
 
-        @OneToMany
-        @JoinColumn( name = "GARAGE_ID" )
-        Set<Car> cars = new HashSet<>();
+		Garage() {
+			id = SafeRandomUUIDGenerator.safeRandomUUIDAsString();
+		}
 
-        Garage() {
-            id = SafeRandomUUIDGenerator.safeRandomUUIDAsString();
-        }
+		void insert(Car aCar) {
+			cars.add( aCar );
+		}
+	}
 
-        void insert(Car aCar) {
-            cars.add( aCar );
-        }
-    }
+	@Entity
+	@Table( name = "CAR" )
+	public static class Car {
 
-    @Entity
-    @Table( name = "CAR" )
-    public static class Car {
+		@Id
+		String id;
 
-        @Id
-        String id;
-
-        Car() {
-            id = SafeRandomUUIDGenerator.safeRandomUUIDAsString();
-        }
-    }
+		Car() {
+			id = SafeRandomUUIDGenerator.safeRandomUUIDAsString();
+		}
+	}
 }

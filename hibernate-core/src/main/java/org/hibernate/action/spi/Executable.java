@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.action.spi;
 
@@ -15,7 +13,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * An operation which may be scheduled for later execution. Usually, the
  * operation is a database insert/update/delete, together with required
  * second-level cache management.
- * 
+ *
  * @author Gavin King
  * @author Steve Ebersole
  */
@@ -56,7 +54,7 @@ public interface Executable {
 	 * before-transaction-completion process
 	 */
 	@Nullable BeforeTransactionCompletionProcess getBeforeTransactionCompletionProcess();
-	
+
 	/**
 	 * Reconnect to session after deserialization
 	 *

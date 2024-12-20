@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -178,7 +176,7 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	protected void visitConflictClause(ConflictClause conflictClause) {
 		if ( conflictClause != null ) {
 			if ( conflictClause.isDoUpdate() && conflictClause.getConstraintName() != null ) {
-				throw new IllegalQueryOperationException( "Insert conflict do update clause with constraint name is not supported" );
+				throw new IllegalQueryOperationException( "Insert conflict 'do update' clause with constraint name is not supported" );
 			}
 		}
 	}
@@ -324,10 +322,15 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	@Override
 	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
 		appendSql( OPEN_PARENTHESIS );
-		render( arithmeticExpression.getLeftHandOperand(), SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+		visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
 		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
-		render( arithmeticExpression.getRightHandOperand(), SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+		visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
 		appendSql( CLOSE_PARENTHESIS );
+	}
+
+	@Override
+	protected void visitArithmeticOperand(Expression expression) {
+		render( expression, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 	}
 
 	@Override
@@ -335,13 +338,9 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		final TableReference tableRef = tableGroup.getPrimaryTableReference();
 		// The H2 parser can't handle a sub-query as first element in a nested join
 		// i.e. `join ( (select ...) alias join ... )`, so we have to introduce a dummy table reference
-		if ( tableRef instanceof QueryPartTableReference || tableRef.getTableId().startsWith( "(select" ) ) {
-			final boolean realTableGroup = tableGroup.isRealTableGroup()
-					&& ( CollectionHelper.isNotEmpty( tableGroup.getTableReferenceJoins() )
-					|| hasNestedTableGroupsToRender( tableGroup.getNestedTableGroupJoins() ) );
-			if ( realTableGroup ) {
-				appendSql( "dual cross join " );
-			}
+		if ( getSqlBuffer().charAt( getSqlBuffer().length() - 1 ) == '('
+				&& ( tableRef instanceof QueryPartTableReference || tableRef.getTableId().startsWith( "(select" ) ) ) {
+			appendSql( "dual cross join " );
 		}
 		return super.renderPrimaryTableReference( tableGroup, lockMode );
 	}
@@ -387,11 +386,6 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		return getClauseStack().getCurrent() != Clause.WITHIN_GROUP || getDialect().getVersion().isSameOrAfter( 2 );
 	}
 
-	@Override
-	protected String getDual() {
-		return "dual";
-	}
-
 	private boolean supportsOffsetFetchClause() {
 		return getDialect().getVersion().isSameOrAfter( 1, 4, 195 );
 	}
@@ -405,5 +399,10 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	@Override
 	protected boolean supportsJoinInMutationStatementSubquery() {
 		return false;
+	}
+
+	@Override
+	public boolean supportsFilterClause() {
+		return getDialect().getVersion().isSameOrAfter( 1, 4, 197 );
 	}
 }

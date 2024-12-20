@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.naturalid.immutableentity;
 
@@ -17,7 +15,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -50,7 +48,7 @@ import static org.junit.Assert.assertTrue;
 @DomainModel( annotatedClasses = Building.class )
 @SessionFactory
 @SuppressWarnings("unchecked")
-@TestForIssue( jiraKey = "HHH-7085" )
+@JiraKey( value = "HHH-7085" )
 public class ImmutableEntityNaturalIdTest {
 	@BeforeEach
 	public void createTestData(SessionFactoryScope scope) {
@@ -165,7 +163,7 @@ public class ImmutableEntityNaturalIdTest {
 					assertEquals( "Cache put should be one after second query", 1, stats.getNaturalIdCachePutCount() );
 
 					// Try Deleting
-					session.delete( building );
+					session.remove( building );
 
 					// third query
 					naturalIdLoader.load();
@@ -206,7 +204,7 @@ public class ImmutableEntityNaturalIdTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-7371" )
+	@JiraKey( value = "HHH-7371" )
 	public void testImmutableNaturalIdLifecycle2(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(s) -> {
@@ -219,7 +217,7 @@ public class ImmutableEntityNaturalIdTest {
 					Building building = naturalIdLoader.getReference();
 					assertNotNull( building );
 
-					s.delete( building );
+					s.remove( building );
 					building = naturalIdLoader.load();
 //org.hibernate.ObjectNotFoundException: No row with the given identifier exists: [org.hibernate.test.naturalid.immutableentity.Building#1]
 //		at org.hibernate.internal.SessionFactoryImpl$1$1.handleEntityNotFound(SessionFactoryImpl.java:247)

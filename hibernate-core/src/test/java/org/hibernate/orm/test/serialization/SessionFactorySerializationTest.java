@@ -1,14 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.serialization;
 
 
-import javax.naming.Reference;
-import javax.naming.StringRefAddr;
 
 import org.junit.Test;
 
@@ -37,7 +33,7 @@ public class SessionFactorySerializationTest extends BaseUnitTestCase {
 	public void testNamedSessionFactorySerialization() throws Exception {
 		Configuration cfg = new Configuration()
 				.setProperty( AvailableSettings.SESSION_FACTORY_NAME, NAME )
-				.setProperty( AvailableSettings.SESSION_FACTORY_NAME_IS_JNDI, "false" ); // default is true
+				.setProperty( AvailableSettings.SESSION_FACTORY_NAME_IS_JNDI, false ); // default is true
 		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
 		try (SessionFactory factory = cfg.buildSessionFactory()) {
 
@@ -45,12 +41,12 @@ public class SessionFactorySerializationTest extends BaseUnitTestCase {
 			// different VM
 			String uuid = ( (SessionFactoryImplementor) factory ).getUuid();
 			// deregister under this uuid...
-			SessionFactoryRegistry.INSTANCE.removeSessionFactory( uuid, NAME, false, null );
+			SessionFactoryRegistry.INSTANCE.removeSessionFactory( uuid, NAME, null, null );
 			// and then register under a different uuid...
 			SessionFactoryRegistry.INSTANCE.addSessionFactory(
 					"some-other-uuid",
 					NAME,
-					false,
+					null,
 					(SessionFactoryImplementor) factory,
 					null
 			);
@@ -58,7 +54,7 @@ public class SessionFactorySerializationTest extends BaseUnitTestCase {
 			SessionFactory factory2 = (SessionFactory) SerializationHelper.clone( factory );
 			assertSame( factory, factory2 );
 
-			SessionFactoryRegistry.INSTANCE.removeSessionFactory( "some-other-uuid", NAME, false, null );
+			SessionFactoryRegistry.INSTANCE.removeSessionFactory( "some-other-uuid", NAME, null, null );
 		}
 
 		assertFalse( SessionFactoryRegistry.INSTANCE.hasRegistrations() );
@@ -69,7 +65,7 @@ public class SessionFactorySerializationTest extends BaseUnitTestCase {
 		// IMPL NOTE : this test is a control to testNamedSessionFactorySerialization
 		// 		here, the test should fail based just on attempted uuid resolution
 		Configuration cfg = new Configuration()
-				.setProperty( AvailableSettings.SESSION_FACTORY_NAME_IS_JNDI, "false" ); // default is true
+				.setProperty( AvailableSettings.SESSION_FACTORY_NAME_IS_JNDI, false ); // default is true
 		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
 		try (SessionFactory factory = cfg.buildSessionFactory()) {
 
@@ -77,12 +73,12 @@ public class SessionFactorySerializationTest extends BaseUnitTestCase {
 			// different VM
 			String uuid = ( (SessionFactoryImplementor) factory ).getUuid();
 			// deregister under this uuid...
-			SessionFactoryRegistry.INSTANCE.removeSessionFactory( uuid, null, false, null );
+			SessionFactoryRegistry.INSTANCE.removeSessionFactory( uuid, null, null, null );
 			// and then register under a different uuid...
 			SessionFactoryRegistry.INSTANCE.addSessionFactory(
 					"some-other-uuid",
 					null,
-					false,
+					null,
 					(SessionFactoryImplementor) factory,
 					null
 			);
@@ -94,7 +90,7 @@ public class SessionFactorySerializationTest extends BaseUnitTestCase {
 			catch (SerializationException expected) {
 			}
 
-			SessionFactoryRegistry.INSTANCE.removeSessionFactory( "some-other-uuid", null, false, null );
+			SessionFactoryRegistry.INSTANCE.removeSessionFactory( "some-other-uuid", null, null, null );
 		}
 
 		assertFalse( SessionFactoryRegistry.INSTANCE.hasRegistrations() );

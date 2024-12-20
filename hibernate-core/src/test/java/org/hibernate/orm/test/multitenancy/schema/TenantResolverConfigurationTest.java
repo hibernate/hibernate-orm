@@ -1,15 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.multitenancy.schema;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -18,7 +16,7 @@ import static org.junit.Assert.assertSame;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-10964")
+@JiraKey(value = "HHH-10964")
 public class TenantResolverConfigurationTest extends BaseCoreFunctionalTestCase {
 
 	private TestCurrentTenantIdentifierResolver currentTenantResolver = new TestCurrentTenantIdentifierResolver();

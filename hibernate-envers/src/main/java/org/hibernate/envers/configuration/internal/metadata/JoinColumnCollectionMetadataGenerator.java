@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
@@ -31,6 +29,8 @@ import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
 
+import java.lang.invoke.MethodHandles;
+
 /**
  * An implementation of {@link AbstractCollectionMetadataGenerator} that builds collection metadata
  * and association mappings where the association uses a join column mapping.
@@ -40,6 +40,7 @@ import org.jboss.logging.Logger;
 public class JoinColumnCollectionMetadataGenerator extends AbstractCollectionMetadataGenerator {
 
 	private static final EnversMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			EnversMessageLogger.class,
 			JoinColumnCollectionMetadataGenerator.class.getName()
 	);
@@ -157,7 +158,7 @@ public class JoinColumnCollectionMetadataGenerator extends AbstractCollectionMet
 				fakeBidirectionalRelationMapper,
 				fakeBidirectionalRelationIndexMapper,
 				hasCollectionIndex( context )
-		);        
+		);
 	}
 
 	private boolean hasCollectionIndex(CollectionMetadataContext context) {
@@ -169,7 +170,7 @@ public class JoinColumnCollectionMetadataGenerator extends AbstractCollectionMet
 			return context.getPropertyAuditingData().getAuditMappedBy();
 		}
 		return context.getCollection().getMappedByProperty();
-	} 
+	}
 
 	private PropertyMapper getBidirectionalRelationMapper(String entityName, IdMappingData idData, String auditMappedBy) {
 		// Creating a prefixed relation mapper.
@@ -186,7 +187,7 @@ public class JoinColumnCollectionMetadataGenerator extends AbstractCollectionMet
 				false,
 				false
 		);
-	}    
+	}
 
 	private PropertyMapper getBidirectionalRelationIndexMapper(CollectionMetadataContext context, String positionMappedBy) {
 		if ( positionMappedBy != null ) {
@@ -220,5 +221,5 @@ public class JoinColumnCollectionMetadataGenerator extends AbstractCollectionMet
 			return new MiddleComponentData( new MiddleStraightComponentMapper( positionMappedBy ) );
 		}
 		return original;
-	}    
+	}
 }

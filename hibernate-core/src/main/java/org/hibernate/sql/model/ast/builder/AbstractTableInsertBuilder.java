@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.model.ast.builder;
 
@@ -15,7 +13,6 @@ import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
-import org.hibernate.sql.model.ast.ColumnValueParameter;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.TableInsert;
 

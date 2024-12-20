@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
@@ -54,11 +52,9 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 	private final Integer scale;
 	private final Integer temporalPrecision;
 
-	private final BasicType versionBasicType;
+	private final BasicType<?> versionBasicType;
 
 	private final VersionValue unsavedValueStrategy;
-
-	private BasicAttributeMapping attributeMapping;
 
 	public EntityVersionMappingImpl(
 			RootClass bootEntityDescriptor,
@@ -72,8 +68,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 			Integer scale,
 			Integer temporalPrecision,
 			BasicType<?> versionBasicType,
-			EntityMappingType declaringType,
-			MappingModelCreationProcess creationProcess) {
+			EntityMappingType declaringType) {
 		this.attributeName = attributeName;
 		this.columnDefinition = columnDefinition;
 		this.length = length;
@@ -90,11 +85,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 		unsavedValueStrategy = UnsavedValueFactory.getUnsavedVersionValue(
 				(KeyValue) bootEntityDescriptor.getVersion().getValue(),
 				(VersionJavaType<?>) versionBasicType.getJavaTypeDescriptor(),
-				length,
-				precision,
-				scale,
-				declaringType
-						.getRepresentationStrategy()
+				declaringType.getRepresentationStrategy()
 						.resolvePropertyAccess( bootEntityDescriptor.getVersion() )
 						.getGetter(),
 				templateInstanceAccess
@@ -263,7 +254,8 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 				fetchablePath,
 				this,
 				fetchTiming,
-				creationState
+				creationState,
+				!sqlSelection.isVirtual()
 		);
 	}
 
@@ -279,7 +271,9 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				versionBasicType,
-				navigablePath
+				navigablePath,
+				false,
+				!sqlSelection.isVirtual()
 		);
 	}
 

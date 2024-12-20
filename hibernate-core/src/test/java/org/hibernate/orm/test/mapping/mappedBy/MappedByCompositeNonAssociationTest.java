@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.mapping.mappedBy;
 
 import jakarta.persistence.Column;
@@ -8,6 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
 import org.hibernate.Hibernate;
+import org.hibernate.annotations.ListIndexBase;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -26,7 +31,7 @@ public class MappedByCompositeNonAssociationTest {
 	@Test void test(SessionFactoryScope scope) {
 		Extensions ex = new Extensions();
 		ex.exExtensionDays = 3L;
-		ex.extensionId.exNo = 2L;
+		ex.extensionId.exNo = 1L;
 		ex.extensionId.exLoanId = 4L;
 
 		Loan loan = new Loan();
@@ -55,7 +60,7 @@ public class MappedByCompositeNonAssociationTest {
 		private Long id;
 
 		@OneToMany(cascade = PERSIST, mappedBy = "extensionId.exLoanId")
-		@OrderColumn(name = "EX_NO")
+		@OrderColumn(name = "EX_NO") @ListIndexBase(1)
 		private List<Extensions> extensions = new ArrayList<>();
 	}
 

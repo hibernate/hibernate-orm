@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.test.c3p0;
 
@@ -10,7 +8,7 @@ import java.sql.Statement;
 
 import org.hibernate.dialect.SQLServerDialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -33,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class JdbcCompatibilityTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11308")
+	@JiraKey(value = "HHH-11308")
 	public void testJdbc41(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			session.doWork( connection -> {
@@ -45,7 +43,7 @@ public class JdbcCompatibilityTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11308")
+	@JiraKey(value = "HHH-11308")
 	public void testJdbc42(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			for ( int i = 0; i < 5; i++ ) {

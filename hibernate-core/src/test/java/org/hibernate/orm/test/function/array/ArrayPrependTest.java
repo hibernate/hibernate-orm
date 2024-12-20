@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.function.array;
 
@@ -36,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 @DomainModel(annotatedClasses = EntityWithArrays.class)
 @SessionFactory
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsStructuralArrays.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsArrayPrepend.class)
 // Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
 @BootstrapServiceRegistry(integrators = SharedDriverManagerTypeCacheClearingIntegrator.class)
 public class ArrayPrependTest {

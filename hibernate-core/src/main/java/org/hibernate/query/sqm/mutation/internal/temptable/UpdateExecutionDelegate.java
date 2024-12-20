@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.mutation.internal.temptable;
 
@@ -19,28 +17,27 @@ import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SoftDeleteMapping;
-import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.results.TableGroupImpl;
+import org.hibernate.query.results.internal.TableGroupImpl;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.mutation.internal.TableKeyExpressionCollector;
+import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
@@ -58,11 +55,11 @@ import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
-import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
-import org.hibernate.sql.exec.spi.JdbcOperationQueryUpdate;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
+
+import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
 
 /**
  * @author Steve Ebersole
@@ -121,17 +118,12 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 
 
 
-		this.assignmentsByTable = CollectionHelper.mapOfSize( updatingTableGroup.getTableReferenceJoins().size() + 1 );
+		this.assignmentsByTable = mapOfSize( updatingTableGroup.getTableReferenceJoins().size() + 1 );
 
 		jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
 				executionContext.getQueryParameterBindings(),
 				domainParameterXref,
-				SqmUtil.generateJdbcParamsXref(
-						domainParameterXref,
-						sqmConverter::getJdbcParamsBySqmParam
-				),
-				sessionFactory.getRuntimeMetamodels().getMappingMetamodel(),
-				navigablePath -> updatingTableGroup,
+				SqmUtil.generateJdbcParamsXref( domainParameterXref, sqmConverter ),
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")
 					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
@@ -299,7 +291,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 	}
 
 	protected boolean isTableOptional(String tableExpression) {
-		final AbstractEntityPersister entityPersister = (AbstractEntityPersister) entityDescriptor.getEntityPersister();
+		final EntityPersister entityPersister = entityDescriptor.getEntityPersister();
 		for ( int i = 0; i < entityPersister.getTableSpan(); i++ ) {
 			if ( tableExpression.equals( entityPersister.getTableName( i ) )
 					&& entityPersister.isNullableTable( i ) ) {

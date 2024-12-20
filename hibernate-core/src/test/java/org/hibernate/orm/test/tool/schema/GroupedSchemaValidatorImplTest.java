@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.tool.schema;
 
@@ -13,12 +11,12 @@ import org.hibernate.tool.schema.internal.GroupedSchemaValidatorImpl;
 import org.hibernate.tool.schema.spi.ContributableMatcher;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-10332")
+@JiraKey(value = "HHH-10332")
 @RequiresDialect(H2Dialect.class)
 public class GroupedSchemaValidatorImplTest extends IndividuallySchemaValidatorImplTest {
 	@Override

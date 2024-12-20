@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.transaction.backend.jta.internal;
 
@@ -13,10 +11,14 @@ import jakarta.transaction.TransactionManager;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.concurrent.Callable;
+import java.util.function.BiFunction;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.JDBCException;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
+import org.hibernate.exception.internal.SQLStateConversionDelegate;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.transaction.spi.IsolationDelegate;
 import org.hibernate.internal.CoreLogging;
@@ -35,7 +37,7 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( JtaIsolationDelegate.class );
 
 	private final JdbcConnectionAccess connectionAccess;
-	private final SqlExceptionHelper sqlExceptionHelper;
+	private final BiFunction<SQLException, String, JDBCException> sqlExceptionConverter;
 	private final TransactionManager transactionManager;
 
 	public JtaIsolationDelegate(TransactionCoordinatorOwner transactionCoordinatorOwner, TransactionManager transactionManager) {
@@ -45,26 +47,37 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 	public JtaIsolationDelegate(JdbcSessionOwner jdbcSessionOwner, TransactionManager transactionManager) {
 		this(
 				jdbcSessionOwner.getJdbcConnectionAccess(),
-				jdbcSessionOwner.getJdbcSessionContext().getJdbcServices().getSqlExceptionHelper(),
+				jdbcSessionOwner.getSqlExceptionHelper(),
 				transactionManager
 		);
 	}
 
 	public JtaIsolationDelegate(
 			JdbcConnectionAccess connectionAccess,
-			SqlExceptionHelper sqlExceptionHelper,
+			SqlExceptionHelper sqlExceptionConverter,
 			TransactionManager transactionManager) {
 		this.connectionAccess = connectionAccess;
-		this.sqlExceptionHelper = sqlExceptionHelper;
 		this.transactionManager = transactionManager;
+		if ( sqlExceptionConverter != null ) {
+			this.sqlExceptionConverter = sqlExceptionConverter::convert;
+		}
+		else {
+			SQLStateConversionDelegate delegate = new SQLStateConversionDelegate(
+					() -> {
+						throw new AssertionFailure(
+								"Unexpected call to ConversionContext.getViolatedConstraintNameExtractor" );
+					}
+			);
+			this.sqlExceptionConverter = (sqlException, message) -> delegate.convert( sqlException, message, null );
+		}
 	}
 
-	protected JdbcConnectionAccess jdbcConnectionAccess() {
+	private JdbcConnectionAccess jdbcConnectionAccess() {
 		return connectionAccess;
 	}
 
-	protected SqlExceptionHelper sqlExceptionHelper() {
-		return sqlExceptionHelper;
+	private BiFunction<SQLException, String, JDBCException> sqlExceptionConverter() {
+		return sqlExceptionConverter;
 	}
 
 	@Override
@@ -101,7 +114,9 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 		try {
 			// First we suspend any current JTA transaction
 			final Transaction surroundingTransaction = transactionManager.suspend();
-			LOG.debugf( "Surrounding JTA transaction suspended [%s]", surroundingTransaction );
+			if ( surroundingTransaction != null ) {
+				LOG.debugf( "Surrounding JTA transaction suspended [%s]", surroundingTransaction );
+			}
 
 			try {
 				return callable.call();
@@ -111,8 +126,10 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 			}
 			finally {
 				try {
-					transactionManager.resume( surroundingTransaction );
-					LOG.debugf( "Surrounding JTA transaction resumed [%s]", surroundingTransaction );
+					if ( surroundingTransaction != null ) {
+						transactionManager.resume( surroundingTransaction );
+						LOG.debugf( "Surrounding JTA transaction resumed [%s]", surroundingTransaction );
+					}
 				}
 				catch ( Throwable t2 ) {
 					// if the actually work had an error use that, otherwise error based on t
@@ -183,7 +200,7 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 			}
 		}
 		catch (SQLException e) {
-			throw sqlExceptionHelper().convert( e, "unable to obtain isolated JDBC connection" );
+			throw sqlExceptionConverter().apply( e, "unable to obtain isolated JDBC connection" );
 		}
 	}
 

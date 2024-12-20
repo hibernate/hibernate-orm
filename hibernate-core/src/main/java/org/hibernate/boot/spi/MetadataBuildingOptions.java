@@ -1,25 +1,22 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.spi;
 
 import java.util.List;
 
+import org.hibernate.Incubating;
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.collection.internal.StandardCollectionSemanticsResolver;
 import org.hibernate.collection.spi.CollectionSemanticsResolver;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.metamodel.internal.ManagedTypeRepresentationResolverStandard;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.type.WrapperArrayHandling;
@@ -48,13 +45,6 @@ public interface MetadataBuildingOptions {
 	MappingDefaults getMappingDefaults();
 
 	/**
-	 * The service implementing {@link IdentifierGeneratorFactory}.
-	 * <p>
-	 * @implNote Almost always a {@link org.hibernate.id.factory.internal.StandardIdentifierGeneratorFactory}.
-	 */
-	IdentifierGeneratorFactory getIdentifierGeneratorFactory();
-
-	/**
 	 * @return the {@link TimeZoneStorageStrategy} determined by the global configuration
 	 *         property and the {@linkplain #getTimeZoneSupport() time zone support} of
 	 *         the configured {@link org.hibernate.dialect.Dialect}
@@ -78,6 +68,10 @@ public interface MetadataBuildingOptions {
 	 */
 	WrapperArrayHandling getWrapperArrayHandling();
 
+	/**
+	 * @deprecated no longer called
+	 */
+	@Deprecated(since="7.0", forRemoval = true)
 	default ManagedTypeRepresentationResolver getManagedTypeRepresentationResolver() {
 		// for now always return the standard one
 		return ManagedTypeRepresentationResolverStandard.INSTANCE;
@@ -152,6 +146,15 @@ public interface MetadataBuildingOptions {
 	boolean isMultiTenancyEnabled();
 
 	/**
+	 * Whether to use the legacy format for serializing/deserializing XML data.
+	 *
+	 * @since 7.0
+	 * @see org.hibernate.cfg.MappingSettings#XML_FORMAT_MAPPER_LEGACY_FORMAT
+	 */
+	@Incubating
+	boolean isXmlFormatMapperLegacyFormatEnabled();
+
+	/**
 	 * @return the {@link TypeConfiguration} belonging to the {@link BootstrapContext}
 	 */
 	TypeConfiguration getTypeConfiguration();
@@ -217,15 +220,6 @@ public interface MetadataBuildingOptions {
 	boolean isNoConstraintByDefault();
 
 	/**
-	 * Retrieve the ordering in which {@linkplain MetadataSourceType sources} should be processed.
-	 *
-	 * @return The order in which sources should be processed.
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#ARTIFACT_PROCESSING_ORDER
-	 */
-	List<MetadataSourceType> getSourceProcessOrdering();
-
-	/**
 	 * @see org.hibernate.cfg.AvailableSettings#HBM2DDL_CHARSET_NAME
 	 */
 	default String getSchemaCharset() {
@@ -243,14 +237,4 @@ public interface MetadataBuildingOptions {
 	 * Check to see if extensions can be hosted in CDI
 	 */
 	boolean isAllowExtensionsInCdi();
-
-	/**
-	 * Check to see if extensions can be hosted in CDI
-	 *
-	 * @deprecated Use {@link #isAllowExtensionsInCdi()}
-	 */
-	@Deprecated(forRemoval = true)
-	default boolean disallowExtensionsInCdi() {
-		return !isAllowExtensionsInCdi();
-	}
 }

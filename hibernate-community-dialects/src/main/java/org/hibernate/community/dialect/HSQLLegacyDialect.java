@@ -1,15 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
+import java.lang.invoke.MethodHandles;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
@@ -51,13 +51,13 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.entity.Lockable;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.dialect.NullOrdering;
-import org.hibernate.query.sqm.TemporalUnit;
-import org.hibernate.query.sqm.mutation.internal.temptable.AfterUseAction;
-import org.hibernate.query.sqm.mutation.internal.temptable.BeforeUseAction;
+import org.hibernate.query.common.TemporalUnit;
+import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
+import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
@@ -95,6 +95,7 @@ import static org.hibernate.type.SqlTypes.NUMERIC;
  */
 public class HSQLLegacyDialect extends Dialect {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			org.hibernate.community.dialect.HSQLLegacyDialect.class.getName()
 	);
@@ -259,7 +260,7 @@ public class HSQLLegacyDialect extends Dialect {
 		functionFactory.arrayPrepend_operator();
 		functionFactory.arrayAppend_operator();
 		functionFactory.arrayContains_hsql();
-		functionFactory.arrayOverlaps_hsql();
+		functionFactory.arrayIntersects_hsql();
 		functionFactory.arrayGet_unnest();
 		functionFactory.arraySet_hsql();
 		functionFactory.arrayRemove_hsql();
@@ -270,12 +271,37 @@ public class HSQLLegacyDialect extends Dialect {
 		functionFactory.arrayFill_hsql();
 		functionFactory.arrayToString_hsql();
 
+		if ( getVersion().isSameOrAfter( 2, 7 ) ) {
+			functionFactory.jsonObject_hsqldb();
+			functionFactory.jsonArray_hsqldb();
+			functionFactory.jsonArrayAgg_hsqldb();
+			functionFactory.jsonObjectAgg_h2();
+		}
+
+		functionFactory.unnest( "c1", "c2" );
+		functionFactory.generateSeries_recursive( getMaximumSeriesSize(), true, false );
+
 		//trim() requires parameters to be cast when used as trim character
 		functionContributions.getFunctionRegistry().register( "trim", new TrimFunction(
 				this,
 				functionContributions.getTypeConfiguration(),
 				SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER
 		) );
+	}
+
+	/**
+	 * HSQLDB doesn't support the {@code generate_series} function or {@code lateral} recursive CTEs,
+	 * so it has to be emulated with a top level recursive CTE which requires an upper bound on the amount
+	 * of elements that the series can return.
+	 */
+	protected int getMaximumSeriesSize() {
+		// The maximum recursion depth of HSQLDB
+		return 258;
+	}
+
+	@Override
+	public @Nullable String getDefaultOrdinalityColumnName() {
+		return "c2";
 	}
 
 	@Override
@@ -315,25 +341,33 @@ public class HSQLLegacyDialect extends Dialect {
 				}
 				break;
 			case BOOLEAN:
-				result = BooleanDecoder.toBoolean( from );
+				result = from == CastType.STRING
+						? buildStringToBooleanCastDecode( "true", "false" )
+						: BooleanDecoder.toBoolean( from );
 				if ( result != null ) {
 					return result;
 				}
 				break;
 			case INTEGER_BOOLEAN:
-				result = BooleanDecoder.toIntegerBoolean( from );
+				result = from == CastType.STRING
+						? buildStringToBooleanCastDecode( "1", "0" )
+						: BooleanDecoder.toIntegerBoolean( from );
 				if ( result != null ) {
 					return result;
 				}
 				break;
 			case YN_BOOLEAN:
-				result = BooleanDecoder.toYesNoBoolean( from );
+				result = from == CastType.STRING
+						? buildStringToBooleanCastDecode( "'Y'", "'N'" )
+						: BooleanDecoder.toYesNoBoolean( from );
 				if ( result != null ) {
 					return result;
 				}
 				break;
 			case TF_BOOLEAN:
-				result = BooleanDecoder.toTrueFalseBoolean( from );
+				result = from == CastType.STRING
+						? buildStringToBooleanCastDecode( "'T'", "'F'" )
+						: BooleanDecoder.toTrueFalseBoolean( from );
 				if ( result != null ) {
 					return result;
 				}
@@ -736,7 +770,7 @@ public class HSQLLegacyDialect extends Dialect {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public LockingStrategy getLockingStrategy(Lockable lockable, LockMode lockMode) {
+	public LockingStrategy getLockingStrategy(EntityPersister lockable, LockMode lockMode) {
 		switch (lockMode) {
 			case PESSIMISTIC_FORCE_INCREMENT:
 				return new PessimisticForceIncrementLockingStrategy( lockable, lockMode);
@@ -758,7 +792,7 @@ public class HSQLLegacyDialect extends Dialect {
 	}
 
 	private static class ReadUncommittedLockingStrategy extends SelectLockingStrategy {
-		private ReadUncommittedLockingStrategy(Lockable lockable, LockMode lockMode) {
+		private ReadUncommittedLockingStrategy(EntityPersister lockable, LockMode lockMode) {
 			super( lockable, lockMode );
 		}
 
@@ -826,6 +860,11 @@ public class HSQLLegacyDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsValuesList() {
+		return true;
+	}
+
+	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return identityColumnSupport;
 	}
@@ -888,6 +927,7 @@ public class HSQLLegacyDialect extends Dialect {
 	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
 			throws SQLException {
 		builder.setAutoQuoteInitialUnderscore(true);
+		builder.setAutoQuoteDollar(true);
 		return super.buildIdentifierHelper(builder, dbMetaData);
 	}
 
@@ -899,5 +939,10 @@ public class HSQLLegacyDialect extends Dialect {
 	@Override
 	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
 		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+	}
+
+	@Override
+	public String getFromDualForSelectOnly() {
+		return " from " + getDual();
 	}
 }

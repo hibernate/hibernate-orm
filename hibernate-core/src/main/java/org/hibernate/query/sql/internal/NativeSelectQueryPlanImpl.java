@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sql.internal;
 
@@ -95,10 +93,7 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 				SqmJdbcExecutionContextAdapter.usingLockingAndPaging( executionContext ),
 				null,
 				null,
-				sqlString -> executionContext.getSession()
-						.getJdbcCoordinator()
-						.getStatementPreparer()
-						.prepareQueryStatement( sqlString, false, null ),
+				-1,
 				resultsConsumer
 		);
 	}
@@ -183,7 +178,8 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 				scrollMode,
 				jdbcParameterBindings,
 				SqmJdbcExecutionContextAdapter.usingLockingAndPaging( executionContext ),
-				null
+				null,
+				-1
 		);
 	}
 }

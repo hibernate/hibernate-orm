@@ -186,7 +186,7 @@
 	<sql-query name="simpleScalar" callable="true">
 		<return-scalar column="name" type="string"/>
 		<return-scalar column="`value`" type="long"/>
-		{ call simpleScalar(:number) }
+		{ call simpleScalar(:p_number) }
 	</sql-query>
 
 	<sql-query name="paramhandling" callable="true">
@@ -261,10 +261,10 @@
 	
     <database-object>
 	 <create>
-		CREATE PROCEDURE simpleScalar (IN j SMALLINT) RESULT SETS 1
+		CREATE PROCEDURE simpleScalar (IN p_number SMALLINT) RESULT SETS 1
         P1: BEGIN
          DECLARE C1 CURSOR WITH RETURN FOR
-    		SELECT j as value, 'getAll' as name from sysibm.sysdummy1;
+    		SELECT p_number as value, 'getAll' as name from sysibm.sysdummy1;
          OPEN C1;
         END P1
 	 </create>

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
@@ -14,12 +12,13 @@ import java.sql.Statement;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 
 import static org.hibernate.cfg.DialectSpecificSettings.HANA_MAX_LOB_PREFETCH_SIZE;
 
 /**
- * Utility class that extract some initial configuration from the database for {@link HANADialect}.
+ * Utility class that extracts some initial configuration from the database for {@link HANADialect}.
  */
 public class HANAServerConfiguration {
 
@@ -74,16 +73,19 @@ public class HANAServerConfiguration {
 					MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE
 			);
 		}
-		return new HANAServerConfiguration( createVersion( info ), maxLobPrefetchSize );
+		return new HANAServerConfiguration( staticDetermineDatabaseVersion( info ), maxLobPrefetchSize );
 	}
 
-	private static DatabaseVersion createVersion(DialectResolutionInfo info) {
+	static DatabaseVersion staticDetermineDatabaseVersion(DialectResolutionInfo info) {
 		// Parse the version according to https://answers.sap.com/questions/9760991/hana-sps-version-check.html
 		final String versionString = info.getDatabaseVersion();
 		int majorVersion = 1;
 		int minorVersion = 0;
 		int patchLevel = 0;
-		final String[] components = versionString.split( "\\." );
+		if ( versionString == null ) {
+			return HANADialect.MINIMUM_VERSION;
+		}
+		final String[] components = StringHelper.split( ".", versionString );
 		if ( components.length >= 3 ) {
 			try {
 				majorVersion = Integer.parseInt( components[0] );

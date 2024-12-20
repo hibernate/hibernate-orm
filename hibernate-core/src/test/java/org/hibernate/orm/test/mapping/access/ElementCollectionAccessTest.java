@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.access;
 
@@ -13,7 +11,6 @@ import jakarta.persistence.AccessType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
-import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -69,7 +66,7 @@ public class ElementCollectionAccessTest extends BaseEntityManagerFunctionalTest
 
 		//Getters and setters are omitted for brevity
 	//end::access-element-collection-mapping-example[]
-		
+
 		public Long getId() {
 			return id;
 		}
@@ -127,5 +124,5 @@ public class ElementCollectionAccessTest extends BaseEntityManagerFunctionalTest
 		}
 	}
 	//end::access-embeddable-mapping-example[]
-	
+
 }

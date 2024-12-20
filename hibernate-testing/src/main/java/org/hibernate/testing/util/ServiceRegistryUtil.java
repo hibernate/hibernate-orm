@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.util;
 
@@ -38,16 +36,25 @@ public class ServiceRegistryUtil {
 					AvailableSettings.CONNECTION_PROVIDER,
 					SharedDriverManagerConnectionProviderImpl.getInstance()
 			);
+			builder.applySetting(
+					AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT,
+					Boolean.TRUE
+			);
 		}
 		return builder;
 	}
 
 	public static void applySettings(Map<?, ?> properties) {
 		if ( !properties.containsKey( AvailableSettings.CONNECTION_PROVIDER ) ) {
-			//noinspection unchecked
-			( (Map<Object, Object>) properties ).put(
+			@SuppressWarnings( "unchecked" )
+			final Map<Object, Object> objectMap = (Map<Object, Object>) properties;
+			objectMap.put(
 					AvailableSettings.CONNECTION_PROVIDER,
 					SharedDriverManagerConnectionProviderImpl.getInstance()
+			);
+			objectMap.put(
+					AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT,
+					Boolean.TRUE
 			);
 		}
 	}

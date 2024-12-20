@@ -13,7 +13,7 @@
         package="org.hibernate.orm.test.bidi">
 
     <class name="SpecialAuction" table="TAuction">
-        <id name="id">
+        <id name="id" column="c_id">
             <generator class="native"/>
         </id>
         <property name="description"/>
@@ -25,13 +25,13 @@
         </bag>
         <one-to-one name="successfulBid"
                     property-ref="abc">
-            <formula>id</formula>
+            <formula>c_id</formula>
             <formula>true</formula>
         </one-to-one>
     </class>
 
     <class name="AbstractBid" table="TBid" abstract="true">
-        <id name="id">
+        <id name="id" column="c_id">
             <generator class="native"/>
         </id>
 

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.filter;
 
@@ -27,7 +25,7 @@ import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -48,7 +46,7 @@ import static org.junit.Assert.assertThat;
 		}
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-10991")
+@JiraKey(value = "HHH-10991")
 public class CriteriaQueryWithAppliedFilterTest extends AbstractStatefulStatelessFilterTest {
 
 	private final static Identifier STUDENT_ID = new Identifier( 2, new Identifier2( 4, 5L ) );
@@ -62,7 +60,7 @@ public class CriteriaQueryWithAppliedFilterTest extends AbstractStatefulStateles
 			student.setStatus( "active" );
 			student.setAge( 21 );
 			student.setAddress( new Address( "London", "Lollard St" ) );
-			session.save( student );
+			session.persist( student );
 
 			final Student student2 = new Student();
 			student2.setId( new Identifier( 4, new Identifier2( 4, 6L ) ) );
@@ -70,8 +68,8 @@ public class CriteriaQueryWithAppliedFilterTest extends AbstractStatefulStateles
 			student2.setStatus( "active" );
 			student2.setAge( 27 );
 			student2.setAddress( new Address( "London", "Oxford St" ) );
-			session.save( student2 );
-	   });
+			session.persist( student2 );
+	});
 	}
 
 	@AfterEach
@@ -108,7 +106,7 @@ public class CriteriaQueryWithAppliedFilterTest extends AbstractStatefulStateles
 //			query.add( Property.forName( "age" ).eq( inner ) );
 
 			assertThat( list.size(), is( 1 ) );
-	   	});
+		});
 
 		scope.inTransaction( session -> {
 			session.enableFilter( "statusFilter" ).setParameter( "status", "deleted" );
@@ -133,7 +131,7 @@ public class CriteriaQueryWithAppliedFilterTest extends AbstractStatefulStateles
 			final List<Student> list = session.createQuery( query ).getResultList();
 
 			assertThat( list.size(), is( 0 ) );
-	   	});
+		});
 	}
 
 	@ParameterizedTest

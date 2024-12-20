@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.test.integration.customtype;
 
@@ -20,7 +18,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CustomType;
 import org.hibernate.usertype.UserType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import jakarta.persistence.Entity;
@@ -44,7 +42,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-12304")
+@JiraKey(value = "HHH-12304")
 public class ExtendedEnumTypeTest extends BaseEnversJPAFunctionalTestCase {
 
 	// An extended type to trigger the need for Envers to supply type information in the HBM mappings.

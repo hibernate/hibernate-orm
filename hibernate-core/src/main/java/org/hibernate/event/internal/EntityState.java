@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
 
@@ -15,6 +13,8 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
+
+import static org.hibernate.event.internal.EventUtil.getLoggableName;
 
 public enum EntityState {
 	PERSISTENT, TRANSIENT, DETACHED, DELETED;
@@ -44,13 +44,13 @@ public enum EntityState {
 			if ( entry.getStatus() != Status.DELETED ) {
 				// do nothing for persistent instances
 				if ( LOG.isTraceEnabled() ) {
-					LOG.tracev( "Persistent instance of: {0}", EventUtil.getLoggableName( entityName, entity ) );
+					LOG.trace( "Persistent instance of: " + getLoggableName( entityName, entity ) );
 				}
 				return PERSISTENT;
 			}
 			// ie. e.status==DELETED
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev( "Deleted instance of: {0}", EventUtil.getLoggableName( entityName, entity ) );
+				LOG.trace( "Deleted instance of: " + getLoggableName( entityName, entity ) );
 			}
 			return DELETED;
 		}
@@ -61,12 +61,12 @@ public enum EntityState {
 
 		if ( ForeignKeys.isTransient( entityName, entity, assumedUnsaved, source ) ) {
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev( "Transient instance of: {0}", EventUtil.getLoggableName( entityName, entity ) );
+				LOG.trace( "Transient instance of: " + getLoggableName( entityName, entity ) );
 			}
 			return TRANSIENT;
 		}
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "Detached instance of: {0}", EventUtil.getLoggableName( entityName, entity ) );
+			LOG.trace( "Detached instance of: " + getLoggableName( entityName, entity ) );
 		}
 
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();

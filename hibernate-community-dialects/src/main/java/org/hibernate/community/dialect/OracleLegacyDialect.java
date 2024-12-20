@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -23,19 +21,7 @@ import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.BooleanDecoder;
-import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
-import org.hibernate.dialect.DatabaseVersion;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.OracleBooleanJdbcType;
-import org.hibernate.dialect.OracleJdbcHelper;
-import org.hibernate.dialect.OracleJsonJdbcType;
-import org.hibernate.dialect.OracleReflectionStructJdbcType;
-import org.hibernate.dialect.OracleTypes;
-import org.hibernate.dialect.OracleXmlJdbcType;
-import org.hibernate.dialect.Replacer;
-import org.hibernate.dialect.RowLockStrategy;
-import org.hibernate.dialect.TimeZoneSupport;
+import org.hibernate.dialect.*;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.OracleAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -67,6 +53,10 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.mapping.AggregateColumn;
+import org.hibernate.mapping.CheckConstraint;
+import org.hibernate.mapping.Table;
+import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
@@ -74,14 +64,15 @@ import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.CastType;
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
+import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -92,37 +83,40 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorOracleDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.tool.schema.internal.StandardTableExporter;
+import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.NullType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
-import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
-import org.hibernate.type.descriptor.jdbc.OracleJsonBlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
+import org.hibernate.type.descriptor.jdbc.OracleJsonBlobJdbcType;
+import org.hibernate.type.descriptor.jdbc.SqlTypedJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.ArrayDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
 
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
-import static org.hibernate.query.sqm.TemporalUnit.DAY;
-import static org.hibernate.query.sqm.TemporalUnit.HOUR;
-import static org.hibernate.query.sqm.TemporalUnit.MINUTE;
-import static org.hibernate.query.sqm.TemporalUnit.MONTH;
-import static org.hibernate.query.sqm.TemporalUnit.SECOND;
-import static org.hibernate.query.sqm.TemporalUnit.YEAR;
+import static org.hibernate.query.common.TemporalUnit.DAY;
+import static org.hibernate.query.common.TemporalUnit.HOUR;
+import static org.hibernate.query.common.TemporalUnit.MINUTE;
+import static org.hibernate.query.common.TemporalUnit.MONTH;
+import static org.hibernate.query.common.TemporalUnit.SECOND;
+import static org.hibernate.query.common.TemporalUnit.YEAR;
 import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
+import static org.hibernate.type.SqlTypes.BIT;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
 import static org.hibernate.type.SqlTypes.DATE;
 import static org.hibernate.type.SqlTypes.DECIMAL;
@@ -152,6 +146,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
  *
  * @author Steve Ebersole
  * @author Gavin King
+ * @author Loïc Lefèvre
  */
 public class OracleLegacyDialect extends Dialect {
 
@@ -177,7 +172,20 @@ public class OracleLegacyDialect extends Dialect {
 	private final LimitHandler limitHandler = supportsFetchClause( FetchClauseType.ROWS_ONLY )
 			? Oracle12LimitHandler.INSTANCE
 			: new LegacyOracleLimitHandler( getVersion() );
+	private final OracleUserDefinedTypeExporter userDefinedTypeExporter = new OracleUserDefinedTypeExporter( this );
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
+	private final SequenceSupport oracleSequenceSupport = OracleSequenceSupport.getInstance(this);
+	private final StandardTableExporter oracleTableExporter = new StandardTableExporter( this ) {
+		@Override
+		protected void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn) {
+			final JdbcType jdbcType = aggregateColumn.getType().getJdbcType();
+			if ( dialect.getVersion().isBefore( 23, 6 ) && jdbcType.isXml() ) {
+				// ORA-00600 when selecting XML columns that have a check constraint was fixed in 23.6
+				return;
+			}
+			super.applyAggregateColumnCheck( buf, aggregateColumn );
+		}
+	};
 
 	public OracleLegacyDialect() {
 		this( DatabaseVersion.make( 8, 0 ) );
@@ -254,6 +262,17 @@ public class OracleLegacyDialect extends Dialect {
 			functionFactory.coalesce();
 		}
 
+		functionContributions.getFunctionRegistry()
+				.patternDescriptorBuilder( "bitor", "(?1+?2-bitand(?1,?2))")
+				.setExactArgumentCount( 2 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.register();
+		functionContributions.getFunctionRegistry()
+				.patternDescriptorBuilder( "bitxor", "(?1+?2-2*bitand(?1,?2))")
+				.setExactArgumentCount( 2 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.register();
+
 		functionContributions.getFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
 				typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
@@ -292,7 +311,7 @@ public class OracleLegacyDialect extends Dialect {
 		functionFactory.arrayPrepend_oracle();
 		functionFactory.arrayAppend_oracle();
 		functionFactory.arrayContains_oracle();
-		functionFactory.arrayOverlaps_oracle();
+		functionFactory.arrayIntersects_oracle();
 		functionFactory.arrayGet_oracle();
 		functionFactory.arraySet_oracle();
 		functionFactory.arrayRemove_oracle();
@@ -302,6 +321,46 @@ public class OracleLegacyDialect extends Dialect {
 		functionFactory.arrayTrim_oracle();
 		functionFactory.arrayFill_oracle();
 		functionFactory.arrayToString_oracle();
+
+		if ( getVersion().isSameOrAfter( 12 ) ) {
+			functionFactory.jsonValue_oracle();
+			functionFactory.jsonQuery_oracle();
+			functionFactory.jsonExists_oracle();
+			functionFactory.jsonObject_oracle( getVersion().isSameOrAfter( 19 ) );
+			functionFactory.jsonArray_oracle();
+			functionFactory.jsonArrayAgg_oracle();
+			functionFactory.jsonObjectAgg_oracle();
+			functionFactory.jsonSet_oracle();
+			functionFactory.jsonRemove_oracle();
+			functionFactory.jsonReplace_oracle();
+			functionFactory.jsonInsert_oracle();
+			functionFactory.jsonMergepatch_oracle();
+			functionFactory.jsonArrayAppend_oracle();
+			functionFactory.jsonArrayInsert_oracle();
+			functionFactory.jsonTable_oracle();
+		}
+
+		functionFactory.xmlelement();
+		functionFactory.xmlcomment();
+		functionFactory.xmlforest();
+		functionFactory.xmlconcat();
+		functionFactory.xmlpi();
+		functionFactory.xmlquery_oracle();
+		functionFactory.xmlexists();
+		functionFactory.xmlagg();
+		functionFactory.xmltable_oracle();
+
+		functionFactory.unnest_oracle();
+		functionFactory.generateSeries_recursive( getMaximumSeriesSize(), true, false );
+	}
+
+	/**
+	 * Oracle doesn't support the {@code generate_series} function or {@code lateral} recursive CTEs,
+	 * so it has to be emulated with a top level recursive CTE which requires an upper bound on the amount
+	 * of elements that the series can return.
+	 */
+	protected int getMaximumSeriesSize() {
+		return 10000;
 	}
 
 	@Override
@@ -381,20 +440,33 @@ public class OracleLegacyDialect extends Dialect {
 				}
 				break;
 			case INTEGER_BOOLEAN:
-				result = BooleanDecoder.toIntegerBoolean( from );
+				result = from == CastType.STRING
+						? buildStringToBooleanCastDecode( "1", "0" )
+						: BooleanDecoder.toIntegerBoolean( from );
 				if ( result != null ) {
 					return result;
 				}
 				break;
 			case YN_BOOLEAN:
-				result = BooleanDecoder.toYesNoBoolean( from );
+				result = from == CastType.STRING
+						? buildStringToBooleanCastDecode( "'Y'", "'N'" )
+						: BooleanDecoder.toYesNoBoolean( from );
 				if ( result != null ) {
 					return result;
 				}
 				break;
 			case BOOLEAN:
+				result = from == CastType.STRING
+						? buildStringToBooleanCastDecode( "true", "false" )
+						: BooleanDecoder.toBoolean( from );
+				if ( result != null ) {
+					return result;
+				}
+				break;
 			case TF_BOOLEAN:
-				result = BooleanDecoder.toTrueFalseBoolean( from );
+				result = from == CastType.STRING
+						? buildStringToBooleanCastDecode( "'T'", "'F'" )
+						: BooleanDecoder.toTrueFalseBoolean( from );
 				if ( result != null ) {
 					return result;
 				}
@@ -445,6 +517,8 @@ public class OracleLegacyDialect extends Dialect {
 					return "to_timestamp_tz(?1,'YYYY-MM-DD HH24:MI:SS.FF9 TZR')";
 				}
 				break;
+			case XML:
+				return "xmlparse(document ?1)";
 		}
 		return super.castPattern(from, to);
 	}
@@ -640,6 +714,7 @@ public class OracleLegacyDialect extends Dialect {
 	protected String columnType(int sqlTypeCode) {
 		switch ( sqlTypeCode ) {
 			case BOOLEAN:
+			case BIT:
 				// still, after all these years...
 				return "number(1,0)";
 
@@ -749,25 +824,30 @@ public class OracleLegacyDialect extends Dialect {
 					jdbcTypeCode = SqlTypes.GEOMETRY;
 				}
 				else {
-					final AggregateJdbcType aggregateDescriptor = jdbcTypeRegistry.findAggregateDescriptor(
+					final SqlTypedJdbcType descriptor = jdbcTypeRegistry.findSqlTypedDescriptor(
 							// Skip the schema
 							columnTypeName.substring( columnTypeName.indexOf( '.' ) + 1 )
 					);
-					if ( aggregateDescriptor != null ) {
-						return aggregateDescriptor;
+					if ( descriptor != null ) {
+						return descriptor;
 					}
 				}
 				break;
 			case ARRAY:
 				if ( "MDSYS.SDO_ORDINATE_ARRAY".equals( columnTypeName ) ) {
-					final JdbcTypeConstructor jdbcTypeConstructor = jdbcTypeRegistry.getConstructor( jdbcTypeCode );
-					if ( jdbcTypeConstructor != null ) {
-						return jdbcTypeConstructor.resolveType(
-								jdbcTypeRegistry.getTypeConfiguration(),
-								this,
-								jdbcTypeRegistry.getDescriptor( NUMERIC ),
-								ColumnTypeInformation.EMPTY
-						);
+					return jdbcTypeRegistry.resolveTypeConstructorDescriptor(
+							jdbcTypeCode,
+							jdbcTypeRegistry.getDescriptor( NUMERIC ),
+							ColumnTypeInformation.EMPTY
+					);
+				}
+				else {
+					final SqlTypedJdbcType descriptor = jdbcTypeRegistry.findSqlTypedDescriptor(
+							// Skip the schema
+							columnTypeName.substring( columnTypeName.indexOf( '.' ) + 1 )
+					);
+					if ( descriptor != null ) {
+						return descriptor;
 					}
 				}
 				break;
@@ -821,13 +901,18 @@ public class OracleLegacyDialect extends Dialect {
 
 	@Override
 	public String getArrayTypeName(String javaElementTypeName, String elementTypeName, Integer maxLength) {
-		return javaElementTypeName + "Array";
+		return ( javaElementTypeName == null ? elementTypeName : javaElementTypeName ) + "Array";
 	}
 
 	@Override
 	public int getPreferredSqlTypeCodeForArray() {
 		// Prefer to resolve to the OracleArrayJdbcType, since that will fall back to XML later if needed
 		return ARRAY;
+	}
+
+	@Override
+	public Exporter<UserDefinedType> getUserDefinedTypeExporter() {
+		return userDefinedTypeExporter;
 	}
 
 	@Override
@@ -846,7 +931,7 @@ public class OracleLegacyDialect extends Dialect {
 		if ( getVersion().isSameOrAfter( 12 ) ) {
 			// account for Oracle's deprecated support for LONGVARBINARY
 			// prefer BLOB, unless the user explicitly opts out
-			boolean preferLong = serviceRegistry.getService( ConfigurationService.class ).getSetting(
+			boolean preferLong = serviceRegistry.requireService( ConfigurationService.class ).getSetting(
 					PREFER_LONG_RAW,
 					StandardConverters.BOOLEAN,
 					false
@@ -860,9 +945,11 @@ public class OracleLegacyDialect extends Dialect {
 
 			if ( getVersion().isSameOrAfter( 21 ) ) {
 				typeContributions.contributeJdbcType( OracleJsonJdbcType.INSTANCE );
+				typeContributions.contributeJdbcTypeConstructor( OracleJsonArrayJdbcTypeConstructor.NATIVE_INSTANCE );
 			}
 			else {
 				typeContributions.contributeJdbcType( OracleJsonBlobJdbcType.INSTANCE );
+				typeContributions.contributeJdbcTypeConstructor( OracleJsonArrayJdbcTypeConstructor.BLOB_INSTANCE );
 			}
 		}
 
@@ -902,8 +989,8 @@ public class OracleLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public String getNativeIdentifierGeneratorStrategy() {
-		return "sequence";
+	public GenerationType getNativeValueGenerationStrategy() {
+		return GenerationType.SEQUENCE;
 	}
 
 	// features which change between 8i, 9i, and 10g ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -968,7 +1055,12 @@ public class OracleLegacyDialect extends Dialect {
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		return OracleSequenceSupport.INSTANCE;
+		return oracleSequenceSupport;
+	}
+
+	@Override
+	public Exporter<Table> getTableExporter() {
+		return oracleTableExporter;
 	}
 
 	@Override
@@ -1200,6 +1292,12 @@ public class OracleLegacyDialect extends Dialect {
 	public int getMaxIdentifierLength() {
 		// Since 12.2 version, maximum identifier length is 128
 		return getVersion().isSameOrAfter( 12, 2 ) ? 128 : 30;
+	}
+
+	@Override
+	public int getDefaultTimestampPrecision() {
+		// 9 is supported at least since v10
+		return getVersion().isSameOrAfter( 10 ) ? 9 : 6;
 	}
 
 	@Override
@@ -1475,12 +1573,6 @@ public class OracleLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsNamedParameters(DatabaseMetaData databaseMetaData) {
-		// Not sure if it's a JDBC driver issue, but it doesn't work
-		return false;
-	}
-
-	@Override
 	public ResultSet getResultSet(CallableStatement statement, String name) throws SQLException {
 		return (ResultSet) statement.getObject( name );
 	}
@@ -1536,4 +1628,29 @@ public class OracleLegacyDialect extends Dialect {
 	public boolean supportsFromClauseInUpdate() {
 		return true;
 	}
+
+	@Override
+	public boolean useInputStreamToInsertBlob() {
+		// see HHH-18206
+		return false;
+	}
+
+
+	@Override
+	public String appendCheckConstraintOptions(CheckConstraint checkConstraint, String sqlCheckConstraint) {
+		if ( StringHelper.isNotEmpty( checkConstraint.getOptions() ) ) {
+			return sqlCheckConstraint + " " + checkConstraint.getOptions();
+		}
+		return sqlCheckConstraint;
+	}
+	@Override
+	public String getDual() {
+		return "dual";
+	}
+
+	@Override
+	public String getFromDualForSelectOnly() {
+		return " from " + getDual();
+	}
+
 }

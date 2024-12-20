@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy;
 
@@ -20,20 +18,18 @@ import jakarta.persistence.Table;
 
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.LazyGroup;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -41,13 +37,29 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-11147" )
-@RunWith( BytecodeEnhancerRunner.class )
+@JiraKey( "HHH-11147" )
+@DomainModel(
+		annotatedClasses = {
+				EntitySharedInCollectionAndToOneTest.CodeTableItem.class,
+				EntitySharedInCollectionAndToOneTest.CodeTable.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.FORMAT_SQL, value = "false" ),
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+				@Setting( name = AvailableSettings.USE_QUERY_CACHE, value = "false" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @EnhancementOptions( lazyLoading = true )
-public class EntitySharedInCollectionAndToOneTest extends BaseNonConfigCoreFunctionalTestCase {
+public class EntitySharedInCollectionAndToOneTest {
+
 	@Test
-	public void testIt() {
-		inTransaction(
+	public void testIt(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					int passes = 0;
 					for ( CodeTable codeTable : session.createQuery( "from CodeTable ct where ct.id = 2", CodeTable.class ).list() ) {
@@ -61,19 +73,19 @@ public class EntitySharedInCollectionAndToOneTest extends BaseNonConfigCoreFunct
 		);
 	}
 
-	@Before
-	public void createTestData() {
-		inTransaction(
+	@BeforeEach
+	public void createTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					final CodeTable codeTable1 = new CodeTable( 1, 1 );
 					final CodeTableItem item1 = new CodeTableItem( 1, 1, "first" );
 					final CodeTableItem item2 = new CodeTableItem( 2, 1, "second" );
 					final CodeTableItem item3 = new CodeTableItem( 3, 1, "third" );
 
-					session.save( codeTable1 );
-					session.save( item1 );
-					session.save( item2 );
-					session.save( item3 );
+					session.persist( codeTable1 );
+					session.persist( item1 );
+					session.persist( item2 );
+					session.persist( item3 );
 
 					codeTable1.getCodeTableItems().add( item1 );
 					item1.setCodeTable( codeTable1 );
@@ -90,8 +102,8 @@ public class EntitySharedInCollectionAndToOneTest extends BaseNonConfigCoreFunct
 					final CodeTable codeTable2 = new CodeTable( 2, 1 );
 					final CodeTableItem item4 = new CodeTableItem( 4, 1, "fourth" );
 
-					session.save( codeTable2 );
-					session.save( item4 );
+					session.persist( codeTable2 );
+					session.persist( item4 );
 
 					codeTable2.getCodeTableItems().add( item4 );
 					item4.setCodeTable( codeTable2 );
@@ -107,32 +119,11 @@ public class EntitySharedInCollectionAndToOneTest extends BaseNonConfigCoreFunct
 //		inTransaction(
 //				session -> {
 //					for ( CodeTable codeTable : session.createQuery( "from CodeTable", CodeTable.class ).list() ) {
-//						session.delete( codeTable );
+//						session.remove( codeTable );
 //					}
 //				}
 //		);
 //	}
-
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.FORMAT_SQL, "false" );
-	}
-
-	@Override
-	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
-		super.configureSessionFactoryBuilder( sfb );
-		sfb.applyStatisticsSupport( true );
-		sfb.applySecondLevelCacheSupport( false );
-		sfb.applyQueryCacheSupport( false );
-	}
-
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-		sources.addAnnotatedClass( CodeTableItem.class );
-		sources.addAnnotatedClass( CodeTable.class );
-	}
 
 	@MappedSuperclass
 	public static class BaseEntity {

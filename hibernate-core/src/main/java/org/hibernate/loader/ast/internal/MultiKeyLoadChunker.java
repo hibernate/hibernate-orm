@@ -1,16 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.ast.internal;
 
-import java.util.List;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.Bindable;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.ExecutionContext;
@@ -18,7 +14,7 @@ import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
-import org.hibernate.sql.results.spi.ListResultsConsumer;
+import org.hibernate.sql.results.spi.ManagedResultConsumer;
 
 /**
  * When the number of ids to initialize exceeds a certain threshold, IN-predicate based
@@ -149,12 +145,14 @@ public class MultiKeyLoadChunker<K> {
 			return;
 		}
 
-		session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
+		session.getFactory().getJdbcServices().getJdbcSelectExecutor().executeQuery(
 				jdbcSelect,
 				jdbcParameterBindings,
 				sqlExecutionContextCreator.createContext( jdbcParameterBindings, session ),
 				RowTransformerStandardImpl.instance(),
-				ListResultsConsumer.UniqueSemantic.FILTER
+				null,
+				nonNullCounter,
+				ManagedResultConsumer.INSTANCE
 		);
 
 		boundaryListener.chunkBoundaryNotification( startIndex, nonNullCounter );

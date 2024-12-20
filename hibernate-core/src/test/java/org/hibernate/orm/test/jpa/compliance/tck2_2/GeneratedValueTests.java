@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.compliance.tck2_2;
 
@@ -14,14 +12,16 @@ import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.generator.Generator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IncrementGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
+import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 
@@ -57,13 +57,10 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 					.addAnnotatedClass( ExplicitGeneratorEntity.class )
 					.buildMetadata();
 			final PersistentClass entityMapping = bootModel.getEntityBinding( ExplicitGeneratorEntity.class.getName() );
-			final IdentifierGenerator generator = entityMapping.getIdentifier().createIdentifierGenerator(
-					bootModel.getMetadataBuildingOptions().getIdentifierGeneratorFactory(),
-					ssr.getService( JdbcEnvironment.class ).getDialect(),
-					null,
-					null,
-					(RootClass) entityMapping
-			);
+			KeyValue keyValue = entityMapping.getIdentifier();
+			Dialect dialect = ssr.getService( JdbcEnvironment.class ).getDialect();
+			final Generator generator1 = keyValue.createGenerator( dialect, (RootClass) entityMapping);
+			final IdentifierGenerator generator = generator1 instanceof IdentifierGenerator ? (IdentifierGenerator) generator1 : null;
 			generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
 			final SequenceStyleGenerator sequenceStyleGenerator = assertTyping(
@@ -85,13 +82,10 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 					.addAnnotatedClass( ImplicitSequenceGeneratorEntity.class )
 					.buildMetadata();
 			final PersistentClass entityMapping = bootModel.getEntityBinding( ImplicitSequenceGeneratorEntity.class.getName() );
-			final IdentifierGenerator generator = entityMapping.getIdentifier().createIdentifierGenerator(
-					bootModel.getMetadataBuildingOptions().getIdentifierGeneratorFactory(),
-					ssr.getService( JdbcEnvironment.class ).getDialect(),
-					null,
-					null,
-					(RootClass) entityMapping
-			);
+			KeyValue keyValue = entityMapping.getIdentifier();
+			Dialect dialect = ssr.getService( JdbcEnvironment.class ).getDialect();
+			final Generator generator1 = keyValue.createGenerator( dialect, (RootClass) entityMapping);
+			final IdentifierGenerator generator = generator1 instanceof IdentifierGenerator ? (IdentifierGenerator) generator1 : null;
 			generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
 			final SequenceStyleGenerator sequenceStyleGenerator = assertTyping(
@@ -116,13 +110,10 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 					.addAnnotatedClass( ImplicitSequenceGeneratorEntity.class )
 					.buildMetadata();
 			final PersistentClass entityMapping = bootModel.getEntityBinding( ImplicitSequenceGeneratorEntity.class.getName() );
-			final IdentifierGenerator generator = entityMapping.getIdentifier().createIdentifierGenerator(
-					bootModel.getMetadataBuildingOptions().getIdentifierGeneratorFactory(),
-					ssr.getService( JdbcEnvironment.class ).getDialect(),
-					null,
-					null,
-					(RootClass) entityMapping
-			);
+			KeyValue keyValue = entityMapping.getIdentifier();
+			Dialect dialect = ssr.getService( JdbcEnvironment.class ).getDialect();
+			final Generator generator1 = keyValue.createGenerator( dialect, (RootClass) entityMapping);
+			final IdentifierGenerator generator = generator1 instanceof IdentifierGenerator ? (IdentifierGenerator) generator1 : null;
 			generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
 			final SequenceStyleGenerator sequenceStyleGenerator = assertTyping(
@@ -149,13 +140,10 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 					.buildMetadata();
 			final PersistentClass entityMapping = bootModel.getEntityBinding(
 					ExplicitSequenceGeneratorImplicitNameEntity.class.getName() );
-			final IdentifierGenerator generator = entityMapping.getIdentifier().createIdentifierGenerator(
-					bootModel.getMetadataBuildingOptions().getIdentifierGeneratorFactory(),
-					ssr.getService( JdbcEnvironment.class ).getDialect(),
-					null,
-					null,
-					(RootClass) entityMapping
-			);
+			KeyValue keyValue = entityMapping.getIdentifier();
+			Dialect dialect = ssr.getService( JdbcEnvironment.class ).getDialect();
+			final Generator generator1 = keyValue.createGenerator( dialect, (RootClass) entityMapping);
+			final IdentifierGenerator generator = generator1 instanceof IdentifierGenerator ? (IdentifierGenerator) generator1 : null;
 			Database database = bootModel.getDatabase();
 			SqlStringGenerationContext sqlStringGenerationContext =
 					SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() );
@@ -195,13 +183,10 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 					.addAnnotatedClass( ImplicitTableGeneratorEntity.class )
 					.buildMetadata();
 			final PersistentClass entityMapping = bootModel.getEntityBinding( ImplicitTableGeneratorEntity.class.getName() );
-			final IdentifierGenerator generator = entityMapping.getIdentifier().createIdentifierGenerator(
-					bootModel.getMetadataBuildingOptions().getIdentifierGeneratorFactory(),
-					ssr.getService( JdbcEnvironment.class ).getDialect(),
-					null,
-					null,
-					(RootClass) entityMapping
-			);
+			KeyValue keyValue = entityMapping.getIdentifier();
+			Dialect dialect = ssr.getService( JdbcEnvironment.class ).getDialect();
+			final Generator generator1 = keyValue.createGenerator( dialect, (RootClass) entityMapping);
+			final IdentifierGenerator generator = generator1 instanceof IdentifierGenerator ? (IdentifierGenerator) generator1 : null;
 			generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
 			final TableGenerator tableGenerator = assertTyping( TableGenerator.class, generator );
@@ -221,13 +206,10 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 					.addAnnotatedClass( ExplicitTableGeneratorImplicitNameEntity.class )
 					.buildMetadata();
 			final PersistentClass entityMapping = bootModel.getEntityBinding( ExplicitTableGeneratorImplicitNameEntity.class.getName() );
-			final IdentifierGenerator generator = entityMapping.getIdentifier().createIdentifierGenerator(
-					bootModel.getMetadataBuildingOptions().getIdentifierGeneratorFactory(),
-					ssr.getService( JdbcEnvironment.class ).getDialect(),
-					null,
-					null,
-					(RootClass) entityMapping
-			);
+			KeyValue keyValue = entityMapping.getIdentifier();
+			Dialect dialect = ssr.getService( JdbcEnvironment.class ).getDialect();
+			final Generator generator1 = keyValue.createGenerator( dialect, (RootClass) entityMapping);
+			final IdentifierGenerator generator = generator1 instanceof IdentifierGenerator ? (IdentifierGenerator) generator1 : null;
 			generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
 			final TableGenerator tableGenerator = assertTyping( TableGenerator.class, generator );
@@ -247,13 +229,10 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 					.addAnnotatedClass( ExplicitTableGeneratorEntity.class )
 					.buildMetadata();
 			final PersistentClass entityMapping = bootModel.getEntityBinding( ExplicitTableGeneratorEntity.class.getName() );
-			final IdentifierGenerator generator = entityMapping.getIdentifier().createIdentifierGenerator(
-					bootModel.getMetadataBuildingOptions().getIdentifierGeneratorFactory(),
-					ssr.getService( JdbcEnvironment.class ).getDialect(),
-					null,
-					null,
-					(RootClass) entityMapping
-			);
+			KeyValue keyValue = entityMapping.getIdentifier();
+			Dialect dialect = ssr.getService( JdbcEnvironment.class ).getDialect();
+			final Generator generator1 = keyValue.createGenerator( dialect, (RootClass) entityMapping);
+			final IdentifierGenerator generator = generator1 instanceof IdentifierGenerator ? (IdentifierGenerator) generator1 : null;
 			generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
 			final TableGenerator tableGenerator = assertTyping( TableGenerator.class, generator );
@@ -275,13 +254,10 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 					.addAnnotatedClass( ExplicitIncrementGeneratorEntity.class )
 					.buildMetadata();
 			final PersistentClass entityMapping = bootModel.getEntityBinding( ExplicitIncrementGeneratorEntity.class.getName() );
-			final IdentifierGenerator generator = entityMapping.getIdentifier().createIdentifierGenerator(
-					bootModel.getMetadataBuildingOptions().getIdentifierGeneratorFactory(),
-					ssr.getService( JdbcEnvironment.class ).getDialect(),
-					null,
-					null,
-					(RootClass) entityMapping
-			);
+			KeyValue keyValue = entityMapping.getIdentifier();
+			Dialect dialect = ssr.getService( JdbcEnvironment.class ).getDialect();
+			final Generator generator1 = keyValue.createGenerator( dialect, (RootClass) entityMapping);
+			final IdentifierGenerator generator = generator1 instanceof IdentifierGenerator ? (IdentifierGenerator) generator1 : null;
 			generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
 			assertTyping( IncrementGenerator.class, generator );
@@ -295,13 +271,10 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 					.addAnnotatedClass( ImplicitIncrementGeneratorEntity.class )
 					.buildMetadata();
 			final PersistentClass entityMapping = bootModel.getEntityBinding( ImplicitIncrementGeneratorEntity.class.getName() );
-			final IdentifierGenerator generator = entityMapping.getIdentifier().createIdentifierGenerator(
-					bootModel.getMetadataBuildingOptions().getIdentifierGeneratorFactory(),
-					ssr.getService( JdbcEnvironment.class ).getDialect(),
-					null,
-					null,
-					(RootClass) entityMapping
-			);
+			KeyValue keyValue = entityMapping.getIdentifier();
+			Dialect dialect = ssr.getService( JdbcEnvironment.class ).getDialect();
+			final Generator generator1 = keyValue.createGenerator( dialect, (RootClass) entityMapping);
+			final IdentifierGenerator generator = generator1 instanceof IdentifierGenerator ? (IdentifierGenerator) generator1 : null;
 			generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
 			assertTyping( IncrementGenerator.class, generator );

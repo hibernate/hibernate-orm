@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.namingstrategy;
 
@@ -11,7 +9,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.junit.jupiter.api.Test;
 
@@ -52,7 +50,7 @@ public class NamingStrategyTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5848")
+	@JiraKey(value = "HHH-5848")
 	public void testDatabaseTableNames() {
 		PersistentClass classMapping = getMetadata().getEntityBinding( Item.class.getName() );
 		Column secTabColumn = (Column) classMapping.getProperty( "specialPrice" ).getSelectables().get( 0 );

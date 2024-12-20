@@ -1,18 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql;
 
 import java.sql.Statement;
 
 import org.hibernate.Session;
-import org.hibernate.annotations.Loader;
 import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLInsert;
+import org.hibernate.annotations.SQLSelect;
 import org.hibernate.dialect.OracleDialect;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -24,8 +22,6 @@ import org.junit.jupiter.api.Test;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.NamedNativeQueries;
-import jakarta.persistence.NamedNativeQuery;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -98,16 +94,7 @@ public class OracleCustomSQLWithStoredProcedureTest {
 			callable = true
 	)
 	//end::sql-sp-custom-crud-example[]
-	@Loader(namedQuery = "find_valid_person")
-	@NamedNativeQueries({
-			@NamedNativeQuery(
-					name = "find_valid_person",
-					query = "SELECT id, name " +
-							"FROM person " +
-							"WHERE id = ? and valid = 1",
-					resultClass = Person.class
-			)
-	})
+	@SQLSelect(sql = "SELECT id, name  FROM person WHERE id = ? and valid = 1")
 	public static class Person {
 
 		@Id

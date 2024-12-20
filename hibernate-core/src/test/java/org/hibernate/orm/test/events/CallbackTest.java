@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.events;
 
@@ -11,6 +9,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
@@ -21,8 +20,9 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.JiraKeyGroup;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,18 +34,22 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Steve Ebersole
  */
-@TestForIssue(jiraKey = {"HHH-2884", "HHH-10674",  "HHH-14541"})
+@JiraKeyGroup( value = {
+		@JiraKey( value = "HHH-2884" ),
+		@JiraKey( value = "HHH-10674" ),
+		@JiraKey( value = "HHH-14541" )
+} )
 public class CallbackTest extends BaseCoreFunctionalTestCase {
 	private TestingObserver observer = new TestingObserver();
 	private TestingListener listener = new TestingListener();
 
 	@Override
-    public String[] getMappings() {
+	public String[] getMappings() {
 		return NO_MAPPINGS;
 	}
 
 	@Override
-    public void configure(Configuration cfg) {
+	public void configure(Configuration cfg) {
 		cfg.setSessionFactoryObserver( observer );
 	}
 
@@ -57,13 +61,13 @@ public class CallbackTest extends BaseCoreFunctionalTestCase {
 					@Override
 					public void integrate(
 							Metadata metadata,
-							SessionFactoryImplementor sessionFactory,
-							SessionFactoryServiceRegistry serviceRegistry) {
-						integrate( serviceRegistry );
+							BootstrapContext bootstrapContext,
+							SessionFactoryImplementor sessionFactory) {
+						integrate( sessionFactory );
 					}
 
-					private void integrate(SessionFactoryServiceRegistry serviceRegistry) {
-						serviceRegistry.getService( EventListenerRegistry.class ).setListeners(
+					private void integrate(SessionFactoryImplementor sessionFactory) {
+						sessionFactory.getServiceRegistry().getService( EventListenerRegistry.class ).setListeners(
 								EventType.DELETE,
 								listener
 						);

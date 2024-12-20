@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.internal;
 
@@ -14,9 +12,9 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.MutationStatementPreparer;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
-import org.hibernate.resource.jdbc.spi.JdbcObserver;
+import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
+import org.hibernate.resource.jdbc.spi.JdbcEventHandler;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
@@ -94,21 +92,18 @@ public class MutationStatementPreparerImpl implements MutationStatementPreparer 
 		public PreparedStatement prepareStatement() {
 			try {
 				final PreparedStatement preparedStatement;
-				//noinspection deprecation
 				final JdbcSessionOwner jdbcSessionOwner = jdbcCoordinator.getJdbcSessionOwner();
-				final JdbcObserver observer = jdbcSessionOwner
-						.getJdbcSessionContext()
-						.getObserver();
-				final EventManager eventManager = jdbcSessionOwner.getEventManager();
-				final HibernateMonitoringEvent jdbcPreparedStatementCreation = eventManager.beginJdbcPreparedStatementCreationEvent();
+				final JdbcEventHandler jdbcEventHandler = jdbcSessionOwner.getJdbcSessionContext().getEventHandler();
+				final EventMonitor eventMonitor = jdbcSessionOwner.getEventMonitor();
+				final DiagnosticEvent jdbcPreparedStatementCreation = eventMonitor.beginJdbcPreparedStatementCreationEvent();
 				try {
-					observer.jdbcPrepareStatementStart();
+					jdbcEventHandler.jdbcPrepareStatementStart();
 					preparedStatement = doPrepare();
 					setStatementTimeout( preparedStatement );
 				}
 				finally {
-					eventManager.completeJdbcPreparedStatementCreationEvent( jdbcPreparedStatementCreation, sql );
-					observer.jdbcPrepareStatementEnd();
+					eventMonitor.completeJdbcPreparedStatementCreationEvent( jdbcPreparedStatementCreation, sql );
+					jdbcEventHandler.jdbcPrepareStatementEnd();
 				}
 				postProcess( preparedStatement );
 				return preparedStatement;

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.insert;
 
@@ -12,7 +10,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -22,7 +19,6 @@ import org.hibernate.generator.values.GeneratedValueBasicResultBuilder;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.generator.values.internal.TableUpdateReturningBuilder;
-import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -46,14 +42,6 @@ import static org.hibernate.generator.values.internal.GeneratedValuesHelper.getG
 public class InsertReturningDelegate extends AbstractReturningDelegate {
 	private final MutatingTableReference tableReference;
 	private final List<ColumnReference> generatedColumns;
-
-	/**
-	 * @deprecated Use {@link #InsertReturningDelegate(EntityPersister, EventType)} instead.
-	 */
-	@Deprecated( forRemoval = true, since = "6.5" )
-	public InsertReturningDelegate(PostInsertIdentityPersister persister, Dialect dialect) {
-		this( persister, EventType.INSERT );
-	}
 
 	public InsertReturningDelegate(EntityPersister persister, EventType timing) {
 		super(
@@ -104,17 +92,14 @@ public class InsertReturningDelegate extends AbstractReturningDelegate {
 					sql
 			);
 		}
-		finally {
-			jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( resultSet, preparedStatement );
-		}
 	}
 
 	@Override
 	public String prepareIdentifierGeneratingInsert(String insertSQL) {
-		return dialect().getIdentityColumnSupport().appendIdentitySelectToInsert(
-				( (BasicEntityIdentifierMapping) persister.getRootEntityDescriptor().getIdentifierMapping() ).getSelectionExpression(),
-				insertSQL
-		);
+		final BasicEntityIdentifierMapping identifierMapping =
+				(BasicEntityIdentifierMapping) persister.getRootEntityDescriptor().getIdentifierMapping();
+		return dialect().getIdentityColumnSupport()
+				.appendIdentitySelectToInsert( identifierMapping.getSelectionExpression(), insertSQL );
 	}
 
 	@Override

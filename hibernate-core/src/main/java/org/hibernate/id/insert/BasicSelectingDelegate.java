@@ -1,16 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.insert;
 
-import org.hibernate.dialect.Dialect;
+import org.hibernate.HibernateException;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.generator.EventType;
-import org.hibernate.id.PostInsertIdentityPersister;
-import org.hibernate.internal.CoreLogging;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
@@ -22,14 +19,6 @@ import org.hibernate.sql.model.ast.builder.TableMutationBuilder;
  */
 public class BasicSelectingDelegate extends AbstractSelectingDelegate {
 	final private EntityPersister persister;
-
-	/**
-	 * @deprecated Use {@link #BasicSelectingDelegate(EntityPersister)} instead.
-	 */
-	@Deprecated( forRemoval = true, since = "6.5" )
-	public BasicSelectingDelegate(PostInsertIdentityPersister persister, Dialect dialect) {
-		this( persister );
-	}
 
 	public BasicSelectingDelegate(EntityPersister persister) {
 		super( persister, EventType.INSERT, false, false );
@@ -45,9 +34,13 @@ public class BasicSelectingDelegate extends AbstractSelectingDelegate {
 
 	@Override
 	protected String getSelectSQL() {
-		if ( persister.getIdentitySelectString() == null && !dialect().getIdentityColumnSupport().supportsInsertSelectIdentity() ) {
-			throw CoreLogging.messageLogger( BasicSelectingDelegate.class ).nullIdentitySelectString();
+		final String identitySelectString = persister.getIdentitySelectString();
+		if ( identitySelectString == null
+				&& !dialect().getIdentityColumnSupport().supportsInsertSelectIdentity() ) {
+			throw new HibernateException( "Cannot retrieve the generated identity, because '"
+					+ AvailableSettings.USE_GET_GENERATED_KEYS
+					+ "' was disabled and the dialect does not support selecting the last generated identity" );
 		}
-		return persister.getIdentitySelectString();
+		return identitySelectString;
 	}
 }

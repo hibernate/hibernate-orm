@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cascade.circle;
 
@@ -34,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * |  <-   ->                |
  * -- (1 : N) -- (delivery) --
  * <p>
- * Arrows indicate the direction of cascade-merge, cascade-save, cascade-refresh and cascade-save-or-update
+ * Arrows indicate the direction of cascade-merge, cascade-persist, cascade-refresh
  * <p>
  * It reproduces the following issues:
  * https://hibernate.atlassian.net/browse/HHH-9512

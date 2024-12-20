@@ -1,25 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * Copyright (c) 2015, Red Hat Inc. or third-party contributors as
- * indicated by the @author tags or express copyright attribution
- * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Inc.
- *
- * This copyrighted material is made available to anyone wishing to use, modify,
- * copy, or redistribute it subject to the terms and conditions of the GNU
- * Lesser General Public License, as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
- * for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this distribution; if not, write to:
- * Free Software Foundation, Inc.
- * 51 Franklin Street, Fifth Floor
- * Boston, MA  02110-1301  USA
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.collection.dereferenced;
 
@@ -30,12 +11,13 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EntityEntry;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -54,13 +36,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class UnversionedNoCascadeDereferencedCollectionTest extends AbstractDereferencedCollectionTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9777")
+	@JiraKey(value = "HHH-9777")
 	public void testMergeNullCollection(SessionFactoryScope scope) {
 		UnversionedNoCascadeOne unversionedNoCascadeOne = new UnversionedNoCascadeOne();
 		scope.inTransaction(
 				session -> {
 					assertNull( unversionedNoCascadeOne.getManies() );
-					session.save( unversionedNoCascadeOne );
+					session.persist( unversionedNoCascadeOne );
 					assertNull( unversionedNoCascadeOne.getManies() );
 					EntityEntry eeOne = getEntityEntry( session, unversionedNoCascadeOne );
 					assertNull( eeOne.getLoadedValue( "manies" ) );
@@ -74,12 +56,10 @@ public class UnversionedNoCascadeDereferencedCollectionTest extends AbstractDere
 
 		scope.inTransaction(
 				session -> {
-					UnversionedNoCascadeOne one = (UnversionedNoCascadeOne) session.merge( unversionedNoCascadeOne );
+					UnversionedNoCascadeOne one = session.merge( unversionedNoCascadeOne );
 
-					// after merging, one.getManies() should still be null;
-					// the EntityEntry loaded state should contain a PersistentCollection though.
+					assertThat( one.getManies().size() ).isEqualTo( 0 );
 
-					assertNull( one.getManies() );
 					EntityEntry eeOne = getEntityEntry( session, one );
 					AbstractPersistentCollection maniesEEOneStateOrig = (AbstractPersistentCollection) eeOne.getLoadedValue(
 							"manies" );
@@ -94,8 +74,8 @@ public class UnversionedNoCascadeDereferencedCollectionTest extends AbstractDere
 					CollectionEntry ceManiesOrig = getCollectionEntry( session, maniesEEOneStateOrig );
 					assertNotNull( ceManiesOrig );
 					assertEquals( role, ceManiesOrig.getRole() );
-                    assertSame(
-                            scope.getSessionFactory().getRuntimeMetamodels()
+					assertSame(
+							scope.getSessionFactory().getRuntimeMetamodels()
 									.getMappingMetamodel()
 									.getCollectionDescriptor(role),
 							ceManiesOrig.getLoadedPersister()
@@ -107,39 +87,20 @@ public class UnversionedNoCascadeDereferencedCollectionTest extends AbstractDere
 					// Ensure the same EntityEntry is being used.
 					assertSame( eeOne, getEntityEntry( session, one ) );
 
-					// Ensure one.getManies() is still null.
-					assertNull( one.getManies() );
+					assertThat( one.getManies().size() ).isEqualTo( 0 );
 
-					// Ensure CollectionEntry for maniesEEOneStateOrig is no longer in the PersistenceContext.
-					assertNull( getCollectionEntry( session, maniesEEOneStateOrig ) );
-
-					// Ensure the original CollectionEntry has role, persister, and key set to null.
-					assertNull( ceManiesOrig.getRole() );
-					assertNull( ceManiesOrig.getLoadedPersister() );
-					assertNull( ceManiesOrig.getKey() );
-
-					// Ensure the PersistentCollection (that was previously returned by eeOne.getLoadedState())
-					// has key and role set to null.
-					assertNull( maniesEEOneStateOrig.getKey() );
-					assertNull( maniesEEOneStateOrig.getRole() );
-
-					// Ensure eeOne.getLoadedState() returns null for collection after flush.
-					assertNull( eeOne.getLoadedValue( "manies" ) );
-
-					// Ensure the session in maniesEEOneStateOrig has been unset.
-					assertNull( maniesEEOneStateOrig.getSession() );
 				}
 		);
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9777")
+	@JiraKey(value = "HHH-9777")
 	public void testGetAndNullifyCollection(SessionFactoryScope scope) {
 		UnversionedNoCascadeOne unversionedNoCascadeOne = new UnversionedNoCascadeOne();
 		scope.inTransaction(
 				session -> {
 					assertNull( unversionedNoCascadeOne.getManies() );
-					session.save( unversionedNoCascadeOne );
+					session.persist( unversionedNoCascadeOne );
 					assertNull( unversionedNoCascadeOne.getManies() );
 					EntityEntry eeOne = getEntityEntry( session, unversionedNoCascadeOne );
 					assertNull( eeOne.getLoadedValue( "manies" ) );
@@ -176,8 +137,8 @@ public class UnversionedNoCascadeDereferencedCollectionTest extends AbstractDere
 					CollectionEntry ceManies = getCollectionEntry( session, maniesEEOneStateOrig );
 					assertNotNull( ceManies );
 					assertEquals( role, ceManies.getRole() );
-                    assertSame(
-                            scope.getSessionFactory().getRuntimeMetamodels()
+					assertSame(
+							scope.getSessionFactory().getRuntimeMetamodels()
 									.getMappingMetamodel()
 									.getCollectionDescriptor(role),
 							ceManies.getLoadedPersister()
@@ -218,13 +179,13 @@ public class UnversionedNoCascadeDereferencedCollectionTest extends AbstractDere
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9777")
+	@JiraKey(value = "HHH-9777")
 	public void testGetAndReplaceCollection(SessionFactoryScope scope) {
 		UnversionedNoCascadeOne unversionedNoCascadeOne = new UnversionedNoCascadeOne();
 		scope.inTransaction(
 				session -> {
 					assertNull( unversionedNoCascadeOne.getManies() );
-					session.save( unversionedNoCascadeOne );
+					session.persist( unversionedNoCascadeOne );
 					assertNull( unversionedNoCascadeOne.getManies() );
 					EntityEntry eeOne = getEntityEntry( session, unversionedNoCascadeOne );
 					assertNull( eeOne.getLoadedValue( "manies" ) );
@@ -261,8 +222,8 @@ public class UnversionedNoCascadeDereferencedCollectionTest extends AbstractDere
 					CollectionEntry ceManiesOrig = getCollectionEntry( session, maniesEEOneStateOrig );
 					assertNotNull( ceManiesOrig );
 					assertEquals( role, ceManiesOrig.getRole() );
-                    assertSame(
-                            scope.getSessionFactory().getRuntimeMetamodels()
+					assertSame(
+							scope.getSessionFactory().getRuntimeMetamodels()
 									.getMappingMetamodel()
 									.getCollectionDescriptor(role),
 							ceManiesOrig.getLoadedPersister()
@@ -306,8 +267,8 @@ public class UnversionedNoCascadeDereferencedCollectionTest extends AbstractDere
 					);
 					assertNotNull( ceManiesAfterReplace );
 					assertEquals( role, ceManiesAfterReplace.getRole() );
-                    assertSame(
-                            scope.getSessionFactory().getRuntimeMetamodels()
+					assertSame(
+							scope.getSessionFactory().getRuntimeMetamodels()
 									.getMappingMetamodel()
 									.getCollectionDescriptor(role),
 							ceManiesAfterReplace.getLoadedPersister()
@@ -320,44 +281,4 @@ public class UnversionedNoCascadeDereferencedCollectionTest extends AbstractDere
 		);
 	}
 
-	@Test
-	public void testSaveOrUpdateNullCollection(SessionFactoryScope scope) {
-		UnversionedNoCascadeOne unversionedNoCascadeOne = new UnversionedNoCascadeOne();
-		scope.inTransaction(
-				session -> {
-					assertNull( unversionedNoCascadeOne.getManies() );
-					session.save( unversionedNoCascadeOne );
-					assertNull( unversionedNoCascadeOne.getManies() );
-					EntityEntry eeOne = getEntityEntry( session, unversionedNoCascadeOne );
-					assertNull( eeOne.getLoadedValue( "manies" ) );
-					session.flush();
-					assertNull( unversionedNoCascadeOne.getManies() );
-					assertNull( eeOne.getLoadedValue( "manies" ) );
-				}
-		);
-
-		scope.inTransaction(
-				session -> {
-					session.saveOrUpdate( unversionedNoCascadeOne );
-
-					// Ensure one.getManies() is still null.
-					assertNull( unversionedNoCascadeOne.getManies() );
-
-					// Ensure the EntityEntry loaded state contains null for the manies collection.
-					EntityEntry eeOne = getEntityEntry( session, unversionedNoCascadeOne );
-					assertNull( eeOne.getLoadedValue( "manies" ) );
-
-					session.flush();
-
-					// Ensure one.getManies() is still null.
-					assertNull( unversionedNoCascadeOne.getManies() );
-
-					// Ensure the same EntityEntry is being used.
-					assertSame( eeOne, getEntityEntry( session, unversionedNoCascadeOne ) );
-
-					// Ensure the EntityEntry loaded state still contains null for the manies collection.
-					assertNull( eeOne.getLoadedValue( "manies" ) );
-				}
-		);
-	}
 }

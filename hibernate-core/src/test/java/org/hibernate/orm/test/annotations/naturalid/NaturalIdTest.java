@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.naturalid;
 
@@ -20,12 +18,12 @@ import org.hibernate.query.Query;
 import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.cfg.CacheSettings.USE_QUERY_CACHE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -36,7 +34,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
-@SuppressWarnings("unchecked")
 public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 	@After
 	public void cleanupData() {
@@ -70,7 +67,7 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testNaturalIdCached() {
 		saveSomeCitizens();
-		
+
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		State france = this.getState( s, "Ile de France" );
@@ -193,22 +190,22 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 		Statistics stats = sessionFactory().getStatistics();
 		stats.setStatisticsEnabled( true );
 		stats.clear();
-		
+
 		assertEquals( "NaturalId Cache Hits", 0, stats.getNaturalIdCacheHitCount() );
 		assertEquals( "NaturalId Cache Misses", 0, stats.getNaturalIdCacheMissCount() );
 		assertEquals( "NaturalId Cache Puts", 0, stats.getNaturalIdCachePutCount() );
 		assertEquals( "NaturalId Cache Queries", 0, stats.getNaturalIdQueryExecutionCount() );
 
 		saveSomeCitizens();
-		
+
 		assertEquals( "NaturalId Cache Hits", 0, stats.getNaturalIdCacheHitCount() );
 		assertEquals( "NaturalId Cache Misses", 0, stats.getNaturalIdCacheMissCount() );
 		assertEquals( "NaturalId Cache Puts", 2, stats.getNaturalIdCachePutCount() );
 		assertEquals( "NaturalId Cache Queries", 0, stats.getNaturalIdQueryExecutionCount() );
 
-		
+
 		//Try NaturalIdLoadAccess after insert
-		
+
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		State france = this.getState( s, "Ile de France" );
@@ -229,8 +226,8 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 		// cleanup
 		tx.rollback();
 		s.close();
-		
-		
+
+
 		//Try NaturalIdLoadAccess
 
 		s = openSession();
@@ -252,9 +249,9 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 		tx.rollback();
 		s.close();
 
-		
+
 		//Try NaturalIdLoadAccess after load
-		
+
 		s = openSession();
 		tx = s.beginTransaction();
 		france = this.getState( s, "Ile de France" );
@@ -379,6 +376,6 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected void configure(Configuration cfg) {
-		cfg.setProperty( "hibernate.cache.use_query_cache", "true" );
+		cfg.setProperty( USE_QUERY_CACHE, true );
 	}
 }

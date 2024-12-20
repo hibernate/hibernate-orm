@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.vector;
 
@@ -14,6 +12,7 @@ import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.type.BasicPluralType;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -46,7 +45,18 @@ public class VectorArgumentValidator implements ArgumentsValidator {
 	}
 
 	private static boolean isVectorType(SqmExpressible<?> vectorType) {
-		return vectorType instanceof BasicPluralType<?, ?>
-				&& ( (BasicPluralType<?, ?>) vectorType ).getJdbcType().getDefaultSqlTypeCode() == SqlTypes.VECTOR;
+		if ( !( vectorType instanceof BasicPluralType<?, ?> ) ) {
+			return false;
+		}
+
+		switch ( ( (BasicType<?>) vectorType ).getJdbcType().getDefaultSqlTypeCode() ) {
+			case SqlTypes.VECTOR:
+			case SqlTypes.VECTOR_INT8:
+			case SqlTypes.VECTOR_FLOAT32:
+			case SqlTypes.VECTOR_FLOAT64:
+				return true;
+			default:
+				return false;
+		}
 	}
 }

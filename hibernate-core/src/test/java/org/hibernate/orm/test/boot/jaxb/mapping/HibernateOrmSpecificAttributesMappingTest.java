@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.boot.jaxb.mapping;
 
@@ -22,6 +20,7 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.GeneratorCreator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.RootClass;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.usertype.UserTypeSupport;
@@ -159,6 +158,11 @@ public class HibernateOrmSpecificAttributesMappingTest {
 		@Override
 		public PersistentClass getPersistentClass() {
 			return tenantId.getPersistentClass();
+		}
+
+		@Override
+		public RootClass getRootClass() {
+			return tenantId.getPersistentClass().getRootClass();
 		}
 
 		@Override

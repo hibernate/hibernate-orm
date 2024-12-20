@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query;
 
@@ -12,6 +10,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -89,6 +88,24 @@ public class NativeQueryLimitOffsetTest {
 					assertEquals( 3, l.size() );
 				}
 		);
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-18309" )
+	public void testLimitOffsetZeroValue(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			List<Long> l = session.createNativeQuery( "select id from Person where name like :name", Long.class )
+					.setParameter( "name", "J%" )
+					.setFirstResult( 0 )
+					.getResultList();
+			assertEquals( 5, l.size() );
+
+			l = session.createNativeQuery( "select id from Person where name like :name", Long.class )
+					.setParameter( "name", "J%" )
+					.setMaxResults( 0 )
+					.getResultList();
+			assertEquals( 0, l.size() );
+		} );
 	}
 
 	@Entity(name = "Person")

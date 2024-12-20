@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.entitygraph;
 
 import java.util.ArrayList;
@@ -16,7 +20,7 @@ import jakarta.persistence.TypedQuery;
 
 import org.hibernate.graph.GraphSemantic;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -44,7 +48,7 @@ import static org.hibernate.testing.hamcrest.InitializationCheckMatcher.isNotIni
 		}
 )
 @SessionFactory(useCollectingStatementInspector = true)
-@TestForIssue(jiraKey = "HHH-14097")
+@JiraKey(value = "HHH-14097")
 public class LoadAndFetchGraphTest {
 
 	@BeforeEach

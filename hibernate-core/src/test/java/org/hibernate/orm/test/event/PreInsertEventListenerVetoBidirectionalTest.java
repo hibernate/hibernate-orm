@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.event;
 
@@ -13,7 +11,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 
-import org.hibernate.TransientObjectException;
 import org.hibernate.action.internal.EntityActionVetoException;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
@@ -21,19 +18,18 @@ import org.hibernate.event.spi.PreInsertEventListener;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
  * @author Chris Cranford
  */
 @RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
-@TestForIssue(jiraKey = "HHH-11721")
+@JiraKey(value = "HHH-11721")
 public class PreInsertEventListenerVetoBidirectionalTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -61,7 +57,7 @@ public class PreInsertEventListenerVetoBidirectionalTest extends BaseCoreFunctio
 			Child child = new Child();
 			parent.setChild( child );
 
-			session.save( parent );
+			session.persist( parent );
 		} );
 
 		fail( "Should have thrown EntityActionVetoException!" );

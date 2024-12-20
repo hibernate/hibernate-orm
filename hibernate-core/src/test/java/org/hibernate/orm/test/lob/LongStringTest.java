@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.lob;
 
@@ -22,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings({ "UnusedDeclaration" })
+@SuppressWarnings("unused")
 @SessionFactory
 public abstract class LongStringTest {
 	private static final int LONG_STRING_SIZE = 10000;
@@ -36,7 +34,7 @@ public abstract class LongStringTest {
 		Long id = scope.fromTransaction(
 				session -> {
 					LongStringHolder entity = new LongStringHolder();
-					session.save( entity );
+					session.persist( entity );
 					return entity.getId();
 				}
 		);
@@ -89,7 +87,7 @@ public abstract class LongStringTest {
 							assertEquals( empty, entity.getLongString() );
 						}
 					}
-					session.delete( entity );
+					session.remove( entity );
 				}
 		);
 	}

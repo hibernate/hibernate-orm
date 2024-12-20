@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.hqlfetchscroll;
 
@@ -16,7 +14,7 @@ import java.util.Set;
 import org.hibernate.Hibernate;
 import org.hibernate.ScrollableResults;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -90,7 +88,7 @@ public class HQLScrollFetchTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-1283")
+	@JiraKey(value = "HHH-1283")
 	public void testIncompleteScrollSecondResult(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -120,7 +118,7 @@ public class HQLScrollFetchTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-1283")
+	@JiraKey(value = "HHH-1283")
 	public void testIncompleteScrollSecondResultInTransaction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -137,7 +135,7 @@ public class HQLScrollFetchTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-1283")
+	@JiraKey(value = "HHH-1283")
 	public void testIncompleteScroll(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -179,7 +177,7 @@ public class HQLScrollFetchTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-1283")
+	@JiraKey(value = "HHH-1283")
 	public void testIncompleteScrollLast(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -225,7 +223,7 @@ public class HQLScrollFetchTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-1283")
+	@JiraKey(value = "HHH-1283")
 	public void testScrollOrderParentAsc(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -241,7 +239,7 @@ public class HQLScrollFetchTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-1283")
+	@JiraKey(value = "HHH-1283")
 	public void testScrollOrderParentDesc(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -257,7 +255,7 @@ public class HQLScrollFetchTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-1283")
+	@JiraKey(value = "HHH-1283")
 	public void testScrollOrderParentAscChildrenAsc(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -274,7 +272,7 @@ public class HQLScrollFetchTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-1283")
+	@JiraKey(value = "HHH-1283")
 	public void testScrollOrderParentAscChildrenDesc(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -297,7 +295,7 @@ public class HQLScrollFetchTest {
 		scope.inTransaction(
 				session -> {
 					Parent p0 = new Parent( "parent0" );
-					session.save( p0 );
+					session.persist( p0 );
 				}
 		);
 
@@ -329,7 +327,7 @@ public class HQLScrollFetchTest {
 		scope.inTransaction(
 				session -> {
 					Parent p0 = new Parent( "parent0" );
-					session.save( p0 );
+					session.persist( p0 );
 				}
 		);
 
@@ -376,12 +374,12 @@ public class HQLScrollFetchTest {
 					Child child_2_2 = new Child( "cchild2-2" );
 					Child child_2_3 = new Child( "zchild2-3" );
 
-					session.save( child_1_1 );
-					session.save( child_2_1 );
-					session.save( child_1_2 );
-					session.save( child_2_2 );
-					session.save( child_1_3 );
-					session.save( child_2_3 );
+					session.persist( child_1_1 );
+					session.persist( child_2_1 );
+					session.persist( child_1_2 );
+					session.persist( child_2_2 );
+					session.persist( child_1_3 );
+					session.persist( child_2_3 );
 
 					session.flush();
 
@@ -389,13 +387,13 @@ public class HQLScrollFetchTest {
 					p1.addChild( child_1_1 );
 					p1.addChild( child_1_2 );
 					p1.addChild( child_1_3 );
-					session.save( p1 );
+					session.persist( p1 );
 
 					Parent p2 = new Parent( "parent2" );
 					p2.addChild( child_2_1 );
 					p2.addChild( child_2_2 );
 					p2.addChild( child_2_3 );
-					session.save( p2 );
+					session.persist( p2 );
 				}
 		);
 	}
@@ -406,7 +404,7 @@ public class HQLScrollFetchTest {
 				session -> {
 					List list = session.createQuery( "from Parent" ).list();
 					for ( Iterator i = list.iterator(); i.hasNext(); ) {
-						session.delete( i.next() );
+						session.remove( i.next() );
 					}
 				}
 		);

@@ -1,12 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.orphan;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -17,7 +15,7 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Steve Ebersole
  */
-@TestForIssue(jiraKey = "HHH-565")
+@JiraKey(value = "HHH-565")
 @DomainModel(
 		xmlMappings = {
 				"org/hibernate/orm/test/orphan/User.hbm.xml",
@@ -44,14 +42,14 @@ public class PropertyRefTest {
 				session -> {
 					user.addMail( "test" );
 					user.addMail( "test" );
-					session.save( user );
+					session.persist( user );
 				}
 		);
 
 		scope.inTransaction(
 				session -> {
-					User u = session.load( User.class, user.getId() );
-					session.delete( u );
+					User u = session.getReference( User.class, user.getId() );
+					session.remove( u );
 				}
 		);
 

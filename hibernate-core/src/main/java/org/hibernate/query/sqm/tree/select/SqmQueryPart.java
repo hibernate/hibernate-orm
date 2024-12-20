@@ -1,15 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.select;
 
-import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.criteria.JpaQueryPart;
@@ -17,6 +14,8 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+
+import static java.util.Collections.emptyList;
 
 /**
  * Defines the ordering and fetch/offset part of a query which is shared with query groups.
@@ -129,11 +128,7 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 
 	@Override
 	public List<SqmSortSpecification> getSortSpecifications() {
-		if ( getOrderByClause() == null ) {
-			return Collections.emptyList();
-		}
-
-		return getOrderByClause().getSortSpecifications();
+		return getOrderByClause() == null ? emptyList() : getOrderByClause().getSortSpecifications();
 	}
 
 	@Override

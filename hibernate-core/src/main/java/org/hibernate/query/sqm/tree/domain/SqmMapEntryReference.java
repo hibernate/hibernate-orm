@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
@@ -157,6 +155,26 @@ public class SqmMapEntryReference<K,V>
 	}
 
 	@Override
+	public Predicate equalTo(Expression<?> value) {
+		throw new UnsupportedOperationException( "Whatever JPA" );
+	}
+
+	@Override
+	public Predicate equalTo(Object value) {
+		throw new UnsupportedOperationException( "Whatever JPA" );
+	}
+
+	@Override
+	public Predicate notEqualTo(Expression<?> value) {
+		throw new UnsupportedOperationException( "Whatever JPA" );
+	}
+
+	@Override
+	public Predicate notEqualTo(Object value) {
+		throw new UnsupportedOperationException( "Whatever JPA" );
+	}
+
+	@Override
 	public Predicate in(Object... values) {
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
@@ -178,6 +196,11 @@ public class SqmMapEntryReference<K,V>
 
 	@Override
 	public <X> Expression<X> as(Class<X> type) {
+		throw new UnsupportedOperationException( "Whatever JPA" );
+	}
+
+	@Override
+	public <X> Expression<X> cast(Class<X> type) {
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
 }

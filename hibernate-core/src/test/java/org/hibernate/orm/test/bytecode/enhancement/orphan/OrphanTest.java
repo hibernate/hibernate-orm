@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.orphan;
 
@@ -13,39 +11,40 @@ import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.orm.test.orphan.Part;
 import org.hibernate.orm.test.orphan.Product;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Gavin King
  */
-@RunWith(BytecodeEnhancerRunner.class)
+@DomainModel(
+		xmlMappings = {
+				"org/hibernate/orm/test/orphan/Product.hbm.xml"
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @CustomEnhancementContext({
 		EnhancerTestContext.class, // supports laziness and dirty-checking
 		DefaultEnhancementContext.class
 })
-public class OrphanTest extends BaseCoreFunctionalTestCase {
+public class OrphanTest {
 
-	@Override
-	protected String[] getOrmXmlFiles() {
-		return new String[]{
-				"org/hibernate/orm/test/orphan/Product.hbm.xml"
-		};
-	}
-
-	@After
-	public void tearDown() {
-		inTransaction(
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "delete from Part" ).executeUpdate();
 					session.createQuery( "delete from Product" ).executeUpdate();
@@ -55,8 +54,8 @@ public class OrphanTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SuppressWarnings("unchecked")
-	public void testOrphanDeleteOnDelete() {
-		inTransaction(
+	public void testOrphanDeleteOnDelete(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Product prod = new Product();
 					prod.setName( "Widget" );
@@ -73,12 +72,12 @@ public class OrphanTest extends BaseCoreFunctionalTestCase {
 
 					prod.getParts().remove( part );
 
-					session.delete( prod );
+					session.remove( prod );
 				}
 		);
 
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					assertNull( session.get( Part.class, "Widge" ) );
 					assertNull( session.get( Part.class, "Get" ) );
@@ -89,8 +88,8 @@ public class OrphanTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SuppressWarnings("unchecked")
-	public void testOrphanDeleteAfterPersist() {
-		inTransaction(
+	public void testOrphanDeleteAfterPersist(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Product prod = new Product();
 					prod.setName( "Widget" );
@@ -108,19 +107,19 @@ public class OrphanTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					assertNull( session.get( Part.class, "Widge" ) );
 					assertNotNull( session.get( Part.class, "Get" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
+					session.remove( session.get( Product.class, "Widget" ) );
 				}
 		);
 	}
 
 	@Test
 	@SuppressWarnings("unchecked")
-	public void testOrphanDeleteAfterPersistAndFlush() {
-		inTransaction(
+	public void testOrphanDeleteAfterPersistAndFlush(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Product prod = new Product();
 					prod.setName( "Widget" );
@@ -139,21 +138,21 @@ public class OrphanTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					assertNull( session.get( Part.class, "Widge" ) );
 					assertNotNull( session.get( Part.class, "Get" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
+					session.remove( session.get( Product.class, "Widget" ) );
 				}
 		);
 	}
 
 	@Test
 	@SuppressWarnings("unchecked")
-	public void testOrphanDeleteAfterLock() {
+	public void testCannotLockDetachedEntity(SessionFactoryScope scope) {
 		Product prod = new Product();
 		Part part = new Part();
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					prod.setName( "Widget" );
 					part.setName( "Widge" );
@@ -168,28 +167,30 @@ public class OrphanTest extends BaseCoreFunctionalTestCase {
 		);
 
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
-					session.lock( prod, LockMode.READ );
-					prod.getParts().remove( part );
+					assertThrows(IllegalArgumentException.class,
+								() -> session.lock( prod, LockMode.READ ),
+								"Given entity is not associated with the persistence context"
+					);
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
-					assertNull( session.get( Part.class, "Widge" ) );
+					assertNotNull( session.get( Part.class, "Widge" ) );
 					assertNotNull( session.get( Part.class, "Get" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
+					session.remove( session.get( Product.class, "Widget" ) );
 				}
 		);
 	}
 
 	@Test
 	@SuppressWarnings("unchecked")
-	public void testOrphanDeleteOnSaveOrUpdate() {
+	public void testOrphanDeleteOnSaveOrUpdate(SessionFactoryScope scope) {
 		Product prod = new Product();
 		Part part = new Part();
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					prod.setName( "Widget" );
 					part.setName( "Widge" );
@@ -205,26 +206,26 @@ public class OrphanTest extends BaseCoreFunctionalTestCase {
 
 		prod.getParts().remove( part );
 
-		inTransaction(
+		scope.inTransaction(
 				session ->
-						session.saveOrUpdate( prod )
+						session.merge( prod )
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					assertNull( session.get( Part.class, "Widge" ) );
 					assertNotNull( session.get( Part.class, "Get" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
+					session.remove( session.get( Product.class, "Widget" ) );
 				}
 		);
 	}
 
 	@Test
 	@SuppressWarnings("unchecked")
-	public void testOrphanDeleteOnSaveOrUpdateAfterSerialization() {
+	public void testOrphanDeleteOnSaveOrUpdateAfterSerialization(SessionFactoryScope scope) {
 		Product prod = new Product();
 		Part part = new Part();
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					prod.setName( "Widget" );
 					part.setName( "Widge" );
@@ -242,24 +243,24 @@ public class OrphanTest extends BaseCoreFunctionalTestCase {
 
 		Product cloned = (Product) SerializationHelper.clone( prod );
 
-		inTransaction(
+		scope.inTransaction(
 				session ->
-					session.saveOrUpdate( cloned )
+					session.merge( cloned )
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					assertNull( session.get( Part.class, "Widge" ) );
 					assertNotNull( session.get( Part.class, "Get" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
+					session.remove( session.get( Product.class, "Widget" ) );
 				}
 		);
 	}
 
 	@Test
 	@SuppressWarnings("unchecked")
-	public void testOrphanDelete() {
-		inTransaction(
+	public void testOrphanDelete(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Product prod = new Product();
 					prod.setName( "Widget" );
@@ -275,11 +276,11 @@ public class OrphanTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		sessionFactory().getCache().evictEntityData( Product.class );
-		sessionFactory().getCache().evictEntityData( Part.class );
+		scope.getSessionFactory().getCache().evictEntityData( Product.class );
+		scope.getSessionFactory().getCache().evictEntityData( Part.class );
 
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Product prod = session.get( Product.class, "Widget" );
 					assertTrue( Hibernate.isInitialized( prod.getParts() ) );
@@ -288,22 +289,22 @@ public class OrphanTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					assertNull( session.get( Part.class, "Widge" ) );
 					assertNotNull( session.get( Part.class, "Get" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
+					session.remove( session.get( Product.class, "Widget" ) );
 				}
 		);
 	}
 
 	@Test
 	@SuppressWarnings("unchecked")
-	public void testOrphanDeleteOnMerge() {
+	public void testOrphanDeleteOnMerge(SessionFactoryScope scope) {
 		Product prod = new Product();
 		Part part = new Part();
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					prod.setName( "Widget" );
 					part.setName( "Widge" );
@@ -319,26 +320,26 @@ public class OrphanTest extends BaseCoreFunctionalTestCase {
 
 		prod.getParts().remove( part );
 
-		inTransaction(
+		scope.inTransaction(
 				session ->
 						session.merge( prod )
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					assertNull( session.get( Part.class, "Widge" ) );
 					assertNotNull( session.get( Part.class, "Get" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
+					session.remove( session.get( Product.class, "Widget" ) );
 				}
 		);
 	}
 
 	@Test
 	@SuppressWarnings("unchecked")
-	public void testOrphanDeleteOnMergeRemoveElementMerge() {
+	public void testOrphanDeleteOnMergeRemoveElementMerge(SessionFactoryScope scope) {
 		Product prod = new Product();
 		Part part = new Part();
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					prod.setName( "Widget" );
 					part.setName( "Widge" );
@@ -348,7 +349,7 @@ public class OrphanTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					session.merge( prod );
 					prod.getParts().remove( part );
@@ -356,20 +357,20 @@ public class OrphanTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					assertNull( session.get( Part.class, "Widge" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
+					session.remove( session.get( Product.class, "Widget" ) );
 				}
 		);
 	}
 
 	@Test
 	@SuppressWarnings("unchecked")
-	@TestForIssue(jiraKey = "HHH-9171")
-	public void testOrphanDeleteOnAddElementMergeRemoveElementMerge() {
+	@JiraKey("HHH-9171")
+	public void testOrphanDeleteOnAddElementMergeRemoveElementMerge(SessionFactoryScope scope) {
 		Product prod = new Product();
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					prod.setName( "Widget" );
 					session.persist( prod );
@@ -381,7 +382,7 @@ public class OrphanTest extends BaseCoreFunctionalTestCase {
 		part.setDescription( "part if a Widget" );
 		prod.getParts().add( part );
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					session.merge( prod );
 					// In Section 2.9, Entity Relationships, the JPA 2.1 spec says:
@@ -394,10 +395,10 @@ public class OrphanTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					assertNotNull( session.get( Part.class, "Widge" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
+					session.remove( session.get( Product.class, "Widget" ) );
 				}
 		);
 	}

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
@@ -54,7 +52,7 @@ public class JpaCriteriaParameter<T>
 		if ( type == null ) {
 			return null;
 		}
-		return type.resolveExpressible( nodeBuilder.getSessionFactory() );
+		return type.resolveExpressible( nodeBuilder );
 	}
 
 	@Override
@@ -122,12 +120,13 @@ public class JpaCriteriaParameter<T>
 
 	@Override
 	public BindableType<T> getHibernateType() {
-		return this.getNodeType();
+		return getNodeType();
 	}
 
 	@Override
 	public Class<T> getParameterType() {
-		return this.getNodeType().getExpressibleJavaType().getJavaTypeClass();
+		final SqmExpressible<T> nodeType = getNodeType();
+		return nodeType == null ? null : nodeType.getExpressibleJavaType().getJavaTypeClass();
 	}
 
 	@Override

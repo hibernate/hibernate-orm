@@ -1,17 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id$
 package org.hibernate.orm.test.annotations.inheritance.mixed;
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.SecondaryTable;
-import jakarta.persistence.Table;
 
 /**
  * @author Emmanuel Bernard
@@ -19,7 +14,6 @@ import jakarta.persistence.Table;
 @Entity
 @DiscriminatorValue("D")
 @SecondaryTable(name = "DocumentMixed")
-@Table(name="Document_Wrong") //illegal use, a warn is raised
 public class Document extends File {
 	private int size;
 

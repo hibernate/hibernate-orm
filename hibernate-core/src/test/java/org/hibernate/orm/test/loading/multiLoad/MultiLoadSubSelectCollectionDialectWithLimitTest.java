@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.loading.multiLoad;
 
 import java.util.ArrayList;
@@ -13,9 +17,8 @@ import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.loader.ast.internal.MultiKeyLoadHelper;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -106,7 +109,7 @@ public class MultiLoadSubSelectCollectionDialectWithLimitTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12740")
+	@JiraKey(value = "HHH-12740")
 	public void testSubselect(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		final Dialect dialect = scope.getSessionFactory().getFastSessionServices().jdbcServices.getDialect();

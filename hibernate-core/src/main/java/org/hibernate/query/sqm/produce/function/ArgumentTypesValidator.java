@@ -1,19 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.produce.function;
 
 import java.lang.reflect.Type;
-import java.sql.Types;
 import java.util.List;
 
+import org.hibernate.Internal;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmCollation;
@@ -26,25 +23,10 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.spi.JdbcTypeRecommendationException;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.type.SqlTypes.BIT;
-import static org.hibernate.type.SqlTypes.BOOLEAN;
-import static org.hibernate.type.SqlTypes.SMALLINT;
-import static org.hibernate.type.SqlTypes.TINYINT;
-import static org.hibernate.type.SqlTypes.UUID;
-import static org.hibernate.type.SqlTypes.hasDatePart;
-import static org.hibernate.type.SqlTypes.hasTimePart;
-import static org.hibernate.type.SqlTypes.isCharacterOrClobType;
-import static org.hibernate.type.SqlTypes.isCharacterType;
-import static org.hibernate.type.SqlTypes.isEnumType;
-import static org.hibernate.type.SqlTypes.isIntegral;
-import static org.hibernate.type.SqlTypes.isNumericType;
-import static org.hibernate.type.SqlTypes.isSpatialType;
-import static org.hibernate.type.SqlTypes.isTemporalType;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.COMPARABLE;
 import static org.hibernate.type.descriptor.java.JavaTypeHelper.isUnknown;
 
 
@@ -66,7 +48,7 @@ import static org.hibernate.type.descriptor.java.JavaTypeHelper.isUnknown;
 public class ArgumentTypesValidator implements ArgumentsValidator {
 	// a JDBC type code of an enum when we don't know if it's mapped STRING or ORDINAL
 	// this number has to be distinct from every code in SqlTypes!
-	private static final int ENUM_UNKNOWN_JDBC_TYPE = -101977;
+//	private static final int ENUM_UNKNOWN_JDBC_TYPE = -101977;
 
 	final ArgumentsValidator delegate;
 	private final FunctionParameterType[] types;
@@ -93,13 +75,13 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 		delegate.validate( arguments, functionName, typeConfiguration);
 		int count = 0;
 		for (SqmTypedNode<?> argument : arguments) {
-			JdbcTypeIndicators indicators = typeConfiguration.getCurrentBaseSqlTypeIndicators();
+//			JdbcTypeIndicators indicators = typeConfiguration.getCurrentBaseSqlTypeIndicators();
 			SqmExpressible<?> nodeType = argument.getNodeType();
 			FunctionParameterType type = count < types.length ? types[count++] : types[types.length - 1];
 			if ( nodeType != null && type != FunctionParameterType.ANY ) {
 				JavaType<?> javaType = nodeType.getRelationalJavaType();
 				if (javaType != null) {
-					checkArgumentType( functionName, count, argument, indicators, type, javaType );
+					checkArgumentType( functionName, count, argument, type, javaType );
 				}
 				switch (type) {
 					case TEMPORAL_UNIT:
@@ -144,46 +126,42 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 			String functionName,
 			int count,
 			SqmTypedNode<?> argument,
-			JdbcTypeIndicators indicators,
 			FunctionParameterType type,
 			JavaType<?> javaType) {
 		if ( !isUnknown( javaType ) ) {
-			DomainType<?> domainType = argument.getExpressible().getSqmType();
-			if ( domainType instanceof JdbcMapping ) {
-				JdbcType jdbcType = ((JdbcMapping) domainType).getJdbcType();
+			if ( argument.getExpressible().getSqmType() instanceof JdbcMapping jdbcMapping ) {
 				checkArgumentType(
 						count, functionName, type,
-						jdbcType.getDefaultSqlTypeCode(),
-						jdbcType.getFriendlyName(),
+						jdbcMapping.getJdbcType(),
 						javaType.getJavaTypeClass()
 				);
 			}
-			else {
-				//TODO: this branch is now probably obsolete and can be deleted!
-				try {
-					checkArgumentType(
-							count, functionName, type,
-							getJdbcType( indicators, javaType ),
-							null,
-							javaType.getJavaTypeClass()
-					);
-				}
-				catch (JdbcTypeRecommendationException e) {
-					// it's a converter or something like that, and we will check it later
-				}
-			}
+//			else {
+//				//TODO: this branch is now probably obsolete and can be deleted!
+//				try {
+//					checkArgumentType(
+//							count, functionName, type,
+//							getJdbcType( indicators, javaType ),
+//							null,
+//							javaType.getJavaTypeClass()
+//					);
+//				}
+//				catch (JdbcTypeRecommendationException e) {
+//					// it's a converter or something like that, and we will check it later
+//				}
+//			}
 		}
 	}
 
-	private int getJdbcType(JdbcTypeIndicators indicators, JavaType<?> javaType) {
-		if ( javaType.getJavaTypeClass().isEnum() ) {
-			// we can't tell if the enum is mapped STRING or ORDINAL
-			return ENUM_UNKNOWN_JDBC_TYPE;
-		}
-		else {
-			return javaType.getRecommendedJdbcType( indicators ).getDefaultSqlTypeCode();
-		}
-	}
+//	private int getJdbcType(JdbcTypeIndicators indicators, JavaType<?> javaType) {
+//		if ( javaType.getJavaTypeClass().isEnum() ) {
+//			// we can't tell if the enum is mapped STRING or ORDINAL
+//			return ENUM_UNKNOWN_JDBC_TYPE;
+//		}
+//		else {
+//			return javaType.getRecommendedJdbcType( indicators ).getDefaultSqlTypeCode();
+//		}
+//	}
 
 	/**
 	 * This is the final validation phase with the fully-typed SQL nodes. Note that these
@@ -198,8 +176,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 	public void validateSqlTypes(List<? extends SqlAstNode> arguments, String functionName) {
 		int count = 0;
 		for ( SqlAstNode argument : arguments ) {
-			if ( argument instanceof Expression ) {
-				final Expression expression = (Expression) argument;
+			if ( argument instanceof Expression expression ) {
 				final JdbcMappingContainer expressionType = expression.getExpressionType();
 				if (expressionType != null) {
 					if ( isUnknownExpressionType( expressionType ) ) {
@@ -216,7 +193,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 	/**
 	 * We can't validate some expressions involving parameters / unknown functions.
 	 */
-	private static boolean isUnknownExpressionType(JdbcMappingContainer expressionType) {
+	public static boolean isUnknownExpressionType(JdbcMappingContainer expressionType) {
 		return expressionType instanceof JavaObjectType
 			|| expressionType instanceof BasicType
 				&& isUnknown( ((BasicType<?>) expressionType).getJavaTypeDescriptor() );
@@ -232,8 +209,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 						paramNumber,
 						functionName,
 						type,
-						mapping.getJdbcType().getDefaultSqlTypeCode(),
-						mapping.getJdbcType().getFriendlyName(),
+						mapping.getJdbcType(),
 						mapping.getJavaTypeDescriptor().getJavaType()
 				);
 			}
@@ -241,67 +217,46 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 		return paramNumber;
 	}
 
-	private static void checkArgumentType(
-			int paramNumber, String functionName, FunctionParameterType type, int code, String sqlType, Type javaType) {
-		switch (type) {
-			case COMPARABLE:
-				if ( !isCharacterType(code) && !isTemporalType(code) && !isNumericType(code) && !isEnumType( code )
-						// both Java and the database consider UUIDs
-						// comparable, so go ahead and accept them
-						&& code != UUID
-						// as a special case, we consider a binary column
-						// comparable when it is mapped by a Java UUID
-						&& !( javaType == java.util.UUID.class && code == Types.BINARY ) ) {
-					throwError(type, javaType, sqlType, functionName, paramNumber);
-				}
-				break;
-			case STRING:
-				if ( !isCharacterType(code) && !isEnumType(code) ) {
-					throwError(type, javaType, sqlType, functionName, paramNumber);
-				}
-				break;
-			case STRING_OR_CLOB:
-				if ( !isCharacterOrClobType(code) ) {
-					throwError(type, javaType, sqlType, functionName, paramNumber);
-				}
-				break;
-			case NUMERIC:
-				if ( !isNumericType(code) ) {
-					throwError(type, javaType, sqlType, functionName, paramNumber);
-				}
-				break;
-			case INTEGER:
-				if ( !isIntegral(code) ) {
-					throwError(type, javaType, sqlType, functionName, paramNumber);
-				}
-				break;
-			case BOOLEAN:
-				// ugh, need to be careful here, need to accept all the
-				// JDBC type codes that a Dialect might use for BOOLEAN
-				if ( code != BOOLEAN && code != BIT && code != TINYINT && code != SMALLINT ) {
-					throwError(type, javaType, sqlType, functionName, paramNumber);
-				}
-				break;
-			case TEMPORAL:
-				if ( !isTemporalType(code) ) {
-					throwError(type, javaType, sqlType, functionName, paramNumber);
-				}
-				break;
-			case DATE:
-				if ( !hasDatePart(code) ) {
-					throwError(type, javaType, sqlType, functionName, paramNumber);
-				}
-				break;
-			case TIME:
-				if ( !hasTimePart(code) ) {
-					throwError(type, javaType, sqlType, functionName, paramNumber);
-				}
-				break;
-			case SPATIAL:
-				if ( !isSpatialType( code ) ) {
-					throwError( type, javaType, sqlType, functionName, paramNumber );
-				}
+	@Internal
+	public static void checkArgumentType(
+			int paramNumber, String functionName, FunctionParameterType type, JdbcType jdbcType, Type javaType) {
+		if ( !isCompatible( type, jdbcType, javaType )
+				// as a special case, we consider a binary column
+				// comparable when it is mapped by a Java UUID
+				&& !( type == COMPARABLE && isBinaryUuid( jdbcType, javaType ) ) ) {
+			throwError( type, javaType, jdbcType.getFriendlyName(), functionName, paramNumber );
 		}
+	}
+
+	private static boolean isBinaryUuid(JdbcType jdbcType, Type javaType) {
+		return javaType == java.util.UUID.class
+			&& jdbcType.isBinary();
+	}
+
+	@Internal
+	private static boolean isCompatible(FunctionParameterType type, JdbcType jdbcType, Type javaType) {
+		return switch (type) {
+			case COMPARABLE -> jdbcType.isComparable();
+			case STRING -> jdbcType.isStringLikeExcludingClob();
+			case STRING_OR_CLOB -> jdbcType.isString(); // should it be isStringLike()
+			case NUMERIC -> jdbcType.isNumber();
+			case INTEGER -> jdbcType.isInteger();
+			case BOOLEAN -> jdbcType.isBoolean()
+					// some Dialects map Boolean to SMALLINT or TINYINT
+					// TODO: check with Dialect.getPreferredSqlTypeCodeForBoolean
+					|| jdbcType.isSmallInteger();
+			case TEMPORAL -> jdbcType.isTemporal();
+			case DATE -> jdbcType.hasDatePart();
+			case TIME -> jdbcType.hasTimePart();
+			case BINARY -> jdbcType.isBinary();
+			case SPATIAL -> jdbcType.isSpatial();
+			case JSON -> jdbcType.isJson();
+			case IMPLICIT_JSON -> jdbcType.isImplicitJson();
+			case XML -> jdbcType.isXml();
+			case IMPLICIT_XML -> jdbcType.isImplicitXml();
+			case ENUM -> javaType instanceof Class<?> clz && clz.isEnum();
+			default -> true; // TODO: should we throw here?
+		};
 	}
 
 	private static void throwError(

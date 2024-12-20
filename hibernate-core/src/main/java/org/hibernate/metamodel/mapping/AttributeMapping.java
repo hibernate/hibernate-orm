@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping;
 
@@ -56,14 +54,14 @@ public interface AttributeMapping
 	 * Convenient access to getting the value for this attribute from the declarer
 	 */
 	default Object getValue(Object container) {
-		return getPropertyAccess().getGetter().get( container );
+		return getDeclaringType().getValue( container, getStateArrayPosition() );
 	}
 
 	/**
 	 * Convenient access to setting the value for this attribute on the declarer
 	 */
 	default void setValue(Object container, Object value) {
-		getPropertyAccess().getSetter().set( container, value );
+		getDeclaringType().setValue( container, getStateArrayPosition(), value );
 	}
 
 	/**

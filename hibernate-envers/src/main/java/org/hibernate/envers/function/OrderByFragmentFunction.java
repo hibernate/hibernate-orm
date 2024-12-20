@@ -1,10 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.envers.function;
 
 import java.util.ArrayList;
@@ -13,15 +10,13 @@ import java.util.List;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.ReturnableType;
-import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.persister.entity.Joinable;
 import org.hibernate.query.sqm.function.FunctionRenderer;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
-import org.hibernate.query.sqm.function.FunctionRenderingSupport;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
@@ -138,7 +133,7 @@ public class OrderByFragmentFunction extends AbstractSqmFunctionDescriptor {
 				QueryEngine queryEngine) {
 			super(
 					orderByFragmentFunction,
-					null,
+					(sqlAppender, sqlAstArguments, returnType, walker) -> {},
 					arguments,
 					impliedResultType,
 					orderByFragmentFunction.getArgumentsValidator(),
@@ -201,7 +196,7 @@ public class OrderByFragmentFunction extends AbstractSqmFunctionDescriptor {
 			final TableGroup tableGroup = ( (FromClauseIndex) walker.getFromClauseAccess() ).findTableGroup(
 					sqmAlias
 			);
-			final QueryableCollection collectionDescriptor = (QueryableCollection) walker.getCreationContext()
+			final CollectionPersister collectionDescriptor = walker.getCreationContext()
 					.getSessionFactory()
 						.getRuntimeMetamodels()
 						.getMappingMetamodel()
@@ -220,7 +215,7 @@ public class OrderByFragmentFunction extends AbstractSqmFunctionDescriptor {
 				targetTableExpression = collectionDescriptor.getTableName();
 			}
 			else {
-				targetTableExpression = ( (Joinable) collectionDescriptor.getElementPersister() ).getTableName();
+				targetTableExpression = collectionDescriptor.getElementPersister().getTableName();
 			}
 			// We apply the fragment here and return null to signal that this is a no-op
 			fragment.apply(

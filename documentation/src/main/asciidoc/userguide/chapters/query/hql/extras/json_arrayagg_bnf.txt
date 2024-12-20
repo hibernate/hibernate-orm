@@ -1,0 +1,5 @@
+"json_arrayagg(" expressionOrPredicate jsonNullClause? orderByClause? ")" filterClause?
+
+jsonNullClause
+	: ("absent"|"null") "on null"
+	;

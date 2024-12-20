@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.procedure;
 
@@ -16,7 +14,6 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityResult;
 import jakarta.persistence.FieldResult;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.NamedStoredProcedureQuery;
 import jakarta.persistence.OneToMany;
@@ -35,142 +32,142 @@ import static org.hibernate.jpa.HibernateHints.HINT_CALLABLE_FUNCTION;
  * @author Vlad Mihalcea
  */
 @NamedStoredProcedureQuery(
-        name = "personAndPhonesFunction",
-        procedureName = "fn_person_and_phones",
-        resultSetMappings = "personWithPhonesMapping",
-        parameters = @StoredProcedureParameter(type = Long.class),
-        hints = @QueryHint(name = HINT_CALLABLE_FUNCTION, value = "true")
+		name = "personAndPhonesFunction",
+		procedureName = "fn_person_and_phones",
+		resultSetMappings = "personWithPhonesMapping",
+		parameters = @StoredProcedureParameter(type = Long.class),
+		hints = @QueryHint(name = HINT_CALLABLE_FUNCTION, value = "true")
 )
 @NamedNativeQuery(
-        name = "fn_person_and_phones_hana",
-        query = "select \"pr.id\", \"pr.name\", \"pr.nickName\", \"pr.address\", \"pr.createdOn\", \"pr.version\", \"ph.id\", \"ph.person_id\", \"ph.phone_number\", \"ph.valid\" from fn_person_and_phones( ? )",
-        resultSetMapping = "person_with_phones_hana"
+		name = "fn_person_and_phones_hana",
+		query = "select \"pr.id\", \"pr.name\", \"pr.nickName\", \"pr.address\", \"pr.createdOn\", \"pr.version\", \"ph.id\", \"ph.person_id\", \"ph.phone_number\", \"ph.valid\" from fn_person_and_phones( ? )",
+		resultSetMapping = "person_with_phones_hana"
 )
 @SqlResultSetMappings({
-     @SqlResultSetMapping(
-         name = "personWithPhonesMapping",
-         entities = {
-             @EntityResult(
-                 entityClass = Person.class,
-                 fields = {
-                     @FieldResult( name = "id", column = "pr.id" ),
-                     @FieldResult( name = "name", column = "pr.name" ),
-                     @FieldResult( name = "nickName", column = "pr.nickName" ),
-                     @FieldResult( name = "address", column = "pr.address" ),
-                     @FieldResult( name = "createdOn", column = "pr.createdOn" ),
-                     @FieldResult( name = "version", column = "pr.version" ),
-                 }
-             ),
-             @EntityResult(
-                 entityClass = Phone.class,
-                 fields = {
-                     @FieldResult( name = "id", column = "ph.id" ),
-                     @FieldResult( name = "person", column = "ph.person_id" ),
-                     @FieldResult( name = "number", column = "ph.phone_number" ),
-                     @FieldResult( name = "valid", column = "ph.valid" )
-                 }
-             )
-         }
-     ),
-     @SqlResultSetMapping(
-         name = "person_with_phones_hana",
-         entities = {
-             @EntityResult(
-                 entityClass = Person.class,
-                 fields = {
-                     @FieldResult( name = "id", column = "pr.id" ),
-                     @FieldResult( name = "name", column = "pr.name" ),
-                     @FieldResult( name = "nickName", column = "pr.nickName" ),
-                     @FieldResult( name = "address", column = "pr.address" ),
-                     @FieldResult( name = "createdOn", column = "pr.createdOn" ),
-                     @FieldResult( name = "version", column = "pr.version" ),
-                 }
-             ),
-             @EntityResult(
-                 entityClass = Phone.class,
-                 fields = {
-                     @FieldResult( name = "id", column = "ph.id" ),
-                     @FieldResult( name = "person", column = "ph.person_id" ),
-                     @FieldResult( name = "number", column = "ph.phone_number" ),
-                     @FieldResult( name = "valid", column = "ph.valid" )
-                 }
-             )
-         }
-     ),
+	@SqlResultSetMapping(
+		name = "personWithPhonesMapping",
+		entities = {
+			@EntityResult(
+				entityClass = Person.class,
+				fields = {
+					@FieldResult( name = "id", column = "pr.id" ),
+					@FieldResult( name = "name", column = "pr.name" ),
+					@FieldResult( name = "nickName", column = "pr.nickName" ),
+					@FieldResult( name = "address", column = "pr.address" ),
+					@FieldResult( name = "createdOn", column = "pr.createdOn" ),
+					@FieldResult( name = "version", column = "pr.version" ),
+				}
+			),
+			@EntityResult(
+				entityClass = Phone.class,
+				fields = {
+					@FieldResult( name = "id", column = "ph.id" ),
+					@FieldResult( name = "person", column = "ph.person_id" ),
+					@FieldResult( name = "number", column = "ph.phone_number" ),
+					@FieldResult( name = "valid", column = "ph.valid" )
+				}
+			)
+		}
+	),
+	@SqlResultSetMapping(
+		name = "person_with_phones_hana",
+		entities = {
+			@EntityResult(
+				entityClass = Person.class,
+				fields = {
+					@FieldResult( name = "id", column = "pr.id" ),
+					@FieldResult( name = "name", column = "pr.name" ),
+					@FieldResult( name = "nickName", column = "pr.nickName" ),
+					@FieldResult( name = "address", column = "pr.address" ),
+					@FieldResult( name = "createdOn", column = "pr.createdOn" ),
+					@FieldResult( name = "version", column = "pr.version" ),
+				}
+			),
+			@EntityResult(
+				entityClass = Phone.class,
+				fields = {
+					@FieldResult( name = "id", column = "ph.id" ),
+					@FieldResult( name = "person", column = "ph.person_id" ),
+					@FieldResult( name = "number", column = "ph.phone_number" ),
+					@FieldResult( name = "valid", column = "ph.valid" )
+				}
+			)
+		}
+	),
 })
 @Entity
 public class Person {
 
-    @Id
-    private Long id;
+	@Id
+	private Long id;
 
-    private String name;
+	private String name;
 
-    private String nickName;
+	private String nickName;
 
-    private String address;
+	private String address;
 
-    @Temporal(TemporalType.TIMESTAMP )
-    private Date createdOn;
+	@Temporal(TemporalType.TIMESTAMP )
+	private Date createdOn;
 
-    @OneToMany(mappedBy = "person", cascade = CascadeType.ALL)
-    @OrderColumn(name = "order_id")
-    private List<Phone> phones = new ArrayList<>();
+	@OneToMany(mappedBy = "person", cascade = CascadeType.ALL)
+	@OrderColumn(name = "order_id")
+	private List<Phone> phones = new ArrayList<>();
 
-    @Version
-    private int version;
+	@Version
+	private int version;
 
-    //Getters and setters are omitted for brevity
+	//Getters and setters are omitted for brevity
 
 //end::hql-examples-domain-model-example[]
 
-    public Person() {}
+	public Person() {}
 
-    public Person(Long id, String name) {
-        this.id = id;
-        this.name = name;
-    }
+	public Person(Long id, String name) {
+		this.id = id;
+		this.name = name;
+	}
 
-    public Long getId() {
-        return id;
-    }
+	public Long getId() {
+		return id;
+	}
 
-    public String getName() {
-        return name;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public String getNickName() {
-        return nickName;
-    }
+	public String getNickName() {
+		return nickName;
+	}
 
-    public void setNickName(String nickName) {
-        this.nickName = nickName;
-    }
+	public void setNickName(String nickName) {
+		this.nickName = nickName;
+	}
 
-    public String getAddress() {
-        return address;
-    }
+	public String getAddress() {
+		return address;
+	}
 
-    public void setAddress(String address) {
-        this.address = address;
-    }
+	public void setAddress(String address) {
+		this.address = address;
+	}
 
-    public Date getCreatedOn() {
-        return createdOn;
-    }
+	public Date getCreatedOn() {
+		return createdOn;
+	}
 
-    public void setCreatedOn(Date createdOn) {
-        this.createdOn = createdOn;
-    }
+	public void setCreatedOn(Date createdOn) {
+		this.createdOn = createdOn;
+	}
 
-    public List<Phone> getPhones() {
-        return phones;
-    }
+	public List<Phone> getPhones() {
+		return phones;
+	}
 
-    public void addPhone(Phone phone) {
-        phones.add( phone );
-        phone.setPerson( this );
-    }
+	public void addPhone(Phone phone) {
+		phones.add( phone );
+		phone.setPerson( this );
+	}
 //tag::hql-examples-domain-model-example[]
 }
 //end::hql-examples-domain-model-example[]

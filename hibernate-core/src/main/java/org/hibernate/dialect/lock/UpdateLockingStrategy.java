@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.lock;
 
+import java.lang.invoke.MethodHandles;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
@@ -17,7 +16,7 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.persister.entity.Lockable;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.Update;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -36,11 +35,12 @@ import org.jboss.logging.Logger;
  */
 public class UpdateLockingStrategy implements LockingStrategy {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			UpdateLockingStrategy.class.getName()
 	);
 
-	private final Lockable lockable;
+	private final EntityPersister lockable;
 	private final LockMode lockMode;
 	private final String sql;
 
@@ -51,7 +51,7 @@ public class UpdateLockingStrategy implements LockingStrategy {
 	 * @param lockMode Indicates the type of lock to be acquired.  Note that
 	 * read-locks are not valid for this strategy.
 	 */
-	public UpdateLockingStrategy(Lockable lockable, LockMode lockMode) {
+	public UpdateLockingStrategy(EntityPersister lockable, LockMode lockMode) {
 		this.lockable = lockable;
 		this.lockMode = lockMode;
 		if ( lockMode.lessThan( LockMode.WRITE ) ) {

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.internal;
 
@@ -94,8 +92,6 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 				executionContext.getQueryParameterBindings(),
 				domainParameterXref,
 				jdbcParamsXref,
-				factory.getRuntimeMetamodels().getMappingMetamodel(),
-				sqmInterpretation.getFromClauseAccess()::findTableGroup,
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")
 					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
@@ -137,6 +133,7 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 							collectionTableGroup,
 							factory.getJdbcServices().getDialect().getDmlTargetColumnQualifierSupport() == DmlTargetColumnQualifierSupport.TABLE_ALIAS,
 							executionContext.getSession().getLoadQueryInfluencers().getEnabledFilters(),
+							false,
 							null,
 							null
 					);

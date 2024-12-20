@@ -1,15 +1,17 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.jpa.criteria;
 
 import java.util.List;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,7 +28,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @Jpa(
 		annotatedClasses = PowerFunctionTest.Person.class
 )
-@TestForIssue(jiraKey = "HHH-15395")
+@JiraKey(value = "HHH-15395")
 public class PowerFunctionTest {
 
 	@BeforeEach
@@ -55,7 +57,7 @@ public class PowerFunctionTest {
 
 					if ( getDialect( scope ) instanceof DerbyDialect ) {
 						/**
-						 for Derby dialect we are emulating the power function see {@link CommonFunctionFactory#power_expLn()}.
+						for Derby dialect we are emulating the power function see {@link CommonFunctionFactory#power_expLn()}.
 						 */
 						assertThat( results.get( 0 ) ).isEqualTo( 2500D, Offset.offset( 0.000000000001 ) );
 					}

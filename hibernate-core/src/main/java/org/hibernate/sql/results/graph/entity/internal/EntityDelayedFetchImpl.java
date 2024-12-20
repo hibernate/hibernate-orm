@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
@@ -11,32 +9,32 @@ import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.DomainResultAssembler;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.FetchParentAccess;
-import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerParent;
+import org.hibernate.sql.results.graph.entity.EntityInitializer;
 
 /**
  * @author Andrea Boriero
  * @author Steve Ebersole
  */
 public class EntityDelayedFetchImpl extends AbstractNonJoinedEntityFetch {
-
-	private final DomainResult<?> keyResult;
-	private final boolean selectByUniqueKey;
-
 	public EntityDelayedFetchImpl(
 			FetchParent fetchParent,
 			ToOneAttributeMapping fetchedAttribute,
 			NavigablePath navigablePath,
 			DomainResult<?> keyResult,
-			boolean selectByUniqueKey) {
-		super( navigablePath, fetchedAttribute, fetchParent );
-
-		assert fetchedAttribute.getNotFoundAction() == null;
-
-		this.keyResult = keyResult;
-		this.selectByUniqueKey = selectByUniqueKey;
+			boolean selectByUniqueKey,
+			DomainResultCreationState creationState) {
+		super(
+				navigablePath,
+				fetchedAttribute,
+				fetchParent,
+				keyResult,
+				fetchedAttribute.getEntityMappingType().getEntityPersister().isConcreteProxy(),
+				selectByUniqueKey,
+				creationState
+		);
 	}
 
 	@Override
@@ -45,41 +43,15 @@ public class EntityDelayedFetchImpl extends AbstractNonJoinedEntityFetch {
 	}
 
 	@Override
-	public boolean hasTableGroup() {
-		return false;
-	}
-
-	@Override
-	public DomainResultAssembler<?> createAssembler(
-			FetchParentAccess parentAccess,
-			AssemblerCreationState creationState) {
-		final NavigablePath navigablePath = getNavigablePath();
-		final Initializer entityInitializer = creationState.resolveInitializer(
-				navigablePath,
-				getEntityValuedModelPart(),
-				() -> buildEntityDelayedFetchInitializer(
-						parentAccess,
-						navigablePath,
-						(ToOneAttributeMapping) getEntityValuedModelPart(),
-						selectByUniqueKey,
-						keyResult.createResultAssembler( parentAccess, creationState )
-				)
-		);
-
-		return buildEntityAssembler( entityInitializer );
-	}
-
-	protected EntityAssembler buildEntityAssembler(Initializer entityInitializer) {
-		return new EntityAssembler( getFetchedMapping().getJavaType(), entityInitializer.asEntityInitializer() );
-	}
-
-	protected Initializer buildEntityDelayedFetchInitializer(FetchParentAccess parentAccess, NavigablePath navigablePath, ToOneAttributeMapping entityValuedModelPart, boolean selectByUniqueKey, DomainResultAssembler<?> resultAssembler) {
+	public EntityInitializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {
 		return new EntityDelayedFetchInitializer(
-				parentAccess,
-				navigablePath,
-				entityValuedModelPart,
-				selectByUniqueKey,
-				resultAssembler
+				parent,
+				getNavigablePath(),
+				getEntityValuedModelPart(),
+				isSelectByUniqueKey(),
+				getKeyResult(),
+				getDiscriminatorFetch(),
+				creationState
 		);
 	}
 }

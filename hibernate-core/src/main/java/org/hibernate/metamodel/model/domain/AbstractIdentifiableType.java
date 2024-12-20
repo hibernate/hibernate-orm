@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain;
 
@@ -76,13 +74,8 @@ public abstract class AbstractIdentifiableType<J>
 	}
 
 	@Override
-	protected InFlightAccessImpl createInFlightAccess() {
+	protected InFlightAccess<J> createInFlightAccess() {
 		return new InFlightAccessImpl( super.createInFlightAccess() );
-	}
-
-	@Override
-	public InFlightAccessImpl getInFlightAccess() {
-		return (InFlightAccessImpl) super.getInFlightAccess();
 	}
 
 	@Override
@@ -183,6 +176,9 @@ public abstract class AbstractIdentifiableType<J>
 		if ( idClassAttributes != null ) {
 			if ( idClassAttributes.size() == 1 ) {
 				return idClassAttributes.iterator().next().getType();
+			}
+			else if ( idClassType instanceof SimpleDomainType<?> ) {
+				return (SimpleDomainType<?>) idClassType;
 			}
 		}
 
@@ -402,7 +398,7 @@ public abstract class AbstractIdentifiableType<J>
 	private SqmPathSource<?> interpretIdDescriptor() {
 		log.tracef( "Interpreting domain-model identifier descriptor" );
 
-		if ( getSuperType() != null ) {
+		if ( getSuperType() != null && getSuperType().getIdentifierDescriptor() != null ) {
 			return getSuperType().getIdentifierDescriptor();
 		}
 		else if ( id != null ) {
@@ -420,11 +416,10 @@ public abstract class AbstractIdentifiableType<J>
 			}
 			else {
 				assert type instanceof EmbeddableDomainType;
-				final EmbeddableDomainType<?> compositeType = (EmbeddableDomainType<?>) type;
 				return new EmbeddedSqmPathSource<>(
 						EntityIdentifierMapping.ID_ROLE_NAME,
 						(SqmPathSource) id,
-						compositeType,
+						(EmbeddableDomainType<?>) type,
 						Bindable.BindableType.SINGULAR_ATTRIBUTE,
 						id.isGeneric()
 				);

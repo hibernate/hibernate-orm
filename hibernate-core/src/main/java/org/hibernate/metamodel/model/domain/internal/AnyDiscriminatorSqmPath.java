@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
 
@@ -19,21 +17,22 @@ public class AnyDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implements Di
 
 	protected AnyDiscriminatorSqmPath(
 			NavigablePath navigablePath,
-			SqmPathSource referencedPathSource,
-			SqmPath lhs,
+			SqmPathSource<T> referencedPathSource,
+			SqmPath<?> lhs,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, nodeBuilder );
 	}
 
 	@Override
 	public AnyDiscriminatorSqmPath<T> copy(SqmCopyContext context) {
-		final AnyDiscriminatorSqmPath existing = context.getCopy( this );
+		final AnyDiscriminatorSqmPath<T> existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
+		//noinspection unchecked
 		return context.registerCopy(
 				this,
-				(AnyDiscriminatorSqmPath) getLhs().copy( context ).type()
+				(AnyDiscriminatorSqmPath<T>) getLhs().copy( context ).type()
 		);
 	}
 
@@ -46,5 +45,4 @@ public class AnyDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implements Di
 	public AnyDiscriminatorSqmPathSource<T> getExpressible() {
 		return (AnyDiscriminatorSqmPathSource<T>) getNodeType();
 	}
-
 }

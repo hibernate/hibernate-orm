@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemavalidation;
 
@@ -15,7 +13,7 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.RequiresDialects;
@@ -108,7 +106,7 @@ public class SynonymValidationTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12406")
+	@JiraKey(value = "HHH-12406")
 	public void testSynonymUsingDefaultStrategySchemaValidator() {
 		// Hibernate should use JdbcMetadaAccessStrategy.INDIVIDUALLY when
 		// AvailableSettings.ENABLE_SYNONYMS is true.
@@ -128,7 +126,7 @@ public class SynonymValidationTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12406")
+	@JiraKey(value = "HHH-12406")
 	public void testSynonymUsingGroupedSchemaValidator() {
 		// Hibernate should use JdbcMetadaAccessStrategy.INDIVIDUALLY when
 		// AvailableSettings.ENABLE_SYNONYMS is true,

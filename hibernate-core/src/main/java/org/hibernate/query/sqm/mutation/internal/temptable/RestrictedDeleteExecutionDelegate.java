@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.mutation.internal.temptable;
 
@@ -25,7 +23,6 @@ import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Joinable;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -34,6 +31,7 @@ import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.query.sqm.mutation.internal.TableKeyExpressionCollector;
+import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -93,7 +91,7 @@ public class RestrictedDeleteExecutionDelegate extends AbstractDeleteExecutionDe
 		final EntityPersister entityDescriptor = getSessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( getSqmDelete().getTarget().getEntityName() );
-		final String hierarchyRootTableName = ( (Joinable) entityDescriptor ).getTableName();
+		final String hierarchyRootTableName = entityDescriptor.getTableName();
 
 		final TableGroup deletingTableGroup = getConverter().getMutatingTableGroup();
 
@@ -116,6 +114,7 @@ public class RestrictedDeleteExecutionDelegate extends AbstractDeleteExecutionDe
 				deletingTableGroup,
 				true,
 				executionContext.getSession().getLoadQueryInfluencers().getEnabledFilters(),
+				false,
 				null,
 				getConverter()
 		);
@@ -140,7 +139,6 @@ public class RestrictedDeleteExecutionDelegate extends AbstractDeleteExecutionDe
 		if ( needsIdTable ) {
 			return executeWithIdTable(
 					predicateCollector.getPredicate(),
-					deletingTableGroup,
 					getConverter().getJdbcParamsBySqmParam(),
 					getConverter().getSqmParameterMappingModelExpressibleResolutions(),
 					executionContextAdapter
@@ -168,7 +166,7 @@ public class RestrictedDeleteExecutionDelegate extends AbstractDeleteExecutionDe
 		assert getEntityDescriptor() == getEntityDescriptor().getRootEntityDescriptor();
 
 		final EntityPersister rootEntityPersister = getEntityDescriptor().getEntityPersister();
-		final String rootTableName = ( (Joinable) rootEntityPersister ).getTableName();
+		final String rootTableName = rootEntityPersister.getTableName();
 		final NamedTableReference rootTableReference = (NamedTableReference) tableGroup.resolveTableReference(
 				tableGroup.getNavigablePath(),
 				rootTableName
@@ -190,8 +188,6 @@ public class RestrictedDeleteExecutionDelegate extends AbstractDeleteExecutionDe
 						getDomainParameterXref(),
 						() -> restrictionSqmParameterResolutions
 				),
-				getSessionFactory().getRuntimeMetamodels().getMappingMetamodel(),
-				navigablePath -> tableGroup,
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")
 					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
@@ -425,7 +421,6 @@ public class RestrictedDeleteExecutionDelegate extends AbstractDeleteExecutionDe
 
 	private int executeWithIdTable(
 			Predicate predicate,
-			TableGroup deletingTableGroup,
 			Map<SqmParameter<?>, List<List<JdbcParameter>>> restrictionSqmParameterResolutions,
 			Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions,
 			ExecutionContext executionContext) {
@@ -436,8 +431,6 @@ public class RestrictedDeleteExecutionDelegate extends AbstractDeleteExecutionDe
 						getDomainParameterXref(),
 						() -> restrictionSqmParameterResolutions
 				),
-				getSessionFactory().getRuntimeMetamodels().getMappingMetamodel(),
-				navigablePath -> deletingTableGroup,
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")
 					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {

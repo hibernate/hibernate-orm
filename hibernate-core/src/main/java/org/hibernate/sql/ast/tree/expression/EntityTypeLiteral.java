@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.expression;
 
@@ -15,7 +13,6 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Queryable;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -23,7 +20,6 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.JavaTypedExpressible;
 
 /**
  * @author Steve Ebersole
@@ -35,7 +31,7 @@ public class EntityTypeLiteral
 
 	public EntityTypeLiteral(EntityPersister entityTypeDescriptor) {
 		this.entityTypeDescriptor = entityTypeDescriptor;
-		this.discriminatorType = (DiscriminatorType) ( (Queryable) entityTypeDescriptor ).getTypeDiscriminatorMetadata().getResolutionType();
+		this.discriminatorType = (DiscriminatorType) entityTypeDescriptor.getTypeDiscriminatorMetadata().getResolutionType();
 	}
 
 	public EntityPersister getEntityTypeDescriptor() {

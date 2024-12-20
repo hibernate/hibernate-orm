@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id;
 
@@ -17,6 +15,7 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.type.Type;
@@ -39,7 +38,7 @@ import static org.hibernate.generator.EventTypeSets.INSERT_ONLY;
  * {@code ExportableProducer}, in case the implementation needs to export
  * objects to the database as part of the process of schema export.
  * <p>
- * The {@link #configure(Type, Properties, ServiceRegistry)} method accepts
+ * The {@link #configure(GeneratorCreationContext, Properties)} method accepts
  * a properties object containing named values. These include:
  * <ul>
  * <li>several "standard" parameters with keys defined as static members of
@@ -51,8 +50,6 @@ import static org.hibernate.generator.EventTypeSets.INSERT_ONLY;
  *     using {@link org.hibernate.annotations.GenericGenerator#parameters()}.
  * </ul>
  * <p>
- * Instances of {@code IdentifierGenerator} are usually created and configured
- * by the {@link org.hibernate.id.factory.IdentifierGeneratorFactory} service.
  * It's not usually correct to use an {@code IdentifierGenerator} with the
  * {@link org.hibernate.annotations.IdGeneratorType} meta-annotation.
  *
@@ -97,8 +94,11 @@ public interface IdentifierGenerator extends BeforeExecutionGenerator, Exportabl
 	 * @param parameters param values, keyed by parameter name
 	 * @param serviceRegistry Access to service that may be needed.
 	 * @throws MappingException If configuration fails.
+	 *
+	 * @deprecated since it overrides a deprecated method
 	 */
-	@Override
+	@SuppressWarnings("removal")
+	@Override @Deprecated( since = "7.0", forRemoval = true )
 	default void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) {}
 
 	/**
@@ -106,24 +106,12 @@ public interface IdentifierGenerator extends BeforeExecutionGenerator, Exportabl
 	 * for example, a sequence or tables.
 	 * <p>
 	 * This method is called just once, after
-	 * {@link #configure(Type, Properties, ServiceRegistry)}.
+	 * {@link #configure(GeneratorCreationContext, Properties)}.
 	 *
 	 * @param database The database instance
 	 */
 	@Override
 	default void registerExportables(Database database) {}
-
-	/**
-	 * Initializes this instance, in particular pre-generates
-	 * SQL as necessary.
-	 * <p>
-	 * This method is called after
-	 * {@link #registerExportables(Database)},
-	 * and before first use.
-	 *
-	 * @param context A context to help generate SQL strings
-	 */
-	default void initialize(SqlStringGenerationContext context) {}
 
 	/**
 	 * Generate a new identifier.
@@ -153,31 +141,5 @@ public interface IdentifierGenerator extends BeforeExecutionGenerator, Exportabl
 	@Override
 	default EnumSet<EventType> getEventTypes() {
 		return INSERT_ONLY;
-	}
-
-	/**
-	 * Determine if this generator allows identifier values to be manually assigned to the entity
-	 * instance before persisting it. This is useful when, for example, needing existing assigned
-	 * values to be used as identifiers and falling back to generated values by default.
-	 *
-	 * @return {@code true} if this generator allows pre-assigned identifier values,
-	 * {@code false} otherwise (default).
-	 *
-	 * @since 6.5
-	 */
-	default boolean allowAssignedIdentifiers() {
-		return false;
-	}
-
-	/**
-	 * Check if JDBC batch inserts are supported.
-	 *
-	 * @return JDBC batch inserts are supported.
-	 *
-	 * @deprecated this method is no longer called
-	 */
-	@Deprecated(since="6.2")
-	default boolean supportsJdbcBatchInserts() {
-		return true;
 	}
 }

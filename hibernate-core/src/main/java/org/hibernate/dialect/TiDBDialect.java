@@ -1,16 +1,18 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
 import org.hibernate.LockOptions;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.MySQLAggregateSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sequence.TiDBSequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.sqm.IntervalType;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
@@ -18,6 +20,8 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorTiDBDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+
+import jakarta.persistence.TemporalType;
 
 /**
  * A {@linkplain Dialect SQL dialect} for TiDB.
@@ -86,6 +90,11 @@ public class TiDBDialect extends MySQLDialect {
 	@Override
 	public SequenceSupport getSequenceSupport() {
 		return TiDBSequenceSupport.INSTANCE;
+	}
+
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		return MySQLAggregateSupport.forTiDB( this );
 	}
 
 	@Override
@@ -176,5 +185,18 @@ public class TiDBDialect extends MySQLDialect {
 	@Override
 	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
 		return FunctionalDependencyAnalysisSupportImpl.TABLE_REFERENCE;
+	}
+
+	@Override @SuppressWarnings("deprecation")
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
+		// TiDB doesn't natively support adding fractional seconds
+		return unit == TemporalUnit.SECOND && intervalType == null
+				? "timestampadd(microsecond,?2*1e6,?3)"
+				: super.timestampaddPattern(unit, temporalType, intervalType);
+	}
+
+	@Override
+	public String getDual() {
+		return "dual";
 	}
 }

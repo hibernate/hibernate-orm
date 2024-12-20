@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
@@ -27,6 +25,8 @@ import org.hibernate.mapping.PersistentClass;
 
 import org.jboss.logging.Logger;
 
+import java.lang.invoke.MethodHandles;
+
 /**
  * An implementation of {@link AbstractCollectionMetadataGenerator} that builds collection metadata
  * and association mappings where the association uses a middle table mapping.
@@ -36,6 +36,7 @@ import org.jboss.logging.Logger;
 public class MiddleTableCollectionMetadataGenerator extends AbstractCollectionMetadataGenerator {
 
 	private static final EnversMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			EnversMessageLogger.class,
 			MiddleTableCollectionMetadataGenerator.class.getName()
 	);
@@ -257,7 +258,7 @@ public class MiddleTableCollectionMetadataGenerator extends AbstractCollectionMe
 	private PersistentClass getReferencedEntityMapping(CollectionMetadataContext context) {
 		return getMetadataBuildingContext().getMetadataCollector().getEntityBinding( context.getReferencedEntityName() );
 	}
-	
+
 	private void storeMiddleEntityRelationInformation(
 			CollectionMetadataContext context,
 			String mappedBy,
@@ -304,5 +305,5 @@ public class MiddleTableCollectionMetadataGenerator extends AbstractCollectionMe
 					referencingIdData
 			);
 		}
-	}	
+	}
 }

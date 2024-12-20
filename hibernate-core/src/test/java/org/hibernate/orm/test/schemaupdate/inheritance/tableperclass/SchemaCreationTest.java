@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemaupdate.inheritance.tableperclass;
 
@@ -27,7 +25,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import static org.hamcrest.core.Is.is;
@@ -56,7 +54,7 @@ public class SchemaCreationTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10553")
+	@JiraKey(value = "HHH-10553")
 	public void testUniqueConstraintIsCorrectlyGenerated() throws Exception {
 
 		final MetadataSources metadataSources = new MetadataSources( ssr );

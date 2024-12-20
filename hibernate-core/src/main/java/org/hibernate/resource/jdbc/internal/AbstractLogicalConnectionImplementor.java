@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.jdbc.internal;
 
@@ -10,6 +8,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.hibernate.TransactionException;
+import org.hibernate.resource.jdbc.LogicalConnection;
 import org.hibernate.resource.jdbc.ResourceRegistry;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.resource.jdbc.spi.PhysicalJdbcTransaction;
@@ -18,6 +17,8 @@ import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.jboss.logging.Logger;
 
 /**
+ * Base support for {@link LogicalConnection} implementations
+ *
  * @author Steve Ebersole
  */
 public abstract class AbstractLogicalConnectionImplementor implements LogicalConnectionImplementor, PhysicalJdbcTransaction {
@@ -83,7 +84,13 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 	public void commit() {
 		try {
 			log.trace( "Preparing to commit transaction via JDBC Connection.commit()" );
-			getConnectionForTransactionManagement().commit();
+			status = TransactionStatus.COMMITTING;
+			if ( isPhysicallyConnected() ) {
+				getConnectionForTransactionManagement().commit();
+			}
+			else {
+				errorIfClosed();
+			}
 			status = TransactionStatus.COMMITTED;
 			log.trace( "Transaction committed via JDBC Connection.commit()" );
 		}
@@ -118,7 +125,13 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 	public void rollback() {
 		try {
 			log.trace( "Preparing to rollback transaction via JDBC Connection.rollback()" );
-			getConnectionForTransactionManagement().rollback();
+			status = TransactionStatus.ROLLING_BACK;
+			if ( isPhysicallyConnected() ) {
+				getConnectionForTransactionManagement().rollback();
+			}
+			else {
+				errorIfClosed();
+			}
 			status = TransactionStatus.ROLLED_BACK;
 			log.trace( "Transaction rolled-back via JDBC Connection.rollback()" );
 		}

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -10,15 +8,18 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Map;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.QueryTimeoutException;
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.SybaseDriverKind;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.SybaseASEAggregateSupport;
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.engine.jdbc.Size;
@@ -31,9 +32,8 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
@@ -56,6 +56,7 @@ import static org.hibernate.type.SqlTypes.DATE;
 import static org.hibernate.type.SqlTypes.TIME;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.XML_ARRAY;
 
 /**
  * A {@linkplain Dialect SQL dialect} for Sybase Adaptive Server Enterprise 11.9 and above.
@@ -127,13 +128,8 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 		// But with jTDS we can't use them as the driver can't handle the types
 		if ( getVersion().isSameOrAfter( 15, 5 ) && getDriverKind() != SybaseDriverKind.JTDS ) {
 			ddlTypeRegistry.addDescriptor(
-					CapacityDependentDdlType.builder( DATE, "bigdatetime", "bigdatetime", this )
-							.withTypeCapacity( 3, "datetime" )
-							.build()
-			);
-			ddlTypeRegistry.addDescriptor(
-					CapacityDependentDdlType.builder( TIME, "bigdatetime", "bigdatetime", this )
-							.withTypeCapacity( 3, "datetime" )
+					CapacityDependentDdlType.builder( TIME, "bigtime", "bigtime", this )
+							.withTypeCapacity( 3, "time" )
 							.build()
 			);
 			ddlTypeRegistry.addDescriptor(
@@ -150,6 +146,11 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 	}
 
 	@Override
+	public int getPreferredSqlTypeCodeForArray() {
+		return XML_ARRAY;
+	}
+
+	@Override
 	public int getMaxVarcharLength() {
 		// the maximum length of a VARCHAR or VARBINARY
 		// column depends on the page size and ASE version
@@ -158,6 +159,27 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 		// largest possible page size is 16k, so that's a
 		// hard upper limit
 		return 16_384;
+	}
+
+	@Override
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry( functionContributions );
+
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory( functionContributions);
+
+		functionFactory.unnest_sybasease();
+		functionFactory.generateSeries_sybasease( getMaximumSeriesSize() );
+		functionFactory.xmltable_sybasease();
+	}
+
+	/**
+	 * Sybase ASE doesn't support the {@code generate_series} function or {@code lateral} recursive CTEs,
+	 * so it has to be emulated with the {@code xmltable} and {@code replicate} functions.
+	 */
+	protected int getMaximumSeriesSize() {
+		// The maximum possible value for replicating an XML tag, so that the resulting string stays below the 16K limit
+		// https://infocenter.sybase.com/help/index.jsp?topic=/com.sybase.infocenter.dc32300.1570/html/sqlug/sqlug31.htm
+		return 4094;
 	}
 
 	private static boolean isAnsiNull(DatabaseMetaData databaseMetaData) {
@@ -177,7 +199,6 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 		return false;
 	}
 
-	@Override
 	public boolean isAnsiNullOn() {
 		return ansiNull;
 	}
@@ -208,6 +229,11 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 		};
 	}
 
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		return SybaseASEAggregateSupport.valueOf( this );
+	}
+
 	/**
 	 * The Sybase ASE {@code BIT} type does not allow
 	 * null values, so we don't use it.
@@ -235,22 +261,6 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 		if ( getDriverKind() == SybaseDriverKind.JTDS ) {
 			jdbcTypeRegistry.addDescriptor( Types.TIMESTAMP_WITH_TIMEZONE, TimestampJdbcType.INSTANCE );
 		}
-	}
-
-	@Override
-	public int resolveSqlTypeLength(
-			String columnTypeName,
-			int jdbcTypeCode,
-			int precision,
-			int scale,
-			int displaySize) {
-		// Sybase ASE reports the "actual" precision in the display size
-		switch ( jdbcTypeCode ) {
-			case Types.REAL:
-			case Types.DOUBLE:
-				return displaySize;
-		}
-		return super.resolveSqlTypeLength( columnTypeName, jdbcTypeCode, precision, scale, displaySize );
 	}
 
 	@Override
@@ -654,6 +664,8 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
 			if ( sqlState != null ) {
 				switch ( sqlState ) {
+					case "HY008":
+						return new QueryTimeoutException( message, sqlException, sql );
 					case "JZ0TO":
 					case "JZ006":
 						return new LockTimeoutException( message, sqlException, sql );
@@ -711,5 +723,10 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 			return super.getLimitHandler();
 		}
 		return new TopLimitHandler(false);
+	}
+
+	@Override
+	public String getDual() {
+		return "(select 1 c1)";
 	}
 }

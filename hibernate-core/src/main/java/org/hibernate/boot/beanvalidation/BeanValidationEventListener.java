@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.beanvalidation;
 
+import java.lang.invoke.MethodHandles;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -20,8 +19,9 @@ import org.hibernate.event.spi.PreInsertEvent;
 import org.hibernate.event.spi.PreInsertEventListener;
 import org.hibernate.event.spi.PreUpdateEvent;
 import org.hibernate.event.spi.PreUpdateEventListener;
+import org.hibernate.event.spi.PreUpsertEvent;
+import org.hibernate.event.spi.PreUpsertEventListener;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -30,9 +30,11 @@ import org.jboss.logging.Logger;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.TraversableResolver;
-import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
+
+import static jakarta.validation.Validation.buildDefaultValidatorFactory;
+import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
 
 /**
  * Event listener used to enable Bean Validation for insert/update/delete events.
@@ -42,9 +44,10 @@ import jakarta.validation.ValidatorFactory;
  */
 //FIXME review exception model
 public class BeanValidationEventListener
-		implements PreInsertEventListener, PreUpdateEventListener, PreDeleteEventListener {
+		implements PreInsertEventListener, PreUpdateEventListener, PreDeleteEventListener, PreUpsertEventListener {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			BeanValidationEventListener.class.getName()
 	);
@@ -60,14 +63,14 @@ public class BeanValidationEventListener
 	 * @param factory The {@code ValidatorFactory} to use to create {@code Validator} instance(s)
 	 * @param settings Configured properties
 	 */
-	public BeanValidationEventListener(ValidatorFactory factory, Map<String,Object> settings, ClassLoaderService classLoaderService) {
+	public BeanValidationEventListener(
+			ValidatorFactory factory, Map<String,Object> settings, ClassLoaderService classLoaderService) {
 		init( factory, settings, classLoaderService );
 	}
 
 	public void initialize(Map<String,Object> settings, ClassLoaderService classLoaderService) {
 		if ( !initialized ) {
-			ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-			init( factory, settings, classLoaderService );
+			init( buildDefaultValidatorFactory(), settings, classLoaderService );
 		}
 	}
 
@@ -80,9 +83,8 @@ public class BeanValidationEventListener
 	public boolean onPreInsert(PreInsertEvent event) {
 		validate(
 				event.getEntity(),
-				event.getPersister().getRepresentationStrategy().getMode(),
 				event.getPersister(),
-				event.getSession().getFactory(),
+				event.getFactory(),
 				GroupsPerOperation.Operation.INSERT
 		);
 		return false;
@@ -91,9 +93,8 @@ public class BeanValidationEventListener
 	public boolean onPreUpdate(PreUpdateEvent event) {
 		validate(
 				event.getEntity(),
-				event.getPersister().getRepresentationStrategy().getMode(),
 				event.getPersister(),
-				event.getSession().getFactory(),
+				event.getFactory(),
 				GroupsPerOperation.Operation.UPDATE
 		);
 		return false;
@@ -102,21 +103,30 @@ public class BeanValidationEventListener
 	public boolean onPreDelete(PreDeleteEvent event) {
 		validate(
 				event.getEntity(),
-				event.getPersister().getRepresentationStrategy().getMode(),
 				event.getPersister(),
-				event.getSession().getFactory(),
+				event.getFactory(),
 				GroupsPerOperation.Operation.DELETE
+		);
+		return false;
+	}
+
+	@Override
+	public boolean onPreUpsert(PreUpsertEvent event) {
+		validate(
+				event.getEntity(),
+				event.getPersister(),
+				event.getFactory(),
+				GroupsPerOperation.Operation.UPSERT
 		);
 		return false;
 	}
 
 	private <T> void validate(
 			T object,
-			RepresentationMode mode,
 			EntityPersister persister,
 			SessionFactoryImplementor sessionFactory,
 			GroupsPerOperation.Operation operation) {
-		if ( object == null || mode != RepresentationMode.POJO ) {
+		if ( object == null || persister.getRepresentationStrategy().getMode() != RepresentationMode.POJO ) {
 			return;
 		}
 		TraversableResolver tr = new HibernateTraversableResolver( persister, associationsPerEntityPersister, sessionFactory );
@@ -126,15 +136,15 @@ public class BeanValidationEventListener
 		final Class<?>[] groups = groupsPerOperation.get( operation );
 		if ( groups.length > 0 ) {
 			final Set<ConstraintViolation<T>> constraintViolations = validator.validate( object, groups );
-			if ( constraintViolations.size() > 0 ) {
-				Set<ConstraintViolation<?>> propagatedViolations = CollectionHelper.setOfSize( constraintViolations.size() );
-				Set<String> classNames = new HashSet<>();
+			if ( !constraintViolations.isEmpty() ) {
+				final Set<ConstraintViolation<?>> propagatedViolations = setOfSize( constraintViolations.size() );
+				final Set<String> classNames = new HashSet<>();
 				for ( ConstraintViolation<?> violation : constraintViolations ) {
 					LOG.trace( violation );
 					propagatedViolations.add( violation );
 					classNames.add( violation.getLeafBean().getClass().getName() );
 				}
-				StringBuilder builder = new StringBuilder();
+				final StringBuilder builder = new StringBuilder();
 				builder.append( "Validation failed for classes " );
 				builder.append( classNames );
 				builder.append( " during " );
@@ -142,20 +152,18 @@ public class BeanValidationEventListener
 				builder.append( " time for groups " );
 				builder.append( toString( groups ) );
 				builder.append( "\nList of constraint violations:[\n" );
-				for (ConstraintViolation<?> violation : constraintViolations) {
+				for ( ConstraintViolation<?> violation : constraintViolations ) {
 					builder.append( "\t" ).append( violation.toString() ).append("\n");
 				}
 				builder.append( "]" );
 
-				throw new ConstraintViolationException(
-						builder.toString(), propagatedViolations
-				);
+				throw new ConstraintViolationException( builder.toString(), propagatedViolations );
 			}
 		}
 	}
 
 	private String toString(Class<?>[] groups) {
-		StringBuilder toString = new StringBuilder( "[" );
+		final StringBuilder toString = new StringBuilder( "[" );
 		for ( Class<?> group : groups ) {
 			toString.append( group.getName() ).append( ", " );
 		}

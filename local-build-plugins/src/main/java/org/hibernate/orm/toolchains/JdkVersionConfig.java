@@ -33,12 +33,14 @@ public class JdkVersionConfig {
 
 	private final boolean explicit;
 	private final JavaLanguageVersion baseline;
+	private final JavaLanguageVersion max;
 	private final MainJdks main;
 	private final TestJdks test;
 
 	public JdkVersionConfig(
 			boolean explicit,
 			JavaLanguageVersion baseline,
+			JavaLanguageVersion max,
 			JavaLanguageVersion mainCompileVersion,
 			JavaLanguageVersion mainReleaseVersion,
 			JavaLanguageVersion testCompileVersion,
@@ -46,6 +48,7 @@ public class JdkVersionConfig {
 			JavaLanguageVersion testLauncherVersion) {
 		this.explicit = explicit;
 		this.baseline = baseline;
+		this.max = max;
 		this.main = new MainJdks( mainCompileVersion, mainReleaseVersion );
 		this.test = new TestJdks( testCompileVersion, testReleaseVersion, testLauncherVersion );
 	}
@@ -58,12 +61,28 @@ public class JdkVersionConfig {
 		return explicit;
 	}
 
-	public JavaLanguageVersion getBaselineVersion() {
+	public JavaLanguageVersion getBaseline() {
 		return baseline;
 	}
 
-	public JavaLanguageVersion getBaseline() {
-		return baseline;
+	public String getBaselineStr() {
+		return getBaseline().toString();
+	}
+
+	public JavaLanguageVersion getBaselineVersion() {
+		return getBaseline();
+	}
+
+	public JavaLanguageVersion getMax() {
+		return max;
+	}
+
+	public String getMaxStr() {
+		return getMax().toString();
+	}
+
+	public JavaLanguageVersion getMaxVersion() {
+		return getMax();
 	}
 
 	public MainJdks getMain() {
@@ -140,6 +159,7 @@ public class JdkVersionConfig {
 			return new JdkVersionConfig(
 					true,
 					baselineJdkVersion,
+					maxSupportedJdkVersion,
 					mainCompileVersion,
 					mainReleaseVersion,
 					testCompileVersion,
@@ -165,6 +185,7 @@ public class JdkVersionConfig {
 			return new JdkVersionConfig(
 					false,
 					baselineJdkVersion,
+					maxSupportedJdkVersion,
 					gradleJdkVersion,
 					baselineJdkVersion,
 					gradleJdkVersion,
@@ -172,12 +193,6 @@ public class JdkVersionConfig {
 					gradleJdkVersion
 			);
 		}
-	}
-
-	@NotNull
-	private static JavaLanguageVersion getJavaLanguageVersion(VersionCatalog jdks, String entryName) {
-		final VersionConstraint versionConstraint = jdks.findVersion( entryName ).orElseThrow();
-		return JavaLanguageVersion.of( versionConstraint.getRequiredVersion() );
 	}
 
 	public static JavaLanguageVersion extractVersion(Settings settings, String propertyName) {

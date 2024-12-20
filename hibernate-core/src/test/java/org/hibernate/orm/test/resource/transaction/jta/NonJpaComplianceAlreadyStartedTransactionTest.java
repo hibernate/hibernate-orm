@@ -1,32 +1,31 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.resource.transaction.jta;
 
 import java.util.Map;
+
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.hibernate.cfg.AvailableSettings;
+
+import org.hibernate.testing.jta.TestingJtaBootstrap;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.junit.Before;
+import org.junit.Test;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.transaction.Status;
 import jakarta.transaction.TransactionManager;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.cfg.AvailableSettings;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.jta.TestingJtaBootstrap;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
-
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-13076")
+@JiraKey("HHH-13076")
 public class NonJpaComplianceAlreadyStartedTransactionTest extends BaseNonConfigCoreFunctionalTestCase {
 	private TransactionManager tm;
 
@@ -51,9 +50,10 @@ public class NonJpaComplianceAlreadyStartedTransactionTest extends BaseNonConfig
 	public void noIllegalStateExceptionShouldBeThrownWhenBeginTxIsCalledWithAnAlreadyActiveTx() throws Exception {
 		tm.begin();
 		try (Session s = openSession()) {
-			Transaction tx = s.beginTransaction();
+			Transaction tx = s.getTransaction();
+			tx.begin();
 			try {
-				s.saveOrUpdate( new TestEntity( "ABC" ) );
+				s.persist( new TestEntity( "ABC" ) );
 				tx.commit();
 			}
 			catch (Exception e) {
@@ -82,6 +82,9 @@ public class NonJpaComplianceAlreadyStartedTransactionTest extends BaseNonConfig
 		private Long id;
 
 		private String stringAttribute;
+
+		public TestEntity() {
+		}
 
 		public TestEntity(String stringAttribute) {
 			this.stringAttribute = stringAttribute;

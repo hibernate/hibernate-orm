@@ -1,15 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.internal;
 
 import java.util.function.Supplier;
 
 import org.hibernate.bytecode.spi.BasicProxyFactory;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.ValueAccess;
 
@@ -22,7 +19,7 @@ public class EmbeddableInstantiatorProxied implements StandardEmbeddableInstanti
 	private final BasicProxyFactory factory;
 
 	public EmbeddableInstantiatorProxied(
-			Class proxiedClass,
+			Class<?> proxiedClass,
 			Supplier<EmbeddableMappingType> embeddableMappingAccess, BasicProxyFactory factory) {
 		this.proxiedClass = proxiedClass;
 		this.embeddableMappingAccess = embeddableMappingAccess;
@@ -30,7 +27,7 @@ public class EmbeddableInstantiatorProxied implements StandardEmbeddableInstanti
 	}
 
 	@Override
-	public Object instantiate(ValueAccess valuesAccess, SessionFactoryImplementor sessionFactory) {
+	public Object instantiate(ValueAccess valuesAccess) {
 		final Object proxy = factory.getProxy();
 		Object[] values = valuesAccess == null ? null : valuesAccess.getValues();
 		if ( values != null ) {
@@ -41,12 +38,12 @@ public class EmbeddableInstantiatorProxied implements StandardEmbeddableInstanti
 	}
 
 	@Override
-	public boolean isInstance(Object object, SessionFactoryImplementor sessionFactory) {
+	public boolean isInstance(Object object) {
 		return proxiedClass.isInstance( object );
 	}
 
 	@Override
-	public boolean isSameClass(Object object, SessionFactoryImplementor sessionFactory) {
+	public boolean isSameClass(Object object) {
 		return object.getClass() == proxiedClass;
 	}
 }

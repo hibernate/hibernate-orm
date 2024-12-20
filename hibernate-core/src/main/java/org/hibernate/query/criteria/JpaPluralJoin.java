@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.criteria;
 
@@ -35,8 +33,8 @@ public interface JpaPluralJoin<O, C, E> extends JpaJoin<O, E>, PluralJoin<O, C, 
 	JpaPluralJoin<O, ? extends C, E> on(Predicate... restrictions);
 
 	@Override
-	<S extends E> JpaPluralJoin<O, ?, S> treatAs(Class<S> treatAsType);
+	<S extends E> JpaTreatedJoin<O, E, S> treatAs(Class<S> treatAsType);
 
 	@Override
-	<S extends E> JpaPluralJoin<O, ?, S> treatAs(EntityDomainType<S> treatAsType);
+	<S extends E> JpaTreatedJoin<O, E, S> treatAs(EntityDomainType<S> treatAsType);
 }

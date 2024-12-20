@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.collectionelement;
 
@@ -16,7 +14,7 @@ import org.hibernate.orm.test.annotations.collectionelement.ElementCollectionOfE
 import org.hibernate.orm.test.annotations.collectionelement.ElementCollectionOfEmbeddableWithEntityWithEntityCollectionTest.Plan;
 import org.hibernate.orm.test.annotations.collectionelement.ElementCollectionOfEmbeddableWithEntityWithEntityCollectionTest.SubPlan;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -48,7 +46,7 @@ import static org.hibernate.annotations.FetchMode.SUBSELECT;
 		}
 )
 @SessionFactory( useCollectingStatementInspector = true )
-@TestForIssue(jiraKey = "HHH-15713")
+@JiraKey(value = "HHH-15713")
 public class ElementCollectionOfEmbeddableWithEntityWithEntityCollectionTest {
 
 	@BeforeEach

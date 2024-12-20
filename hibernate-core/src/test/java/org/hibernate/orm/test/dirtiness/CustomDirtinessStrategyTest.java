@@ -1,12 +1,8 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.dirtiness;
-
-import java.io.Serializable;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.Interceptor;
@@ -47,7 +43,9 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 	public void testOnlyCustomStrategy() {
 		Session session = openSession();
 		session.beginTransaction();
-		Long id = (Long) session.save( new Thing( INITIAL_NAME ) );
+		Thing t = new Thing( INITIAL_NAME );
+		session.persist( t );
+		Long id = t.getId();
 		session.getTransaction().commit();
 		session.close();
 
@@ -69,7 +67,7 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 		session.beginTransaction();
 		thing = session.get( Thing.class, id );
 		assertEquals( SUBSEQUENT_NAME, thing.getName() );
-		session.delete( thing );
+		session.remove( thing );
 		session.getTransaction().commit();
 		session.close();
 	}
@@ -78,7 +76,9 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 	public void testCustomStrategyWithFlushInterceptor() {
 		Session session = openSession();
 		session.beginTransaction();
-		Long id = (Long) session.save( new Thing( INITIAL_NAME ) );
+		Thing t = new Thing( INITIAL_NAME );
+		session.persist( t );
+		Long id = t.getId();
 		session.getTransaction().commit();
 		session.close();
 
@@ -101,7 +101,7 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 		session.beginTransaction();
 		thing = session.get( Thing.class, id );
 		assertEquals( SUBSEQUENT_NAME, thing.getName() );
-		session.delete( thing );
+		session.remove( thing );
 		session.getTransaction().commit();
 		session.close();
 	}
@@ -110,7 +110,9 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 	public void testOnlyCustomStrategyConsultedOnNonDirty() {
 		Session session = openSession();
 		session.beginTransaction();
-		Long id = (Long) session.save( new Thing( INITIAL_NAME ) );
+		Thing t = new Thing( INITIAL_NAME );
+		session.persist( t );
+		Long id = t.getId();
 		session.getTransaction().commit();
 		session.close();
 
@@ -197,7 +199,7 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 		@Override
 		public boolean onFlushDirty(
 				Object entity,
-				Serializable id,
+				Object id,
 				Object[] currentState,
 				Object[] previousState,
 				String[] propertyNames,

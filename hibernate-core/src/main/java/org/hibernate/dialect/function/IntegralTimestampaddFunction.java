@@ -1,16 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.ReturnableType;
-import org.hibernate.query.sqm.BinaryArithmeticOperator;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -27,6 +24,9 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.Arrays;
 import java.util.List;
+
+import static org.hibernate.query.sqm.BinaryArithmeticOperator.DIVIDE;
+import static org.hibernate.query.sqm.BinaryArithmeticOperator.MULTIPLY;
 
 /**
  * Used in place of {@link TimestampaddFunction} for databases which don't
@@ -110,11 +110,10 @@ public class IntegralTimestampaddFunction
 				? magnitude
 				: new BinaryArithmeticExpression(
 						magnitude,
-						conversionFactor.charAt(0) == '*'
-								? BinaryArithmeticOperator.MULTIPLY
-								: BinaryArithmeticOperator.DIVIDE,
+						conversionFactor.charAt(0) == '*' ? MULTIPLY : DIVIDE,
 						new QueryLiteral<>(
-								expressionType.getExpressibleJavaType().fromString( conversionFactor.substring(1) ),
+								expressionType.getExpressibleJavaType()
+										.fromString( conversionFactor.substring(1) ),
 								expressionType
 						),
 						expressionType
@@ -125,9 +124,9 @@ public class IntegralTimestampaddFunction
 		final JdbcType jdbcType = magnitude.getExpressionType().getSingleJdbcMapping().getJdbcType();
 		if ( jdbcType.isFloat() ) {
 			// We need to multiply the magnitude by the conversion factor and cast to int
-			// Use second by default and nanosecond if we encounter fractional seconds
+			// Use SECOND by default and NATIVE if we encounter fractional seconds
 			return field.getUnit() == TemporalUnit.SECOND
-					? TemporalUnit.NANOSECOND
+					? TemporalUnit.NATIVE
 					: TemporalUnit.SECOND;
 		}
 		else {

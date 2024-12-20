@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.test.stat;
 
@@ -113,6 +111,7 @@ public class MicrometerCacheStatisticsTest extends BaseNonConfigCoreFunctionalTe
 		Assert.assertNotNull(registry.get("hibernate.entities.inserts").functionCounter());
 		Assert.assertNotNull(registry.get("hibernate.entities.loads").functionCounter());
 		Assert.assertNotNull(registry.get("hibernate.entities.updates").functionCounter());
+		Assert.assertNotNull(registry.get("hibernate.entities.upserts").functionCounter());
 
 		Assert.assertNotNull(registry.get("hibernate.collections.deletes").functionCounter());
 		Assert.assertNotNull(registry.get("hibernate.collections.fetches").functionCounter());
@@ -144,7 +143,7 @@ public class MicrometerCacheStatisticsTest extends BaseNonConfigCoreFunctionalTe
 		Session session = openSession();
 		session.beginTransaction();
 		Person person = new Person( 1, "testAcct");
-		session.save( person );
+		session.persist( person );
 		session.getTransaction().commit();
 		session.close();
 
@@ -171,7 +170,7 @@ public class MicrometerCacheStatisticsTest extends BaseNonConfigCoreFunctionalTe
 		// clean up
 		session = openSession();
 		session.beginTransaction();
-		session.delete( person );
+		session.remove( person );
 		session.getTransaction().commit();
 		session.close();
 

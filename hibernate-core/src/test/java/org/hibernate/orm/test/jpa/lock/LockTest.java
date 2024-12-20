@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.lock;
 
@@ -15,15 +13,18 @@ import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import jakarta.persistence.Timeout;
+import org.hibernate.Hibernate;
+import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.TransactionException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.CockroachDialect;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -36,7 +37,7 @@ import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.hibernate.testing.util.ExceptionUtil;
 import org.junit.Test;
@@ -45,7 +46,6 @@ import org.jboss.logging.Logger;
 
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.LockTimeoutException;
-import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.PessimisticLockException;
 import jakarta.persistence.Query;
@@ -85,7 +85,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		} );
 
 		doInJPA( this::entityManagerFactory, em -> {
-			Map<String, Object> properties = new HashMap<String, Object>();
+			Map<String, Object> properties = new HashMap<>();
 			properties.put( AvailableSettings.JAKARTA_LOCK_TIMEOUT, 0L );
 			em.find( Lock.class, 1, LockModeType.PESSIMISTIC_WRITE, properties );
 		} );
@@ -95,12 +95,12 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			em.remove( _lock );
 		} );
 	}
-	
+
 	@Test(timeout = 5 * 1000) //5 seconds
-	@TestForIssue( jiraKey = "HHH-7252" )
-	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class, 
-		                    comment = "Test verifies proper exception throwing when a lock timeout is specified.",
-                              jiraKey = "HHH-7252" )
+	@JiraKey( value = "HHH-7252" )
+	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class,
+							comment = "Test verifies proper exception throwing when a lock timeout is specified.",
+							jiraKey = "HHH-7252" )
 	@SkipForDialect(value = CockroachDialect.class, comment = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
 	@SkipForDialect(value = AltibaseDialect.class, comment = "Altibase close socket after lock timeout occurred")
 	public void testFindWithPessimisticWriteLockTimeoutException() {
@@ -119,7 +119,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			doInJPA( this::entityManagerFactory, entityManager -> {
 				TransactionUtil.withJdbcTimeout( entityManager.unwrap( Session.class ), () -> {
 					try {
-						Map<String, Object> properties = new HashMap<String, Object>();
+						Map<String, Object> properties = new HashMap<>();
 						properties.put( AvailableSettings.JAKARTA_LOCK_TIMEOUT, 0L );
 
 						entityManager.find( Lock.class, lock.getId(), LockModeType.PESSIMISTIC_WRITE, properties );
@@ -147,7 +147,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test(timeout = 5 * 1000) //5 seconds
-	@TestForIssue( jiraKey = "HHH-13364" )
+	@JiraKey( value = "HHH-13364" )
 	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class,
 			comment = "Test verifies proper exception throwing when a lock timeout is specified for Query#getSingleResult.",
 			jiraKey = "HHH-13364" )
@@ -184,8 +184,8 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 					}
 					catch (PersistenceException pe) {
 						log.info("EntityManager.find() for PESSIMISTIC_WRITE with timeout of 0 threw a PersistenceException.\n" +
-										 "This is likely a consequence of " + getDialect().getClass().getName() + " not properly mapping SQL errors into the correct HibernateException subtypes.\n" +
-										 "See HHH-7251 for an example of one such situation.", pe);
+										"This is likely a consequence of " + getDialect().getClass().getName() + " not properly mapping SQL errors into the correct HibernateException subtypes.\n" +
+										"See HHH-7251 for an example of one such situation.", pe);
 						fail( "EntityManager should be throwing LockTimeoutException." );
 					}
 				} );
@@ -194,7 +194,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test(timeout = 5 * 1000) //5 seconds
-	@TestForIssue( jiraKey = "HHH-13364" )
+	@JiraKey( value = "HHH-13364" )
 	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class,
 			comment = "Test verifies proper exception throwing when a lock timeout is specified for Query#getResultList.",
 			jiraKey = "HHH-13364" )
@@ -244,7 +244,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test(timeout = 5 * 1000) //5 seconds
-	@TestForIssue( jiraKey = "HHH-13364" )
+	@JiraKey( value = "HHH-13364" )
 	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class,
 			comment = "Test verifies proper exception throwing when a lock timeout is specified for NamedQuery#getResultList.",
 			jiraKey = "HHH-13364" )
@@ -305,7 +305,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 
 		doInJPA( this::entityManagerFactory, _entityManagaer -> {
 			Map<String, Object> properties = new HashMap<>();
-			properties.put( AvailableSettings.JPA_LOCK_TIMEOUT, LockOptions.SKIP_LOCKED );
+			properties.put( AvailableSettings.JAKARTA_LOCK_TIMEOUT, LockOptions.SKIP_LOCKED );
 			_entityManagaer.find( Lock.class, lock.getId(), LockModeType.PESSIMISTIC_READ, properties );
 
 			try {
@@ -389,7 +389,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		}
 		return "UPDATE Lock_ SET name = :name where id = :id";
 	}
-	
+
 	@Test
 	public void testLockRead() throws Exception {
 		final Lock lock = new Lock();
@@ -485,9 +485,9 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 				// To get the same functionality as prior release, change the  LockModeType.READ lock to:
 				// em.lock(lock,LockModeType.PESSIMISTIC_READ);
 				em.lock( _lock, LockModeType.READ );
-				fail( "expected OptimisticLockException exception" );
+				fail( "expected HibernateException exception" );
 			}
-			catch ( OptimisticLockException expected ) {
+			catch ( HibernateException expected ) {
 			}
 		} );
 
@@ -703,9 +703,9 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 							Lock lock2 = _entityManager.getReference( Lock.class, lock.getId() );
 							lock2.getName();		//  force entity to be read
 							log.info( "testContendedPessimisticReadLockTimeout: (BG) read write-locked entity" );
-							Map<String, Object> props = new HashMap<String, Object>();
+							Map<String, Object> props = new HashMap<>();
 							// timeout is in milliseconds
-							props.put( AvailableSettings.JPA_LOCK_TIMEOUT, 1000 );
+							props.put( AvailableSettings.JAKARTA_LOCK_TIMEOUT, 1000 );
 							try {
 								_entityManager.lock( lock2, LockModeType.PESSIMISTIC_READ, props );
 							}
@@ -786,9 +786,9 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 							Lock lock2 = _entityManager.getReference( Lock.class, lock.getId() );
 							lock2.getName();		//  force entity to be read
 							log.info( "testContendedPessimisticWriteLockTimeout: (BG) read write-locked entity" );
-							Map<String, Object> props = new HashMap<String, Object>();
+							Map<String, Object> props = new HashMap<>();
 							// timeout is in milliseconds
-							props.put( AvailableSettings.JPA_LOCK_TIMEOUT, 1000 );
+							props.put( AvailableSettings.JAKARTA_LOCK_TIMEOUT, 1000 );
 							try {
 								_entityManager.lock( lock2, LockModeType.PESSIMISTIC_WRITE, props );
 							}
@@ -850,7 +850,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	@RequiresDialect(OracleDialect.class)
 	@RequiresDialect(PostgreSQLDialect.class)
-    @RequiresDialectFeature( DialectChecks.SupportsLockTimeouts.class )
+	@RequiresDialectFeature( DialectChecks.SupportsLockTimeouts.class )
 	public void testContendedPessimisticWriteLockNoWait() throws Exception {
 
 		final CountDownLatch latch = new CountDownLatch( 1 );
@@ -867,11 +867,8 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 							Lock lock2 = _entityManager.getReference( Lock.class, lock.getId() );
 							lock2.getName();		//  force entity to be read
 							log.info( "testContendedPessimisticWriteLockNoWait: (BG) read write-locked entity" );
-							Map<String, Object> props = new HashMap<String, Object>();
-							// timeout of zero means no wait (for lock)
-							props.put( AvailableSettings.JPA_LOCK_TIMEOUT, 0 );
 							try {
-								_entityManager.lock( lock2, LockModeType.PESSIMISTIC_WRITE, props );
+								_entityManager.lock( lock2, LockModeType.PESSIMISTIC_WRITE, Timeout.ms(0) );
 							}
 							catch ( LockTimeoutException e ) {
 								// success
@@ -904,8 +901,8 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 
 			doInJPA( this::entityManagerFactory, em -> {
 				Lock _lock = em.getReference( Lock.class, lock.getId() );
+				assertFalse( Hibernate.isInitialized(_lock) );
 				em.lock( _lock, LockModeType.PESSIMISTIC_WRITE );
-				final Integer id = _lock.getId();
 				_lock.getName();		// force entity to be read
 				log.info( "testContendedPessimisticWriteLockNoWait: got write lock" );
 
@@ -1019,7 +1016,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	public void testQueryTimeoutEMProps() throws Exception {
 		final CountDownLatch latch = new CountDownLatch( 1 );
 
-		final Map<String, Object> timeoutProps = new HashMap<String, Object>();
+		final Map<String, Object> timeoutProps = new HashMap<>();
 		timeoutProps.put( HINT_SPEC_QUERY_TIMEOUT, 500 ); // 1 sec timeout (should round up)
 		final Lock lock = new Lock();
 
@@ -1106,8 +1103,8 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 
 		final CountDownLatch latch = new CountDownLatch( 1 );
 
-		final Map<String, Object> timeoutProps = new HashMap<String, Object>();
-		timeoutProps.put( AvailableSettings.JPA_LOCK_TIMEOUT, 1000 ); // 1 second timeout
+		final Map<String, Object> timeoutProps = new HashMap<>();
+		timeoutProps.put( AvailableSettings.JAKARTA_LOCK_TIMEOUT, 1000 ); // 1 second timeout
 		final Lock lock = new Lock();
 
 		FutureTask<Boolean> bgTask = new FutureTask<>(
@@ -1156,8 +1153,8 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 
 			doInJPA( this::entityManagerFactory, em -> {
 				Lock _lock = em.getReference( Lock.class, lock.getId() );
+				assertFalse( Hibernate.isInitialized(_lock) );
 				em.lock( _lock, LockModeType.PESSIMISTIC_WRITE );
-				final Integer id = _lock.getId();
 				_lock.getName();		// force entity to be read
 				log.info( "testLockTimeoutEMProps: got write lock" );
 
@@ -1181,11 +1178,11 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test(timeout = 70 * 1000) //70 seconds
-	@TestForIssue( jiraKey = "HHH-13135" )
+	@JiraKey( value = "HHH-13135" )
 	@SkipForDialect(value = MySQLDialect.class, strictMatching = true, comment = "With InnoDB, a FK constraint check acquires a shared lock that isn't compatible with an exclusive lock")
 	@SkipForDialect(value = MariaDBDialect.class, strictMatching = true, comment = "With InnoDB, a FK constraint check acquires a shared lock that isn't compatible with an exclusive lock")
 	@SkipForDialect(value = HSQLDialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
-	@SkipForDialect(value = AbstractHANADialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
+	@SkipForDialect(value = HANADialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
 	@SkipForDialect(value = CockroachDialect.class, comment = "Cockroach supports the 'for no key update' syntax but it doesn't work")
 	@SkipForDialect(value = FirebirdDialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
 	@SkipForDialect(value = AltibaseDialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
@@ -1220,11 +1217,11 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test(timeout = 70 * 1000) //70 seconds
-	@TestForIssue( jiraKey = "HHH-13135" )
+	@JiraKey( value = "HHH-13135" )
 	@SkipForDialect(value = MySQLDialect.class, strictMatching = true, comment = "With InnoDB, a FK constraint check acquires a shared lock that isn't compatible with an exclusive lock")
 	@SkipForDialect(value = MariaDBDialect.class, strictMatching = true, comment = "With InnoDB, a FK constraint check acquires a shared lock that isn't compatible with an exclusive lock")
 	@SkipForDialect(value = HSQLDialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
-	@SkipForDialect(value = AbstractHANADialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
+	@SkipForDialect(value = HANADialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
 	@SkipForDialect(value = CockroachDialect.class, comment = "Cockroach supports the 'for no key update' syntax but it doesn't work")
 	@SkipForDialect(value = FirebirdDialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
 	@SkipForDialect(value = AltibaseDialect.class, comment = "FK constraint checks are not compatible with exclusive locks")

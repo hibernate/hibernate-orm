@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.internal;
 
@@ -12,7 +10,7 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.named.FetchMemento;
 import org.hibernate.query.results.FetchBuilder;
-import org.hibernate.query.results.ImplicitAttributeFetchBuilder;
+import org.hibernate.query.results.internal.implicit.ImplicitAttributeFetchBuilder;
 
 /**
  * @author Steve Ebersole

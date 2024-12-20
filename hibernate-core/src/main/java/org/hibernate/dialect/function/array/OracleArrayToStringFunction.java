@@ -1,26 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.array;
 
 import java.util.List;
 
 import org.hibernate.query.ReturnableType;
-import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
-import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
-import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
-import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.spi.TypeConfiguration;
-
-import static org.hibernate.query.sqm.produce.function.FunctionParameterType.ANY;
-import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
 
 /**
  * Oracle array_to_string function.
@@ -46,6 +37,13 @@ public class OracleArrayToStringFunction extends ArrayToStringFunction {
 		sqlAstArguments.get( 0 ).accept( walker );
 		sqlAppender.append( ',' );
 		sqlAstArguments.get( 1 ).accept( walker );
+		if ( sqlAstArguments.size() > 2 ) {
+			sqlAppender.append( ',' );
+			sqlAstArguments.get( 2 ).accept( walker );
+		}
+		else {
+			sqlAppender.append( ",null" );
+		}
 		sqlAppender.append( ')' );
 	}
 }

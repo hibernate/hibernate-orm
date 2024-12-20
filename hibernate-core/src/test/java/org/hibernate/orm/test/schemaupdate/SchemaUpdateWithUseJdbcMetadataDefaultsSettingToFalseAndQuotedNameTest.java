@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemaupdate;
 
@@ -16,6 +14,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
+import org.hibernate.annotations.processing.Exclude;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -28,7 +27,7 @@ import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
 import org.hibernate.tool.schema.TargetType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -37,7 +36,8 @@ import org.junit.jupiter.params.provider.EnumSource;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
-@TestForIssue(jiraKey = "HHH-13788")
+@JiraKey(value = "HHH-13788")
+@Exclude
 public class SchemaUpdateWithUseJdbcMetadataDefaultsSettingToFalseAndQuotedNameTest {
 
 	private File updateOutputFile;

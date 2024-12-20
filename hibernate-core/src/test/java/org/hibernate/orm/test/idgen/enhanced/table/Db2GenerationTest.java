@@ -1,27 +1,31 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.idgen.enhanced.table;
 
 import java.util.Properties;
 
-import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.id.enhanced.TableGenerator;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
+import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Table;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.Type;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
@@ -31,26 +35,65 @@ import static org.junit.Assert.assertThat;
 
 public class Db2GenerationTest {
 	@Test
-	@TestForIssue( jiraKey = "HHH-9850" )
+	@JiraKey( value = "HHH-9850" )
 	public void testNewGeneratorTableCreationOnDb2() {
 		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, DB2Dialect.class.getName() )
 				.build();
 
 		try {
-			final Metadata metadata = new MetadataSources( ssr ).buildMetadata();
+			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr ).buildMetadata();
 
 			assertEquals( 0, metadata.getDatabase().getDefaultNamespace().getTables().size() );
 
 			final TableGenerator generator = new TableGenerator();
 
 			generator.configure(
-					metadata.getDatabase()
-							.getTypeConfiguration()
-							.getBasicTypeRegistry()
-							.resolve( StandardBasicTypes.INTEGER ),
-					new Properties(),
-					ssr
+					new GeneratorCreationContext() {
+						@Override
+						public Database getDatabase() {
+							return metadata.getDatabase();
+						}
+
+						@Override
+						public ServiceRegistry getServiceRegistry() {
+							return ssr;
+						}
+
+						@Override
+						public String getDefaultCatalog() {
+							return "";
+						}
+
+						@Override
+						public String getDefaultSchema() {
+							return "";
+						}
+
+						@Override
+						public PersistentClass getPersistentClass() {
+							return null;
+						}
+
+						@Override
+						public RootClass getRootClass() {
+							return null;
+						}
+
+						@Override
+						public Property getProperty() {
+							return null;
+						}
+
+						@Override
+						public Type getType() {
+							return metadata.getDatabase()
+									.getTypeConfiguration()
+									.getBasicTypeRegistry()
+									.resolve( StandardBasicTypes.INTEGER );
+						}
+					},
+					new Properties()
 			);
 
 			generator.registerExportables( metadata.getDatabase() );

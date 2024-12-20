@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bootstrap.binding.annotations.attributeOverrides;
 
@@ -26,11 +24,9 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.type.BasicType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
-import org.hibernate.testing.orm.junit.FailureExpected;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -64,7 +60,7 @@ public class PluralEmbeddedOverrideTests {
 
 	@SuppressWarnings("rawtypes")
 	@Test
-	@TestForIssue(jiraKey = "HHH-8630")
+	@JiraKey(value = "HHH-8630")
 	public void testModel(DomainModelScope scope) {
 		final PersistentClass entityBinding = scope.getDomainModel().getEntityBinding( AggregatedTypeValue.class.getName() );
 		final Property attributesBinding = entityBinding.getProperty( "attributes" );

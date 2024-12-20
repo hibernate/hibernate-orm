@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.collection.spi;
 
@@ -62,7 +60,7 @@ public interface PersistentCollection<E> extends LazyInitializable {
 	 *
 	 * @return The owner
 	 */
-	Object getOwner();
+	@Nullable Object getOwner();
 
 	/**
 	 * Set the reference to the owning entity
@@ -405,14 +403,14 @@ public interface PersistentCollection<E> extends LazyInitializable {
 	 *
 	 * @return the current collection key value
 	 */
-	Object getKey();
+	@Nullable Object getKey();
 
 	/**
 	 * Get the current role name
 	 *
 	 * @return the collection role name
 	 */
-	String getRole();
+	@Nullable String getRole();
 
 	/**
 	 * Is the collection unreferenced?
@@ -461,7 +459,7 @@ public interface PersistentCollection<E> extends LazyInitializable {
 	 *
 	 * @return The internally stored snapshot state
 	 */
-	Serializable getStoredSnapshot();
+	@Nullable Serializable getStoredSnapshot();
 
 	/**
 	 * Mark the collection as dirty

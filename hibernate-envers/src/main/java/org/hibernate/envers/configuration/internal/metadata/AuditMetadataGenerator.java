@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
+import java.lang.invoke.MethodHandles;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Locale;
@@ -51,6 +50,7 @@ import org.jboss.logging.Logger;
 public final class AuditMetadataGenerator extends AbstractMetadataGenerator {
 
 	private static final EnversMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			EnversMessageLogger.class,
 			AuditMetadataGenerator.class.getName()
 	);
@@ -152,7 +152,7 @@ public final class AuditMetadataGenerator extends AbstractMetadataGenerator {
 			org.hibernate.mapping.Join join = joins.next();
 
 			// Checking if all of the join properties are audited
-			if ( !checkPropertiesAudited( join.getPropertyIterator(), auditingData ) ) {
+			if ( !checkPropertiesAudited( join.getProperties().iterator(), auditingData ) ) {
 				continue;
 			}
 
@@ -205,7 +205,7 @@ public final class AuditMetadataGenerator extends AbstractMetadataGenerator {
 			if ( entityJoin != null ) {
 				addProperties(
 						entityJoin,
-						join.getPropertyIterator(),
+						join.getProperties().iterator(),
 						currentMapper,
 						auditingData,
 						entityName,

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
@@ -25,6 +23,8 @@ import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Descriptor for the Java side of a value mapping. A {@code JavaType} is always
@@ -222,18 +222,28 @@ public interface JavaType<T> extends Serializable {
 	}
 
 	/**
+	 * Whether to use {@link Object#equals(Object)} and {@link Object#hashCode()}
+	 * or {@link #areEqual(Object, Object)} and {@link #extractHashCode(Object)}
+	 * for objects of this java type.
+	 * This is useful to avoid mega-morphic callsites.
+	 */
+	default boolean useObjectEqualsHashCode() {
+		return false;
+	}
+
+	/**
 	 * Extract a loggable representation of the given value.
 	 *
 	 * @param value The value for which to extract a loggable representation.
 	 *
 	 * @return The loggable representation
 	 */
-	default String extractLoggableRepresentation(T value) {
-		return toString( value );
+	default String extractLoggableRepresentation(@Nullable T value) {
+		return value == null ? "null" : toString( value );
 	}
 
 	default String toString(T value) {
-		return value == null ? "null" : value.toString();
+		return value.toString();
 	}
 
 	T fromString(CharSequence string);
@@ -311,24 +321,11 @@ public interface JavaType<T> extends Serializable {
 	 * Creates the {@link JavaType} for the given {@link ParameterizedType}
 	 * based on this {@link JavaType} registered for the raw type.
 	 *
-	 * @deprecated Use {@link #createJavaType(ParameterizedType, TypeConfiguration)} instead
-	 */
-	@Deprecated(since = "6.1")
-	default JavaType<T> createJavaType(ParameterizedType parameterizedType) {
-		return this;
-	}
-
-	/**
-	 * Creates the {@link JavaType} for the given {@link ParameterizedType}
-	 * based on this {@link JavaType} registered for the raw type.
-	 *
 	 * @since 6.1
 	 */
 	@Incubating
-	default JavaType<T> createJavaType(
-			ParameterizedType parameterizedType,
-			TypeConfiguration typeConfiguration) {
-		return createJavaType( parameterizedType );
+	default JavaType<T> createJavaType(ParameterizedType parameterizedType, TypeConfiguration typeConfiguration) {
+		return this;
 	}
 
 	/**
@@ -352,7 +349,7 @@ public interface JavaType<T> extends Serializable {
 	 * @since 6.2
 	 */
 	@Incubating
-	default String getCheckCondition(String columnName, JdbcType jdbcType, BasicValueConverter<?, ?> converter, Dialect dialect) {
+	default String getCheckCondition(String columnName, JdbcType jdbcType, BasicValueConverter<T, ?> converter, Dialect dialect) {
 		return null;
 	}
 }

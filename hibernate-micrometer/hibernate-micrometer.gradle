@@ -1,6 +1,6 @@
 description = 'Integration for Micrometer metrics into Hibernate as a metrics collection package'
 
-apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+apply from: rootProject.file( 'gradle/relocated-published-java-module.gradle' )
 
 dependencies {
     implementation project( ':hibernate-core' )
@@ -8,7 +8,7 @@ dependencies {
 
     testImplementation project( ':hibernate-testing' )
 
-    testAnnotationProcessor project( ':hibernate-jpamodelgen' )
+    testAnnotationProcessor project( ':hibernate-processor' )
     testCompileOnly jakartaLibs.annotation
 }
 

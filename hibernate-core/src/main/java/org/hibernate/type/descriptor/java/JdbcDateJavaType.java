@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
@@ -19,7 +17,6 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 
 import org.hibernate.HibernateException;
-import org.hibernate.internal.util.CharSequenceHelper;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -27,6 +24,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
+
+import static org.hibernate.internal.util.CharSequenceHelper.subSequence;
 
 /**
  * Descriptor for {@link java.sql.Date} handling.
@@ -39,15 +38,13 @@ import jakarta.persistence.TemporalType;
 public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 	public static final JdbcDateJavaType INSTANCE = new JdbcDateJavaType();
 
-	public static final String DATE_FORMAT = "dd MMMM yyyy";
-
 	/**
 	 * Intended for use in reading HQL literals and writing SQL literals
 	 *
-	 * @see #DATE_FORMAT
+	 * @see DateTimeFormatter#ISO_LOCAL_DATE
 	 */
-	@SuppressWarnings("unused")
 	public static final DateTimeFormatter LITERAL_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
+
 	private static final DateTimeFormatter ENCODED_FORMATTER = new DateTimeFormatterBuilder()
 			.append( DateTimeFormatter.ISO_DATE )
 			.optionalStart()
@@ -68,7 +65,7 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 	public boolean isInstance(Object value) {
 		// this check holds true for java.sql.Date as well
 		return value instanceof Date
-				&& !( value instanceof java.sql.Time );
+			&& !( value instanceof java.sql.Time );
 	}
 
 	@Override
@@ -91,8 +88,8 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 		calendar2.setTime( another );
 
 		return calendar1.get( Calendar.MONTH ) == calendar2.get( Calendar.MONTH )
-				&& calendar1.get( Calendar.DAY_OF_MONTH ) == calendar2.get( Calendar.DAY_OF_MONTH )
-				&& calendar1.get( Calendar.YEAR ) == calendar2.get( Calendar.YEAR );
+			&& calendar1.get( Calendar.DAY_OF_MONTH ) == calendar2.get( Calendar.DAY_OF_MONTH )
+			&& calendar1.get( Calendar.YEAR ) == calendar2.get( Calendar.YEAR );
 	}
 
 	@Override
@@ -145,7 +142,7 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 		}
 
 		if ( java.sql.Timestamp.class.isAssignableFrom( type ) ) {
-			return new java.sql.Timestamp( value.getTime() );
+			return new java.sql.Timestamp( unwrapDateEpoch( value ) );
 		}
 
 		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
@@ -156,20 +153,32 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 	}
 
 	private LocalDate unwrapLocalDate(Date value) {
-		return value instanceof java.sql.Date
-				? ( (java.sql.Date) value ).toLocalDate()
-				: new java.sql.Date( value.getTime() ).toLocalDate();
+		return value instanceof java.sql.Date date
+				? date.toLocalDate()
+				: new java.sql.Date( unwrapDateEpoch( value ) ).toLocalDate();
 	}
 
 	private java.sql.Date unwrapSqlDate(Date value) {
-		return value instanceof java.sql.Date
-				? (java.sql.Date) value
-				: new java.sql.Date( value.getTime() );
+		if ( value instanceof java.sql.Date date ) {
+			final long dateEpoch = toDateEpoch( date.getTime() );
+			return dateEpoch == date.getTime() ? date : new java.sql.Date( dateEpoch );
+		}
+		return new java.sql.Date( unwrapDateEpoch( value ) );
 
 	}
 
 	private static long unwrapDateEpoch(Date value) {
-		return value.getTime();
+		return toDateEpoch( value.getTime() );
+	}
+
+	private static long toDateEpoch(long value) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTimeInMillis( value );
+		calendar.set(Calendar.HOUR_OF_DAY, 0);
+		calendar.clear(Calendar.MINUTE);
+		calendar.clear(Calendar.SECOND);
+		calendar.clear(Calendar.MILLISECOND);
+		return calendar.getTimeInMillis();
 	}
 
 	@Override
@@ -178,24 +187,24 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 			return null;
 		}
 
-		if ( value instanceof java.sql.Date ) {
-			return (java.sql.Date) value;
+		if ( value instanceof java.sql.Date date ) {
+			return date;
 		}
 
-		if ( value instanceof Long ) {
-			return new java.sql.Date( (Long) value );
+		if ( value instanceof Long longValue ) {
+			return new java.sql.Date( toDateEpoch( longValue ) );
 		}
 
-		if ( value instanceof Calendar ) {
-			return new java.sql.Date( ( (Calendar) value ).getTimeInMillis() );
+		if ( value instanceof Calendar calendar ) {
+			return new java.sql.Date( toDateEpoch( calendar.getTimeInMillis() ) );
 		}
 
-		if ( value instanceof Date ) {
-			return new java.sql.Date( ( (Date) value ).getTime() );
+		if ( value instanceof Date date ) {
+			return unwrapSqlDate( date );
 		}
 
-		if ( value instanceof LocalDate ) {
-			return java.sql.Date.valueOf( (LocalDate) value );
+		if ( value instanceof LocalDate localDate ) {
+			return java.sql.Date.valueOf( localDate );
 		}
 
 		throw unknownWrap( value.getClass() );
@@ -225,17 +234,11 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 	@Override
 	public Date fromEncodedString(CharSequence charSequence, int start, int end) {
 		try {
-			final TemporalAccessor accessor = ENCODED_FORMATTER.parse(
-					CharSequenceHelper.subSequence(
-							charSequence,
-							start,
-							end
-					)
-			);
+			final TemporalAccessor accessor = ENCODED_FORMATTER.parse( subSequence( charSequence, start, end ) );
 			return java.sql.Date.valueOf( accessor.query( LocalDate::from ) );
 		}
 		catch ( DateTimeParseException pe) {
-			throw new HibernateException( "could not parse time string " + charSequence, pe );
+			throw new HibernateException( "could not parse time string " + subSequence( charSequence, start, end ), pe );
 		}
 	}
 

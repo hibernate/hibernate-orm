@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.criteria.basic;
 
@@ -17,7 +15,7 @@ import java.util.List;
 import org.hibernate.Session;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.orm.test.jpa.metamodel.AbstractMetamodelSpecificTest;
@@ -29,9 +27,9 @@ import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaDerivedRoot;
 import org.hibernate.query.criteria.JpaSubQuery;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
@@ -103,7 +101,7 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15452")
+	@JiraKey( value = "HHH-15452")
 	public void testGetConjunctionExpressionsAndAddPredicate(){
 		inTransaction(
 				entityManager -> {
@@ -124,7 +122,7 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-6876")
+	@JiraKey(value = "HHH-6876")
 	public void testEmptyInList() {
 		doInJPA(
 				this::entityManagerFactory,

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.registry.classloading.spi;
 
@@ -37,26 +35,17 @@ public interface ClassLoaderService extends ResourceLocator, ResourceStreamLocat
 
 	@SuppressWarnings("unchecked")
 	default <T> Class<T> classForTypeName(String className) {
-		switch ( className ) {
-			case "boolean":
-				return (Class<T>) boolean.class;
-			case "byte":
-				return (Class<T>) byte.class;
-			case "char":
-				return (Class<T>) char.class;
-			case "short":
-				return (Class<T>) short.class;
-			case "int":
-				return (Class<T>) int.class;
-			case "float":
-				return (Class<T>) float.class;
-			case "long":
-				return (Class<T>) long.class;
-			case "double":
-				return (Class<T>) double.class;
-			default:
-				return classForName( className );
-		}
+		return (Class<T>) switch ( className ) {
+			case "boolean" -> boolean.class;
+			case "byte" -> byte.class;
+			case "char" -> char.class;
+			case "short" -> short.class;
+			case "int" -> int.class;
+			case "float" -> float.class;
+			case "long" -> long.class;
+			case "double" -> double.class;
+			default -> classForName( className );
+		};
 	}
 
 	/**
@@ -94,14 +83,14 @@ public interface ClassLoaderService extends ResourceLocator, ResourceStreamLocat
 	 *
 	 * @param serviceContract The java type defining the service contract
 	 * @param <S> The type of the service contract
-	 *     
+	 *
 	 * @return The ordered set of discovered services.
 	 *
 	 * @see org.hibernate.service.JavaServiceLoadable
 	 */
 	<S> Collection<S> loadJavaServices(Class<S> serviceContract);
 
-	<T> T generateProxy(InvocationHandler handler, Class... interfaces);
+	<T> T generateProxy(InvocationHandler handler, Class<?>... interfaces);
 
 	/**
 	 * Loading a Package from the ClassLoader.

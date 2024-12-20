@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.event;
 
 import jakarta.persistence.Entity;
@@ -8,7 +12,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Nathan Xu
  * @author Tassilo Karge
  */
-@TestForIssue(jiraKey = "HHH-14413")
+@JiraKey(value = "HHH-14413")
 public class PreUpdateEventListenerVetoTest extends BaseSessionFactoryFunctionalTest {
 
 	private static final Long EXAMPLE_ID_VALUE = 1L;
@@ -32,11 +36,8 @@ public class PreUpdateEventListenerVetoTest extends BaseSessionFactoryFunctional
 
 	@Override
 	protected void sessionFactoryBuilt(SessionFactoryImplementor factory) {
-		EventListenerRegistry registry = factory.getServiceRegistry().getService( EventListenerRegistry.class );
-		registry.appendListeners(
-				EventType.PRE_UPDATE,
-				event -> true
-		);
+		factory.getServiceRegistry().requireService( EventListenerRegistry.class )
+				.appendListeners( EventType.PRE_UPDATE, event -> true );
 	}
 
 	@BeforeEach
@@ -45,7 +46,7 @@ public class PreUpdateEventListenerVetoTest extends BaseSessionFactoryFunctional
 			ExampleEntity entity = new ExampleEntity();
 			entity.id = EXAMPLE_ID_VALUE;
 			entity.name = "old_name";
-			session.save( entity );
+			session.persist( entity );
 		} );
 	}
 
@@ -56,7 +57,7 @@ public class PreUpdateEventListenerVetoTest extends BaseSessionFactoryFunctional
 			ExampleEntity entity = session.byId( ExampleEntity.class ).load( EXAMPLE_ID_VALUE );
 
 			entity.name = "new_name";
-			session.update( entity );
+			entity = session.merge( entity );
 
 			final Long versionBeforeFlush = entity.version;
 

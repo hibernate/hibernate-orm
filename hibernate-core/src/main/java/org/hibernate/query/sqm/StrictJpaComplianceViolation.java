@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm;
 
@@ -29,6 +27,7 @@ public class StrictJpaComplianceViolation extends SemanticException {
 		COLLATIONS( "use of collations" ),
 		SUBQUERY_ORDER_BY( "use of ORDER BY clause in subquery" ),
 		FROM_SUBQUERY( "use of subquery in FROM clause" ),
+		FROM_FUNCTION( "use of functions in FROM clause" ),
 		SET_OPERATIONS( "use of set operations" ),
 		CTES( "use of CTEs (common table expressions)" ),
 		LIMIT_OFFSET_CLAUSE( "use of LIMIT/OFFSET clause" ),

@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.filter.subclass.joined2;
 
 import jakarta.persistence.Entity;
@@ -10,7 +14,7 @@ import jakarta.persistence.Table;
 @Table(name = "dogs")
 @PrimaryKeyJoinColumn(name = "id_dog", referencedColumnName = "id_animal")
 public class Dog extends Animal {
-    private String breed;
+	private String breed;
 	@ManyToOne @JoinColumn(name = "id_owner")
-    private Owner owner;
+	private Owner owner;
 }

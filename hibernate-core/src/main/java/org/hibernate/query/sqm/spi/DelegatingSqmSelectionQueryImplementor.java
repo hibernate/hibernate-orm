@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.spi;
 
@@ -20,16 +18,19 @@ import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.Remove;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.query.BindableType;
+import org.hibernate.query.KeyedPage;
+import org.hibernate.query.KeyedResultList;
 import org.hibernate.query.Order;
 import org.hibernate.query.Page;
 import org.hibernate.query.ParameterMetadata;
+import org.hibernate.query.QueryFlushMode;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.sqm.SqmSelectionQuery;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.sql.results.spi.ResultsConsumer;
 
@@ -63,6 +64,16 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 	}
 
 	@Override
+	public QueryFlushMode getQueryFlushMode() {
+		return getDelegate().getQueryFlushMode();
+	}
+
+	@Override
+	public SqmSelectionQuery<R> setQueryFlushMode(QueryFlushMode queryFlushMode) {
+		return getDelegate().setQueryFlushMode( queryFlushMode );
+	}
+
+	@Override
 	public Integer getTimeout() {
 		return getDelegate().getTimeout();
 	}
@@ -92,6 +103,16 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 	@Override
 	public List<R> getResultList() {
 		return getDelegate().getResultList();
+	}
+
+	@Override
+	public long getResultCount() {
+		return getDelegate().getResultCount();
+	}
+
+	@Override
+	public KeyedResultList<R> getKeyedResultList(KeyedPage<R> page) {
+		return getDelegate().getKeyedResultList( page );
 	}
 
 	@Override
@@ -274,7 +295,7 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 
 	@Override
 	@Incubating
-	public SqmSelectionQueryImplementor<R> setOrder(List<Order<? super R>> orders) {
+	public SqmSelectionQueryImplementor<R> setOrder(List<? extends Order<? super R>> orders) {
 		getDelegate().setOrder( orders );
 		return this;
 	}
@@ -283,14 +304,6 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 	@Incubating
 	public SqmSelectionQueryImplementor<R> setOrder(Order<? super R> order) {
 		getDelegate().setOrder( order );
-		return this;
-	}
-
-	@Override
-	@Remove
-	@Deprecated(since = "6.2")
-	public SqmSelectionQueryImplementor<R> setAliasSpecificLockMode(String alias, LockMode lockMode) {
-		getDelegate().setAliasSpecificLockMode( alias, lockMode );
 		return this;
 	}
 

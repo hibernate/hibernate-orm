@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.mutation.internal;
 
@@ -38,7 +36,7 @@ import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /**
- * Standard MutationExecutor implementation
+ * Standard {@link org.hibernate.engine.jdbc.mutation.MutationExecutor}
  *
  * @author Steve Ebersole
  */
@@ -285,11 +283,12 @@ public class MutationExecutorStandard extends AbstractMutationExecutor implement
 	@Override
 	protected void performBatchedOperations(
 			ValuesAnalysis valuesAnalysis,
-			TableInclusionChecker inclusionChecker) {
+			TableInclusionChecker inclusionChecker,
+			Batch.StaleStateMapper staleStateMapper) {
 		if ( batch == null ) {
 			return;
 		}
-		batch.addToBatch( valueBindings, inclusionChecker );
+		batch.addToBatch( valueBindings, inclusionChecker, staleStateMapper );
 	}
 
 	@Override

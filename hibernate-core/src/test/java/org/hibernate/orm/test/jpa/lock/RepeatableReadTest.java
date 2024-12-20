@@ -1,18 +1,18 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.lock;
 
 import java.math.BigDecimal;
 
+import jakarta.persistence.OptimisticLockException;
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.CockroachDialect;
+import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.exception.SQLGrammarException;
@@ -65,7 +65,7 @@ public class RepeatableReadTest extends AbstractJPATest {
 		Item it = new Item( check );
 		inTransaction(
 				session -> {
-					session.save( it );
+					session.persist( it );
 				}
 		);
 
@@ -106,6 +106,7 @@ public class RepeatableReadTest extends AbstractJPATest {
 
 	@Test
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "Cockroach uses SERIALIZABLE by default and fails to acquire a write lock after a TX in between committed changes to a row")
+	@SkipForDialect(dialectClass = MariaDBDialect.class, majorVersion = 11, minorVersion = 6, microVersion = 2, reason = "MariaDB will throw an error DB_RECORD_CHANGED when acquiring a lock on a record that have changed")
 	public void testStaleVersionedInstanceFoundOnLock() {
 		if ( !readCommittedIsolationMaintained( "repeatable read tests" ) ) {
 			return;
@@ -114,7 +115,7 @@ public class RepeatableReadTest extends AbstractJPATest {
 		Item it = new Item( check );
 		inTransaction(
 				session -> {
-					session.save( it );
+					session.persist( it );
 				}
 		);
 
@@ -151,7 +152,8 @@ public class RepeatableReadTest extends AbstractJPATest {
 						s1.lock( item, LockMode.PESSIMISTIC_WRITE );
 						fail( "expected UPGRADE lock failure" );
 					}
-					catch (StaleObjectStateException expected) {
+					catch (OptimisticLockException expected) {
+						assertTrue( expected.getCause() instanceof StaleObjectStateException );
 						// this is the expected behavior
 					}
 					catch (SQLGrammarException t) {
@@ -185,7 +187,7 @@ public class RepeatableReadTest extends AbstractJPATest {
 		Part p = new Part( new Item( "EJB3 Specification" ), check, "3.3.5.3", new BigDecimal( 0.0 ) );
 		inTransaction(
 				session -> {
-					session.save( p );
+					session.persist( p );
 				}
 		);
 
@@ -220,14 +222,15 @@ public class RepeatableReadTest extends AbstractJPATest {
 				session -> {
 					Part part = (Part) session.createQuery( "select p from Part p" ).list().get( 0 );
 
-					session.delete( part );
-					session.delete( part.getItem() );
+					session.remove( part );
+					session.remove( part.getItem() );
 				}
 		);
 	}
 
 	@Test
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "Cockroach uses SERIALIZABLE by default and fails to acquire a write lock after a TX in between committed changes to a row")
+	@SkipForDialect(dialectClass = MariaDBDialect.class, majorVersion = 11, minorVersion = 6, microVersion = 2, reason = "MariaDB will throw an error DB_RECORD_CHANGED when acquiring a lock on a record that have changed")
 	public void testStaleNonVersionedInstanceFoundOnLock() {
 		if ( !readCommittedIsolationMaintained( "repeatable read tests" ) ) {
 			return;
@@ -236,7 +239,7 @@ public class RepeatableReadTest extends AbstractJPATest {
 		Part p = new Part( new Item( "EJB3 Specification" ), check, "3.3.5.3", new BigDecimal( 0.0 ) );
 		inTransaction(
 				session -> {
-					session.save( p );
+					session.persist( p );
 				}
 		);
 
@@ -283,8 +286,8 @@ public class RepeatableReadTest extends AbstractJPATest {
 		inTransaction(
 				session -> {
 					Part part = session.get( Part.class, partId );
-					session.delete( part );
-					session.delete( part.getItem() );
+					session.remove( part );
+					session.remove( part.getItem() );
 				}
 		);
 	}

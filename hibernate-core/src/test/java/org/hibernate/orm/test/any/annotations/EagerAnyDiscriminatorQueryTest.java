@@ -1,7 +1,12 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.any.annotations;
 
 import java.util.List;
 
+import jakarta.persistence.TypedQuery;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Any;
 import org.hibernate.annotations.AnyDiscriminator;
@@ -9,7 +14,7 @@ import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyDiscriminatorValues;
 import org.hibernate.annotations.AnyKeyJavaClass;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.BeforeAll;
@@ -32,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 				EagerAnyDiscriminatorQueryTest.StringProperty.class
 		}
 )
-@TestForIssue(jiraKey = "HHH-15423")
+@JiraKey(value = "HHH-15423")
 public class EagerAnyDiscriminatorQueryTest {
 	private static final Long PROPERTY_HOLDER_ID = 2l;
 	private static final Long STRING_PROPERTY_ID = 1l;
@@ -82,9 +87,9 @@ public class EagerAnyDiscriminatorQueryTest {
 	public void testHQLQuery(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
-					Query q = entityManager.createQuery(
+					TypedQuery<PropertyHolder> q = entityManager.createQuery(
 							"select p from PropertyHolder p",
-							LazyAnyDiscriminatorQueryTest.PropertyHolder.class
+							PropertyHolder.class
 					);
 					List<PropertyHolder> results = q.getResultList();
 					assertThat( results.size() ).isEqualTo( 1 );

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
@@ -50,6 +48,8 @@ public interface NaturalIdLoadAccess<T> {
 	 * Override the associations fetched by default by specifying
 	 * the complete list of associations to be fetched as an
 	 * {@linkplain jakarta.persistence.EntityGraph entity graph}.
+	 *
+	 * @since 6.3
 	 */
 	default NaturalIdLoadAccess<T> withFetchGraph(RootGraph<T> graph) {
 		return with( graph, GraphSemantic.FETCH );
@@ -59,6 +59,8 @@ public interface NaturalIdLoadAccess<T> {
 	 * Augment the associations fetched by default by specifying a
 	 * list of additional associations to be fetched as an
 	 * {@linkplain jakarta.persistence.EntityGraph entity graph}.
+	 *
+	 * @since 6.3
 	 */
 	default NaturalIdLoadAccess<T> withLoadGraph(RootGraph<T> graph) {
 		return with( graph, GraphSemantic.LOAD );
@@ -68,6 +70,8 @@ public interface NaturalIdLoadAccess<T> {
 	 * Customize the associations fetched by specifying an
 	 * {@linkplain jakarta.persistence.EntityGraph entity graph},
 	 * and how it should be {@linkplain GraphSemantic interpreted}.
+	 *
+	 * @since 6.3
 	 */
 	NaturalIdLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic);
 
@@ -110,7 +114,7 @@ public interface NaturalIdLoadAccess<T> {
 	/**
 	 * Add a {@link org.hibernate.annotations.NaturalId @NaturalId}
 	 * attribute value.
-	 * 
+	 *
 	 * @param attributeName The name of an attribute of the entity
 	 *                      that is annotated {@code @NaturalId}
 	 * @param value The value of the attribute
@@ -133,25 +137,6 @@ public interface NaturalIdLoadAccess<T> {
 	 * @return {@code this}, for method chaining
 	 */
 	NaturalIdLoadAccess<T> using(Map<String,?> mappings);
-
-	/**
-	 * Set multiple {@link org.hibernate.annotations.NaturalId @NaturalId}
-	 * attribute values at once. An even number of arguments is expected,
-	 * with each attribute name followed by its value, for example:
-	 * <pre>
-	 * Book book =
-	 *         session.byNaturalId(Book.class)
-	 *             .using(Book_.ISBN, isbn, Book_.PRINTING, printing)
-	 *             .load();
-	 * </pre>
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated use {@link #using(Map)} with {@link Map#of}, which is
-	 *             slightly more typesafe
-	 */
-	@Deprecated(since = "6.3")
-	NaturalIdLoadAccess<T> using(Object... mappings);
 
 	/**
 	 * Determines if cached natural id cross-references are synchronized
@@ -205,7 +190,7 @@ public interface NaturalIdLoadAccess<T> {
 	 * the session, return that instance, initializing it if needed. This
 	 * method never returns an uninitialized instance.
 	 *
-	 * @return The persistent instance or {@code null} 
+	 * @return The persistent instance or {@code null}
 	 */
 	T load();
 

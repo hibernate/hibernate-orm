@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.merge;
 
@@ -17,44 +15,61 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import jakarta.persistence.OptimisticLockException;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.hibernate.orm.test.bytecode.enhancement.merge.MergeDetachedCascadedCollectionInEmbeddableTest.Grouping;
+import static org.hibernate.orm.test.bytecode.enhancement.merge.MergeDetachedCascadedCollectionInEmbeddableTest.Heading;
+import static org.hibernate.orm.test.bytecode.enhancement.merge.MergeDetachedCascadedCollectionInEmbeddableTest.Thing;
 import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.fail;
+
+import org.junit.jupiter.api.Test;
+
 
 /**
  * @author Gail Badner
  */
-@TestForIssue(jiraKey = "HHH-12592")
-@RunWith(BytecodeEnhancerRunner.class)
-public class MergeDetachedCascadedCollectionInEmbeddableTest extends BaseCoreFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Heading.class, Grouping.class, Thing.class };
-	}
+@JiraKey("HHH-12592")
+@DomainModel(
+		annotatedClasses = {
+			Heading.class, Grouping.class, Thing.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class MergeDetachedCascadedCollectionInEmbeddableTest {
 
 	@Test
-	public void testMergeDetached() {
-		final Heading heading = doInHibernate( this::sessionFactory, session -> {
+	public void testMergeDetached(SessionFactoryScope scope) {
+		final Heading heading = scope.fromSession( session -> {
 			Heading entity = new Heading();
 			entity.name = "new";
 			entity.setGrouping( new Grouping() );
 			entity.getGrouping().getThings().add( new Thing() );
-			session.save( entity );
+			session.persist( entity );
 			return entity;
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
-			heading.name = "updated";
-			Heading headingMerged = (Heading) session.merge( heading );
-			assertNotSame( heading, headingMerged );
-			assertNotSame( heading.grouping, headingMerged.grouping );
-			assertNotSame( heading.grouping.things, headingMerged.grouping.things );
-		} );
+		try {
+			scope.inTransaction(session -> {
+				heading.name = "updated";
+				Heading headingMerged = session.merge(heading);
+				assertNotSame(heading, headingMerged);
+				assertNotSame(heading.grouping, headingMerged.grouping);
+				assertNotSame(heading.grouping.things, headingMerged.grouping.things);
+				fail();
+			});
+		}
+		catch (OptimisticLockException e) {
+			// expected since tx above was never committed
+			// so the entity had id generated but was never
+			// actually inserted in database
+		}
 	}
 
 	@Entity(name = "Heading")

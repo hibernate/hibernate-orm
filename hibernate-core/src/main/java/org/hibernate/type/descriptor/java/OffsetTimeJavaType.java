@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
@@ -62,6 +60,11 @@ public class OffsetTimeJavaType extends AbstractTemporalJavaType<OffsetTime> {
 	protected <X> TemporalJavaType<X> forTimePrecision(TypeConfiguration typeConfiguration) {
 		//noinspection unchecked
 		return (TemporalJavaType<X>) this;
+	}
+
+	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
 	}
 
 	@Override
@@ -151,16 +154,16 @@ public class OffsetTimeJavaType extends AbstractTemporalJavaType<OffsetTime> {
 		// for java.time types, we assume that the JDBC timezone, if any, is ignored
 		// (since PS.setObject() doesn't support passing a timezone)
 
-		if (value instanceof OffsetTime) {
-			return (OffsetTime) value;
+		if (value instanceof OffsetTime offsetTime) {
+			return offsetTime;
 		}
 
-		if (value instanceof LocalTime) {
-			return ((LocalTime) value).atOffset( getCurrentSystemOffset() );
+		if (value instanceof LocalTime localTime) {
+			return localTime.atOffset( getCurrentSystemOffset() );
 		}
 
-		if ( value instanceof OffsetDateTime ) {
-			return ( (OffsetDateTime) value ).toOffsetTime();
+		if ( value instanceof OffsetDateTime offsetDateTime) {
+			return offsetDateTime.toOffsetTime();
 		}
 
 		/*
@@ -181,20 +184,23 @@ public class OffsetTimeJavaType extends AbstractTemporalJavaType<OffsetTime> {
 		// for legacy types, we assume that the JDBC timezone is passed to JDBC
 		// (since PS.setTime() and friends do accept a timezone passed as a Calendar)
 
-		if (value instanceof Time) {
-			final Time time = (Time) value;
+		if (value instanceof Time time) {
 			final OffsetTime offsetTime = time.toLocalTime()
 					.atOffset( getCurrentJdbcOffset( options) )
 					.withOffsetSameInstant( getCurrentSystemOffset() );
-			final long millis = time.getTime() % 1000;
+			long millis = time.getTime() % 1000;
 			if ( millis == 0 ) {
 				return offsetTime;
+			}
+			if ( millis < 0 ) {
+				// The milliseconds for a Time could be negative,
+				// which usually means the time is in a different time zone
+				millis += 1_000L;
 			}
 			return offsetTime.with( ChronoField.NANO_OF_SECOND, millis * 1_000_000L );
 		}
 
-		if (value instanceof Timestamp) {
-			final Timestamp ts = (Timestamp) value;
+		if (value instanceof Timestamp timestamp) {
 			/*
 			 * Workaround for HHH-13266 (JDK-8061577).
 			 * Ideally we'd want to use OffsetDateTime.ofInstant( ts.toInstant(), ... ),
@@ -202,24 +208,21 @@ public class OffsetTimeJavaType extends AbstractTemporalJavaType<OffsetTime> {
 			 * milliseconds since the epoch means the same thing in Timestamp and Instant,
 			 * but it doesn't, in particular before 1900.
 			 */
-			return ts.toLocalDateTime().toLocalTime().atOffset( getCurrentJdbcOffset(options) )
+			return timestamp.toLocalDateTime().toLocalTime().atOffset( getCurrentJdbcOffset(options) )
 					.withOffsetSameInstant( getCurrentSystemOffset() );
 		}
 
-		if (value instanceof Date) {
-			final Date date = (Date) value;
+		if (value instanceof Date date) {
 			return OffsetTime.ofInstant( date.toInstant(), getCurrentSystemOffset() );
 		}
 
 		// for instants, we assume that the JDBC timezone, if any, is ignored
 
-		if (value instanceof Long) {
-			final long millis = (Long) value;
+		if (value instanceof Long millis) {
 			return OffsetTime.ofInstant( Instant.ofEpochMilli(millis), getCurrentSystemOffset() );
 		}
 
-		if (value instanceof Calendar) {
-			final Calendar calendar = (Calendar) value;
+		if (value instanceof Calendar calendar) {
 			return OffsetTime.ofInstant( calendar.toInstant(), calendar.getTimeZone().toZoneId() );
 		}
 
@@ -241,7 +244,10 @@ public class OffsetTimeJavaType extends AbstractTemporalJavaType<OffsetTime> {
 
 	@Override
 	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
-		return dialect.getDefaultTimestampPrecision();
+		// times represent repeating events - they
+		// almost never come equipped with seconds,
+		// let alone fractional seconds!
+		return 0;
 	}
 
 }

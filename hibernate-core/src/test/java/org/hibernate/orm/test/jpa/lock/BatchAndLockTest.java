@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.jpa.lock;
 
 import java.util.List;
@@ -79,7 +83,7 @@ public class BatchAndLockTest {
 		scope.inTransaction(
 				session -> {
 					TestEntity testEntity = session.find( TestEntity.class, 1 );
-					assertEntityLockMode( testEntity, LockModeType.OPTIMISTIC, session );
+					assertEntityLockMode( testEntity, LockModeType.NONE, session );
 				}
 		);
 		assertNoLokIsApplied( scope );
@@ -93,11 +97,11 @@ public class BatchAndLockTest {
 					assertFalse( Hibernate.isInitialized( proxy ) );
 
 					TestEntity testEntity = session.find( TestEntity.class, 1 );
-					assertEntityLockMode( testEntity, LockModeType.OPTIMISTIC, session );
+					assertEntityLockMode( testEntity, LockModeType.NONE, session );
 
 					// batching is enabled because LockMode = NONE, so the proxy has been initialized
 					assertTrue( Hibernate.isInitialized( proxy ) );
-					assertEntityLockMode( proxy, LockModeType.OPTIMISTIC, session );
+					assertEntityLockMode( proxy, LockModeType.NONE, session );
 				}
 		);
 		assertNoLokIsApplied( scope );
@@ -108,7 +112,7 @@ public class BatchAndLockTest {
 		scope.inTransaction(
 				session -> {
 					TestEntity testEntity = session.find( TestEntity.class, 1, LockModeType.NONE );
-					assertEntityLockMode( testEntity, LockModeType.OPTIMISTIC, session );
+					assertEntityLockMode( testEntity, LockModeType.NONE, session );
 				}
 		);
 		assertNoLokIsApplied( scope );
@@ -122,11 +126,11 @@ public class BatchAndLockTest {
 					assertFalse( Hibernate.isInitialized( proxy ) );
 
 					TestEntity testEntity = session.find( TestEntity.class, 1, LockModeType.NONE );
-					assertEntityLockMode( testEntity, LockModeType.OPTIMISTIC, session );
+					assertEntityLockMode( testEntity, LockModeType.NONE, session );
 
 					// batching is enabled because LockMode = NONE, so the proxy has been initialized
 					assertTrue( Hibernate.isInitialized( proxy ) );
-					assertEntityLockMode( proxy, LockModeType.OPTIMISTIC, session );
+					assertEntityLockMode( proxy, LockModeType.NONE, session );
 				}
 		);
 		assertNoLokIsApplied( scope );

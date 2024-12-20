@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
@@ -616,16 +614,17 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			ForeignKeyDescriptor.Side side,
 			SharedSessionContractImplementor session) {
 		final ModelPart modelPart = side.getModelPart();
-
 		// If the mapping type has an identifier type, that identifier is the key
-		if ( modelPart instanceof SingleAttributeIdentifierMapping ) {
-			return ( (SingleAttributeIdentifierMapping) modelPart ).getIdentifierIfNotUnsaved( targetObject, session );
+		if ( modelPart instanceof SingleAttributeIdentifierMapping singleAttributeIdentifierMapping ) {
+			return singleAttributeIdentifierMapping.getIdentifierIfNotUnsaved( targetObject, session );
 		}
-		else if ( modelPart instanceof CompositeIdentifierMapping ) {
-			return ( (CompositeIdentifierMapping) modelPart ).getIdentifierIfNotUnsaved( targetObject, session );
+		else if ( modelPart instanceof CompositeIdentifierMapping compositeIdentifierMapping ) {
+			return compositeIdentifierMapping.getIdentifierIfNotUnsaved( targetObject, session );
 		}
-		// Otherwise, this is a key based on the target object i.e. without id-class
-		return targetObject;
+		else {
+			// Otherwise, this is a key based on the target object i.e. without id-class
+			return targetObject;
+		}
 	}
 
 	@Override

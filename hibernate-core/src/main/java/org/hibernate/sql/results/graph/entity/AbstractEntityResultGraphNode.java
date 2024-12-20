@@ -1,15 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.entity;
+
+import java.util.BitSet;
 
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
@@ -21,13 +22,15 @@ import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * AbstractFetchParent sub-class for entity-valued graph nodes
  *
  * @author Steve Ebersole
  */
 public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent implements EntityResultGraphNode {
-	private Fetch identifierFetch;
+	private @Nullable Fetch identifierFetch;
 	private BasicFetch<?> discriminatorFetch;
 	private DomainResult<Object> rowIdResult;
 	private final EntityValuedModelPart fetchContainer;
@@ -89,7 +92,7 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 		return getEntityValuedModelPart().getEntityMappingType().getMappedJavaType();
 	}
 
-	public Fetch getIdentifierFetch() {
+	public @Nullable Fetch getIdentifierFetch() {
 		return identifierFetch;
 	}
 
@@ -99,6 +102,26 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 
 	public DomainResult<Object> getRowIdResult() {
 		return rowIdResult;
+	}
+
+	@Override
+	public void collectValueIndexesToCache(BitSet valueIndexes) {
+		final EntityPersister entityPersister = fetchContainer.getEntityMappingType().getEntityPersister();
+		if ( identifierFetch != null ) {
+			identifierFetch.collectValueIndexesToCache( valueIndexes );
+		}
+		if ( !entityPersister.useShallowQueryCacheLayout() ) {
+			if ( discriminatorFetch != null ) {
+				discriminatorFetch.collectValueIndexesToCache( valueIndexes );
+			}
+			if ( rowIdResult != null ) {
+				rowIdResult.collectValueIndexesToCache( valueIndexes );
+			}
+			super.collectValueIndexesToCache( valueIndexes );
+		}
+		else if ( entityPersister.storeDiscriminatorInShallowQueryCacheLayout() && discriminatorFetch != null ) {
+			discriminatorFetch.collectValueIndexesToCache( valueIndexes );
+		}
 	}
 
 }

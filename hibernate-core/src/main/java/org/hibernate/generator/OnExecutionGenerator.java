@@ -1,20 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.generator;
 
 import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.id.PostInsertIdentityPersister;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.insert.GetGeneratedKeysDelegate;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.id.insert.InsertReturningDelegate;
 import org.hibernate.id.insert.UniqueKeySelectingDelegate;
 import org.hibernate.persister.entity.EntityPersister;
 
+import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.generator.internal.NaturalIdHelper.getNaturalIdPropertyNames;
 import static org.hibernate.generator.values.internal.GeneratedValuesHelper.noCustomSql;
 
@@ -116,22 +115,19 @@ public interface OnExecutionGenerator extends Generator {
 	 * identity columns is the reason why this layer-breaking method exists.
 	 */
 	@Incubating
-	default InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate(PostInsertIdentityPersister persister) {
-		final Dialect dialect = persister.getFactory().getJdbcServices().getDialect();
+	default InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate(EntityPersister persister) {
+		final SessionFactoryImplementor factory = persister.getFactory();
+		final Dialect dialect = factory.getJdbcServices().getDialect();
 		if ( dialect.supportsInsertReturningGeneratedKeys()
-				&& persister.getFactory().getSessionFactoryOptions().isGetGeneratedKeysEnabled() ) {
-			return new GetGeneratedKeysDelegate( persister, false, EventType.INSERT );
+				&& factory.getSessionFactoryOptions().isGetGeneratedKeysEnabled() ) {
+			return new GetGeneratedKeysDelegate( persister, false, INSERT );
 		}
-		else if ( dialect.supportsInsertReturning() && noCustomSql( persister, EventType.INSERT ) ) {
-			return new InsertReturningDelegate( persister, EventType.INSERT );
+		else if ( dialect.supportsInsertReturning() && noCustomSql( persister, INSERT ) ) {
+			return new InsertReturningDelegate( persister, INSERT );
 		}
 		else {
 			// let's just hope the entity has a @NaturalId!
-			return new UniqueKeySelectingDelegate(
-					persister,
-					getUniqueKeyPropertyNames( persister ),
-					EventType.INSERT
-			);
+			return new UniqueKeySelectingDelegate( persister, getUniqueKeyPropertyNames( persister ), INSERT );
 		}
 	}
 

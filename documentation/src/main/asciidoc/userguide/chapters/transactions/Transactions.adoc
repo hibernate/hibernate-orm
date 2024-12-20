@@ -116,7 +116,7 @@ Let's take a look at using the Transaction API in the various environments.
 [[transactions-api-jdbc-example]]
 .Using Transaction API in JDBC
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-transaction}/TransactionsTest.java[tags=transactions-api-jdbc-example]
 ----
@@ -125,7 +125,7 @@ include::{example-dir-transaction}/TransactionsTest.java[tags=transactions-api-j
 [[transactions-api-cmt-example]]
 .Using Transaction API in JTA (CMT)
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-transaction}/TransactionsTest.java[tags=transactions-api-cmt-example]
 ----
@@ -134,7 +134,7 @@ include::{example-dir-transaction}/TransactionsTest.java[tags=transactions-api-c
 [[transactions-api-bmt-example]]
 .Using Transaction API in JTA (BMT)
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-transaction}/TransactionsTest.java[tags=transactions-api-bmt-example]
 ----

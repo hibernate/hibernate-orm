@@ -1,18 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.persister.entity;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Set;
 
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableStrategy;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -22,8 +21,6 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.Rule;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.jboss.logging.Logger;
@@ -51,7 +48,7 @@ public class TemporaryTableStrategyTest {
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( CoreMessageLogger.class, GlobalTemporaryTableStrategy.class.getName() )
+			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, GlobalTemporaryTableStrategy.class.getName() )
 	);
 
 	private final Triggerable triggerable = logInspection.watchForLogMessages( Set.of(
@@ -60,7 +57,7 @@ public class TemporaryTableStrategyTest {
 	) );
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-15550")
+	@JiraKey(value = "HHH-15550")
 	public void testGlobalTemporaryTableStrategy(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
 			Bar bar = new Bar();

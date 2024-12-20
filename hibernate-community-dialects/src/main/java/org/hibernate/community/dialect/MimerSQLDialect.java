@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -22,7 +20,7 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -42,7 +40,6 @@ import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.CHAR;
 import static org.hibernate.type.SqlTypes.CLOB;
 import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
-import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
 import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
 import static org.hibernate.type.SqlTypes.NCHAR;
 import static org.hibernate.type.SqlTypes.NCLOB;
@@ -336,7 +333,17 @@ public class MimerSQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean useConnectionToCreateLob() {
+		return false;
+	}
+
+	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return MimerSQLIdentityColumnSupport.INSTANCE;
+	}
+
+	@Override
+	public String getFromDualForSelectOnly() {
+		return " from " + getDual();
 	}
 }

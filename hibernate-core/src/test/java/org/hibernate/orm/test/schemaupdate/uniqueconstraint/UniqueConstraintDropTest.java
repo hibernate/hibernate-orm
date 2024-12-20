@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemaupdate.uniqueconstraint;
 
@@ -35,12 +33,11 @@ import org.hibernate.tool.schema.internal.exec.ScriptTargetOutputToFile;
 import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
-import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
@@ -75,7 +72,7 @@ public class UniqueConstraintDropTest {
 		metadata.validate();
 		tool = (HibernateSchemaManagementTool) ssr.getService( SchemaManagementTool.class );
 
-		final Map configurationValues = ssr.getService( ConfigurationService.class ).getSettings();
+		final Map<String,Object> configurationValues = ssr.requireService( ConfigurationService.class ).getSettings();
 		options = new ExecutionOptions() {
 			@Override
 			public boolean shouldManageNamespaces() {
@@ -83,18 +80,13 @@ public class UniqueConstraintDropTest {
 			}
 
 			@Override
-			public Map getConfigurationValues() {
+			public Map<String,Object> getConfigurationValues() {
 				return configurationValues;
 			}
 
 			@Override
 			public ExceptionHandler getExceptionHandler() {
 				return ExceptionHandlerLoggedImpl.INSTANCE;
-			}
-
-			@Override
-			public SchemaFilter getSchemaFilter() {
-				return SchemaFilter.ALL;
 			}
 		};
 	}
@@ -105,7 +97,7 @@ public class UniqueConstraintDropTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11236")
+	@JiraKey(value = "HHH-11236")
 	public void testUniqueConstraintIsDropped() throws Exception {
 
 		new IndividuallySchemaMigratorImpl( tool, DefaultSchemaFilter.INSTANCE )
@@ -144,7 +136,7 @@ public class UniqueConstraintDropTest {
 		if ( getDialect().supportsIfExistsBeforeConstraintName() ) {
 			regex += " if exists";
 		}
-		regex += " uk_.*";
+		regex += " uk.*";
 		if ( getDialect().supportsIfExistsAfterConstraintName() ) {
 			regex += " if exists";
 		}

@@ -1,27 +1,35 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hql;
 
+import org.hamcrest.Matchers;
+
+import org.hibernate.HibernateException;
+import org.hibernate.JDBCException;
 import org.hibernate.QueryException;
 import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.PostgresPlusDialect;
+import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
+import org.hibernate.sql.exec.ExecutionException;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.domain.gambit.EntityOfLists;
@@ -29,20 +37,20 @@ import org.hibernate.testing.orm.domain.gambit.EntityOfMaps;
 import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.time.ZoneOffset;
-import java.util.Date;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Duration;
@@ -51,11 +59,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
-
-import org.hamcrest.Matchers;
+import java.util.UUID;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -90,6 +100,7 @@ public class FunctionTests {
 					entity.setTheTime( new Time( 20, 10, 8 ) );
 					entity.setTheDuration( Duration.of(3, ChronoUnit.SECONDS).plus( Duration.of(23,ChronoUnit.MILLIS) ) );
 					entity.setTheTimestamp( new Timestamp( 121, 4, 27, 13, 22, 50, 123456789 ) );
+					entity.setTheUuid( UUID.randomUUID() );
 					em.persist(entity);
 
 					EntityOfLists eol = new EntityOfLists(1,"");
@@ -113,7 +124,7 @@ public class FunctionTests {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15711")
+	@JiraKey( value = "HHH-15711")
 	public void testLowerUpperFunctionsWithEnums(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -126,7 +137,7 @@ public class FunctionTests {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15711")
+	@JiraKey( value = "HHH-15711")
 	public void testLowerUpperFunctionsWithConvertedEnums(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -139,7 +150,7 @@ public class FunctionTests {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-15711")
+	@JiraKey(value = "HHH-15711")
 	public void testLowerFunctionsOrdinalEnumsShouldFail(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session ->
@@ -519,6 +530,8 @@ public class FunctionTests {
 							.list();
 					session.createQuery("select round(cast(e.theDouble as BigDecimal), 3) from EntityOfBasics e", BigDecimal.class)
 							.list();
+					assertThat( session.createQuery("select round(1.2345bd, 2)").getSingleResult(),
+							isOneOf(BigDecimal.valueOf(1.23), BigDecimal.valueOf(12300,4)) );
 					assertThat( session.createQuery("select abs(-2)", Integer.class).getSingleResult(), is(2) );
 					assertThat( session.createQuery("select sign(-2)", Integer.class).getSingleResult(), is(-1) );
 					assertThat(
@@ -567,6 +580,7 @@ public class FunctionTests {
 
 	@Test
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support any form of date truncation")
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix doesn't support any form of date truncation")
 	public void testDateTruncFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -596,6 +610,7 @@ public class FunctionTests {
 	@Test
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support any form of date truncation")
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "See HHH-16442, Oracle trunc() throws away the timezone")
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix doesn't support any form of date truncation")
 	public void testDateTruncWithOffsetFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -688,6 +703,8 @@ public class FunctionTests {
 							.list();
 					assertThat( session.createQuery("select left('hello world', 5)", String.class).getSingleResult(), is("hello") );
 					assertThat( session.createQuery("select right('hello world', 5)", String.class).getSingleResult(), is("world") );
+
+					assertThat( session.createQuery("select right(:data, 5)", String.class).setParameter( "data", "hello world" ).getSingleResult(), is("world") );
 				}
 		);
 	}
@@ -1026,6 +1043,44 @@ public class FunctionTests {
 	}
 
 	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-18447")
+	public void testCastStringToBoolean(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			assertThat( session.createQuery("select cast('1' as Boolean)", Boolean.class).getSingleResult(), is(true) );
+			assertThat( session.createQuery("select cast('0' as Boolean)", Boolean.class).getSingleResult(), is(false) );
+			assertThat( session.createQuery("select cast('y' as Boolean)", Boolean.class).getSingleResult(), is(true) );
+			assertThat( session.createQuery("select cast('n' as Boolean)", Boolean.class).getSingleResult(), is(false) );
+			assertThat( session.createQuery("select cast('Y' as Boolean)", Boolean.class).getSingleResult(), is(true) );
+			assertThat( session.createQuery("select cast('N' as Boolean)", Boolean.class).getSingleResult(), is(false) );
+			assertThat( session.createQuery("select cast('t' as Boolean)", Boolean.class).getSingleResult(), is(true) );
+			assertThat( session.createQuery("select cast('f' as Boolean)", Boolean.class).getSingleResult(), is(false) );
+			assertThat( session.createQuery("select cast('T' as Boolean)", Boolean.class).getSingleResult(), is(true) );
+			assertThat( session.createQuery("select cast('F' as Boolean)", Boolean.class).getSingleResult(), is(false) );
+			assertThat( session.createQuery("select cast('true' as Boolean)", Boolean.class).getSingleResult(), is(true) );
+			assertThat( session.createQuery("select cast('false' as Boolean)", Boolean.class).getSingleResult(), is(false) );
+			assertThat( session.createQuery("select cast('TRUE' as Boolean)", Boolean.class).getSingleResult(), is(true) );
+			assertThat( session.createQuery("select cast('FALSE' as Boolean)", Boolean.class).getSingleResult(), is(false) );
+		});
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-18447")
+	public void testCastInvalidStringToBoolean(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			try {
+				session.createQuery( "select cast('bla' as Boolean)", Boolean.class ).getSingleResult();
+				fail("Casting invalid boolean string should fail");
+			}
+			catch ( HibernateException e ) {
+				// Expected
+				if ( !( e instanceof JDBCException || e instanceof ExecutionException ) ) {
+					throw e;
+				}
+			}
+		} );
+	}
+
+	@Test
 	@SkipForDialect(dialectClass = DB2Dialect.class, matchSubTypes = true)
 	@SkipForDialect(dialectClass = DerbyDialect.class)
 	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true)
@@ -1058,6 +1113,7 @@ public class FunctionTests {
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle treats the cast value as a hexadecimal literal")
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQL treats the cast value as a hexadecimal literal")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase doesn't support casting varchar to binary")
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix doesn't support casting varchar to byte")
 	public void testCastFunctionBinary(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1090,8 +1146,17 @@ public class FunctionTests {
 					assertEquals( 'A',
 							session.createQuery("select cast('ABCDEF' as Character)", Character.class)
 									.getSingleResult() );
+					assertEquals( ' ',
+							session.createQuery("select cast(' X ' as Character)", Character.class)
+									.getSingleResult() );
 					assertEquals( "ABC",
 							session.createQuery("select cast('ABCDEF' as String(3))", String.class)
+									.getSingleResult() );
+					assertEquals( "ABC",
+							session.createQuery("select cast('ABC' as String(6))", String.class)
+									.getSingleResult() );
+					assertEquals( "ABC ",
+							session.createQuery("select cast('ABC DEF' as String(4))", String.class)
 									.getSingleResult() );
 				}
 		);
@@ -1233,9 +1298,8 @@ public class FunctionTests {
 							.list();
 					session.createQuery("select any(e.theInt > 0), every(e.theInt > 0) from EntityOfBasics e", Object[].class)
 							.list();
-					//not supported by grammar:
-//					session.createQuery("select any(e.theBoolean), every(e.theBoolean) from EntityOfBasics e")
-//							.list();
+					session.createQuery("select any(e.theBoolean), every(e.theBoolean) from EntityOfBasics e")
+							.list();
 					session.createQuery("select some(e.theInt > 0), all(e.theInt > 0) from EntityOfBasics e", Object[].class)
 							.list();
 				}
@@ -1278,13 +1342,61 @@ public class FunctionTests {
 				session -> {
 					assertThat( session.createQuery("select function('lower','HIBERNATE')", String.class).getSingleResult(),
 							equalTo("hibernate") );
+					assertThat( session.createQuery("select function(lower as String,'HIBERNATE')", String.class).getSingleResult(),
+							equalTo("hibernate") );
 					assertThat( session.createQuery("select 1 where function('lower','HIBERNATE') = 'hibernate'", Integer.class).getSingleResult(),
 							equalTo(1) );
 					assertThat( session.createQuery("select function('current_user')", String.class).getSingleResult().toLowerCase(),
 							isOneOf("hibernate_orm_test", "hibernateormtest", "sa", "hibernateormtest@%", "hibernate_orm_test@%", "root@%") );
+					assertThat( session.createQuery("select function(current_user as String)", String.class).getSingleResult().toLowerCase(),
+							isOneOf("hibernate_orm_test", "hibernateormtest", "sa", "hibernateormtest@%", "hibernate_orm_test@%", "root@%") );
 					assertThat( session.createQuery("select lower(function('current_user'))", String.class).getSingleResult(),
 							isOneOf("hibernate_orm_test", "hibernateormtest", "sa", "hibernateormtest@%", "hibernate_orm_test@%", "root@%") );
 					session.createQuery("select 1 where function('current_user') = 'hibernate_orm_test'", Integer.class).getSingleResultOrNull();
+				}
+		);
+	}
+
+	@Test
+	// really this could and should be made work on these dialects
+	@SkipForDialect(dialectClass = DerbyDialect.class)
+	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true)
+	@SkipForDialect(dialectClass = AltibaseDialect.class,
+			reason = "Altibase timestampadd does not support seconds with fractional part")
+	public void testAddSecondsWithFractionalPart(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals(LocalDateTime.of(1974, 3, 23, 0, 0, 28, 123_000_000),
+							session.createQuery("select datetime 1974-03-23 00:00:15 + 13.123 second", LocalDateTime.class)
+									.getSingleResult());
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true)
+	public void testAddNanoseconds(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals(LocalDateTime.of(1974, 3, 23, 0, 0, 28, 123_000_000),
+							session.createQuery("select datetime 1974-03-23 00:00:15 + 13_123_000_000 nanosecond", LocalDateTime.class)
+									.getSingleResult());
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true)
+	public void testDiffMillisecondsAndNanoseconds(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertThat(
+							session.createQuery("select (datetime 1974-03-23 00:00:15 - datetime 1974-03-23 00:00:12.123) by second", Long.class)
+									.getSingleResult(),
+							anyOf(is(3L),is(2L)));
+					assertEquals(2_877_000_000L,
+							session.createQuery("select (datetime 1974-03-23 00:00:15 - datetime 1974-03-23 00:00:12.123) by nanosecond", Long.class)
+									.getSingleResult());
 				}
 		);
 	}
@@ -1452,14 +1564,18 @@ public class FunctionTests {
 					session.createQuery("select e.theTimestamp + 3.5 * (4 day - 1 week) from EntityOfBasics e", Date.class)
 							.list();
 
-					session.createQuery("select 4 day by second from EntityOfBasics e", Long.class)
-							.list();
-					session.createQuery("select (4 day + 2 hour) by second from EntityOfBasics e", Long.class)
-							.list();
-					session.createQuery("select (2 * 4 day) by second from EntityOfBasics e", Long.class)
-							.list();
-//					session.createQuery("select (1 year - 1 month) by day from EntityOfBasics e")
-//							.list();
+					assertEquals(345_600,
+							session.createQuery("select 4 day by second", Long.class)
+									.getSingleResult());
+					assertEquals(345_600 + 7_200,
+							session.createQuery("select (4 day + 2 hour) by second", Long.class)
+									.getSingleResult());
+					assertEquals(2*345_600,
+							session.createQuery("select (2 * 4 day) by second", Long.class)
+									.getSingleResult());
+					assertEquals(11L,
+							session.createQuery("select (1 year - 1 month) by month", Long.class)
+									.getSingleResult());
 
 					session.createQuery("select (2 * (e.theTimestamp - e.theTimestamp) + 3 * (4 day + 2 hour)) by second from EntityOfBasics e", Long.class)
 							.list();
@@ -1606,31 +1722,34 @@ public class FunctionTests {
 					assertEquals( LocalDate.now().minus(2, ChronoUnit.DAYS),
 							session.createQuery("select local date - 2 day", LocalDate.class)
 									.getSingleResult() );
+					assertEquals( LocalDate.now().plus(1, ChronoUnit.WEEKS),
+							session.createQuery("select local date + 1 week", LocalDate.class)
+									.getSingleResult() );
 					assertEquals( LocalDate.now().plus(1, ChronoUnit.MONTHS),
-								  session.createQuery("select local date + 1 month", LocalDate.class)
-										  .getSingleResult() );
+								session.createQuery("select local date + 1 month", LocalDate.class)
+										.getSingleResult() );
 					assertEquals( LocalDate.now().plus(1, ChronoUnit.YEARS),
-								  session.createQuery("select local date + 1 year", LocalDate.class)
-										  .getSingleResult() );
+								session.createQuery("select local date + 1 year", LocalDate.class)
+										.getSingleResult() );
 					assertEquals( LocalDate.now().plus(3, ChronoUnit.MONTHS),
-								  session.createQuery("select local date + 1 quarter", LocalDate.class)
-										  .getSingleResult() );
+								session.createQuery("select local date + 1 quarter", LocalDate.class)
+										.getSingleResult() );
 					// Some explicit 'special' cases:
 					assertEquals( LocalDate.of(2024, 02, 29),
-								  session.createQuery("select {2024-01-31} + 1 month", LocalDate.class)
-										  .getSingleResult() );
+								session.createQuery("select {2024-01-31} + 1 month", LocalDate.class)
+										.getSingleResult() );
 					assertEquals( LocalDate.of(2025, 02, 28),
-								  session.createQuery("select {2024-02-29} + 1 year", LocalDate.class)
-										  .getSingleResult() );
+								session.createQuery("select {2024-02-29} + 1 year", LocalDate.class)
+										.getSingleResult() );
 					assertEquals( LocalDate.of(2028, 02, 29),
-								  session.createQuery("select {2024-02-29} + 4 year", LocalDate.class)
-										  .getSingleResult() );
+								session.createQuery("select {2024-02-29} + 4 year", LocalDate.class)
+										.getSingleResult() );
 					assertEquals( LocalDate.of(2025, 03, 29),
-								  session.createQuery("select {2024-02-29} + 13 month", LocalDate.class)
-										  .getSingleResult() );
+								session.createQuery("select {2024-02-29} + 13 month", LocalDate.class)
+										.getSingleResult() );
 					assertEquals( LocalDate.of(2024, 02, 29),
-								  session.createQuery("select {2023-11-30} + 1 quarter", LocalDate.class)
-										  .getSingleResult() );
+								session.createQuery("select {2023-11-30} + 1 quarter", LocalDate.class)
+										.getSingleResult() );
 
 					session.createQuery("select e.theTimestamp - 21 second from EntityOfBasics e", java.util.Date.class)
 							.getSingleResult();
@@ -1638,9 +1757,29 @@ public class FunctionTests {
 							.getSingleResult();
 					session.createQuery("select e.theTimestamp - 21 second + 2 day from EntityOfBasics e", java.util.Date.class)
 							.getSingleResult();
-					//TODO: FIX!!
-//					session.createQuery("select e.theTimestamp + 2 * e.theDuration from EntityOfBasics e")
-//							.list();
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = SQLServerDialect.class,
+			reason = "numeric overflow")
+	@SkipForDialect(dialectClass = DerbyDialect.class,
+			reason = "numeric overflow")
+	@SkipForDialect(dialectClass = SybaseDialect.class,
+			matchSubTypes = true,
+			reason = "numeric overflow")
+	@SkipForDialect(dialectClass = OracleDialect.class,
+			reason = "numeric overflow")
+	@SkipForDialect( dialectClass = TiDBDialect.class,
+			reason = "Bug in the TiDB timestampadd function (https://github.com/pingcap/tidb/issues/41052)")
+	@SkipForDialect( dialectClass = AltibaseDialect.class,
+			reason = "exceeds timestampadd limit in Altibase")
+	public void testDurationArithmeticOverflowing(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select e.theTimestamp + 2 * e.theDuration from EntityOfBasics e")
+							.list();
 				}
 		);
 	}
@@ -1688,10 +1827,125 @@ public class FunctionTests {
 					assertEquals( 10L*60,
 							session.createQuery("select (datetime 1974-03-23 5:30:25 - datetime 1974-03-23 5:20:25) by second", Long.class)
 									.getSingleResult() );
+				}
+		);
+	}
+
+	@Test
+	public void testTimeDurationArithmeticWithLiterals(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
 					// timestampadd() might not work for time on at least some dbs:
-//					assertEquals( LocalTime.of(5,30,25),
-//							session.createQuery("select time 5:30:46 - 21 second")
-//									.getSingleResult() );
+					assertEquals( LocalTime.of(5,30,25),
+							session.createQuery("select time 5:30:46 - 21 second")
+									.getSingleResult() );
+					assertEquals( LocalTime.of(5,31,7),
+							session.createQuery("select time 5:30:46 + 21 second")
+									.getSingleResult() );
+					assertEquals( LocalTime.of(5,15,30),
+							session.createQuery("select time 5:30:30 - 15 minute")
+									.getSingleResult() );
+					assertEquals( LocalTime.of(4,45,30),
+							session.createQuery("select time 5:30:30 - 45 minute")
+									.getSingleResult() );
+					assertEquals( LocalTime.of(6,00,30),
+							session.createQuery("select time 5:15:30 + 45 minute")
+									.getSingleResult() );
+					assertEquals( LocalTime.of(3,30,30),
+							session.createQuery("select time 5:30:30 - 2 hour")
+									.getSingleResult() );
+					assertEquals( LocalTime.of(11,30,30),
+							session.createQuery("select time 5:30:30 + 6 hour")
+									.getSingleResult() );
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = OracleDialect.class,
+			reason = "invalid extract field for extract source")
+	public void testDurationSubtractionWithTimeLiterals(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals( Duration.ofSeconds(21),
+							session.createQuery("select time 5:30:46 - time 5:30:25")
+									.getSingleResult() );
+					assertEquals( Duration.ofMinutes(10),
+							session.createQuery("select time 5:30:30 - time 5:20:30")
+									.getSingleResult() );
+					assertEquals( Duration.ofHours(2),
+							session.createQuery("select time 5:30:30 - time 3:30:30")
+									.getSingleResult() );
+					assertEquals( Duration.ofHours(1).plus(Duration.ofMinutes(10).plus(Duration.ofSeconds(20))),
+							session.createQuery("select time 5:30:30 - time 4:20:10")
+									.getSingleResult() );
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = SybaseDialect.class,
+			matchSubTypes = true,
+			reason = "numeric overflow")
+	public void testDurationSubtractionWithDatetimeLiterals(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals( Duration.ofDays(35),
+							session.createQuery("select local date 1990-2-5 - local date 1990-1-1")
+									.getSingleResult() );
+					assertEquals( Duration.ofDays(35).plus(Duration.ofHours(1).plus(Duration.ofMinutes(10).plus(Duration.ofSeconds(20)))),
+							session.createQuery("select local datetime 1990-2-5 5:30:30 - local datetime 1990-1-1 4:20:10")
+									.getSingleResult() );
+					assertEquals( Duration.ofDays(28).plus(Duration.ofHours(2).plus(Duration.ofMinutes(20).plus(Duration.ofSeconds(10)))),
+							session.createQuery("select (local datetime 1990-2-5 5:30:30 - local datetime 1990-1-1 4:20:10) - 7 day + 10 minute - 10 second + 1 hour")
+									.getSingleResult() );
+				}
+		);
+	}
+
+	@Test @SkipForDialect(dialectClass = MySQLDialect.class,
+			reason = "MySQL has a really weird TIME type")
+	public void testTimeDurationArithmeticWrapAroundWithLiterals(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals( LocalTime.of(23,30,30),
+							session.createQuery("select time 5:30:30 - 6 hour")
+									.getSingleResult() );
+					assertEquals( LocalTime.of(5,30,30),
+							session.createQuery("select time 5:30:30 + 24 hour")
+									.getSingleResult() );
+				}
+		);
+	}
+
+	@Test
+	public void testDateDurationArithmeticWithLiterals(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals( LocalDate.of(1991,7,25),
+							session.createQuery("select local date 1991-7-20 + 5 day")
+									.getSingleResult() );
+					assertEquals( LocalDate.of(1991,7,5),
+							session.createQuery("select local date 1991-7-20 - 15 day")
+									.getSingleResult() );
+					assertEquals( LocalDate.of(1991,7,27),
+							session.createQuery("select local date 1991-7-20 + 1 week")
+									.getSingleResult() );
+					assertEquals( LocalDate.of(1991,4,5),
+							session.createQuery("select local date 1991-7-5 - 3 month")
+									.getSingleResult() );
+					assertEquals( LocalDate.of(2001,7,5),
+							session.createQuery("select local date 1991-7-5 + 10 year")
+									.getSingleResult() );
+					assertEquals( LocalDate.of(1990,4,5),
+							session.createQuery("select local date 1991-7-5 - 15 month")
+									.getSingleResult() );
+					assertEquals( LocalDate.of(1990,8,5),
+							session.createQuery("select local date 1990-2-5 + 2 quarter")
+									.getSingleResult() );
+					assertEquals( LocalDate.of(1990,12,31),
+							session.createQuery("select local date 1991-1-1 - 1 day")
+									.getSingleResult() );
 				}
 		);
 	}
@@ -1748,16 +2002,30 @@ public class FunctionTests {
 							.list();
 					session.createQuery("select (e.theTimestamp - (e.theTimestamp + (4 day + 2 hour))) by second from EntityOfBasics e", Long.class)
 							.list();
-
-
-					//these cause numerical overflow on Sybase
-//					session.createQuery("select current_timestamp - e.theTimestamp from EntityOfBasics e")
-//							.list();
-//					session.createQuery("select current_timestamp - (current_timestamp - e.theTimestamp) from EntityOfBasics e")
-//							.list();
 				}
 		);
 	}
+
+	@Test
+	@SkipForDialect(dialectClass = SybaseDialect.class,
+			matchSubTypes = true,
+			reason = "result in numeric overflow")
+	@SkipForDialect(dialectClass = PostgresPlusDialect.class,
+			reason = "trivial rounding error")
+	public void testMoreIntervalDiffExpressions(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select current_timestamp - e.theTimestamp from EntityOfBasics e")
+							.list();
+					session.createQuery("select current_timestamp - (current_timestamp - e.theTimestamp) from EntityOfBasics e")
+							.list();
+					assertEquals(LocalDateTime.of(1990, 1, 1, 12, 30, 0),
+							session.createQuery("select local datetime - (local datetime - local datetime 1990-1-1 12:30:00)")
+									.getSingleResult());
+				}
+		);
+	}
+
 
 	@Test
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "unsupported binary operator: <date> - <timestamp(6)>")
@@ -1882,10 +2150,26 @@ public class FunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTimezoneTypes.class)
+	@SkipForDialect(dialectClass = SQLServerDialect.class) // no idea why!
+	public void testExtractOffsetHourMinute(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals(3,
+							session.createQuery("select extract(offset hour from offset datetime 2024-2-5 12:30:12+03:12)", Integer.class)
+									.getSingleResult());
+					assertEquals(12,
+							session.createQuery("select extract(offset minute from offset datetime 2024-2-5 12:30:12+03:12)", Integer.class)
+									.getSingleResult());
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTimezoneTypes.class)
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFormat.class, comment = "We extract the offset with a format function")
 	public void testExtractFunctionTimeZoneOffset(SessionFactoryScope scope) {
 		scope.inTransaction(
-				session -> session.createQuery( "select extract(offset from e.theZonedDateTime) from EntityOfBasics e", Integer.class)
+				session -> session.createQuery( "select extract(offset from e.theZonedDateTime) from EntityOfBasics e", ZoneOffset.class)
 						.list()
 		);
 	}
@@ -2000,7 +2284,7 @@ public class FunctionTests {
 				session -> {
 					session.createQuery("select format(e.theDate as 'dd/MM/yy'), format(e.theDate as 'EEEE, MMMM dd, yyyy') from EntityOfBasics e", Object[].class)
 							.list();
-					session.createQuery("select format(e.theTimestamp as 'dd/MM/yyyy ''at'' HH:mm:ss') from EntityOfBasics e", Date.class)
+					session.createQuery("select format(e.theTimestamp as 'dd/MM/yyyy ''at'' HH:mm:ss') from EntityOfBasics e", String.class)
 							.list();
 
 					assertThat(
@@ -2017,7 +2301,7 @@ public class FunctionTests {
 	public void testFormatTime(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery("select format(e.theTime as 'hh:mm:ss a') from EntityOfBasics e", Date.class)
+					session.createQuery("select format(e.theTime as 'hh:mm:ss a') from EntityOfBasics e", String.class)
 							.list();
 					assertThat(
 							session.createQuery("select format(theTime as '''Hello'', hh:mm:ss a') from EntityOfBasics where id=123", String.class).getResultList().get(0),
@@ -2032,6 +2316,12 @@ public class FunctionTests {
 	public void testMedian(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
+					assertEquals( 1.0,
+							session.createQuery("select median(e.theDouble) from EntityOfBasics e", Double.class).getSingleResult(),
+							1e-5);
+					assertEquals( 5.0,
+							session.createQuery("select median(e.theInt) from EntityOfBasics e", Double.class).getSingleResult(),
+							1e-5);
 					List<Object[]> list = session.createQuery("select median(e.theDouble), median(e.theInt) from EntityOfBasics e", Object[].class)
 							.list();
 					assertEquals( 1, list.size() );
@@ -2247,5 +2537,112 @@ public class FunctionTests {
 									.getSingleResult());
 				}
 		);
+	}
+
+	@Test
+	public void testSlice(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals("ring",
+							session.createSelectionQuery("select theString[3:6] from EntityOfBasics", String.class)
+									.getSingleResult());
+					assertEquals('s',
+							session.createSelectionQuery("select theString[1] from EntityOfBasics", Character.class)
+									.getSingleResult());
+					assertEquals('y',
+							session.createSelectionQuery("select theString[7] from EntityOfBasics", Character.class)
+									.getSingleResult());
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = H2Dialect.class)
+	@SkipForDialect(dialectClass = DerbyDialect.class)
+	@SkipForDialect(dialectClass = HSQLDialect.class)
+	@SkipForDialect(dialectClass = DB2Dialect.class)
+	public void testNullInCoalesce(SessionFactoryScope scope) {
+		scope.inTransaction(s -> {
+			assertEquals("hello",
+					s.createQuery("select coalesce(null, :word)", String.class)
+							.setParameter("word", "hello")
+							.getSingleResultOrNull());
+			assertEquals("hello",
+					s.createQuery("select coalesce(:word, null)", String.class)
+							.setParameter("word", "hello")
+							.getSingleResultOrNull());
+		});
+	}
+
+	@Test
+	public void testColumnFunction(SessionFactoryScope scope) {
+		scope.inTransaction(s -> {
+			assertEquals("the string",
+					s.createSelectionQuery("select column(e.the_column) from EntityOfBasics e", String.class)
+							.getSingleResultOrNull());
+			assertEquals("the string",
+					s.createSelectionQuery("select column(e.'the_column') from EntityOfBasics e", String.class)
+							.getSingleResultOrNull());
+			s.createSelectionQuery("from EntityOfBasics e where column(e.the_column as String) = 'the string'", EntityOfBasics.class)
+					.getSingleResult();
+		});
+	}
+
+	@Test
+	public void testUUIDColumnFunction(SessionFactoryScope scope) {
+		scope.inTransaction(s -> {
+			byte[] bytes = s.createSelectionQuery("select column(e.theuuid as binary) from EntityOfBasics e", byte[].class)
+					.getSingleResultOrNull();
+//			UUID uuid = s.createSelectionQuery("select column(e.theuuid as UUID) from EntityOfBasics e", UUID.class)
+//					.getSingleResultOrNull();
+		});
+	}
+
+	@Test @RequiresDialect(PostgreSQLDialect.class)
+	public void testCtidColumnFunction(SessionFactoryScope scope) {
+		scope.inTransaction(s -> {
+			String string = s.createSelectionQuery("select column(e.ctid as String) from EntityOfBasics e", String.class)
+					.getSingleResultOrNull();
+			byte[] bytes = s.createSelectionQuery("select column(e.ctid as binary) from EntityOfBasics e", byte[].class)
+					.getSingleResultOrNull();
+		});
+	}
+
+	@Test
+	@RequiresDialect(PostgreSQLDialect.class)
+	@RequiresDialect(MySQLDialect.class)
+	@RequiresDialect(OracleDialect.class)
+	@RequiresDialect(value = DB2Dialect.class, majorVersion = 11)
+	@RequiresDialect(SQLServerDialect.class)
+	@RequiresDialect(H2Dialect.class)
+	@RequiresDialect(HANADialect.class)
+	@RequiresDialect(CockroachDialect.class)
+	public void testSha256Function(SessionFactoryScope scope) {
+		scope.inTransaction(s -> {
+			byte[] bytes = s.createSelectionQuery("select sha('hello')", byte[].class).getSingleResult();
+			try {
+				assertArrayEquals( MessageDigest.getInstance( "SHA-256" ).digest("hello".getBytes()), bytes );
+			}
+			catch (NoSuchAlgorithmException e) {
+				throw new RuntimeException( e );
+			}
+			bytes = s.createSelectionQuery("select md5('hello')", byte[].class).getSingleResult();
+			try {
+				assertArrayEquals( MessageDigest.getInstance( "MD5" ).digest("hello".getBytes()), bytes );
+			}
+			catch (NoSuchAlgorithmException e) {
+				throw new RuntimeException( e );
+			}
+		});
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = SybaseASEDialect.class)
+	public void testHexFunction(SessionFactoryScope scope) {
+		scope.inTransaction(s -> {
+			assertEquals( "DEADBEEF",
+					s.createSelectionQuery("select hex({0xDE, 0xAD, 0xBE, 0xEF})", String.class)
+							.getSingleResult().toUpperCase( Locale.ROOT ) );
+		});
 	}
 }

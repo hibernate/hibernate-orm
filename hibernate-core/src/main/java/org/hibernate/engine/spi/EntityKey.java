@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
@@ -14,6 +12,7 @@ import java.io.Serializable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.type.Type;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -58,8 +57,9 @@ public final class EntityKey implements Serializable {
 	private int generateHashCode() {
 		int result = 17;
 		final String rootEntityName = persister.getRootEntityName();
-		result = 37 * result + ( rootEntityName != null ? rootEntityName.hashCode() : 0 );
-		result = 37 * result + persister.getIdentifierType().getHashCode( identifier, persister.getFactory() );
+		result = 37 * result + rootEntityName.hashCode();
+		final Type identifierType = persister.getIdentifierType().getTypeForEqualsHashCode();
+		result = 37 * result + ( identifierType == null ? identifier.hashCode() : identifierType.getHashCode( identifier, persister.getFactory() ) );
 		return result;
 	}
 
@@ -99,8 +99,10 @@ public final class EntityKey implements Serializable {
 	}
 
 	private boolean sameIdentifier(final EntityKey otherKey) {
-		return this.identifier == otherKey.identifier ||
-			persister.getIdentifierType().isEqual( otherKey.identifier, this.identifier, persister.getFactory() );
+		final Type identifierType;
+		return this.identifier == otherKey.identifier || (
+				(identifierType = persister.getIdentifierType().getTypeForEqualsHashCode()) == null && identifier.equals( otherKey.identifier )
+						|| identifierType != null && identifierType.isEqual( otherKey.identifier, this.identifier, persister.getFactory() ) );
 	}
 
 	private boolean samePersistentType(final EntityKey otherKey) {

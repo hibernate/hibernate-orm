@@ -1,13 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.mutation.internal;
 
 import java.sql.SQLException;
 
+import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
@@ -21,10 +20,11 @@ import org.hibernate.persister.entity.mutation.EntityTableMapping;
 import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.ValuesAnalysis;
 
+import static org.hibernate.engine.jdbc.mutation.internal.ModelMutationHelper.checkResults;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 
 /**
- * Base support for MutationExecutor implementations
+ * Base support for {@link MutationExecutor} implementations
  *
  * @author Steve Ebersole
  */
@@ -52,6 +52,17 @@ public abstract class AbstractMutationExecutor implements MutationExecutor {
 			TableInclusionChecker inclusionChecker,
 			OperationResultChecker resultChecker,
 			SharedSessionContractImplementor session) {
+		return execute( modelReference, valuesAnalysis, inclusionChecker, resultChecker, session, null );
+	}
+
+	@Override
+	public final GeneratedValues execute(
+			Object modelReference,
+			ValuesAnalysis valuesAnalysis,
+			TableInclusionChecker inclusionChecker,
+			OperationResultChecker resultChecker,
+			SharedSessionContractImplementor session,
+			Batch.StaleStateMapper staleStateMapper) {
 		final GeneratedValues generatedValues = performNonBatchedOperations(
 				modelReference,
 				valuesAnalysis,
@@ -60,9 +71,11 @@ public abstract class AbstractMutationExecutor implements MutationExecutor {
 				session
 		);
 		performSelfExecutingOperations( valuesAnalysis, inclusionChecker, session );
-		performBatchedOperations( valuesAnalysis, inclusionChecker );
+		performBatchedOperations( valuesAnalysis, inclusionChecker, staleStateMapper );
 		return generatedValues;
 	}
+
+
 
 	protected GeneratedValues performNonBatchedOperations(
 			Object modelReference,
@@ -81,7 +94,8 @@ public abstract class AbstractMutationExecutor implements MutationExecutor {
 
 	protected void performBatchedOperations(
 			ValuesAnalysis valuesAnalysis,
-			TableInclusionChecker inclusionChecker) {
+			TableInclusionChecker inclusionChecker,
+			Batch.StaleStateMapper staleStateMapper) {
 	}
 
 	/**
@@ -125,9 +139,10 @@ public abstract class AbstractMutationExecutor implements MutationExecutor {
 
 		// If we get here the statement is needed - make sure it is resolved
 		session.getJdbcServices().getSqlStatementLogger().logStatement( statementDetails.getSqlString() );
-		valueBindings.beforeStatement( statementDetails );
 
 		try {
+			valueBindings.beforeStatement( statementDetails );
+
 			final int affectedRowCount = session.getJdbcCoordinator()
 					.getResultSetReturn()
 					.executeUpdate( statementDetails.getStatement(), statementDetails.getSqlString() );
@@ -137,7 +152,7 @@ public abstract class AbstractMutationExecutor implements MutationExecutor {
 				return;
 			}
 
-			ModelMutationHelper.checkResults( resultChecker, statementDetails, affectedRowCount, -1 );
+			checkResults( resultChecker, statementDetails, affectedRowCount, -1 );
 		}
 		catch (SQLException e) {
 			throw session.getJdbcServices().getSqlExceptionHelper().convert(

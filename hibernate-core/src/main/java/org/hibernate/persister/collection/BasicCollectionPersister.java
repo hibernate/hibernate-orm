@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.collection;
 
@@ -44,7 +42,6 @@ import org.hibernate.persister.collection.mutation.RowMutationOperations;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinator;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorNoOp;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorStandard;
-import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -60,6 +57,7 @@ import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
 import org.hibernate.sql.model.internal.TableUpdateStandard;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
+import org.hibernate.type.EntityType;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
@@ -80,18 +78,6 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	private final UpdateRowsCoordinator updateCoordinator;
 	private final DeleteRowsCoordinator deleteRowsCoordinator;
 	private final RemoveCoordinator removeCoordinator;
-
-	public boolean isCascadeDeleteEnabled() {
-		return false;
-	}
-
-	@Deprecated(since = "6.0")
-	public BasicCollectionPersister(
-			Collection collectionBinding,
-			CollectionDataAccess cacheAccessStrategy,
-			PersisterCreationContext creationContext) throws MappingException, CacheException {
-		this( collectionBinding, cacheAccessStrategy, (RuntimeModelCreationContext) creationContext );
-	}
 
 	public BasicCollectionPersister(
 			Collection collectionBinding,
@@ -758,23 +744,13 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	}
 
 	@Override
-	public boolean consumesEntityAlias() {
-		return false;
-	}
-
-	@Override
-	public boolean consumesCollectionAlias() {
-		return true;
-	}
-
-	@Override
 	public boolean isOneToMany() {
 		return false;
 	}
 
 	@Override
 	public boolean isManyToMany() {
-		return elementType.isEntityType(); //instanceof AssociationType;
+		return elementType instanceof EntityType; //instanceof AssociationType;
 	}
 
 	@Override

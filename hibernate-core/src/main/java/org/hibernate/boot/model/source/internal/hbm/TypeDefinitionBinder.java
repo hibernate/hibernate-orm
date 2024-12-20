@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
@@ -27,11 +25,12 @@ public class TypeDefinitionBinder {
 	public static void processTypeDefinition(
 			HbmLocalMetadataBuildingContext context,
 			JaxbHbmTypeDefinitionType typeDefinitionBinding) {
-		final ClassLoaderService cls = context.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class );
 
 		final TypeDefinition definition = new TypeDefinition(
 				typeDefinitionBinding.getName(),
-				cls.classForName( typeDefinitionBinding.getClazz() ),
+				context.getBuildingOptions().getServiceRegistry()
+						.requireService( ClassLoaderService.class )
+						.classForName( typeDefinitionBinding.getClazz() ),
 				null,
 				ConfigParameterHelper.extractConfigParameters( typeDefinitionBinding )
 		);

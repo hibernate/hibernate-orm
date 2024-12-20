@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.entity;
 
@@ -13,7 +11,7 @@ import java.util.ConcurrentModificationException;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
@@ -22,9 +20,9 @@ import org.junit.Test;
  * @author Guenther Demetz
  */
 public class HibernateAnnotationMappingTest extends BaseUnitTestCase {
-	
+
 	@Test
-	@TestForIssue( jiraKey = "HHH-7446" )
+	@JiraKey( value = "HHH-7446" )
 	public void testUniqueConstraintAnnotationOnNaturalIds() throws Exception {
 		Configuration configuration = new Configuration();
 		ServiceRegistryUtil.applySettings( configuration.getStandardServiceRegistryBuilder() );
@@ -36,7 +34,7 @@ public class HibernateAnnotationMappingTest extends BaseUnitTestCase {
 			sf.close();
 		}
 		catch (ConcurrentModificationException e) {
-			fail(e.toString()); 
+			fail(e.toString());
 		}
 	}
 }

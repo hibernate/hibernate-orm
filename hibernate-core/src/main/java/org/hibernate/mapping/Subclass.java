@@ -1,21 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.collections.JoinedList;
-import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * A mapping model object that represents a subclass in an entity class
@@ -26,7 +22,6 @@ import org.hibernate.persister.entity.EntityPersister;
 public class Subclass extends PersistentClass {
 
 	private PersistentClass superclass;
-	private Class<? extends EntityPersister> classPersisterClass;
 	private final int subclassId;
 
 	public Subclass(PersistentClass superclass, MetadataBuildingContext buildingContext) {
@@ -183,13 +178,6 @@ public class Subclass extends PersistentClass {
 	}
 
 	@Override
-	public Class<? extends EntityPersister> getEntityPersisterClass() {
-		return classPersisterClass == null
-				? getSuperclass().getEntityPersisterClass()
-				: classPersisterClass;
-	}
-
-	@Override
 	public Table getRootTable() {
 		return getSuperclass().getRootTable();
 	}
@@ -200,8 +188,8 @@ public class Subclass extends PersistentClass {
 	}
 
 	@Override
-	public boolean isExplicitPolymorphism() {
-		return getSuperclass().isExplicitPolymorphism();
+	public boolean isConcreteProxy() {
+		return getRootClass().isConcreteProxy();
 	}
 
 	public void setSuperclass(PersistentClass superclass) {
@@ -222,11 +210,6 @@ public class Subclass extends PersistentClass {
 		if ( isJoinedSubclass() ) {
 			getKey().createForeignKeyOfEntity( getSuperclass().getEntityName() );
 		}
-	}
-
-	@Override
-	public void setEntityPersisterClass(Class<? extends EntityPersister> classPersisterClass) {
-		this.classPersisterClass = classPersisterClass;
 	}
 
 

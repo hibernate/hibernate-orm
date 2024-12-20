@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.usertypes;
 
@@ -15,8 +13,8 @@ import java.time.YearMonth;
 import java.util.Objects;
 
 import org.hibernate.annotations.Type;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.UserType;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -134,7 +132,7 @@ public class UserTypeFunctionsTest {
 		}
 
 		@Override
-		public YearMonth nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner)
+		public YearMonth nullSafeGet(ResultSet rs, int position, WrapperOptions options)
 				throws SQLException {
 			int intValue = rs.getInt( position );
 			if ( rs.wasNull() ) {
@@ -148,7 +146,7 @@ public class UserTypeFunctionsTest {
 				PreparedStatement st,
 				YearMonth value,
 				int index,
-				SharedSessionContractImplementor session) throws SQLException {
+				WrapperOptions options) throws SQLException {
 			if ( value == null ) {
 				st.setNull( index, Types.INTEGER );
 			}

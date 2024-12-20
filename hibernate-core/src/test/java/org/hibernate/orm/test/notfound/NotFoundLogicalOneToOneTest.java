@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.notfound;
 
@@ -50,7 +48,7 @@ public class NotFoundLogicalOneToOneTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( euro )
+						session.remove( euro )
 		);
 
 		scope.inTransaction(
@@ -58,7 +56,7 @@ public class NotFoundLogicalOneToOneTest {
 					Coin coin = session.get( Coin.class, fiveC.getId() );
 					assertNull( coin.getCurrency() );
 
-					session.delete( coin );
+					session.remove( coin );
 				}
 		);
 	}

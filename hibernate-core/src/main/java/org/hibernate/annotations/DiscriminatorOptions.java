@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-// $Id$
 package org.hibernate.annotations;
+import org.hibernate.binder.internal.DiscriminatorOptionsBinder;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -19,6 +18,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author Hardy Ferentschik
  */
+@TypeBinderType(binder = DiscriminatorOptionsBinder.class)
 @Target(TYPE)
 @Retention(RUNTIME)
 public @interface DiscriminatorOptions {
@@ -28,6 +28,10 @@ public @interface DiscriminatorOptions {
 	 * instances of a root entity and its subtypes. This is useful if
 	 * there are discriminator column values which do <em>not</em>
 	 * map to any subtype of the root entity type.
+	 * <p>
+	 * This setting has the side effect of suppressing the generation
+	 * of a {@code check} constraint in the DDL for the discriminator
+	 * column.
 	 *
 	 * @return {@code true} if allowed discriminator values must always
 	 *         be explicitly enumerated

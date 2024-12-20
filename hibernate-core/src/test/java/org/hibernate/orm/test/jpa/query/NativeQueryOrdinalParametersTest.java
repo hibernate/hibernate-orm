@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.query;
 
@@ -22,7 +20,7 @@ import org.hibernate.Session;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.query.NativeQuery;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -67,7 +65,7 @@ public class NativeQueryOrdinalParametersTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10885")
+	@JiraKey(value = "HHH-10885")
 	public void testNativeQueryIndexedOrdinalParameter(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
@@ -80,7 +78,7 @@ public class NativeQueryOrdinalParametersTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10885")
+	@JiraKey(value = "HHH-10885")
 	public void testNativeQueryOrdinalParameter(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
@@ -93,7 +91,7 @@ public class NativeQueryOrdinalParametersTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11121")
+	@JiraKey(value = "HHH-11121")
 	public void testConflictWithSessionNativeQuery(EntityManagerFactoryScope scope) {
 		final String sqlString = "SELECT * FROM GAME g WHERE title = ?";
 
@@ -122,7 +120,7 @@ public class NativeQueryOrdinalParametersTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12532")
+	@JiraKey(value = "HHH-12532")
 	// Add RequiresDialect be Cockroach version 201
 	@RequiresDialect( value = PostgreSQLDialect.class )
 	@RequiresDialect( value = CockroachDialect.class, majorVersion = 20, minorVersion = 1 )

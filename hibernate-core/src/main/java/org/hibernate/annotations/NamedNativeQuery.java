@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
 
@@ -13,7 +11,7 @@ import java.lang.annotation.Target;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import org.hibernate.CacheMode;
-import org.hibernate.Remove;
+import org.hibernate.query.QueryFlushMode;
 
 import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.ElementType.TYPE;
@@ -65,11 +63,24 @@ public @interface NamedNativeQuery {
 	String resultSetMapping() default "";
 
 	/**
+	 * Determines whether the session should be flushed before
+	 * executing the query.
+	 *
+	 * @see org.hibernate.query.CommonQueryContract#setQueryFlushMode(QueryFlushMode)
+	 *
+	 * @since 7.0
+	 */
+	QueryFlushMode flush() default QueryFlushMode.DEFAULT;
+
+	/**
 	 * The flush mode for the query.
 	 *
 	 * @see org.hibernate.query.CommonQueryContract#setFlushMode(jakarta.persistence.FlushModeType)
 	 * @see org.hibernate.jpa.HibernateHints#HINT_FLUSH_MODE
+	 *
+	 * @deprecated use {@link #flush()}
 	 */
+	@Deprecated(since = "7")
 	FlushModeType flushMode() default FlushModeType.PERSISTENCE_CONTEXT;
 
 	/**
@@ -135,16 +146,10 @@ public @interface NamedNativeQuery {
 	/**
 	 * The cache interaction mode for this query.
 	 *
-	 * @deprecated use {@link #cacheStoreMode()} and
-	 *            {@link #cacheRetrieveMode()} since
-	 *            {@link CacheModeType} is deprecated
-	 *
+	 * @see org.hibernate.query.SelectionQuery#setCacheMode(CacheMode)
 	 * @see org.hibernate.jpa.HibernateHints#HINT_CACHE_MODE
 	 */
-	@Deprecated(since = "6.2") @Remove
-	//TODO: actually, we won't remove it, we'll change its
-	//      type to CacheMode and then un-deprecate it
-	CacheModeType cacheMode() default CacheModeType.NORMAL;
+	CacheMode cacheMode() default CacheMode.NORMAL;
 
 	/**
 	 * Whether the results should be loaded in read-only mode.

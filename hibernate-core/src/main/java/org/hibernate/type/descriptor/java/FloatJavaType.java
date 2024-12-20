@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
@@ -35,6 +33,11 @@ public class FloatJavaType extends AbstractClassJavaType<Float> implements Primi
 	}
 
 	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
+	@Override
 	public String toString(Float value) {
 		return value == null ? null : value.toString();
 	}
@@ -50,7 +53,7 @@ public class FloatJavaType extends AbstractClassJavaType<Float> implements Primi
 		if ( value == null ) {
 			return null;
 		}
-		if ( Float.class.isAssignableFrom( type ) ) {
+		if ( Float.class.isAssignableFrom( type ) || type == Object.class ) {
 			return (X) value;
 		}
 		if ( Double.class.isAssignableFrom( type ) ) {
@@ -85,35 +88,30 @@ public class FloatJavaType extends AbstractClassJavaType<Float> implements Primi
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof Float) {
-			return (Float) value;
+		if (value instanceof Float floatValue) {
+			return floatValue;
 		}
-		if (value instanceof Number) {
-			return ( (Number) value ).floatValue();
+		if (value instanceof Number number) {
+			return number.floatValue();
 		}
-		else if (value instanceof String) {
-			return Float.valueOf( ( (String) value ) );
+		else if (value instanceof String string) {
+			return Float.valueOf( string );
 		}
 		throw unknownWrap( value.getClass() );
 	}
 
 	@Override
 	public boolean isWider(JavaType<?> javaType) {
-		switch ( javaType.getJavaType().getTypeName() ) {
-			case "byte":
-			case "java.lang.Byte":
-			case "short":
-			case "java.lang.Short":
-			case "int":
-			case "java.lang.Integer":
-			case "long":
-			case "java.lang.Long":
-			case "java.math.BigInteger":
-			case "java.math.BigDecimal":
-				return true;
-			default:
-				return false;
-		}
+		return switch ( javaType.getTypeName() ) {
+			case
+				"byte", "java.lang.Byte",
+				"short", "java.lang.Short",
+				"int", "java.lang.Integer",
+				"long", "java.lang.Long",
+				"java.math.BigInteger",
+				"java.math.BigDecimal" -> true;
+			default -> false;
+		};
 	}
 
 	@Override
@@ -157,36 +155,12 @@ public class FloatJavaType extends AbstractClassJavaType<Float> implements Primi
 			return null;
 		}
 
-		if ( value instanceof Float ) {
-			return (Float) value;
+		if ( value instanceof Float floatValue ) {
+			return floatValue;
 		}
 
-		if ( value instanceof Double ) {
-			return ( (Double) value ).floatValue();
-		}
-
-		if ( value instanceof Byte ) {
-			return ( (Byte) value ).floatValue();
-		}
-
-		if ( value instanceof Short ) {
-			return ( (Short) value ).floatValue();
-		}
-
-		if ( value instanceof Integer ) {
-			return ( (Integer) value ).floatValue();
-		}
-
-		if ( value instanceof Long ) {
-			return ( (Long) value ).floatValue();
-		}
-
-		if ( value instanceof BigInteger ) {
-			return ( (BigInteger) value ).floatValue();
-		}
-
-		if ( value instanceof BigDecimal ) {
-			return ( (BigDecimal) value ).floatValue();
+		if ( value instanceof Number number ) {
+			return number.floatValue();
 		}
 
 		if ( value instanceof String ) {

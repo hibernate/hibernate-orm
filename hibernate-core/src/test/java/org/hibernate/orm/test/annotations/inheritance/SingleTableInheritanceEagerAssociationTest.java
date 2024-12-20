@@ -1,8 +1,12 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.annotations.inheritance;
 
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.BeforeAll;
@@ -13,7 +17,6 @@ import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
@@ -36,7 +39,7 @@ import jakarta.persistence.Version;
 				SingleTableInheritanceEagerAssociationTest.Message.class,
 		}
 )
-@TestForIssue(jiraKey = "HHH-15969")
+@JiraKey(value = "HHH-15969")
 public class SingleTableInheritanceEagerAssociationTest {
 
 	@BeforeAll

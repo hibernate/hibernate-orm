@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.dialect.functional;
 
 import java.sql.Connection;
@@ -12,7 +16,7 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorMa
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -42,7 +46,7 @@ public class MariaDBExtractSequenceInformationTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-15665")
+	@JiraKey(value = "HHH-15665")
 	public void testExtractSequenceInformationForSqlServerWithCaseSensitiveCollation() {
 		try (StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry()) {
 			JdbcEnvironment jdbcEnvironment = ssr.getService( JdbcEnvironment.class );

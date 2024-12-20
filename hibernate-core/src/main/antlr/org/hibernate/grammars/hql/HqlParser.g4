@@ -14,12 +14,6 @@ options {
 package org.hibernate.grammars.hql;
 }
 
-@members {
-	protected void logUseOfReservedWordAsIdentifier(Token token) {
-	}
-}
-
-
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Statements
 
@@ -110,13 +104,18 @@ values
 /**
  * a 'conflict' clause in an 'insert' statement
  */
-conflictClause: ON CONFLICT conflictTarget? conflictAction;
+conflictClause
+	: ON CONFLICT conflictTarget? DO conflictAction
+	;
+
 conflictTarget
 	: ON CONSTRAINT identifier
-	| LEFT_PAREN simplePath (COMMA simplePath)* RIGHT_PAREN;
+	| LEFT_PAREN simplePath (COMMA simplePath)* RIGHT_PAREN
+	;
+
 conflictAction
-	: DO NOTHING
-	| DO UPDATE setClause whereClause?
+	: NOTHING
+	| UPDATE setClause whereClause?
 	;
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -220,6 +219,7 @@ entityWithJoins
 fromRoot
 	: entityName variable?							# RootEntity
 	| LEFT_PAREN subquery RIGHT_PAREN variable?		# RootSubquery
+	| setReturningFunction variable?				# RootFunction
 	;
 
 /**
@@ -270,8 +270,9 @@ joinType
  * The joined path, with an optional identification variable
  */
 joinTarget
-	: path variable?										#JoinPath
-	| LATERAL? LEFT_PAREN subquery RIGHT_PAREN variable?	#JoinSubquery
+	: path variable?										# JoinPath
+	| LATERAL? LEFT_PAREN subquery RIGHT_PAREN variable?	# JoinSubquery
+	| LATERAL? setReturningFunction variable?				# JoinFunction
 	;
 
 /**
@@ -425,12 +426,19 @@ pathContinuation
  *		* VALUE( path )
  * 		* KEY( path )
  * 		* path[ selector ]
+ * 		* ARRAY_GET( embeddableArrayPath, index ).path
+ * 		* COALESCE( array1, array2 )[ selector ].path
  */
 syntacticDomainPath
 	: treatedNavigablePath
 	| collectionValueNavigablePath
 	| mapKeyNavigablePath
 	| simplePath indexedPathAccessFragment
+	| simplePath slicedPathAccessFragment
+	| toOneFkReference
+	| function pathContinuation
+	| function indexedPathAccessFragment pathContinuation?
+	| function slicedPathAccessFragment
 	;
 
 /**
@@ -451,6 +459,13 @@ generalPathFragment
  */
 indexedPathAccessFragment
 	: LEFT_BRACKET expression RIGHT_BRACKET (DOT generalPathFragment)?
+	;
+
+/**
+ * The slice operator to obtain elements between the lower and upper bound.
+ */
+slicedPathAccessFragment
+	: LEFT_BRACKET expression COLON expression RIGHT_BRACKET
 	;
 
 /**
@@ -654,6 +669,9 @@ predicate
 	| expression NOT? IN inList													# InPredicate
 	| expression NOT? BETWEEN expression AND expression							# BetweenPredicate
 	| expression NOT? (LIKE | ILIKE) expression likeEscape?						# LikePredicate
+	| expression NOT? CONTAINS expression										# ContainsPredicate
+	| expression NOT? INCLUDES expression										# IncludesPredicate
+	| expression NOT? INTERSECTS expression										# IntersectsPredicate
 	| expression comparisonOperator expression									# ComparisonPredicate
 	| EXISTS collectionQuantifier LEFT_PAREN simplePath RIGHT_PAREN				# ExistsCollectionPartPredicate
 	| EXISTS expression															# ExistsPredicate
@@ -685,6 +703,7 @@ inList
 	| LEFT_PAREN (expressionOrPredicate (COMMA expressionOrPredicate)*)? RIGHT_PAREN# ExplicitTupleInList
 	| LEFT_PAREN subquery RIGHT_PAREN												# SubqueryInList
 	| parameter 																	# ParamInList
+	| expression 																	# ArrayInList
 	;
 
 /**
@@ -727,7 +746,6 @@ primaryExpression
 	| entityIdReference									# EntityIdExpression
 	| entityVersionReference							# EntityVersionExpression
 	| entityNaturalIdReference							# EntityNaturalIdExpression
-	| toOneFkReference									# ToOneFkExpression
 	| syntacticDomainPath pathContinuation?				# SyntacticPathExpression
 	| function											# FunctionExpression
 	| generalPathFragment								# GeneralPathExpression
@@ -880,6 +898,7 @@ literal
 	| numericLiteral
 	| binaryLiteral
 	| temporalLiteral
+	| arrayLiteral
 	| generalizedLiteral
 	;
 
@@ -1052,6 +1071,13 @@ genericTemporalLiteralText
 /**
  * A generic format for specifying literal values of arbitary types
  */
+arrayLiteral
+	: LEFT_BRACKET (expression (COMMA expression)*)? RIGHT_BRACKET
+	;
+
+/**
+ * A generic format for specifying literal values of arbitary types
+ */
 generalizedLiteral
 	: LEFT_BRACE generalizedLiteralType COLON generalizedLiteralText RIGHT_BRACE
 	;
@@ -1078,14 +1104,30 @@ function
 	| collectionAggregateFunction
 	| collectionFunctionMisuse
 	| jpaNonstandardFunction
+	| columnFunction
+	| jsonFunction
+	| xmlFunction
 	| genericFunction
+	;
+
+setReturningFunction
+	: simpleSetReturningFunction
+	| jsonTableFunction
+	| xmltableFunction
+	;
+
+/**
+ * A simple set returning function invocation without special syntax.
+ */
+simpleSetReturningFunction
+	: identifier LEFT_PAREN genericFunctionArguments? RIGHT_PAREN
 	;
 
 /**
  * A syntax for calling user-defined or native database functions, required by JPQL
  */
 jpaNonstandardFunction
-	: FUNCTION LEFT_PAREN jpaNonstandardFunctionName (COMMA genericFunctionArguments)? RIGHT_PAREN
+	: FUNCTION LEFT_PAREN jpaNonstandardFunctionName (AS castTarget)? (COMMA genericFunctionArguments)? RIGHT_PAREN
 	;
 
 /**
@@ -1093,7 +1135,12 @@ jpaNonstandardFunction
  */
 jpaNonstandardFunctionName
 	: STRING_LITERAL
+	| identifier
 	;
+
+columnFunction
+    : COLUMN LEFT_PAREN path DOT jpaNonstandardFunctionName (AS castTarget)? RIGHT_PAREN
+    ;
 
 /**
  * Any function invocation that follows the regular syntax
@@ -1584,6 +1631,204 @@ rollup
 	: ROLLUP LEFT_PAREN expressionOrPredicate (COMMA expressionOrPredicate)* RIGHT_PAREN
 	;
 
+jsonFunction
+	: jsonArrayFunction
+	| jsonExistsFunction
+	| jsonObjectFunction
+	| jsonQueryFunction
+	| jsonValueFunction
+	| jsonArrayAggFunction
+	| jsonObjectAggFunction
+	;
+
+/**
+ * The 'json_value()' function
+ */
+jsonValueFunction
+	: JSON_VALUE LEFT_PAREN expression COMMA expression jsonPassingClause? jsonValueReturningClause? jsonValueOnErrorOrEmptyClause? jsonValueOnErrorOrEmptyClause? RIGHT_PAREN
+	;
+
+jsonPassingClause
+	: PASSING expressionOrPredicate AS identifier (COMMA expressionOrPredicate AS identifier)*
+	;
+
+jsonValueReturningClause
+	: RETURNING castTarget
+	;
+
+jsonValueOnErrorOrEmptyClause
+	: (ERROR | NULL | DEFAULT expression) ON (ERROR | EMPTY)
+	;
+
+/**
+ * The 'json_query()' function
+ */
+jsonQueryFunction
+	: JSON_QUERY LEFT_PAREN expression COMMA expression jsonPassingClause? jsonQueryWrapperClause? jsonQueryOnErrorOrEmptyClause? jsonQueryOnErrorOrEmptyClause? RIGHT_PAREN
+	;
+
+jsonQueryWrapperClause
+	: WITH (CONDITIONAL | UNCONDITIONAL)? ARRAY? WRAPPER
+	| WITHOUT ARRAY? WRAPPER
+	;
+
+jsonQueryOnErrorOrEmptyClause
+	: (ERROR | NULL | EMPTY (ARRAY | OBJECT)?) ON (ERROR | EMPTY)
+	;
+
+/**
+ * The 'json_exists()' function
+ */
+jsonExistsFunction
+	: JSON_EXISTS LEFT_PAREN expression COMMA expression jsonPassingClause? jsonExistsOnErrorClause? RIGHT_PAREN
+	;
+
+jsonExistsOnErrorClause
+	: (ERROR | TRUE | FALSE) ON ERROR
+	;
+
+/**
+ * The 'json_array()' function
+ */
+jsonArrayFunction
+	: JSON_ARRAY LEFT_PAREN (expressionOrPredicate (COMMA expressionOrPredicate)* jsonNullClause?)? RIGHT_PAREN
+	;
+
+/**
+ * The 'json_object()' function
+ */
+jsonObjectFunction
+	: JSON_OBJECT LEFT_PAREN (jsonObjectFunctionEntries jsonNullClause?)? RIGHT_PAREN
+	;
+
+jsonObjectFunctionEntries
+	: expressionOrPredicate COMMA expressionOrPredicate (COMMA expressionOrPredicate COMMA expressionOrPredicate)*
+	| (KEY? expressionOrPredicate VALUE expressionOrPredicate | expressionOrPredicate COLON expressionOrPredicate)
+	  (COMMA (KEY? expressionOrPredicate VALUE expressionOrPredicate | expressionOrPredicate COLON expressionOrPredicate))*
+	;
+
+jsonNullClause
+	: (ABSENT | NULL) ON NULL
+	;
+
+/**
+ * The 'json_arrayagg()' function
+ */
+jsonArrayAggFunction
+	: JSON_ARRAYAGG LEFT_PAREN expressionOrPredicate jsonNullClause? orderByClause? RIGHT_PAREN filterClause?
+	;
+
+/**
+ * The 'json_objectagg()' function
+ */
+jsonObjectAggFunction
+	: JSON_OBJECTAGG LEFT_PAREN KEY? expressionOrPredicate (VALUE | COLON) expressionOrPredicate jsonNullClause? jsonUniqueKeysClause? RIGHT_PAREN filterClause?
+	;
+
+jsonUniqueKeysClause
+	: (WITH | WITHOUT) UNIQUE KEYS
+	;
+
+jsonTableFunction
+	: JSON_TABLE LEFT_PAREN expression (COMMA expression)? jsonPassingClause? jsonTableColumnsClause jsonTableErrorClause? RIGHT_PAREN
+	;
+
+jsonTableErrorClause
+	: (ERROR | NULL) ON ERROR
+	;
+
+jsonTableColumnsClause
+    : COLUMNS LEFT_PAREN jsonTableColumns RIGHT_PAREN
+    ;
+
+jsonTableColumns
+    : jsonTableColumn (COMMA jsonTableColumn)*
+    ;
+
+jsonTableColumn
+    : NESTED PATH? STRING_LITERAL jsonTableColumnsClause                                                                            # JsonTableNestedColumn
+    | identifier JSON jsonQueryWrapperClause? (PATH STRING_LITERAL)? jsonQueryOnErrorOrEmptyClause? jsonQueryOnErrorOrEmptyClause?  # JsonTableQueryColumn
+    | identifier FOR ORDINALITY                                                                                                     # JsonTableOrdinalityColumn
+    | identifier EXISTS (PATH STRING_LITERAL)? jsonExistsOnErrorClause?                                                             # JsonTableExistsColumn
+    | identifier castTarget (PATH STRING_LITERAL)? jsonValueOnErrorOrEmptyClause? jsonValueOnErrorOrEmptyClause?                    # JsonTableValueColumn
+    ;
+
+xmlFunction
+	: xmlelementFunction
+	| xmlforestFunction
+	| xmlpiFunction
+	| xmlqueryFunction
+	| xmlexistsFunction
+	| xmlaggFunction
+	;
+
+/**
+ * The 'xmlelement()' function
+ */
+xmlelementFunction
+	: XMLELEMENT LEFT_PAREN NAME identifier (COMMA xmlattributesFunction)? (COMMA expressionOrPredicate)* RIGHT_PAREN
+	;
+
+/**
+ * The 'xmlattributes()' function
+ */
+xmlattributesFunction
+	: XMLATTRIBUTES LEFT_PAREN expressionOrPredicate AS identifier (COMMA expressionOrPredicate AS identifier)* RIGHT_PAREN
+	;
+
+/**
+ * The 'xmlforest()' function
+ */
+xmlforestFunction
+	: XMLFOREST LEFT_PAREN expressionOrPredicate (AS identifier)? (COMMA expressionOrPredicate (AS identifier)?)* RIGHT_PAREN
+	;
+
+/**
+ * The 'xmlpi()' function
+ */
+xmlpiFunction
+	: XMLPI LEFT_PAREN NAME identifier (COMMA expression)? RIGHT_PAREN
+	;
+
+/**
+ * The 'xmlquery()' function
+ */
+xmlqueryFunction
+	: XMLQUERY LEFT_PAREN expression PASSING expression RIGHT_PAREN
+	;
+
+/**
+ * The 'xmlexists()' function
+ */
+xmlexistsFunction
+	: XMLEXISTS LEFT_PAREN expression PASSING expression RIGHT_PAREN
+	;
+
+/**
+ * The 'xmlexists()' function
+ */
+xmlaggFunction
+	: XMLAGG LEFT_PAREN expression orderByClause? RIGHT_PAREN filterClause? overClause?
+	;
+
+xmltableFunction
+	: XMLTABLE LEFT_PAREN expression PASSING expression xmltableColumnsClause RIGHT_PAREN
+	;
+
+xmltableColumnsClause
+    : COLUMNS xmltableColumn (COMMA xmltableColumn)*
+    ;
+
+xmltableColumn
+    : identifier XML (PATH STRING_LITERAL)? xmltableDefaultClause?          # XmlTableQueryColumn
+    | identifier FOR ORDINALITY                                             # XmlTableOrdinalityColumn
+    | identifier castTarget (PATH STRING_LITERAL)? xmltableDefaultClause?   # XmlTableValueColumn
+    ;
+
+xmltableDefaultClause
+    : DEFAULT expression
+    ;
+
 /**
  * Support for "soft" keywords which may be used as identifiers
  *
@@ -1600,9 +1845,11 @@ rollup
  nakedIdentifier
 	: IDENTIFIER
 	| QUOTED_IDENTIFIER
-	| (ALL
+	| ABSENT
+	| ALL
 	| AND
 	| ANY
+	| ARRAY
 	| AS
 	| ASC
 	| AVG
@@ -1613,8 +1860,12 @@ rollup
 	| CASE
 	| CAST
 	| COLLATE
+	| COLUMN
+	| COLUMNS
+	| CONDITIONAL
 	| CONFLICT
 	| CONSTRAINT
+	| CONTAINS
 	| COUNT
 	| CROSS
 	| CUBE
@@ -1650,6 +1901,7 @@ rollup
 	| FETCH
 	| FILTER
 	| FIRST
+	| FK
 	| FOLLOWING
 	| FOR
 	| FORMAT
@@ -1665,14 +1917,25 @@ rollup
 	| ILIKE
 	| IN
 	| INDEX
+	| INCLUDES
 	| INDICES
 //	| INNER
 	| INSERT
 	| INSTANT
 	| INTERSECT
+	| INTERSECTS
 	| INTO
 	| IS
 	| JOIN
+	| JSON
+	| JSON_ARRAY
+	| JSON_ARRAYAGG
+	| JSON_EXISTS
+	| JSON_OBJECT
+	| JSON_OBJECTAGG
+	| JSON_QUERY
+	| JSON_TABLE
+	| JSON_VALUE
 	| KEY
 	| KEYS
 	| LAST
@@ -1700,7 +1963,9 @@ rollup
 	| MININDEX
 	| MINUTE
 	| MONTH
+	| NAME
 	| NANOSECOND
+	| NESTED
 	| NATURALID
 	| NEW
 	| NEXT
@@ -1716,6 +1981,7 @@ rollup
 	| ONLY
 	| OR
 	| ORDER
+	| ORDINALITY
 	| OTHERS
 //	| OUTER
 	| OVER
@@ -1723,6 +1989,8 @@ rollup
 	| OVERLAY
 	| PAD
 	| PARTITION
+	| PASSING
+	| PATH
 	| PERCENT
 	| PLACING
 	| POSITION
@@ -1730,6 +1998,7 @@ rollup
 	| QUARTER
 	| RANGE
 	| RESPECT
+	| RETURNING
 //	| RIGHT
 	| ROLLUP
 	| ROW
@@ -1756,7 +2025,9 @@ rollup
 	| TRUNCATE
 	| TYPE
 	| UNBOUNDED
+	| UNCONDITIONAL
 	| UNION
+	| UNIQUE
 	| UPDATE
 	| USING
 	| VALUE
@@ -1769,18 +2040,25 @@ rollup
 	| WITH
 	| WITHIN
 	| WITHOUT
+	| WRAPPER
+	| XML
+	| XMLAGG
+	| XMLATTRIBUTES
+	| XMLELEMENT
+	| XMLEXISTS
+	| XMLFOREST
+	| XMLPI
+	| XMLQUERY
+	| XMLTABLE
 	| YEAR
-	| ZONED) {
-		logUseOfReservedWordAsIdentifier( getCurrentToken() );
-	}
+	| ZONED
 	;
+
 identifier
 	: nakedIdentifier
-	| (FULL
+	| FULL
 	| INNER
 	| LEFT
 	| OUTER
-	| RIGHT) {
-		logUseOfReservedWordAsIdentifier( getCurrentToken() );
-	}
+	| RIGHT
 	;

@@ -1,16 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.unionsubclass3;
 
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.junit.After;
 import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
 
 import java.util.List;
+
+import org.hibernate.Transaction;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -18,6 +21,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
@@ -30,8 +35,15 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		return new Class[] {Child.class, Parent.class, Father.class, Mother.class};
 	}
 
+	@After
+	public void tearDown() {
+		doInHibernate( this::sessionFactory, session -> {
+			session.createMutationQuery( "delete from Parent" ).executeUpdate();
+		} );
+	}
+
 	@Test
-	@TestForIssue( jiraKey = "HHH-12114" )
+	@JiraKey( value = "HHH-12114")
 	public void testUnionSubclassClassResults() {
 		doInHibernate( this::sessionFactory, session -> {
 			Father father = new Father();
@@ -92,7 +104,7 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12565" )
+	@JiraKey( value = "HHH-12565")
 	public void typeOfLeafTPC() {
 		doInHibernate( this::sessionFactory, session -> {
 			List results = session.createQuery(
@@ -102,6 +114,62 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 					.getResultList();
 			assertEquals(0, results.size());
 		} );
+	}
+
+	@Test
+	@JiraKey( value = "HHH-12565")
+	public void typeOfLeafTPCWithoutWhere() {
+		doInHibernate( this::sessionFactory, session -> {
+			List results = session.createQuery("select TYPE(f) from Father f")
+					.getResultList();
+			assertEquals(0, results.size());
+		} );
+	}
+
+	@Test
+	@JiraKey( value = "HHH-12565")
+	public void typeOfParentInheritorTPCCriteriaTest() {
+		inSession(
+				session -> {
+					Transaction transaction = session.beginTransaction();
+					Father father = new Father();
+					father.id = 42L;
+					session.persist( father );
+					session.flush();
+
+					HibernateCriteriaBuilder cb = session.getSessionFactory().getCriteriaBuilder();
+					CriteriaQuery<Parent> query = cb.createQuery( Parent.class );
+					Root<Parent> root = query.from( Parent.class );
+					query.where( cb.equal( root.type(), cb.literal(Father.class) ) );
+					List<Parent> result = session.createQuery( query ).getResultList();
+					Assertions.assertEquals( result, List.of( father ) );
+
+					transaction.rollback();
+				}
+		);
+	}
+
+	@Test
+	@JiraKey( value = "HHH-12565")
+	public void typeOfTPCCriteriaTest() {
+		inSession(
+				session -> {
+					Transaction transaction = session.beginTransaction();
+					Father father = new Father();
+					father.id = 42L;
+					session.persist( father );
+					session.flush();
+
+					HibernateCriteriaBuilder cb = session.getSessionFactory().getCriteriaBuilder();
+					CriteriaQuery<Class> query = cb.createQuery( Class.class );
+					Root<Parent> root = query.from( Parent.class );
+					query.select( root.type() );
+					List<Class> result = session.createQuery( query ).getResultList();
+					Assertions.assertEquals( List.of( Father.class ), result );
+
+					transaction.rollback();
+				}
+		);
 	}
 
 	@Entity(name = "Child")
@@ -117,14 +185,14 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 
 	@Entity(name = "Father")
 	public static class Father extends Parent {
-		
+
 		@Column
 		String fathersDay;
 	}
 
 	@Entity(name = "Mother")
 	public static class Mother extends Parent {
-		
+
 		@Column
 		String mothersDay;
 	}
@@ -136,4 +204,3 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		public Long id;
 	}
 }
-

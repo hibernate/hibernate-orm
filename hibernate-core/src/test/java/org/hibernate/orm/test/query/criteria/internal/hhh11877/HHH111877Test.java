@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.query.criteria.internal.hhh11877;
 
 import jakarta.persistence.TypedQuery;
@@ -9,7 +13,7 @@ import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -18,7 +22,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
  * @author Archie Cobbs
  * @author Nathan Xu
  */
-@TestForIssue( jiraKey = "HHH-11877" )
+@JiraKey( value = "HHH-11877" )
 @RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
 public class HHH111877Test extends BaseEntityManagerFunctionalTestCase {
 

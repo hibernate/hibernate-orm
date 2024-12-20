@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -12,15 +10,19 @@ import java.util.function.Consumer;
 import org.hibernate.LockMode;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.MutationStatement;
+import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
@@ -30,6 +32,8 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.DerivedTableReference;
+import org.hibernate.sql.ast.tree.from.FunctionTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -76,7 +80,7 @@ public class DB2LegacySqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	@Override
-	protected void renderTableReferenceJoins(TableGroup tableGroup) {
+	protected void renderTableReferenceJoins(TableGroup tableGroup, int swappedJoinIndex, boolean forceLeftJoin) {
 		// When we are in a recursive CTE, we can't render joins on DB2...
 		// See https://modern-sql.com/feature/with-recursive/db2/error-345-state-42836
 		if ( isInRecursiveQueryPart() ) {
@@ -103,7 +107,7 @@ public class DB2LegacySqlAstTranslator<T extends JdbcOperation> extends Abstract
 			}
 		}
 		else {
-			super.renderTableReferenceJoins( tableGroup );
+			super.renderTableReferenceJoins( tableGroup, swappedJoinIndex, forceLeftJoin );
 		}
 	}
 
@@ -137,6 +141,11 @@ public class DB2LegacySqlAstTranslator<T extends JdbcOperation> extends Abstract
 		else {
 			expression.accept( this );
 		}
+	}
+
+	@Override
+	protected void visitArithmeticOperand(Expression expression) {
+		render( expression, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 	}
 
 	@Override
@@ -248,6 +257,34 @@ public class DB2LegacySqlAstTranslator<T extends JdbcOperation> extends Abstract
 		inLateral = tableReference.isLateral();
 		super.visitQueryPartTableReference( tableReference );
 		inLateral = oldLateral;
+	}
+
+	@Override
+	protected void renderDerivedTableReference(DerivedTableReference tableReference) {
+		if ( tableReference instanceof FunctionTableReference && tableReference.isLateral() ) {
+			// No need for a lateral keyword for functions
+			tableReference.accept( this );
+		}
+		else {
+			super.renderDerivedTableReference( tableReference );
+		}
+	}
+
+	@Override
+	public void renderNamedSetReturningFunction(String functionName, List<? extends SqlAstNode> sqlAstArguments, AnonymousTupleTableGroupProducer tupleType, String tableIdentifierVariable, SqlAstNodeRenderingMode argumentRenderingMode) {
+		final ModelPart ordinalitySubPart = tupleType.findSubPart( CollectionPart.Nature.INDEX.getName(), null );
+		if ( ordinalitySubPart != null ) {
+			appendSql( "lateral (select t.*, row_number() over() " );
+			appendSql( ordinalitySubPart.asBasicValuedModelPart().getSelectionExpression() );
+			appendSql( " from table(" );
+			renderSimpleNamedFunction( functionName, sqlAstArguments, argumentRenderingMode );
+			append( ") t)" );
+		}
+		else {
+			appendSql( "table(" );
+			super.renderNamedSetReturningFunction( functionName, sqlAstArguments, tupleType, tableIdentifierVariable, argumentRenderingMode );
+			append( ')' );
+		}
 	}
 
 	@Override
@@ -383,7 +420,7 @@ public class DB2LegacySqlAstTranslator<T extends JdbcOperation> extends Abstract
 	protected void visitConflictClause(ConflictClause conflictClause) {
 		if ( conflictClause != null ) {
 			if ( conflictClause.isDoUpdate() && conflictClause.getConstraintName() != null ) {
-				throw new IllegalQueryOperationException( "Insert conflict do update clause with constraint name is not supported" );
+				throw new IllegalQueryOperationException( "Insert conflict 'do update' clause with constraint name is not supported" );
 			}
 		}
 	}
@@ -418,9 +455,17 @@ public class DB2LegacySqlAstTranslator<T extends JdbcOperation> extends Abstract
 			appendSql( " from old table (" );
 		}
 		else {
-			appendSql( " from final table (" );
+			appendSql( " from ");
+			appendSql( getNewTableChangeModifier() );
+			appendSql(" table (" );
 		}
 		return true;
+	}
+
+	protected String getNewTableChangeModifier() {
+		// Use 'from new table' to also see data from triggers
+		// See https://www.ibm.com/docs/en/db2/10.5?topic=clause-table-reference#:~:text=FOR%20sequence%20reference-,FINAL%20TABLE,-Specifies%20that%20the
+		return "new";
 	}
 
 	@Override
@@ -436,7 +481,9 @@ public class DB2LegacySqlAstTranslator<T extends JdbcOperation> extends Abstract
 				appendSql( returningColumns.get( i ).getColumnExpression() );
 			}
 
-			appendSql( " from new table ( " ); // 'from final table' does not seem to play well with triggers
+			appendSql( " from ");
+			appendSql( getNewTableChangeModifier() );
+			appendSql(" table (" );
 			super.visitStandardTableInsert( tableInsert );
 			appendSql( ")" );
 		}
@@ -589,16 +636,6 @@ public class DB2LegacySqlAstTranslator<T extends JdbcOperation> extends Abstract
 	@Override
 	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
 		return false;
-	}
-
-	@Override
-	protected String getDual() {
-		return "sysibm.dual";
-	}
-
-	@Override
-	protected String getFromDualForSelectOnly() {
-		return " from " + getDual();
 	}
 
 	@Override

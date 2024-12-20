@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.produce.function.internal;
 
@@ -20,9 +18,7 @@ import org.hibernate.sql.ast.tree.select.SortSpecification;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Delegate for handling function "templates".
@@ -36,7 +32,7 @@ public class PatternRenderer {
 	private final int[] paramIndexes;
 	private final int varargParam;
 	private final int maxParamIndex;
-	private final SqlAstNodeRenderingMode argumentRenderingMode;
+	private final SqlAstNodeRenderingMode[] argumentRenderingModes;
 
 	public PatternRenderer(String pattern) {
 		this( pattern, SqlAstNodeRenderingMode.DEFAULT );
@@ -49,7 +45,16 @@ public class PatternRenderer {
 	 * @param argumentRenderingMode The rendering mode for arguments
 	 */
 	public PatternRenderer(String pattern, SqlAstNodeRenderingMode argumentRenderingMode) {
-		final Set<Integer> paramNumbers = new HashSet<>();
+		this( pattern, new SqlAstNodeRenderingMode[] { argumentRenderingMode } );
+	}
+
+	/**
+	 * Constructs a template renderer
+	 *
+	 * @param pattern The template
+	 * @param argumentRenderingModes The rendering modes for arguments
+	 */
+	public PatternRenderer(String pattern, SqlAstNodeRenderingMode[] argumentRenderingModes) {
 		final List<String> chunkList = new ArrayList<>();
 		final List<Integer> paramList = new ArrayList<>();
 		final StringBuilder chunk = new StringBuilder( 10 );
@@ -88,8 +93,7 @@ public class PatternRenderer {
 					vararg = paramList.size();
 				}
 				else {
-					int paramNumber = Integer.valueOf( index.toString() );
-					paramNumbers.add( paramNumber );
+					int paramNumber = Integer.parseInt( index.toString() );
 					paramList.add( paramNumber );
 					index.setLength(0);
 					if ( paramNumber > max ) {
@@ -116,7 +120,7 @@ public class PatternRenderer {
 			paramIndexes[i] = paramList.get( i );
 		}
 		this.paramIndexes = paramIndexes;
-		this.argumentRenderingMode = argumentRenderingMode;
+		this.argumentRenderingModes = argumentRenderingModes;
 	}
 
 	public boolean hasVarargs() {
@@ -130,11 +134,10 @@ public class PatternRenderer {
 	/**
 	 * The rendering code.
 	 *
-	 * @param sqlAppender
+	 * @param sqlAppender Target for appending
 	 * @param args The arguments to inject into the template
-	 * @return The rendered template with replacements
 	 */
-	@SuppressWarnings({ "UnusedDeclaration" })
+	@SuppressWarnings("unused")
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> args,
@@ -185,6 +188,7 @@ public class PatternRenderer {
 
 		for ( int i = 0; i < chunks.length; i++ ) {
 			if ( i == varargParam ) {
+				final SqlAstNodeRenderingMode argumentRenderingMode = getArgumentRenderingMode(varargParam - 1);
 				for ( int j = i; j < numberOfArguments; j++ ) {
 					final SqlAstNode arg = args.get( j );
 					if ( arg != null ) {
@@ -217,11 +221,11 @@ public class PatternRenderer {
 						filter.accept( translator );
 						translator.getCurrentClauseStack().pop();
 						sqlAppender.appendSql( " then " );
-						translator.render( arg, argumentRenderingMode );
+						translator.render( arg, getArgumentRenderingMode(index) );
 						sqlAppender.appendSql( " else null end" );
 					}
 					else {
-						translator.render( arg, argumentRenderingMode );
+						translator.render( arg, getArgumentRenderingMode(index) );
 					}
 				}
 			}
@@ -233,10 +237,10 @@ public class PatternRenderer {
 		if ( withinGroup != null && !withinGroup.isEmpty() ) {
 			translator.getCurrentClauseStack().push( Clause.WITHIN_GROUP );
 			sqlAppender.appendSql( " within group (order by" );
-			translator.render( withinGroup.get( 0 ), argumentRenderingMode );
+			translator.render( withinGroup.get( 0 ), getArgumentRenderingMode( 0 ) );
 			for ( int i = 1; i < withinGroup.size(); i++ ) {
 				sqlAppender.appendSql( SqlAppender.COMMA_SEPARATOR_CHAR );
-				translator.render( withinGroup.get( 0 ), argumentRenderingMode );
+				translator.render( withinGroup.get( 0 ), getArgumentRenderingMode( 0 ) );
 			}
 			sqlAppender.appendSql( ')' );
 			translator.getCurrentClauseStack().pop();
@@ -266,5 +270,12 @@ public class PatternRenderer {
 			sqlAppender.appendSql( ')' );
 			translator.getCurrentClauseStack().pop();
 		}
+	}
+
+	private SqlAstNodeRenderingMode getArgumentRenderingMode(int index) {
+		if ( index < argumentRenderingModes.length ) {
+			return argumentRenderingModes[index];
+		}
+		return argumentRenderingModes[argumentRenderingModes.length - 1];
 	}
 }

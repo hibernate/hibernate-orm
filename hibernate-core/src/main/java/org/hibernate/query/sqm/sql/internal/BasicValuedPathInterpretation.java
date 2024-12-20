@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.sql.internal;
 
@@ -13,7 +11,6 @@ import java.util.function.Consumer;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
@@ -34,8 +31,9 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.update.Assignable;
 
+import static jakarta.persistence.metamodel.Type.PersistenceType.ENTITY;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
-import static org.hibernate.query.sqm.internal.SqmUtil.needsTargetTableMapping;
+import static org.hibernate.query.sqm.internal.SqmUtil.getTargetMappingIfNeeded;
 
 /**
  * @author Steve Ebersole
@@ -52,8 +50,8 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup( lhs.getNavigablePath() );
 		EntityMappingType treatTarget = null;
 		final ModelPartContainer modelPartContainer;
-		if ( lhs instanceof SqmTreatedPath<?, ?> ) {
-			final EntityDomainType<?> treatTargetDomainType = ( (SqmTreatedPath<?, ?>) lhs ).getTreatTarget();
+		if ( lhs instanceof SqmTreatedPath<?, ?> && ( (SqmTreatedPath<?, ?>) lhs ).getTreatTarget().getPersistenceType() == ENTITY ) {
+			final EntityDomainType<?> treatTargetDomainType = (EntityDomainType<?>) ( (SqmTreatedPath<?, ?>) lhs ).getTreatTarget();
 
 			final MappingMetamodel mappingMetamodel = sqlAstCreationState.getCreationContext()
 					.getSessionFactory()
@@ -82,20 +80,12 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 			}
 		}
 
-		final ModelPart modelPart;
-		if ( needsTargetTableMapping( sqmPath, modelPartContainer ) ) {
-			// We have to make sure we render the column of the target table
-			modelPart = ( (ManagedMappingType) modelPartContainer.getPartMappingType() ).findSubPart(
-					sqmPath.getReferencedPathSource().getPathName(),
-					treatTarget
-			);
-		}
-		else {
-			modelPart = modelPartContainer.findSubPart(
-					sqmPath.getReferencedPathSource().getPathName(),
-					treatTarget
-			);
-		}
+		// Use the target type to find the sub part if needed, otherwise just use the container
+		final ModelPart modelPart = getTargetMappingIfNeeded(
+				sqmPath,
+				modelPartContainer,
+				sqlAstCreationState
+		).findSubPart( sqmPath.getReferencedPathSource().getPathName(), treatTarget );
 
 		if ( modelPart == null ) {
 			if ( jpaQueryComplianceEnabled ) {

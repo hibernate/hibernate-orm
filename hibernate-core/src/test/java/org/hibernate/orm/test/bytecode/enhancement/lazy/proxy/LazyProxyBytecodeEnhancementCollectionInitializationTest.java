@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy;
 
@@ -15,12 +13,13 @@ import java.util.List;
 import org.hibernate.Hibernate;
 import org.hibernate.engine.spi.SessionImplementor;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -36,26 +35,26 @@ import jakarta.persistence.Table;
  * <p>
  * See <a href="https://github.com/hibernate/hibernate-orm/pull/5252#issuecomment-1236635727">this comment</a>.
  */
-@RunWith(BytecodeEnhancerRunner.class)
+@DomainModel(
+		annotatedClasses = {
+				LazyProxyBytecodeEnhancementCollectionInitializationTest.Parent.class,
+				LazyProxyBytecodeEnhancementCollectionInitializationTest.Child.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @EnhancementOptions(lazyLoading = true)
-public class LazyProxyBytecodeEnhancementCollectionInitializationTest
-		extends BaseCoreFunctionalTestCase {
+public class LazyProxyBytecodeEnhancementCollectionInitializationTest {
 
-
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Parent.class, Child.class };
-	}
-
-	@Before
-	public void checkSettings() {
+	@BeforeEach
+	public void checkSettings(SessionFactoryScope scope) {
 		// We want to test this configuration exactly
-		assertTrue( sessionFactory().getSessionFactoryOptions().isCollectionsInDefaultFetchGroupEnabled() );
+		assertTrue( scope.getSessionFactory().getSessionFactoryOptions().isCollectionsInDefaultFetchGroupEnabled() );
 	}
 
-	@Before
-	public void prepare() {
-		inTransaction( s -> {
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			Parent parent = new Parent();
 			parent.setId( 1 );
 			for ( int i = 0; i < 2; i++ ) {
@@ -70,12 +69,12 @@ public class LazyProxyBytecodeEnhancementCollectionInitializationTest
 	}
 
 	@Test
-	public void collectionInitializationOnLazyProxy() {
-		inTransaction( s -> {
+	public void collectionInitializationOnLazyProxy(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			Parent parent = s.getReference( Parent.class, 1 );
 			assertThat( Hibernate.isPropertyInitialized( parent, "children") ).isFalse();
 			assertThat( s.unwrap( SessionImplementor.class ).getPersistenceContext().getCollectionEntries() )
-					.isEmpty();
+					.isNullOrEmpty();
 
 			// Accessing a collection property on a lazy proxy initializes the property and instantiates the collection,
 			// but does not initialize the collection.
@@ -92,7 +91,7 @@ public class LazyProxyBytecodeEnhancementCollectionInitializationTest
 
 	@Entity(name = "Parent")
 	@Table
-	private static class Parent {
+	static class Parent {
 
 		@Id
 		Integer id;
@@ -119,7 +118,7 @@ public class LazyProxyBytecodeEnhancementCollectionInitializationTest
 
 	@Entity(name = "Child")
 	@Table
-	private static class Child {
+	static class Child {
 
 		@Id
 		Integer id;

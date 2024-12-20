@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.sql.internal;
 
@@ -13,7 +11,6 @@ import java.util.function.Consumer;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
@@ -29,7 +26,8 @@ import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.update.Assignable;
 
-import static org.hibernate.query.sqm.internal.SqmUtil.needsTargetTableMapping;
+import static jakarta.persistence.metamodel.Type.PersistenceType.ENTITY;
+import static org.hibernate.query.sqm.internal.SqmUtil.getTargetMappingIfNeeded;
 
 /**
  * @author Steve Ebersole
@@ -51,34 +49,24 @@ public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterp
 					.getSessionFactory()
 					.getRuntimeMetamodels()
 					.getMappingMetamodel();
-			if ( lhs instanceof SqmTreatedPath ) {
-				//noinspection rawtypes
-				final EntityDomainType<?> treatTargetDomainType = ( (SqmTreatedPath) lhs ).getTreatTarget();
+			if ( lhs instanceof SqmTreatedPath<?, ?> && ( (SqmTreatedPath<?, ?>) lhs ).getTreatTarget().getPersistenceType() == ENTITY ) {
+				final EntityDomainType<?> treatTargetDomainType = (EntityDomainType<?>) ( (SqmTreatedPath<?, ?>) lhs ).getTreatTarget();
 				treatTarget = mappingMetamodel.findEntityDescriptor( treatTargetDomainType.getHibernateEntityName() );
 			}
 			else if ( lhs.getNodeType() instanceof EntityDomainType ) {
 				//noinspection rawtypes
 				final EntityDomainType<?> entityDomainType = (EntityDomainType) lhs.getNodeType();
 				treatTarget = mappingMetamodel.findEntityDescriptor( entityDomainType.getHibernateEntityName() );
-
 			}
 		}
 
 		final ModelPartContainer modelPartContainer = tableGroup.getModelPart();
-		final EmbeddableValuedModelPart mapping;
-		if ( needsTargetTableMapping( sqmPath, modelPartContainer ) ) {
-			// We have to make sure we render the column of the target table
-			mapping = (EmbeddableValuedModelPart) ( (ManagedMappingType) modelPartContainer.getPartMappingType() ).findSubPart(
-					sqmPath.getReferencedPathSource().getPathName(),
-					treatTarget
-			);
-		}
-		else {
-			mapping = (EmbeddableValuedModelPart) modelPartContainer.findSubPart(
-					sqmPath.getReferencedPathSource().getPathName(),
-					treatTarget
-			);
-		}
+		// Use the target type to find the sub part if needed, otherwise just use the container
+		final EmbeddableValuedModelPart mapping = (EmbeddableValuedModelPart) getTargetMappingIfNeeded(
+				sqmPath,
+				modelPartContainer,
+				sqlAstCreationState
+		).findSubPart( sqmPath.getReferencedPathSource().getPathName(), treatTarget );
 
 		return new EmbeddableValuedPathInterpretation<>(
 				mapping.toSqlExpression(

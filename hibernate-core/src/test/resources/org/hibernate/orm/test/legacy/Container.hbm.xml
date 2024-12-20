@@ -59,11 +59,11 @@
 				<many-to-one name="many" cascade="all" not-null="true"/>
 			</composite-element>
 		</bag>
-		<bag name="bag" inverse="true" cascade="save-update" table="CCBAG">
+		<bag name="bag" inverse="true" cascade="merge,persist" table="CCBAG">
 			<key column="container_id"/>
 			<many-to-many column="contained_id" class="org.hibernate.orm.test.legacy.Contained" outer-join="true"/>
 		</bag>
-		<bag name="lazyBag" inverse="true" lazy="true" table="LCCBAG" cascade="save-update">
+		<bag name="lazyBag" inverse="true" lazy="true" table="LCCBAG" cascade="merge,persist">
 			<!--cache usage="read-write"-->
 			<key column="container_id"/>
 			<many-to-many column="contained_id" class="org.hibernate.orm.test.legacy.Contained"/>

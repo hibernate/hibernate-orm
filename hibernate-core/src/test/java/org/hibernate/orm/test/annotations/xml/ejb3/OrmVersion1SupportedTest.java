@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.xml.ejb3;
 
@@ -11,19 +9,25 @@ import org.hibernate.Transaction;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.internal.CoreMessageLogger;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
+import org.hibernate.testing.orm.junit.JiraKeyGroup;
 import org.junit.Rule;
 import org.junit.Test;
 
 import org.jboss.logging.Logger;
 
+import java.lang.invoke.MethodHandles;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-@TestForIssue(jiraKey = {"HHH-6271", "HHH-14529"})
+@JiraKeyGroup( value = {
+		@JiraKey( value = "HHH-6271" ),
+		@JiraKey( value = "HHH-14529" )
+} )
 public class OrmVersion1SupportedTest extends BaseCoreFunctionalTestCase {
 
 	@Override
@@ -34,6 +38,7 @@ public class OrmVersion1SupportedTest extends BaseCoreFunctionalTestCase {
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
 			Logger.getMessageLogger(
+					MethodHandles.lookup(),
 					CoreMessageLogger.class,
 					"org.hibernate.internal.util.xml.ErrorLogger"
 			)

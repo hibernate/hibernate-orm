@@ -15,7 +15,7 @@
 
         <property name="name" type="string" not-null="true"/>
 
-        <set name="nodes" inverse="true" cascade="persist,save-update,merge,refresh">
+        <set name="nodes" inverse="true" cascade="persist,persist,merge,refresh">
             <key column="routeID"/>
             <one-to-many class="Node"/>
         </set>
@@ -27,7 +27,7 @@
 
         <property name="name" type="string" not-null="true"/>
 
-        <set name="nodes" inverse="true" lazy="true" cascade="save-update,merge,refresh">
+        <set name="nodes" inverse="true" lazy="true" cascade="persist,merge,refresh">
             <key column="tourID"/>
             <one-to-many class="Node"/>
         </set>
@@ -43,14 +43,14 @@
             column="pickupNodeID"
             unique="true"
             not-null="true"
-            cascade="save-update,merge,refresh"
+            cascade="persist,merge,refresh"
             lazy="false"/> 
 
         <many-to-one name="deliveryNode"
             column="deliveryNodeID"
             unique="true"
             not-null="true"
-            cascade="save-update,merge,refresh"
+            cascade="persist,merge,refresh"
             lazy="false"/> 
     </class>
 
@@ -60,12 +60,12 @@
 
         <property name="name" type="string" not-null="true"/>
 
-         <set name="deliveryTransports" inverse="true" lazy="true" cascade="save-update,merge,refresh">
+         <set name="deliveryTransports" inverse="true" lazy="true" cascade="persist,merge,refresh">
             <key column="deliveryNodeID"/>
             <one-to-many class="Transport"/>
         </set>
 
-        <set name="pickupTransports" inverse="true" lazy="true" cascade="save-update,merge,refresh">
+        <set name="pickupTransports" inverse="true" lazy="true" cascade="persist,merge,refresh">
             <key column="pickupNodeID"/>
             <one-to-many class="Transport"/>
         </set>
@@ -81,7 +81,7 @@
             column="tourID"
             unique="false"
             not-null="false"
-            cascade="save-update,merge,refresh"
+            cascade="persist,merge,refresh"
             lazy="false"/>                 
     </class>
 

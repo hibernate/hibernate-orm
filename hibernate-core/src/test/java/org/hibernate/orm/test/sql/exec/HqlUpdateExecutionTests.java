@@ -1,15 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql.exec;
 
 import org.hibernate.orm.test.mapping.SecondaryTableTests;
 import org.hibernate.orm.test.mapping.inheritance.joined.JoinedInheritanceTest;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -50,7 +48,7 @@ public class HqlUpdateExecutionTests {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15361")
+	@JiraKey( value = "HHH-15361")
 	public void testSimpleUpdateAssignability(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createQuery( "update EntityOfBasics set theDate = current_date" )
@@ -59,7 +57,7 @@ public class HqlUpdateExecutionTests {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15939" )
+	@JiraKey( value = "HHH-15939" )
 	public void testNumericUpdate(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			session.createMutationQuery( "update EntityOfBasics set theShort = 69" )
@@ -74,8 +72,8 @@ public class HqlUpdateExecutionTests {
 	public void testSimpleUpdateWithData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.save( new BasicEntity( 1, "abc" ) );
-					session.save( new BasicEntity( 2, "def" ) );
+					session.persist( new BasicEntity( 1, "abc" ) );
+					session.persist( new BasicEntity( 2, "def" ) );
 				}
 		);
 
@@ -117,8 +115,8 @@ public class HqlUpdateExecutionTests {
 	public void testSimpleRestrictedUpdateWithData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.save( new BasicEntity( 1, "abc" ) );
-					session.save( new BasicEntity( 2, "def" ) );
+					session.persist( new BasicEntity( 1, "abc" ) );
+					session.persist( new BasicEntity( 2, "def" ) );
 				}
 		);
 

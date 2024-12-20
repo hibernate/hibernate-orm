@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.internal;
 
@@ -48,6 +46,8 @@ import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableFetchImpl;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableResultImpl;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Base implementation for composite identifier mappings
  *
@@ -70,6 +70,16 @@ public abstract class AbstractCompositeIdentifierMapping
 		this.entityMapping = entityMapping;
 		this.tableExpression = tableExpression;
 		this.sessionFactory = creationProcess.getCreationContext().getSessionFactory();
+	}
+
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected AbstractCompositeIdentifierMapping(AbstractCompositeIdentifierMapping original) {
+		this.navigableRole = original.navigableRole;
+		this.entityMapping = original.entityMapping;
+		this.tableExpression = original.tableExpression;
+		this.sessionFactory = original.sessionFactory;
 	}
 
 	@Override
@@ -119,9 +129,9 @@ public abstract class AbstractCompositeIdentifierMapping
 	public TableGroupJoin createTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAliasBase explicitSqlAliasBase,
-			SqlAstJoinType requestedJoinType,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase explicitSqlAliasBase,
+			@Nullable SqlAstJoinType requestedJoinType,
 			boolean fetched,
 			boolean addsPredicate,
 			SqlAstCreationState creationState) {
@@ -144,11 +154,11 @@ public abstract class AbstractCompositeIdentifierMapping
 	public TableGroup createRootTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAliasBase explicitSqlAliasBase,
-			SqlAstJoinType sqlAstJoinType,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase explicitSqlAliasBase,
+			@Nullable SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
-			Consumer<Predicate> predicateConsumer,
+			@Nullable Consumer<Predicate> predicateConsumer,
 			SqlAstCreationState creationState) {
 		return new StandardVirtualTableGroup( navigablePath, this, lhs, fetched );
 	}
@@ -185,7 +195,7 @@ public abstract class AbstractCompositeIdentifierMapping
 		else {
 			for ( int i = 0; i < size; i++ ) {
 				final AttributeMapping attributeMapping = embeddableTypeDescriptor.getAttributeMapping( i );
-				final Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
+				final Object o = embeddableTypeDescriptor.getValue( value, i );
 				if ( attributeMapping instanceof ToOneAttributeMapping ) {
 					final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
 					final ForeignKeyDescriptor fkDescriptor = toOneAttributeMapping.getForeignKeyDescriptor();
@@ -252,7 +262,7 @@ public abstract class AbstractCompositeIdentifierMapping
 
 	@Override
 	public Object instantiate() {
-		return getEntityMapping().getRepresentationStrategy().getInstantiator().instantiate( sessionFactory );
+		return getEntityMapping().getRepresentationStrategy().getInstantiator().instantiate();
 	}
 
 	@Override

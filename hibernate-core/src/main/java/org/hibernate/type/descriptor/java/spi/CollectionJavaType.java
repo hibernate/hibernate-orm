@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java.spi;
 
@@ -18,6 +16,7 @@ import org.hibernate.collection.spi.MapSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractClassJavaType;
+import org.hibernate.type.descriptor.java.ArrayJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -58,9 +57,14 @@ public class CollectionJavaType<C> extends AbstractClassJavaType<C> {
 			TypeConfiguration typeConfiguration) {
 		final Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
 		final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
-		final JavaType<Object> valueDescriptor = javaTypeRegistry.resolveDescriptor( actualTypeArguments[actualTypeArguments.length - 1] );
 		switch ( semantics.getCollectionClassification() ) {
 			case ARRAY:
+				//noinspection unchecked
+				return (JavaType<C>) new ArrayJavaType<>(
+						javaTypeRegistry.resolveDescriptor(
+								( (Class<?>) parameterizedType.getRawType() ).getComponentType()
+						)
+				);
 			case BAG:
 			case ID_BAG:
 			case LIST:
@@ -70,7 +74,7 @@ public class CollectionJavaType<C> extends AbstractClassJavaType<C> {
 				//noinspection unchecked,rawtypes
 				return new BasicCollectionJavaType(
 						parameterizedType,
-						valueDescriptor,
+						javaTypeRegistry.resolveDescriptor( actualTypeArguments[actualTypeArguments.length - 1] ),
 						semantics
 				);
 
@@ -82,7 +86,7 @@ public class CollectionJavaType<C> extends AbstractClassJavaType<C> {
 				new MapMutabilityPlan<>(
 						(MapSemantics<Map<Object, Object>, Object, Object>) semantics,
 						javaTypeRegistry.resolveDescriptor( actualTypeArguments[0] ),
-						valueDescriptor
+						javaTypeRegistry.resolveDescriptor( actualTypeArguments[actualTypeArguments.length - 1] )
 				)
 		);
 	}

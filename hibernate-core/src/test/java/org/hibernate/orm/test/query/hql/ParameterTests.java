@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hql;
 
@@ -31,7 +29,7 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ExpectedException;
 import org.hibernate.testing.orm.junit.ExpectedExceptionExtension;
 import org.junit.jupiter.api.Assertions;
@@ -182,7 +180,7 @@ public class ParameterTests extends BaseSqmUnitTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15341")
+	@JiraKey( value = "HHH-15341")
 	public void testTransientParamValue() {
 		inTransaction(
 				session -> {

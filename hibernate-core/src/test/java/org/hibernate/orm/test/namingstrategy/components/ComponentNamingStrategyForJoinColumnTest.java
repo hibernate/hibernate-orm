@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.namingstrategy.components;
 
@@ -17,7 +15,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.metamodel.CollectionClassification;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
@@ -39,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Cai Chun
  */
-@TestForIssue(jiraKey = "HHH-11826")
+@JiraKey(value = "HHH-11826")
 @BaseUnitTest
 public class ComponentNamingStrategyForJoinColumnTest {
 
@@ -216,5 +214,3 @@ public class ComponentNamingStrategyForJoinColumnTest {
 		}
 	}
 }
-
-

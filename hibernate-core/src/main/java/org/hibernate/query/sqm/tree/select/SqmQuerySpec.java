@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.select;
 
@@ -12,6 +10,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.Internal;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
@@ -22,14 +21,15 @@ import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.criteria.JpaQueryStructure;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSelection;
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.internal.SqmUtil;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmNode;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
@@ -64,13 +64,13 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 
 	public SqmQuerySpec(NodeBuilder nodeBuilder) {
 		super( nodeBuilder );
+		// Enforce non-nullness of the fromClause
+		this.fromClause = new SqmFromClause();
 	}
 
 	public SqmQuerySpec(SqmQuerySpec<T> original, SqmCopyContext context) {
 		super( original, context );
-		if ( original.fromClause != null ) {
-			this.fromClause = original.fromClause.copy( context );
-		}
+		this.fromClause = original.fromClause.copy( context );
 		if ( original.selectClause != null ) {
 			this.selectClause = original.selectClause.copy( context );
 		}
@@ -96,9 +96,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 			return existing;
 		}
 		final SqmQuerySpec<T> querySpec = context.registerCopy( this, new SqmQuerySpec<>( nodeBuilder() ) );
-		if ( fromClause != null ) {
-			querySpec.fromClause = fromClause.copy( context );
-		}
+		querySpec.fromClause = fromClause.copy( context );
 		if ( selectClause != null ) {
 			querySpec.selectClause = selectClause.copy( context );
 		}
@@ -145,7 +143,10 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	}
 
 	public void setFromClause(SqmFromClause fromClause) {
-		this.fromClause = fromClause;
+		// Enforce non-nullness of the fromClause
+		if ( fromClause != null ) {
+			this.fromClause = fromClause;
+		}
 	}
 
 	public boolean producesUniqueResults() {
@@ -352,11 +353,16 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 
 	@Override
 	public SqmQuerySpec<T> setRestriction(Expression<Boolean> restriction) {
-		SqmWhereClause whereClause = getWhereClause();
-		if ( whereClause == null ) {
-			setWhereClause( whereClause = new SqmWhereClause( nodeBuilder() ) );
+		if ( restriction == null ) {
+			setWhereClause( null );
 		}
-		whereClause.setPredicate( nodeBuilder().wrap( restriction ) );
+		else {
+			SqmWhereClause whereClause = getWhereClause();
+			if ( whereClause == null ) {
+				setWhereClause( whereClause = new SqmWhereClause( nodeBuilder() ) );
+			}
+			whereClause.setPredicate( nodeBuilder().wrap( restriction ) );
+		}
 		return this;
 	}
 
@@ -488,9 +494,9 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		}
 
 		for ( SqmRoot<?> root : roots ) {
-			validateFetchOwners( selectedFromSet, root, root );
+			validateFetchOwners( selectedFromSet, root );
 			for ( SqmFrom<?, ?> sqmTreat : root.getSqmTreats() ) {
-				validateFetchOwners( selectedFromSet, root, sqmTreat );
+				validateFetchOwners( selectedFromSet, sqmTreat );
 			}
 		}
 	}
@@ -537,12 +543,12 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		}
 	}
 
-	private void validateFetchOwners(Set<SqmFrom<?, ?>> selectedFromSet, SqmFrom<?, ?> owner, SqmFrom<?, ?> joinContainer) {
+	private void validateFetchOwners(Set<SqmFrom<?, ?>> selectedFromSet, SqmFrom<?, ?> joinContainer) {
 		for ( SqmJoin<?, ?> sqmJoin : joinContainer.getSqmJoins() ) {
 			if ( sqmJoin instanceof SqmAttributeJoin<?, ?> ) {
 				final SqmAttributeJoin<?, ?> attributeJoin = (SqmAttributeJoin<?, ?>) sqmJoin;
 				if ( attributeJoin.isFetched() ) {
-					assertFetchOwner( selectedFromSet, owner, sqmJoin );
+					assertFetchOwner( selectedFromSet, attributeJoin.getLhs(), sqmJoin );
 					// Only need to check the first level
 					continue;
 				}
@@ -551,14 +557,14 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 				if ( sqmTreat instanceof SqmAttributeJoin<?, ?> ) {
 					final SqmAttributeJoin<?, ?> attributeJoin = (SqmAttributeJoin<?, ?>) sqmTreat;
 					if ( attributeJoin.isFetched() ) {
-						assertFetchOwner( selectedFromSet, owner, attributeJoin );
+						assertFetchOwner( selectedFromSet, attributeJoin.getLhs(), attributeJoin );
 						// Only need to check the first level
 						continue;
 					}
 				}
-				validateFetchOwners( selectedFromSet, sqmJoin, sqmTreat );
+				validateFetchOwners( selectedFromSet, sqmTreat );
 			}
-			validateFetchOwners( selectedFromSet, sqmJoin, sqmJoin );
+			validateFetchOwners( selectedFromSet, sqmJoin );
 		}
 	}
 
@@ -626,9 +632,52 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		super.appendHqlString( sb );
 	}
 
-	public boolean groupByClauseContains(NavigablePath path) {
-		for ( SqmExpression<?> expression : groupByClauseExpressions ) {
-			if ( expression instanceof SqmPath && ( (SqmPath<?>) expression ).getNavigablePath() == path ) {
+	@Internal
+	public boolean whereClauseContains(NavigablePath navigablePath, SqmToSqlAstConverter sqlAstConverter) {
+		if ( whereClause == null ) {
+			return false;
+		}
+		return isSameOrParent(
+				navigablePath,
+				sqlAstConverter.resolveMetadata( this, SqmUtil::getWhereClauseNavigablePaths )
+		);
+	}
+
+	@Internal
+	public boolean groupByClauseContains(NavigablePath navigablePath, SqmToSqlAstConverter sqlAstConverter) {
+		if ( groupByClauseExpressions.isEmpty() ) {
+			return false;
+		}
+		return isSameOrChildren(
+				navigablePath,
+				sqlAstConverter.resolveMetadata( this, SqmUtil::getGroupByNavigablePaths )
+		);
+	}
+
+	@Internal
+	public boolean orderByClauseContains(NavigablePath navigablePath, SqmToSqlAstConverter sqlAstConverter) {
+		final SqmOrderByClause orderByClause = getOrderByClause();
+		if ( orderByClause == null || orderByClause.getSortSpecifications().isEmpty() ) {
+			return false;
+		}
+		return isSameOrChildren(
+				navigablePath,
+				sqlAstConverter.resolveMetadata( this, SqmUtil::getOrderByNavigablePaths )
+		);
+	}
+
+	private boolean isSameOrChildren(NavigablePath navigablePath, List<NavigablePath> navigablePaths) {
+		for ( NavigablePath path : navigablePaths ) {
+			if ( path.isParentOrEqual( navigablePath ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean isSameOrParent(NavigablePath navigablePath, List<NavigablePath> navigablePaths) {
+		for ( NavigablePath path : navigablePaths ) {
+			if ( navigablePath.isParentOrEqual( path ) ) {
 				return true;
 			}
 		}

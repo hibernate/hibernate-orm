@@ -1,20 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id;
 
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.id.enhanced.StandardOptimizerDescriptor;
-import org.hibernate.id.factory.spi.StandardGenerator;
 
 /**
  * Commonality between sequence-based and table-based generators
  */
-public interface OptimizableGenerator extends IdentifierGenerator, StandardGenerator, ExportableProducer {
+public interface OptimizableGenerator extends IdentifierGenerator, ExportableProducer {
 	/**
 	 * If an explicit sequence/table name is not configured,
 	 */

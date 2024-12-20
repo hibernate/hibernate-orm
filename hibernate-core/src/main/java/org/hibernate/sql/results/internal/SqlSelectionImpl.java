@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.internal;
 
@@ -11,7 +9,6 @@ import java.util.Objects;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlExpressionAccess;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -93,7 +90,10 @@ public class SqlSelectionImpl implements SqlSelection, SqlExpressionAccess {
 	}
 
 	private static ValueExtractor determineValueExtractor(Expression sqlExpression, JavaType<?> jdbcJavaType) {
-		final JdbcMapping jdbcMapping = sqlExpression.getExpressionType().getSingleJdbcMapping();
+		final JdbcMappingContainer expressionType = sqlExpression.getExpressionType();
+		final JdbcMapping jdbcMapping = expressionType == null
+				? JavaObjectType.INSTANCE
+				: expressionType.getSingleJdbcMapping();
 		if ( jdbcJavaType == null || jdbcMapping.getMappedJavaType() == jdbcJavaType ) {
 			return jdbcMapping.getJdbcValueExtractor();
 		}
@@ -101,6 +101,7 @@ public class SqlSelectionImpl implements SqlSelection, SqlExpressionAccess {
 			return jdbcMapping.getJdbcType().getExtractor( jdbcJavaType );
 		}
 	}
+
 
 	@Override
 	public Expression getExpression() {
@@ -146,9 +147,13 @@ public class SqlSelectionImpl implements SqlSelection, SqlExpressionAccess {
 		sqlExpression.accept( interpreter );
 	}
 
+	public boolean needsResolve() {
+		return sqlExpression.getExpressionType() instanceof JavaObjectType;
+	}
+
 	@Override
 	public SqlSelection resolve(JdbcValuesMetadata jdbcResultsMetadata, SessionFactoryImplementor sessionFactory) {
-		if ( sqlExpression.getExpressionType() instanceof JavaObjectType ) {
+		if ( needsResolve() ) {
 			final BasicType<Object> resolvedType = jdbcResultsMetadata.resolveType(
 					jdbcPosition,
 					null,

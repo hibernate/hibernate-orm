@@ -1,18 +1,18 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java.spi;
 
-import org.hibernate.Hibernate;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractClassJavaType;
 import org.hibernate.type.descriptor.java.IncomparableComparator;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
+
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * Uses object identity for {@code equals}/{@code hashCode} as we ensure that internally.
@@ -28,7 +28,7 @@ public class EntityJavaType<T> extends AbstractClassJavaType<T> {
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
 		throw new JdbcTypeRecommendationException(
-				"Could not determine recommended JdbcType for `" + getJavaType().getTypeName() + "`"
+				"Could not determine recommended JdbcType for '" + getTypeName() + "'"
 		);
 	}
 
@@ -44,7 +44,15 @@ public class EntityJavaType<T> extends AbstractClassJavaType<T> {
 
 	@Override
 	public boolean isInstance(Object value) {
-		return getJavaTypeClass().isAssignableFrom( Hibernate.getClassLazy( value ) );
+		final LazyInitializer lazyInitializer = extractLazyInitializer( value );
+		final Class<T> javaTypeClass = getJavaTypeClass();
+		if ( lazyInitializer != null ) {
+			return javaTypeClass.isAssignableFrom( lazyInitializer.getPersistentClass() )
+					|| javaTypeClass.isAssignableFrom( lazyInitializer.getImplementationClass() );
+		}
+		else {
+			return javaTypeClass.isAssignableFrom( value.getClass() );
+		}
 	}
 
 	@Override
@@ -55,26 +63,26 @@ public class EntityJavaType<T> extends AbstractClassJavaType<T> {
 	@Override
 	public T fromString(CharSequence string) {
 		throw new UnsupportedOperationException(
-				"Conversion from String strategy not known for this Java type : " + getJavaType().getTypeName()
+				"Conversion from String strategy not known for this Java type: " + getTypeName()
 		);
 	}
 
 	@Override
 	public <X> X unwrap(T value, Class<X> type, WrapperOptions options) {
 		throw new UnsupportedOperationException(
-				"Unwrap strategy not known for this Java type : " + getJavaType().getTypeName()
+				"Unwrap strategy not known for this Java type: " + getTypeName()
 		);
 	}
 
 	@Override
 	public <X> T wrap(X value, WrapperOptions options) {
 		throw new UnsupportedOperationException(
-				"Wrap strategy not known for this Java type : " + getJavaType().getTypeName()
+				"Wrap strategy not known for this Java type: " + getTypeName()
 		);
 	}
 
 	@Override
 	public String toString() {
-		return "EntityJavaType(" + getJavaType().getTypeName() + ")";
+		return "EntityJavaType(" + getTypeName() + ")";
 	}
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.graph;
 
@@ -13,7 +11,7 @@ import org.hibernate.graph.EntityGraphs;
 import org.hibernate.graph.spi.RootGraphImplementor;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -196,7 +194,7 @@ public class EntityGraphsTest extends AbstractEntityGraphTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-14264" )
+	@JiraKey( value = "HHH-14264" )
 	public void testRootGraphAppliesToChildEntityClass() {
 		RootGraphImplementor<GraphParsingTestEntity> rootGraphImplementor = parseGraph( GraphParsingTestEntity.class, "name, description" );
 		EntityDomainType<?> entity = entityManagerFactory().getJpaMetamodel().entity( (Class<?>) GraphParsingTestSubentity.class );

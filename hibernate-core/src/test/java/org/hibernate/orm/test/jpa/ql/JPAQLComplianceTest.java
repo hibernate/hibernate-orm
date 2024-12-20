@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.ql;
 
@@ -12,7 +10,7 @@ import java.util.List;
 import org.hibernate.query.Query;
 import org.hibernate.query.SemanticException;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.orm.test.jpa.model.AbstractJPATest;
 import org.hibernate.orm.test.jpa.model.Item;
 import org.junit.jupiter.api.Test;
@@ -85,7 +83,7 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12290")
+	@JiraKey(value = "HHH-12290")
 	public void testParametersMixturePositionalAndNamed() {
 		inTransaction(
 				s -> {
@@ -102,7 +100,7 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12290")
+	@JiraKey(value = "HHH-12290")
 	public void testParametersMixtureNamedAndPositional() {
 		inTransaction(
 				s -> {
@@ -119,7 +117,7 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12290")
+	@JiraKey(value = "HHH-12290")
 	public void testReusedNamedCollectionParam() {
 		inTransaction(
 				session -> {
@@ -135,7 +133,7 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12290")
+	@JiraKey(value = "HHH-12290")
 	public void testReusedPositionalCollectionParam() {
 		inTransaction(
 				session -> {
@@ -154,7 +152,7 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 	 * query is wrong in terms of JPA and exception must be thrown
 	 */
 	@Test
-	@TestForIssue(jiraKey = "HHH-12290")
+	@JiraKey(value = "HHH-12290")
 	public void testParametersMixtureNamedCollectionAndPositional() {
 		inTransaction(
 				s -> {
@@ -178,17 +176,15 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12290")
+	@JiraKey(value = "HHH-12290")
 	public void testParameterCollectionParenthesesAndPositional() {
 		final Item item = new Item( "Mouse" );
-		item.setId( 1L );
 		final Item item2 = new Item( "Computer" );
-		item2.setId( 2L );
 
 		inTransaction(
 				s -> {
-					s.save( item );
-					s.save( item2 );
+					s.persist( item );
+					s.persist( item2 );
 				}
 		);
 
@@ -214,7 +210,7 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 		);
 
 		inTransaction(
-				s -> s.createQuery( "select i from Item i" ).list().forEach( result -> s.delete( result ) )
+				s -> s.createQuery( "select i from Item i" ).list().forEach( result -> s.remove( result ) )
 		);
 
 	}

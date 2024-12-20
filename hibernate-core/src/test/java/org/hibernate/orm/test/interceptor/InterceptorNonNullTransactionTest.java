@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.interceptor;
 
@@ -18,7 +16,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
-import org.hibernate.EmptyInterceptor;
+import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
@@ -117,7 +115,7 @@ public class InterceptorNonNullTransactionTest extends BaseJpaOrNativeBootstrapF
 		assertNull( interceptor.afterTransactionCompletionAssertionPassed );
 
 		SimpleEntity entity = new SimpleEntity( "Hello World" );
-		session.save( entity );
+		session.persist( entity );
 
 		interceptor.reset();
 
@@ -155,7 +153,7 @@ public class InterceptorNonNullTransactionTest extends BaseJpaOrNativeBootstrapF
 		assertNull( interceptor.afterTransactionCompletionAssertionPassed );
 
 		SimpleEntity entity = new SimpleEntity( "Hello World" );
-		session.save( entity );
+		session.persist( entity );
 
 		interceptor.reset();
 
@@ -205,7 +203,7 @@ public class InterceptorNonNullTransactionTest extends BaseJpaOrNativeBootstrapF
 		}
 	}
 
-	private class TransactionInterceptor extends EmptyInterceptor {
+	private class TransactionInterceptor implements Interceptor {
 		private boolean afterTransactionBeginMethodCalled;
 		private Boolean afterTransactionBeginAssertionPassed;
 

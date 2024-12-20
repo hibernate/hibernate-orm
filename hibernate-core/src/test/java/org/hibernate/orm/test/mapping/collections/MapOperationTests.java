@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.collections;
 
@@ -63,7 +61,7 @@ public class MapOperationTests {
 					entityContainingMaps.addComponentByBasic( "the stuff", new SimpleComponent( "the stuff - 1", "the stuff - 2" ) );
 					entityContainingMaps.addComponentByBasic( "the other stuff", new SimpleComponent( "the other stuff - 1", "the other stuff - 2" ) );
 
-					session.save( entityContainingMaps );
+					session.persist( entityContainingMaps );
 				}
 		);
 	}
@@ -75,8 +73,8 @@ public class MapOperationTests {
 
 		scope.inTransaction(
 				session -> {
-					final EntityOfMaps entity = session.load( EntityOfMaps.class, 1 );
-					session.delete( entity );
+					final EntityOfMaps entity = session.getReference( EntityOfMaps.class, 1 );
+					session.remove( entity );
 				}
 		);
 
@@ -110,7 +108,7 @@ public class MapOperationTests {
 							EntityOfMaps.class
 					).getSingleResult();
 
-					session.delete( entity );
+					session.remove( entity );
 				}
 		);
 

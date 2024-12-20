@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.inheritance.discriminator;
 
 import java.util.ArrayList;
@@ -6,7 +10,7 @@ import java.util.List;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -36,7 +40,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 		}
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-16258")
+@JiraKey(value = "HHH-16258")
 public class OneToManySubSelectFetchAndInheritanceTest {
 
 	public static final String ANOTHER_PARENT_NAME = "another parent";

@@ -1,13 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -43,12 +40,11 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
-import org.hibernate.sql.results.graph.entity.EntityInitializer;
+import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -62,6 +58,11 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	private final List<SingularAttributeMapping> attributes;
 
 	private List<JdbcMapping> jdbcMappings;
+	/*
+		This value is used to determine the size of the array used to create the ImmutableFetchList (see org.hibernate.sql.results.graph.internal.ImmutableFetchList#Builder)
+		The Fetch is inserted into the array at a position corresponding to its Fetchable key value.
+	 */
+	private final int maxFetchableKeyIndex;
 
 	public CompoundNaturalIdMapping(
 			EntityMappingType declaringType,
@@ -69,6 +70,14 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 			MappingModelCreationProcess creationProcess) {
 		super( declaringType, isMutable( attributes ) );
 		this.attributes = attributes;
+
+		int maxIndex = 0;
+		for ( SingularAttributeMapping attribute : attributes ) {
+			if ( attribute.getFetchableKey() > maxIndex ) {
+				maxIndex = attribute.getFetchableKey();
+			}
+		}
+		this.maxFetchableKeyIndex = maxIndex + 1;
 
 		creationProcess.registerInitializationCallback(
 				"Determine compound natural-id JDBC mappings ( " + declaringType.getEntityName() + ")",
@@ -90,12 +99,12 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		for ( int i = 0; i < attributes.size(); i++ ) {
 			final SingularAttributeMapping attributeMapping = attributes.get( i );
 			final AttributeMetadata metadata = attributeMapping.getAttributeMetadata();
-			if ( ! metadata.isUpdatable() ) {
-				return false;
+			if ( metadata.isUpdatable() ) {
+				return true;
 			}
 		}
 
-		return true;
+		return false;
 	}
 
 	@Override
@@ -236,7 +245,15 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 	@Override
 	public boolean areEqual(Object one, Object other, SharedSessionContractImplementor session) {
-		return Arrays.equals( (Object[]) one, (Object[]) other );
+		final Object[] one1 = (Object[]) one;
+		final Object[] other1 = (Object[]) other;
+		final List<SingularAttributeMapping> naturalIdAttributes = getNaturalIdAttributes();
+		for ( int i = 0; i < naturalIdAttributes.size(); i++ ) {
+			if ( !naturalIdAttributes.get( i ).areEqual( one1[i], other1[i], session ) ) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	@Override
@@ -532,6 +549,10 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		attributes.forEach( consumer );
 	}
 
+	@Override
+	public int getNumberOfFetchableKeys() {
+		return maxFetchableKeyIndex;
+	}
 
 	public static class DomainResultImpl implements DomainResult<Object[]>, FetchParent {
 		private final NavigablePath navigablePath;
@@ -570,7 +591,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 		@Override
 		public DomainResultAssembler<Object[]> createResultAssembler(
-				FetchParentAccess parentAccess,
+				InitializerParent<?> parent,
 				AssemblerCreationState creationState) {
 			return new AssemblerImpl(
 					fetches,
@@ -589,6 +610,11 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// FetchParent
+
+		@Override
+		public Initializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {
+			throw new UnsupportedOperationException( "Compound natural id mappings should not use an initializer" );
+		}
 
 		@Override
 		public FetchableContainer getReferencedMappingContainer() {
@@ -639,25 +665,24 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 				JavaType<Object[]> jtd,
 				AssemblerCreationState creationState) {
 			this.jtd = jtd;
-
-			// we don't even register the Initializer here... its really no-op.
-			// we just "need it" as an impl detail for handling Fetches
-			final InitializerImpl initializer = new InitializerImpl( navigablePath, naturalIdMapping );
-
 			this.subAssemblers = new DomainResultAssembler[fetches.size()];
 			int i = 0;
 			for ( Fetch fetch : fetches ) {
-				subAssemblers[i++] = fetch.createAssembler( initializer, creationState );
+				subAssemblers[i++] = fetch.createAssembler( null, creationState );
 			}
+		}
+
+		private AssemblerImpl(JavaType<Object[]> jtd, DomainResultAssembler<?>[] subAssemblers) {
+			this.jtd = jtd;
+			this.subAssemblers = subAssemblers;
 		}
 
 		@Override
 		public Object[] assemble(
-				RowProcessingState rowProcessingState,
-				JdbcValuesSourceProcessingOptions options) {
+				RowProcessingState rowProcessingState) {
 			final Object[] result = new Object[ subAssemblers.length ];
 			for ( int i = 0; i < subAssemblers.length; i++ ) {
-				result[ i ] = subAssemblers[i].assemble( rowProcessingState, options );
+				result[ i ] = subAssemblers[i].assemble( rowProcessingState );
 			}
 			return result;
 		}
@@ -670,73 +695,22 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		}
 
 		@Override
+		public <X> void forEachResultAssembler(BiConsumer<Initializer<?>, X> consumer, X arg) {
+			for ( DomainResultAssembler<?> subAssembler : subAssemblers ) {
+				final Initializer<?> initializer = subAssembler.getInitializer();
+				// In case of natural id mapping selection every initializer is a "result initializer",
+				// regardless of what Initializer#isResultInitializer reports
+				if ( initializer != null ) {
+					consumer.accept( initializer, arg );
+				}
+			}
+		}
+
+		@Override
 		public JavaType<Object[]> getAssembledJavaType() {
 			return jtd;
 		}
+
 	}
 
-	private static class InitializerImpl implements FetchParentAccess {
-		private final NavigablePath navigablePath;
-		private final CompoundNaturalIdMapping naturalIdMapping;
-
-		public InitializerImpl(NavigablePath navigablePath, CompoundNaturalIdMapping naturalIdMapping) {
-			this.navigablePath = navigablePath;
-			this.naturalIdMapping = naturalIdMapping;
-		}
-
-		@Override
-		public FetchParentAccess findFirstEntityDescriptorAccess() {
-			return null;
-		}
-
-		@Override
-		public EntityInitializer findFirstEntityInitializer() {
-			return null;
-		}
-
-		@Override
-		public Object getParentKey() {
-			return null;
-		}
-
-		@Override
-		public NavigablePath getNavigablePath() {
-			return navigablePath;
-		}
-
-		@Override
-		public ModelPart getInitializedPart() {
-			return naturalIdMapping;
-		}
-
-		@Override
-		public Object getInitializedInstance() {
-			return null;
-		}
-
-		@Override
-		public void resolveKey(RowProcessingState rowProcessingState) {
-
-		}
-
-		@Override
-		public void resolveInstance(RowProcessingState rowProcessingState) {
-
-		}
-
-		@Override
-		public void initializeInstance(RowProcessingState rowProcessingState) {
-
-		}
-
-		@Override
-		public void finishUpRow(RowProcessingState rowProcessingState) {
-
-		}
-
-		@Override
-		public void registerResolutionListener(Consumer<Object> resolvedParentConsumer) {
-
-		}
-	}
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.spi;
 
@@ -15,6 +13,7 @@ import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -22,12 +21,10 @@ import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.internal.BaselineSessionEventsListenerBuilder;
 import org.hibernate.jpa.spi.JpaCompliance;
-import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -37,6 +34,10 @@ import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.format.FormatMapper;
+
+import jakarta.persistence.criteria.Nulls;
+
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 
 /**
  * Convenience base class for custom implementations of {@link SessionFactoryOptions}
@@ -78,8 +79,13 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 		return delegate.isJtaTransactionAccessEnabled();
 	}
 
+	/**
+	 * @deprecated with no replacement.
+	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	@Override
 	public boolean isAllowRefreshDetachedEntity() {
+		DEPRECATION_LOGGER.deprecatedRefreshLockDetachedEntity();
 		return delegate.isAllowRefreshDetachedEntity();
 	}
 
@@ -99,7 +105,7 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	public boolean isSessionFactoryNameAlsoJndiName() {
+	public Boolean isSessionFactoryNameAlsoJndiName() {
 		return delegate.isSessionFactoryNameAlsoJndiName();
 	}
 
@@ -169,11 +175,6 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	public BatchFetchStyle getBatchFetchStyle() {
-		return delegate.getBatchFetchStyle();
-	}
-
-	@Override
 	public boolean isDelayBatchFetchLoaderCreationsEnabled() {
 		return delegate.isDelayBatchFetchLoaderCreationsEnabled();
 	}
@@ -194,7 +195,7 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	public NullPrecedence getDefaultNullPrecedence() {
+	public Nulls getDefaultNullPrecedence() {
 		return delegate.getDefaultNullPrecedence();
 	}
 
@@ -251,6 +252,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public boolean isQueryCacheEnabled() {
 		return delegate.isQueryCacheEnabled();
+	}
+
+	@Override
+	public CacheLayout getQueryCacheLayout() {
+		return delegate.getQueryCacheLayout();
 	}
 
 	@Override
@@ -423,6 +429,21 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	public boolean isJsonFunctionsEnabled() {
+		return delegate.isJsonFunctionsEnabled();
+	}
+
+	@Override
+	public boolean isXmlFunctionsEnabled() {
+		return delegate.isXmlFunctionsEnabled();
+	}
+
+	@Override
+	public boolean isPortableIntegerDivisionEnabled() {
+		return delegate.isPortableIntegerDivisionEnabled();
+	}
+
+	@Override
 	public int getQueryStatisticsMaxSize() {
 		return delegate.getQueryStatisticsMaxSize();
 	}
@@ -435,6 +456,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public boolean isCollectionsInDefaultFetchGroupEnabled() {
 		return delegate.isCollectionsInDefaultFetchGroupEnabled();
+	}
+
+	@Override
+	public boolean isUnownedAssociationTransientCheck() {
+		return delegate.isUnownedAssociationTransientCheck();
 	}
 
 	@Override
@@ -483,6 +509,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	public boolean isPreferNativeEnumTypesEnabled() {
+		return delegate.isPreferNativeEnumTypesEnabled();
+	}
+
+	@Override
 	public FormatMapper getJsonFormatMapper() {
 		return delegate.getJsonFormatMapper();
 	}
@@ -490,5 +521,20 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public FormatMapper getXmlFormatMapper() {
 		return delegate.getXmlFormatMapper();
+	}
+
+	@Override
+	public boolean isXmlFormatMapperLegacyFormatEnabled() {
+		return delegate.isXmlFormatMapperLegacyFormatEnabled();
+	}
+
+	@Override
+	public boolean isPassProcedureParameterNames() {
+		return delegate.isPassProcedureParameterNames();
+	}
+
+	@Override
+	public boolean isPreferJdbcDatetimeTypesInNativeQueriesEnabled() {
+		return delegate.isPreferJdbcDatetimeTypesInNativeQueriesEnabled();
 	}
 }

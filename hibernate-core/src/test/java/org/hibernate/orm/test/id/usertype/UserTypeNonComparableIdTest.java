@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id.usertype;
 
@@ -19,11 +17,10 @@ import jakarta.persistence.Table;
 
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.Type;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.EnhancedUserType;
-import org.hibernate.usertype.UserType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -36,7 +33,7 @@ import org.junit.jupiter.api.Test;
 public class UserTypeNonComparableIdTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8999")
+	@JiraKey(value = "HHH-8999")
 	public void testUserTypeId(SessionFactoryScope scope) {
 		SomeEntity e1 = new SomeEntity();
 		SomeEntity e2 = new SomeEntity();
@@ -53,8 +50,8 @@ public class UserTypeNonComparableIdTest {
 
 		scope.inTransaction(
 				session -> {
-					session.delete( session.get( SomeEntity.class, e1.getCustomId() ) );
-					session.delete( session.get( SomeEntity.class, e2.getCustomId() ) );
+					session.remove( session.get( SomeEntity.class, e1.getCustomId() ) );
+					session.remove( session.get( SomeEntity.class, e2.getCustomId() ) );
 				}
 		);
 	}
@@ -118,7 +115,7 @@ public class UserTypeNonComparableIdTest {
 		}
 
 		@Override
-		public CustomId nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner)
+		public CustomId nullSafeGet(ResultSet rs, int position, WrapperOptions options)
 				throws SQLException {
 			Long value = rs.getLong( position );
 
@@ -130,7 +127,7 @@ public class UserTypeNonComparableIdTest {
 				PreparedStatement preparedStatement,
 				CustomId customId,
 				int index,
-				SharedSessionContractImplementor sessionImplementor) throws HibernateException, SQLException {
+				WrapperOptions sessionImplementor) throws SQLException {
 			if ( customId == null ) {
 				preparedStatement.setNull( index, Types.BIGINT );
 			}

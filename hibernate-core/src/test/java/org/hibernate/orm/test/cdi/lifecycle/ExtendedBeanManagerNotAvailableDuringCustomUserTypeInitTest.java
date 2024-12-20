@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cdi.lifecycle;
 
@@ -16,11 +14,11 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.UserType;
 import org.junit.jupiter.api.Test;
@@ -32,7 +30,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Properties;
 
-@TestForIssue(jiraKey = "HHH-16096")
+@JiraKey(value = "HHH-16096")
 public class ExtendedBeanManagerNotAvailableDuringCustomUserTypeInitTest {
 
 	@Test
@@ -93,13 +91,15 @@ public class ExtendedBeanManagerNotAvailableDuringCustomUserTypeInitTest {
 		}
 
 		@Override
-		public Object nullSafeGet(ResultSet rs, int i, SharedSessionContractImplementor sharedSessionContractImplementor, Object o) throws SQLException {
+		public Object nullSafeGet(ResultSet rs, int i, WrapperOptions sharedSessionContractImplementor)
+				throws SQLException {
 			String xmldoc = rs.getString(i);
 			return rs.wasNull() ? null : xmldoc;
 		}
 
 		@Override
-		public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException  {
+		public void nullSafeSet(PreparedStatement st, Object value, int index, WrapperOptions options)
+				throws SQLException  {
 			if (value == null) {
 				st.setNull(index, Types.OTHER);
 			} else {

@@ -1,14 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.propertyref.cachedcollections;
 
 import org.hibernate.Hibernate;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -24,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @author Steve Ebersole
  */
-@TestForIssue(jiraKey = "HHH-5853")
+@JiraKey(value = "HHH-5853")
 @DomainModel(
 		xmlMappings = "org/hibernate/orm/test/propertyref/cachedcollections/Mappings.hbm.xml"
 )
@@ -39,7 +37,7 @@ public class CachedPropertyRefCollectionTest {
 				session -> {
 					mo = new ManagedObject( "test", "test" );
 					mo.getMembers().add( "members" );
-					session.save( mo );
+					session.persist( mo );
 				}
 		);
 	}
@@ -48,7 +46,7 @@ public class CachedPropertyRefCollectionTest {
 	public void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session ->
-						session.delete( mo )
+						session.remove( mo )
 		);
 	}
 
@@ -77,4 +75,3 @@ public class CachedPropertyRefCollectionTest {
 		);
 	}
 }
-

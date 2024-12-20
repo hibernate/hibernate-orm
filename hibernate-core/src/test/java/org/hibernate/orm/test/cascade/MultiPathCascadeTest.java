@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cascade;
 
@@ -51,7 +49,7 @@ public class MultiPathCascadeTest {
 
 		scope.inTransaction(
 				session ->
-						session.save( a )
+						session.persist( a )
 		);
 
 		// modify detached entity
@@ -73,7 +71,7 @@ public class MultiPathCascadeTest {
 
 		scope.inTransaction(
 				session ->
-						session.save( a )
+						session.persist( a )
 		);
 
 		// modify detached entity
@@ -81,33 +79,10 @@ public class MultiPathCascadeTest {
 
 		scope.inTransaction(
 				session -> {
-					A aLoaded = session.load( A.class, new Long( a.getId() ) );
+					A aLoaded = session.getReference( A.class, new Long( a.getId() ) );
 					assertTrue( aLoaded instanceof HibernateProxy );
 					assertSame( aLoaded, session.merge( a ) );
 				}
-		);
-
-		verifyModifications( scope, a.getId() );
-	}
-
-	@Test
-	public void testMultiPathUpdateModifiedDetached(SessionFactoryScope scope) {
-		// persist a simple A in the database
-
-		A a = new A();
-		a.setData( "Anna" );
-
-		scope.inTransaction(
-				session ->
-						session.save( a )
-		);
-
-		// modify detached entity
-		modifyEntity( a );
-
-		scope.inTransaction(
-				session ->
-						session.update( a )
 		);
 
 		verifyModifications( scope, a.getId() );
@@ -122,7 +97,7 @@ public class MultiPathCascadeTest {
 
 		scope.inTransaction(
 				session ->
-						session.save( a )
+						session.persist( a )
 		);
 
 		scope.inTransaction(
@@ -145,7 +120,7 @@ public class MultiPathCascadeTest {
 
 		scope.inTransaction(
 				session ->
-						session.save( a )
+						session.persist( a )
 		);
 
 		// modify detached entity
@@ -196,7 +171,7 @@ public class MultiPathCascadeTest {
 
 		scope.inTransaction(
 				session ->
-						session.save( a )
+						session.persist( a )
 		);
 
 		// modify detached entity
@@ -246,7 +221,7 @@ public class MultiPathCascadeTest {
 
 		scope.inTransaction(
 				session ->
-						session.save( a )
+						session.persist( a )
 		);
 
 		// modify detached entity

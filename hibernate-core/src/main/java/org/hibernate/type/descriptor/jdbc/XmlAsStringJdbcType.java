@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
 
@@ -12,7 +10,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.SqlTypes;
@@ -104,14 +101,11 @@ public class XmlAsStringJdbcType extends XmlJdbcType implements AdjustableJdbcTy
 	}
 
 	protected boolean needsLob(JdbcTypeIndicators indicators) {
-		final Dialect dialect = indicators.getTypeConfiguration()
-				.getServiceRegistry()
-				.getService( JdbcServices.class )
-				.getDialect();
+		final Dialect dialect = indicators.getDialect();
 		final long length = indicators.getColumnLength();
-		final long maxLength = indicators.isNationalized() ?
-				dialect.getMaxNVarcharLength() :
-				dialect.getMaxVarcharLength();
+		final long maxLength = indicators.isNationalized()
+				? dialect.getMaxNVarcharLength()
+				: dialect.getMaxVarcharLength();
 		if ( length > maxLength ) {
 			return true;
 		}
@@ -134,7 +128,12 @@ public class XmlAsStringJdbcType extends XmlJdbcType implements AdjustableJdbcTy
 							getJavaType(),
 							options
 					);
-					st.setNString( index, xml );
+					if ( options.getDialect().supportsNationalizedMethods() ) {
+						st.setNString( index, xml );
+					}
+					else {
+						st.setString( index, xml );
+					}
 				}
 
 				@Override
@@ -145,7 +144,12 @@ public class XmlAsStringJdbcType extends XmlJdbcType implements AdjustableJdbcTy
 							getJavaType(),
 							options
 					);
-					st.setNString( name, xml );
+					if ( options.getDialect().supportsNationalizedMethods() ) {
+						st.setNString( name, xml );
+					}
+					else {
+						st.setString( name, xml );
+					}
 				}
 			};
 		}
@@ -183,19 +187,34 @@ public class XmlAsStringJdbcType extends XmlJdbcType implements AdjustableJdbcTy
 
 				@Override
 				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-					return getObject( rs.getNString( paramIndex ), options );
+					if ( options.getDialect().supportsNationalizedMethods() ) {
+						return getObject( rs.getNString( paramIndex ), options );
+					}
+					else {
+						return getObject( rs.getString( paramIndex ), options );
+					}
 				}
 
 				@Override
 				protected X doExtract(CallableStatement statement, int index, WrapperOptions options)
 						throws SQLException {
-					return getObject( statement.getNString( index ), options );
+					if ( options.getDialect().supportsNationalizedMethods() ) {
+						return getObject( statement.getNString( index ), options );
+					}
+					else {
+						return getObject( statement.getString( index ), options );
+					}
 				}
 
 				@Override
 				protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 						throws SQLException {
-					return getObject( statement.getNString( name ), options );
+					if ( options.getDialect().supportsNationalizedMethods() ) {
+						return getObject( statement.getNString( name ), options );
+					}
+					else {
+						return getObject( statement.getString( name ), options );
+					}
 				}
 
 				private X getObject(String xml, WrapperOptions options) throws SQLException {

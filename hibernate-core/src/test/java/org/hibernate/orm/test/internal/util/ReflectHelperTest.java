@@ -1,14 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.internal.util;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import jakarta.persistence.FetchType;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -16,7 +13,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -27,12 +24,7 @@ import static org.hibernate.orm.test.internal.util.ReflectHelperTest.Status.OFF;
 import static org.hibernate.orm.test.internal.util.ReflectHelperTest.Status.ON;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -136,7 +128,7 @@ public class ReflectHelperTest {
 		assertNotNull( ReflectHelper.findSetterMethod( C.class, "id", Integer.class ) );
 	}
 
-	@TestForIssue(jiraKey = "HHH-12090")
+	@JiraKey(value = "HHH-12090")
 	@Test
 	public void test_getMethod_nestedInterfaces_on_superclasses()
 			throws InvocationTargetException, IllegalAccessException {
@@ -149,7 +141,7 @@ public class ReflectHelperTest {
 		assertEquals( OFF,  statusMethodFClass.invoke( new F() ) );
 	}
 
-	@TestForIssue(jiraKey = "HHH-12090")
+	@JiraKey(value = "HHH-12090")
 	@Test
 	public void test_setMethod_nestedInterfaces_on_superclasses() {
 		assertNotNull( ReflectHelper.findSetterMethod( E.class, "id", String.class ) );

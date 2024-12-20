@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
@@ -14,7 +12,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
@@ -36,7 +33,6 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
-import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -66,6 +62,7 @@ public class BasicAttributeMapping
 	private final boolean insertable;
 	private final boolean updateable;
 	private final boolean partitioned;
+	private final boolean isLazy;
 
 	private final JavaType domainTypeDescriptor;
 
@@ -110,12 +107,9 @@ public class BasicAttributeMapping
 		this.tableExpression = tableExpression;
 		this.mappedColumnExpression = mappedColumnExpression;
 		this.temporalPrecision = temporalPrecision;
-		if ( selectablePath == null ) {
-			this.selectablePath = new SelectablePath( mappedColumnExpression );
-		}
-		else {
-			this.selectablePath = selectablePath;
-		}
+		this.selectablePath = selectablePath == null
+				? new SelectablePath( mappedColumnExpression )
+				: selectablePath;
 		this.isFormula = isFormula;
 		this.columnDefinition = columnDefinition;
 		this.length = length;
@@ -137,6 +131,11 @@ public class BasicAttributeMapping
 		else {
 			this.customWriteExpression = customWriteExpression;
 		}
+		this.isLazy = navigableRole.getParent().getParent() == null && declaringType.findContainingEntityMapping()
+				.getEntityPersister()
+				.getBytecodeEnhancementMetadata()
+				.getLazyAttributesMetadata()
+				.isLazyAttribute( attributeName );
 	}
 
 	public static BasicAttributeMapping withSelectableMapping(
@@ -149,8 +148,7 @@ public class BasicAttributeMapping
 		String attributeName = null;
 		int stateArrayPosition = 0;
 		AttributeMetadata attributeMetadata;
-		if ( original instanceof SingleAttributeIdentifierMapping ) {
-			final SingleAttributeIdentifierMapping mapping = (SingleAttributeIdentifierMapping) original;
+		if ( original instanceof SingleAttributeIdentifierMapping mapping ) {
 			attributeName = mapping.getAttributeName();
 			attributeMetadata = new SimpleAttributeMetadata(
 					propertyAccess,
@@ -162,8 +160,7 @@ public class BasicAttributeMapping
 					true
 			);
 		}
-		else if ( original instanceof SingularAttributeMapping ) {
-			final SingularAttributeMapping mapping = (SingularAttributeMapping) original;
+		else if ( original instanceof SingularAttributeMapping mapping ) {
 			attributeName = mapping.getAttributeName();
 			stateArrayPosition = mapping.getStateArrayPosition();
 			attributeMetadata = mapping.getAttributeMetadata();
@@ -244,6 +241,10 @@ public class BasicAttributeMapping
 	@Override
 	public boolean isNullable() {
 		return nullable;
+	}
+
+	public boolean isLazy() {
+		return isLazy;
 	}
 
 	@Override
@@ -329,7 +330,9 @@ public class BasicAttributeMapping
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				jdbcMapping,
-				navigablePath
+				navigablePath,
+				false,
+				!sqlSelection.isVirtual()
 		);
 	}
 
@@ -382,14 +385,13 @@ public class BasicAttributeMapping
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		final int valuesArrayPosition;
-		// Lazy property. A valuesArrayPosition of -1 will lead to
-		// returning a domain result assembler that returns LazyPropertyInitializer.UNFETCHED_PROPERTY
-		final EntityMappingType containingEntityMapping = findContainingEntityMapping();
 		boolean coerceResultType = false;
-		if ( fetchTiming == FetchTiming.DELAYED
-				&& !( fetchParent instanceof EmbeddableResultGraphNode )
-				&& containingEntityMapping.getEntityPersister().getPropertyLaziness()[getStateArrayPosition()] ) {
+		final SqlSelection sqlSelection;
+		if ( fetchTiming == FetchTiming.DELAYED && isLazy ) {
+			// Lazy property. A valuesArrayPosition of -1 will lead to
+			// returning a domain result assembler that returns LazyPropertyInitializer.UNFETCHED_PROPERTY
 			valuesArrayPosition = -1;
+			sqlSelection = null;
 		}
 		else {
 			final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
@@ -399,7 +401,7 @@ public class BasicAttributeMapping
 
 			assert tableGroup != null;
 
-			final SqlSelection sqlSelection = resolveSqlSelection(
+			sqlSelection = resolveSqlSelection(
 					fetchablePath,
 					tableGroup,
 					fetchParent,
@@ -417,9 +419,12 @@ public class BasicAttributeMapping
 				fetchParent,
 				fetchablePath,
 				this,
+				getJdbcMapping().getValueConverter(),
 				fetchTiming,
+				true,
 				creationState,
-				coerceResultType
+				coerceResultType,
+				sqlSelection != null && !sqlSelection.isVirtual()
 		);
 	}
 

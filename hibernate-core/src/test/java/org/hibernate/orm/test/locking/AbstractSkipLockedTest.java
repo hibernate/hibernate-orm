@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.locking;
 
 import java.util.Arrays;
@@ -197,7 +201,7 @@ public abstract class AbstractSkipLockedTest
 				"select j from BatchJob j", BatchJob.class )
 				.setMaxResults( maxResult )
 				.unwrap( Query.class );
-		
+
 		applySkipLocked(query);
 
 		return query.list();

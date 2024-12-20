@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.locking;
 
@@ -13,7 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Version;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.testing.junit4.CustomParameterized;
 import org.junit.Test;
@@ -28,7 +26,7 @@ import static org.junit.Assert.assertNull;
  * @author Gail Badner
  */
 
-@TestForIssue(jiraKey = "HHH-13492")
+@JiraKey(value = "HHH-13492")
 @RunWith(CustomParameterized.class)
 public class LockRefreshTest extends BaseNonConfigCoreFunctionalTestCase {
 	private final LockModeType lockModeType;
@@ -93,7 +91,7 @@ public class LockRefreshTest extends BaseNonConfigCoreFunctionalTestCase {
 					final Employee employee = session.get( Employee.class, "Jane" );
 					session.lock( employee, lockModeType );
 					session.refresh( employee );
-					session.delete( employee );
+					session.remove( employee );
 				}
 		);
 

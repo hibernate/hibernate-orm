@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.transaction;
 
@@ -27,7 +25,7 @@ import org.hibernate.Transaction;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DialectDelegateWrapper;
@@ -636,7 +634,7 @@ public class TransactionUtil {
 				st.execute( String.format( "SET LOCK_TIMEOUT %d", millis == 0L ? -1L : millis ) );
 			}
 		}
-		else if ( extractedDialect instanceof AbstractHANADialect ) {
+		else if ( extractedDialect instanceof HANADialect ) {
 			try (Statement st = connection.createStatement()) {
 				//Prepared Statements fail for SET commands
 				st.execute( String.format( "SET TRANSACTION LOCK WAIT TIMEOUT %d", millis ) );

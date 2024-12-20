@@ -1,13 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.naming.ids;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinColumns;
@@ -25,7 +22,6 @@ import org.hibernate.envers.Audited;
 @Table(name = "JoinEmbIdRefIng")
 public class JoinEmbIdNamingRefIngEntity {
 	@Id
-	@GeneratedValue
 	private EmbIdNaming id;
 
 	@Audited
@@ -34,9 +30,9 @@ public class JoinEmbIdNamingRefIngEntity {
 	@Audited
 	@ManyToOne
 	@JoinColumns({
-						 @JoinColumn(name = "XX_reference", referencedColumnName = "XX"),
-						 @JoinColumn(name = "YY_reference", referencedColumnName = "YY")
-				 })
+						@JoinColumn(name = "XX_reference", referencedColumnName = "XX"),
+						@JoinColumn(name = "YY_reference", referencedColumnName = "YY")
+				})
 	private JoinEmbIdNamingRefEdEntity reference;
 
 	public JoinEmbIdNamingRefIngEntity() {

@@ -14,6 +14,8 @@ elif [ "$RDBMS" == 'db2' ]; then
   bash $DIR/../docker_db.sh db2
 elif [ "$RDBMS" == 'oracle' ]; then
   bash $DIR/../docker_db.sh oracle
+elif [ "$RDBMS" == 'oracle_atps_tls' ]; then
+  bash $DIR/../docker_db.sh oracle_atps_tls
 elif [ "$RDBMS" == 'oracle_atps' ]; then
   bash $DIR/../docker_db.sh oracle_atps
 elif [ "$RDBMS" == 'oracle_db19c' ]; then
@@ -30,4 +32,6 @@ elif [ "$RDBMS" == 'cockroachdb' ]; then
   bash $DIR/../docker_db.sh cockroachdb
 elif [ "$RDBMS" == 'hana' ]; then
   bash $DIR/../docker_db.sh hana
+elif [ "$RDBMS" == 'informix' ]; then
+  bash $DIR/../docker_db.sh informix
 fi

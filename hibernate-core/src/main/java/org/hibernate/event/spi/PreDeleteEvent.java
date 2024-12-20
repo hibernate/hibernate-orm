@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
 
@@ -22,7 +20,7 @@ public class PreDeleteEvent extends AbstractPreDatabaseOperationEvent {
 
 	/**
 	 * Constructs an event containing the pertinent information.
-	 *  @param entity The entity to be deleted.
+	 * @param entity The entity to be deleted.
 	 * @param id The id to use in the deletion.
 	 * @param deletedState The entity's state at deletion time.
 	 * @param persister The entity's persister.

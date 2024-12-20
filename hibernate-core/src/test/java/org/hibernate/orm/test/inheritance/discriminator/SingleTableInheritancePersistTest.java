@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.inheritance.discriminator;
 
@@ -12,7 +10,7 @@ import java.util.List;
 
 import org.hibernate.query.spi.QueryImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -38,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Davide D'Alto
  */
-@TestForIssue(jiraKey = "HHH-12332")
+@JiraKey(value = "HHH-12332")
 @DomainModel(
 		annotatedClasses = {
 				SingleTableInheritancePersistTest.Family.class,
@@ -112,7 +110,7 @@ public class SingleTableInheritancePersistTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-15497")
+	@JiraKey(value = "HHH-15497")
 	public void testFetchChildrenCountTwiceFails(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

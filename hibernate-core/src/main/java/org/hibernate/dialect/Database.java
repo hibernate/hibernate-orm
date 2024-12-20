@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
@@ -59,23 +57,6 @@ public enum Database {
 		@Override
 		public String getDriverClassName(String jdbcUrl) {
 			return "com.ibm.db2.jcc.DB2Driver";
-		}
-	},
-
-	DERBY {
-		@Override
-		public Dialect createDialect(DialectResolutionInfo info) {
-			return new DerbyDialect( info );
-		}
-		@Override
-		public boolean productNameMatches(String databaseName) {
-			return "Apache Derby".equals( databaseName );
-		}
-		@Override
-		public String getDriverClassName(String jdbcUrl) {
-			return jdbcUrl.startsWith( "jdbc:derby://" )
-					? "org.apache.derby.jdbc.ClientDriver"
-					: "org.apache.derby.jdbc.EmbeddedDriver";
 		}
 	},
 

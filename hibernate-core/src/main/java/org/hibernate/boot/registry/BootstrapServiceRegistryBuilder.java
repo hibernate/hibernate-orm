@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.registry;
 
@@ -84,7 +82,7 @@ public class BootstrapServiceRegistryBuilder {
 
 	/**
 	 * Defines when the lookup in the thread context {@code ClassLoader} is done.
-	 * 
+	 *
 	 * @param precedence The lookup precedence
 	 */
 	public void applyTcclLookupPrecedence(TcclLookupPrecedence precedence) {
@@ -180,7 +178,7 @@ public class BootstrapServiceRegistryBuilder {
 			if ( providedClassLoaders != null )  {
 				classLoaders.addAll( providedClassLoaders );
 			}
-			
+
 			classLoaderService = new ClassLoaderServiceImpl( classLoaders,tcclLookupPrecedence );
 		}
 		else {

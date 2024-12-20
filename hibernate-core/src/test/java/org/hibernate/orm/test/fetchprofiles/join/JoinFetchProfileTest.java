@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.fetchprofiles.join;
 
@@ -47,10 +45,10 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 	}
 
 	public void configure(Configuration cfg) {
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
+		cfg.setProperty( Environment.GENERATE_STATISTICS, true );
 	}
 
-	@SuppressWarnings({ "UnusedDeclaration" })
+	@SuppressWarnings("unused")
 	private interface TestData {
 		Long getStudentId();
 
@@ -76,12 +74,12 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 		final Enrollment enrollment = new Enrollment( section, me );
 		inTransaction(
 				session -> {
-					session.save( literatureDepartment );
-					session.save( lit101 );
-					session.save( section );
-					session.save( me );
+					session.persist( literatureDepartment );
+					session.persist( lit101 );
+					session.persist( section );
+					session.persist( me );
 					section.getEnrollments().add( enrollment );
-					session.save( enrollment );
+					session.persist( enrollment );
 				}
 		);
 
@@ -113,11 +111,11 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 
 		inTransaction(
 				session -> {
-					session.delete( enrollment );
-					session.delete( me );
-					session.delete( enrollment.getOffering() );
-					session.delete( enrollment.getOffering().getCourse() );
-					session.delete( enrollment.getOffering().getCourse().getCode().getDepartment() );
+					session.remove( enrollment );
+					session.remove( me );
+					session.remove( enrollment.getOffering() );
+					session.remove( enrollment.getOffering().getCourse() );
+					session.remove( enrollment.getOffering().getCourse().getCode().getDepartment() );
 				}
 		);
 	}
@@ -134,8 +132,8 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 									assertFalse( Hibernate.isInitialized( section.getCourse() ) );
 									assertFalse( Hibernate.isInitialized( section.getEnrollments() ) );
 									assertFalse( Hibernate.isInitialized( section.getCourse()
-																				  .getCode()
-																				  .getDepartment() ) );
+																				.getCode()
+																				.getDepartment() ) );
 									assertTrue( Hibernate.isInitialized( section.getCourse() ) );
 									assertEquals( 1, sessionFactory().getStatistics().getEntityFetchCount() );
 								}
@@ -160,8 +158,8 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 									assertFalse( Hibernate.isInitialized( section.getCourse() ) );
 									assertFalse( Hibernate.isInitialized( section.getEnrollments() ) );
 									assertFalse( Hibernate.isInitialized( section.getCourse()
-																				  .getCode()
-																				  .getDepartment() ) );
+																				.getCode()
+																				.getDepartment() ) );
 									assertTrue( Hibernate.isInitialized( section.getCourse() ) );
 									assertEquals( 1, sessionFactory().getStatistics().getEntityFetchCount() );
 								}

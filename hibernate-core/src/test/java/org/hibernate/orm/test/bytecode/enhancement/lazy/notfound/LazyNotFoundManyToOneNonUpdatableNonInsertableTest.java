@@ -1,10 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.notfound;
+
+import org.hibernate.Hibernate;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
+
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.ConstraintMode;
@@ -16,43 +25,28 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
-import org.hibernate.Hibernate;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
-import org.hibernate.annotations.NotFound;
-import org.hibernate.annotations.NotFoundAction;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Gail Badner
  */
-@TestForIssue( jiraKey = "HHH-12226")
-@RunWith( BytecodeEnhancerRunner.class )
-public class LazyNotFoundManyToOneNonUpdatableNonInsertableTest extends BaseCoreFunctionalTestCase {
+@SuppressWarnings("JUnitMalformedDeclaration")
+@JiraKey("HHH-12226")
+@DomainModel(
+		annotatedClasses = {
+				LazyNotFoundManyToOneNonUpdatableNonInsertableTest.User.class,
+				LazyNotFoundManyToOneNonUpdatableNonInsertableTest.Lazy.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class LazyNotFoundManyToOneNonUpdatableNonInsertableTest {
 	private static int ID = 1;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				User.class,
-				Lazy.class
-		};
-	}
-
 	@Test
-	public void test() {
-		doInHibernate(
-				this::sessionFactory, session -> {
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 					Lazy p = new Lazy();
 					p.id = ID;
 					User u = new User();
@@ -62,14 +56,9 @@ public class LazyNotFoundManyToOneNonUpdatableNonInsertableTest extends BaseCore
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-					session.delete( session.get( Lazy.class, ID ) );
-				}
-		);
+		scope.inTransaction( session -> session.remove( session.get( Lazy.class, ID ) ) );
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 					User user = session.find( User.class, ID );
 					// per UserGuide (and simply correct behavior), `@NotFound` forces EAGER fetching
 					assertThat( Hibernate.isPropertyInitialized( user, "lazy" ) )
@@ -88,7 +77,6 @@ public class LazyNotFoundManyToOneNonUpdatableNonInsertableTest extends BaseCore
 		private Integer id;
 
 		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, optional = true)
-		@LazyToOne(value = LazyToOneOption.NO_PROXY)
 		@NotFound(action = NotFoundAction.IGNORE)
 		@JoinColumn(
 				foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT),

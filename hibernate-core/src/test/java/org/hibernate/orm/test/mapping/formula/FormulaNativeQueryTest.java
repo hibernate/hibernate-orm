@@ -1,13 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.formula;
 
 import java.util.Collections;
 import java.util.List;
+
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -17,7 +17,7 @@ import org.hibernate.annotations.Formula;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -28,7 +28,6 @@ import org.junit.jupiter.api.Test;
 
 import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Алексей Макаров
@@ -37,7 +36,7 @@ import static org.junit.Assert.assertTrue;
  */
 @DomainModel( annotatedClasses = FormulaNativeQueryTest.Foo.class )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-7525")
+@JiraKey(value = "HHH-7525")
 public class FormulaNativeQueryTest {
 
 	@BeforeEach
@@ -76,7 +75,7 @@ public class FormulaNativeQueryTest {
 		scope.inTransaction(
 				session -> {
 					Query<Foo> query = session.createNativeQuery(
-							"SELECT ft.*, abs(locationEnd - locationStart) as distance FROM foo_table ft",
+							"SELECT ft.*, abs(location_end - location_start) as distance FROM foo_table ft",
 							Foo.class
 					);
 					List<Foo> list = query.getResultList();
@@ -90,11 +89,11 @@ public class FormulaNativeQueryTest {
 		scope.inTransaction(
 				session -> {
 					NativeQuery query = session.createNativeQuery(
-							"SELECT ft.*, abs(ft.locationEnd - locationStart) as d FROM foo_table ft" );
+							"SELECT ft.*, abs(ft.location_end - location_start) as d FROM foo_table ft" );
 					query.addRoot( "ft", Foo.class )
 							.addProperty( "id", "id" )
-							.addProperty( "locationStart", "locationStart" )
-							.addProperty( "locationEnd", "locationEnd" )
+							.addProperty( "locationStart", "location_start" )
+							.addProperty( "locationEnd", "location_end" )
 							.addProperty( "distance", "d" );
 					List<Foo> list = query.getResultList();
 					assertThat( list, hasSize( 3 ) );
@@ -107,7 +106,7 @@ public class FormulaNativeQueryTest {
 		scope.inTransaction(
 				session -> {
 					NativeQuery query = session.createNativeQuery(
-							"SELECT ft.id as {ft.id}, ft.locationStart as {ft.locationStart}, ft.locationEnd as {ft.locationEnd}, abs(ft.locationEnd - locationStart) as {ft.distance} FROM foo_table ft" )
+							"SELECT ft.id as {ft.id}, ft.location_start as {ft.locationStart}, ft.location_end as {ft.locationEnd}, abs(ft.location_end - location_start) as {ft.distance} FROM foo_table ft" )
 							.addEntity( "ft", Foo.class );
 					query.setProperties( Collections.singletonMap( "distance", "distance" ) );
 					List<Foo> list = query.getResultList();
@@ -153,6 +152,7 @@ public class FormulaNativeQueryTest {
 			this.id = id;
 		}
 
+		@Column(name = "location_start")
 		public int getLocationStart() {
 			return locationStart;
 		}
@@ -160,6 +160,7 @@ public class FormulaNativeQueryTest {
 			this.locationStart = locationStart;
 		}
 
+		@Column(name = "location_end")
 		public int getLocationEnd() {
 			return locationEnd;
 		}
@@ -167,7 +168,7 @@ public class FormulaNativeQueryTest {
 			this.locationEnd = locationEnd;
 		}
 
-		@Formula("abs(locationEnd - locationStart)")
+		@Formula("abs(location_end - location_start)")
 		public int getDistance() {
 			return distance;
 		}

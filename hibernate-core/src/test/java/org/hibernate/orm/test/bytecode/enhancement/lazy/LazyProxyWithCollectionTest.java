@@ -1,29 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy;
 
 import java.util.HashSet;
 import java.util.Set;
 
-import org.hibernate.HibernateException;
-import org.hibernate.bytecode.enhance.spi.UnloadedClass;
-import org.hibernate.event.service.spi.EventListenerRegistry;
-import org.hibernate.event.spi.EventType;
-import org.hibernate.event.spi.LoadEvent;
-import org.hibernate.event.spi.LoadEventListener;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
-import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -35,132 +25,152 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Christian Beikov
  */
-@TestForIssue( jiraKey = "HHH-14619" )
-@RunWith( BytecodeEnhancerRunner.class )
-public class LazyProxyWithCollectionTest extends BaseCoreFunctionalTestCase {
+@Jira( "https://hibernate.atlassian.net/browse/HHH-14619" )
+@DomainModel(
+		annotatedClasses = {
+				LazyProxyWithCollectionTest.Parent.class,
+				LazyProxyWithCollectionTest.Child.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class LazyProxyWithCollectionTest {
 
-    private Long childId;
+	private Long childId;
 
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{Parent.class, Child.class};
-    }
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
+			Child c = new Child();
+			em.persist( c );
+			childId = c.getId();
+		} );
+	}
 
-    @Before
-    public void prepare() {
-        doInJPA( this::sessionFactory, em -> {
-            Child c = new Child();
-            em.persist( c );
-            childId = c.getId();
-        } );
-    }
+	@Test
+	public void testReference(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
+			Child child = em.getReference( Child.class, childId );
+			Parent parent = new Parent();
+			parent.child = child;
+			em.persist( parent );
+			// Class cast exception occurs during auto-flush
+			em.find( Parent.class, parent.getId() );
+		} );
+	}
 
-    @Test
-    public void testReference() {
-        doInJPA( this::sessionFactory, em -> {
-            Child child = em.getReference( Child.class, childId );
-            Parent parent = new Parent();
-            parent.child = child;
-            em.persist( parent );
-            // Class cast exception occurs during auto-flush
-            em.find( Parent.class, parent.getId() );
-        } );
-    }
+	@Test
+	public void testLazyCollection(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
+			Child child = em.find( Child.class, childId );
+			Parent parent = new Parent();
+			parent.child = child;
+			em.persist( parent );
+			child.children = new HashSet<>();
+			// Class cast exception occurs during auto-flush
+			em.find( Parent.class, parent.getId() );
+		} );
+	}
 
-    @Test
-    public void testLazyCollection() {
-        doInJPA( this::sessionFactory, em -> {
-            Child child = em.find( Child.class, childId );
-            Parent parent = new Parent();
-            parent.child = child;
-            em.persist( parent );
-            child.children = new HashSet<>();
-            // Class cast exception occurs during auto-flush
-            em.find( Parent.class, parent.getId() );
-        } );
-    }
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17750" )
+	public void testMerge(SessionFactoryScope scope) {
+		final Child child = scope.fromTransaction( em -> em.find( Child.class, childId ) );
 
-    // --- //
+		final Parent parent = scope.fromTransaction( em -> {
+			Parent p = new Parent();
+			p.setChild( child );
+			return em.merge( p );
+		} );
 
-    @Entity
-    @Table( name = "PARENT" )
-    private static class Parent {
+		scope.inTransaction( em -> em.merge( parent ) );
 
-        @Id
-        @GeneratedValue( strategy = GenerationType.AUTO )
-        Long id;
+		scope.inTransaction( em -> {
+			assertThat( em.find( Parent.class, parent.getId() ).getChild().getId() ).isEqualTo( child.getId() );
+		} );
+	}
 
-        @OneToOne( fetch = FetchType.LAZY )
-        Child child;
+	// --- //
 
-        public Long getId() {
-            return id;
-        }
+	@Entity
+	@Table( name = "PARENT" )
+	static class Parent {
 
-        public Child getChild() {
-            return child;
-        }
+		@Id
+		@GeneratedValue( strategy = GenerationType.AUTO )
+		Long id;
 
-        public void setChild(Child child) {
-            this.child = child;
-        }
-    }
+		@OneToOne( fetch = FetchType.LAZY )
+		Child child;
 
-    @Entity
-    @Table( name = "CHILD" )
-    private static class Child {
+		public Long getId() {
+			return id;
+		}
 
-        @Id
-        @GeneratedValue( strategy = GenerationType.AUTO )
-        Long id;
-        @Version
-        Long version;
+		public Child getChild() {
+			return child;
+		}
 
-        String name;
+		public void setChild(Child child) {
+			this.child = child;
+		}
+	}
 
-        @OneToMany
-        Set<Child> children = new HashSet<>();
+	@Entity
+	@Table( name = "CHILD" )
+	static class Child {
 
-        Child() {
-            // No-arg constructor necessary for proxy factory
-        }
+		@Id
+		@GeneratedValue( strategy = GenerationType.AUTO )
+		Long id;
+		@Version
+		Long version;
 
-        public Long getId() {
-            return id;
-        }
+		String name;
 
-        public void setId(Long id) {
-            this.id = id;
-        }
+		@OneToMany
+		Set<Child> children = new HashSet<>();
 
-        public Long getVersion() {
-            return version;
-        }
+		Child() {
+			// No-arg constructor necessary for proxy factory
+		}
 
-        public void setVersion(Long version) {
-            this.version = version;
-        }
+		public Long getId() {
+			return id;
+		}
 
-        public String getName() {
-            return name;
-        }
+		public void setId(Long id) {
+			this.id = id;
+		}
 
-        public void setName(String name) {
-            this.name = name;
-        }
+		public Long getVersion() {
+			return version;
+		}
 
-        public Set<Child> getChildren() {
-            return children;
-        }
+		public void setVersion(Long version) {
+			this.version = version;
+		}
 
-        public void setChildren(Set<Child> children) {
-            this.children = children;
-        }
-    }
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public Set<Child> getChildren() {
+			return children;
+		}
+
+		public void setChildren(Set<Child> children) {
+			this.children = children;
+		}
+	}
 
 }

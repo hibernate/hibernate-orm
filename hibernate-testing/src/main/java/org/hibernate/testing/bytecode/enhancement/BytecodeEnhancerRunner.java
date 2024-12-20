@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.bytecode.enhancement;
 
@@ -22,8 +20,8 @@ import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.bytecode.enhance.spi.UnloadedField;
-import org.hibernate.cfg.Environment;
 
+import org.hibernate.bytecode.enhance.spi.UnsupportedEnhancementStrategy;
 import org.hibernate.testing.junit4.CustomRunner;
 import org.junit.runner.Runner;
 import org.junit.runner.notification.RunNotifier;
@@ -32,6 +30,7 @@ import org.junit.runners.Suite;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.RunnerBuilder;
 
+import static org.hibernate.bytecode.enhance.spi.UnsupportedEnhancementStrategy.SKIP;
 import static org.hibernate.bytecode.internal.BytecodeProviderInitiator.buildDefaultBytecodeProvider;
 
 /**
@@ -115,6 +114,12 @@ public class BytecodeEnhancerRunner extends Suite {
 				@Override
 				public boolean isLazyLoadable(UnloadedField field) {
 					return options.lazyLoading() && super.isLazyLoadable( field );
+				}
+
+				@Override
+				public UnsupportedEnhancementStrategy getUnsupportedEnhancementStrategy() {
+					final UnsupportedEnhancementStrategy strategy = options.unsupportedEnhancementStrategy();
+					return strategy != SKIP ? strategy : super.getUnsupportedEnhancementStrategy();
 				}
 			};
 		}

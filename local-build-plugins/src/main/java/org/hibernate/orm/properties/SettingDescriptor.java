@@ -18,6 +18,8 @@ public class SettingDescriptor {
 	private final String defaultValue;
 	private final String apiNote;
 	private final LifecycleDetails lifecycleDetails;
+	private final boolean unsafe;
+	private final boolean compatibility;
 
 	public SettingDescriptor(
 			String name,
@@ -27,6 +29,8 @@ public class SettingDescriptor {
 			String comment,
 			String defaultValue,
 			String apiNote,
+			boolean unsafe,
+			boolean compatibility,
 			LifecycleDetails lifecycleDetails) {
 		this.name = name;
 		this.settingsClassName = settingsClassName;
@@ -35,6 +39,8 @@ public class SettingDescriptor {
 		this.publishedJavadocLink = publishedJavadocLink;
 		this.defaultValue = defaultValue;
 		this.apiNote = apiNote;
+		this.unsafe = unsafe;
+		this.compatibility = compatibility;
 		this.lifecycleDetails = lifecycleDetails;
 	}
 
@@ -48,7 +54,9 @@ public class SettingDescriptor {
 			String apiNote,
 			String since,
 			boolean deprecated,
-			boolean incubating) {
+			boolean incubating,
+			boolean unsafe,
+			boolean compatibility) {
 		this(
 				name,
 				settingsClassName,
@@ -56,6 +64,8 @@ public class SettingDescriptor {
 				publishedJavadocLink, comment,
 				defaultValue,
 				apiNote,
+				unsafe,
+				compatibility,
 				new LifecycleDetails( since, deprecated, incubating )
 		);
 	}
@@ -98,6 +108,14 @@ public class SettingDescriptor {
 
 	public String getSettingFieldName() {
 		return settingFieldName;
+	}
+
+	public boolean isUnsafe() {
+		return unsafe;
+	}
+
+	public boolean isCompatibility() {
+		return compatibility;
 	}
 
 	public LifecycleDetails getLifecycleDetails() {

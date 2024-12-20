@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.manytomany.defaults;
 
@@ -14,7 +12,7 @@ import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.type.EntityType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -149,7 +147,7 @@ public class ManyToManyImplicitNamingTest extends BaseNonConfigCoreFunctionalTes
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9390")
+	@JiraKey( value = "HHH-9390")
 	public void testUnidirOwnerEntityNamePrimaryTableOverride() {
 		// Category.clients: associated entity: KnownClient
 		// Category has @Entity(name="CATEGORY") @Table(name="CATEGORY_TAB")
@@ -202,7 +200,7 @@ public class ManyToManyImplicitNamingTest extends BaseNonConfigCoreFunctionalTes
 		}
 		boolean hasOwnerFK = false;
 		boolean hasInverseFK = false;
-        for (Iterator it = ownerCollection.getCollectionTable().getForeignKeys().values().iterator(); it.hasNext(); ) {
+		for (Iterator it = ownerCollection.getCollectionTable().getForeignKeys().values().iterator(); it.hasNext(); ) {
 			final ForeignKey fk = (ForeignKey) it.next();
 			assertSame( ownerCollection.getCollectionTable(), fk.getTable() );
 			if ( fk.getColumnSpan() > 1 ) {

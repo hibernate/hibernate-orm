@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
@@ -14,10 +12,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import jakarta.persistence.FindOption;
 import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.RefreshOption;
 import org.hibernate.query.Query;
 import org.hibernate.query.spi.QueryOptions;
 
+import static jakarta.persistence.PessimisticLockScope.NORMAL;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableSet;
 
@@ -51,7 +52,7 @@ import static java.util.Collections.unmodifiableSet;
  *
  * @author Scott Marlow
  */
-public class LockOptions implements Serializable {
+public class LockOptions implements FindOption, RefreshOption, Serializable {
 	/**
 	 * Represents {@link LockMode#NONE}, to which timeout and scope are
 	 * not applicable.
@@ -138,7 +139,7 @@ public class LockOptions implements Serializable {
 	private final boolean immutable;
 	private LockMode lockMode;
 	private int timeout;
-	private boolean scope;
+	private PessimisticLockScope pessimisticLockScope;
 	private Boolean followOnLocking;
 	private Map<String, LockMode> aliasSpecificLockModes;
 
@@ -150,6 +151,7 @@ public class LockOptions implements Serializable {
 		immutable = false;
 		lockMode = LockMode.NONE;
 		timeout = WAIT_FOREVER;
+		pessimisticLockScope = NORMAL;
 	}
 
 	/**
@@ -162,6 +164,7 @@ public class LockOptions implements Serializable {
 		immutable = false;
 		this.lockMode = lockMode;
 		timeout = WAIT_FOREVER;
+		pessimisticLockScope = NORMAL;
 	}
 
 	/**
@@ -175,6 +178,7 @@ public class LockOptions implements Serializable {
 		immutable = false;
 		this.lockMode = lockMode;
 		this.timeout = timeout;
+		pessimisticLockScope = NORMAL;
 	}
 
 	/**
@@ -189,7 +193,7 @@ public class LockOptions implements Serializable {
 		immutable = false;
 		this.lockMode = lockMode;
 		this.timeout = timeout;
-		this.scope = scope == PessimisticLockScope.EXTENDED;
+		this.pessimisticLockScope = scope;
 	}
 
 	/**
@@ -199,6 +203,7 @@ public class LockOptions implements Serializable {
 		this.immutable = immutable;
 		this.lockMode = lockMode;
 		timeout = WAIT_FOREVER;
+		pessimisticLockScope = NORMAL;
 	}
 	/**
 	 * Determine of the lock options are empty.
@@ -210,7 +215,7 @@ public class LockOptions implements Serializable {
 		return lockMode == LockMode.NONE
 			&& timeout == WAIT_FOREVER
 			&& followOnLocking == null
-			&& !scope
+			&& pessimisticLockScope == NORMAL
 			&& !hasAliasSpecificLockModes();
 	}
 
@@ -232,7 +237,7 @@ public class LockOptions implements Serializable {
 	 */
 	public LockOptions setLockMode(LockMode lockMode) {
 		if ( immutable ) {
-			throw new UnsupportedOperationException("immutable global instance of LockMode");
+			throw new UnsupportedOperationException("immutable global instance of LockOptions");
 		}
 		this.lockMode = lockMode;
 		return this;
@@ -249,7 +254,7 @@ public class LockOptions implements Serializable {
 	 */
 	public LockOptions setAliasSpecificLockMode(String alias, LockMode lockMode) {
 		if ( immutable ) {
-			throw new UnsupportedOperationException("immutable global instance of LockMode");
+			throw new UnsupportedOperationException("immutable global instance of LockOptions");
 		}
 		if ( aliasSpecificLockModes == null ) {
 			aliasSpecificLockModes = new LinkedHashMap<>();
@@ -413,7 +418,7 @@ public class LockOptions implements Serializable {
 	 * @return the current {@link PessimisticLockScope}
 	 */
 	public PessimisticLockScope getLockScope() {
-		return scope ? PessimisticLockScope.EXTENDED : PessimisticLockScope.NORMAL;
+		return pessimisticLockScope;
 	}
 
 	/**
@@ -430,49 +435,9 @@ public class LockOptions implements Serializable {
 	 */
 	public LockOptions setLockScope(PessimisticLockScope scope) {
 		if ( immutable ) {
-			throw new UnsupportedOperationException("immutable global instance of LockMode");
+			throw new UnsupportedOperationException("immutable global instance of LockOptions");
 		}
-		return setScope(scope==PessimisticLockScope.EXTENDED);
-	}
-
-	/**
-	 * The current lock scope setting:
-	 * <ul>
-	 * <li>{@code true} means the lock extends to rows of owned
-	 *     collections, but
-	 * <li>{@code false} means only the entity table and secondary
-	 *     tables are locked.
-	 * </ul>
-	 *
-	 * @return {@code true} if the lock extends to owned associations
-	 *
-	 * @deprecated use {@link #getLockScope()}
-	 */
-	@Deprecated(since = "6.2")
-	public boolean getScope() {
-		return scope;
-	}
-
-	/**
-	 * Set the lock scope setting:
-	 * <ul>
-	 * <li>{@code true} means the lock extends to rows of owned
-	 *     collections, but
-	 * <li>{@code false} means only the entity table and secondary
-	 *     tables are locked.
-	 * </ul>
-	 *
-	 * @param scope the new scope setting
-	 * @return {@code this} for method chaining
-	 *
-	 * @deprecated use {@link #setLockScope(PessimisticLockScope)}
-	 */
-	@Deprecated(since = "6.2")
-	public LockOptions setScope(boolean scope) {
-		if ( immutable ) {
-			throw new UnsupportedOperationException("immutable global instance of LockMode");
-		}
-		this.scope = scope;
+		pessimisticLockScope = scope;
 		return this;
 	}
 
@@ -505,7 +470,7 @@ public class LockOptions implements Serializable {
 	 */
 	public LockOptions setFollowOnLocking(Boolean followOnLocking) {
 		if ( immutable ) {
-			throw new UnsupportedOperationException("immutable global instance of LockMode");
+			throw new UnsupportedOperationException("immutable global instance of LockOptions");
 		}
 		this.followOnLocking = followOnLocking;
 		return this;
@@ -544,7 +509,7 @@ public class LockOptions implements Serializable {
 	 */
 	public void overlay(LockOptions lockOptions) {
 		setLockMode( lockOptions.getLockMode() );
-		setScope( lockOptions.getScope() );
+		setLockScope( lockOptions.getLockScope() );
 		setTimeOut( lockOptions.getTimeOut() );
 		if ( lockOptions.aliasSpecificLockModes != null ) {
 			lockOptions.aliasSpecificLockModes.forEach(this::setAliasSpecificLockMode);
@@ -563,7 +528,7 @@ public class LockOptions implements Serializable {
 	 */
 	public static LockOptions copy(LockOptions source, LockOptions destination) {
 		destination.setLockMode( source.getLockMode() );
-		destination.setScope( source.getScope() );
+		destination.setLockScope( source.getLockScope() );
 		destination.setTimeOut( source.getTimeOut() );
 		if ( source.aliasSpecificLockModes != null ) {
 			destination.aliasSpecificLockModes = new HashMap<>( source.aliasSpecificLockModes );
@@ -577,13 +542,12 @@ public class LockOptions implements Serializable {
 		if ( this == object ) {
 			return true;
 		}
-		else if ( !(object instanceof LockOptions) ) {
+		else if ( !(object instanceof LockOptions that) ) {
 			return false;
 		}
 		else {
-			final LockOptions that = (LockOptions) object;
 			return timeout == that.timeout
-				&& scope == that.scope
+				&& pessimisticLockScope == that.pessimisticLockScope
 				&& lockMode == that.lockMode
 				&& Objects.equals( aliasSpecificLockModes, that.aliasSpecificLockModes )
 				&& Objects.equals( followOnLocking, that.followOnLocking );
@@ -592,6 +556,6 @@ public class LockOptions implements Serializable {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( lockMode, timeout, aliasSpecificLockModes, followOnLocking, scope );
+		return Objects.hash( lockMode, timeout, aliasSpecificLockModes, followOnLocking, pessimisticLockScope );
 	}
 }

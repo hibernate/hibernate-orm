@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot;
 
@@ -14,24 +12,27 @@ import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.annotations.CacheLayout;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.jpa.spi.JpaCompliance;
-import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.type.format.FormatMapper;
 
+import jakarta.persistence.criteria.Nulls;
+
 /**
- * The contract for building a {@link SessionFactory} given a number of options.
+ * The contract for building a {@link SessionFactory} given a specified set of options.
  *
  * @author Steve Ebersole
  * @author Gail Badner
  *
  * @since 5.0
+ *
+ * @see Metadata#getSessionFactoryBuilder()
  */
 public interface SessionFactoryBuilder {
 	/**
@@ -80,7 +81,9 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 *
+	 * @see org.hibernate.cfg.AvailableSettings#SESSION_FACTORY_NAME
 	 * @see org.hibernate.cfg.AvailableSettings#SESSION_FACTORY_NAME_IS_JNDI
+	 * @see org.hibernate.cfg.AvailableSettings#SESSION_FACTORY_JNDI_NAME
 	 */
 	SessionFactoryBuilder applyNameAsJndiName(boolean isJndiName);
 
@@ -255,21 +258,13 @@ public interface SessionFactoryBuilder {
 	 */
 	SessionFactoryBuilder applyLazyInitializationOutsideTransaction(boolean enabled);
 
-	SessionFactoryBuilder applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling);
-
 	/**
-	 * What style of batching should be used?
+	 * Specifies how temporary tables should be created or dropped with respect
+	 * to transaction handling.
 	 *
-	 * @param style The style to use
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#BATCH_FETCH_STYLE
-	 *
-	 * @deprecated : an appropriate style is selected
+	 * @see TempTableDdlTransactionHandling
 	 */
-	@Deprecated(since = "6.0")
-	SessionFactoryBuilder applyBatchFetchStyle(BatchFetchStyle style);
+	SessionFactoryBuilder applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling);
 
 	/**
 	 * Should entity {@linkplain org.hibernate.loader.ast.spi.Loader loaders} be
@@ -326,7 +321,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#DEFAULT_NULL_ORDERING
 	 */
-	SessionFactoryBuilder applyDefaultNullPrecedence(NullPrecedence nullPrecedence);
+	SessionFactoryBuilder applyDefaultNullPrecedence(Nulls nullPrecedence);
 
 	/**
 	 * Specify whether ordering of inserts should be enabled.
@@ -359,11 +354,18 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyOrderingOfUpdates(boolean enabled);
 
 	/**
-	 * Specifies whether multi-tenancy is enabled
+	 * Specifies whether multitenancy is enabled via use of a
+	 * {@link org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider}.
+	 * <p>
+	 * Note that this setting does not affect
+	 * {@linkplain org.hibernate.annotations.TenantId discriminator-based}
+	 * multitenancy.
 	 *
-	 * @param enabled True if multi-tenancy in use.
+	 * @param enabled True if multi-tenancy in use via a {@code MultiTenantConnectionProvider}.
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#MULTI_TENANT_CONNECTION_PROVIDER
 	 */
 	SessionFactoryBuilder applyMultiTenancy(boolean enabled);
 
@@ -444,6 +446,19 @@ public interface SessionFactoryBuilder {
 	 * @see org.hibernate.cfg.AvailableSettings#USE_QUERY_CACHE
 	 */
 	SessionFactoryBuilder applyQueryCacheSupport(boolean enabled);
+
+	/**
+	 * Specifies the default {@link CacheLayout} to use for query cache entries.
+	 *
+	 * @param cacheLayout The cache layout to use.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#QUERY_CACHE_LAYOUT
+	 * @since 6.5
+	 */
+	@Incubating
+	SessionFactoryBuilder applyQueryCacheLayout(CacheLayout cacheLayout);
 
 	/**
 	 * Specifies a {@link org.hibernate.cache.spi.TimestampsCacheFactory}.
@@ -693,14 +708,12 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder enableJpaTransactionCompliance(boolean enabled);
 
 	/**
-	 * @see JpaCompliance#isJpaListComplianceEnabled()
+	 * @deprecated No longer has any effect.
 	 *
-	 * @see org.hibernate.cfg.AvailableSettings#JPA_LIST_COMPLIANCE
-	 *
-	 * @deprecated Use {@link org.hibernate.cfg.AvailableSettings#DEFAULT_LIST_SEMANTICS} instead
+	 * @see JpaCompliance#isJpaCascadeComplianceEnabled()
 	 */
-	@Deprecated( since = "6.0" )
-	SessionFactoryBuilder enableJpaListCompliance(boolean enabled);
+	@Deprecated(since = "7.0", forRemoval = true)
+	SessionFactoryBuilder enableJpaCascadeCompliance(boolean enabled);
 
 	/**
 	 * @see JpaCompliance#isJpaClosedComplianceEnabled()

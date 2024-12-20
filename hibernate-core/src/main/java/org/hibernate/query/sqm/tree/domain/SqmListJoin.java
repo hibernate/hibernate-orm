@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
@@ -10,17 +8,17 @@ import java.util.List;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
+import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaListJoin;
 import org.hibernate.query.criteria.JpaPredicate;
-import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
-import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 
 import jakarta.persistence.criteria.Expression;
@@ -123,8 +121,8 @@ public class SqmListJoin<O,E>
 	}
 
 	@Override
-	public <S extends E> SqmTreatedListJoin<O,E,S> treatAs(Class<S> treatAsType) {
-		return treatAs( nodeBuilder().getDomainModel().entity( treatAsType ), null );
+	public <S extends E> SqmTreatedListJoin<O,E,S> treatAs(Class<S> treatJavaType) {
+		return treatAs( treatJavaType, null );
 	}
 
 	@Override
@@ -134,7 +132,7 @@ public class SqmListJoin<O,E>
 
 	@Override
 	public <S extends E> SqmTreatedListJoin<O,E,S> treatAs(Class<S> treatJavaType, String alias) {
-		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ), alias );
+		return treatAs( treatJavaType, alias, false );
 	}
 
 	@Override
@@ -143,8 +141,18 @@ public class SqmListJoin<O,E>
 	}
 
 	@Override
-	public <S extends E> SqmTreatedListJoin<O,E,S> treatAs(Class<S> treatJavaType, String alias, boolean fetch) {
-		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ), alias, fetch );
+	public <S extends E> SqmTreatedListJoin<O, E, S> treatAs(Class<S> treatJavaType, String alias, boolean fetch) {
+		final ManagedDomainType<S> treatTarget = nodeBuilder().getDomainModel().managedType( treatJavaType );
+		final SqmTreatedListJoin<O, E, S> treat = findTreat( treatTarget, alias );
+		if ( treat == null ) {
+			if ( treatTarget instanceof TreatableDomainType<?> ) {
+				return addTreat( new SqmTreatedListJoin<>( this, (TreatableDomainType<S>) treatTarget, alias, fetch ) );
+			}
+			else {
+				throw new IllegalArgumentException( "Not a treatable type: " + treatJavaType.getName() );
+			}
+		}
+		return treat;
 	}
 
 	@Override
@@ -154,18 +162,6 @@ public class SqmListJoin<O,E>
 			return addTreat( new SqmTreatedListJoin<>( this, treatTarget, alias, fetch ) );
 		}
 		return treat;
-	}
-
-	@Override
-	public SqmAttributeJoin<O, E> makeCopy(SqmCreationProcessingState creationProcessingState) {
-		return new SqmListJoin<>(
-				creationProcessingState.getPathRegistry().findFromByPath( getLhs().getNavigablePath() ),
-				getAttribute(),
-				getExplicitAlias(),
-				getSqmJoinType(),
-				isFetched(),
-				nodeBuilder()
-		);
 	}
 
 }

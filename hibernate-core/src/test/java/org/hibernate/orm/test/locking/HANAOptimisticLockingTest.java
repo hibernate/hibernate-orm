@@ -1,12 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.locking;
 
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -14,7 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Version;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -33,8 +31,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 		}
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-11656")
-@RequiresDialect(AbstractHANADialect.class)
+@JiraKey(value = "HHH-11656")
+@RequiresDialect(HANADialect.class)
 public class HANAOptimisticLockingTest {
 
 	@Test
@@ -50,7 +48,11 @@ public class HANAOptimisticLockingTest {
 	private void testWithSpecifiedLockMode(SessionFactoryScope scope, LockModeType lockModeType) {
 		// makes sure we have an entity to actually query
 		Object id = scope.fromTransaction(
-				session -> session.save( new SomeEntity() )
+				session -> {
+					SomeEntity someEntity = new SomeEntity();
+					session.persist( someEntity );
+					return someEntity.getId();
+				}
 		);
 
 		// tests that both the query execution doesn't throw a SQL syntax (which is the main bug) and that

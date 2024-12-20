@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.quote;
 
@@ -24,7 +22,7 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Selectable;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Assert;
@@ -39,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class ColumnDefinitionQuotingTest {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9491" )
+	@JiraKey( value = "HHH-9491" )
 	public void testExplicitQuoting() {
 		withStandardServiceRegistry(
 				false,
@@ -66,7 +64,7 @@ public class ColumnDefinitionQuotingTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9491" )
+	@JiraKey( value = "HHH-9491" )
 	public void testExplicitQuotingSkippingColumnDef() {
 		withStandardServiceRegistry(
 				false,
@@ -104,7 +102,7 @@ public class ColumnDefinitionQuotingTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9491" )
+	@JiraKey( value = "HHH-9491" )
 	public void testGlobalQuotingNotSkippingColumnDef() {
 		withStandardServiceRegistry(
 				true,
@@ -131,7 +129,7 @@ public class ColumnDefinitionQuotingTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9491" )
+	@JiraKey( value = "HHH-9491" )
 	public void testGlobalQuotingSkippingColumnDef() {
 		withStandardServiceRegistry(
 				true,

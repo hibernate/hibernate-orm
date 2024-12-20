@@ -1,10 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.orm.test.multitenancy.discriminator;
 
 import java.util.HashMap;
@@ -30,7 +27,7 @@ import org.hibernate.tool.schema.internal.SchemaDropperImpl;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
 
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -47,7 +44,7 @@ import org.junit.Test;
 /**
  * @author Mårten Svantesson
  */
-@TestForIssue(jiraKey = "HHH-11980")
+@JiraKey(value = "HHH-11980")
 @RequiresDialectFeature( value = ConnectionProviderBuilder.class )
 public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 
@@ -132,14 +129,14 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 
 		doInHibernate( "jboss", session -> {
 			Customer steve = new Customer( 1L, "steve" );
-			session.save( steve );
+			session.persist( steve );
 		} );
 
 		sessionFactory.getStatistics().clear();
 
 		// make sure we get the steve back, from cache if same tenant (jboss)
 		doInHibernate( "jboss", session -> {
-			Customer customer = session.load( Customer.class, 1L );
+			Customer customer = session.getReference( Customer.class, 1L );
 			Assert.assertEquals( "steve", customer.getName() );
 			// also, make sure this came from second level
 			Assert.assertEquals( 1, sessionFactory.getStatistics().getSecondLevelCacheHitCount() );
@@ -149,7 +146,7 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 
 		// then make sure we get the steve back, from db if other tenant (acme)
 		doInHibernate( "acme", session -> {
-			Customer customer = session.load( Customer.class, 1L );
+			Customer customer = session.getReference( Customer.class, 1L );
 			Assert.assertEquals( "steve", customer.getName() );
 			// also, make sure this doesn't came from second level
 			Assert.assertEquals( 0, sessionFactory.getStatistics().getSecondLevelCacheHitCount() );
@@ -161,7 +158,7 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 
 		// first jboss
 		doInHibernate( "jboss", session -> {
-			Customer customer = session.load( Customer.class, 1L );
+			Customer customer = session.getReference( Customer.class, 1L );
 			Assert.assertEquals( "steve", customer.getName() );
 			// also, make sure this doesn't came from second level
 			Assert.assertEquals( 0, sessionFactory.getStatistics().getSecondLevelCacheHitCount() );
@@ -170,15 +167,15 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 		sessionFactory.getStatistics().clear();
 		// then, acme
 		doInHibernate( "acme", session -> {
-			Customer customer = session.load( Customer.class, 1L );
+			Customer customer = session.getReference( Customer.class, 1L );
 			Assert.assertEquals( "steve", customer.getName() );
 			// also, make sure this doesn't came from second level
 			Assert.assertEquals( 0, sessionFactory.getStatistics().getSecondLevelCacheHitCount() );
 		} );
 
 		doInHibernate( "jboss", session -> {
-			Customer customer = session.load( Customer.class, 1L );
-			session.delete( customer );
+			Customer customer = session.getReference( Customer.class, 1L );
+			session.remove( customer );
 		} );
 	}
 

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.entitymode.map.basic;
 
@@ -62,21 +60,21 @@ public class DynamicClassTest extends BaseCoreFunctionalTestCase {
 		cars.put("models", models);
 		models.add(hsv);
 		models.add(monaro);
-		s.save("ProductLine", cars);
+		s.persist("ProductLine", cars);
 		t.commit();
 		s.close();
 
 		s = openSession();
 		t = s.beginTransaction();
-		
+
 		cars = (Map) s.createQuery("from ProductLine pl order by pl.description").uniqueResult();
 		models = (List) cars.get("models");
 		assertFalse( Hibernate.isInitialized(models) );
 		assertEquals( models.size(), 2);
 		assertTrue( Hibernate.isInitialized(models) );
-		
+
 		s.clear();
-		
+
 		List list = s.createQuery("from Model m").list();
 		for ( Iterator i=list.iterator(); i.hasNext(); ) {
 			assertFalse( Hibernate.isInitialized( ( (Map) i.next() ).get("productLine") ) );
@@ -84,18 +82,17 @@ public class DynamicClassTest extends BaseCoreFunctionalTestCase {
 		Map model = (Map) list.get(0);
 		assertTrue( ( (List) ( (Map) model.get("productLine") ).get("models") ).contains(model) );
 		s.clear();
-		
+
 		t.commit();
 		s.close();
 
 		s = openSession();
 		t = s.beginTransaction();
 		cars = (Map) s.createQuery("from ProductLine pl order by pl.description").uniqueResult();
-		s.delete(cars);
+		s.remove(cars);
 		t.commit();
 		s.close();
 	}
 
 
 }
-

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemamanager;
 
@@ -34,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @DomainModel(annotatedClasses = {SchemaManagerLoadScriptTest.Book.class, SchemaManagerLoadScriptTest.Author.class})
 @SessionFactory(exportSchema = false)
 @ServiceRegistry(settings = @Setting(name = JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE,
-			                    	value = "org/hibernate/orm/test/schemamanager/data.sql"))
+									value = "org/hibernate/orm/test/schemamanager/data.sql"))
 @RequiresDialectFeature(feature= DialectFeatureChecks.SupportsTruncateTable.class)
 public class SchemaManagerLoadScriptTest {
 

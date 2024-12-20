@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.exception;
 
@@ -10,7 +8,7 @@ import java.sql.PreparedStatement;
 import java.sql.Types;
 
 import org.hibernate.Session;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.ResultSetReturn;
@@ -20,7 +18,7 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.SQLGrammarException;
 
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -44,7 +42,7 @@ public class SQLExceptionConversionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = AbstractHANADialect.class, comment = "Hana do not support FK violation checking")
+	@SkipForDialect(value = HANADialect.class, comment = "Hana do not support FK violation checking")
 	@SkipForDialect(value = TiDBDialect.class, comment = "TiDB do not support FK violation checking")
 	public void testIntegrityViolation() {
 		final Session session = openSession();
@@ -109,14 +107,14 @@ public class SQLExceptionConversionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7357")
+	@JiraKey(value = "HHH-7357")
 	public void testNotNullConstraint() {
 		final Session session = openSession();
 		session.beginTransaction();
 
 		final User user = new User();
 		user.setUsername( "Lukasz" );
-		session.save( user );
+		session.persist( user );
 		session.flush();
 
 		session.doWork(
@@ -151,7 +149,7 @@ public class SQLExceptionConversionTest extends BaseCoreFunctionalTestCase {
 	private void releaseStatement(Session session, PreparedStatement ps) {
 		if ( ps != null ) {
 			try {
-                ((SessionImplementor) session).getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( ps );
+				((SessionImplementor) session).getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( ps );
 			}
 			catch ( Throwable ignore ) {
 				// ignore...

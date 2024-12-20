@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.event.collection.detached;
 
@@ -22,7 +20,7 @@ import org.hibernate.event.spi.PreCollectionRemoveEvent;
 import org.hibernate.event.spi.PreCollectionUpdateEvent;
 import org.hibernate.metamodel.CollectionClassification;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,14 +32,14 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-7928" )
+@JiraKey( value = "HHH-7928" )
 public class MergeCollectionEventTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected void configure(Configuration configuration) {
 		super.configure( configuration );
 		configuration.setImplicitNamingStrategy( ImplicitNamingStrategyLegacyJpaImpl.INSTANCE );
-		configuration.setProperty( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG.name() );
+		configuration.setProperty( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG );
 	}
 
 	private AggregatedCollectionEventListener.IntegratorImpl collectionListenerIntegrator =
@@ -92,7 +90,7 @@ public class MergeCollectionEventTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		Character paul = new Character( 1, "Paul Atreides" );
-		s.save( paul );
+		s.persist( paul );
 		s.getTransaction().commit();
 		s.close();
 
@@ -105,7 +103,7 @@ public class MergeCollectionEventTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.beginTransaction();
 		Character paulo = new Character( 2, "Paulo Atreides" );
-		s.save( paulo );
+		s.persist( paulo );
 		s.getTransaction().commit();
 		s.close();
 
@@ -118,7 +116,7 @@ public class MergeCollectionEventTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.beginTransaction();
 		Alias alias1 = new Alias( 1, "Paul Muad'Dib" );
-		s.save( alias1 );
+		s.persist( alias1 );
 		s.getTransaction().commit();
 		s.close();
 
@@ -131,7 +129,7 @@ public class MergeCollectionEventTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.beginTransaction();
 		Alias alias2 = new Alias( 2, "Usul" );
-		s.save( alias2 );
+		s.persist( alias2 );
 		s.getTransaction().commit();
 		s.close();
 

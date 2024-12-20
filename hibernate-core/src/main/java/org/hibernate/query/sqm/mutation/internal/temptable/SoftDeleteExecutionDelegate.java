@@ -1,13 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.mutation.internal.temptable;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
@@ -31,6 +28,7 @@ import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
+import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -53,6 +51,7 @@ import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 
+import static java.util.Collections.singletonList;
 import static org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter.omittingLockingAndPaging;
 
 /**
@@ -117,6 +116,7 @@ public class SoftDeleteExecutionDelegate extends AbstractDeleteExecutionDelegate
 				deletingTableGroup,
 				true,
 				executionContext.getSession().getLoadQueryInfluencers().getEnabledFilters(),
+				false,
 				null,
 				getConverter()
 		);
@@ -132,12 +132,7 @@ public class SoftDeleteExecutionDelegate extends AbstractDeleteExecutionDelegate
 		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
 				executionContext.getQueryParameterBindings(),
 				getDomainParameterXref(),
-				SqmUtil.generateJdbcParamsXref(
-						getDomainParameterXref(),
-						getConverter()::getJdbcParamsBySqmParam
-				),
-				getSessionFactory().getRuntimeMetamodels().getMappingMetamodel(),
-				navigablePath -> deletingTableGroup,
+				SqmUtil.generateJdbcParamsXref( getDomainParameterXref(), getConverter() ),
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")
 					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
@@ -152,7 +147,6 @@ public class SoftDeleteExecutionDelegate extends AbstractDeleteExecutionDelegate
 		if ( needsSubQuery ) {
 			if ( getSessionFactory().getJdbcServices().getDialect().supportsSubqueryOnMutatingTable() ) {
 				return performDeleteWithSubQuery(
-						targetEntityDescriptor,
 						rootEntityDescriptor,
 						deletingTableGroup,
 						rootTableReference,
@@ -174,13 +168,10 @@ public class SoftDeleteExecutionDelegate extends AbstractDeleteExecutionDelegate
 		}
 		else {
 			return performDirectDelete(
-					targetEntityDescriptor,
 					rootEntityDescriptor,
-					deletingTableGroup,
 					rootTableReference,
 					predicateCollector,
 					jdbcParameterBindings,
-					getConverter(),
 					executionContext
 			);
 		}
@@ -292,7 +283,7 @@ public class SoftDeleteExecutionDelegate extends AbstractDeleteExecutionDelegate
 
 		final UpdateStatement updateStatement = new UpdateStatement(
 				targetTableReference,
-				Collections.singletonList( softDeleteAssignment ),
+				singletonList( softDeleteAssignment ),
 				new InSubQueryPredicate( idExpression, idTableIdentifierSubQuery, false )
 		);
 
@@ -302,7 +293,6 @@ public class SoftDeleteExecutionDelegate extends AbstractDeleteExecutionDelegate
 	}
 
 	private int performDeleteWithSubQuery(
-			EntityMappingType targetEntityDescriptor,
 			EntityMappingType rootEntityDescriptor,
 			TableGroup deletingTableGroup,
 			NamedTableReference rootTableReference,
@@ -346,7 +336,7 @@ public class SoftDeleteExecutionDelegate extends AbstractDeleteExecutionDelegate
 
 		final UpdateStatement updateStatement = new UpdateStatement(
 				targetTable,
-				Collections.singletonList( softDeleteAssignment ),
+				singletonList( softDeleteAssignment ),
 				new InSubQueryPredicate( idExpression, matchingIdSubQuery, false )
 		);
 
@@ -354,13 +344,10 @@ public class SoftDeleteExecutionDelegate extends AbstractDeleteExecutionDelegate
 	}
 
 	private int performDirectDelete(
-			EntityMappingType targetEntityDescriptor,
 			EntityMappingType rootEntityDescriptor,
-			TableGroup deletingTableGroup,
 			NamedTableReference rootTableReference,
 			PredicateCollector predicateCollector,
 			JdbcParameterBindings jdbcParameterBindings,
-			MultiTableSqmMutationConverter converter,
 			SqmJdbcExecutionContextAdapter executionContext) {
 		final Assignment softDeleteAssignment = SoftDeleteHelper.createSoftDeleteAssignment(
 				rootTableReference,
@@ -369,7 +356,7 @@ public class SoftDeleteExecutionDelegate extends AbstractDeleteExecutionDelegate
 
 		final UpdateStatement updateStatement = new UpdateStatement(
 				rootTableReference,
-				Collections.singletonList( softDeleteAssignment ),
+				singletonList( softDeleteAssignment ),
 				predicateCollector.getPredicate()
 		);
 

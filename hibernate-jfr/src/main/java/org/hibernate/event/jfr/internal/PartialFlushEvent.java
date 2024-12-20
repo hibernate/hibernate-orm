@@ -1,12 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.jfr.internal;
 
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.internal.build.AllowNonPortable;
 
 import jdk.jfr.Category;
@@ -20,9 +18,9 @@ import jdk.jfr.StackTrace;
 @Label( "PartialFlushEvent Execution" )
 @Category( "Hibernate ORM" )
 @Description( "PartialFlushEvent Execution" )
-@StackTrace(false)
+@StackTrace
 @AllowNonPortable
-public class PartialFlushEvent extends Event implements HibernateMonitoringEvent {
+public class PartialFlushEvent extends Event implements DiagnosticEvent {
 	public static final String NAME = "org.hibernate.orm.PartialFlushEvent";
 
 	@Label( "Session Identifier" )
@@ -34,9 +32,6 @@ public class PartialFlushEvent extends Event implements HibernateMonitoringEvent
 	@Label( "Number Of Processed Collections" )
 	public int numberOfCollectionsProcessed;
 
-	@Label( "PartialFlushEvent time" )
-	public long executionTime;
-
 	@Label( "Auto Flush" )
 	public boolean isAutoFlush;
 
@@ -44,7 +39,5 @@ public class PartialFlushEvent extends Event implements HibernateMonitoringEvent
 	public String toString() {
 		return NAME ;
 	}
-
-	public transient long startedAt;
 
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.entities.converter;
 
@@ -15,7 +13,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.envers.AbstractEnversTest;
 import org.hibernate.mapping.PersistentClass;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
@@ -26,7 +24,7 @@ import static org.junit.Assert.assertNotNull;
  */
 public class BasicModelingTest extends AbstractEnversTest {
 	@Test
-	@TestForIssue( jiraKey = "HHH-9042" )
+	@JiraKey( value = "HHH-9042" )
 	public void testMetamodelBuilding() {
 		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )

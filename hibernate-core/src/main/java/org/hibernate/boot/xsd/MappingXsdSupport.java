@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.xsd;
 
@@ -26,6 +24,12 @@ public class MappingXsdSupport {
 	public static final XsdDescriptor _310 = LocalXsdResolver.buildXsdDescriptor(
 			"org/hibernate/xsd/mapping/mapping-3.1.0.xsd",
 			"3.1",
+			"http://www.hibernate.org/xsd/orm/mapping"
+	);
+
+	public static final XsdDescriptor _70 = LocalXsdResolver.buildXsdDescriptor(
+			"org/hibernate/xsd/mapping/mapping-7.0.xsd",
+			"7.0",
 			"http://www.hibernate.org/xsd/orm/mapping"
 	);
 
@@ -65,6 +69,12 @@ public class MappingXsdSupport {
 			"https://jakarta.ee/xml/ns/persistence/orm"
 	);
 
+	public static final XsdDescriptor jpa32 = LocalXsdResolver.buildXsdDescriptor(
+			"org/hibernate/jpa/orm_3_2.xsd",
+			"3.2",
+			"https://jakarta.ee/xml/ns/persistence/orm"
+	);
+
 	public static final XsdDescriptor hbmXml = LocalXsdResolver.buildXsdDescriptor(
 			"org/hibernate/xsd/mapping/legacy-mapping-4.0.xsd",
 			"4.0",
@@ -82,30 +92,11 @@ public class MappingXsdSupport {
 	}
 
 	public static XsdDescriptor latestDescriptor() {
-		return _310;
+		return _70;
 	}
 
 	public static XsdDescriptor latestJpaDescriptor() {
-		return jpa22;
-	}
-
-	public static boolean shouldBeMappedToLatestJpaDescriptor(String uri) {
-		// JPA 1.0 and 2.0 share the same namespace URI
-		return jpa10.getNamespaceUri().equals( uri );
-	}
-
-	public static boolean isValidJpaVersion(String version) {
-		switch ( version ) {
-			case "1.0":
-			case "2.0":
-			case "2.1":
-			case "2.2":
-			case "3.0":
-			case "3.1":
-				return true;
-			default:
-				return false;
-		}
+		return jpa32;
 	}
 
 	public XsdDescriptor jpaXsd(String version) {
@@ -127,6 +118,9 @@ public class MappingXsdSupport {
 			}
 			case "3.1:": {
 				return jpa31;
+			}
+			case "3.2:": {
+				return jpa32;
 			}
 			default: {
 				throw new IllegalArgumentException( "Unrecognized JPA orm.xml XSD version : `" + version + "`" );

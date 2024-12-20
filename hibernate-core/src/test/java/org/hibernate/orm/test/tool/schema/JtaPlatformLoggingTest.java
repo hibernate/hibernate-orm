@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.tool.schema;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Map;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -15,7 +14,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator;
 import org.hibernate.internal.CoreMessageLogger;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.testing.logger.LoggerInspectionRule;
@@ -30,12 +29,12 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue( jiraKey = "HHH-12763" )
+@JiraKey( value = "HHH-12763" )
 public class JtaPlatformLoggingTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( CoreMessageLogger.class, JtaPlatformInitiator.class.getName() ) );
+			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, JtaPlatformInitiator.class.getName() ) );
 
 	private Triggerable triggerable = logInspection.watchForLogMessages( "HHH000490" );
 

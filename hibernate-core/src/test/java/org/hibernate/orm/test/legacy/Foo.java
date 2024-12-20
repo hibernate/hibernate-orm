@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id: Foo.java 4599 2004-09-26 05:18:27Z oneovthafew $
 package org.hibernate.orm.test.legacy;
 import java.io.Serializable;
 import java.sql.Timestamp;
@@ -13,11 +9,10 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
+import jakarta.persistence.PrePersist;
 import org.hibernate.CallbackException;
-import org.hibernate.Session;
-import org.hibernate.classic.Lifecycle;
 
-public class Foo implements Lifecycle, FooProxy, Serializable {
+public class Foo implements FooProxy, Serializable {
 
 	private static int count=0;
 
@@ -93,7 +88,8 @@ public class Foo implements Lifecycle, FooProxy, Serializable {
 		this.x=x;
 	}
 
-	public boolean onSave(Session db) throws CallbackException {
+	@PrePersist
+	public void onSave() throws CallbackException {
 		_string = "a string";
 		_date = new Date(123);
 		_timestamp = new Date( System.currentTimeMillis() );
@@ -118,17 +114,6 @@ public class Foo implements Lifecycle, FooProxy, Serializable {
 		dependent = new Fee();
 		dependent.setFi( "belongs to foo # " + getKey() );
 		theLocale = Locale.getDefault();
-		return NO_VETO;
-	}
-
-	public boolean onDelete(Session db) throws CallbackException {
-		return NO_VETO;
-	}
-	public boolean onUpdate(Session db) throws CallbackException {
-		return NO_VETO;
-	}
-
-	public void onLoad(Session db, Object id) {
 	}
 
 	public String getKey() {
@@ -429,8 +414,3 @@ public class Foo implements Lifecycle, FooProxy, Serializable {
 	}
 
 }
-
-
-
-
-

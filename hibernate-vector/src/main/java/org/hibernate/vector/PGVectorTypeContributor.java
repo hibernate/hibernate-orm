@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.vector;
 
@@ -35,7 +33,7 @@ public class PGVectorTypeContributor implements TypeContributor {
 
 	@Override
 	public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		final Dialect dialect = serviceRegistry.getService( JdbcServices.class ).getDialect();
+		final Dialect dialect = serviceRegistry.requireService( JdbcServices.class ).getDialect();
 		if ( dialect instanceof PostgreSQLDialect ) {
 			final TypeConfiguration typeConfiguration = typeContributions.getTypeConfiguration();
 			final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();

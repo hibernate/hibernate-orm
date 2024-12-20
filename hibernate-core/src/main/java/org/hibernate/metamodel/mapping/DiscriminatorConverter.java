@@ -1,13 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping;
 
 import org.hibernate.metamodel.RepresentationMode;
-import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -19,22 +16,21 @@ import java.util.function.Function;
  * @author Gavin King
  */
 public abstract class DiscriminatorConverter<O,R> implements BasicValueConverter<O,R> {
-
-	private final NavigableRole discriminatorRole;
+	private final String discriminatorName;
 	private final JavaType<O> domainJavaType;
 	private final JavaType<R> relationalJavaType;
 
 	public DiscriminatorConverter(
-			NavigableRole discriminatorRole,
+			String discriminatorName,
 			JavaType<O> domainJavaType,
 			JavaType<R> relationalJavaType) {
-		this.discriminatorRole = discriminatorRole;
+		this.discriminatorName = discriminatorName;
 		this.domainJavaType = domainJavaType;
 		this.relationalJavaType = relationalJavaType;
 	}
 
-	public NavigableRole getNavigableRole() {
-		return discriminatorRole;
+	public String getDiscriminatorName() {
+		return discriminatorName;
 	}
 
 	@Override
@@ -89,16 +85,19 @@ public abstract class DiscriminatorConverter<O,R> implements BasicValueConverter
 		return (R) discriminatorValueDetails.getValue();
 	}
 
-	public abstract DiscriminatorValueDetails getDetailsForDiscriminatorValue(Object relationalForm);
+	public abstract DiscriminatorValueDetails getDetailsForDiscriminatorValue(Object relationalValue);
 
 	public abstract DiscriminatorValueDetails getDetailsForEntityName(String entityName);
 
 	@Override
 	public String toString() {
-		return "DiscriminatorConverter(" + discriminatorRole.getFullPath() + ")";
+		return "DiscriminatorConverter(" + discriminatorName + ")";
 	}
 
 	public abstract void forEachValueDetail(Consumer<DiscriminatorValueDetails> consumer);
 
+	/**
+	 * Find and return the first DiscriminatorValueDetails which matches the given {@code handler}
+	 */
 	public abstract <X> X fromValueDetails(Function<DiscriminatorValueDetails,X> handler);
 }

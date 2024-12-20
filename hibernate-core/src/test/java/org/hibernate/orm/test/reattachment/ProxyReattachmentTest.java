@@ -1,12 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.reattachment;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -39,24 +37,23 @@ public class ProxyReattachmentTest {
 		scope.inTransaction(
 				session -> {
 					Parent p = new Parent( "p" );
-					session.save( p );
+					session.persist( p );
 				}
 		);
 
 		Parent parent = scope.fromTransaction(
 				session -> {
-					Parent p = session.load( Parent.class, "p" );
+					Parent p = session.getReference( Parent.class, "p" );
 					// evict...
 					session.evict( p );
 					// now try to reattach...
-					session.update( p );
-					return p;
+					return session.merge( p );
 				}
 		);
 
 		scope.inTransaction(
 				session ->
-						session.delete( parent )
+						session.remove( parent )
 		);
 	}
 
@@ -65,30 +62,29 @@ public class ProxyReattachmentTest {
 		scope.inTransaction(
 				session -> {
 					Parent p = new Parent( "p" );
-					session.save( p );
+					session.persist( p );
 				}
 		);
 
 		Parent parent = scope.fromTransaction(
 				session -> {
-					Parent p = session.load( Parent.class, "p" );
+					Parent p = session.getReference( Parent.class, "p" );
 					// clear...
 					session.clear();
 					// now try to reattach...
-					session.update( p );
-					return p;
+					return session.merge( p );
 				}
 		);
 
 		scope.inTransaction(
 				session ->
-						session.delete( parent )
+						session.remove( parent )
 		);
 	}
 
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8374")
+	@JiraKey(value = "HHH-8374")
 	public void testRemoveAndReattachProxyEntity(SessionFactoryScope scope) {
 		Parent p = new Parent( "foo" );
 		scope.inTransaction(
@@ -99,8 +95,8 @@ public class ProxyReattachmentTest {
 
 		scope.inTransaction(
 				session -> {
-					Parent parent = session.load( Parent.class, p.getName() );
-					session.delete( parent );
+					Parent parent = session.getReference( Parent.class, p.getName() );
+					session.remove( parent );
 					// re-attach
 					session.persist( parent );
 				}

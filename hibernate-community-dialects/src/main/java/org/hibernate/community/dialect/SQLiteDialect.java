@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -42,7 +40,7 @@ import org.hibernate.mapping.UniqueKey;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.dialect.NullOrdering;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.service.ServiceRegistry;
@@ -64,11 +62,11 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
-import static org.hibernate.query.sqm.TemporalUnit.DAY;
-import static org.hibernate.query.sqm.TemporalUnit.EPOCH;
-import static org.hibernate.query.sqm.TemporalUnit.MONTH;
-import static org.hibernate.query.sqm.TemporalUnit.QUARTER;
-import static org.hibernate.query.sqm.TemporalUnit.YEAR;
+import static org.hibernate.query.common.TemporalUnit.DAY;
+import static org.hibernate.query.common.TemporalUnit.EPOCH;
+import static org.hibernate.query.common.TemporalUnit.MONTH;
+import static org.hibernate.query.common.TemporalUnit.QUARTER;
+import static org.hibernate.query.common.TemporalUnit.YEAR;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUMERIC;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
@@ -95,15 +93,17 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  */
 public class SQLiteDialect extends Dialect {
 
+	private static final DatabaseVersion DEFAULT_VERSION = DatabaseVersion.make( 2, 0 );
+
 	private final UniqueDelegate uniqueDelegate;
 
 	public SQLiteDialect(DialectResolutionInfo info) {
-		this( info.makeCopy() );
+		this( info.makeCopyOrDefault( DEFAULT_VERSION ) );
 		registerKeywords( info );
 	}
 
 	public SQLiteDialect() {
-		this( DatabaseVersion.make( 2, 0 ) );
+		this( DEFAULT_VERSION );
 	}
 
 	public SQLiteDialect(DatabaseVersion version) {

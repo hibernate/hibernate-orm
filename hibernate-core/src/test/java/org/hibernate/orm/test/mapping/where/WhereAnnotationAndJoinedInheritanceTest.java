@@ -1,9 +1,13 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.mapping.where;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jira;
@@ -139,7 +143,7 @@ public class WhereAnnotationAndJoinedInheritanceTest {
 
 	@Entity(name = "Parent")
 	@Inheritance(strategy = InheritanceType.JOINED)
-	@Where(clause = "deleted_column is null")
+	@SQLRestriction("deleted_column is null")
 	public static abstract class Parent {
 
 		@Id

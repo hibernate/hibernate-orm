@@ -1,16 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.customtype;
 
+import java.util.Map;
+
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.customtype.EnumTypeEntity;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -19,11 +20,17 @@ import jakarta.persistence.EntityManager;
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-7780")
+@JiraKey(value = "HHH-7780")
 public class EnumTypeTest extends BaseEnversJPAFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {EnumTypeEntity.class};
+	}
+
+	@Override
+	protected void addConfigOptions(Map options) {
+		super.addConfigOptions( options );
+		options.put( AvailableSettings.PREFER_NATIVE_ENUM_TYPES, "false" );
 	}
 
 	@Test

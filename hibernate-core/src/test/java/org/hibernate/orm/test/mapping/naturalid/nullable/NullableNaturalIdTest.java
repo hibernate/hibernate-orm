@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.naturalid.nullable;
 
@@ -12,7 +10,7 @@ import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -37,7 +35,7 @@ import static org.junit.Assert.assertTrue;
 public class NullableNaturalIdTest {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10360")
+	@JiraKey( value = "HHH-10360")
 	public void testNaturalIdNullability(SessionFactoryScope scope) {
 		// A, B, C, and D are mapped using annotations;
 		// none are mapped to be non-nullable, so all are nullable by annotations-specific default,

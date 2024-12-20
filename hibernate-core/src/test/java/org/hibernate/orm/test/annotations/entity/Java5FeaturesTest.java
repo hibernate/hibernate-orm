@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.entity;
 
@@ -71,7 +69,7 @@ public class Java5FeaturesTest extends BaseCoreFunctionalTestCase {
 		assertEquals( Starred.OK, bid.getNote() );
 		assertEquals( Starred.GOOD, bid.getEditorsNote() );
 		bid = (Bid)s.createQuery( "select b from Bid b where b.note = :note" +
-				 " and b.editorsNote = :editorNote " +
+				" and b.editorsNote = :editorNote " +
 				" and b.id = :id")
 				.setParameter( "id", bid.getId() )
 				.setParameter( "note", Starred.OK )
@@ -88,13 +86,13 @@ public class Java5FeaturesTest extends BaseCoreFunctionalTestCase {
 		communityBid = (CommunityBid) s.get( CommunityBid.class, communityBid.getId() );
 		assertNull( bid.getNote() );
 		assertEquals( Starred.OK, communityBid.getCommunityNote() );
-		s.delete( bid );
+		s.remove( bid );
 		s.clear();
 		communityBid = (CommunityBid) s.createNativeQuery( "select {b.*} from Bid b where b.id = ?" )
 				.addEntity( "b", CommunityBid.class )
 				.setParameter( 1, communityBid.getId() ).uniqueResult();
 		assertEquals( Starred.OK, communityBid.getCommunityNote() );
-		s.delete( communityBid );
+		s.remove( communityBid );
 		tx.commit();
 		s.close();
 	}
@@ -118,7 +116,7 @@ public class Java5FeaturesTest extends BaseCoreFunctionalTestCase {
 		tx = s.beginTransaction();
 		bid = (Bid) s.get( Bid.class, bid.getId() );
 		assertEquals( null, bid.getApproved() );
-		s.delete( bid );
+		s.remove( bid );
 		tx.commit();
 		s.close();
 	}

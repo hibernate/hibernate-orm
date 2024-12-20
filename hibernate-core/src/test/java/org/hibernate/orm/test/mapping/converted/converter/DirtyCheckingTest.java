@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.converted.converter;
 
@@ -36,7 +34,7 @@ public class DirtyCheckingTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		Session session = openSession();
 		session.getTransaction().begin();
-		session.save( simpleEntity );
+		session.persist( simpleEntity );
 		session.getTransaction().commit();
 		session.close();
 
@@ -51,7 +49,7 @@ public class DirtyCheckingTest extends BaseNonConfigCoreFunctionalTestCase {
 		session.getTransaction().begin();
 		loaded = session.byId( SomeEntity.class ).load( 1L );
 		assertEquals( "Steve", loaded.getName().getText() );
-		session.delete( loaded );
+		session.remove( loaded );
 		session.getTransaction().commit();
 		session.close();
 	}
@@ -64,7 +62,7 @@ public class DirtyCheckingTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		Session session = openSession();
 		session.getTransaction().begin();
-		session.save( simpleEntity );
+		session.persist( simpleEntity );
 		session.getTransaction().commit();
 		session.close();
 
@@ -79,7 +77,7 @@ public class DirtyCheckingTest extends BaseNonConfigCoreFunctionalTestCase {
 		session.getTransaction().begin();
 		loaded = session.byId( SomeEntity.class ).load( 1L );
 		assertEquals( "Steve", loaded.getName().getText() );
-		session.delete( loaded );
+		session.remove( loaded );
 		session.getTransaction().commit();
 		session.close();
 	}
@@ -93,7 +91,7 @@ public class DirtyCheckingTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		Session session = openSession();
 		session.getTransaction().begin();
-		session.save( simpleEntity );
+		session.persist( simpleEntity );
 		session.getTransaction().commit();
 		session.close();
 
@@ -108,14 +106,14 @@ public class DirtyCheckingTest extends BaseNonConfigCoreFunctionalTestCase {
 		session.getTransaction().begin();
 		loaded = session.byId( SomeEntity.class ).load( 1L );
 		assertEquals( 2, loaded.getNumber().intValue() );
-		session.delete( loaded );
+		session.remove( loaded );
 		session.getTransaction().commit();
 		session.close();
 	}
 
 	@Test
 	public void checkConverterMutabilityPlans() {
-        final EntityPersister persister = sessionFactory().getMappingMetamodel().getEntityDescriptor(SomeEntity.class.getName());
+		final EntityPersister persister = sessionFactory().getMappingMetamodel().getEntityDescriptor(SomeEntity.class.getName());
 		final AttributeMapping numberMapping = persister.findAttributeMapping( "number" );
 		final AttributeMapping nameMapping = persister.findAttributeMapping( "name" );
 

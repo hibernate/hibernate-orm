@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.naturalid.lazy;
 
@@ -13,7 +11,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -29,7 +27,7 @@ import static org.junit.Assert.assertFalse;
 /**
  * @author Gail Badner
  */
-@TestForIssue( jiraKey = "HHH-13607" )
+@JiraKey( value = "HHH-13607" )
 @ServiceRegistry(
 		settings = {
 				@Setting( name = AvailableSettings.FORMAT_SQL, value = "false" ),

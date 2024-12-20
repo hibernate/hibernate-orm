@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.action.internal;
 
@@ -80,7 +78,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 				);
 			}
 
-			final MappingMetamodelImplementor mappingMetamodel = session.getFactory().getRuntimeMetamodels().getMappingMetamodel();
+			final MappingMetamodelImplementor mappingMetamodel = session.getFactory().getMappingMetamodel();
 			final Set<String> roles = mappingMetamodel.getCollectionRolesByEntityParticipant( persister.getEntityName() );
 			if ( roles != null ) {
 				for ( String role : roles ) {
@@ -151,9 +149,9 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		}
 		for ( SqmCteStatement<?> cteStatement : statement.getCteStatements() ) {
 			final SqmQuery<?> cteDefinition = cteStatement.getCteDefinition();
-			if ( cteDefinition instanceof SqmDmlStatement<?> ) {
+			if ( cteDefinition instanceof SqmDmlStatement<?> dmlStatement ) {
 				entityPersisters.add(
-						metamodel.getEntityDescriptor( ( (SqmDmlStatement<?>) cteDefinition ).getTarget().getEntityName() )
+						metamodel.getEntityDescriptor( dmlStatement.getTarget().getEntityName() )
 				);
 			}
 		}
@@ -247,7 +245,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 
 	@Override
 	public void execute() throws HibernateException {
-		// nothing to do		
+		// nothing to do
 	}
 
 	private static class EntityCleanup implements Serializable {

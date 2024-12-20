@@ -1,34 +1,32 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.cut.generic;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
 
+@JiraKey(value = "HHH-17019")
+@DomainModel(
+		annotatedClasses = {
+				GenericCompositeUserTypeEntity.class
+		}
+)
+@SessionFactory
+public class GenericCompositeUserTypeTest {
 
-@TestForIssue(jiraKey = "HHH-17019")
-public class GenericCompositeUserTypeTest extends BaseCoreFunctionalTestCase {
+	@Test
+	public void hhh17019Test(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			EnumPlaceholder<Weekdays, Weekdays> placeholder = new EnumPlaceholder<>( Weekdays.MONDAY, Weekdays.SUNDAY );
+			GenericCompositeUserTypeEntity entity = new GenericCompositeUserTypeEntity( placeholder );
 
-    @Override
-    protected Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[] {
-                GenericCompositeUserTypeEntity.class
-        };
-    }
-
-    @Test
-    public void hhh17019Test() throws Exception {
-        Session s = openSession();
-        Transaction tx = s.beginTransaction();
-
-        EnumPlaceholder<Weekdays, Weekdays> placeholder = new EnumPlaceholder<>( Weekdays.MONDAY, Weekdays.SUNDAY );
-        GenericCompositeUserTypeEntity entity = new GenericCompositeUserTypeEntity( placeholder );
-
-        s.persist( entity );
-
-        tx.commit();
-        s.close();
-    }
+			session.persist( entity );
+		} );
+	}
 }

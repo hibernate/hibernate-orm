@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
@@ -82,8 +80,8 @@ public class VersionValue implements UnsavedValueStrategy {
 			if ( version == null ) {
 				return Boolean.TRUE;
 			}
-			if ( version instanceof Number ) {
-				return ((Number) version).longValue() < 0L;
+			if ( version instanceof Number number ) {
+				return number.longValue() < 0L;
 			}
 			throw new MappingException( "unsaved-value NEGATIVE may only be used with short, int and long types" );
 		}

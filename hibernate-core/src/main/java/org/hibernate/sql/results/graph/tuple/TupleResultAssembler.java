@@ -1,14 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.tuple;
 
 import org.hibernate.sql.results.ResultsLogger;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -27,6 +24,10 @@ public class TupleResultAssembler<J> implements DomainResultAssembler<J> {
 		this.assembledJavaType = assembledJavaType;
 	}
 
+	public int[] getValuesArrayPositions() {
+		return valuesArrayPositions;
+	}
+
 	/**
 	 * Access to the raw value (unconverted, if a converter applied)
 	 */
@@ -40,8 +41,7 @@ public class TupleResultAssembler<J> implements DomainResultAssembler<J> {
 
 	@Override
 	public J assemble(
-			RowProcessingState rowProcessingState,
-			JdbcValuesSourceProcessingOptions options) {
+			RowProcessingState rowProcessingState) {
 		final Object[] jdbcValues = extractRawValue( rowProcessingState );
 
 		if ( ResultsLogger.RESULTS_MESSAGE_LOGGER.isDebugEnabled() ) {

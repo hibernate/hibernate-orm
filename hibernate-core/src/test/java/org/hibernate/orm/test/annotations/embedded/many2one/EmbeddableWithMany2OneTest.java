@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.embedded.many2one;
 
@@ -31,9 +29,9 @@ public class EmbeddableWithMany2OneTest {
 	public void testJoinAcrossEmbedded(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "from Person p join p.address as a join a.country as c where c.name = 'US'" )
+					session.createQuery( "from Person p join p.address as a join a.country as c where c.name = 'US'", Person.class )
 							.list();
-					session.createQuery( "from Person p join p.address as a join a.country as c where c.id = 'US'" )
+					session.createQuery( "from Person p join p.address as a join a.country as c where c.id = 'US'", Person.class )
 							.list();
 				}
 		);
@@ -61,11 +59,11 @@ public class EmbeddableWithMany2OneTest {
 					// same query!
 					session.createQuery( "from Person p where p.address.country.id = 'US'" )
 							.list();
-					Person p = session.load( Person.class, person.getId() );
-					session.delete( p );
+					Person p = session.getReference( Person.class, person.getId() );
+					session.remove( p );
 					List countries = session.createQuery( "from Country" ).list();
 					assertEquals( 1, countries.size() );
-					session.delete( countries.get( 0 ) );
+					session.remove( countries.get( 0 ) );
 				}
 		);
 	}

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.unique;
 
@@ -76,14 +74,25 @@ public class CreateTableUniqueDelegate extends AlterTableUniqueDelegate {
 		if ( uniqueKey.isNameExplicit() ) {
 			fragment.append( "constraint " ).append( uniqueKey.getName() ).append( " " );
 		}
-		fragment.append( uniqueConstraintSql(uniqueKey) );
+		fragment.append( uniqueConstraintSql( uniqueKey ) );
 	}
 
 	private static boolean isSingleColumnUnique(Table table, UniqueKey uniqueKey) {
-		return uniqueKey.getColumns().size() == 1
-				// Since columns are created on demand in IndexBinder.createColumn,
-				// we also have to check if the "real" column is unique to be safe
-				&& ( uniqueKey.getColumn( 0 ).isUnique() || table.getColumn( uniqueKey.getColumn( 0 ) ).isUnique() );
+		if ( uniqueKey.getColumns().size() == 1)  {
+			// Since columns are created on demand in IndexBinder.createColumn,
+			// we also have to check if the "real" column is unique to be safe
+			final Column uniqueKeyColumn = uniqueKey.getColumn(0);
+			if ( uniqueKeyColumn.isUnique() ) {
+				return true;
+			}
+			else {
+				final Column column = table.getColumn( uniqueKeyColumn );
+				return column != null && column.isUnique();
+			}
+		}
+		else {
+			return false;
+		}
 	}
 
 	@Override

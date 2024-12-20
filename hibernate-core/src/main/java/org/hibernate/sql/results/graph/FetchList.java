@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph;
 
@@ -77,6 +75,22 @@ public interface FetchList extends Iterable<Fetch> {
 			}
 		}
 		return false;
+	}
+
+	default int getCollectionFetchesCount() {
+		int collectionFetchesCount = 0;
+		for ( Fetch fetch : this ) {
+			if ( fetch instanceof EagerCollectionFetch ) {
+				collectionFetchesCount++;
+			}
+			else {
+				final FetchParent fetchParent = fetch.asFetchParent();
+				if ( fetchParent != null ) {
+					collectionFetchesCount += fetchParent.getCollectionFetchesCount();
+				}
+			}
+		}
+		return collectionFetchesCount;
 	}
 
 }

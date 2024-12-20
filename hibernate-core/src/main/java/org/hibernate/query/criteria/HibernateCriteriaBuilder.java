@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.criteria;
 
@@ -15,6 +13,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
+import java.time.temporal.TemporalAmount;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -23,24 +22,27 @@ import java.util.Set;
 import org.hibernate.Incubating;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortDirection;
-import org.hibernate.query.sqm.FrameKind;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.FrameKind;
+import org.hibernate.query.common.TemporalUnit;
 
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.AbstractQuery;
 import jakarta.persistence.criteria.CollectionJoin;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaSelect;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.ListJoin;
 import jakarta.persistence.criteria.MapJoin;
+import jakarta.persistence.criteria.Nulls;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Selection;
 import jakarta.persistence.criteria.SetJoin;
 import jakarta.persistence.criteria.Subquery;
+import jakarta.persistence.criteria.TemporalField;
 
 /**
  * A JPA {@link CriteriaBuilder} is a source of objects which may be composed
@@ -92,6 +94,14 @@ import jakarta.persistence.criteria.Subquery;
 public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	<X, T> JpaExpression<X> cast(JpaExpression<T> expression, Class<X> castTargetJavaType);
+
+	<X, T> JpaExpression<X> cast(JpaExpression<T> expression, JpaCastTarget<X> castTarget);
+
+	<X> JpaCastTarget<X> castTarget(Class<X> castTargetJavaType);
+
+	<X> JpaCastTarget<X> castTarget(Class<X> castTargetJavaType, long length);
+
+	<X> JpaCastTarget<X> castTarget(Class<X> castTargetJavaType, int precision, int scale);
 
 	JpaPredicate wrap(Expression<Boolean> expression);
 
@@ -174,15 +184,35 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	<T> JpaCriteriaQuery<T> except(boolean all, CriteriaQuery<? extends T> query1, CriteriaQuery<?>... queries);
 
-	default <T> JpaSubQuery<T> unionAll(Subquery<? extends T> query1, Subquery<?>... queries) {
-		return union( true, query1, queries );
-	}
+	@Override
+	<T> CriteriaSelect<T> union(CriteriaSelect<? extends T> left, CriteriaSelect<? extends T> right);
+
+	<T> JpaCriteriaQuery<T> union(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right);
 
 	default <T> JpaSubQuery<T> union(Subquery<? extends T> query1, Subquery<?>... queries) {
 		return union( false, query1, queries );
 	}
 
 	<T> JpaSubQuery<T> union(boolean all, Subquery<? extends T> query1, Subquery<?>... queries);
+
+	default <T> JpaSubQuery<T> unionAll(JpaSubQuery<? extends T> query1, JpaSubQuery<? extends T> query2) {
+		return union( true, query1, query2 );
+	}
+
+	@Override
+	<T> CriteriaSelect<T> unionAll(CriteriaSelect<? extends T> left, CriteriaSelect<? extends T> right);
+
+	<T> JpaCriteriaQuery<T> unionAll(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right);
+
+	@Override
+	<T> CriteriaSelect<T> intersect(CriteriaSelect<? super T> left, CriteriaSelect<? super T> right);
+
+	@Override
+	<T> CriteriaSelect<T> intersectAll(CriteriaSelect<? super T> left, CriteriaSelect<? super T> right);
+
+	<T> JpaCriteriaQuery<T> intersect(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right);
+
+	<T> JpaCriteriaQuery<T> intersectAll(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right);
 
 	default <T> JpaSubQuery<T> intersectAll(Subquery<? extends T> query1, Subquery<?>... queries) {
 		return intersect( true, query1, queries );
@@ -193,6 +223,16 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	}
 
 	<T> JpaSubQuery<T> intersect(boolean all, Subquery<? extends T> query1, Subquery<?>... queries);
+
+	@Override
+	<T> CriteriaSelect<T> except(CriteriaSelect<T> left, CriteriaSelect<?> right);
+
+	@Override
+	<T> CriteriaSelect<T> exceptAll(CriteriaSelect<T> left, CriteriaSelect<?> right);
+
+	<T> JpaCriteriaQuery<T> except(CriteriaQuery<T> left, CriteriaQuery<?> right);
+
+	<T> JpaCriteriaQuery<T> exceptAll(CriteriaQuery<T> left, CriteriaQuery<?> right);
 
 	default <T> JpaSubQuery<T> exceptAll(Subquery<? extends T> query1, Subquery<?>... queries) {
 		return except( true, query1, queries );
@@ -346,11 +386,11 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	@Override
 	JpaCompoundSelection<Tuple> tuple(Selection<?>... selections);
-	JpaCompoundSelection<Tuple> tuple(List<? extends JpaSelection<?>> selections);
+	JpaCompoundSelection<Tuple> tuple(List<Selection<?>> selections);
 
 	@Override
 	JpaCompoundSelection<Object[]> array(Selection<?>... selections);
-	JpaCompoundSelection<Object[]> array(List<? extends JpaSelection<?>> selections);
+	JpaCompoundSelection<Object[]> array(List<Selection<?>> selections);
 
 	<Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, Selection<?>... selections);
 	<Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, List<? extends JpaSelection<?>> selections);
@@ -388,6 +428,11 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	@Override
 	JpaExpression<Long> countDistinct(Expression<?> x);
+
+	/**
+	 * Equivalent to HQL {@code count(*)}.
+	 */
+	JpaExpression<Long> count();
 
 	@Override
 	<N extends Number> JpaExpression<N> neg(Expression<N> x);
@@ -489,7 +534,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * A literal {@link Duration}, for example, "five days" or "30 minutes".
 	 * @since 6.3
 	 */
-	@Incubating // layer breaker (leaks SQM type)
+	@Incubating
 	JpaExpression<Duration> duration(long magnitude, TemporalUnit unit);
 
 	/**
@@ -499,7 +544,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @return the magnitude of the duration measured in the given units
 	 * @since 6.3
 	 */
-	@Incubating // layer breaker (leaks SQM type)
+	@Incubating
 	JpaExpression<Long> durationByUnit(TemporalUnit unit, Expression<Duration> duration);
 
 	/**
@@ -600,6 +645,25 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	@Override
 	<T> JpaParameterExpression<T> parameter(Class<T> paramClass, String name);
+
+	/**
+	 * Create a multivalued parameter accepting multiple arguments
+	 * packaged together as a {@link List}.
+	 * @param paramClass the type of each argument to the parameter
+	 * @param <T> the type of each argument to the parameter
+	 * @since 7.0
+	 */
+	<T> JpaParameterExpression<List<T>> listParameter(Class<T> paramClass);
+
+	/**
+	 * Create a multivalued parameter accepting multiple arguments
+	 * packaged together as a {@link List}.
+	 * @param paramClass the type of each argument to the parameter
+	 * @param name the parameter name
+	 * @param <T> the type of each argument to the parameter
+	 * @since 7.0
+	 */
+	<T> JpaParameterExpression<List<T>> listParameter(Class<T> paramClass, String name);
 
 	@Override
 	JpaExpression<String> concat(Expression<String> x, Expression<String> y);
@@ -996,9 +1060,34 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Ordering
 
-	JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence);
-	JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder);
+
 	JpaOrder sort(JpaExpression<?> sortExpression);
+
+	JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder);
+
+	JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, Nulls nullPrecedence);
+
+	JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, Nulls nullPrecedence, boolean ignoreCase);
+
+	/**
+	 * @deprecated Use {@linkplain #sort(JpaExpression, SortDirection, Nulls)} instead
+	 */
+	@Deprecated
+	default JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence) {
+		return sort( sortExpression, sortOrder, nullPrecedence.getJpaValue() );
+	}
+
+	/**
+	 * @deprecated Use {@linkplain #sort(JpaExpression, SortDirection, Nulls, boolean)} instead
+	 */
+	@Deprecated
+	default JpaOrder sort(
+			JpaExpression<?> sortExpression,
+			SortDirection sortOrder,
+			NullPrecedence nullPrecedence,
+			boolean ignoreCase) {
+		return sort( sortExpression, sortOrder, nullPrecedence.getJpaValue(), ignoreCase );
+	}
 
 	@Override
 	JpaOrder asc(Expression<?> x);
@@ -1118,7 +1207,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	JpaFunction<String> format(Expression<? extends TemporalAccessor> datetime, String pattern);
 
 	/**
-	 * Extracts the {@link org.hibernate.query.sqm.TemporalUnit#YEAR} of a date, time, or datetime expression.
+	 * Extracts the {@link TemporalUnit#YEAR} of a date, time, or datetime expression.
 	 *
 	 * @param datetime the date, time, or datetime to extract the value from
 	 *
@@ -1128,7 +1217,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	JpaFunction<Integer> year(Expression<? extends TemporalAccessor> datetime);
 
 	/**
-	 * Extracts the {@link org.hibernate.query.sqm.TemporalUnit#MONTH} of a date, time, or datetime expression.
+	 * Extracts the {@link TemporalUnit#MONTH} of a date, time, or datetime expression.
 	 *
 	 * @param datetime the date, time, or datetime to extract the value from
 	 *
@@ -1138,7 +1227,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	JpaFunction<Integer> month(Expression<? extends TemporalAccessor> datetime);
 
 	/**
-	 * Extracts the {@link org.hibernate.query.sqm.TemporalUnit#DAY} of a date, time, or datetime expression.
+	 * Extracts the {@link TemporalUnit#DAY} of a date, time, or datetime expression.
 	 *
 	 * @param datetime the date, time, or datetime to extract the value from
 	 *
@@ -1148,7 +1237,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	JpaFunction<Integer> day(Expression<? extends TemporalAccessor> datetime);
 
 	/**
-	 * Extracts the {@link org.hibernate.query.sqm.TemporalUnit#HOUR} of a date, time, or datetime expression.
+	 * Extracts the {@link TemporalUnit#HOUR} of a date, time, or datetime expression.
 	 *
 	 * @param datetime the date, time, or datetime to extract the value from
 	 *
@@ -1158,7 +1247,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	JpaFunction<Integer> hour(Expression<? extends TemporalAccessor> datetime);
 
 	/**
-	 * Extracts the {@link org.hibernate.query.sqm.TemporalUnit#MINUTE} of a date, time, or datetime expression.
+	 * Extracts the {@link TemporalUnit#MINUTE} of a date, time, or datetime expression.
 	 *
 	 * @param datetime the date, time, or datetime to extract the value from
 	 *
@@ -1168,7 +1257,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	JpaFunction<Integer> minute(Expression<? extends TemporalAccessor> datetime);
 
 	/**
-	 * Extracts the {@link org.hibernate.query.sqm.TemporalUnit#SECOND} of a date, time, or datetime expression.
+	 * Extracts the {@link TemporalUnit#SECOND} of a date, time, or datetime expression.
 	 *
 	 * @param datetime the date, time, or datetime to extract the value from
 	 *
@@ -2680,7 +2769,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @since 6.4
 	 */
 	@Incubating
-	<T> JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, Expression<String> separatorExpression);
+	JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, Expression<String> separatorExpression);
 
 	/**
 	 * Concatenates the non-null array elements with a separator, as specified by the arguments.
@@ -2688,8 +2777,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @since 6.4
 	 */
 	@Incubating
-	<T> JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator);
-	
+	JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator);
 	/**
 	 * Whether an array contains an element.
 	 *
@@ -2739,100 +2827,244 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	<T> JpaPredicate arrayContainsNullable(T[] array, Expression<T> elementExpression);
 
 	/**
-	 * Whether an array contains another array.
+	 * Whether an array is a subset of another array.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #arrayIncludes(Expression, Expression)}
 	 */
 	@Incubating
-	<T> JpaPredicate arrayContainsAll(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression);
+	@Deprecated(forRemoval = true)
+	default <T> JpaPredicate arrayContainsAll(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression) {
+		return arrayIncludes( arrayExpression, subArrayExpression );
+	}
 
 	/**
-	 * Whether an array contains another array.
+	 * Whether an array is a subset of another array.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #arrayIncludes(Expression, Object[])}
 	 */
 	@Incubating
-	<T> JpaPredicate arrayContainsAll(Expression<T[]> arrayExpression, T[] subArray);
+	@Deprecated(forRemoval = true)
+	default <T> JpaPredicate arrayContainsAll(Expression<T[]> arrayExpression, T[] subArray) {
+		return arrayIncludes( arrayExpression, subArray );
+	}
 
 	/**
-	 * Whether an array contains another array.
+	 * Whether an array is a subset of another array.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #arrayIncludes(Object[], Expression)}
 	 */
 	@Incubating
-	<T> JpaPredicate arrayContainsAll(T[] array, Expression<T[]> subArrayExpression);
+	@Deprecated(forRemoval = true)
+	default <T> JpaPredicate arrayContainsAll(T[] array, Expression<T[]> subArrayExpression) {
+		return arrayIncludes( array, subArrayExpression );
+	}
 
 	/**
-	 * Whether an array contains another array with nullable elements.
+	 * Whether an array is a subset of another array with nullable elements.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #arrayIncludesNullable(Expression, Expression)}
 	 */
 	@Incubating
-	<T> JpaPredicate arrayContainsAllNullable(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression);
+	@Deprecated(forRemoval = true)
+	default <T> JpaPredicate arrayContainsAllNullable(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression) {
+		return arrayIncludesNullable( arrayExpression, subArrayExpression );
+	}
 
 	/**
-	 * Whether an array contains another array with nullable elements.
+	 * Whether an array is a subset of another array with nullable elements.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #arrayIncludesNullable(Expression, Object[])}
 	 */
 	@Incubating
-	<T> JpaPredicate arrayContainsAllNullable(Expression<T[]> arrayExpression, T[] subArray);
+	@Deprecated(forRemoval = true)
+	default <T> JpaPredicate arrayContainsAllNullable(Expression<T[]> arrayExpression, T[] subArray) {
+		return arrayIncludesNullable( arrayExpression, subArray );
+	}
 
 	/**
-	 * Whether an array contains another array with nullable elements.
+	 * Whether an array is a subset of another array with nullable elements.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #arrayIncludesNullable(Object[], Expression)}
 	 */
 	@Incubating
-	<T> JpaPredicate arrayContainsAllNullable(T[] array, Expression<T[]> subArrayExpression);
+	@Deprecated(forRemoval = true)
+	default <T> JpaPredicate arrayContainsAllNullable(T[] array, Expression<T[]> subArrayExpression) {
+		return arrayIncludesNullable( array, subArrayExpression );
+	}
+
+	/**
+	 * Whether an array is a subset of another array.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	<T> JpaPredicate arrayIncludes(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression);
+
+	/**
+	 * Whether an array is a subset of another array.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	<T> JpaPredicate arrayIncludes(Expression<T[]> arrayExpression, T[] subArray);
+
+	/**
+	 * Whether an array is a subset of another array.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	<T> JpaPredicate arrayIncludes(T[] array, Expression<T[]> subArrayExpression);
+
+	/**
+	 * Whether an array is a subset of another array with nullable elements.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	<T> JpaPredicate arrayIncludesNullable(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression);
+
+	/**
+	 * Whether an array is a subset of another array with nullable elements.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	<T> JpaPredicate arrayIncludesNullable(Expression<T[]> arrayExpression, T[] subArray);
+
+	/**
+	 * Whether an array is a subset of another array with nullable elements.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	<T> JpaPredicate arrayIncludesNullable(T[] array, Expression<T[]> subArrayExpression);
 
 	/**
 	 * Whether one array has any elements common with another array.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #arrayIntersects(Expression, Expression)}
 	 */
 	@Incubating
-	<T> JpaPredicate arrayOverlaps(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2);
+	@Deprecated(forRemoval = true)
+	default <T> JpaPredicate arrayOverlaps(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2) {
+		return arrayIntersects( arrayExpression1, arrayExpression2 );
+	}
 
 	/**
 	 * Whether one array has any elements common with another array.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #arrayIntersects(Expression, Object[])}
 	 */
 	@Incubating
-	<T> JpaPredicate arrayOverlaps(Expression<T[]> arrayExpression1, T[] array2);
+	@Deprecated(forRemoval = true)
+	default <T> JpaPredicate arrayOverlaps(Expression<T[]> arrayExpression1, T[] array2) {
+		return arrayIntersects( arrayExpression1, array2 );
+	}
 
 	/**
 	 * Whether one array has any elements common with another array.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #arrayIntersects(Object[], Expression)}
 	 */
 	@Incubating
-	<T> JpaPredicate arrayOverlaps(T[] array1, Expression<T[]> arrayExpression2);
+	@Deprecated(forRemoval = true)
+	default <T> JpaPredicate arrayOverlaps(T[] array1, Expression<T[]> arrayExpression2) {
+		return arrayIntersects( array1, arrayExpression2 );
+	}
 
 	/**
 	 * Whether one array has any elements common with another array, supporting {@code null} elements.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #arrayIntersectsNullable(Expression, Expression)}
 	 */
 	@Incubating
-	<T> JpaPredicate arrayOverlapsNullable(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2);
+	@Deprecated(forRemoval = true)
+	default <T> JpaPredicate arrayOverlapsNullable(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2) {
+		return arrayIntersectsNullable( arrayExpression1, arrayExpression2 );
+	}
 
 	/**
 	 * Whether one array has any elements common with another array, supporting {@code null} elements.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #arrayIntersectsNullable(Expression, Object[])}
 	 */
 	@Incubating
-	<T> JpaPredicate arrayOverlapsNullable(Expression<T[]> arrayExpression1, T[] array2);
+	@Deprecated(forRemoval = true)
+	default <T> JpaPredicate arrayOverlapsNullable(Expression<T[]> arrayExpression1, T[] array2) {
+		return arrayIntersectsNullable( arrayExpression1, array2 );
+	}
 
 	/**
 	 * Whether one array has any elements common with another array, supporting {@code null} elements.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #arrayIntersectsNullable(Object[], jakarta.persistence.criteria.Expression)}
 	 */
 	@Incubating
-	<T> JpaPredicate arrayOverlapsNullable(T[] array1, Expression<T[]> arrayExpression2);
+	@Deprecated(forRemoval = true)
+	default <T> JpaPredicate arrayOverlapsNullable(T[] array1, Expression<T[]> arrayExpression2) {
+		return arrayIntersectsNullable( array1, arrayExpression2 );
+	}
+
+	/**
+	 * Whether one array has any elements common with another array.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	<T> JpaPredicate arrayIntersects(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2);
+
+	/**
+	 * Whether one array has any elements common with another array.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	<T> JpaPredicate arrayIntersects(Expression<T[]> arrayExpression1, T[] array2);
+
+	/**
+	 * Whether one array has any elements common with another array.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	<T> JpaPredicate arrayIntersects(T[] array1, Expression<T[]> arrayExpression2);
+
+	/**
+	 * Whether one array has any elements common with another array, supporting {@code null} elements.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	<T> JpaPredicate arrayIntersectsNullable(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2);
+
+	/**
+	 * Whether one array has any elements common with another array, supporting {@code null} elements.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	<T> JpaPredicate arrayIntersectsNullable(Expression<T[]> arrayExpression1, T[] array2);
+
+	/**
+	 * Whether one array has any elements common with another array, supporting {@code null} elements.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	<T> JpaPredicate arrayIntersectsNullable(T[] array1, Expression<T[]> arrayExpression2);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Array functions for collection types
@@ -3159,7 +3391,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @since 6.4
 	 */
 	@Incubating
-	<T> JpaExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, Expression<String> separatorExpression);
+	JpaExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, Expression<String> separatorExpression);
 
 	/**
 	 * Concatenates the non-null basic collection elements with a separator, as specified by the arguments.
@@ -3167,7 +3399,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @since 6.4
 	 */
 	@Incubating
-	<T> JpaExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, String separator);
+	JpaExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, String separator);
 
 	/**
 	 * Whether a basic collection contains an element.
@@ -3218,98 +3450,1048 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	<E> JpaPredicate collectionContainsNullable(Collection<E> collection, Expression<E> elementExpression);
 
 	/**
-	 * Whether a basic collection contains another basic collection.
+	 * Whether a basic collection is a subset of another basic collection.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #collectionIncludes(Expression, Expression)}
 	 */
 	@Incubating
-	<E> JpaPredicate collectionContainsAll(Expression<? extends Collection<E>> collectionExpression, Expression<? extends Collection<? extends E>> subCollectionExpression);
+	@Deprecated(forRemoval = true)
+	default <E> JpaPredicate collectionContainsAll(Expression<? extends Collection<E>> collectionExpression, Expression<? extends Collection<? extends E>> subCollectionExpression) {
+		return collectionIncludes( collectionExpression, subCollectionExpression );
+	}
 
 	/**
-	 * Whether a basic collection contains another basic collection.
+	 * Whether a basic collection is a subset of another basic collection.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #collectionIncludes(Expression, Collection)}
 	 */
 	@Incubating
-	<E> JpaPredicate collectionContainsAll(Expression<? extends Collection<E>> collectionExpression, Collection<? extends E> subCollection);
+	@Deprecated(forRemoval = true)
+	default <E> JpaPredicate collectionContainsAll(Expression<? extends Collection<E>> collectionExpression, Collection<? extends E> subCollection) {
+		return collectionIncludes( collectionExpression, subCollection );
+	}
 
 	/**
-	 * Whether a basic collection contains another basic collection.
+	 * Whether a basic collection is a subset of another basic collection.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #collectionIncludes(Collection, Expression)}
 	 */
 	@Incubating
-	<E> JpaPredicate collectionContainsAll(Collection<E> collection, Expression<? extends Collection<? extends E>> subArrayExpression);
+	@Deprecated(forRemoval = true)
+	default <E> JpaPredicate collectionContainsAll(Collection<E> collection, Expression<? extends Collection<? extends E>> subCollectionExpression) {
+		return collectionIncludes( collection, subCollectionExpression );
+	}
 
 	/**
-	 * Whether a basic collection contains another basic collection with nullable elements.
+	 * Whether a basic collection is a subset of another basic collection with nullable elements.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #collectionIncludesNullable(Expression, Expression)}
 	 */
 	@Incubating
-	<E> JpaPredicate collectionContainsAllNullable(Expression<? extends Collection<E>> collectionExpression, Expression<? extends Collection<? extends E>> subCollectionExpression);
+	@Deprecated(forRemoval = true)
+	default <E> JpaPredicate collectionContainsAllNullable(Expression<? extends Collection<E>> collectionExpression, Expression<? extends Collection<? extends E>> subCollectionExpression) {
+		return collectionIncludesNullable( collectionExpression, subCollectionExpression );
+	}
 
 	/**
-	 * Whether a basic collection contains another basic collection with nullable elements.
+	 * Whether a basic collection is a subset of another basic collection with nullable elements.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #collectionIncludesNullable(Expression, Collection)}
 	 */
 	@Incubating
-	<E> JpaPredicate collectionContainsAllNullable(Expression<? extends Collection<E>> collectionExpression, Collection<? extends E> subCollection);
+	@Deprecated(forRemoval = true)
+	default <E> JpaPredicate collectionContainsAllNullable(Expression<? extends Collection<E>> collectionExpression, Collection<? extends E> subCollection) {
+		return collectionIncludesNullable( collectionExpression, subCollection );
+	}
 
 	/**
-	 * Whether a basic collection contains another basic collection with nullable elements.
+	 * Whether a basic collection is a subset of another basic collection with nullable elements.
+	 *
+	 * @since 6.4
+	 * @deprecated Replaced with {@link #collectionIncludesNullable(Collection, Expression)}
+	 */
+	@Incubating
+	@Deprecated(forRemoval = true)
+	default <E> JpaPredicate collectionContainsAllNullable(Collection<E> collection, Expression<? extends Collection<? extends E>> subCollectionExpression) {
+		return collectionIncludesNullable( collection, subCollectionExpression );
+	}
+
+	/**
+	 * Whether a basic collection is a subset of another basic collection.
 	 *
 	 * @since 6.4
 	 */
 	@Incubating
-	<E> JpaPredicate collectionContainsAllNullable(Collection<E> collection, Expression<? extends Collection<? extends E>> subCollectionExpression);
+	<E> JpaPredicate collectionIncludes(Expression<? extends Collection<E>> collectionExpression, Expression<? extends Collection<? extends E>> subCollectionExpression);
+
+	/**
+	 * Whether a basic collection is a subset of another basic collection.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E> JpaPredicate collectionIncludes(Expression<? extends Collection<E>> collectionExpression, Collection<? extends E> subCollection);
+
+	/**
+	 * Whether a basic collection is a subset of another basic collection.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E> JpaPredicate collectionIncludes(Collection<E> collection, Expression<? extends Collection<? extends E>> subCollectionExpression);
+
+	/**
+	 * Whether a basic collection is a subset of another basic collection with nullable elements.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E> JpaPredicate collectionIncludesNullable(Expression<? extends Collection<E>> collectionExpression, Expression<? extends Collection<? extends E>> subCollectionExpression);
+
+	/**
+	 * Whether a basic collection is a subset of another basic collection with nullable elements.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E> JpaPredicate collectionIncludesNullable(Expression<? extends Collection<E>> collectionExpression, Collection<? extends E> subCollection);
+
+	/**
+	 * Whether a basic collection is a subset of another basic collection with nullable elements.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E> JpaPredicate collectionIncludesNullable(Collection<E> collection, Expression<? extends Collection<? extends E>> subCollectionExpression);
 
 	/**
 	 * Whether one basic collection has any elements common with another basic collection.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #collectionIntersects(Expression, Expression)}
 	 */
 	@Incubating
-	<E> JpaPredicate collectionOverlaps(Expression<? extends Collection<E>> collectionExpression1, Expression<? extends Collection<? extends E>> collectionExpression2);
+	@Deprecated(forRemoval = true)
+	default <E> JpaPredicate collectionOverlaps(Expression<? extends Collection<E>> collectionExpression1, Expression<? extends Collection<? extends E>> collectionExpression2) {
+		return collectionIntersects( collectionExpression1, collectionExpression2 );
+	}
 
 	/**
 	 * Whether one basic collection has any elements common with another basic collection.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #collectionIntersects(Expression, Collection)}
 	 */
 	@Incubating
-	<E> JpaPredicate collectionOverlaps(Expression<? extends Collection<E>> collectionExpression1, Collection<? extends E> collection2);
+	@Deprecated(forRemoval = true)
+	default <E> JpaPredicate collectionOverlaps(Expression<? extends Collection<E>> collectionExpression1, Collection<? extends E> collection2) {
+		return collectionIntersects( collectionExpression1, collection2 );
+	}
 
 	/**
 	 * Whether one basic collection has any elements common with another basic collection.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #collectionIntersects(Collection, Expression)}
 	 */
 	@Incubating
-	<E> JpaPredicate collectionOverlaps(Collection<E> collection1, Expression<? extends Collection<? extends E>> collectionExpression2);
+	@Deprecated(forRemoval = true)
+	default <E> JpaPredicate collectionOverlaps(Collection<E> collection1, Expression<? extends Collection<? extends E>> collectionExpression2) {
+		return collectionIntersects( collection1, collectionExpression2 );
+	}
 
 	/**
 	 * Whether one basic collection has any elements common with another basic collection, supporting {@code null} elements.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #collectionIntersectsNullable(Expression, Expression)}
 	 */
 	@Incubating
-	<E> JpaPredicate collectionOverlapsNullable(Expression<? extends Collection<E>> collectionExpression1, Expression<? extends Collection<? extends E>> collectionExpression2);
+	@Deprecated(forRemoval = true)
+	default <E> JpaPredicate collectionOverlapsNullable(Expression<? extends Collection<E>> collectionExpression1, Expression<? extends Collection<? extends E>> collectionExpression2) {
+		return collectionIntersectsNullable( collectionExpression1, collectionExpression2 );
+	}
 
 	/**
 	 * Whether one basic collection has any elements common with another basic collection, supporting {@code null} elements.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #collectionIntersectsNullable(Expression, Collection)}
 	 */
 	@Incubating
-	<E> JpaPredicate collectionOverlapsNullable(Expression<? extends Collection<E>> collectionExpression1, Collection<? extends E> collection2);
+	@Deprecated(forRemoval = true)
+	default <E> JpaPredicate collectionOverlapsNullable(Expression<? extends Collection<E>> collectionExpression1, Collection<? extends E> collection2) {
+		return collectionIntersectsNullable( collectionExpression1, collection2 );
+	}
 
 	/**
 	 * Whether one basic collection has any elements common with another basic collection, supporting {@code null} elements.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #collectionIntersectsNullable(Collection, Expression)}
 	 */
 	@Incubating
-	<E> JpaPredicate collectionOverlapsNullable(Collection<E> collection1, Expression<? extends Collection<? extends E>> collectionExpression2);
+	@Deprecated(forRemoval = true)
+	default <E> JpaPredicate collectionOverlapsNullable(Collection<E> collection1, Expression<? extends Collection<? extends E>> collectionExpression2) {
+		return collectionIntersectsNullable( collection1, collectionExpression2 );
+	}
+
+	/**
+	 * Whether one basic collection has any elements common with another basic collection.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	<E> JpaPredicate collectionIntersects(Expression<? extends Collection<E>> collectionExpression1, Expression<? extends Collection<? extends E>> collectionExpression2);
+
+	/**
+	 * Whether one basic collection has any elements common with another basic collection.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	<E> JpaPredicate collectionIntersects(Expression<? extends Collection<E>> collectionExpression1, Collection<? extends E> collection2);
+
+	/**
+	 * Whether one basic collection has any elements common with another basic collection.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	<E> JpaPredicate collectionIntersects(Collection<E> collection1, Expression<? extends Collection<? extends E>> collectionExpression2);
+
+	/**
+	 * Whether one basic collection has any elements common with another basic collection, supporting {@code null} elements.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	<E> JpaPredicate collectionIntersectsNullable(Expression<? extends Collection<E>> collectionExpression1, Expression<? extends Collection<? extends E>> collectionExpression2);
+
+	/**
+	 * Whether one basic collection has any elements common with another basic collection, supporting {@code null} elements.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	<E> JpaPredicate collectionIntersectsNullable(Expression<? extends Collection<E>> collectionExpression1, Collection<? extends E> collection2);
+
+	/**
+	 * Whether one basic collection has any elements common with another basic collection, supporting {@code null} elements.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	<E> JpaPredicate collectionIntersectsNullable(Collection<E> collection1, Expression<? extends Collection<? extends E>> collectionExpression2);
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// JSON functions
+
+	/**
+	 * @see #jsonValue(Expression, String, Class)
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaJsonValueExpression<String> jsonValue(Expression<?> jsonDocument, String jsonPath);
+
+	/**
+	 * Extracts a value by JSON path from a JSON document.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	<T> JpaJsonValueExpression<T> jsonValue(Expression<?> jsonDocument, String jsonPath, Class<T> returningType);
+
+	/**
+	 * @see #jsonValue(Expression, Expression, Class)
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaJsonValueExpression<String> jsonValue(Expression<?> jsonDocument, Expression<String> jsonPath);
+
+	/**
+	 * Extracts a value by JSON path from a JSON document.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	<T> JpaJsonValueExpression<T> jsonValue(Expression<?> jsonDocument, Expression<String> jsonPath, Class<T> returningType);
+
+	/**
+	 * @see #jsonQuery(Expression, Expression)
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaJsonQueryExpression jsonQuery(Expression<?> jsonDocument, String jsonPath);
+
+	/**
+	 * Queries values by JSON path from a JSON document.
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaJsonQueryExpression jsonQuery(Expression<?> jsonDocument, Expression<String> jsonPath);
+
+	/**
+	 * Checks if a JSON document contains a node for the given JSON path.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaJsonExistsExpression jsonExists(Expression<?> jsonDocument, String jsonPath);
+
+	/**
+	 * Checks if a JSON document contains a node for the given JSON path.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaJsonExistsExpression jsonExists(Expression<?> jsonDocument, Expression<String> jsonPath);
+
+	/**
+	 * Create a JSON object from the given map of key values.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonObject(Map<?, ? extends Expression<?>> keyValues);
+
+	/**
+	 * Create a JSON object from the given map of key values, retaining {@code null} values in the JSON.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonObjectWithNulls(Map<?, ? extends Expression<?>> keyValues);
+
+	/**
+	 * Create a JSON array from the array of values.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonArray(Expression<?>... values);
+
+	/**
+	 * Create a JSON object from the given array of values, retaining {@code null} values in the JSON array.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonArrayWithNulls(Expression<?>... values);
+
+	/**
+	 * Aggregates the given value into a JSON array.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonArrayAgg(Expression<?> value);
+
+	/**
+	 * Aggregates the given value into a JSON array.
+	 * Ordering values based on the given order by items.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonArrayAgg(Expression<?> value, JpaOrder... orderBy);
+
+	/**
+	 * Aggregates the given value into a JSON array.
+	 * Filtering rows that don't match the given filter predicate.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonArrayAgg(Expression<?> value, Predicate filter);
+
+	/**
+	 * Aggregates the given value into a JSON array.
+	 * Filtering rows that don't match the given filter predicate.
+	 * Ordering values based on the given order by items.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonArrayAgg(Expression<?> value, Predicate filter, JpaOrder... orderBy);
+
+	/**
+	 * Aggregates the given value into a JSON array, retaining {@code null} values in the JSON array.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonArrayAggWithNulls(Expression<?> value);
+
+	/**
+	 * Aggregates the given value into a JSON array, retaining {@code null} values in the JSON array.
+	 * Ordering values based on the given order by items.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonArrayAggWithNulls(Expression<?> value, JpaOrder... orderBy);
+
+	/**
+	 * Aggregates the given value into a JSON array, retaining {@code null} values in the JSON array.
+	 * Filtering rows that don't match the given filter predicate.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonArrayAggWithNulls(Expression<?> value, Predicate filter);
+
+	/**
+	 * Aggregates the given value into a JSON array, retaining {@code null} values in the JSON array.
+	 * Filtering rows that don't match the given filter predicate.
+	 * Ordering values based on the given order by items.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonArrayAggWithNulls(Expression<?> value, Predicate filter, JpaOrder... orderBy);
+
+	/**
+	 * Aggregates the given value under the given key into a JSON object.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonObjectAgg(Expression<?> key, Expression<?> value);
+
+	/**
+	 * Aggregates the given value under the given key into a JSON object, retaining {@code null} values in the JSON object.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonObjectAggWithNulls(Expression<?> key, Expression<?> value);
+
+	/**
+	 * Aggregates the given value under the given key into a JSON object.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonObjectAggWithUniqueKeys(Expression<?> key, Expression<?> value);
+
+	/**
+	 * Aggregates the given value under the given key into a JSON object, retaining {@code null} values in the JSON object.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonObjectAggWithUniqueKeysAndNulls(Expression<?> key, Expression<?> value);
+
+	/**
+	 * Aggregates the given value under the given key into a JSON object.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonObjectAgg(Expression<?> key, Expression<?> value, Predicate filter);
+
+	/**
+	 * Aggregates the given value under the given key into a JSON object, retaining {@code null} values in the JSON object.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonObjectAggWithNulls(Expression<?> key, Expression<?> value, Predicate filter);
+
+	/**
+	 * Aggregates the given value under the given key into a JSON object.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonObjectAggWithUniqueKeys(Expression<?> key, Expression<?> value, Predicate filter);
+
+	/**
+	 * Aggregates the given value under the given key into a JSON object, retaining {@code null} values in the JSON object.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonObjectAggWithUniqueKeysAndNulls(Expression<?> key, Expression<?> value, Predicate filter);
+
+	/**
+	 * Inserts/Replaces a value by JSON path within a JSON document.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonSet(Expression<?> jsonDocument, String jsonPath, Expression<?> value);
+
+	/**
+	 * Inserts/Replaces a value by JSON path within a JSON document.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonSet(Expression<?> jsonDocument, Expression<String> jsonPath, Expression<?> value);
+
+	/**
+	 * Inserts/Replaces a value by JSON path within a JSON document.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonSet(Expression<?> jsonDocument, String jsonPath, Object value);
+
+	/**
+	 * Inserts/Replaces a value by JSON path within a JSON document.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonSet(Expression<?> jsonDocument, Expression<String> jsonPath, Object value);
+
+	/**
+	 * Removes a value by JSON path within a JSON document.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonRemove(Expression<?> jsonDocument, String jsonPath);
+
+	/**
+	 * Removes a value by JSON path within a JSON document.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonRemove(Expression<?> jsonDocument, Expression<String> jsonPath);
+
+	/**
+	 * Inserts a value by JSON path within a JSON document.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonInsert(Expression<?> jsonDocument, String jsonPath, Expression<?> value);
+
+	/**
+	 * Inserts a value by JSON path within a JSON document.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonInsert(Expression<?> jsonDocument, Expression<String> jsonPath, Expression<?> value);
+
+	/**
+	 * Inserts a value by JSON path within a JSON document.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonInsert(Expression<?> jsonDocument, String jsonPath, Object value);
+
+	/**
+	 * Inserts a value by JSON path within a JSON document.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonInsert(Expression<?> jsonDocument, Expression<String> jsonPath, Object value);
+
+	/**
+	 * Replaces a value by JSON path within a JSON document.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonReplace(Expression<?> jsonDocument, String jsonPath, Expression<?> value);
+
+	/**
+	 * Replaces a value by JSON path within a JSON document.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonReplace(Expression<?> jsonDocument, Expression<String> jsonPath, Expression<?> value);
+
+	/**
+	 * Replaces a value by JSON path within a JSON document.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonReplace(Expression<?> jsonDocument, String jsonPath, Object value);
+
+	/**
+	 * Replaces a value by JSON path within a JSON document.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonReplace(Expression<?> jsonDocument, Expression<String> jsonPath, Object value);
+
+	/**
+	 * Applies the patch JSON document onto the other JSON document and returns that.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonMergepatch(Expression<?> document, Expression<?> patch);
+
+	/**
+	 * Applies the patch JSON document onto the other JSON document and returns that.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonMergepatch(Expression<?> document, String patch);
+
+	/**
+	 * Applies the patch JSON document onto the other JSON document and returns that.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonMergepatch(String document, Expression<?> patch);
+
+	/**
+	 * Creates an XML element with the given element name.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaXmlElementExpression xmlelement(String elementName);
+
+	/**
+	 * Creates an XML comment with the given argument as content.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> xmlcomment(String comment);
+
+	/**
+	 * Creates an XML forest from the given XML element expressions.
+	 *
+	 * @since 7.0
+	 * @see #named(Expression, String)
+	 */
+	@Incubating
+	JpaExpression<String> xmlforest(Expression<?>... elements);
+
+	/**
+	 * Creates an XML forest from the given XML element expressions.
+	 *
+	 * @since 7.0
+	 * @see #named(Expression, String)
+	 */
+	@Incubating
+	JpaExpression<String> xmlforest(List<? extends Expression<?>> elements);
+
+	/**
+	 * Concatenates the given XML element expressions.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> xmlconcat(Expression<?>... elements);
+
+	/**
+	 * Concatenates the given XML element expressions.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> xmlconcat(List<? extends Expression<?>> elements);
+
+	/**
+	 * Creates an XML processing with the given name.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> xmlpi(String elementName);
+
+	/**
+	 * Creates an XML processing with the given name and content.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> xmlpi(String elementName, Expression<String> content);
+
+	/**
+	 * Queries the given XML document with the given XPath or XQuery query.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> xmlquery(String query, Expression<?> xmlDocument);
+
+	/**
+	 * Queries the given XML document with the given XPath or XQuery query.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> xmlquery(Expression<String> query, Expression<?> xmlDocument);
+
+	/**
+	 * Checks if the given XPath or XQuery query exists in the given XML document.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<Boolean> xmlexists(String query, Expression<?> xmlDocument);
+
+	/**
+	 * Checks if the given XPath or XQuery query exists in the given XML document.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<Boolean> xmlexists(Expression<String> query, Expression<?> xmlDocument);
+
+	/**
+	 * @see #xmlagg(JpaOrder, JpaPredicate, JpaWindow, Expression)
+	 */
+	@Incubating
+	JpaExpression<String> xmlagg(JpaOrder order, Expression<?> argument);
+
+	/**
+	 * @see #xmlagg(JpaOrder, JpaPredicate, JpaWindow, Expression)
+	 */
+	@Incubating
+	JpaExpression<String> xmlagg(JpaOrder order, JpaPredicate filter, Expression<?> argument);
+
+	/**
+	 * @see #xmlagg(JpaOrder, JpaPredicate, JpaWindow, Expression)
+	 */
+	@Incubating
+	JpaExpression<String> xmlagg(JpaOrder order, JpaWindow window, Expression<?> argument);
+
+	/**
+	 * Create a {@code xmlagg} ordered set-aggregate function expression.
+	 *
+	 * @param order order by clause used in within group
+	 * @param filter optional filter clause
+	 * @param window optional window over which to apply the function
+	 * @param argument values to join
+	 *
+	 * @return ordered set-aggregate expression
+	 *
+	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
+	 */
+	@Incubating
+	JpaExpression<String> xmlagg(
+			JpaOrder order,
+			JpaPredicate filter,
+			JpaWindow window,
+			Expression<?> argument);
+
+	/**
+	 * Creates a named expression. The name is important for the result of the expression,
+	 * e.g. when building an {@code xmlforest}, the name acts as the XML element name.
+	 *
+	 * @since 7.0
+	 * @see #xmlforest(Expression[])
+	 * @see #xmlforest(List)
+	 */
+	@Incubating
+	<T> JpaExpression<T> named(Expression<T> expression, String name);
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Set-Returning functions
+
+	/**
+	 * Create a new set-returning function expression.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E> JpaSetReturningFunction<E> setReturningFunction(String name, Expression<?>... args);
+
+	/**
+	 * Creates an unnest function expression to turn an array into a set of rows.
+	 *
+	 * @since 7.0
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E> JpaSetReturningFunction<E> unnestArray(Expression<E[]> array);
+
+	/**
+	 * Creates an unnest function expression to turn an array into a set of rows.
+	 *
+	 * @since 7.0
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E> JpaSetReturningFunction<E> unnestCollection(Expression<? extends Collection<E>> collection);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Number> JpaSetReturningFunction<E> generateSeries(E start, E stop);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Number> JpaSetReturningFunction<E> generateSeries(E start, Expression<E> stop);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Number> JpaSetReturningFunction<E> generateSeries(Expression<E> start, E stop);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Number> JpaSetReturningFunction<E> generateSeries(Expression<E> start, Expression<E> stop);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Number> JpaSetReturningFunction<E> generateSeries(E start, Expression<E> stop, Expression<E> step);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Number> JpaSetReturningFunction<E> generateSeries(Expression<E> start, E stop, Expression<E> step);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Number> JpaSetReturningFunction<E> generateSeries(Expression<E> start, Expression<E> stop, E step);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Number> JpaSetReturningFunction<E> generateSeries(E start, Expression<E> stop, E step);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Number> JpaSetReturningFunction<E> generateSeries(Expression<E> start, E stop, E step);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Number> JpaSetReturningFunction<E> generateSeries(E start, E stop, Expression<E> step);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Number> JpaSetReturningFunction<E> generateSeries(E start, E stop, E step);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Number> JpaSetReturningFunction<E> generateSeries(Expression<E> start, Expression<E> stop, Expression<E> step);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(E start, Expression<E> stop, Expression<? extends TemporalAmount> step);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(Expression<E> start, E stop, Expression<? extends TemporalAmount> step);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(E start, E stop, Expression<? extends TemporalAmount> step);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(Expression<E> start, Expression<E> stop, TemporalAmount step);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(Expression<E> start, E stop, TemporalAmount step);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(E start, Expression<E> stop, TemporalAmount step);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(E start, E stop, TemporalAmount step);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(Expression<E> start, Expression<E> stop, Expression<? extends TemporalAmount> step);
+
+	/**
+	 * Creates a {@code json_table} function expression to generate rows from JSON array elements.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	JpaJsonTableFunction jsonTable(Expression<?> jsonDocument);
+
+	/**
+	 * Creates a {@code json_table} function expression to generate rows from JSON array elements.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	JpaJsonTableFunction jsonTable(Expression<?> jsonDocument, String jsonPath);
+
+	/**
+	 * Creates a {@code json_table} function expression to generate rows from JSON array elements.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	JpaJsonTableFunction jsonTable(Expression<?> jsonDocument, Expression<String> jsonPath);
+
+	/**
+	 * Creates a {@code xmltable} function expression to generate rows from XML elements.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	JpaXmlTableFunction xmlTable(String xpath, Expression<?> xmlDocument);
+
+	/**
+	 * Creates a {@code xmltable} function expression to generate rows from XML elements.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	JpaXmlTableFunction xmlTable(Expression<String> xpath, Expression<?> xmlDocument);
+
+	@Override
+	JpaPredicate and(List<Predicate> restrictions);
+
+	@Override
+	JpaPredicate or(List<Predicate> restrictions);
+
+	@Override
+	JpaExpression<String> concat(List<Expression<String>> expressions);
+
+	@Override
+	<N, T extends Temporal> JpaExpression<N> extract(TemporalField<N, T> field, Expression<T> temporal);
 }

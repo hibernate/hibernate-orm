@@ -8,6 +8,7 @@ package org.hibernate.orm.toolchains;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -20,6 +21,7 @@ import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.compile.CompileOptions;
+import org.gradle.api.tasks.compile.ForkOptions;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.javadoc.Javadoc;
 import org.gradle.api.tasks.testing.Test;
@@ -89,18 +91,15 @@ public class JavaModulePlugin implements Plugin<Project> {
 		final CompileOptions compileTaskOptions = compileTask.getOptions();
 		compileTaskOptions.getRelease().set( releaseVersion.asInt() );
 		// Needs add-opens because of https://github.com/gradle/gradle/issues/15538
-		compileTaskOptions.getForkOptions().getJvmArgs().add( "--add-opens" );
-		compileTaskOptions.getForkOptions().getJvmArgs().add( "jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED" );
+		addJvmArgs( compileTask, "--add-opens", "jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED" );
 	}
 
 	private void configureCompileTasks(Project project) {
 		project.getTasks().withType( JavaCompile.class ).configureEach( new Action<JavaCompile>() {
 			@Override
 			public void execute(JavaCompile compileTask) {
-				getJvmArgs( compileTask ).addAll(
-						Arrays.asList(
-								project.property( "toolchain.compiler.jvmargs" ).toString().split( " " )
-						)
+				addJvmArgs( compileTask,
+						project.property( "toolchain.compiler.jvmargs" ).toString().split( " " )
 				);
 				compileTask.doFirst(
 						new Action<Task>() {
@@ -121,13 +120,13 @@ public class JavaModulePlugin implements Plugin<Project> {
 		project.getTasks().withType( Test.class ).configureEach( new Action<Test>() {
 			@Override
 			public void execute(Test testTask) {
-				getJvmArgs( testTask ).addAll(
+				testTask.jvmArgs(
 						Arrays.asList(
 								project.property( "toolchain.launcher.jvmargs" ).toString().split( " " )
 						)
 				);
 				if ( project.hasProperty( "test.jdk.launcher.args" ) ) {
-					getJvmArgs( testTask ).addAll(
+					testTask.jvmArgs(
 							Arrays.asList(
 								project.getProperties().get( "test.jdk.launcher.args" ).toString().split( " " )
 							)
@@ -169,30 +168,12 @@ public class JavaModulePlugin implements Plugin<Project> {
 		return Arrays.asList( splits ).stream().filter( (split) -> !split.isEmpty() ).collect( Collectors.toList() );
 	}
 
-	public static List<String> getJvmArgs(JavaCompile compileTask) {
-		final List<String> existing = compileTask
+	public static void addJvmArgs(JavaCompile compileTask, String ... newArgs) {
+		ForkOptions forOptions = compileTask
 				.getOptions()
-				.getForkOptions()
-				.getJvmArgs();
-		if ( existing == null ) {
-			final List<String> target = new ArrayList<>();
-			compileTask.getOptions().getForkOptions().setJvmArgs( target );
-			return target;
-		}
-		else {
-			return existing;
-		}
-	}
-
-	public static List<String> getJvmArgs(Test testTask) {
-		final List<String> existing = testTask.getJvmArgs();
-		if ( existing == null || !( existing instanceof ArrayList ) ) {
-			final List<String> target = new ArrayList<>();
-			testTask.setJvmArgs( target );
-			return target;
-		}
-		else {
-			return existing;
-		}
+				.getForkOptions();
+		final List<String> mergedArgs = new ArrayList<>( forOptions.getJvmArgs() );
+		Collections.addAll( mergedArgs, newArgs );
+		forOptions.setJvmArgs( mergedArgs );
 	}
 }

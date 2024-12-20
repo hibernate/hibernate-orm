@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
@@ -13,12 +11,11 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.DiscriminatorConverter;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
-import org.hibernate.metamodel.mapping.DiscriminatorValueDetails;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -35,7 +32,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @implNote `discriminatorType` represents the mapping to Class, whereas `discriminatorType.getUnderlyingType()`
- * represents the "raw" JDBC mapping (String, Integer, etc)
+ * represents the "raw" JDBC mapping (String, Integer, etc.)
  *
  * @author Steve Ebersole
  */
@@ -44,22 +41,22 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 
 	private final BasicType<Object> underlyingJdbcMapping;
 	private final DiscriminatorType<Object> discriminatorType;
-	private final EntityMappingType entityDescriptor;
+	private final ManagedMappingType mappingType;
 
 	public AbstractDiscriminatorMapping(
-			EntityMappingType entityDescriptor,
+			ManagedMappingType mappingType,
 			DiscriminatorType<Object> discriminatorType,
 			BasicType<Object> underlyingJdbcMapping) {
 		this.underlyingJdbcMapping = underlyingJdbcMapping;
-		this.entityDescriptor = entityDescriptor;
+		this.mappingType = mappingType;
 
-		this.role = entityDescriptor.getNavigableRole().append( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME );
+		this.role = mappingType.getNavigableRole().append( DISCRIMINATOR_ROLE_NAME );
 
 		this.discriminatorType = discriminatorType;
 	}
 
 	public EntityMappingType getEntityDescriptor() {
-		return entityDescriptor;
+		return mappingType.asEntityMappingType();
 	}
 
 	@Override
@@ -87,13 +84,8 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 	}
 
 	@Override
-	public DiscriminatorValueDetails resolveDiscriminatorValue(Object value) {
-		return discriminatorType.getValueConverter().getDetailsForDiscriminatorValue( value );
-	}
-
-	@Override
 	public EntityMappingType findContainingEntityMapping() {
-		return entityDescriptor;
+		return mappingType.findContainingEntityMapping();
 	}
 
 	@Override
@@ -128,7 +120,9 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 				resultVariable,
 				discriminatorType.getJavaTypeDescriptor(),
 				discriminatorType.getValueConverter(),
-				navigablePath
+				navigablePath,
+				false,
+				!sqlSelection.isVirtual()
 		);
 	}
 
@@ -179,7 +173,10 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 				this,
 				discriminatorType.getValueConverter(),
 				fetchTiming,
-				creationState
+				true,
+				creationState,
+				false,
+				!sqlSelection.isVirtual()
 		);
 	}
 
@@ -242,12 +239,6 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return value;
-	}
-
-	@Override
-	public int forEachSelectable(int offset, SelectableConsumer consumer) {
-		consumer.accept( offset, this );
-		return getJdbcTypeCount();
 	}
 
 }

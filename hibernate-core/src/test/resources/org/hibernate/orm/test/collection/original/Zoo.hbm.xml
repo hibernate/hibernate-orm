@@ -15,7 +15,7 @@
 		<id name="id" type="long">
 			<generator class="native" />
 		</id>
-		<list name="animals" cascade="save-update,delete">
+		<list name="animals" cascade="persist, merge ,delete">
 			<key column="Zoo_id" not-null="true" />
 			<list-index column="list_index" />
 			<one-to-many class="Animal" not-found="ignore" />
@@ -28,7 +28,7 @@
 		</id>
 		<discriminator column="discriminator" type="string" />
 		<property name="name"/>
-		<many-to-one name="zoo" class="Zoo" cascade="save-update,delete" />
+		<many-to-one name="zoo" class="Zoo" cascade="merge,persist,delete" />
 	</class>
 
 	<subclass name="Mammal" discriminator-value="MAMMAL" extends="Animal">

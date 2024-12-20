@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
@@ -14,7 +12,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * Identifies a named association belonging to a particular
  * entity instance. Used to record the fact that an association
  * is null during loading.
- * 
+ *
  * @author Gavin King
  */
 public final class AssociationKey implements Serializable {

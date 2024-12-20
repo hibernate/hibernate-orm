@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.collection.list;
 
@@ -16,11 +14,10 @@ import org.hibernate.collection.spi.PersistentList;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.sql.ComparisonRestriction;
 import org.hibernate.sql.SimpleSelect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -42,11 +39,11 @@ import static org.junit.Assert.assertTrue;
 public class PersistentListTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5732")
+	@JiraKey(value = "HHH-5732")
 	public void testInverseListIndex(SessionFactoryScope scope) {
 		// make sure no one changes the mapping
 		SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-        final CollectionPersister collectionPersister = sessionFactory.getRuntimeMetamodels()
+		final CollectionPersister collectionPersister = sessionFactory.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getCollectionDescriptor(ListOwner.class.getName() + ".children");
 		assertTrue( collectionPersister.isInverse() );
@@ -62,7 +59,7 @@ public class PersistentListTest {
 					root.getChildren().add( child2 );
 					child2.setParent( root );
 
-					session.save( root );
+					session.persist( root );
 				}
 		);
 
@@ -72,9 +69,8 @@ public class PersistentListTest {
 				session2 -> {
 					session2.doWork(
 							connection -> {
-								final QueryableCollection queryableCollection = (QueryableCollection) collectionPersister;
 								SimpleSelect select = new SimpleSelect( sessionFactory )
-										.setTableName( queryableCollection.getTableName() )
+										.setTableName( collectionPersister.getTableName() )
 										.addColumn( "NAME" )
 										.addColumn( "LIST_INDEX" )
 										.addRestriction( "NAME", ComparisonRestriction.Operator.NE, "?" );
@@ -101,18 +97,18 @@ public class PersistentListTest {
 								assertEquals( Integer.valueOf( 1 ), valueMap.get( "c2" ) );
 							}
 					);
-					session2.delete( root );
+					session2.remove( root );
 
 				}
 		);
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5732")
+	@JiraKey(value = "HHH-5732")
 	public void testInverseListIndex2(SessionFactoryScope scope) {
 		// make sure no one changes the mapping
 		SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-        final CollectionPersister collectionPersister = sessionFactory.getRuntimeMetamodels()
+		final CollectionPersister collectionPersister = sessionFactory.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getCollectionDescriptor(Order.class.getName() + ".lineItems");
 		assertTrue( collectionPersister.isInverse() );
@@ -124,7 +120,7 @@ public class PersistentListTest {
 					order.addLineItem( "abc", 2 );
 					order.addLineItem( "def", 200 );
 					order.addLineItem( "ghi", 13 );
-					session.save( order );
+					session.persist( order );
 				}
 		);
 
@@ -133,9 +129,8 @@ public class PersistentListTest {
 				session2 -> {
 					session2.doWork(
 							connection -> {
-								final QueryableCollection queryableCollection = (QueryableCollection) collectionPersister;
 								SimpleSelect select = new SimpleSelect( sessionFactory )
-										.setTableName( queryableCollection.getTableName() )
+										.setTableName( collectionPersister.getTableName() )
 										.addColumn( "order_id" )
 										.addColumn( "INDX" )
 										.addColumn( "PRD_CODE" );
@@ -162,7 +157,7 @@ public class PersistentListTest {
 								assertEquals( Integer.valueOf( 2 ), valueMap.get( "ghi" ) );
 							}
 					);
-					session2.delete( order );
+					session2.remove( order );
 				}
 		);
 	}
@@ -177,7 +172,7 @@ public class PersistentListTest {
 
 		scope.inTransaction(
 				session -> {
-					session.save( parent );
+					session.persist( parent );
 					session.flush();
 					// at this point, the list on parent has now been replaced with a PersistentList...
 					PersistentList children = (PersistentList) parent.getChildren();
@@ -196,7 +191,7 @@ public class PersistentListTest {
 					assertFalse( children.isDirty() );
 
 					children.clear();
-					session.delete( child );
+					session.remove( child );
 					assertTrue( children.isDirty() );
 
 					session.flush();
@@ -204,7 +199,7 @@ public class PersistentListTest {
 					children.clear();
 					assertFalse( children.isDirty() );
 
-					session.delete( parent );
+					session.remove( parent );
 				}
 		);
 	}

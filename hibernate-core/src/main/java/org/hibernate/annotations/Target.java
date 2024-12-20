@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
 
@@ -23,7 +21,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *             annotations, for example,
  *             {@link jakarta.persistence.OneToMany#targetEntity()}
  */
-@Deprecated(since = "6.2")
+@Deprecated(since = "6.2", forRemoval = true)
 @java.lang.annotation.Target({FIELD, METHOD})
 @Retention(RUNTIME)
 public @interface Target {

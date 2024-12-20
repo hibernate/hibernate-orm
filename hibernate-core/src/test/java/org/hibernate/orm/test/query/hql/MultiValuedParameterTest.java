@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hql;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -28,6 +27,7 @@ import jakarta.persistence.Id;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Andrea Boriero
@@ -93,13 +93,27 @@ public class MultiValuedParameterTest extends BaseSessionFactoryFunctionalTest {
 	public void test() {
 		inTransaction( session -> {
 			final List<BigInteger> ids = List.of( BigInteger.ZERO, BigInteger.ONE, BigInteger.TWO );
-			final List<EntityWithNumericId> resultList = session.createQuery(
+			final List<BigInteger> resultList = session.createQuery(
 					"select id from EntityWithNumericId e WHERE e.id in (:ids)",
-					EntityWithNumericId.class
+					BigInteger.class
 			).setParameter( "ids", ids ).getResultList();
 			assertThat( resultList.size(), is( 3 ) );
 			assertThat( resultList, is( ids ) );
 		} );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-18575" )
+	void testMultiValuedBigDecimals() {
+		inTransaction( session -> {
+			assertEquals(
+					1,
+					session.createQuery("SELECT 1 WHERE :value IN (:list)", Integer.class)
+							.setParameter( "value", BigDecimal.valueOf( 2.0))
+							.setParameter("list", List.of(BigDecimal.valueOf(2.0), BigDecimal.valueOf(3.0)))
+							.getSingleResult()
+			);
+		});
 	}
 
 	@AfterAll

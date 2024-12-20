@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.envers.integration.ids.idclass;
 
 import java.util.List;
@@ -14,12 +18,12 @@ import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.UnversionedStrTestEntity;
 import org.hibernate.orm.test.envers.entities.ids.MulId;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-@TestForIssue( jiraKey = "HHH-14280" )
+@JiraKey( value = "HHH-14280" )
 public class ManyToOneNotAuditedMulIdTest extends BaseEnversJPAFunctionalTestCase {
 	private final static String str1 = "str1", str2 = "str2";
 

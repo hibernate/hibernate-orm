@@ -1,10 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.orm.test.engine.spi;
 
 import jakarta.persistence.Entity;
@@ -17,7 +14,7 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityEntryExtraState;
 import org.hibernate.engine.spi.SessionImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -41,7 +38,7 @@ public class ExtraStateTest {
 	private SessionImplementor sessionRef;
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9451")
+	@JiraKey(value = "HHH-9451")
 	public void shouldMaintainExtraStateWhenUsingIdentityIdGenerationStrategy(SessionFactoryScope scope) {
 		scope.inSession(
 				(nonTransactedSession) -> {

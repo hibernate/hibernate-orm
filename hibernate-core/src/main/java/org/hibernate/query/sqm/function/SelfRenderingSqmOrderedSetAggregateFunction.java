@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.function;
 
@@ -34,35 +32,6 @@ public class SelfRenderingSqmOrderedSetAggregateFunction<T> extends SelfRenderin
 		implements SqmOrderedSetAggregateFunction<T> {
 
 	private final SqmOrderByClause withinGroup;
-
-	/**
-	 * @deprecated Use {@link #SelfRenderingSqmOrderedSetAggregateFunction(SqmFunctionDescriptor, FunctionRenderer, List, SqmPredicate, SqmOrderByClause, ReturnableType, ArgumentsValidator, FunctionReturnTypeResolver, NodeBuilder, String)} instead
-	 */
-	@Deprecated(forRemoval = true)
-	public SelfRenderingSqmOrderedSetAggregateFunction(
-			SqmFunctionDescriptor descriptor,
-			FunctionRenderingSupport renderingSupport,
-			List<? extends SqmTypedNode<?>> arguments,
-			SqmPredicate filter,
-			SqmOrderByClause withinGroupClause,
-			ReturnableType<T> impliedResultType,
-			ArgumentsValidator argumentsValidator,
-			FunctionReturnTypeResolver returnTypeResolver,
-			NodeBuilder nodeBuilder,
-			String name) {
-		super(
-				descriptor,
-				renderingSupport,
-				arguments,
-				filter,
-				impliedResultType,
-				argumentsValidator,
-				returnTypeResolver,
-				nodeBuilder,
-				name
-		);
-		this.withinGroup = withinGroupClause;
-	}
 
 	public SelfRenderingSqmOrderedSetAggregateFunction(
 			SqmFunctionDescriptor descriptor,

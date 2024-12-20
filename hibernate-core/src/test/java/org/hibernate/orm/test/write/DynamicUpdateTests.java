@@ -1,15 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.write;
 
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.OptimisticLocking;
-import org.hibernate.annotations.SelectBeforeUpdate;
 import org.hibernate.internal.util.StringHelper;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
@@ -319,7 +316,6 @@ public class DynamicUpdateTests {
 	@Entity( name = "AttachableJob" )
 	@Table( name = "AttachableJob" )
 	@DynamicUpdate
-	@SelectBeforeUpdate
 	public static class AttachableJob {
 		@Id
 		private Integer id;
@@ -359,5 +355,3 @@ public class DynamicUpdateTests {
 		}
 	}
 }
-
-

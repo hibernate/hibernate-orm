@@ -1,14 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
@@ -42,7 +39,7 @@ public class VirtualIdRepresentationStrategy implements EmbeddableRepresentation
 					bootDescriptor.getComponentClass(),
 					() -> virtualIdEmbeddable,
 					creationContext.getServiceRegistry()
-							.getService( ProxyFactoryFactory.class )
+							.requireService( ProxyFactoryFactory.class )
 							.buildBasicProxyFactory( bootDescriptor.getComponentClass() )
 
 			);
@@ -87,8 +84,8 @@ public class VirtualIdRepresentationStrategy implements EmbeddableRepresentation
 		}
 
 		@Override
-		public Object instantiate(ValueAccess valuesAccess, SessionFactoryImplementor sessionFactory) {
-			final Object instantiated = entityInstantiator.instantiate( sessionFactory );
+		public Object instantiate(ValueAccess valuesAccess) {
+			final Object instantiated = entityInstantiator.instantiate();
 			if ( valuesAccess != null ) {
 				final Object[] values = valuesAccess.getValues();
 				if ( values != null ) {
@@ -99,13 +96,13 @@ public class VirtualIdRepresentationStrategy implements EmbeddableRepresentation
 		}
 
 		@Override
-		public boolean isInstance(Object object, SessionFactoryImplementor sessionFactory) {
-			return entityInstantiator.isInstance( object, sessionFactory );
+		public boolean isInstance(Object object) {
+			return entityInstantiator.isInstance( object );
 		}
 
 		@Override
-		public boolean isSameClass(Object object, SessionFactoryImplementor sessionFactory) {
-			return entityInstantiator.isSameClass( object, sessionFactory );
+		public boolean isSameClass(Object object) {
+			return entityInstantiator.isSameClass( object );
 		}
 	}
 }

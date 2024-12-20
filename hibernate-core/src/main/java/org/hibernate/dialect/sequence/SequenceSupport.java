@@ -1,12 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.sequence;
 
 import org.hibernate.MappingException;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * A set of operations providing support for sequences in a
@@ -110,6 +109,26 @@ public interface SequenceSupport {
 	 */
 	default String getSequenceNextValString(String sequenceName, int increment) throws MappingException {
 		return getSequenceNextValString( sequenceName );
+	}
+
+	/**
+	 * An optional multi-line form for databases which {@link #supportsPooledSequences()}.
+	 *
+	 * @param sequenceName The name of the sequence
+	 * @param initialValue The initial value to apply to 'create sequence' statement
+	 * @param incrementSize The increment value to apply to 'create sequence' statement
+	 * @param options A SQL fragment appended to the generated DDL.
+	 * @return The sequence creation commands
+	 * @throws MappingException If sequences are not supported.
+	 */
+	default String[] getCreateSequenceStrings(String sequenceName, int initialValue, int incrementSize, String options)
+			throws MappingException {
+		return new String[] {
+				StringHelper.isNotEmpty( options ) ?
+						getCreateSequenceString( sequenceName, initialValue, incrementSize ) + " " + options :
+						getCreateSequenceString( sequenceName, initialValue, incrementSize ),
+
+		};
 	}
 
 	/**

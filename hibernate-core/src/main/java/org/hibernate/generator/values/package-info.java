@@ -11,4 +11,7 @@
  *
  * @see org.hibernate.generator.values.GeneratedValuesMutationDelegate
  */
+@Incubating
 package org.hibernate.generator.values;
+
+import org.hibernate.Incubating;

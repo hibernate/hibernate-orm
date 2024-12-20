@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemaupdate;
 
@@ -37,7 +35,7 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
@@ -64,7 +62,7 @@ public class PostgreSQLMultipleSchemaSequenceTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-5538" )
+	@JiraKey( value = "HHH-5538" )
 	public void test() {
 		StandardServiceRegistry ssr1 = ServiceRegistryUtil.serviceRegistry();
 
@@ -155,10 +153,10 @@ public class PostgreSQLMultipleSchemaSequenceTest extends BaseUnitTestCase {
 
 			final List<String> sqlLines = Files.readAllLines( output.toPath(), Charset.defaultCharset() );
 			assertEquals( 2 ,
-						  sqlLines
-						  .stream()
-						  .filter( s -> s.equalsIgnoreCase( "create sequence SEQ_TEST start with 1 increment by 1;" ) )
-						  .count()
+						sqlLines
+						.stream()
+						.filter( s -> s.equalsIgnoreCase( "create sequence SEQ_TEST start with 1 increment by 1;" ) )
+						.count()
 			);
 		}
 		catch (IOException e) {

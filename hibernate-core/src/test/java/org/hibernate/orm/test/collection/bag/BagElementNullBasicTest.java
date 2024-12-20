@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.collection.bag;
 
@@ -21,7 +19,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -64,7 +62,7 @@ public class BagElementNullBasicTest {
 					AnEntity e = session.get( AnEntity.class, entityId );
 					assertEquals( 0, e.aCollection.size() );
 					assertEquals( 0, getCollectionElementRows( entityId, scope ).size() );
-					session.delete( e );
+					session.remove( e );
 				}
 		);
 	}
@@ -93,13 +91,13 @@ public class BagElementNullBasicTest {
 					AnEntity e = session.get( AnEntity.class, entityId );
 					assertEquals( 0, e.aCollection.size() );
 					assertEquals( 0, getCollectionElementRows( entityId, scope ).size() );
-					session.delete( e );
+					session.remove( e );
 				}
 		);
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13651")
+	@JiraKey(value = "HHH-13651")
 	public void addNullValueToNullableCollections(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -136,7 +134,7 @@ public class BagElementNullBasicTest {
 					AnEntity e = session.get( AnEntity.class, entityId );
 					assertEquals( 0, e.aCollection.size() );
 					assertEquals( 0, getCollectionElementRows( entityId, scope ).size() );
-					session.delete( e );
+					session.remove( e );
 				}
 		);
 	}
@@ -168,7 +166,7 @@ public class BagElementNullBasicTest {
 					assertEquals( 1, e.aCollection.size() );
 					assertEquals( 1, getCollectionElementRows( e.id, scope ).size() );
 					assertEquals( "ghi", e.aCollection.get( 0 ) );
-					session.delete( e );
+					session.remove( e );
 				}
 		);
 	}

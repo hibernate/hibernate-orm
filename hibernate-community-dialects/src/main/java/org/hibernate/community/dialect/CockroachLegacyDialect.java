@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
+import java.lang.invoke.MethodHandles;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -19,6 +18,7 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
@@ -26,6 +26,8 @@ import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.*;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.CockroachDBAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.FormatFunction;
 import org.hibernate.dialect.function.PostgreSQLTruncFunction;
@@ -47,10 +49,12 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.dialect.NullOrdering;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
+import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -61,24 +65,26 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NamedNativeEnumDdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NamedNativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
-import static org.hibernate.query.sqm.TemporalUnit.DAY;
-import static org.hibernate.query.sqm.TemporalUnit.EPOCH;
-import static org.hibernate.query.sqm.TemporalUnit.NATIVE;
+import static org.hibernate.query.common.TemporalUnit.DAY;
+import static org.hibernate.query.common.TemporalUnit.EPOCH;
+import static org.hibernate.query.common.TemporalUnit.NATIVE;
 import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
@@ -118,7 +124,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  */
 public class CockroachLegacyDialect extends Dialect {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, CockroachLegacyDialect.class.getName() );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, CockroachLegacyDialect.class.getName() );
 	// KNOWN LIMITATIONS:
 	// * no support for java.sql.Clob
 
@@ -145,7 +151,13 @@ public class CockroachLegacyDialect extends Dialect {
 		super(version);
 		this.driverKind = driverKind;
 	}
-	protected static DatabaseVersion fetchDataBaseVersion( DialectResolutionInfo info ) {
+
+	@Override
+	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
+		return fetchDataBaseVersion( info );
+	}
+
+	protected static DatabaseVersion fetchDataBaseVersion(DialectResolutionInfo info ) {
 		String versionString = null;
 		if ( info.getDatabaseMetadata() != null ) {
 			try (java.sql.Statement s = info.getDatabaseMetadata().getConnection().createStatement() ) {
@@ -166,7 +178,7 @@ public class CockroachLegacyDialect extends Dialect {
 		// What the DB select returns is similar to "CockroachDB CCL v21.2.10 (x86_64-unknown-linux-gnu, built 2022/05/02 17:38:58, go1.16.6)"
 		Matcher m = CRDB_VERSION_PATTERN.matcher( versionString == null ? "" : versionString );
 		if ( m.find() ) {
-			String[] versionParts = m.group().substring( 1 ).split( "\\." );
+			String[] versionParts = StringHelper.split( ".", m.group().substring( 1 ) );
 			// if we got to this point, there is at least a major version, so no need to check [].length > 0
 			int majorVersion = Integer.parseInt( versionParts[0] );
 			int minorVersion = versionParts.length > 1 ? Integer.parseInt( versionParts[1] ) : 0;
@@ -257,6 +269,8 @@ public class CockroachLegacyDialect extends Dialect {
 		else {
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
 		}
+		ddlTypeRegistry.addDescriptor( new NamedNativeEnumDdlTypeImpl( this ) );
+		ddlTypeRegistry.addDescriptor( new NamedNativeOrdinalEnumDdlTypeImpl( this ) );
 	}
 
 	@Override
@@ -300,15 +314,13 @@ public class CockroachLegacyDialect extends Dialect {
 				}
 				break;
 			case ARRAY:
-				final JdbcTypeConstructor jdbcTypeConstructor = jdbcTypeRegistry.getConstructor( jdbcTypeCode );
 				// PostgreSQL names array types by prepending an underscore to the base name
-				if ( jdbcTypeConstructor != null && columnTypeName.charAt( 0 ) == '_' ) {
+				if ( columnTypeName.charAt( 0 ) == '_' ) {
 					final String componentTypeName = columnTypeName.substring( 1 );
 					final Integer sqlTypeCode = resolveSqlTypeCode( componentTypeName, jdbcTypeRegistry.getTypeConfiguration() );
 					if ( sqlTypeCode != null ) {
-						return jdbcTypeConstructor.resolveType(
-								jdbcTypeRegistry.getTypeConfiguration(),
-								this,
+						return jdbcTypeRegistry.resolveTypeConstructorDescriptor(
+								jdbcTypeCode,
 								jdbcTypeRegistry.getDescriptor( sqlTypeCode ),
 								ColumnTypeInformation.EMPTY
 						);
@@ -351,6 +363,8 @@ public class CockroachLegacyDialect extends Dialect {
 		// Don't use this type due to https://github.com/pgjdbc/pgjdbc/issues/2862
 		//jdbcTypeRegistry.addDescriptor( TimestampUtcAsOffsetDateTimeJdbcType.INSTANCE );
 		if ( driverKind == PostgreSQLDriverKind.PG_JDBC ) {
+			jdbcTypeRegistry.addDescriptor( PostgreSQLEnumJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( PostgreSQLOrdinalEnumJdbcType.INSTANCE );
 			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLUUIDJdbcType.INSTANCE );
 			if ( PgJdbcHelper.isUsable( serviceRegistry ) ) {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getIntervalJdbcType( serviceRegistry ) );
@@ -358,9 +372,11 @@ public class CockroachLegacyDialect extends Dialect {
 				if ( getVersion().isSameOrAfter( 20, 0 ) ) {
 					jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getInetJdbcType( serviceRegistry ) );
 					jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getJsonbJdbcType( serviceRegistry ) );
+					jdbcTypeRegistry.addTypeConstructorIfAbsent( PgJdbcHelper.getJsonbArrayJdbcType( serviceRegistry ) );
 				}
 				else {
 					jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getJsonJdbcType( serviceRegistry ) );
+					jdbcTypeRegistry.addTypeConstructorIfAbsent( PgJdbcHelper.getJsonArrayJdbcType( serviceRegistry ) );
 				}
 			}
 			else {
@@ -368,9 +384,11 @@ public class CockroachLegacyDialect extends Dialect {
 				if ( getVersion().isSameOrAfter( 20, 0 ) ) {
 					jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingInetJdbcType.INSTANCE );
 					jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
+					jdbcTypeRegistry.addTypeConstructorIfAbsent( PostgreSQLCastingJsonArrayJdbcTypeConstructor.JSONB_INSTANCE );
 				}
 				else {
 					jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSON_INSTANCE );
+					jdbcTypeRegistry.addTypeConstructorIfAbsent( PostgreSQLCastingJsonArrayJdbcTypeConstructor.JSON_INSTANCE );
 				}
 			}
 		}
@@ -380,9 +398,11 @@ public class CockroachLegacyDialect extends Dialect {
 			if ( getVersion().isSameOrAfter( 20, 0 ) ) {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingInetJdbcType.INSTANCE );
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
+				jdbcTypeRegistry.addTypeConstructorIfAbsent( PostgreSQLCastingJsonArrayJdbcTypeConstructor.JSONB_INSTANCE );
 			}
 			else {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSON_INSTANCE );
+				jdbcTypeRegistry.addTypeConstructorIfAbsent( PostgreSQLCastingJsonArrayJdbcTypeConstructor.JSON_INSTANCE );
 			}
 		}
 
@@ -403,6 +423,9 @@ public class CockroachLegacyDialect extends Dialect {
 								.getDescriptor( Object.class )
 				)
 		);
+
+		// Replace the standard array constructor
+		jdbcTypeRegistry.addTypeConstructor( PostgreSQLArrayJdbcTypeConstructor.INSTANCE );
 	}
 
 	@Override
@@ -469,7 +492,7 @@ public class CockroachLegacyDialect extends Dialect {
 		functionFactory.arrayPrepend_postgresql();
 		functionFactory.arrayAppend_postgresql();
 		functionFactory.arrayContains_postgresql();
-		functionFactory.arrayOverlaps_postgresql();
+		functionFactory.arrayIntersects_postgresql();
 		functionFactory.arrayGet_bracket();
 		functionFactory.arraySet_unnest();
 		functionFactory.arrayRemove();
@@ -480,6 +503,32 @@ public class CockroachLegacyDialect extends Dialect {
 		functionFactory.arrayFill_cockroachdb();
 		functionFactory.arrayToString_postgresql();
 
+		functionFactory.jsonValue_cockroachdb();
+		functionFactory.jsonQuery_cockroachdb();
+		functionFactory.jsonExists_cockroachdb();
+		functionFactory.jsonObject_postgresql();
+		functionFactory.jsonArray_postgresql();
+		functionFactory.jsonArrayAgg_postgresql( false );
+		functionFactory.jsonObjectAgg_postgresql( false );
+		functionFactory.jsonSet_postgresql();
+		functionFactory.jsonRemove_cockroachdb();
+		functionFactory.jsonReplace_postgresql();
+		functionFactory.jsonInsert_postgresql();
+		// No support for WITH clause in subquery: https://github.com/cockroachdb/cockroach/issues/131011
+//		functionFactory.jsonMergepatch_postgresql();
+		functionFactory.jsonArrayAppend_postgresql( false );
+		functionFactory.jsonArrayInsert_postgresql();
+
+		functionFactory.unnest_postgresql();
+		functionFactory.generateSeries( null, "ordinality", true );
+		functionFactory.jsonTable_cockroachdb();
+
+		// Postgres uses # instead of ^ for XOR
+		functionContributions.getFunctionRegistry().patternDescriptorBuilder( "bitxor", "(?1#?2)" )
+				.setExactArgumentCount( 2 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.register();
+
 		functionContributions.getFunctionRegistry().register(
 				"trunc",
 				new PostgreSQLTruncFunction(
@@ -488,6 +537,11 @@ public class CockroachLegacyDialect extends Dialect {
 				)
 		);
 		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
+	}
+
+	@Override
+	public @Nullable String getDefaultOrdinalityColumnName() {
+		return "ordinality";
 	}
 
 	@Override
@@ -611,8 +665,8 @@ public class CockroachLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public String getNativeIdentifierGeneratorStrategy() {
-		return "sequence";
+	public GenerationType getNativeValueGenerationStrategy() {
+		return GenerationType.SEQUENCE;
 	}
 
 	@Override
@@ -645,6 +699,11 @@ public class CockroachLegacyDialect extends Dialect {
 	public NationalizationSupport getNationalizationSupport() {
 		// TEXT / STRING inherently support nationalized data
 		return NationalizationSupport.IMPLICIT;
+	}
+
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		return CockroachDBAggregateSupport.valueOf( this );
 	}
 
 	@Override
@@ -789,20 +848,23 @@ public class CockroachLegacyDialect extends Dialect {
 
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-		if ( intervalType != null ) {
-			return "(?2+?3)";
-		}
-		switch ( unit ) {
-			case NANOSECOND:
-				return "(?3+(?2)/1e3*interval '1 microsecond')";
+		return intervalType != null
+				? "(?2+?3)"
+				: "cast(?3+" + intervalPattern( unit ) + " as " + temporalType.name().toLowerCase() + ")";
+	}
+
+	private static String intervalPattern(TemporalUnit unit) {
+		switch (unit) {
 			case NATIVE:
-				return "(?3+(?2)*interval '1 microsecond')";
+				return "(?2)*interval '1 microsecond'";
+			case NANOSECOND:
+				return "(?2)/1e3*interval '1 microsecond'";
 			case QUARTER: //quarter is not supported in interval literals
-				return "(?3+(?2)*interval '3 month')";
+				return "(?2)*interval '3 month'";
 			case WEEK: //week is not supported in interval literals
-				return "(?3+(?2)*interval '7 day')";
+				return "(?2)*interval '7 day'";
 			default:
-				return "(?3+(?2)*interval '1 ?1')";
+				return "(?2)*interval '1 " + unit + "'";
 		}
 	}
 
@@ -843,13 +905,16 @@ public class CockroachLegacyDialect extends Dialect {
 					//all the following units:
 
 					// Note that CockroachDB also has an extract_duration function which returns an int,
-					// but we don't use that here because it is deprecated since v20
+					// but we don't use that here because it is deprecated since v20.
+					// We need to use round() instead of cast(... as int) because extract epoch returns
+					// float8 which can cause loss-of-precision in some cases
+					// https://github.com/cockroachdb/cockroach/issues/72523
 					case HOUR:
 					case MINUTE:
 					case SECOND:
 					case NANOSECOND:
 					case NATIVE:
-						return "cast(extract(epoch from ?3-?2)" + EPOCH.conversionFactor( unit, this ) + " as int)";
+						return "round(extract(epoch from ?3-?2)" + EPOCH.conversionFactor( unit, this ) + ")::int";
 					default:
 						throw new SemanticException( "unrecognized field: " + unit );
 				}
@@ -1024,6 +1089,11 @@ public class CockroachLegacyDialect extends Dialect {
 
 	@Override
 	public boolean useInputStreamToInsertBlob() {
+		return false;
+	}
+
+	@Override
+	public boolean useConnectionToCreateLob() {
 		return false;
 	}
 

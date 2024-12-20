@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.internal;
 
@@ -32,7 +30,7 @@ class SessionFactoryObserverForNamedQueryValidation implements SessionFactoryObs
 
 	@Override
 	public void sessionFactoryCreated(SessionFactory factory) {
-		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) factory;
+		final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) factory;
 		final QueryEngine queryEngine = sessionFactory.getQueryEngine();
 		queryEngine.getNamedObjectRepository().prepare( sessionFactory, metadata );
 		if ( sessionFactory.getSessionFactoryOptions().isNamedQueryStartupCheckingEnabled() ) {

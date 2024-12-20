@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
@@ -53,7 +51,7 @@ public class SqmEntityValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		final SqmPath<?> sqmPath = get( name );
+		final SqmPath<?> sqmPath = get( name, true );
 		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
 		return sqmPath;
 	}
@@ -78,8 +76,8 @@ public class SqmEntityValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 //	}
 
 	@Override
-	public <S extends T> SqmTreatedSimplePath<T,S> treatAs(Class<S> treatJavaType) throws PathException {
-		return (SqmTreatedSimplePath<T, S>) treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
+	public <S extends T> SqmTreatedEntityValuedSimplePath<T,S> treatAs(Class<S> treatJavaType) throws PathException {
+		return (SqmTreatedEntityValuedSimplePath<T, S>) treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
 	}
 
 	@Override

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
@@ -10,6 +8,8 @@ import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressible;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Common support for SqmParameter impls
@@ -28,7 +28,7 @@ public abstract class AbstractSqmParameter<T> extends AbstractSqmExpression<T> i
 	}
 
 	@Override
-	public void applyInferableType(SqmExpressible<?> type) {
+	public void applyInferableType(@Nullable SqmExpressible<?> type) {
 		if ( type != null ) {
 			if ( type instanceof PluralPersistentAttribute ) {
 				final PluralPersistentAttribute<?, ?, ?> pluralPersistentAttribute =

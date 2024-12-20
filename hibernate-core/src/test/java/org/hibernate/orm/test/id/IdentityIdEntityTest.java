@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id;
 
@@ -16,7 +14,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.OracleDialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -43,7 +41,7 @@ public class IdentityIdEntityTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-15561")
+	@JiraKey(value = "HHH-15561")
 	@ServiceRegistry(
 			settings = { @Setting( name = AvailableSettings.USE_GET_GENERATED_KEYS, value = "false") }
 	)
@@ -66,7 +64,7 @@ public class IdentityIdEntityTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-15561")
+	@JiraKey(value = "HHH-15561")
 	@ServiceRegistry(
 			settings = { @Setting( name = "use_jdbc_metadata_defaults", value = "false") }
 	)
@@ -89,7 +87,7 @@ public class IdentityIdEntityTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-16418")
+	@JiraKey(value = "HHH-16418")
 	@ServiceRegistry(
 			settings = { @Setting( name = AvailableSettings.USE_GET_GENERATED_KEYS, value = "false") }
 	)
@@ -103,10 +101,10 @@ public class IdentityIdEntityTest {
 						IdentityEntity ie = new IdentityEntity();
 						ie.setTimestamp( new Date() );
 						session.persist( ie );
-						fail( "A HibernateException with message id HHH000515 should have been thrown" );
+						fail( "A HibernateException should have been thrown" );
 					}
 					catch (Exception e) {
-						assertTrue( e.getMessage().startsWith( "HHH000515" ) );
+						assertTrue( e.getMessage().contains( AvailableSettings.USE_GET_GENERATED_KEYS ) );
 					}
 				}
 		);

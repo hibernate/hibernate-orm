@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.orm.junit;
 
@@ -30,7 +28,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
  * @author Steve Ebersole
  */
 @Inherited
-@Target( ElementType.TYPE )
+@Target( {ElementType.TYPE, ElementType.METHOD} )
 @Retention( RetentionPolicy.RUNTIME )
 
 @TestInstance( TestInstance.Lifecycle.PER_CLASS )
@@ -82,12 +80,6 @@ public @interface Jpa {
 	 * @see JpaCompliance#isJpaClosedComplianceEnabled()
 	 */
 	boolean closedComplianceEnabled() default false;
-
-	/**
-	 * @see JpaCompliance#isJpaListComplianceEnabled()
-	 * @see org.hibernate.cfg.AvailableSettings#DEFAULT_LIST_SEMANTICS
-	 */
-	boolean listMappingComplianceEnabled() default false;
 
 	/**
 	 * @see JpaCompliance#isJpaOrderByMappingComplianceEnabled()

@@ -24,7 +24,7 @@ This can be done by using the `JpaCriteriaQuery#createCountQuery()` method.
 
 [[criteria-extensions-count-query-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-criteria}/CountQueryTests.java[tags=criteria-extensions-count-query-example]
 ----

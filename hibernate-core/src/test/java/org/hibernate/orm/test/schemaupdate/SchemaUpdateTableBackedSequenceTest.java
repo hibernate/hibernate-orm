@@ -1,12 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemaupdate;
 
-import java.sql.SQLException;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Map;
@@ -30,7 +27,6 @@ import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
 import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
-import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
@@ -63,13 +59,12 @@ public class SchemaUpdateTableBackedSequenceTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void testCreateTableOnUpdate() throws SQLException {
+	public void testCreateTableOnUpdate() {
 		Metadata metadata = new MetadataSources( ssr ).buildMetadata();
 
 		Database database = metadata.getDatabase();
 
 		TableStructure tableStructure = new TableStructure(
-				database.getJdbcEnvironment(),
 				"orm",
 				new QualifiedTableName( null, null, Identifier.toIdentifier( "test_seq" ) ),
 				Identifier.toIdentifier( "nextval" ),
@@ -79,7 +74,7 @@ public class SchemaUpdateTableBackedSequenceTest extends BaseUnitTestCase {
 		);
 		tableStructure.registerExportables( database );
 
-		// lets make sure the InitCommand is there
+		// let's make sure the InitCommand is there
 		assertEquals( 1, database.getDefaultNamespace().getTables().size() );
 		Table table = database.getDefaultNamespace().getTables().iterator().next();
 		SqlStringGenerationContext context = SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment(), null, null );
@@ -96,18 +91,13 @@ public class SchemaUpdateTableBackedSequenceTest extends BaseUnitTestCase {
 					}
 
 					@Override
-					public Map getConfigurationValues() {
-						return ssr.getService( ConfigurationService.class ).getSettings();
+					public Map<String,Object> getConfigurationValues() {
+						return ssr.requireService( ConfigurationService.class ).getSettings();
 					}
 
 					@Override
 					public ExceptionHandler getExceptionHandler() {
 						return ExceptionHandlerLoggedImpl.INSTANCE;
-					}
-
-					@Override
-					public SchemaFilter getSchemaFilter() {
-						return SchemaFilter.ALL;
 					}
 				},
 				ContributableMatcher.ALL,

@@ -1,11 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.entity.mutation;
 
+import org.hibernate.StaleObjectStateException;
+import org.hibernate.StaleStateException;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
@@ -17,9 +17,8 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
-import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
 
@@ -40,7 +39,7 @@ public abstract class AbstractDeleteCoordinator
 	private MutationOperationGroup noVersionDeleteGroup;
 
 	public AbstractDeleteCoordinator(
-			AbstractEntityPersister entityPersister,
+			EntityPersister entityPersister,
 			SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
 
@@ -94,7 +93,8 @@ public abstract class AbstractDeleteCoordinator
 			Object rowId,
 			Object[] loadedState,
 			SharedSessionContractImplementor session) {
-		final MutationOperationGroup operationGroup = generateOperationGroup( null, loadedState, true, session );
+		final MutationOperationGroup operationGroup =
+				generateOperationGroup( null, loadedState, true, session );
 		final MutationExecutor mutationExecutor = executor( session, operationGroup );
 
 		for ( int i = 0; i < operationGroup.getNumberOfOperations(); i++ ) {
@@ -119,15 +119,10 @@ public abstract class AbstractDeleteCoordinator
 					entity,
 					null,
 					null,
-					(statementDetails, affectedRowCount, batchPosition) -> identifiedResultsCheck(
-							statementDetails,
-							affectedRowCount,
-							batchPosition,
-							entityPersister(),
-							id,
-							factory()
-					),
-					session
+					(statementDetails, affectedRowCount, batchPosition) ->
+							resultCheck( id, statementDetails, affectedRowCount, batchPosition ),
+					session,
+					staleStateException -> staleObjectState( id, staleStateException )
 			);
 		}
 		finally {
@@ -169,34 +164,35 @@ public abstract class AbstractDeleteCoordinator
 			SharedSessionContractImplementor session,
 			JdbcValueBindings jdbcValueBindings) {
 		if ( loadedState != null ) {
-			final AbstractEntityPersister persister = entityPersister();
+			final EntityPersister persister = entityPersister();
 			final boolean[] versionability = persister.getPropertyVersionability();
 			for ( int attributeIndex = 0; attributeIndex < versionability.length; attributeIndex++ ) {
-				final AttributeMapping attribute;
 				// only makes sense to lock on singular attributes which are not excluded from optimistic locking
-				if ( versionability[attributeIndex] && !( attribute = persister.getAttributeMapping( attributeIndex ) ).isPluralAttributeMapping() ) {
-					final Object loadedValue = loadedState[attributeIndex];
-					if ( loadedValue != null ) {
-						final String mutationTableName = persister.getAttributeMutationTableName( attributeIndex );
-						attribute.breakDownJdbcValues(
-								loadedValue,
-								0,
-								jdbcValueBindings,
-								mutationTableName,
-								(valueIndex, bindings, tableName, jdbcValue, jdbcValueMapping) -> {
-									if ( jdbcValue == null ) {
-										// presumably the SQL was generated with `is null`
-										return;
-									}
-									bindings.bindValue(
-											jdbcValue,
-											tableName,
-											jdbcValueMapping.getSelectionExpression(),
-											ParameterUsage.RESTRICT
-									);
-								},
-								session
-						);
+				if ( versionability[attributeIndex] ) {
+					final AttributeMapping attribute = persister.getAttributeMapping( attributeIndex );
+					if ( !attribute.isPluralAttributeMapping() ) {
+						final Object loadedValue = loadedState[attributeIndex];
+						if ( loadedValue != null ) {
+							attribute.breakDownJdbcValues(
+									loadedValue,
+									0,
+									jdbcValueBindings,
+									persister.getAttributeMutationTableName( attributeIndex ),
+									(valueIndex, bindings, tableName, jdbcValue, jdbcValueMapping) -> {
+										if ( jdbcValue == null ) {
+											// presumably the SQL was generated with `is null`
+											return;
+										}
+										bindings.bindValue(
+												jdbcValue,
+												tableName,
+												jdbcValueMapping.getSelectionExpression(),
+												ParameterUsage.RESTRICT
+										);
+									},
+									session
+							);
+						}
 					}
 				}
 			}
@@ -206,7 +202,7 @@ public abstract class AbstractDeleteCoordinator
 	private void applyVersionLocking(
 			Object version,
 			JdbcValueBindings jdbcValueBindings) {
-		final AbstractEntityPersister persister = entityPersister();
+		final EntityPersister persister = entityPersister();
 		final EntityVersionMapping versionMapping = persister.getVersionMapping();
 		if ( version != null && versionMapping != null ) {
 			jdbcValueBindings.bindValue(
@@ -225,13 +221,14 @@ public abstract class AbstractDeleteCoordinator
 			MutationOperationGroup operationGroup,
 			SharedSessionContractImplementor session) {
 		final JdbcValueBindings jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
-		final EntityRowIdMapping rowIdMapping = entityPersister().getRowIdMapping();
+//		final EntityRowIdMapping rowIdMapping = entityPersister().getRowIdMapping();
 
 		for ( int position = 0; position < operationGroup.getNumberOfOperations(); position++ ) {
 			final MutationOperation jdbcMutation = operationGroup.getOperation( position );
 			final EntityTableMapping tableDetails = (EntityTableMapping) jdbcMutation.getTableDetails();
 			breakDownKeyJdbcValues( id, rowId, session, jdbcValueBindings, tableDetails );
-			final PreparedStatementDetails statementDetails = mutationExecutor.getPreparedStatementDetails( tableDetails.getTableName() );
+			final PreparedStatementDetails statementDetails =
+					mutationExecutor.getPreparedStatementDetails( tableDetails.getTableName() );
 			if ( statementDetails != null ) {
 				// force creation of the PreparedStatement
 				//noinspection resource
@@ -280,18 +277,29 @@ public abstract class AbstractDeleteCoordinator
 				entity,
 				null,
 				null,
-				(statementDetails, affectedRowCount, batchPosition) -> identifiedResultsCheck(
-						statementDetails,
-						affectedRowCount,
-						batchPosition,
-						entityPersister(),
-						id,
-						factory()
-				),
-				session
+				(statementDetails, affectedRowCount, batchPosition) ->
+						resultCheck( id, statementDetails, affectedRowCount, batchPosition ),
+				session,
+				staleStateException -> staleObjectState( id, staleStateException )
 		);
 
 		mutationExecutor.release();
+	}
+
+	private StaleObjectStateException staleObjectState(Object id, StaleStateException staleStateException) {
+		return new StaleObjectStateException( entityPersister.getEntityName(), id, staleStateException );
+	}
+
+	private boolean resultCheck(
+			Object id, PreparedStatementDetails statementDetails, int affectedRowCount, int batchPosition) {
+		return identifiedResultsCheck(
+				statementDetails,
+				affectedRowCount,
+				batchPosition,
+				entityPersister,
+				id,
+				factory
+		);
 	}
 
 	protected void applyStaticDeleteTableDetails(

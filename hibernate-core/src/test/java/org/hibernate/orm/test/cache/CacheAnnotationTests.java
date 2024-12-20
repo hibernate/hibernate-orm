@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cache;
 
@@ -16,12 +14,11 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Chris Cranford
@@ -33,7 +30,7 @@ public class CacheAnnotationTests extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void configure(Configuration configuration) {
 		super.configure( configuration );
-		configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "true" );
+		configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, true );
 	}
 
 	@Override
@@ -42,23 +39,23 @@ public class CacheAnnotationTests extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12587")
+	@JiraKey(value = "HHH-12587")
 	public void testCacheWriteConcurrencyStrategyNone() {
 		doInHibernate( this::sessionFactory, session -> {
 			NoCacheConcurrencyStrategyEntity entity = new NoCacheConcurrencyStrategyEntity();
-			session.save( entity );
+			session.persist( entity );
 			session.flush();
 			session.clear();
 		} );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12868")
+	@JiraKey(value = "HHH-12868")
 	public void testCacheReadConcurrencyStrategyNone() {
 		doInHibernate( this::sessionFactory, session -> {
 			NoCacheConcurrencyStrategyEntity entity = new NoCacheConcurrencyStrategyEntity();
 			entity.setName( "name" );
-			session.save( entity );
+			session.persist( entity );
 			session.flush();
 
 			this.entityId = entity.getId();
@@ -67,7 +64,7 @@ public class CacheAnnotationTests extends BaseCoreFunctionalTestCase {
 		} );
 
 		doInHibernate( this::sessionFactory, session -> {
-			NoCacheConcurrencyStrategyEntity entity = session.load( NoCacheConcurrencyStrategyEntity.class, this.entityId );
+			NoCacheConcurrencyStrategyEntity entity = session.getReference( NoCacheConcurrencyStrategyEntity.class, this.entityId );
 			assertEquals( "name", entity.getName() );
 		} );
 	}

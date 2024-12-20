@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.embeddable.strategy.usertype.embedded;
 
@@ -10,7 +8,6 @@ import java.io.Serializable;
 import java.util.Objects;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.usertype.CompositeUserType;
 
@@ -33,7 +30,7 @@ public class NameCompositeUserType implements CompositeUserType<Name> {
 	}
 
 	@Override
-	public Name instantiate(ValueAccess valueAccess, SessionFactoryImplementor sessionFactory) {
+	public Name instantiate(ValueAccess valueAccess) {
 		// alphabetical
 		final String first = valueAccess.getValue( 0, String.class );
 		final String last = valueAccess.getValue( 1, String.class );

@@ -1,10 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping;
+
+import java.util.Set;
 
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 
@@ -20,6 +20,8 @@ public interface EntityAssociationMapping extends ModelPart, Association, TableG
 	}
 
 	EntityMappingType getAssociatedEntityMappingType();
+
+	Set<String> getTargetKeyPropertyNames();
 
 	/**
 	 * The model sub-part relative to the associated entity type that is the target

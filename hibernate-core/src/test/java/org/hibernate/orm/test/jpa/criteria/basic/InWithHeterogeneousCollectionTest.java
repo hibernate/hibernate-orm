@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.criteria.basic;
 
@@ -23,7 +21,7 @@ import jakarta.persistence.criteria.Root;
 
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Assert;
 import org.junit.Before;
@@ -33,7 +31,7 @@ import org.junit.Test;
  * @author Jeremy Carnus
  * @author Guillaume Smet
  */
-@TestForIssue(jiraKey = "HHH-12989")
+@JiraKey(value = "HHH-12989")
 public class InWithHeterogeneousCollectionTest extends BaseCoreFunctionalTestCase {
 
 	@Test
@@ -64,8 +62,8 @@ public class InWithHeterogeneousCollectionTest extends BaseCoreFunctionalTestCas
 	@Before
 	public void setup() {
 		doInHibernate( this::sessionFactory, session -> {
-			session.save( new Event( 1L, "EventName1", "EventName1".toLowerCase( Locale.ROOT ) ) );
-			session.save( new Event( 2L, "EventName2", "my-tag" ) );
+			session.persist( new Event( 1L, "EventName1", "EventName1".toLowerCase( Locale.ROOT ) ) );
+			session.persist( new Event( 2L, "EventName2", "my-tag" ) );
 		} );
 	}
 

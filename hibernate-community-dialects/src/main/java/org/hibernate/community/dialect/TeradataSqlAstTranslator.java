@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -13,7 +11,6 @@ import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
@@ -41,9 +38,7 @@ public class TeradataSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 			forUpdateClause.merge( getLockOptions() );
 			super.renderForUpdateClause( querySpec, forUpdateClause );
 		}
-		else {
-			super.visitQuerySpec( querySpec );
-		}
+		super.visitQuerySpec( querySpec );
 	}
 
 	@Override

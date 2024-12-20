@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.mutation.internal;
 
@@ -40,11 +38,11 @@ public class MutationExecutorServiceInitiator implements StandardServiceInitiato
 		final Object custom = configurationValues.get( EXECUTOR_KEY );
 
 		if ( custom == null ) {
-			return createStandardService( configurationValues, registry );
+			return createStandardService( configurationValues );
 		}
 
-		if ( custom instanceof MutationExecutorService ) {
-			return (MutationExecutorService) custom;
+		if ( custom instanceof MutationExecutorService mutationExecutorService ) {
+			return mutationExecutorService;
 		}
 
 		final Class<? extends MutationExecutorService> customImplClass;
@@ -53,8 +51,7 @@ public class MutationExecutorServiceInitiator implements StandardServiceInitiato
 			customImplClass = (Class<? extends MutationExecutorService>) custom;
 		}
 		else {
-			final ClassLoaderService classLoaderService = registry.getService( ClassLoaderService.class );
-			customImplClass = classLoaderService.classForName( custom.toString() );
+			customImplClass = registry.requireService( ClassLoaderService.class ).classForName( custom.toString() );
 		}
 
 		try {
@@ -68,7 +65,7 @@ public class MutationExecutorServiceInitiator implements StandardServiceInitiato
 		}
 	}
 
-	private MutationExecutorService createStandardService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
+	private MutationExecutorService createStandardService(Map<String, Object> configurationValues) {
 		return new StandardMutationExecutorService( configurationValues );
 	}
 }

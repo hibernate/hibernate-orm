@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.proxy;
 
@@ -32,7 +30,7 @@ public class JPAProxyTest extends AbstractJPATest {
 	public void testEjb3ProxyUsage() {
 		inTransaction(
 				s -> {
-					Item item = s.load( Item.class, new Long( -1 ) );
+					Item item = s.getReference( Item.class, new Long( -1 ) );
 					assertFalse( Hibernate.isInitialized( item ) );
 					try {
 						Hibernate.initialize( item );
@@ -47,7 +45,7 @@ public class JPAProxyTest extends AbstractJPATest {
 
 					s.clear();
 
-					Item item2 = s.load( Item.class, new Long( -1 ) );
+					Item item2 = s.getReference( Item.class, new Long( -1 ) );
 					assertFalse( Hibernate.isInitialized( item2 ) );
 					assertFalse( item == item2 );
 					try {
@@ -80,7 +78,7 @@ public class JPAProxyTest extends AbstractJPATest {
 		inTransaction(
 				s -> {
 					// first load() it to generate a proxy...
-					Item item = s.load( Item.class, nonExistentId );
+					Item item = s.getReference( Item.class, nonExistentId );
 					assertFalse( Hibernate.isInitialized( item ) );
 					// then try to get() it to make sure we get an exception
 					try {

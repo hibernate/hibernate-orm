@@ -1,15 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
- */
-
-/*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.stateless;
 
@@ -22,8 +13,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import org.hibernate.StatelessSession;
+import org.hibernate.StatelessSessionBuilder;
 import org.hibernate.dialect.H2Dialect;
 
+import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -42,7 +35,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @DomainModel(
 		annotatedClasses = StatelessDoWorkTest.TestEntity.class
 )
-@SessionFactory
 public class StatelessDoWorkTest {
 	public static final String EXPECTED_ENTITY_NAME = "test";
 	public static final Integer PERSISTED_TEST_ENTITY_ID = 1;
@@ -53,7 +45,7 @@ public class StatelessDoWorkTest {
 		scope.inTransaction(
 				session -> {
 					TestEntity entity = new TestEntity( PERSISTED_TEST_ENTITY_ID, EXPECTED_ENTITY_NAME );
-					session.save( entity );
+					session.persist( entity );
 				}
 		);
 	}
@@ -68,6 +60,7 @@ public class StatelessDoWorkTest {
 	}
 
 	@Test
+	@SessionFactory
 	public void testDoReturningWork(SessionFactoryScope scope) {
 		String retrievedEntityName;
 		try (StatelessSession statelessSession = scope.getSessionFactory().openStatelessSession()) {
@@ -91,6 +84,7 @@ public class StatelessDoWorkTest {
 	}
 
 	@Test
+	@SessionFactory
 	public void testDoWork(SessionFactoryScope scope) {
 		try (StatelessSession statelessSession = scope.getSessionFactory().openStatelessSession()) {
 			statelessSession.doWork(
@@ -104,6 +98,31 @@ public class StatelessDoWorkTest {
 		}
 
 		assertThatAllTestEntitiesHaveBeenDeleted( scope );
+	}
+
+	@Test
+	@SessionFactory(useCollectingStatementInspector = true)
+	public void testStatelessSessionWithStatementInspector(SessionFactoryScope scope) {
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+		scope.inStatelessSession(
+				session -> {
+					session.createQuery( "from TestEntity", TestEntity.class ).list();
+					statementInspector.assertExecutedCount( 1 );
+				}
+		);
+	}
+
+	@Test
+	@SessionFactory
+	public void testStatelessSessionWithStatementInspector2(SessionFactoryScope scope) {
+		SQLStatementInspector statementInspector = new SQLStatementInspector();
+		final StatelessSessionBuilder statelessSessionBuilder = scope.getSessionFactory().withStatelessOptions().statementInspector( statementInspector );
+		StatelessSession session = statelessSessionBuilder.openStatelessSession();
+		session.createQuery( "from TestEntity", TestEntity.class ).list();
+		statementInspector.assertExecutedCount( 1 );
+		statementInspector.clear();
+		session.close();
 	}
 
 	private void assertThatAllTestEntitiesHaveBeenDeleted(SessionFactoryScope scope) {

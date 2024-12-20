@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.spi;
 
@@ -31,6 +29,8 @@ public interface MappingDefaults {
 	 * Identifies the database schema name to use if none specified in the mapping.
 	 *
 	 * @return The implicit schema name; may be {@code null}
+	 *
+	 * @see org.hibernate.cfg.MappingSettings#DEFAULT_SCHEMA
 	 */
 	String getImplicitSchemaName();
 
@@ -38,6 +38,8 @@ public interface MappingDefaults {
 	 * Identifies the database catalog name to use if none specified in the mapping.
 	 *
 	 * @return The implicit catalog name; may be {@code null}
+	 *
+	 * @see org.hibernate.cfg.MappingSettings#DEFAULT_CATALOG
 	 */
 	String getImplicitCatalogName();
 
@@ -99,10 +101,7 @@ public interface MappingDefaults {
 	String getImplicitCascadeStyleName();
 
 	/**
-	 * Identifies the default {@link org.hibernate.property.access.spi.PropertyAccessStrategy} name to use if none specified in the
-	 * mapping.
-	 *
-	 * @return The implicit property accessor name
+	 * The default {@link org.hibernate.property.access.spi.PropertyAccessStrategy} to use if none specified in the mapping.
 	 *
 	 * @see org.hibernate.property.access.spi.PropertyAccessStrategy
 	 */

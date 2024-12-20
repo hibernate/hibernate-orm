@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.array;
 
@@ -36,18 +34,20 @@ public class ArrayAndElementArgumentValidator extends ArrayArgumentValidator {
 			TypeConfiguration typeConfiguration) {
 		final BasicType<?> expectedElementType = getElementType( arguments, functionName, typeConfiguration );
 		for ( int elementIndex : elementIndexes ) {
-			final SqmTypedNode<?> elementArgument = arguments.get( elementIndex );
-			final SqmExpressible<?> elementType = elementArgument.getExpressible().getSqmType();
-			if ( expectedElementType != null && elementType != null && expectedElementType != elementType ) {
-				throw new FunctionArgumentException(
-						String.format(
-								"Parameter %d of function '%s()' has type %s, but argument is of type '%s'",
-								elementIndex,
-								functionName,
-								expectedElementType.getJavaTypeDescriptor().getTypeName(),
-								elementType.getTypeName()
-						)
-				);
+			if ( elementIndex < arguments.size() ) {
+				final SqmTypedNode<?> elementArgument = arguments.get( elementIndex );
+				final SqmExpressible<?> elementType = elementArgument.getExpressible().getSqmType();
+				if ( expectedElementType != null && elementType != null && expectedElementType != elementType ) {
+					throw new FunctionArgumentException(
+							String.format(
+									"Parameter %d of function '%s()' has type %s, but argument is of type '%s'",
+									elementIndex,
+									functionName,
+									expectedElementType.getJavaTypeDescriptor().getTypeName(),
+									elementType.getTypeName()
+							)
+					);
+				}
 			}
 		}
 	}

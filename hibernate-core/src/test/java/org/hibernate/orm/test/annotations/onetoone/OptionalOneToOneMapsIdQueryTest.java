@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.onetoone;
 
@@ -16,7 +14,7 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Test;
@@ -25,7 +23,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-@TestForIssue( jiraKey = "HHH-13875")
+@JiraKey( value = "HHH-13875")
 public class OptionalOneToOneMapsIdQueryTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
@@ -54,7 +52,7 @@ public class OptionalOneToOneMapsIdQueryTest extends BaseNonConfigCoreFunctional
 
 		doInHibernate( this::sessionFactory, session -> {
 			final FooHasBarWithIdNamedId foo = session.get( FooHasBarWithIdNamedId.class, 1L );
-			session.delete( foo.bar );
+			session.remove( foo.bar );
 			foo.bar = null;
 		});
 
@@ -105,7 +103,7 @@ public class OptionalOneToOneMapsIdQueryTest extends BaseNonConfigCoreFunctional
 
 		doInHibernate( this::sessionFactory, session -> {
 			final FooHasBarWithNoIdOrPropNamedId foo = session.get( FooHasBarWithNoIdOrPropNamedId.class, 1L );
-			session.delete( foo.bar );
+			session.remove( foo.bar );
 			foo.bar = null;
 		});
 
@@ -176,7 +174,7 @@ public class OptionalOneToOneMapsIdQueryTest extends BaseNonConfigCoreFunctional
 
 		doInHibernate( this::sessionFactory, session -> {
 			final FooHasBarWithNonIdPropNamedId foo = session.get( FooHasBarWithNonIdPropNamedId.class, 1L );
-			session.delete( foo.bar );
+			session.remove( foo.bar );
 			foo.bar = null;
 		});
 

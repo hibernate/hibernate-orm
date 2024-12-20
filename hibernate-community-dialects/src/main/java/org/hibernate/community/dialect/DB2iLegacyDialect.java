@@ -1,16 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.identity.DB2390IdentityColumnSupport;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
+import org.hibernate.dialect.identity.DB2zIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.FetchLimitHandler;
 import org.hibernate.dialect.pagination.LegacyDB2LimitHandler;
@@ -42,13 +40,15 @@ public class DB2iLegacyDialect extends DB2LegacyDialect {
 
 	final static DatabaseVersion DB2_LUW_VERSION9 = DatabaseVersion.make( 9, 0);
 
+	private static final DatabaseVersion DEFAULT_VERSION = DatabaseVersion.make( 7 );
+
 	public DB2iLegacyDialect(DialectResolutionInfo info) {
-		this( info.makeCopy() );
+		this( info.makeCopyOrDefault( DEFAULT_VERSION ) );
 		registerKeywords( info );
 	}
 
 	public DB2iLegacyDialect() {
-		this( DatabaseVersion.make(7) );
+		this( DEFAULT_VERSION );
 	}
 
 	public DB2iLegacyDialect(DatabaseVersion version) {
@@ -129,7 +129,7 @@ public class DB2iLegacyDialect extends DB2LegacyDialect {
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return getVersion().isSameOrAfter(7, 3)
 				? DB2IdentityColumnSupport.INSTANCE
-				: DB2390IdentityColumnSupport.INSTANCE;
+				: DB2zIdentityColumnSupport.INSTANCE;
 	}
 
 	@Override

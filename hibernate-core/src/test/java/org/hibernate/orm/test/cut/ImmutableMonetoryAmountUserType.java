@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.cut;
 
 import java.io.Serializable;
@@ -5,7 +9,6 @@ import java.math.BigDecimal;
 import java.util.Currency;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.usertype.CompositeUserType;
 
@@ -17,7 +20,7 @@ public class ImmutableMonetoryAmountUserType implements CompositeUserType<Immuta
 	}
 
 	@Override
-	public ImmutableMonetoryAmount instantiate(ValueAccess valueAccess, SessionFactoryImplementor sessionFactory) {
+	public ImmutableMonetoryAmount instantiate(ValueAccess valueAccess) {
 		final BigDecimal value = valueAccess.getValue( 0, BigDecimal.class );
 		final Currency currency = valueAccess.getValue( 1, Currency.class );
 

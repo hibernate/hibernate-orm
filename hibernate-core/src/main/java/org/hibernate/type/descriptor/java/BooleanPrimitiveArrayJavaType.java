@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
@@ -11,12 +9,13 @@ import java.lang.reflect.Array;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.engine.jdbc.BinaryStream;
-import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
+import org.hibernate.engine.jdbc.internal.ArrayBackedBinaryStream;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
 
@@ -119,7 +118,7 @@ public class BooleanPrimitiveArrayJavaType extends AbstractArrayJavaType<boolean
 		else if ( type == BinaryStream.class ) {
 			// BinaryStream can only be requested if the value should be serialized
 			//noinspection unchecked
-			return (X) new BinaryStreamImpl( SerializationHelper.serialize( value ) );
+			return (X) new ArrayBackedBinaryStream( SerializationHelper.serialize( value ) );
 		}
 		else if ( type.isArray() ) {
 			final Class<?> preferredJavaTypeClass = type.getComponentType();
@@ -139,10 +138,10 @@ public class BooleanPrimitiveArrayJavaType extends AbstractArrayJavaType<boolean
 			return null;
 		}
 
-		if ( value instanceof java.sql.Array ) {
+		if ( value instanceof java.sql.Array array ) {
 			try {
 				//noinspection unchecked
-				value = (X) ( (java.sql.Array) value ).getArray();
+				value = (X) array.getArray();
 			}
 			catch ( SQLException ex ) {
 				// This basically shouldn't happen unless you've lost connection to the database.
@@ -150,16 +149,16 @@ public class BooleanPrimitiveArrayJavaType extends AbstractArrayJavaType<boolean
 			}
 		}
 
-		if ( value instanceof boolean[] ) {
-			return (boolean[]) value;
+		if ( value instanceof boolean[] booleans ) {
+			return booleans;
 		}
-		else if ( value instanceof byte[] ) {
+		else if ( value instanceof byte[] bytes ) {
 			// When the value is a byte[], this is a deserialization request
-			return (boolean[]) SerializationHelper.deserialize( (byte[]) value );
+			return (boolean[]) SerializationHelper.deserialize( bytes );
 		}
-		else if ( value instanceof BinaryStream ) {
+		else if ( value instanceof BinaryStream binaryStream ) {
 			// When the value is a BinaryStream, this is a deserialization request
-			return (boolean[]) SerializationHelper.deserialize( ( (BinaryStream) value ).getBytes() );
+			return (boolean[]) SerializationHelper.deserialize( binaryStream.getBytes() );
 		}
 		else if ( value.getClass().isArray() ) {
 			final boolean[] wrapped = new boolean[Array.getLength( value )];
@@ -168,9 +167,17 @@ public class BooleanPrimitiveArrayJavaType extends AbstractArrayJavaType<boolean
 			}
 			return wrapped;
 		}
-		else if ( value instanceof Boolean ) {
+		else if ( value instanceof Boolean booleanValue ) {
 			// Support binding a single element as parameter value
-			return new boolean[]{ (boolean) value };
+			return new boolean[]{ booleanValue };
+		}
+		else if ( value instanceof Collection<?> collection ) {
+			final boolean[] wrapped = new boolean[collection.size()];
+			int i = 0;
+			for ( Object e : collection ) {
+				wrapped[i++] = getElementJavaType().wrap( e, options );
+			}
+			return wrapped;
 		}
 
 		throw unknownWrap( value.getClass() );

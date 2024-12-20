@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode;
 
@@ -35,13 +33,13 @@ public class InvocationTargetExceptionTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 		Bean bean = new Bean();
 		bean.setSomeString( "my-bean" );
-		s.save( bean );
+		s.persist( bean );
 		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
 		s.beginTransaction();
-		bean = ( Bean ) s.load( Bean.class, bean.getSomeString() );
+		bean = ( Bean ) s.getReference( Bean.class, bean.getSomeString() );
 		assertFalse( Hibernate.isInitialized( bean ) );
 		try {
 			bean.throwException();
@@ -54,7 +52,7 @@ public class InvocationTargetExceptionTest extends BaseCoreFunctionalTestCase {
 			fail( "unexpected exception type : " + t );
 		}
 
-		s.delete( bean );
+		s.remove( bean );
 		s.getTransaction().commit();
 		s.close();
 	}

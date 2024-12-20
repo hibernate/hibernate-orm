@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.beanvalidation;
 
@@ -15,8 +13,10 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.Hibernate;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.AnyType;
 import org.hibernate.type.CollectionType;
-import org.hibernate.type.CompositeType;
+import org.hibernate.type.ComponentType;
+import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
 import jakarta.validation.Path;
@@ -24,10 +24,9 @@ import jakarta.validation.TraversableResolver;
 
 /**
  * Use Hibernate metadata to ignore cascade on entities.
- * cascade on embeddable objects or collection of embeddable objects are accepted
+ * Cascade on embeddable objects or collection of embeddable objects are accepted
+ * Also use Hibernate's native {@link Hibernate#isInitialized} method call.
  *
- * Also use Hibernate's native isInitialized method call.
- * 
  * @author Emmanuel Bernard
  */
 public class HibernateTraversableResolver implements TraversableResolver {
@@ -35,46 +34,45 @@ public class HibernateTraversableResolver implements TraversableResolver {
 
 	public HibernateTraversableResolver(
 			EntityPersister persister,
-			ConcurrentHashMap<EntityPersister, Set<String>> associationsPerEntityPersister, 
+			ConcurrentHashMap<EntityPersister, Set<String>> associationsPerEntityPersister,
 			SessionFactoryImplementor factory) {
-		this.associations = associationsPerEntityPersister.get( persister );
-		if (this.associations == null) {
-			this.associations = new HashSet<>();
+		associations = associationsPerEntityPersister.get( persister );
+		if ( associations == null ) {
+			associations = new HashSet<>();
 			addAssociationsToTheSetForAllProperties( persister.getPropertyNames(), persister.getPropertyTypes(), "", factory );
 			associationsPerEntityPersister.put( persister, associations );
 		}
 	}
 
-	private void addAssociationsToTheSetForAllProperties(String[] names, Type[] types, String prefix, SessionFactoryImplementor factory) {
+	private void addAssociationsToTheSetForAllProperties(
+			String[] names, Type[] types, String prefix, SessionFactoryImplementor factory) {
 		final int length = names.length;
 		for( int index = 0 ; index < length; index++ ) {
 			addAssociationsToTheSetForOneProperty( names[index], types[index], prefix, factory );
 		}
 	}
 
-	private void addAssociationsToTheSetForOneProperty(String name, Type type, String prefix, SessionFactoryImplementor factory) {
-
-		if ( type.isCollectionType() ) {
-			CollectionType collType = (CollectionType) type;
-			Type assocType = collType.getElementType( factory );
-			addAssociationsToTheSetForOneProperty(name, assocType, prefix, factory);
+	private void addAssociationsToTheSetForOneProperty(
+			String name, Type type, String prefix, SessionFactoryImplementor factory) {
+		if ( type instanceof CollectionType collectionType ) {
+			addAssociationsToTheSetForOneProperty( name, collectionType.getElementType( factory ), prefix, factory );
 		}
 		//ToOne association
-		else if ( type.isEntityType() || type.isAnyType() ) {
+		else if ( type instanceof EntityType || type instanceof AnyType ) {
 			associations.add( prefix + name );
 		}
-		else if ( type.isComponentType() ) {
-			CompositeType componentType = (CompositeType) type;
+		else if ( type instanceof ComponentType componentType ) {
 			addAssociationsToTheSetForAllProperties(
 					componentType.getPropertyNames(),
 					componentType.getSubtypes(),
 					( prefix.isEmpty() ? name : prefix + name ) + '.',
-					factory);
+					factory
+			);
 		}
 	}
 
 	private String getStringBasedPath(Path.Node traversableProperty, Path pathToTraversableObject) {
-		StringBuilder path = new StringBuilder( );
+		final StringBuilder path = new StringBuilder( );
 		for ( Path.Node node : pathToTraversableObject ) {
 			if (node.getName() != null) {
 				path.append( node.getName() ).append( '.' );
@@ -86,7 +84,6 @@ public class HibernateTraversableResolver implements TraversableResolver {
 							+ path );
 		}
 		path.append( traversableProperty.getName() );
-
 		return path.toString();
 	}
 
@@ -97,7 +94,7 @@ public class HibernateTraversableResolver implements TraversableResolver {
 			ElementType elementType) {
 		//lazy, don't load
 		return Hibernate.isInitialized( traversableObject )
-				&& Hibernate.isPropertyInitialized( traversableObject, traversableProperty.getName() );
+			&& Hibernate.isPropertyInitialized( traversableObject, traversableProperty.getName() );
 	}
 
 	public boolean isCascadable(Object traversableObject,
@@ -105,7 +102,6 @@ public class HibernateTraversableResolver implements TraversableResolver {
 			Class<?> rootBeanType,
 			Path pathToTraversableObject,
 			ElementType elementType) {
-		String path = getStringBasedPath( traversableProperty, pathToTraversableObject );
-		return ! associations.contains(path);
+		return !associations.contains( getStringBasedPath( traversableProperty, pathToTraversableObject ) );
 	}
 }

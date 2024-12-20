@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.legacy;
 
@@ -10,11 +8,11 @@ import java.util.List;
 
 /**
  * Entity containing components for not-null testing
- * 
+ *
  * @author Emmanuel Bernard
  */
 public class ComponentNotNullRoot {
-	
+
 	private int id;
 	private String test;
 	private ComponentNotNull nullable;
@@ -46,11 +44,11 @@ public class ComponentNotNullRoot {
 		private int count;
 		private ContainerInnerClass nested;
 		private String nestedproperty;
-		
+
 		public void setSimple(Simple simple) {
 			this.simple = simple;
 		}
-		
+
 		public Simple getSimple() {
 			return simple;
 		}
@@ -58,26 +56,26 @@ public class ComponentNotNullRoot {
 		public String getName() {
 			return name;
 		}
-		
+
 
 		public void setName(String name) {
 			this.name = name;
 		}
-		
+
 		public String toString() {
 			return name +  " = " + simple.getCount() +
-			 "/"  + ( one==null ? "nil" : one.getKey().toString() ) +
-			 "/"  + ( many==null ? "nil" : many.getKey().toString() );
+			"/"  + ( one==null ? "nil" : one.getKey().toString() ) +
+			"/"  + ( many==null ? "nil" : many.getKey().toString() );
 		}
-		
+
 		public One getOne() {
 			return one;
 		}
-		
+
 		public void setOne(One one) {
 			this.one = one;
 		}
-		
+
 		public Many getMany() {
 			return many;
 		}
@@ -85,7 +83,7 @@ public class ComponentNotNullRoot {
 		public void setMany(Many many) {
 			this.many = many;
 		}
-		
+
 		public int getCount() {
 			return count;
 		}

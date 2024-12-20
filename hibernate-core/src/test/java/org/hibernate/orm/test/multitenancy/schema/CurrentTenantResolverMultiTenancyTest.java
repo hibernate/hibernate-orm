@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.multitenancy.schema;
 
@@ -13,7 +11,7 @@ import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.junit.Assert;
 
@@ -24,7 +22,7 @@ import org.junit.Assert;
  * @author Stefan Schulze
  * @author Steve Ebersole
  */
-@TestForIssue(jiraKey = "HHH-7306")
+@JiraKey(value = "HHH-7306")
 @RequiresDialectFeature( value = ConnectionProviderBuilder.class )
 public class CurrentTenantResolverMultiTenancyTest extends SchemaBasedMultiTenancyTest {
 

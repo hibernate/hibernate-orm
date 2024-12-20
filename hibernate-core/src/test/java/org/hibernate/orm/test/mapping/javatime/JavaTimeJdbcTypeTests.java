@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.javatime;
 
@@ -14,8 +12,9 @@ import java.time.temporal.ChronoUnit;
 
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.cfg.MappingSettings;
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.OracleDialect;
@@ -24,14 +23,10 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.type.SqlTypes;
-import org.hibernate.type.descriptor.jdbc.DateJdbcType;
-import org.hibernate.type.descriptor.jdbc.JavaTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.LocalDateJdbcType;
 import org.hibernate.type.descriptor.jdbc.LocalDateTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.LocalTimeJdbcType;
-import org.hibernate.type.descriptor.jdbc.TimeJdbcType;
-import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -48,7 +43,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.type.descriptor.DateTimeUtils.roundToDefaultPrecision;
+import static org.hibernate.type.descriptor.DateTimeUtils.adjustToDefaultPrecision;
+import static org.hibernate.type.descriptor.DateTimeUtils.adjustToPrecision;
 
 /**
  * Tests for "direct" JDBC handling of {@linkplain java.time Java Time} types.
@@ -57,7 +53,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.roundToDefaultPrecisio
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @ServiceRegistry(
-		settings = @Setting(name = MappingSettings.PREFER_JAVA_TYPE_JDBC_TYPES, value = "false")
+		settings = @Setting(name = MappingSettings.JAVA_TIME_USE_DIRECT_JDBC, value = "false")
 )
 @DomainModel( annotatedClasses = JavaTimeJdbcTypeTests.EntityWithJavaTimeValues.class )
 @SessionFactory
@@ -88,7 +84,7 @@ public class JavaTimeJdbcTypeTests {
 	@Test
 	void testInstant(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
-		final Instant start = roundToDefaultPrecision( Instant.EPOCH, dialect );
+		final Instant start = adjustToDefaultPrecision( Instant.EPOCH, dialect );
 
 		scope.inTransaction( (session) -> {
 			final EntityWithJavaTimeValues entity = new EntityWithJavaTimeValues();
@@ -118,7 +114,7 @@ public class JavaTimeJdbcTypeTests {
 	@Test
 	void testLocalDateTime(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
-		final LocalDateTime start = roundToDefaultPrecision( LocalDateTime.now(), dialect );
+		final LocalDateTime start = adjustToDefaultPrecision( LocalDateTime.now(), dialect );
 
 		scope.inTransaction( (session) -> {
 			final EntityWithJavaTimeValues entity = new EntityWithJavaTimeValues();
@@ -148,7 +144,7 @@ public class JavaTimeJdbcTypeTests {
 	@Test
 	void testLocalDate(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
-		final LocalDate startTime = roundToDefaultPrecision( LocalDate.now(), dialect );
+		final LocalDate startTime = adjustToDefaultPrecision( LocalDate.now(), dialect );
 
 		scope.inTransaction( (session) -> {
 			final EntityWithJavaTimeValues entity = new EntityWithJavaTimeValues();
@@ -178,9 +174,10 @@ public class JavaTimeJdbcTypeTests {
 	@Test
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle drivers truncate fractional seconds from the LocalTime", matchSubTypes = true)
 	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA time type does not support fractional seconds", matchSubTypes = true)
+	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase drivers truncate fractional seconds from the LocalTime")
 	void testLocalTime(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
-		final LocalTime startTime = roundToDefaultPrecision( LocalTime.now(), dialect );
+		final LocalTime startTime = adjustToPrecision( LocalTime.now(), 0, dialect );
 
 		scope.inTransaction( (session) -> {
 			final EntityWithJavaTimeValues entity = new EntityWithJavaTimeValues();

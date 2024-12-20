@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sql.internal;
 
@@ -23,22 +21,22 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.internal.AliasConstantsHelper;
-import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.persister.collection.SQLLoadableCollection;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Loadable;
-import org.hibernate.persister.entity.SQLLoadable;
+import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.results.FetchBuilder;
+import org.hibernate.query.results.LegacyFetchBuilder;
 import org.hibernate.query.results.ResultSetMapping;
-import org.hibernate.query.results.complete.CompleteResultBuilderCollectionStandard;
-import org.hibernate.query.results.dynamic.DynamicFetchBuilderContainer;
-import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
-import org.hibernate.query.results.dynamic.DynamicResultBuilderEntityStandard;
+import org.hibernate.query.results.internal.complete.CompleteResultBuilderCollectionStandard;
+import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderContainer;
+import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.query.results.internal.dynamic.DynamicResultBuilderEntityStandard;
 import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
@@ -107,13 +105,11 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 		// so that role returns can be more easily resolved to their owners
 		resultSetMapping.visitResultBuilders(
 				(i, resultBuilder) -> {
-					if ( resultBuilder instanceof NativeQuery.RootReturn ) {
-						final NativeQuery.RootReturn rootReturn = (NativeQuery.RootReturn) resultBuilder;
+					if ( resultBuilder instanceof NativeQuery.RootReturn rootReturn ) {
 						alias2Return.put( rootReturn.getTableAlias(), rootReturn );
 						resultBuilder.visitFetchBuilders( this::processFetchBuilder );
 					}
-					else if ( resultBuilder instanceof NativeQuery.CollectionReturn ) {
-						final NativeQuery.CollectionReturn collectionReturn = (NativeQuery.CollectionReturn) resultBuilder;
+					else if ( resultBuilder instanceof NativeQuery.CollectionReturn collectionReturn ) {
 						alias2Return.put( collectionReturn.getTableAlias(), collectionReturn );
 						Map<String, String[]> propertyResultsMap = Collections.emptyMap();//fetchReturn.getPropertyResultsMap()
 						addCollection(
@@ -124,12 +120,12 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 					}
 				}
 		);
-		resultSetMapping.visitLegacyFetchBuilders(
-				fetchBuilder -> {
-					alias2Return.put( fetchBuilder.getTableAlias(), fetchBuilder );
-					alias2OwnerAlias.put( fetchBuilder.getTableAlias(), fetchBuilder.getOwnerAlias() );
-				}
-		);
+
+		// handle fetches defined using {@code hbm.xml} or NativeQuery apis
+		resultSetMapping.visitLegacyFetchBuilders( (fetchBuilder) -> {
+			alias2Return.put( fetchBuilder.getTableAlias(), (NativeQuery.ReturnableResultNode) fetchBuilder );
+			alias2OwnerAlias.put( fetchBuilder.getTableAlias(), fetchBuilder.getOwnerAlias() );
+		} );
 
 		// Now, process the returns
 		for ( NativeQuery.ResultNode queryReturn : alias2Return.values() ) {
@@ -139,12 +135,11 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 		return this;
 	}
 
-	private void processFetchBuilder(String attributeName, FetchBuilder fetchBuilder) {
-		if ( fetchBuilder instanceof DynamicFetchBuilderLegacy ) {
-			resultSetMapping.addLegacyFetchBuilder( (DynamicFetchBuilderLegacy) fetchBuilder );
+	private void processFetchBuilder(Fetchable attributeName, FetchBuilder fetchBuilder) {
+		if ( fetchBuilder instanceof LegacyFetchBuilder ) {
+			resultSetMapping.addLegacyFetchBuilder( (LegacyFetchBuilder) fetchBuilder );
 		}
-		else if ( fetchBuilder instanceof NativeQuery.FetchReturn ) {
-			final NativeQuery.FetchReturn fetchReturn = (NativeQuery.FetchReturn) fetchBuilder;
+		else if ( fetchBuilder instanceof NativeQuery.FetchReturn fetchReturn ) {
 			alias2Return.put( fetchReturn.getTableAlias(), fetchReturn );
 			alias2OwnerAlias.put( fetchReturn.getTableAlias(), fetchReturn.getOwnerAlias() );
 		}
@@ -160,8 +155,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 		final Set<String> visited = new HashSet<>();
 		this.resultSetMapping.visitResultBuilders(
 				(i, resultBuilder) -> {
-					if ( resultBuilder instanceof NativeQuery.RootReturn ) {
-						final NativeQuery.RootReturn rootReturn = (NativeQuery.RootReturn) resultBuilder;
+					if ( resultBuilder instanceof NativeQuery.RootReturn rootReturn ) {
 						final String suffix = alias2Suffix.get( rootReturn.getTableAlias() );
 						visited.add( rootReturn.getTableAlias() );
 						if ( suffix == null ) {
@@ -177,8 +171,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 							alias2Return.put( rootReturn.getTableAlias(), resultBuilderEntity );
 						}
 					}
-					else if ( resultBuilder instanceof NativeQuery.CollectionReturn ) {
-						final NativeQuery.CollectionReturn collectionReturn = (NativeQuery.CollectionReturn) resultBuilder;
+					else if ( resultBuilder instanceof NativeQuery.CollectionReturn collectionReturn ) {
 						final String suffix = alias2CollectionSuffix.get( collectionReturn.getTableAlias() );
 						if ( suffix == null ) {
 							resultSetMapping.addResultBuilder( resultBuilder );
@@ -207,7 +200,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 
 	private void applyFetchBuilder(
 			ResultSetMapping resultSetMapping,
-			DynamicFetchBuilderLegacy fetchBuilder,
+			LegacyFetchBuilder fetchBuilder,
 			Set<String> visited) {
 		if ( !visited.add( fetchBuilder.getTableAlias() ) ) {
 			return;
@@ -236,10 +229,10 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 					null,
 					determineNavigablePath( fetchBuilder )
 			);
-			final SQLLoadable loadable = (SQLLoadable) alias2Persister.get( fetchBuilder.getOwnerAlias() );
+			final EntityPersister loadable = alias2Persister.get( fetchBuilder.getOwnerAlias() );
 			final List<String> columnNames;
 			final String[] columnAliases = loadable.getSubclassPropertyColumnAliases(
-					fetchBuilder.getFetchableName(),
+					fetchBuilder.getFetchable().getFetchableName(),
 					alias2Suffix.get( fetchBuilder.getOwnerAlias() )
 			);
 			if ( columnAliases.length == 0 ) {
@@ -253,7 +246,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 					columnNames = Arrays.asList( keyColumnAliases );
 					if ( collectionPersister.hasIndex() ) {
 						resultBuilderEntity.addProperty(
-								CollectionPart.Nature.INDEX.getName(),
+								((PluralAttributeMapping) fetchBuilder.getFetchable()).getIndexDescriptor(),
 								collectionPersister.getIndexColumnAliases( collectionSuffix )
 						);
 					}
@@ -263,11 +256,11 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 				columnNames = Arrays.asList( columnAliases );
 			}
 			ownerBuilder.addFetchBuilder(
-					fetchBuilder.getFetchableName(),
+					fetchBuilder.getFetchable(),
 					new DynamicFetchBuilderLegacy(
 							fetchBuilder.getTableAlias(),
 							fetchBuilder.getOwnerAlias(),
-							fetchBuilder.getFetchableName(),
+							fetchBuilder.getFetchable(),
 							columnNames,
 							Collections.emptyMap(),
 							resultBuilderEntity
@@ -278,15 +271,15 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 		}
 	}
 
-	private NavigablePath determineNavigablePath(DynamicFetchBuilderLegacy fetchBuilder) {
+	private NavigablePath determineNavigablePath(LegacyFetchBuilder fetchBuilder) {
 		final NativeQuery.ResultNode ownerResult = alias2Return.get( fetchBuilder.getOwnerAlias() );
 		if ( ownerResult instanceof NativeQuery.RootReturn ) {
 			return ( (NativeQuery.RootReturn) ownerResult ).getNavigablePath()
-					.append( fetchBuilder.getFetchableName() );
+					.append( fetchBuilder.getFetchable().getFetchableName() );
 		}
 		else {
 			return determineNavigablePath( ( DynamicFetchBuilderLegacy) ownerResult )
-					.append( fetchBuilder.getFetchableName() );
+					.append( fetchBuilder.getFetchable().getFetchableName() );
 		}
 	}
 
@@ -298,7 +291,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 				rootReturn.getTableAlias(),
 				suffix,
 				rootReturn.getLockMode(),
-				new NavigablePath( rootReturn.getEntityMapping().getEntityName() )
+				new NavigablePath( rootReturn.getEntityMapping().getEntityName(), rootReturn.getTableAlias() )
 		);
 	}
 
@@ -308,7 +301,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 			String suffix,
 			LockMode lockMode,
 			NavigablePath navigablePath) {
-		final SQLLoadable loadable = (SQLLoadable) entityMapping.getEntityPersister();
+		final EntityPersister loadable = entityMapping.getEntityPersister();
 		final DynamicResultBuilderEntityStandard resultBuilderEntity = new DynamicResultBuilderEntityStandard(
 				entityMapping,
 				tableAlias,
@@ -320,42 +313,46 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 		resultBuilderEntity.addIdColumnAliases( identifierAliases );
 		resultBuilderEntity.setDiscriminatorAlias( loadable.getDiscriminatorAlias( suffix ) );
 		if ( loadable.hasIdentifierProperty() ) {
-			resultBuilderEntity.addProperty( loadable.getIdentifierPropertyName(), identifierAliases );
+			resultBuilderEntity.addProperty( loadable.getIdentifierMapping(), identifierAliases );
 		}
 
-		final String[] propertyNames = loadable.getPropertyNames();
-		for ( int i = 0; i < propertyNames.length; i++ ) {
-			if ( !loadable.isPropertySelectable( i ) ) {
-				continue;
-			}
-			final String propertyName = propertyNames[i];
-			final String[] columnAliases = loadable.getSubclassPropertyColumnAliases( propertyName, suffix );
-			final Type propertyType = loadable.getPropertyType( propertyName );
-			addFetchBuilder(
-					suffix,
-					loadable,
-					resultBuilderEntity,
-					tableAlias,
-					identifierAliases,
-					propertyName,
-					columnAliases,
-					propertyType
-			);
-		}
+		loadable.visitFetchables(
+				(index, fetchable) -> {
+					if ( fetchable.isSelectable() ) {
+						final Type propertyType;
+						if ( loadable instanceof SingleTableEntityPersister singleTableEntityPersister ) {
+							propertyType = singleTableEntityPersister.getSubclassPropertyType( index );
+						}
+						else {
+							propertyType = loadable.getPropertyType( fetchable.getFetchableName() );
+						}
+						addFetchBuilder(
+								suffix,
+								loadable,
+								resultBuilderEntity,
+								tableAlias,
+								identifierAliases,
+								fetchable,
+								loadable.getSubclassPropertyColumnAliases( fetchable.getFetchableName(), suffix ),
+								propertyType
+						);
+					}
+				},
+				null
+		);
 		return resultBuilderEntity;
 	}
 
 	private void addFetchBuilder(
 			String suffix,
-			SQLLoadable loadable,
+			EntityPersister loadable,
 			DynamicFetchBuilderContainer resultBuilderEntity,
 			String tableAlias,
 			String[] identifierAliases,
-			String propertyName,
+			Fetchable fetchable,
 			String[] columnAliases,
 			Type propertyType) {
-		if ( propertyType instanceof CollectionType ) {
-			final CollectionType collectionType = (CollectionType) propertyType;
+		if ( propertyType instanceof CollectionType collectionType ) {
 			final String[] keyColumnAliases;
 			if ( collectionType.useLHSPrimaryKey() ) {
 				keyColumnAliases = identifierAliases;
@@ -366,18 +363,17 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 						suffix
 				);
 			}
-			resultBuilderEntity.addProperty( propertyName, keyColumnAliases );
+			resultBuilderEntity.addProperty( fetchable, keyColumnAliases );
 		}
-		else if ( propertyType instanceof ComponentType ) {
-			final Map<String, FetchBuilder> fetchBuilderMap = new HashMap<>();
+		else if ( propertyType instanceof ComponentType componentType ) {
+			final Map<Fetchable, FetchBuilder> fetchBuilderMap = new HashMap<>();
 			final DynamicFetchBuilderLegacy fetchBuilder = new DynamicFetchBuilderLegacy(
 					"",
 					tableAlias,
-					propertyName,
-					null,
+					fetchable,
+					Arrays.asList( columnAliases ),
 					fetchBuilderMap
 			);
-			final ComponentType componentType = (ComponentType) propertyType;
 			final String[] propertyNames = componentType.getPropertyNames();
 			final Type[] propertyTypes = componentType.getSubtypes();
 			int aliasIndex = 0;
@@ -389,17 +385,28 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 						fetchBuilder,
 						tableAlias,
 						identifierAliases,
-						propertyNames[i],
+						fetchable,
 						ArrayHelper.slice( columnAliases, aliasIndex, columnSpan ),
 						propertyTypes[i]
 				);
 				aliasIndex += columnSpan;
 			}
 
-			resultBuilderEntity.addFetchBuilder( propertyName, fetchBuilder );
+			resultBuilderEntity.addFetchBuilder( fetchable, fetchBuilder );
 		}
 		else if ( columnAliases.length != 0 ) {
-			resultBuilderEntity.addProperty( propertyName, columnAliases );
+			if ( propertyType instanceof EntityType ) {
+				final ToOneAttributeMapping toOne = (ToOneAttributeMapping) fetchable;
+				if ( !toOne.getIdentifyingColumnsTableExpression().equals( loadable.getTableName() ) ) {
+					// The to-one has a join-table, use the plain join column name instead of the alias
+					assert columnAliases.length == 1;
+					final String[] targetAliases = new String[1];
+					targetAliases[0] = toOne.getTargetKeyPropertyName();
+					resultBuilderEntity.addProperty( fetchable, targetAliases );
+					return;
+				}
+			}
+			resultBuilderEntity.addProperty( fetchable, columnAliases );
 		}
 	}
 
@@ -409,8 +416,8 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 			String entitySuffix) {
 		final CollectionPersister collectionPersister = collectionReturn.getPluralAttribute().getCollectionDescriptor();
 		final String[] elementColumnAliases;
-		if ( collectionPersister.getElementType().isEntityType() ) {
-			final Loadable elementPersister = (Loadable) ( ( QueryableCollection ) collectionPersister).getElementPersister();
+		if ( collectionPersister.getElementType() instanceof EntityType ) {
+			final EntityPersister elementPersister = collectionPersister.getElementPersister();
 			final String[] propertyNames = elementPersister.getPropertyNames();
 			final String[] identifierAliases = elementPersister.getIdentifierAliases( entitySuffix );
 			final String discriminatorAlias = elementPersister.getDiscriminatorAlias( entitySuffix );
@@ -441,14 +448,9 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 		);
 	}
 
-	private SQLLoadable getSQLLoadable(String entityName) throws MappingException {
-		final EntityPersister entityDescriptor = factory.getRuntimeMetamodels()
-				.getMappingMetamodel()
+	private EntityPersister getSQLLoadable(String entityName) throws MappingException {
+		return factory.getRuntimeMetamodels().getMappingMetamodel()
 				.getEntityDescriptor( entityName );
-		if ( !(entityDescriptor instanceof SQLLoadable) ) {
-			throw new MappingException( "class persister is not SQLLoadable: " + entityName );
-		}
-		return (SQLLoadable) entityDescriptor;
 	}
 
 	private String generateEntitySuffix() {
@@ -501,12 +503,12 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 			return;
 		}
 
-		SQLLoadable persister = (SQLLoadable) rootReturn.getEntityMapping().getEntityPersister();
+		EntityPersister persister = rootReturn.getEntityMapping().getEntityPersister();
 		Map<String, String[]> propertyResultsMap = Collections.emptyMap();//rootReturn.getPropertyResultsMap()
 		addPersister( rootReturn.getTableAlias(), propertyResultsMap, persister );
 	}
 
-	private void addPersister(String alias, Map<String, String[]> propertyResult, SQLLoadable persister) {
+	private void addPersister(String alias, Map<String, String[]> propertyResult, EntityPersister persister) {
 		alias2Persister.put( alias, persister );
 		String suffix = generateEntitySuffix();
 		LOG.tracev( "Mapping alias [{0}] to entity-suffix [{1}]", alias, suffix );
@@ -516,9 +518,9 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 
 	private void addCollection(String role, String alias, Map<String, String[]> propertyResults) {
 
-		final SQLLoadableCollection collectionDescriptor = (SQLLoadableCollection) factory.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getCollectionDescriptor( role );
+		final CollectionPersister collectionDescriptor =
+				factory.getRuntimeMetamodels().getMappingMetamodel()
+						.getCollectionDescriptor( role );
 
 		alias2CollectionPersister.put( alias, collectionDescriptor );
 		String suffix = generateCollectionSuffix();
@@ -527,8 +529,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 		collectionPropertyResultMaps.put( alias, propertyResults );
 
 		if ( collectionDescriptor.isOneToMany() || collectionDescriptor.isManyToMany() ) {
-			SQLLoadable persister = ( SQLLoadable ) collectionDescriptor.getElementPersister();
-			addPersister( alias, filter( propertyResults ), persister );
+			addPersister( alias, filter( propertyResults ), collectionDescriptor.getElementPersister() );
 		}
 	}
 
@@ -565,19 +566,18 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 			processReturn( alias2Return.get( ownerAlias ) );
 		}
 
-		SQLLoadable ownerPersister = ( SQLLoadable ) alias2Persister.get( ownerAlias );
-		Type returnType = ownerPersister.getPropertyType( fetchReturn.getFetchableName() );
+		EntityPersister ownerPersister = alias2Persister.get( ownerAlias );
+		Type returnType = ownerPersister.getPropertyType( fetchReturn.getFetchable().getFetchableName() );
 
-		if ( returnType.isCollectionType() ) {
-			String role = ownerPersister.getEntityName() + '.' + fetchReturn.getFetchableName();
+		if ( returnType instanceof CollectionType ) {
+			String role = ownerPersister.getEntityName() + '.' + fetchReturn.getFetchable().getFetchableName();
 			Map<String, String[]> propertyResultsMap = Collections.emptyMap();//fetchReturn.getPropertyResultsMap()
 			addCollection( role, alias, propertyResultsMap );
 //			collectionOwnerAliases.add( ownerAlias );
 		}
-		else if ( returnType.isEntityType() ) {
-			EntityType eType = ( EntityType ) returnType;
+		else if ( returnType instanceof EntityType eType ) {
 			String returnEntityName = eType.getAssociatedEntityName();
-			SQLLoadable persister = getSQLLoadable( returnEntityName );
+			EntityPersister persister = getSQLLoadable( returnEntityName );
 			Map<String, String[]> propertyResultsMap = Collections.emptyMap();//fetchReturn.getPropertyResultsMap()
 			addPersister( alias, propertyResultsMap, persister );
 		}
@@ -594,13 +594,13 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 	}
 
 	@Override
-	public SQLLoadable getEntityPersister(String alias) {
-		return (SQLLoadable) alias2Persister.get( alias );
+	public EntityPersister getEntityPersister(String alias) {
+		return alias2Persister.get( alias );
 	}
 
 	@Override
-	public SQLLoadableCollection getCollectionPersister(String alias) {
-		return (SQLLoadableCollection) alias2CollectionPersister.get( alias );
+	public CollectionPersister getCollectionPersister(String alias) {
+		return alias2CollectionPersister.get( alias );
 	}
 
 	@Override
@@ -634,7 +634,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 //		}
 //		for ( CollectionPersister persister : alias2CollectionPersister.values() ) {
 //			final Type elementType = persister.getElementType();
-//			if ( elementType.isEntityType() && ! elementType.isAnyType() ) {
+//			if ( elementType instanceof EntityType && ! elementType instanceof AnyType ) {
 //				final Joinable joinable = ( (EntityType) elementType ).getAssociatedJoinable( factory );
 //				Collections.addAll( spaces, (String[]) ( (EntityPersister) joinable ).getQuerySpaces() );
 //			}

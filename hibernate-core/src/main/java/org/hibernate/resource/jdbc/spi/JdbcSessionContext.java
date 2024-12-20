@@ -1,16 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.jdbc.spi;
 
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.spi.JpaCompliance;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
@@ -35,12 +31,6 @@ public interface JdbcSessionContext {
 	Integer getFetchSizeOrNull();
 
 	/**
-	 * @deprecated this is never called, and luckily so, because it's not null-safe
-	 */
-	@Deprecated(since = "6.2", forRemoval = true)
-	int getFetchSize();
-
-	/**
 	 * @see org.hibernate.cfg.AvailableSettings#CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT
 	 */
 	boolean doesConnectionProviderDisableAutoCommit();
@@ -63,28 +53,7 @@ public interface JdbcSessionContext {
 
 	StatisticsImplementor getStatistics();
 
-	/**
-	 * @deprecated since {@link JdbcObserver} is deprecated
-	 */
-	@Deprecated(forRemoval = true)
-	JdbcObserver getObserver();
-
-	/**
-	* Retrieve the session factory for this environment.
-	 *
-	 * @deprecated exposing this here seems to kinda defeat the purpose of this SPI
-	*/
-	@Deprecated(since = "6.2")
-	SessionFactoryImplementor getSessionFactory();
-
-	/**
-	 * Retrieve the service registry.
-	 *
-	 * @deprecated this is no longer called, and unnecessary, since the needed
-	 *             services are now available via {@link #getJdbcServices()}
-	 */
-	@Deprecated(since = "6.2")
-	ServiceRegistry getServiceRegistry();
+	JdbcEventHandler getEventHandler();
 
 	JdbcServices getJdbcServices();
 

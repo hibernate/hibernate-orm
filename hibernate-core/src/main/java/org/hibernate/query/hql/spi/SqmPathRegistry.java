@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.hql.spi;
 
@@ -10,13 +8,12 @@ import java.util.function.Function;
 
 import org.hibernate.Incubating;
 import org.hibernate.jpa.spi.JpaCompliance;
-import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
-import org.hibernate.query.sqm.tree.from.SqmJoin;
-import org.hibernate.query.sqm.tree.from.SqmRoot;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmAliasedNode;
+import org.hibernate.spi.NavigablePath;
 
 /**
  * Registry for SqmPath references providing the ability to access them
@@ -52,7 +49,7 @@ public interface SqmPathRegistry {
 	 * has used the previous registration between its registration and this call.
 	 * Generally, most callers want {@link #register(SqmPath)} instead.
 	 */
-	<E> void replace(SqmEntityJoin<E> sqmJoin, SqmRoot<E> sqmRoot);
+	<E> void replace(SqmEntityJoin<?,E> sqmJoin, SqmRoot<E> sqmRoot);
 
 	/**
 	 * Find a SqmFrom by its identification variable (alias).

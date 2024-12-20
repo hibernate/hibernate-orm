@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.internal;
 
@@ -33,7 +31,7 @@ public class ParameterMarkerStrategyInitiator implements StandardServiceInitiato
 		);
 
 		if ( useNativeMarkers ) {
-			final Dialect dialect = registry.getService( JdbcServices.class ).getDialect();
+			final Dialect dialect = registry.requireService( JdbcServices.class ).getDialect();
 			final ParameterMarkerStrategy nativeParameterMarkerStrategy = dialect.getNativeParameterMarkerStrategy();
 			// the Dialect may return `null`, indicating falling-through to the standard strategy
 			if ( nativeParameterMarkerStrategy != null ) {

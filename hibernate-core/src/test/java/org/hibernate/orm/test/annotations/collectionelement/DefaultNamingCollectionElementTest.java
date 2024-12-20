@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.collectionelement;
 
@@ -19,7 +17,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -111,7 +109,7 @@ public class DefaultNamingCollectionElementTest {
 							"select boy from Boy boy join boy.nickNames names where names = :name" )
 							.setParameter( "name", "Thing" ).list();
 					assertEquals( 1, result.size() );
-					session.delete( boy );
+					session.remove( boy );
 				}
 		);
 	}
@@ -141,7 +139,7 @@ public class DefaultNamingCollectionElementTest {
 					assertTrue( boy.getFavoriteToys().contains( toy ) );
 					Toy next = boy.getFavoriteToys().iterator().next();
 					assertEquals( boy, next.getOwner(), "@Parent is failing" );
-					session.delete( boy );
+					session.remove( boy );
 				}
 		);
 	}
@@ -171,8 +169,8 @@ public class DefaultNamingCollectionElementTest {
 					session.beginTransaction();
 					boy = session.get( Boy.class, boy.getId() );
 					assertTrue( boy.getCountryAttitudes().contains( attitude ) );
-					session.delete( boy );
-					session.delete( session.get( Country.class, country.getId() ) );
+					session.remove( boy );
+					session.remove( session.get( Country.class, country.getId() ) );
 				}
 		);
 	}
@@ -220,7 +218,7 @@ public class DefaultNamingCollectionElementTest {
 							"select boy from Boy boy join boy.nickNames names where names = :name" )
 							.setParameter( "name", "Thing" ).list();
 					assertEquals( 1, result.size() );
-					session.delete( boy );
+					session.remove( boy );
 				}
 		);
 	}
@@ -234,7 +232,7 @@ public class DefaultNamingCollectionElementTest {
 					LocalizedString title = new LocalizedString( "title in english" );
 					title.getVariations().put( Locale.FRENCH.getLanguage(), "title en francais" );
 					test.setTitle( title );
-					session.save( test );
+					session.persist( test );
 
 					session.flush();
 					session.clear();
@@ -301,7 +299,7 @@ public class DefaultNamingCollectionElementTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9387")
+	@JiraKey(value = "HHH-9387")
 	public void testDefaultTableNameNoOverrides(SessionFactoryScope scope) {
 		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
@@ -311,7 +309,7 @@ public class DefaultNamingCollectionElementTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9387")
+	@JiraKey(value = "HHH-9387")
 	public void testDefaultTableNameOwnerPrimaryTableOverride(SessionFactoryScope scope) {
 		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
@@ -321,7 +319,7 @@ public class DefaultNamingCollectionElementTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9387")
+	@JiraKey(value = "HHH-9387")
 	public void testDefaultTableNameOwnerEntityNameAndPKColumnOverride(SessionFactoryScope scope) {
 		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
@@ -332,7 +330,7 @@ public class DefaultNamingCollectionElementTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9389")
+	@JiraKey(value = "HHH-9389")
 	public void testDefaultJoinColumnOwnerPrimaryTableAndEntityNamesOverride(SessionFactoryScope scope) {
 		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
@@ -355,7 +353,7 @@ public class DefaultNamingCollectionElementTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9389")
+	@JiraKey(value = "HHH-9389")
 	public void testDefaultJoinColumnNoOverrides(SessionFactoryScope scope) {
 		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
@@ -365,7 +363,7 @@ public class DefaultNamingCollectionElementTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9389")
+	@JiraKey(value = "HHH-9389")
 	public void testDefaultJoinColumnOwnerPrimaryTableOverride(SessionFactoryScope scope) {
 		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
@@ -375,7 +373,7 @@ public class DefaultNamingCollectionElementTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9389")
+	@JiraKey(value = "HHH-9389")
 	public void testDefaultJoinColumnOwnerEntityNameAndPKColumnOverride(SessionFactoryScope scope) {
 		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
@@ -386,7 +384,7 @@ public class DefaultNamingCollectionElementTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9387")
+	@JiraKey(value = "HHH-9387")
 	public void testDefaultTableNameOwnerPrimaryTableAndEntityNamesOverride(SessionFactoryScope scope) {
 		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).

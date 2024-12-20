@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.internal;
 
@@ -26,7 +24,7 @@ import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.UserType;
 
 /**
- * Adapts UserType to the JdbcType contract
+ * Adapts {@link UserType} to the {@link JdbcType} contract
  *
  * @author Steve Ebersole
  */
@@ -83,16 +81,12 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 	@Override
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
 		if ( !( userType instanceof EnhancedUserType<?> ) ) {
-			throw new HibernateException(
-					String.format(
-							"Could not create JdbcLiteralFormatter, UserType class [%s] did not implement %s",
-							userType.getClass().getName(),
-							EnhancedUserType.class.getName()
-					)
-			);
+			throw new HibernateException( "Could not create JdbcLiteralFormatter because UserType class '"
+							+ userType.getClass().getName() + "' did not implement EnhancedUserType" );
 		}
 		final EnhancedUserType<T> type = (EnhancedUserType<T>) userType;
-		return (appender, value, dialect, wrapperOptions) -> appender.append( type.toSqlLiteral( value ) );
+		return (appender, value, dialect, wrapperOptions) ->
+				appender.append( type.toSqlLiteral( value ) );
 	}
 
 	private static class ValueExtractorImpl<J> implements ValueExtractor<J> {
@@ -115,7 +109,8 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 		public J extract(CallableStatement statement, int paramIndex, WrapperOptions options) throws SQLException {
 			if ( userType instanceof ProcedureParameterExtractionAware ) {
 				//noinspection unchecked
-				final J extracted = ( (ProcedureParameterExtractionAware<J>) userType ).extract( statement, paramIndex, options.getSession() );
+				final J extracted = ( (ProcedureParameterExtractionAware<J>) userType )
+						.extract( statement, paramIndex, options.getSession() );
 				logExtracted( paramIndex, extracted );
 				return extracted;
 			}
@@ -127,7 +122,8 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 		public J extract(CallableStatement statement, String paramName, WrapperOptions options) throws SQLException {
 			if ( userType instanceof ProcedureParameterExtractionAware ) {
 				//noinspection unchecked
-				final J extracted = ( (ProcedureParameterExtractionAware<J>) userType ).extract( statement, paramName, options.getSession() );
+				final J extracted = ( (ProcedureParameterExtractionAware<J>) userType )
+						.extract( statement, paramName, options.getSession() );
 				logExtracted( paramName, extracted );
 				return extracted;
 			}

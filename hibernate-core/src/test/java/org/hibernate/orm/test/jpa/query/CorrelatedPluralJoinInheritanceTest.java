@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.query;
 
@@ -101,12 +99,15 @@ public class CorrelatedPluralJoinInheritanceTest {
 	}
 
 	@Test
-	public void testImplicitTreat(EntityManagerFactoryScope scope) {
+	public void testExplicitTreat(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 			final CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 			final CriteriaQuery<ContinuousData> criteriaQuery = cb.createQuery( ContinuousData.class );
 			final Root<ContinuousData> root = criteriaQuery.from( ContinuousData.class );
-			criteriaQuery.where( createExistsPredicate( root, criteriaQuery, cb, "storedTags" ) );
+			final Subquery<String> subquery = criteriaQuery.subquery( String.class );
+			final Root<ContinuousData> root2 = subquery.correlate( root );
+			subquery.select( root2.get( "id" ) ).where( cb.treat( root2, StoredContinuousData.class ).join( "storedTags" ).get( "id" ).in( "a", "b" ) );
+			criteriaQuery.where( cb.exists( subquery ) );
 			final List<ContinuousData> resultList = entityManager.createQuery( criteriaQuery ).getResultList();
 			assertThat( resultList ).hasSize( 1 );
 		} );

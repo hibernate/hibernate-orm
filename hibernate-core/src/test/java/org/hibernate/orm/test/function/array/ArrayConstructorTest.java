@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.function.array;
 
@@ -34,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @DomainModel(annotatedClasses = EntityWithArrays.class)
 @SessionFactory
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsStructuralArrays.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsArrayConstructor.class)
 // Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
 @BootstrapServiceRegistry(integrators = SharedDriverManagerTypeCacheClearingIntegrator.class)
 public class ArrayConstructorTest {
@@ -106,6 +105,28 @@ public class ArrayConstructorTest {
 			assertEquals( 3, result.size() );
 			assertEquals( 1, result.get( 0 ).get( 1, Collection.class ).size() );
 			assertEquals( "xyz", result.get( 0 ).get( 1, Collection.class ).iterator().next() );
+		} );
+	}
+
+	@Test
+	public void testArrayConstructorSyntaxEmpty(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where e.theArray = []", EntityWithArrays.class )
+					.getResultList();
+			assertEquals( 1, results.size() );
+			assertEquals( 1L, results.get( 0 ).getId() );
+		} );
+	}
+
+	@Test
+	public void testArrayConstructorSyntaxNonEmpty(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			//tag::hql-array-hql-example[]
+			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where e.theArray is not distinct from ['abc', null, 'def']", EntityWithArrays.class )
+					.getResultList();
+			//end::hql-array-hql-example[]
+			assertEquals( 1, results.size() );
+			assertEquals( 2L, results.get( 0 ).getId() );
 		} );
 	}
 

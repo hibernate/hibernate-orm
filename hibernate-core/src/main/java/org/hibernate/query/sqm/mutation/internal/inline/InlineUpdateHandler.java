@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.mutation.internal.inline;
 
@@ -23,7 +21,6 @@ import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
-import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
@@ -132,12 +129,7 @@ public class InlineUpdateHandler implements UpdateHandler {
 		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
 				executionContext.getQueryParameterBindings(),
 				domainParameterXref,
-				SqmUtil.generateJdbcParamsXref(
-						domainParameterXref,
-						translation::getJdbcParamsBySqmParam
-				),
-				sessionFactory.getRuntimeMetamodels().getMappingMetamodel(),
-				navigablePath -> updatingTableGroup,
+				SqmUtil.generateJdbcParamsXref( domainParameterXref, translation::getJdbcParamsBySqmParam ),
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override
 					@SuppressWarnings("unchecked")
@@ -268,7 +260,7 @@ public class InlineUpdateHandler implements UpdateHandler {
 			return;
 		}
 		// Otherwise we have to check if the table is nullable, and if so, insert into that table
-		final AbstractEntityPersister entityPersister = (AbstractEntityPersister) entityDescriptor.getEntityPersister();
+		final EntityPersister entityPersister = entityDescriptor.getEntityPersister();
 		boolean isNullable = false;
 		for (int i = 0; i < entityPersister.getTableSpan(); i++) {
 			if ( tableExpression.equals( entityPersister.getTableName( i ) ) && entityPersister.isNullableTable( i ) ) {

@@ -1,15 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cfg;
 
 import java.util.Calendar;
 
 import org.hibernate.Incubating;
-import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.query.Query;
@@ -22,7 +19,7 @@ import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
  *
  * @author Steve Ebersole
  */
-public interface JdbcSettings extends C3p0Settings, ProxoolSettings {
+public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSettings {
 
 	/**
 	 * Specifies a JTA {@link javax.sql.DataSource} to use for Connections.
@@ -228,17 +225,17 @@ public interface JdbcSettings extends C3p0Settings, ProxoolSettings {
 	String DIALECT_RESOLVERS = "hibernate.dialect_resolvers";
 
 	/**
-	 * Specifies a {@link ConnectionProvider}
-	 * to use for obtaining JDBC connections, either:
+	 * Specifies a {@link ConnectionProvider} to use for obtaining JDBC connections,
+	 * either:
 	 * <ul>
 	 *     <li>an instance of {@code ConnectionProvider},
 	 *     <li>a {@link Class} representing a class that implements
 	 *         {@code ConnectionProvider}, or
 	 *     <li>the name of a class that implements {@code ConnectionProvider}.
 	 * </ul>
-	 * <p>
-	 * The term {@code "class"} appears in the setting name due to legacy reasons;
-	 * however it can accept instances.
+	 *
+	 * @apiNote The term {@code "class"} appears in the setting name due to legacy reasons;
+	 *          however it can accept instances.
 	 */
 	String CONNECTION_PROVIDER = "hibernate.connection.provider_class";
 
@@ -252,29 +249,41 @@ public interface JdbcSettings extends C3p0Settings, ProxoolSettings {
 	String POOL_SIZE = "hibernate.connection.pool_size";
 
 	/**
-	 * Specified the JDBC transaction isolation level.
+	 * Specifies the JDBC transaction isolation level for connections obtained
+	 * from any {@link ConnectionProvider} implementation which respects this
+	 * setting, including every built-in implementation except for
+	 * {@link org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl}.
+	 * <p>
+	 * Possible values are enumerated by {@link java.sql.Connection}:
+	 * {@code NONE}, {@code READ_UNCOMMITTED}, {@code READ_COMMITTED},
+	 * {@code REPEATABLE_READ}, {@code SERIALIZABLE}.
+	 * <p>
+	 * If this setting is not explicitly specified, Hibernate does not modify
+	 * the transaction isolation level of the JDBC connection.
 	 */
 	String ISOLATION = "hibernate.connection.isolation";
 
 	/**
 	 * Controls the autocommit mode of JDBC connections obtained from any
-	 * {@link ConnectionProvider} implementation
-	 * which respects this setting, which the built-in implementations do, except for
+	 * {@link ConnectionProvider} implementation which respects this setting,
+	 * including every built-in implementation except for
 	 * {@link org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl}.
+	 *
+	 * @settingDefault {@code false}
 	 */
 	String AUTOCOMMIT = "hibernate.connection.autocommit";
 
 	/**
-	 * Indicates that Connections obtained from the configured {@link ConnectionProvider} have
+	 * Indicates that connections obtained from the configured {@link ConnectionProvider} have
 	 * auto-commit already disabled when they are acquired.
 	 * <p>
-	 * It is inappropriate to set this value to {@code true} when the Connections returned by
-	 * the provider do not, in fact, have auto-commit disabled.  Doing so may lead to Hibernate
+	 * It is inappropriate to set this value to {@code true} when the connections returned by
+	 * the provider do not, in fact, have auto-commit disabled. Doing so may lead to Hibernate
 	 * executing SQL operations outside the scope of any transaction.
 	 *
-	 * @apiNote By default, Hibernate calls {@link java.sql.Connection#setAutoCommit(boolean)} on
-	 * newly-obtained connections.  This setting allows to circumvent that call (as well as other
-	 * operations) in the interest of performance.
+	 * @apiNote By default, Hibernate calls {@link java.sql.Connection#setAutoCommit(boolean)}
+	 * on newly-obtained connections. With this setting enabled, that call is skipped, along
+	 * with some other operations, in the interest of performance.
 	 *
 	 * @settingDefault {@code false}
 	 *
@@ -282,7 +291,7 @@ public interface JdbcSettings extends C3p0Settings, ProxoolSettings {
 	 *
 	 * @since 5.2.10
 	 */
-	String CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT= "hibernate.connection.provider_disables_autocommit";
+	String CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT = "hibernate.connection.provider_disables_autocommit";
 
 	/**
 	 * A prefix for properties specifying arbitrary JDBC connection properties. These
@@ -290,7 +299,11 @@ public interface JdbcSettings extends C3p0Settings, ProxoolSettings {
 	 * <p>
 	 * For example, declaring {@code hibernate.connection.foo=bar} tells Hibernate to
 	 * append {@code foo=bar} to the JDBC connection URL.
+	 *
+	 * @deprecated This setting is only supported by {@code C3P0ConnectionProvider}
+	 * and {@link org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl}.
 	 */
+	@Deprecated(since="7")
 	String CONNECTION_PREFIX = "hibernate.connection";
 
 	/**
@@ -472,6 +485,25 @@ public interface JdbcSettings extends C3p0Settings, ProxoolSettings {
 	 */
 	String CONNECTION_HANDLING = "hibernate.connection.handling_mode";
 
+	/**
+	 * Whether access to JDBC {@linkplain java.sql.DatabaseMetaData metadata} is allowed during bootstrap.
+	 * <p/>
+	 * Typically, Hibernate accesses this metadata to understand the capabilities of the underlying
+	 * database to help minimize needed configuration.  Disabling this access means that only explicit
+	 * settings are used.  At a minimum, the Dialect to use must be specified using either the {@value #DIALECT}
+	 * or {@value JdbcSettings#JAKARTA_HBM2DDL_DB_NAME} setting.  When the Dialect to use is specified in
+	 * this manner it is generally a good idea to specify the
+	 * {@linkplain JdbcSettings#JAKARTA_HBM2DDL_DB_VERSION database version} as well - Dialects use the version
+	 * to configure themselves.
+	 *
+	 * @apiNote The specified Dialect may also provide defaults into the "explicit" settings.
+	 *
+	 * @settingDefault {@code true}
+	 *
+	 * @since 6.5
+	 */
+	String ALLOW_METADATA_ON_BOOT = "hibernate.boot.allow_jdbc_metadata_access";
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Deprecated Hibernate settings
@@ -500,7 +532,7 @@ public interface JdbcSettings extends C3p0Settings, ProxoolSettings {
 	/**
 	 * @see #USER
 	 *
-	 * @deprecated The JPA-standard setting {@link #JAKARTA_JDBC_USER} is now preferred.
+	 * @deprecated The JPA-standard setting {@link #JAKARTA_JDBC_PASSWORD} is now preferred.
 	 */
 	@Deprecated
 	String PASS = "hibernate.connection.password";
@@ -508,8 +540,9 @@ public interface JdbcSettings extends C3p0Settings, ProxoolSettings {
 	/**
 	 * @see javax.sql.DataSource
 	 *
-	 * @deprecated The JPA-standard {@link #JAKARTA_JTA_DATASOURCE} or {@link #JAKARTA_JTA_DATASOURCE} setting
-	 * is now preferred.
+	 * @deprecated The JPA-standard {@value #JAKARTA_JTA_DATASOURCE} or
+	 *             {@value #JAKARTA_NON_JTA_DATASOURCE} setting are now
+	 *             preferred.
 	 */
 	@Deprecated
 	String DATASOURCE = "hibernate.connection.datasource";

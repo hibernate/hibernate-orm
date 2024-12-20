@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
 
@@ -20,7 +18,6 @@ import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
-import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -29,10 +26,14 @@ import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
-import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.sqm.tree.from.SqmFunctionJoin;
+import org.hibernate.query.sqm.tree.from.SqmJoin;
+import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
+import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import static jakarta.persistence.metamodel.Bindable.BindableType.SINGULAR_ATTRIBUTE;
@@ -130,8 +131,8 @@ public class SingularAttributeImpl<D,J>
 	}
 
 	@Override
-	public SqmPathSource<?> findSubPathSource(String name, JpaMetamodelImplementor metamodel) {
-		return sqmPathSource.findSubPathSource( name, metamodel );
+	public SqmPathSource<?> findSubPathSource(String name, boolean includeSubtypes) {
+		return sqmPathSource.findSubPathSource( name, includeSubtypes );
 	}
 
 	@Override
@@ -145,7 +146,7 @@ public class SingularAttributeImpl<D,J>
 	}
 
 	@Override
-	public SqmAttributeJoin<D,J> createSqmJoin(
+	public SqmJoin<D,J> createSqmJoin(
 			SqmFrom<?,D> lhs,
 			SqmJoinType joinType,
 			String alias,
@@ -153,6 +154,21 @@ public class SingularAttributeImpl<D,J>
 			SqmCreationState creationState) {
 		if ( getType() instanceof AnyMappingDomainType ) {
 			throw new SemanticException( "An @Any attribute cannot be join fetched" );
+		}
+		else if ( sqmPathSource.getSqmPathType() instanceof BasicPluralType<?,?> ) {
+			final SqmSetReturningFunction<J> setReturningFunction = creationState.getCreationContext()
+					.getNodeBuilder()
+					.unnestArray( lhs.get( getName() ) );
+			//noinspection unchecked
+			return (SqmJoin<D, J>) new SqmFunctionJoin<>(
+					createNavigablePath( lhs, alias ),
+					setReturningFunction,
+					true,
+					setReturningFunction.getType(),
+					alias,
+					joinType,
+					(SqmRoot<Object>) lhs
+			);
 		}
 		else {
 			return new SqmSingularJoin<>(
@@ -300,5 +316,10 @@ public class SingularAttributeImpl<D,J>
 	@Override
 	public SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
 		return sqmPathSource.createSqmPath( lhs, intermediatePathSource );
+	}
+
+	@Override
+	public JavaType<?> getRelationalJavaType() {
+		return sqmPathSource.getRelationalJavaType();
 	}
 }

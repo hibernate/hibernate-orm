@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.criteria;
 
@@ -20,12 +18,12 @@ import jakarta.persistence.criteria.Selection;
 import jakarta.persistence.criteria.SetJoin;
 import jakarta.persistence.criteria.Subquery;
 
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.common.FetchClauseType;
 
 /**
  * @author Steve Ebersole
  */
-public interface JpaSubQuery<T> extends Subquery<T>, JpaSelectCriteria<T>, JpaExpression<T>, JpaCteContainer {
+public interface JpaSubQuery<T> extends Subquery<T>, JpaSelectCriteria<T>, JpaCriteriaSelect<T>, JpaExpression<T>, JpaCteContainer {
 
 	JpaSubQuery<T> multiselect(Selection<?>... selections);
 
@@ -33,7 +31,7 @@ public interface JpaSubQuery<T> extends Subquery<T>, JpaSelectCriteria<T>, JpaEx
 
 	<X> JpaCrossJoin<X> correlate(JpaCrossJoin<X> parentCrossJoin);
 
-	<X> JpaEntityJoin<X> correlate(JpaEntityJoin<X> parentEntityJoin);
+	<X> JpaEntityJoin<T,X> correlate(JpaEntityJoin<T,X> parentEntityJoin);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Limit/Offset/Fetch clause

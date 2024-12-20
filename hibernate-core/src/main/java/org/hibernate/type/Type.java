@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
 
@@ -96,15 +94,32 @@ public interface Type extends Serializable {
 	/**
 	 * How many columns are used to persist this type?
 	 * <p>
-	 * Always the same as {@link #getSqlTypeCodes(Mapping) getSqlTypCodes(mapping).length}.
+	 * Always the same as {@link #getSqlTypeCodes(MappingContext) getSqlTypCodes(mapping).length}.
 	 *
 	 * @param mapping The mapping object :/
 	 *
 	 * @return The number of columns
 	 *
 	 * @throws MappingException Generally indicates an issue accessing the passed mapping object.
+	 * @deprecated use {@link  #getColumnSpan(MappingContext)}
 	 */
-	int getColumnSpan(Mapping mapping) throws MappingException;
+	@Deprecated(since = "7.0")
+	default int getColumnSpan(Mapping mapping) throws MappingException{
+		return getColumnSpan( (MappingContext) mapping);
+	}
+
+	/**
+	 * How many columns are used to persist this type?
+	 * <p>
+	 * Always the same as {@link #getSqlTypeCodes(MappingContext) getSqlTypCodes(mappingContext).length}.
+	 *
+	 * @param mappingContext The mapping Context object {@link MappingContext}
+	 *
+	 * @return The number of columns
+	 *
+	 * @throws MappingException Generally indicates an issue accessing the passed mappingContext object.
+	 */
+	int getColumnSpan(MappingContext mappingContext) throws MappingException;
 
 	/**
 	 * Return the JDBC types codes as defined by {@link java.sql.Types} or {@link SqlTypes}
@@ -117,15 +132,44 @@ public interface Type extends Serializable {
 	 * @return The JDBC type codes.
 	 *
 	 * @throws MappingException Generally indicates an issue accessing the passed mapping object.
+	 * @deprecated use {@link #getSqlTypeCodes(MappingContext)}
 	 */
-	int[] getSqlTypeCodes(Mapping mapping) throws MappingException;
+	@Deprecated(since = "7.0")
+	default int[] getSqlTypeCodes(Mapping mapping) throws MappingException{
+		return getSqlTypeCodes((MappingContext) mapping);
+	}
+
+	/**
+	 * Return the JDBC types codes as defined by {@link java.sql.Types} or {@link SqlTypes}
+	 * for the columns mapped by this type.
+	 * <p>
+	 * The number of elements in this array must match the return from {@link #getColumnSpan}.
+	 *
+	 * @param mappingContext The mapping context {@link MappingContext} :/
+	 *
+	 * @return The JDBC type codes.
+	 *
+	 * @throws MappingException Generally indicates an issue accessing the passed mapping object.
+	 */
+	int[] getSqlTypeCodes(MappingContext mappingContext) throws MappingException;
 
 	/**
 	 * The class handled by this type.
 	 *
-	 * @return The java type class handled by this type.
+	 * @return The Java class handled by this type.
 	 */
 	Class<?> getReturnedClass();
+
+	/**
+	 * The qualified name of the class handled by this type.
+	 *
+	 * @return The qualified Java class name.
+	 *
+	 * @since 6.5
+	 */
+	default String getReturnedClassName() {
+		return getReturnedClass().getName();
+	}
 
 	/**
 	 * Compare two instances of the class mapped by this type for persistence "equality",
@@ -143,7 +187,7 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException A problem occurred performing the comparison
 	 */
-	boolean isSame(Object x, Object y) throws HibernateException;
+	boolean isSame(@Nullable Object x, @Nullable Object y) throws HibernateException;
 
 	/**
 	 * Compare two instances of the class mapped by this type for persistence "equality",
@@ -162,7 +206,7 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException A problem occurred performing the comparison
 	 */
-	boolean isEqual(Object x, Object y) throws HibernateException;
+	boolean isEqual(@Nullable Object x, @Nullable Object y) throws HibernateException;
 
 	/**
 	 * Compare two instances of the class mapped by this type for persistence "equality",
@@ -182,7 +226,8 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException A problem occurred performing the comparison
 	 */
-	boolean isEqual(Object x, Object y, SessionFactoryImplementor factory) throws HibernateException;
+	boolean isEqual(@Nullable Object x, @Nullable Object y, SessionFactoryImplementor factory)
+			throws HibernateException;
 
 	/**
 	 * Get a hash code, consistent with persistence "equality". For most types this could
@@ -209,6 +254,15 @@ public interface Type extends Serializable {
 	int getHashCode(Object x, SessionFactoryImplementor factory) throws HibernateException;
 
 	/**
+	 * The type to use for {@code equals()} and {@code hashCode()} computation.
+	 * When {@code null}, use {@link Object#equals(Object)} and {@link Object#hashCode()}.
+	 * This is useful to avoid mega-morphic callsites.
+	 */
+	default @Nullable Type getTypeForEqualsHashCode() {
+		return this;
+	}
+
+	/**
 	 * Perform a {@link java.util.Comparator}-style comparison of the given values.
 	 *
 	 * @param x The first value
@@ -218,9 +272,9 @@ public interface Type extends Serializable {
 	 *
 	 * @see java.util.Comparator#compare(Object, Object)
 	 */
-	int compare(Object x, Object y);
+	int compare(@Nullable Object x, @Nullable Object y);
 
-	int compare(Object x, Object y, SessionFactoryImplementor sessionFactory);
+	int compare(@Nullable Object x, @Nullable Object y, SessionFactoryImplementor sessionFactory);
 
 	/**
 	 * Should the parent be considered dirty, given both the old and current value?
@@ -233,7 +287,8 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException A problem occurred performing the checking
 	 */
-	boolean isDirty(Object old, Object current, SharedSessionContractImplementor session) throws HibernateException;
+	boolean isDirty(@Nullable Object old, @Nullable Object current, SharedSessionContractImplementor session)
+			throws HibernateException;
 
 	/**
 	 * Should the parent be considered dirty, given both the old and current value?
@@ -247,7 +302,7 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException A problem occurred performing the checking
 	 */
-	boolean isDirty(Object oldState, Object currentState, boolean[] checkable, SharedSessionContractImplementor session)
+	boolean isDirty(@Nullable Object oldState, @Nullable Object currentState, boolean[] checkable, SharedSessionContractImplementor session)
 			throws HibernateException;
 
 	/**
@@ -266,11 +321,11 @@ public interface Type extends Serializable {
 	 * @throws HibernateException A problem occurred performing the checking
 	 */
 	boolean isModified(
-			Object dbState,
-			Object currentState,
+			@Nullable Object dbState,
+			@Nullable Object currentState,
 			boolean[] checkable,
 			SharedSessionContractImplementor session)
-			throws HibernateException;
+					throws HibernateException;
 
 	/**
 	 * Bind a value represented by an instance of the {@link #getReturnedClass() mapped class}
@@ -289,11 +344,11 @@ public interface Type extends Serializable {
 	 */
 	void nullSafeSet(
 			PreparedStatement st,
-			Object value,
+			@Nullable Object value,
 			int index,
 			boolean[] settable,
 			SharedSessionContractImplementor session)
-	throws HibernateException, SQLException;
+					throws HibernateException, SQLException;
 
 	/**
 	 * Bind a value represented by an instance of the {@link #getReturnedClass() mapped class}
@@ -309,8 +364,8 @@ public interface Type extends Serializable {
 	 * @throws HibernateException An error from Hibernate
 	 * @throws SQLException An error from the JDBC driver
 	 */
-	void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
-	throws HibernateException, SQLException;
+	void nullSafeSet(PreparedStatement st, @Nullable Object value, int index, SharedSessionContractImplementor session)
+			throws HibernateException, SQLException;
 
 	/**
 	 * Generate a representation of the given value for logging purposes.
@@ -323,7 +378,7 @@ public interface Type extends Serializable {
 	 * @throws HibernateException An error from Hibernate
 	 */
 	String toLoggableString(@Nullable Object value, SessionFactoryImplementor factory)
-	throws HibernateException;
+			throws HibernateException;
 
 	/**
 	 * Returns the abbreviated name of the type.
@@ -342,7 +397,7 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException An error from Hibernate
 	 */
-	Object deepCopy(Object value, SessionFactoryImplementor factory)
+	@Nullable Object deepCopy(@Nullable Object value, SessionFactoryImplementor factory)
 			throws HibernateException;
 
 	/**
@@ -381,7 +436,8 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException An error from Hibernate
 	 */
-	default Serializable disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
+	default @Nullable Serializable disassemble(@Nullable Object value, SessionFactoryImplementor sessionFactory)
+			throws HibernateException {
 		return disassemble( value, null, null );
 	}
 
@@ -399,7 +455,8 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException An error from Hibernate
 	 */
-	Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException;
+	@Nullable Serializable disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session, @Nullable Object owner)
+			throws HibernateException;
 
 	/**
 	 * Reconstruct the object from its disassembled state. This function is the inverse of
@@ -413,7 +470,8 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException An error from Hibernate
 	 */
-	Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner) throws HibernateException;
+	@Nullable Object assemble(@Nullable Serializable cached, SharedSessionContractImplementor session, Object owner)
+			throws HibernateException;
 
 	/**
 	 * Called before assembling a query result set from the query cache, to allow batch
@@ -421,7 +479,9 @@ public interface Type extends Serializable {
 	 *
 	 * @param cached The key
 	 * @param session The originating session
+	 * @deprecated Is not called anymore
 	 */
+	@Deprecated(forRemoval = true, since = "6.6")
 	void beforeAssemble(Serializable cached, SharedSessionContractImplementor session);
 
 	/**
@@ -441,9 +501,9 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException An error from Hibernate
 	 */
-	Object replace(
-			Object original,
-			Object target,
+	@Nullable Object replace(
+			@Nullable Object original,
+			@Nullable Object target,
 			SharedSessionContractImplementor session,
 			Object owner,
 			Map<Object, Object> copyCache) throws HibernateException;
@@ -466,9 +526,9 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException An error from Hibernate
 	 */
-	Object replace(
-			Object original,
-			Object target,
+	@Nullable Object replace(
+			@Nullable Object original,
+			@Nullable Object target,
 			SharedSessionContractImplementor session,
 			Object owner,
 			Map<Object, Object> copyCache,
@@ -482,6 +542,22 @@ public interface Type extends Serializable {
 	 * @param mapping The mapping abstraction
 	 *
 	 * @return array indicating column nullness for a value instance
+	 * @deprecated use {@link #toColumnNullness(Object, MappingContext)}
 	 */
-	boolean[] toColumnNullness(Object value, Mapping mapping);
+	@Deprecated(since = "7.0")
+	default boolean[] toColumnNullness(@Nullable Object value, Mapping mapping){
+		return toColumnNullness( value,(MappingContext) mapping);
+	}
+
+	/**
+	 * Given an instance of the type, return an array of {@code boolean} values indicating which
+	 * mapped columns would be null.
+	 *
+	 * @param value an instance of the type
+	 * @param mappingContext The mapping context {@link MappingContext}
+	 *
+	 * @return array indicating column nullness for a value instance
+	 */
+
+	boolean[] toColumnNullness(@Nullable Object value, MappingContext mappingContext);
 }

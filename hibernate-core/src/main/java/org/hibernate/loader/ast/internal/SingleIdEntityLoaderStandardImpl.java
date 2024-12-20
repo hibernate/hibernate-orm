@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.ast.internal;
 
@@ -34,11 +32,11 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 
 	public SingleIdEntityLoaderStandardImpl(
 			EntityMappingType entityDescriptor,
-			SessionFactoryImplementor sessionFactory) {
+			LoadQueryInfluencers loadQueryInfluencers) {
 		this(
 				entityDescriptor,
-				sessionFactory,
-				(lockOptions, influencers) -> createLoadPlan( entityDescriptor, lockOptions, influencers, sessionFactory )
+				loadQueryInfluencers,
+				(lockOptions, influencers) -> createLoadPlan( entityDescriptor, lockOptions, influencers, influencers.getSessionFactory() )
 		);
 	}
 
@@ -50,15 +48,14 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 	 */
 	protected SingleIdEntityLoaderStandardImpl(
 			EntityMappingType entityDescriptor,
-			SessionFactoryImplementor sessionFactory,
+			LoadQueryInfluencers influencers,
 			BiFunction<LockOptions, LoadQueryInfluencers, SingleIdLoadPlan<T>> loadPlanCreator) {
 		// todo (6.0) : consider creating a base AST and "cloning" it
-		super( entityDescriptor, sessionFactory );
+		super( entityDescriptor, influencers.getSessionFactory() );
 		this.loadPlanCreator = loadPlanCreator;
 		// see org.hibernate.persister.entity.AbstractEntityPersister#createLoaders
 		// we should preload a few - maybe LockMode.NONE and LockMode.READ
 		final LockOptions lockOptions = LockOptions.NONE;
-		final LoadQueryInfluencers influencers = new LoadQueryInfluencers( sessionFactory );
 		final SingleIdLoadPlan<T> plan = loadPlanCreator.apply( LockOptions.NONE, influencers );
 		if ( isLoadPlanReusable( lockOptions, influencers ) ) {
 			selectByLockMode.put( lockOptions.getLockMode(), plan );
@@ -96,14 +93,15 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 			LoadQueryInfluencers loadQueryInfluencers,
 			SessionFactoryImplementor sessionFactory) {
 
-		if ( getLoadable().isAffectedByEnabledFilters( loadQueryInfluencers ) ) {
+		if ( getLoadable().isAffectedByEnabledFilters( loadQueryInfluencers, true ) ) {
 			// This case is special because the filters need to be applied in order to
 			// properly restrict the SQL/JDBC results.  For this reason it has higher
 			// precedence than even "internal" fetch profiles.
 			return loadPlanCreator.apply( lockOptions, loadQueryInfluencers );
 		}
 		else if ( loadQueryInfluencers.hasEnabledCascadingFetchProfile()
-				&& LockMode.WRITE.greaterThan( lockOptions.getLockMode() ) ) {
+				// and if it's a non-exclusive (optimistic) lock
+				&& LockMode.PESSIMISTIC_READ.greaterThan( lockOptions.getLockMode() ) ) {
 			return getInternalCascadeLoadPlan(
 					lockOptions,
 					loadQueryInfluencers,

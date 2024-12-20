@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.lazy;
 
@@ -18,7 +16,7 @@ import org.hibernate.orm.test.envers.entities.collection.MultipleCollectionEntit
 import org.hibernate.orm.test.envers.entities.collection.MultipleCollectionRefEntity1;
 import org.hibernate.orm.test.envers.entities.collection.MultipleCollectionRefEntity2;
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import static org.junit.Assert.assertEquals;
@@ -31,7 +29,7 @@ import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
 /**
  * @author Fabricio Gregorio
  */
-@TestForIssue(jiraKey = "HHH-15522")
+@JiraKey(value = "HHH-15522")
 @RunWith(BytecodeEnhancerRunner.class)
 @EnhancementOptions(lazyLoading = true)
 @SkipForDialect(value = OracleDialect.class, comment = "Oracle does not support identity key generation")
@@ -91,10 +89,10 @@ public class IsCollectionInitializedBytecodeEnhancementTest extends BaseEnversJP
 		MultipleCollectionEntity ret = res.get( 0 );
 
 		assertEquals( Hibernate.isInitialized( ret.getRefEntities1() ), false );
-		
+
 		Hibernate.initialize(ret.getRefEntities1());
-		
+
 		assertEquals( Hibernate.isInitialized( ret.getRefEntities1() ), true );
-		
+
 	}
 }

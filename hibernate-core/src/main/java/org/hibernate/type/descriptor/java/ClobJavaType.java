@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
@@ -17,14 +15,14 @@ import org.hibernate.SharedSessionContract;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.CharacterStream;
 import org.hibernate.engine.jdbc.ClobImplementer;
-import org.hibernate.engine.jdbc.ClobProxy;
-import org.hibernate.engine.jdbc.WrappedClob;
-import org.hibernate.engine.jdbc.internal.CharacterStreamImpl;
+import org.hibernate.engine.jdbc.proxy.ClobProxy;
+import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+
+import static org.hibernate.type.descriptor.java.DataHelper.extractString;
 
 /**
  * Descriptor for {@link Clob} handling.
@@ -33,6 +31,7 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
  * But we treat them as immutable because we simply have no way to dirty check nor deep copy them.
  *
  * @author Steve Ebersole
+ * @author Loïc Lefèvre
  */
 public class ClobJavaType extends AbstractClassJavaType<Clob> {
 	public static final ClobJavaType INSTANCE = new ClobJavaType();
@@ -54,7 +53,7 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 	}
 
 	public String toString(Clob value) {
-		return DataHelper.extractString( value );
+		return extractString( value );
 	}
 
 	public Clob fromString(CharSequence string) {
@@ -84,47 +83,44 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 		}
 
 		try {
-			if ( CharacterStream.class.isAssignableFrom( type ) ) {
-				if (value instanceof ClobImplementer) {
-					// if the incoming Clob is a wrapper, just pass along its CharacterStream
-					return (X) ( (ClobImplementer) value ).getUnderlyingStream();
-				}
-				else {
-					// otherwise we need to build a CharacterStream...
-					return (X) new CharacterStreamImpl( DataHelper.extractString( value.getCharacterStream() ) );
-				}
+			if ( Clob.class.isAssignableFrom( type ) ) {
+				return (X) options.getLobCreator().toJdbcClob( value );
 			}
 			else if ( String.class.isAssignableFrom( type ) ) {
-				if (value instanceof ClobImplementer) {
-					// if the incoming Clob is a wrapper, just grab the bytes from its BinaryStream
-					return (X) ( (ClobImplementer) value ).getUnderlyingStream().asString();
+				if (value instanceof ClobImplementer clobImplementer) {
+					// if the incoming Clob is a wrapper, just grab the string from its CharacterStream
+					return (X) clobImplementer.getUnderlyingStream().asString();
 				}
 				else {
 					// otherwise extract the bytes from the stream manually
-					return (X) LobStreamDataHelper.extractString( value.getCharacterStream() );
+					return (X) extractString( value.getCharacterStream() );
 				}
 			}
-			else if (Clob.class.isAssignableFrom( type )) {
-				final Clob clob =  value instanceof WrappedClob
-						? ( (WrappedClob) value ).getWrappedClob()
-						: value;
-				return (X) clob;
-			}
-			else if ( String.class.isAssignableFrom( type ) ) {
-				if (value instanceof ClobImplementer) {
-					// if the incoming Clob is a wrapper, just get the underlying String.
-					return (X) ( (ClobImplementer) value ).getUnderlyingStream().asString();
+			else if ( Reader.class.isAssignableFrom( type ) ) {
+				if (value instanceof ClobImplementer clobImplementer) {
+					// if the incoming NClob is a wrapper, just pass along its BinaryStream
+					return (X) clobImplementer.getUnderlyingStream().asReader();
 				}
 				else {
-					// otherwise we need to extract the String.
-					return (X) DataHelper.extractString( value.getCharacterStream() );
+					// otherwise we need to build a CharacterStream...
+					return (X) value.getCharacterStream();
+				}
+			}
+			else if ( CharacterStream.class.isAssignableFrom( type ) ) {
+				if (value instanceof ClobImplementer clobImplementer) {
+					// if the incoming Clob is a wrapper, just pass along its CharacterStream
+					return (X) clobImplementer.getUnderlyingStream();
+				}
+				else {
+					// otherwise we need to build a CharacterStream...
+					return (X) value.getCharacterStream();
 				}
 			}
 		}
 		catch ( SQLException e ) {
 			throw new HibernateException( "Unable to access clob stream", e );
 		}
-		
+
 		throw unknownUnwrap( type );
 	}
 
@@ -132,24 +128,24 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 		if ( value == null ) {
 			return null;
 		}
-
-		// Support multiple return types from
-		// org.hibernate.type.descriptor.sql.ClobTypeDescriptor
-		if ( Clob.class.isAssignableFrom( value.getClass() ) ) {
-			return options.getLobCreator().wrap( (Clob) value );
+		else {
+			final LobCreator lobCreator = options.getLobCreator();
+			if ( value instanceof Clob clob ) {
+				return lobCreator.wrap( clob );
+			}
+			else if ( value instanceof String string ) {
+				return lobCreator.createClob( string );
+			}
+			else if ( value instanceof Reader reader ) {
+				return lobCreator.createClob( extractString( reader ) );
+			}
+			else if ( value instanceof CharacterStream stream ) {
+				return lobCreator.createClob( stream.asReader(), stream.getLength() );
+			}
+			else {
+				throw unknownWrap( value.getClass() );
+			}
 		}
-		else if ( String.class.isAssignableFrom( value.getClass() ) ) {
-			return options.getLobCreator().createClob( ( String ) value);
-		}
-		else if ( Reader.class.isAssignableFrom( value.getClass() ) ) {
-			Reader reader = (Reader) value;
-			return options.getLobCreator().createClob( DataHelper.extractString( reader ) );
-		}
-		else if ( String.class.isAssignableFrom( value.getClass() ) ) {
-			return options.getLobCreator().createClob( (String) value );
-		}
-
-		throw unknownWrap( value.getClass() );
 	}
 
 	@Override

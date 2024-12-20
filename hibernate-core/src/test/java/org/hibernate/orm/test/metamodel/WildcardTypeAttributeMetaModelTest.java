@@ -1,14 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.metamodel;
 
 import jakarta.persistence.metamodel.EntityType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.orm.test.metamodel.wildcardmodel.AbstractEntity;
@@ -30,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class WildcardTypeAttributeMetaModelTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9403")
+	@JiraKey(value = "HHH-9403")
 	public void testWildcardGenericAttributeCanBeResolved(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 			EntityType<AbstractOwner> entity = entityManager.getMetamodel().entity( AbstractOwner.class );

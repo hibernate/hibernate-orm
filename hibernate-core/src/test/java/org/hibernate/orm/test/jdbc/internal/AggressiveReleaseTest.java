@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jdbc.internal;
 
@@ -130,7 +128,7 @@ public class AggressiveReleaseTest extends BaseSessionFactoryFunctionalTest {
 						ps.setLong( 1, 1 );
 						ps.setString( 2, "name" );
 						jdbcCoord.getResultSetReturn().execute( ps, sql );
-                        assertTrue( jdbcCoord.getLogicalConnection().getResourceRegistry().hasRegisteredResources() );
+						assertTrue( jdbcCoord.getLogicalConnection().getResourceRegistry().hasRegisteredResources() );
 						assertEquals( 1, connectionProvider.getAcquiredConnections().size() );
 						assertEquals( 0, connectionProvider.getReleasedConnections().size() );
 						resourceRegistry.release( ps );

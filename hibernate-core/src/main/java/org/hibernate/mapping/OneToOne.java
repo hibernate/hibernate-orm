@@ -1,12 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
@@ -57,11 +54,11 @@ public class OneToOne extends ToOne {
 	public void setPropertyName(String propertyName) {
 		this.propertyName = propertyName==null ? null : propertyName.intern();
 	}
-	
+
 	public String getEntityName() {
 		return entityName;
 	}
-	
+
 	public Type getType() throws MappingException {
 		if ( getColumnSpan()>0 ) {
 			return MappingHelper.specialOneToOne(
@@ -94,9 +91,9 @@ public class OneToOne extends ToOne {
 	}
 
 	@Override
-	public void createUniqueKey() {
+	public void createUniqueKey(MetadataBuildingContext context) {
 		if ( !hasFormula() && getColumnSpan()>0  ) {
-			getTable().createUniqueKey( getConstraintColumns() );
+			getTable().createUniqueKey( getConstraintColumns(), context );
 		}
 	}
 
@@ -115,15 +112,6 @@ public class OneToOne extends ToOne {
 			columns = identifier.getColumns();
 		}
 		return columns;
-	}
-
-	/**
-	 * @deprecated Use {@link #getSelectables()} instead
-	 */
-	@Deprecated(forRemoval = true, since = "6.3")
-	@Override
-	public Iterator<Selectable> getConstraintColumnIterator() {
-		return identifier.getSelectables().iterator();
 	}
 
 	/**

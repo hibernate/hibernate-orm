@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy;
 
@@ -13,18 +11,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import jakarta.persistence.CascadeType;
 import org.hibernate.Hibernate;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.jpa.SpecHints;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
@@ -43,21 +42,21 @@ import jakarta.persistence.Table;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@TestForIssue(jiraKey = "HHH-15607")
-@RunWith(BytecodeEnhancerRunner.class)
+@JiraKey("HHH-15607")
+@DomainModel(
+		annotatedClasses = {
+				IdClassEntityGraphTest.Parent.class,
+				IdClassEntityGraphTest.Child.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @EnhancementOptions(lazyLoading = true)
-public class IdClassEntityGraphTest extends BaseNonConfigCoreFunctionalTestCase {
+public class IdClassEntityGraphTest {
 
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-		sources.addAnnotatedClass( Parent.class );
-		sources.addAnnotatedClass( Child.class );
-	}
-
-	@Before
-	public void setUp() {
-		inTransaction(
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Parent parent = new Parent( 1l, "abc" );
 					Child child1 = new Child( parent, LocalDateTime.of( 2002, Month.APRIL, 12, 12, 12 ) );
@@ -69,9 +68,9 @@ public class IdClassEntityGraphTest extends BaseNonConfigCoreFunctionalTestCase 
 		);
 	}
 
-	@After
-	public void tearDown() {
-		inTransaction(
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "delete from Child" ).executeUpdate();
 					session.createQuery( "delete from Parent" ).executeUpdate();
@@ -80,8 +79,8 @@ public class IdClassEntityGraphTest extends BaseNonConfigCoreFunctionalTestCase 
 	}
 
 	@Test
-	public void testFetchBasicAttributeAndOneToMany() {
-		inTransaction(
+	public void testFetchBasicAttributeAndOneToMany(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Parent parent = session.createQuery( "SELECT p FROM Parent p WHERE p.id = :id", Parent.class )
 							.setParameter( "id", 1L )
@@ -98,8 +97,8 @@ public class IdClassEntityGraphTest extends BaseNonConfigCoreFunctionalTestCase 
 	}
 
 	@Test
-	public void testFetchBasicAttributeOnly() {
-		inTransaction(
+	public void testFetchBasicAttributeOnly(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Parent parent = session.createQuery( "SELECT p FROM Parent p WHERE p.id = :id", Parent.class )
 							.setParameter( "id", 1L )
@@ -116,8 +115,8 @@ public class IdClassEntityGraphTest extends BaseNonConfigCoreFunctionalTestCase 
 	}
 
 	@Test
-	public void testFetchOneToMany() {
-		inTransaction(
+	public void testFetchOneToMany(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Parent parent = session.createQuery( "SELECT p FROM Parent p WHERE p.id = :id", Parent.class )
 							.setParameter( "id", 1L )
@@ -204,7 +203,7 @@ public class IdClassEntityGraphTest extends BaseNonConfigCoreFunctionalTestCase 
 	public static class Child {
 
 		@Id
-		@ManyToOne(fetch = FetchType.LAZY)
+		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
 		@JoinColumn(name = "parent_id")
 		private Parent parent;
 

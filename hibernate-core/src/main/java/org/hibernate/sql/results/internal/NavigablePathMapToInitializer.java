@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.internal;
 
@@ -17,10 +15,12 @@ import org.hibernate.sql.results.graph.Initializer;
 
 /**
  * This is in all practical terms a {@code Map<NavigablePath, Initializer>}
- * but wrapping an HashMap so to keep the client code readable as we need
+ * but wrapping a {@code HashMap} to keep the client code readable as we need
  * to:
- * a) have a way to log all initializers
- * b) prevent type pollution from happening on Initializer retrieval
+ * <ul>
+ *     <li>have a way to log all initializers</li>
+ *     <li>prevent type pollution from happening on Initializer retrieval</li>
+ * </ul>
  * I also consider it good practice to only expose the minimal set of
  * operations the client actually needs.
  */
@@ -28,7 +28,7 @@ public final class NavigablePathMapToInitializer {
 
 	private HashMap<NavigablePath, InitializerHolder> map = null;
 
-	public Initializer get(final NavigablePath navigablePath) {
+	public Initializer<?> get(final NavigablePath navigablePath) {
 		if ( map != null && navigablePath != null ) {
 			final InitializerHolder h = map.get( navigablePath );
 			if ( h != null ) {
@@ -38,7 +38,7 @@ public final class NavigablePathMapToInitializer {
 		return null;
 	}
 
-	public void put(final NavigablePath navigablePath, final Initializer initializer) {
+	public void put(final NavigablePath navigablePath, final Initializer<?> initializer) {
 		Objects.requireNonNull( navigablePath );
 		Objects.requireNonNull( initializer );
 		if ( map == null ) {
@@ -61,7 +61,7 @@ public final class NavigablePathMapToInitializer {
 			final StringBuilder sb = new StringBuilder( "Initializer list:\n" );
 			for ( Map.Entry<NavigablePath, InitializerHolder> holderEntry : map.entrySet() ) {
 				final NavigablePath navigablePath = holderEntry.getKey();
-				final Initializer initializer = holderEntry.getValue().initializer;
+				final Initializer<?> initializer = holderEntry.getValue().initializer;
 				String formatted = String.format(
 						"  %s -> %s@%s (%s)",
 						navigablePath,
@@ -80,9 +80,9 @@ public final class NavigablePathMapToInitializer {
 	//Custom holder to avoid type pollution:
 	//we make the type explicit, and this is a concrete class.
 	private static final class InitializerHolder {
-		final Initializer initializer;
+		final Initializer<?> initializer;
 
-		private InitializerHolder(final Initializer init) {
+		private InitializerHolder(final Initializer<?> init) {
 			this.initializer = init;
 		}
 	}

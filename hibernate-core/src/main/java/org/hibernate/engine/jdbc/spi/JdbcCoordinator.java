@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.spi;
 
@@ -136,7 +134,7 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	 */
 	void cancelLastQuery();
 
-    /**
+	/**
 	 * Calculate the amount of time, in seconds, still remaining before transaction timeout occurs.
 	 *
 	 * @return The number of seconds remaining until a transaction timeout occurs.  A negative value indicates
@@ -158,7 +156,7 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 
 	/**
 	 * Register a query statement as being able to be cancelled.
-	 * 
+	 *
 	 * @param statement The cancel-able query statement.
 	 */
 	void registerLastQuery(Statement statement);

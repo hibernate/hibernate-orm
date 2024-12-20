@@ -1,16 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.orm.junit;
 
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +14,7 @@ import java.util.Properties;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import jakarta.persistence.PersistenceUnitTransactionType;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.cfg.AvailableSettings;
@@ -29,17 +26,13 @@ import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableM
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy;
 
-import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterEach;
-
-import org.jboss.logging.Logger;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
-import jakarta.persistence.spi.PersistenceUnitTransactionType;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
@@ -49,7 +42,6 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 @FunctionalEntityManagerFactoryTesting
 public class EntityManagerFactoryBasedFunctionalTest
 		implements EntityManagerFactoryProducer, EntityManagerFactoryScopeContainer {
-	private static final Logger log = Logger.getLogger( EntityManagerFactoryBasedFunctionalTest.class );
 
 	private EntityManagerFactoryScope entityManagerFactoryScope;
 
@@ -207,8 +199,13 @@ public class EntityManagerFactoryBasedFunctionalTest
 			return false;
 		}
 
+		@Override @SuppressWarnings("removal")
+		public jakarta.persistence.spi.PersistenceUnitTransactionType getTransactionType() {
+			return null;
+		}
+
 		@Override
-		public PersistenceUnitTransactionType getTransactionType() {
+		public PersistenceUnitTransactionType getPersistenceUnitTransactionType() {
 			return null;
 		}
 

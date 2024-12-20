@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.orm.domain.userguide;
 
@@ -46,7 +44,7 @@ import jakarta.persistence.SqlResultSetMapping;
 //tag::sql-multiple-scalar-values-dto-NamedNativeQuery-hibernate-example[]
 @NamedNativeQuery(
 		name = "get_person_phone_count",
-		query = "select pr.name AS name, count(*) AS phoneCount " +
+		query = "select pr.name AS name, count(*) AS phone_count " +
 				"from Phone p " +
 				"join Person pr ON pr.id = p.person_id " +
 				"group BY pr.name",
@@ -60,7 +58,7 @@ import jakarta.persistence.SqlResultSetMapping;
 				targetClass = PersonPhoneCount.class,
 				columns = {
 						@ColumnResult(name = "name"),
-						@ColumnResult(name = "phoneCount")
+						@ColumnResult(name = "phone_count")
 				}
 		)
 )

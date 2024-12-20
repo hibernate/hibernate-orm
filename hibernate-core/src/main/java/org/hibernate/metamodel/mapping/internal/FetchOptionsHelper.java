@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
@@ -14,7 +12,10 @@ import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.results.graph.FetchOptions;
+import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
+import org.hibernate.type.CollectionType;
+import org.hibernate.type.EntityType;
 
 import static org.hibernate.engine.FetchStyle.JOIN;
 
@@ -38,7 +39,7 @@ public final class FetchOptionsHelper {
 			FetchMode mappingFetchMode,
 			AssociationType type,
 			SessionFactoryImplementor sessionFactory) {
-		if ( !type.isEntityType() && !type.isCollectionType() ) {
+		if ( !( type instanceof EntityType ) && !( type instanceof CollectionType ) ) {
 			return FetchStyle.SELECT;
 		}
 
@@ -46,7 +47,7 @@ public final class FetchOptionsHelper {
 			return JOIN;
 		}
 
-		if ( type.isEntityType() ) {
+		if ( type instanceof EntityType ) {
 			EntityPersister persister = (EntityPersister) type.getAssociatedJoinable( sessionFactory );
 			if ( persister.isBatchLoadable() ) {
 				return FetchStyle.BATCH;
@@ -98,11 +99,11 @@ public final class FetchOptionsHelper {
 	}
 
 	private static boolean isSubsequentSelectDelayed(AssociationType type, SessionFactoryImplementor sessionFactory) {
-		if ( type.isAnyType() ) {
+		if ( type instanceof AnyType ) {
 			// we'd need more context here.  this is only kept as part of the property state on the owning entity
 			return false;
 		}
-		else if ( type.isEntityType() ) {
+		else if ( type instanceof EntityType ) {
 			final EntityPersister entityPersister = (EntityPersister) type.getAssociatedJoinable( sessionFactory );
 			return entityPersister.getEntityMetamodel().isLazy();
 		}

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.function.array;
 
@@ -14,6 +12,7 @@ import org.hibernate.boot.spi.AdditionalMappingContributor;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.OracleArrayJdbcType;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
@@ -57,6 +56,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 @DomainModel(standardModels = StandardDomainModel.GAMBIT)
 @SessionFactory
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStructuralArrays.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsArrayAgg.class)
 @SkipForDialect(dialectClass = SpannerDialect.class, reason = "Doesn't support array_agg ordering yet")
 public class ArrayAggregateTest {
 
@@ -67,18 +67,21 @@ public class ArrayAggregateTest {
 				InFlightMetadataCollector metadata,
 				ResourceStreamLocator resourceStreamLocator,
 				MetadataBuildingContext buildingContext) {
-			final TypeConfiguration typeConfiguration = metadata.getTypeConfiguration();
-			final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
-			final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
-			new OracleArrayJdbcType(
-					jdbcTypeRegistry.getDescriptor( SqlTypes.VARCHAR ),
-					"StringArray"
-			).addAuxiliaryDatabaseObjects(
-					new ArrayJavaType<>( javaTypeRegistry.getDescriptor( String.class ) ),
-					Size.nil(),
-					metadata.getDatabase(),
-					typeConfiguration
-			);
+			if ( metadata.getDatabase().getDialect() instanceof OracleDialect ) {
+				final TypeConfiguration typeConfiguration = metadata.getTypeConfiguration();
+				final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
+				final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
+				new OracleArrayJdbcType(
+						jdbcTypeRegistry.getDescriptor( SqlTypes.VARCHAR ),
+						"StringArray"
+				).addAuxiliaryDatabaseObjects(
+						new ArrayJavaType<>( javaTypeRegistry.getDescriptor( String.class ) ),
+						null,
+						Size.nil(),
+						metadata.getDatabase(),
+						typeConfiguration.getCurrentBaseSqlTypeIndicators()
+				);
+			}
 		}
 	}
 
@@ -138,7 +141,7 @@ public class ArrayAggregateTest {
 	@Test
 	public void testCompareAgainstArray(SessionFactoryScope scope) {
 		scope.inSession( em -> {
-			List<String[]> results = em.createQuery( "select 1 where array('abc','def',null) is not distinct from (select array_agg(e.theString) within group (order by e.theString asc nulls last) from EntityOfBasics e)", String[].class )
+			List<Integer> results = em.createQuery( "select 1 where array('abc','def',null) is not distinct from (select array_agg(e.theString) within group (order by e.theString asc nulls last) from EntityOfBasics e)", Integer.class )
 					.getResultList();
 			assertEquals( 1, results.size() );
 		} );

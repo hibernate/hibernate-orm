@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.array;
 
@@ -39,6 +37,7 @@ public class ArrayContainsUnnestFunction extends AbstractArrayContainsFunction {
 		final JdbcMappingContainer needleTypeContainer = needleExpression.getExpressionType();
 		final JdbcMapping needleType = needleTypeContainer == null ? null : needleTypeContainer.getSingleJdbcMapping();
 		if ( needleType == null || needleType instanceof BasicPluralType<?, ?> ) {
+			LOG.deprecatedArrayContainsWithArray();
 			sqlAppender.append( '(' );
 			if ( ArrayHelper.isNullable( haystackExpression ) ) {
 				walker.render( haystackExpression, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );

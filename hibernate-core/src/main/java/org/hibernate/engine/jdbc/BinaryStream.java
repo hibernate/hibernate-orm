@@ -1,12 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc;
 
 import java.io.InputStream;
+import java.sql.Blob;
 
 /**
  * Wraps a binary stream to also provide the length which is needed when binding.
@@ -39,4 +38,12 @@ public interface BinaryStream {
 	 * Release any underlying resources.
 	 */
 	void release();
+
+	/**
+	 * Use the given {@link LobCreator} to create a {@link Blob}
+	 * with the same data as this binary stream.
+	 *
+	 * @since 7.0
+	 */
+	Blob asBlob(LobCreator lobCreator);
 }

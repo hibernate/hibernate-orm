@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cache;
 
@@ -19,7 +17,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.stat.CacheRegionStatistics;
 import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
@@ -35,7 +33,7 @@ import static org.junit.Assert.assertEquals;
 public class CacheRegionStatisticsTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15105")
+	@JiraKey( value = "HHH-15105")
 	public void testAccessDefaultQueryRegionStatistics() {
 		final Statistics statistics = sessionFactory().getStatistics();
 		final CacheRegionStatistics queryRegionStatistics = statistics.getQueryRegionStatistics(
@@ -90,7 +88,7 @@ public class CacheRegionStatisticsTest extends BaseNonConfigCoreFunctionalTestCa
 				this::sessionFactory, session -> {
 					List<Dog> dogs = session.createQuery( "from Dog", Dog.class ).getResultList();
 					for ( Dog dog : dogs ) {
-						session.delete( dog );
+						session.remove( dog );
 					}
 				}
 		);

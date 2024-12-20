@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.inheritance;
 
@@ -126,7 +124,7 @@ public class SubclassTest {
 					assertEquals( 10000, p.getAltitude() );
 					assertEquals( "0123456789", p.getSerial() );
 					assertNotEquals( 3000, p.getMetricAltitude() );
-					s.delete( p );
+					s.remove( p );
 
 				}
 		);
@@ -155,10 +153,10 @@ public class SubclassTest {
 					assertEquals( 1, result.size() );
 					Noise w = (Noise) result.get( 0 );
 					assertNull( w.getType() );
-					s.delete( w );
+					s.remove( w );
 					result = createQueryForClass( s, Rock.class ).list();
 					assertEquals( 1, result.size() );
-					s.delete( result.get( 0 ) );
+					s.remove( result.get( 0 ) );
 					result = createQueryForClass( s, Funk.class ).list();
 					assertEquals( 0, result.size() );
 				}

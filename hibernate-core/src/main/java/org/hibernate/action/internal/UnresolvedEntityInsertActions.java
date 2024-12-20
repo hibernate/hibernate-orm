@@ -1,14 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.action.internal;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.lang.invoke.MethodHandles;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -45,8 +44,9 @@ import static org.hibernate.pretty.MessageHelper.infoString;
  */
 public class UnresolvedEntityInsertActions {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-				CoreMessageLogger.class,
-				UnresolvedEntityInsertActions.class.getName()
+			MethodHandles.lookup(),
+			CoreMessageLogger.class,
+			UnresolvedEntityInsertActions.class.getName()
 	);
 
 	private static final int INIT_SIZE = 5;

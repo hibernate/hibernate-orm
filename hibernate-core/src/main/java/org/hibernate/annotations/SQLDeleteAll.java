@@ -1,10 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
+
+import org.hibernate.jdbc.Expectation;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -34,15 +34,26 @@ public @interface SQLDeleteAll {
 	boolean callable() default false;
 
 	/**
-	 * For persistence operation what style of determining results (success/failure) is to be used.
+	 * An {@link Expectation} class used to verify that the operation was successful.
+	 *
+	 * @see Expectation.None
+	 * @see Expectation.RowCount
+	 * @see Expectation.OutParameter
 	 */
+	Class<? extends Expectation> verify() default Expectation.class;
+
+	/**
+	 * A {@link ResultCheckStyle} used to verify that the operation was successful.
+	 *
+	 * @deprecated use {@link #verify()} with an {@link Expectation} class
+	 */
+	@Deprecated(since = "6.5")
 	ResultCheckStyle check() default ResultCheckStyle.NONE;
 
 	/**
-	 * The name of the table in the case of an entity with {@link jakarta.persistence.SecondaryTable
-	 * secondary tables}, defaults to the primary table.
+	 * The name of the table affected. Never required.
 	 *
-	 * @return the name of the table
+	 * @return the name of the secondary table
 	 *
 	 * @since 6.2
 	 */

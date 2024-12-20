@@ -1,0 +1,41 @@
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright: Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="7.0">
+    <entity class="org.hibernate.orm.test.boot.models.xml.dynamic.Employee" access="FIELD">
+        <id-class class="org.hibernate.orm.test.boot.models.xml.dynamic.EmployeePK"/>
+        <attributes>
+            <id name="name"/>
+            <id name="number">
+                <column name="emp_num"/>
+            </id>
+            <one-to-many name="addresses" fetch="EAGER">
+                <join-column name="employee_id" referenced-column-name="emp_num" insertable="false" updatable="false">
+                    <foreign-key name="employee_address_fk" constraint-mode="NO_CONSTRAINT"/>
+                    <check-constraint name="employee_id_nn" constraint="employee_id is not null"/>
+                </join-column>
+                <cascade>
+                    <cascade-persist />
+                    <cascade-remove />
+                    <cascade-lock />
+                </cascade>
+                <on-delete>CASCADE</on-delete>
+            </one-to-many>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.boot.models.xml.dynamic.Address" access="FIELD">
+        <attributes>
+            <id name="id"/>
+            <basic name="street"/>
+            <basic name="city"/>
+            <basic name="state"/>
+            <basic name="zip"/>
+        </attributes>
+    </entity>
+</entity-mappings>

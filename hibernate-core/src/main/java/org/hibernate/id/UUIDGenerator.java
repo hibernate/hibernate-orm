@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id;
 
@@ -14,11 +12,10 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.id.factory.spi.StandardGenerator;
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.id.uuid.StandardRandomStrategy;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.UUIDJavaType;
 
@@ -41,7 +38,7 @@ import org.hibernate.type.descriptor.java.UUIDJavaType;
  * {@link org.hibernate.annotations.UuidGenerator} instead
  */
 @Deprecated(since = "6.0")
-public class UUIDGenerator implements IdentifierGenerator, StandardGenerator {
+public class UUIDGenerator implements IdentifierGenerator {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( UUIDGenerator.class );
 
 	public static final String UUID_GEN_STRATEGY = "uuid_gen_strategy";
@@ -51,7 +48,7 @@ public class UUIDGenerator implements IdentifierGenerator, StandardGenerator {
 	private UUIDJavaType.ValueTransformer valueTransformer;
 
 	@Override
-	public void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) throws MappingException {
+	public void configure(GeneratorCreationContext creationContext, Properties parameters) throws MappingException {
 		// check first for an explicit strategy instance
 		strategy = (UUIDGenerationStrategy) parameters.get( UUID_GEN_STRATEGY );
 
@@ -60,8 +57,9 @@ public class UUIDGenerator implements IdentifierGenerator, StandardGenerator {
 			final String strategyClassName = parameters.getProperty( UUID_GEN_STRATEGY_CLASS );
 			if ( strategyClassName != null ) {
 				try {
-					final ClassLoaderService cls = serviceRegistry.getService( ClassLoaderService.class );
-					final Class<?> strategyClass = cls.classForName( strategyClassName );
+					final Class<?> strategyClass =
+							creationContext.getServiceRegistry().requireService( ClassLoaderService.class )
+									.classForName( strategyClassName );
 					try {
 						strategy = (UUIDGenerationStrategy) strategyClass.newInstance();
 					}
@@ -80,6 +78,7 @@ public class UUIDGenerator implements IdentifierGenerator, StandardGenerator {
 			strategy = StandardRandomStrategy.INSTANCE;
 		}
 
+		final Type type = creationContext.getType();
 		if ( UUID.class.isAssignableFrom( type.getReturnedClass() ) ) {
 			valueTransformer = UUIDJavaType.PassThroughTransformer.INSTANCE;
 		}
@@ -91,7 +90,7 @@ public class UUIDGenerator implements IdentifierGenerator, StandardGenerator {
 			valueTransformer = UUIDJavaType.ToBytesTransformer.INSTANCE;
 		}
 		else {
-			throw new HibernateException( "Unanticipated return type [" + type.getReturnedClass().getName() + "] for UUID conversion" );
+			throw new HibernateException( "Unanticipated return type [" + type.getReturnedClassName() + "] for UUID conversion" );
 		}
 	}
 

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
@@ -14,11 +12,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.function.Supplier;
 
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.CustomSql;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -27,9 +26,9 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.collections.JoinedList;
-import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.jdbc.Expectation;
 import org.hibernate.jpa.event.spi.CallbackDefinition;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.Alias;
@@ -40,6 +39,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Comparator.comparing;
+import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.expectationConstructor;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.root;
 import static org.hibernate.mapping.MappingHelper.checkPropertyColumnDuplication;
@@ -119,7 +119,12 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 	private Component declaredIdentifierMapper;
 	private OptimisticLockStyle optimisticLockStyle;
 
+	private Supplier<? extends Expectation> insertExpectation;
+	private Supplier<? extends Expectation> updateExpectation;
+	private Supplier<? extends Expectation> deleteExpectation;
+
 	private boolean isCached;
+	private CacheLayout queryCacheLayout;
 
 	public PersistentClass(MetadataBuildingContext buildingContext) {
 		this.metadataBuildingContext = buildingContext;
@@ -230,7 +235,7 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 	}
 
 	public boolean hasSubclasses() {
-		return subclasses.size() > 0;
+		return !subclasses.isEmpty();
 	}
 
 	public int getSubclassSpan() {
@@ -246,7 +251,7 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 	 */
 	public List<Subclass> getSubclasses() {
 		@SuppressWarnings("unchecked")
-		List<Subclass>[] subclassLists = new List[subclasses.size() + 1];
+		final List<Subclass>[] subclassLists = new List[subclasses.size() + 1];
 		int j;
 		for (j = 0; j < subclasses.size(); j++) {
 			subclassLists[j] = subclasses.get(j).getSubclasses();
@@ -321,20 +326,12 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		isCached = cached;
 	}
 
-	/**
-	 * @deprecated Use {@link #isCached} instead
-	 */
-	@Deprecated(forRemoval = true)
-	public boolean isCachingExplicitlyRequested() {
-		return isCached();
+	public CacheLayout getQueryCacheLayout() {
+		return queryCacheLayout;
 	}
 
-	/**
-	 * @deprecated Use {@link #setCached} instead
-	 */
-	@Deprecated(forRemoval = true)
-	public void setCachingExplicitlyRequested(boolean cached) {
-		setCached( cached );
+	public void setQueryCacheLayout(CacheLayout queryCacheLayout) {
+		this.queryCacheLayout = queryCacheLayout;
 	}
 
 	public abstract String getCacheConcurrencyStrategy();
@@ -343,7 +340,13 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 
 	public abstract PersistentClass getSuperclass();
 
-	public abstract boolean isExplicitPolymorphism();
+	/**
+	 * @deprecated No longer supported
+	 */
+	@Deprecated
+	public boolean isExplicitPolymorphism() {
+		return false;
+	}
 
 	public abstract boolean isDiscriminatorInsertable();
 
@@ -399,11 +402,9 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		this.lazy = lazy;
 	}
 
+	public abstract boolean isConcreteProxy();
+
 	public abstract boolean hasEmbeddedIdentifier();
-
-	public abstract Class<? extends EntityPersister> getEntityPersisterClass();
-
-	public abstract void setEntityPersisterClass(Class<? extends EntityPersister> classPersisterClass);
 
 	public abstract Table getRootTable();
 
@@ -453,7 +454,7 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 	 * Includes properties defined in superclasses of the mapping inheritance.
 	 * Includes all properties defined as part of a join.
 	 *
-	 * @see #getReferencedProperty for a discussion of "referenceable"
+	 * @see #getReferencedProperty
 	 * @return The referenceable property iterator.
 	 */
 	public List<Property> getReferenceableProperties() {
@@ -567,25 +568,6 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 	}
 
 	/**
-	 * @deprecated This will be removed with no replacement.
-	 */
-	@Deprecated(since = "6.2", forRemoval = true)
-	public Property getSubclassProperty(String propertyName) throws MappingException {
-		final Property identifierProperty = getIdentifierProperty();
-		if ( identifierProperty != null
-				&& identifierProperty.getName().equals( root( propertyName ) ) ) {
-			return identifierProperty;
-		}
-		else {
-			final Component identifierMapper = getIdentifierMapper();
-			final List<Property> closure = identifierMapper != null
-					? new JoinedList<>( identifierMapper.getProperties(), getSubclassPropertyClosure() )
-					: getSubclassPropertyClosure();
-			return getProperty( propertyName, closure );
-		}
-	}
-
-	/**
 	 * Check to see if this PersistentClass defines a property with the given name.
 	 *
 	 * @param name The property name to check
@@ -634,22 +616,6 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		return hasProperty( name )
 			|| getSuperMappedSuperclass() != null && getSuperMappedSuperclass().isPropertyDefinedInHierarchy( name )
 			|| getSuperclass() != null && getSuperclass().isPropertyDefinedInHierarchy( name );
-	}
-
-	/**
-	 * @deprecated prefer {@link #getOptimisticLockStyle}
-	 */
-	@Deprecated(forRemoval = true)
-	public int getOptimisticLockMode() {
-		return getOptimisticLockStyle().getOldCode();
-	}
-
-	/**
-	 * @deprecated prefer {@link #setOptimisticLockStyle}
-	 */
-	@Deprecated(forRemoval = true)
-	public void setOptimisticLockMode(int optimisticLockMode) {
-		setOptimisticLockStyle( OptimisticLockStyle.interpretOldCode( optimisticLockMode ) );
 	}
 
 	public OptimisticLockStyle getOptimisticLockStyle() {
@@ -783,20 +749,11 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		return properties;
 	}
 
-	public void setCustomSqlInsert(CustomSql customSql) {
-		if ( customSql != null ) {
-			setCustomSQLInsert(
-					customSql.getSql(),
-					customSql.isCallable(),
-					customSql.getCheckStyle()
-			);
-		}
-	}
-
 	public void setCustomSQLInsert(String customSQLInsert, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
 		this.customSQLInsert = customSQLInsert;
 		this.customInsertCallable = callable;
 		this.insertCheckStyle = checkStyle;
+		this.insertExpectation = expectationConstructor( checkStyle );
 	}
 
 	public String getCustomSQLInsert() {
@@ -807,24 +764,11 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		return customInsertCallable;
 	}
 
-	public ExecuteUpdateResultCheckStyle getCustomSQLInsertCheckStyle() {
-		return insertCheckStyle;
-	}
-
-	public void setCustomSqlUpdate(CustomSql customSql) {
-		if ( customSql != null ) {
-			setCustomSQLUpdate(
-					customSql.getSql(),
-					customSql.isCallable(),
-					customSql.getCheckStyle()
-			);
-		}
-	}
-
 	public void setCustomSQLUpdate(String customSQLUpdate, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
 		this.customSQLUpdate = customSQLUpdate;
 		this.customUpdateCallable = callable;
 		this.updateCheckStyle = checkStyle;
+		this.updateExpectation = expectationConstructor( checkStyle );
 	}
 
 	public String getCustomSQLUpdate() {
@@ -835,24 +779,11 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		return customUpdateCallable;
 	}
 
-	public ExecuteUpdateResultCheckStyle getCustomSQLUpdateCheckStyle() {
-		return updateCheckStyle;
-	}
-
-	public void setCustomSqlDelete(CustomSql customSql) {
-		if ( customSql != null ) {
-			setCustomSQLDelete(
-					customSql.getSql(),
-					customSql.isCallable(),
-					customSql.getCheckStyle()
-			);
-		}
-	}
-
 	public void setCustomSQLDelete(String customSQLDelete, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
 		this.customSQLDelete = customSQLDelete;
 		this.customDeleteCallable = callable;
 		this.deleteCheckStyle = checkStyle;
+		this.deleteExpectation = expectationConstructor( checkStyle );
 	}
 
 	public String getCustomSQLDelete() {
@@ -861,10 +792,6 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 
 	public boolean isCustomDeleteCallable() {
 		return customDeleteCallable;
-	}
-
-	public ExecuteUpdateResultCheckStyle getCustomSQLDeleteCheckStyle() {
-		return deleteCheckStyle;
 	}
 
 	public void addFilter(
@@ -931,6 +858,9 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		}
 		if ( isDiscriminatorInsertable() && getDiscriminator() != null ) {
 			getDiscriminator().checkColumnDuplication( cols, owner );
+		}
+		if ( getRootClass().getSoftDeleteColumn() != null ) {
+			getRootClass().getSoftDeleteColumn().getValue().checkColumnDuplication( cols, owner );
 		}
 		checkPropertyColumnDuplication( cols, getNonDuplicatedProperties(), owner );
 		for ( Join join : getJoins() ) {
@@ -1073,9 +1003,9 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		this.superMappedSuperclass = superMappedSuperclass;
 	}
 
-	public void assignCheckConstraintsToTable(Dialect dialect, TypeConfiguration types, SqmFunctionRegistry functions) {
+	public void assignCheckConstraintsToTable(Dialect dialect, TypeConfiguration types) {
 		for ( CheckConstraint checkConstraint : checkConstraints ) {
-			container( collectColumnNames( checkConstraint.getConstraint(), dialect, types, functions ) )
+			container( collectColumnNames( checkConstraint.getConstraint(), dialect, types ) )
 					.getTable().addCheck( checkConstraint );
 		}
 	}
@@ -1257,5 +1187,29 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 			return getSuperPersistentClass( mappedSuperclass.getSuperMappedSuperclass() );
 		}
 		return null;
+	}
+
+	public Supplier<? extends Expectation> getInsertExpectation() {
+		return insertExpectation;
+	}
+
+	public void setInsertExpectation(Supplier<? extends Expectation> insertExpectation) {
+		this.insertExpectation = insertExpectation;
+	}
+
+	public Supplier<? extends Expectation> getUpdateExpectation() {
+		return updateExpectation;
+	}
+
+	public void setUpdateExpectation(Supplier<? extends Expectation> updateExpectation) {
+		this.updateExpectation = updateExpectation;
+	}
+
+	public Supplier<? extends Expectation> getDeleteExpectation() {
+		return deleteExpectation;
+	}
+
+	public void setDeleteExpectation(Supplier<? extends Expectation> deleteExpectation) {
+		this.deleteExpectation = deleteExpectation;
 	}
 }

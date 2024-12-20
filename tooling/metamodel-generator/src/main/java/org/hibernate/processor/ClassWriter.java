@@ -108,12 +108,6 @@ public final class ClassWriter {
 
 			pw.println();
 
-			// TODO: move this!
-			if ( context.addDependentAnnotation() && context.isDataEventPackageAvailable()
-					&& entity.isImplementation() && !entity.isReactive() ) {
-				pw.println("\t@Inject private Event<? super LifecycleEvent<?>> event;\n");
-			}
-
 			final List<MetaAttribute> members = entity.getMembers();
 			for ( MetaAttribute metaMember : members ) {
 				if ( metaMember instanceof InnerClassMetaAttribute innerClass ) {

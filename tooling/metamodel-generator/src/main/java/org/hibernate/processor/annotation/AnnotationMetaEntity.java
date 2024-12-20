@@ -637,7 +637,22 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			if ( needsDefaultConstructor() ) {
 				addDefaultConstructor();
 			}
+			if ( needsEventBus() ) {
+				addEventBus();
+			}
 		}
+	}
+
+	private boolean needsEventBus() {
+		return jakartaDataRepository
+			&& !usingReactiveSession( sessionType ) // non-reactive
+			&& context.isDataEventPackageAvailable() // events
+			&& context.addInjectAnnotation() // @nject
+			&& context.addDependentAnnotation(); // CDI
+	}
+
+	void addEventBus() {
+		putMember("_event", new EventField(this) );
 	}
 
 	/**
@@ -1382,6 +1397,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						new LifecycleMethod(
 								this, method,
 								entity,
+								typeAsString(lifecycleParameterArgument(parameterType)),
 								methodName,
 								parameter.getSimpleName().toString(),
 								getSessionVariableName(),
@@ -1421,6 +1437,23 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						: LifecycleMethod.ParameterKind.NORMAL;
 			default:
 				return LifecycleMethod.ParameterKind.NORMAL;
+		}
+	}
+
+	private TypeMirror lifecycleParameterArgument(TypeMirror parameterType) {
+		switch (parameterType.getKind()) {
+			case ARRAY:
+				final ArrayType arrayType = (ArrayType) parameterType;
+				return arrayType.getComponentType();
+			case DECLARED:
+				final DeclaredType declaredType = (DeclaredType) parameterType;
+				final TypeElement typeElement = (TypeElement) declaredType.asElement();
+				return typeElement.getQualifiedName().contentEquals(LIST)
+					&& !declaredType.getTypeArguments().isEmpty()
+						? declaredType.getTypeArguments().get(0)
+						: context.getElementUtils().getTypeElement(JAVA_OBJECT).asType();
+			default:
+				return parameterType;
 		}
 	}
 

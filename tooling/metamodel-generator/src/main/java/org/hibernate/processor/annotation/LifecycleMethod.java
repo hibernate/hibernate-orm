@@ -15,6 +15,7 @@ import static org.hibernate.processor.util.Constants.UNI;
 
 public class LifecycleMethod extends AbstractAnnotatedMethod {
 	private final String entity;
+	private final String actualEntity;
 	private final String methodName;
 	private final String parameterName;
 	private final String operationName;
@@ -33,6 +34,7 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 			AnnotationMetaEntity annotationMetaEntity,
 			ExecutableElement method,
 			String entity,
+			String actualEntity,
 			String methodName,
 			String parameterName,
 			String sessionName,
@@ -44,6 +46,7 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 			boolean hasGeneratedId) {
 		super(annotationMetaEntity, method, sessionName, sessionType);
 		this.entity = entity;
+		this.actualEntity = actualEntity;
 		this.methodName = methodName;
 		this.parameterName = parameterName;
 		this.operationName = operationName;
@@ -74,7 +77,7 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 		StringBuilder declaration = new StringBuilder();
 		preamble(declaration);
 		nullCheck(declaration, parameterName);
-		preEvent(declaration);
+		fireEvents(declaration, "Pre");
 		if ( !isReactive() ) {
 			declaration.append( "\ttry {\n" );
 		}
@@ -88,53 +91,71 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 			declaration
 					.append( ";\n" );
 		}
-		postEvent(declaration);
+		fireEvents(declaration, "Post");
 		returnArgument(declaration);
 		declaration.append("}");
 		return declaration.toString();
 	}
 
-	private void postEvent(StringBuilder declaration) {
-		if ( annotationMetaEntity.getContext().isDataEventPackageAvailable()
-				&& annotationMetaEntity.getContext().addDependentAnnotation()
-				&& eventTypes.contains( operationName )
-				&& !isReactive() ) {
-			final String postEventType = "Post" + capitalize( operationName ) + "Event";
-			annotationMetaEntity.importType( "jakarta.data.event." + postEventType );
-			declaration
-					.append( "\tevent.select(new TypeLiteral<" )
-					.append( postEventType )
-					.append( "<" )
-					.append( annotationMetaEntity.importType( entity ) )
-					.append( ">>(){})\n\t\t\t.fire(new " )
-					.append( postEventType )
-					.append( "<>(" )
-					.append( parameterName )
-					.append( "));\n" );
-		}
-	}
-
-	private void preEvent(StringBuilder declaration) {
+	private void fireEvents(StringBuilder declaration, String prefix) {
 		if ( annotationMetaEntity.getContext().isDataEventPackageAvailable()
 				&& annotationMetaEntity.getContext().addDependentAnnotation()
 				&& eventTypes.contains( operationName )
 				&& !isReactive()) {
-			final String preEventType = "Pre" + capitalize( operationName ) + "Event";
-			annotationMetaEntity.importType( "jakarta.data.event." + preEventType );
-			annotationMetaEntity.importType( "jakarta.data.event.LifecycleEvent" );
-			annotationMetaEntity.importType( "jakarta.enterprise.util.TypeLiteral" );
-			annotationMetaEntity.importType( "jakarta.enterprise.event.Event" );
-			annotationMetaEntity.importType( "jakarta.inject.Inject" );
+			final String entityName = iterateEvents( declaration );
+			fireEvent( declaration, entityName, prefix + capitalize( operationName ) + "Event" );
+			endIterateEvents( declaration );
+		}
+	}
+
+	private void fireEvent(StringBuilder declaration, String entityName, String eventType) {
+		annotationMetaEntity.importType( "jakarta.data.event.LifecycleEvent" );
+		annotationMetaEntity.importType( "jakarta.enterprise.util.TypeLiteral" );
+		annotationMetaEntity.importType( "jakarta.enterprise.event.Event" );
+		annotationMetaEntity.importType( "jakarta.inject.Inject" );
+		annotationMetaEntity.importType( "jakarta.data.event." + eventType );
+		if (parameterKind != ParameterKind.NORMAL) {
+			declaration.append( "\t" );
+		}
+		declaration
+				.append( "\tif (event != null) {\n" );
+		if (parameterKind != ParameterKind.NORMAL) {
+			declaration.append( "\t" );
+		}
+		declaration
+				.append( "\t\tevent.select(new TypeLiteral<" )
+				.append( eventType )
+				.append( "<" )
+				.append( annotationMetaEntity.importType( actualEntity ) )
+				.append( ">>(){})\n\t\t\t\t.fire(new " )
+				.append( eventType )
+				.append( "<>(" )
+				.append( entityName )
+				.append( "));\n");
+		if (parameterKind != ParameterKind.NORMAL) {
+			declaration.append( "\t" );
+		}
+		declaration
+				.append("\t}\n" );
+	}
+
+	private void endIterateEvents(StringBuilder declaration) {
+		if (parameterKind != ParameterKind.NORMAL) {
 			declaration
-					.append( "\tevent.select(new TypeLiteral<" )
-					.append( preEventType )
-					.append( "<" )
-					.append( annotationMetaEntity.importType( entity ) )
-					.append( ">>(){})\n\t\t\t.fire(new " )
-					.append( preEventType )
-					.append( "<>(" )
+					.append( "\t}\n");
+		}
+	}
+
+	private String iterateEvents(StringBuilder declaration) {
+		if (parameterKind != ParameterKind.NORMAL) {
+			declaration
+					.append( "\tfor (var _entity : ")
 					.append( parameterName )
-					.append( "));\n" );
+					.append(") {\n" );
+			return "_entity";
+		}
+		else {
+			return parameterName;
 		}
 	}
 

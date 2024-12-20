@@ -42,7 +42,7 @@ pipeline {
 					withEnv([
 							"DISABLE_REMOTE_GRADLE_CACHE=true"
 					]) {
-						sh './gradlew clean publish -x test --no-scan --no-daemon --no-build-cache --stacktrace'
+						sh './gradlew clean publish -x test --no-scan --no-daemon --no-build-cache --stacktrace -PmavenMirror=nexus-load-balancer-c4cf05fd92f43ef8.elb.us-east-1.amazonaws.com'
 					}
 				}
 			}

@@ -42,6 +42,7 @@ import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.uuid.UuidValueGenerator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.AnnotationUtil;
 import org.hibernate.mapping.GeneratorCreator;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
@@ -412,7 +413,7 @@ public class GeneratorBinder {
 							annotationType
 					);
 			callInitialize( annotation, idAttributeMember, creationContext, generator );
-			callConfigure( creationContext, generator, emptyMap(), identifierValue );
+			callConfigure( annotation, creationContext, generator, emptyMap(), identifierValue );
 			checkIdGeneratorTiming( annotationType, generator );
 			return generator;
 		};
@@ -608,7 +609,8 @@ public class GeneratorBinder {
 	 * call its {@link Configurable#configure(GeneratorCreationContext, Properties)
 	 * configure()} method.
 	 */
-	public static void callConfigure(
+	public static <A extends Annotation> void callConfigure(
+			A annotation,
 			GeneratorCreationContext creationContext,
 			Generator generator,
 			Map<String, Object> configuration,
@@ -620,6 +622,9 @@ public class GeneratorBinder {
 					creationContext.getRootClass(),
 					configuration
 			);
+			if ( annotation != null ) {
+				parameters.putAll(AnnotationUtil.getAttributes(annotation));
+			}
 			configurable.configure( creationContext, parameters );
 		}
 		if ( generator instanceof ExportableProducer exportableProducer ) {
@@ -773,7 +778,7 @@ public class GeneratorBinder {
 		identifierValue.setCustomIdGeneratorCreator( creationContext -> {
 			final Generator identifierGenerator =
 					instantiateGenerator( beanContainer, generatorClass( generatorStrategy, identifierValue ) );
-			callConfigure( creationContext, identifierGenerator, configuration, identifierValue );
+			callConfigure( null, creationContext, identifierGenerator, configuration, identifierValue );
 			if ( identifierGenerator instanceof IdentityGenerator) {
 				identifierValue.setColumnToIdentity();
 			}

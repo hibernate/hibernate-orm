@@ -1439,22 +1439,18 @@ public class SessionImpl
 				.fireEventOnEachListener( this, AutoFlushEventListener::onAutoPreFlush );
 	}
 
-
-
 	@Override
 	public boolean isDirty() throws HibernateException {
 		checkOpen();
-		pulseTransactionCoordinator();
-		log.debug( "Checking session dirtiness" );
 		if ( actionQueue.areInsertionsOrDeletionsQueued() ) {
-			log.debug( "Session dirty (scheduled updates and insertions)" );
 			return true;
 		}
-		DirtyCheckEvent event = new DirtyCheckEvent( this );
-		fastSessionServices.eventListenerGroup_DIRTY_CHECK
-				.fireEventOnEachListener( event, DirtyCheckEventListener::onDirtyCheck );
-		delayedAfterCompletion();
-		return event.isDirty();
+		else {
+			final DirtyCheckEvent event = new DirtyCheckEvent( this );
+			fastSessionServices.eventListenerGroup_DIRTY_CHECK
+					.fireEventOnEachListener( event, DirtyCheckEventListener::onDirtyCheck );
+			return event.isDirty();
+		}
 	}
 
 	@Override
@@ -1493,10 +1489,8 @@ public class SessionImpl
 	@Override
 	public void forceFlush(EntityKey key) throws HibernateException {
 		if ( log.isDebugEnabled() ) {
-			log.debugf(
-					"Flushing to force deletion of re-saved object: %s",
-					infoString( key.getPersister(), key.getIdentifier(), getFactory() )
-			);
+			log.debugf("Flushing to force deletion of re-saved object: "
+					+ infoString( key.getPersister(), key.getIdentifier(), getFactory() ) );
 		}
 
 		if ( persistenceContext.getCascadeLevel() > 0 ) {

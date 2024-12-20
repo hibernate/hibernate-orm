@@ -92,6 +92,7 @@ public final class Context {
 	private AccessType persistenceUnitDefaultAccessType;
 	private boolean generateJakartaDataStaticMetamodel;
 	private boolean quarkusInjection;
+	private boolean dataEventPackageAvailable;
 
 	// keep track of all classes for which model have been generated
 	private final Set<Metamodel> generatedModelClasses = new HashSet<>();
@@ -222,6 +223,14 @@ public final class Context {
 
 	public void setQuarkusInjection(boolean quarkusInjection) {
 		this.quarkusInjection = quarkusInjection;
+	}
+
+	public boolean isDataEventPackageAvailable() {
+		return dataEventPackageAvailable;
+	}
+
+	public void setDataEventPackageAvailable(boolean dataEventPackageAvailable) {
+		this.dataEventPackageAvailable = dataEventPackageAvailable;
 	}
 
 	public Elements getElementUtils() {

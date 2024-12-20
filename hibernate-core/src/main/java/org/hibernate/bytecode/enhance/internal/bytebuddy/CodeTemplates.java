@@ -489,7 +489,12 @@ class CodeTemplates {
 			if ( getterSelf() != null ) {
 				Collection<?> c = getter( field );
 				if ( c != null ) {
-					c.remove( self );
+					if ( c instanceof PersistentCollection<?> ) {
+						( (PersistentCollection) c ).queueRemoveOperation( self );
+					}
+					else {
+						c.remove( self );
+					}
 				}
 			}
 		}
@@ -498,7 +503,10 @@ class CodeTemplates {
 		static void exit(@Advice.This Object self, @Advice.Argument(0) Object argument, @BidirectionalAttribute String inverseAttribute) {
 			if ( argument != null ) {
 				Collection<Object> c = getter( argument );
-				if ( c != null && !c.contains( self ) ) {
+				if ( c != null && c instanceof PersistentCollection<?> ) {
+					( (PersistentCollection) c ).queueAddOperation( self );
+				}
+				else if ( c != null && !c.contains( self ) ) {
 					c.add( self );
 				}
 			}
